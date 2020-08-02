@@ -42,6 +42,7 @@
 			self.rotHandle = paper.select('#rotHandle');
 			self.translateXVis = paper.select('#translateXVis');
 			self.translateYVis = paper.select('#translateYVis');
+			self.scaleVis = paper.select('#scaleVis');
 			self.scaleXVis = paper.select('#scaleXVis');
 			self.scaleYVis = paper.select('#scaleYVis');
 			self.rotateVis = paper.select('#rotateVis');
@@ -425,8 +426,10 @@
 		}
 		
 		self._sessionEnd = function(){
-//			self.paper.debug.cleanup();
-			//self.paper.selectAll('.transformVis').attr({d:''});
+			self.paper.debug.cleanup();
+			if(self.config.visualization){
+				self._visualizeTransformCleanup();
+			}
 
 
 //			console.info("Apply Transform: ", self.session.originMatrix.split());
@@ -655,19 +658,24 @@
 		self._visualizeTransform = function(){
 			
 			// translate
-			if(self.session.translate.dx !== 0 || self.session.translate.dy !== 0) {
+			if(self.session.type === 'translate') {
 				self._visualizeTranslate();
 			}
-			if(self.session.rotate.alpha !== 0) {
+			if(self.session.type === 'rotate') {
 				self._visualizeRotate();
 			}
-			if(self.session.scale.sx !== 1 || self.session.scale.sy !== 1) {
+			if(self.session.type === 'scale') {
 				self._visualizeScale();
 			}
 
 		};
+		
+		self._visualizeTransformCleanup = function(){
+			
+		};
 
 		self._visualizeTranslate = function(){
+//			(self.session.translate.dx !== 0 || self.session.translate.dy !== 0)
 			const startXh = self.session.translate.cx;
 			const startYh = 10;
 			const startXv = 10;
@@ -684,20 +692,22 @@
 		};
 
 		self._visualizeRotate = function(){
+//			if(self.session.rotate.alpha !== 0) {
 			const cx = self.session.rotate.ocx;
 			const cy = self.session.rotate.ocy;
 			const a = self.session.rotate.alpha;
 			
 			const visM = Snap.matrix(1,0,0,1,cx, cy).rotate(self.session.rotate._alpha);
-			const visT = Snap.matrix(1,0,0,1,cx, cy).rotate(self.session.rotate._alpha).translate(6,0);
+//			const visT = Snap.matrix(1,0,0,1,cx, cy).rotate(self.session.rotate._alpha).translate(6,0);
 			self.rotateVis.transform(visM);
 			self.rotateVisAngle.transform(Snap.matrix().rotate(self.session.rotate.alpha));
-			const angleText = a < 180 ? a : a - 360;
-			self.rotateText.node.textContent = ` ${angleText.toFixed(1)} °`;
-			self.rotateText.transform(visT);
+			const angleText = ((a + 180) % 360) - 180; // -180° to 180°;
+			self.rotateText.node.textContent = `${(angleText>0 ? '+':'')}${angleText.toFixed(1)} °`;
+//			self.rotateText.transform(visT);
 		};
 		
 		self._visualizeScale = function () {
+//			if(self.session.scale.sx !== 1 || self.session.scale.sy !== 1) {
 			const gap = 15;
 			const dist = 10;
 			const sss = self.session.scale;
@@ -707,8 +717,13 @@
 			const cy = sss.cy;
 			const mirrorX = mouseY < cy ? 1 : -1;
 			const mirrorY = mouseX < cx ? 1 : -1;
+			const width = self.session.bb.width * sss.sx;
+			const height = self.session.bb.height * sss.sy;
 			
-			let attrDx = '';
+			const visM = Snap.matrix(1,0,0,1,cx, cy);
+			self.scaleVis.transform(visM);
+			
+			let transformX = '';
 			let labelX = '';
 			if(sss.sx !== 1 && sss.signX !== 0 && sss.dominantAxis !== 'y'){ // show only if: axis is scaled && handle is scaling this axis && this axis is dominant in proportional scaling
 				if(cy < mouseY){ // show above
@@ -716,21 +731,21 @@
 				} else { // show below
 					
 				}
-				attrDx = `M${cx},${cy}m0,${gap*mirrorX}v${dist*mirrorX}H${mouseX}v${-dist*mirrorX}`
-				labelX = mouseX.toFixed(1) + 'mm';
-				self.scaleXText.attr({x: (cx + mouseX)/2, y: cy + gap * mirrorX });
+				transformX = Snap.matrix(width,0,0,mirrorX,0,0)
+				labelX = `${width.toFixed(1)}'mm' / ${(sss.sx*100).toFixed(1)}%`;
+				self.scaleXText.transform(Snap.matrix(1,0,0,1,(cx + mouseX)/2, cy + gap * mirrorX ));
 			} 
-			self.scaleXVis.attr('d', attrDx);
+			self.scaleXVis.transform(transformX);
 			self.scaleXText.node.textContent = labelX;
 			
-			let attrDy = '';
+			let transformY = '';
 			let labelY = '';
 			if(sss.sy !== 1 && sss.signY !== 0 && sss.dominantAxis !== 'x'){
-				attrDy = `M${cx},${cy}m${gap*mirrorY},0h${dist*mirrorY}V${mouseY}h${-dist*mirrorY}`
-				labelY = mouseY.toFixed(1) + 'mm';
-				self.scaleYText.attr({x: cx + gap * mirrorY, y:  (cy + mouseY)/2 });
+				transformY = Snap.matrix(mirrorY,0,0,height,0,0);
+				labelY = `${height.toFixed(1)}mm / ${(sss.sy*100).toFixed(1)}%`;
+				self.scaleYText.transform(Snap.matrix(1,0,0,1, cx + gap * mirrorY, (cy + mouseY)/2));
 			} 
-			self.scaleYVis.attr('d', attrDy);
+			self.scaleYVis.transform(transformY);
 			self.scaleYText.node.textContent = labelY;	
 			
 		}

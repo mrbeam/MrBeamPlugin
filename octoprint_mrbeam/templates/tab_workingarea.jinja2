@@ -666,21 +666,7 @@
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
 										<g id="userContent"></g>
-										<g id="mbtransformVisualization">
-											<path id="translateXVis" class="transformVis" d="M0,0v-5h1v5" />
-											<path id="translateYVis" class="transformVis" d='M0,0h-5v1h5' />
-											<path id="scaleXVis" class="transformVis" />
-											<path id="scaleYVis" class="transformVis" />
-											<g id="rotateVis">
-												<path class="transformVis" d="M0,0m-2,0h4m-2,-2v4M35,0h10"/>
-												<path id="rotateVisAngle" class="transformVis" d="M35,0h10" />
-											</g>
-											<text id="translateXText"></text>
-											<text id="translateYText"></text>
-											<text id="scaleXText"></text>
-											<text id="scaleYText"></text>
-											<text id="rotateText"></text>
-										</g>
+										
 									</g>
 									<g id="crosshair" transform="matrix(1, 0, 0, 1, -20, -20)"
 									   data-bind="attr: { transform: scaleMatrixCrosshair()}">
@@ -703,6 +689,20 @@
                                         </circle>
 									</g>
 									<g id="mbtransformHandleGroup">
+										<g id="mbtransformVisualization">
+											<g id="translateVis">
+												<path id="translateXVis" class="transformVis" d="M0,0v-5h1v5" />
+												<path id="translateYVis" class="transformVis" d='M0,0h-5v1h5' />
+												<text id="translateXText"></text>
+												<text id="translateYText"></text>
+											</g>
+
+											<g id="rotateVis">
+												<path class="transformVis" d="M0,0m-2,0h4m-2,-2v4M35,0h10"/>
+												<path id="rotateVisAngle" class="transformVis" d="M35,0h10" />
+												<text id="rotateText" transform="translate(5,0)"></text>
+											</g>
+										</g>
 										<rect id="translateHandle_2" x="0" y="0" width="0" height="0" ></rect>
 										<g id="mbtransformTranslateGroup">
 											<!--<path id="_dbg_t" d="M0,0m-2,0h4m-2,-2v4"  stroke="#FF0000" stroke-width="1" fill="none" />-->
@@ -710,6 +710,12 @@
 												<path id="debugRotateCenter" d="M0,0m-2,0h4m-2,-2v4"  stroke="#000000" stroke-width="1" fill="none" />
 												<!--<path id="_dbg_r" d="M0,0m-2,0h4m-2,-2v4"  stroke="#FF0000" stroke-width="1" fill="none" />-->
 
+												<g id="scaleVis">
+													<path id="scaleXVis" class="transformVis" d="M0,0v-5h1v5" />
+													<path id="scaleYVis" class="transformVis" d='M0,0h-5v1h5'/>
+													<text id="scaleXText"></text>
+													<text id="scaleYText"></text>
+												</g>
 												<g id="mbtransformScaleGroup">
 													<!--<path id="_dbg_s" d="M0,0m-2,0h4m-2,-2v4"  stroke="#00FF00" stroke-width="1" fill="none" />-->
 													<rect id="translateHandle" x="0" y="0" width="0" height="0" ></rect>

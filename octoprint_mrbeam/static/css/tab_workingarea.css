@@ -212,11 +212,14 @@
 	display: block; 
 }
 
-#mbtransformVisualization {
+#translateVis, #rotateVis, #scaleVis {
 	display:none;
 }
-#mbtransformVisualization.active {
-	display:block;
+
+#mbtransformHandleGroup.active.translate #translateVis,
+#mbtransformHandleGroup.active.rotate #rotateVis,
+#mbtransformHandleGroup.active.scale #scaleVis { 
+	display:block; 
 }
 
 .transformVis {
@@ -225,7 +228,7 @@
 	stroke-width: 1;
 }
 
-g#mbtransformVisualization text {
+#translateVis text, #rotateVis text, #scaleVis text {
 	font-family: DIN Pro, Roboto, Courier monospace;
 	font-size: 9px;
 	fill: #5555ff;
