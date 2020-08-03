@@ -11,6 +11,7 @@ from os import path
 import shutil
 import logging
 import re
+import yaml
 
 
 from flask.ext.babel import gettext
@@ -414,12 +415,13 @@ class PhotoCreator(object):
 		self.saveRaw = True
 		self.rawLock = Lock()
 		self._flag_send_img_to_analytics = None
-		self.last_markers = None
 
 		if debug:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
 		else:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.INFO)
+
+		self.last_markers, self.last_shutter_speed = self.load_camera_settings()
 		if self._settings.get(["cam", "keepOriginals"]):
 			self.tmp_img_raw = self.final_image_path.replace('.jpg', "-tmp{}.jpg".format(time.time()))
 			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
@@ -484,9 +486,10 @@ class PhotoCreator(object):
 			self._logger.debug("Starting the camera now.")
 			camera_worker = MrbPicWorker(maxSize=2, debug=self.debug)
 			with MrbCamera(camera_worker,
-                           framerate=0.8,
-                           resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
-                           stopEvent=self.stopEvent,) as cam:
+			               framerate=0.8,
+			               shutter_speed=self.last_shutter_speed,
+			               resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
+			               stopEvent=self.stopEvent,) as cam:
 				try:
 					self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 				except Exception:
@@ -740,7 +743,9 @@ class PhotoCreator(object):
 								 force_upload=(count_sent_pictures_analytics%10==0),
 								 notify_user=False)
 
+		self.last_shutter_speed = cam.shutter_speed
 		cam.stop_preview()
+		self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 		if session_details['num_pics'] > 0:
 			session_details.update(
 				{'settings_min_marker_size': self._settings.get(['cam', 'markerRecognitionMinPixel'])}
@@ -921,6 +926,72 @@ class PhotoCreator(object):
 			shutil.move(src, dest)
 		except Exception as e:
 			self._logger.warn("exception_while_moving_file-_%s", e)
+
+	def load_camera_settings(self, path='/home/pi/.octoprint/cam/last_session.yaml'):
+		"""
+		Loads the settings saved from the last session.
+		The file is located by default at .octoprint/cam/pic_settings.yaml
+		"""
+		backup = '/home/pi/.octoprint/cam/last_markers.json'
+		if os.path.isfile(path):
+			_path = path
+		else:
+			self._logger.info("last_session.yaml does not exist, using legacy backup (last_markers.json)")
+			_path = backup
+		try:
+			ret = []
+			with open(_path) as f:
+				settings = yaml.load(f) or {}
+				if _path == backup:
+					# No shutter speed info
+					settings = {k: v[-1] for k, v in settings.items()}
+					ret = [settings, None]
+				else:
+					for k in ['calibMarkers', 'shutter_speed']:
+						ret.append(settings.get(k, None))
+			return ret
+		except OSError as e:
+			self._logger.error(e)
+			return [None]*2
+
+	@logme(True)
+	def save_camera_settings(
+		self,
+		path='/home/pi/.octoprint/cam/last_session.yaml',
+		markers = None,
+		shutter_speed = None
+	):
+		"""
+		Save the settings given for the next sesison.
+		The file is located by default at .octoprint/cam/pic_settings.yaml
+		"""
+		if markers is None and shutter_speed is None:
+			# Nothing to save
+			return
+		_markers = copy.deepcopy(markers)
+		if type(_markers) is dict:
+			for k, v in _markers.items():
+				if type(v) is np.ndarray:
+					_markers[k] = v.tolist()
+		settings = {}
+		try:
+			with open(path) as f:
+				settings = yaml.load(f)
+		except (OSError, IOError) as e:
+			self._logger.warning("file %s does not exist or could not be read. Overwriting..." % path)
+
+		for k, v in [['calibMarkers', _markers],
+			     ['shutter_speed', shutter_speed]]:
+			if v is not None:
+				settings[k] = v
+		try:
+			with open(path, 'w') as f:
+				f.write(yaml.dump(settings))
+		except (OSError, IOError) as e:
+			self._logger.error(e)
+		except TypeError as e:
+			self._logger.warning("Data that I tried writing to %s :\n%s" % (path, settings))
+
 
 def blank_session_details():
 	"""
