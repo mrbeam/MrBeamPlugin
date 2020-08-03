@@ -166,9 +166,9 @@ class MrbCamera(PiCamera, Camera):
 	# 	for a in args:
 
 
-	### Experimental & unused ###
 
 	def anti_rolling_shutter_banding(self):
+		### Experimental & unused ###
 		"""mitigates the horizontal banding due to rolling shutter interaction with 50Hz/60Hz lights"""
 		# TODO 60Hz countries
 		self._logger.debug("Shutter speed : %i", self.shutter_speed)
