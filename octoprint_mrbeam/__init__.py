@@ -1797,6 +1797,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except IOError:
 			self._logger.debug("previous pic settings were not present")
 			pic_settings = {}
+		pic_settings = pic_settings or {} # pic_settings is None if file exists but empty
 
 		pic_settings['cornersFromImage'] = newCorners
 		pic_settings['calibMarkers'] = newMarkers

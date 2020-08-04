@@ -78,7 +78,7 @@ class LoopThread(threading.Thread):
 
 class MrbCamera(PiCamera, Camera):
 
-	def __init__(self, worker, stopEvent=None, *args, **kwargs):
+	def __init__(self, worker, stopEvent=None, shutter_speed=None, *args, **kwargs):
 		"""
 		Record pictures asynchronously in order to perform corrections
 		simultaneously on the previous images.
@@ -110,6 +110,8 @@ class MrbCamera(PiCamera, Camera):
 			stopFlag=self.stopEvent,
 			args=(self.worker,),
 			kwargs={'format': 'jpeg'},)
+		if shutter_speed is not None:
+			self.shutter_speed = shutter_speed
 		# TODO load the default settings
 
 	def start(self):
@@ -166,9 +168,9 @@ class MrbCamera(PiCamera, Camera):
 	# 	for a in args:
 
 
-	### Experimental & unused ###
 
 	def anti_rolling_shutter_banding(self):
+		### Experimental & unused ###
 		"""mitigates the horizontal banding due to rolling shutter interaction with 50Hz/60Hz lights"""
 		# TODO 60Hz countries
 		self._logger.debug("Shutter speed : %i", self.shutter_speed)
