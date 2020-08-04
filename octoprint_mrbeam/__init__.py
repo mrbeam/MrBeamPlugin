@@ -547,7 +547,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	@property
 	def calibration_tool_mode(self):
-		"""Get the support mode"""
+		"""Get the calibration tool mode"""
 		ret = set_calibration_tool_mode(self)
 		self._fixEmptyUserManager()
 		return ret
@@ -1102,6 +1102,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/engrave_calibration_markers/<string:intensity>/<string:feedrate>", methods=["GET"])
 	# @firstrun_only_access #@maintenance_stick_only_access
 	def engraveCalibrationMarkers(self, intensity, feedrate):
+		if not self.calibration_tool_mode:
+			return NO_CONTENT
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		max_intensity = 1300  # TODO get magic numbers from profile
 		min_intensity = 0
