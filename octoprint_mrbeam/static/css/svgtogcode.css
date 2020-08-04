@@ -794,18 +794,31 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	text-shadow: 0 0 10px white;
 }
 
-.requirement::after {
+.camera-status-images .camera-image-description {
+	vertical-align: top;
+	font-size: small;
+}
+
+.camera-status-support .fa-download {
+	color: #e25303;
+    margin: 0 2px;
+}
+
+.requirement-status::after,
+.requirement::before {
 	font-family: FontAwesome3;
 	-webkit-font-smoothing: antialiased;
 	margin-left: 5px;
 }
 
-.requirement.requirement-met::after {
+.requirement-status.requirement-met::after,
+.requirement.requirement-met::before {
 	content: "\f00c";
 	color: #00d400;
 }
 
-.requirement.requirement-not-met::after {
+.requirement-status.requirement-not-met::after,
+.requirement.requirement-not-met::before {
 	content: "\f00d";
 	color: red;
 }

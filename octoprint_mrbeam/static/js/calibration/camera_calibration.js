@@ -39,7 +39,6 @@ $(function () {
 		self.startupComplete = ko.observable(false);
 		self.calibrationScreenShown = ko.observable(false);
 		self.waitingForRefresh = ko.observable(true);
-        self.isHomed = ko.observable(false);
 
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
@@ -86,18 +85,45 @@ $(function () {
 		self.currentMarker = 0;
 		self.calibrationMarkers = [
 			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
-			{name: 'NW', desc: 'North West', focus: [0, 0, 4]},
-			{name: 'SW', desc: 'North East', focus: [0, DEFAULT_IMG_RES[1], 4]},
-			{name: 'SE', desc: 'South East', focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
-			{name: 'NE', desc: 'South West', focus: [DEFAULT_IMG_RES[0], 0, 4]}
+			{name: 'NW', desc: self.camera.MARKER_DESCRIPTIONS['NW'], focus: [0, 0, 4]},
+			{name: 'SW', desc: self.camera.MARKER_DESCRIPTIONS['SW'], focus: [0, DEFAULT_IMG_RES[1], 4]},
+			{name: 'SE', desc: self.camera.MARKER_DESCRIPTIONS['SE'], focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
+			{name: 'NE', desc: self.camera.MARKER_DESCRIPTIONS['NE'], focus: [DEFAULT_IMG_RES[0], 0, 4]}
 		];
 
-		self.cameraStateOk = ko.computed(function () {
+		// ---------------- CAMERA STATUS ----------------
+		self.cameraStatusOk = ko.computed(function () {
 			return self.readyToLaser.lid_fully_open()
                 && self.state.isOperational()
-                && self.isHomed()  // todo iratxe: this should be isHomed or similar
                 && self.camera.markerState() === 4;
 		})
+
+        self.lidMessage  = ko.computed(function() {
+            return self.readyToLaser.lid_fully_open() ?
+                gettext("The lid is open") :
+                gettext("The lid is closed: Please open the lid to start the camera");
+        });
+
+		self.operationalMessage  = ko.computed(function() {
+            return self.state.isOperational() ?
+                gettext("Mr Beam is in status Operational") :
+                gettext("Mr Beam is not in status Operational: Camera does not work during a laser job");
+        });
+
+		self.markersMessage  = ko.computed(function() {
+		    let notFound = [];
+		    for (const [marker, found] of Object.entries(self.camera.markersFound())) {
+		        console.log(found)
+                if (!found) {
+                    notFound.push(self.camera.MARKER_DESCRIPTIONS[marker]);
+                }
+            }
+		    let notFoundStr = notFound.join(", ")
+
+            return self.camera.markerState() === 4 ?
+                gettext("All 4 pink corner markers are recognized") :
+                gettext("Not all pink corner markers are recognized. Missing markers: ") + notFoundStr;
+        });
 
 		// ---------------- CAMERA ALIGNMENT ----------------
 		self.qa_cameraalignment_image_loaded = ko.observable(false);
@@ -247,20 +273,6 @@ $(function () {
 			// self.goto('#camera_settings_view');
             self.abortCalibration()
 		}
-
-		self.fromCurrentData = function(payload) {
-            self._fromData(payload);
-        };
-
-        self._fromData = function(payload, event) {
-            if (!payload || !'mrb_state' in payload || !payload['mrb_state']) {
-                return;
-            }
-            let mrb_state = payload['mrb_state'];
-            if (mrb_state) {
-                self.isHomed(mrb_state['is_homed']);
-            }
-        };
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';

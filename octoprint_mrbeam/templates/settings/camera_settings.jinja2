@@ -4,79 +4,80 @@
         <h3>{{ _("Camera") }}</h3>
 
         <div class="camera-settings-section">
-            <h4 class="requirement"
-                data-bind="css: cameraStateOk() == true ? 'requirement-met' : 'requirement-not-met'">
+            <h4 class="requirement-status"
+                data-bind="css: cameraStatusOk() == true ? 'requirement-met' : 'requirement-not-met'">
                 {{ _("Status") }}
             </h4>
+            <div data-bind="visible: !availablePicUrl()['raw']">
+                <p>{{ _("The camera is not able to take new pictures. Please check the following:") }}</p>
+            </div>
+
+            <ul class="camera-requirements">
+                <li class="requirement"
+                    data-bind="css: readyToLaser.lid_fully_open() == true ? 'requirement-met' : 'requirement-not-met'">
+                    <span data-bind="text: lidMessage()"></span>
+                </li>
+                <li class="requirement"
+                    data-bind="css: state.isOperational() ==  true ? 'requirement-met' : 'requirement-not-met'">
+                    <span data-bind="text: operationalMessage()"></span>
+                </li>
+                <li class="requirement"
+                    data-bind="css: camera.markerState() == 4 ? 'requirement-met' : 'requirement-not-met'">
+                    <span data-bind="text: markersMessage()"></span>
+                    <span class="muted show_only_online">({{ _("More about markers %(opening_tag)shere%(closing_tag)s.",
+                opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000577720-message-preview-not-accurate-and-pink-circles-flashing-on-working-area" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }})</span>
+                    <span class="muted show_only_offline">({{ _("More about markers %(opening_tag)shere%(closing_tag)s.",
+                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000577720_pink_markers\')"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }})</span>
+                </li>
+            </ul>
+
             <table class="camera-status-images" data-bind="visible: availablePicUrl()['raw']">
                 <tr>
-                    <td>
-                        <img data-bind="attr: {src: availablePicUrl()['raw']}"/>
-                        <a data-bind="attr: { href: availablePicUrl()['raw'] }">
-                            <i class="fa fa-download" aria-hidden="true"></i>
-                        </a>
-                    </td>
-                    <td>
-                        <img data-bind="attr: {src: availablePicUrl()['lens_corrected']}"/>
-                        <a data-bind="attr: { href: availablePicUrl()['lens_corrected'] }">
-                            <i class="fa fa-download" aria-hidden="true"></i>
-                        </a>
-                    </td>
                     <td>
                         <img data-bind="attr: {src: availablePicUrl()['cropped']}"/>
                         <a data-bind="attr: { href: availablePicUrl()['cropped'] }">
                             <i class="fa fa-download" aria-hidden="true"></i>
                         </a>
                     </td>
+                    <td>
+                        <img data-bind="attr: {src: availablePicUrl()['raw']}"/>
+                        <a data-bind="attr: { href: availablePicUrl()['raw'] }">
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                        </a>
+                    </td>
                 </tr>
                 <tr>
-                    <td><strong>{{ _("Raw") }}</strong></td>
-                    <td><strong>{{ _("Undistorted") }}</strong></td>
-                    <td><strong>{{ _("Cropped") }}</strong></td>
+                    <td><strong>{{ _("Processed Camera Picture") }}</strong></td>
+                    <td><strong>{{ _("Raw Camera Picture") }}</strong></td>
                 </tr>
                 <tr>
-                    <td>{{ _("The picture taken by the camera") }}</td>
-                    <td>{{ _("After lens calibration") }}</td>
-                    <td>{{ _("Final, as shown in the working area") }}</td>
+                    <td class="camera-image-description muted">{{ _("as you see it in the working area of Mr Beam software") }}</td>
+                    <td class="camera-image-description muted">{{ _("actual camera picture, before it is adjusted in the software by fixing the perspective, angle and colour") }}</td>
                 </tr>
             </table>
 
-            <div data-bind="visible: !availablePicUrl()['raw']">
-                <p>{{ _("The camera is not able to take new pictures. Please check the following:") }}</p>
-            </div>
-            <ul class="camera-requirements">
-                <li class="requirement"
-                    data-bind="css: readyToLaser.lid_fully_open() == true ? 'requirement-met' : 'requirement-not-met'">
-                    {{ _("The lid is open.") }}</li>
-                <li class="requirement"
-                    data-bind="css: state.isOperational() ==  true ? 'requirement-met' : 'requirement-not-met'">
-                    {{ _("Mr Beam is operational.") }}</li>
-                <li class="requirement"
-                    data-bind="css: isHomed() ==  true ? 'requirement-met' : 'requirement-not-met'">
-                    {{ _("The leaser head is in the homing position.") }}</li>
-                <ul data-bind="visible: !isHomed()">
-                    <li>
-                        <button class="btn-link" data-bind="click: control.sendHomeCommand()">
-                            {{ _("Home now") }}
-                        </button>
-                    </li>
-                </ul>
-                <li class="requirement"
-                    data-bind="css: camera.markerState() == 4 ? 'requirement-met' : 'requirement-not-met'">
-                    {{ _("The 4 markers are recognized.") }}</li>
-            </ul>
-
-            <div class='show_only_online'>
-                {{ _("Do you have problems with the camera? Check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
+            <div class="camera-status-support">
+                <div class='show_only_online'>
+                    <strong>{{ _("Do you have problems with the camera?") }}</strong>
+                    {{ _("Please check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
                 opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000582595-trouble-shooting-how-to-solve-problems-with-the-camera-" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}
-            </div>
-            <div class='show_only_offline'>
-                {{ _("Do you have problems with the camera? Check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
+
+                </div>
+                <div class='show_only_offline'>
+                    <strong>{{ _("Do you have problems with the camera?") }}</strong>
+                    {{ _("Please check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
                 opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000582595_camera_troubleshooting\')"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}
-            </div>
 
+                </div>
+                <small data-bind="visible: availablePicUrl()['raw']">
+                    <i class="fa fa-download"
+                       aria-hidden="true"></i>: {{ _("You can use the download button on the images to save your camera picture and provide it to the support team, if necessary.") }}
+                </small>
+            </div>
         </div>
         {#        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,#}
         {#        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,#}
