@@ -166,9 +166,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.set_serial_setting()
 
-		# Enable or disable internal support user.
-		self.support_mode = set_support_mode(self)
-		self.calibration_tool_mode = set_calibration_tool_mode(self)
 		self._fixEmptyUserManager()
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
@@ -538,6 +535,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._settings.get(["dev", "load_gremlins"]):
 			assets['js'].append('js/lib/gremlins.min.js')
 		return assets
+
+	##~~ Helper attributes for different modes
+	# Enable or disable internal support user.
+	@property
+	def support_mode(self):
+		"""Get the support mode"""
+		ret = set_support_mode(self)
+		self._fixEmptyUserManager()
+		return ret
+
+	@property
+	def calibration_tool_mode(self):
+		"""Get the support mode"""
+		ret = set_calibration_tool_mode(self)
+		self._fixEmptyUserManager()
+		return ret
 
 	##~~ UiPlugin mixin
 
@@ -961,8 +974,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return False
 
 	@octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
-	# @firstrun_only_access
 	def calibration_wrapper(self):
+		if not self.calibration_tool_mode:
+			return NO_CONTENT
 		from flask import make_response, render_template
 		from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
 
