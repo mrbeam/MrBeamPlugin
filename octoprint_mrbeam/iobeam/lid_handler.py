@@ -724,6 +724,7 @@ class PhotoCreator(object):
 			self._add_result_to_analytics(
 				session_details,
 				markers,
+				missed=missed,
 				increment_pic=True,
 				error=err,
 				extra=analytics
@@ -750,11 +751,12 @@ class PhotoCreator(object):
 			self._analytics_handler.add_camera_session_details(session_details)
 		self._logger.debug("PhotoCreator_stopping")
 
-	# @logme(True)
+	@logme(True)
 	def _add_result_to_analytics(
 			self,
 			session_details,
 			markers,
+			missed=[],
 			colors={},
 			marker_size={},
 			increment_pic=False,
@@ -790,7 +792,7 @@ class PhotoCreator(object):
 			tot_pics = _s['num_pics']
 			for qd in QD_KEYS:
 				_s_marker = _s['markers'][qd]
-				if qd in markers.keys() and markers[qd] is not None:
+				if qd in markers.keys() and qd not in missed and markers[qd] is not None:
 					_marker = np.asarray(markers[qd])
 					# Position : Avg & Std Deviation
 					_n_avg, _n_std = add_to_stat(
@@ -823,6 +825,8 @@ class PhotoCreator(object):
 				else:
 					_s['errors'][error] = 1
 			_s['avg_shutter_speed'] = updt(_s['avg_shutter_speed'], extra['avg_shutter_speed'], weights=[tot_pics, 1])
+			if len(missed) == 0:
+				_s['num_all_markers_detected'] += 1
 		except Exception as ex:
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 
