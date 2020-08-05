@@ -216,6 +216,19 @@
 	display:none;
 }
 
+#scaleVis.showX #scaleXVis, 
+#scaleVis.showX #scaleXText, 
+#scaleVis.showY #scaleYVis, 
+#scaleVis.showY #scaleYText {
+	display: block;
+} 
+#scaleVis #scaleXVis, 
+#scaleVis #scaleXText, 
+#scaleVis #scaleYVis, 
+#scaleVis #scaleYText {
+	display: none;
+} 
+
 #mbtransformHandleGroup.active.translate #translateVis,
 #mbtransformHandleGroup.active.rotate #rotateVis,
 #mbtransformHandleGroup.active.scale #scaleVis { 

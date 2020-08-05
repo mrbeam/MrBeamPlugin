@@ -40,6 +40,7 @@
 			self.scaleHandleS = paper.select('#scaleHandleSS');
 			self.scaleHandleW = paper.select('#scaleHandleWW');
 			self.rotHandle = paper.select('#rotHandle');
+			
 			self.translateXVis = paper.select('#translateXVis');
 			self.translateYVis = paper.select('#translateYVis');
 			self.scaleVis = paper.select('#scaleVis');
@@ -363,6 +364,10 @@
 			self.session.initialMatrix = self.translateHandle.transform().totalMatrix; // stack of scale, rotate, translate matrices
 
 			self.session.bb = self._transformBBox(self.session.bboxWithoutTransform, self.session.initialMatrix); 
+			
+			if(self.config.visualization){
+				self._visualizeTransform();
+			}
 		}
 		
 		self._sessionUpdate = function(){
@@ -709,44 +714,38 @@
 		self._visualizeScale = function () {
 //			if(self.session.scale.sx !== 1 || self.session.scale.sy !== 1) {
 			const gap = 15;
-			const dist = 10;
 			const sss = self.session.scale;
-			const mouseX = sss.mx + sss.dxMM; 
-			const mouseY = sss.my + sss.dyMM; 
+			const handleX = sss.mx + sss.dxMM; 
+			const handleY = sss.my + sss.dyMM; 
 			const cx = sss.cx;
 			const cy = sss.cy;
-			const mirrorX = mouseY < cy ? 1 : -1;
-			const mirrorY = mouseX < cx ? 1 : -1;
-			const width = self.session.bb.width * sss.sx;
-			const height = self.session.bb.height * sss.sy;
+			const mirrorX = handleY < cy ? 1 : -1;
+			const mirrorY = handleX < cx ? 1 : -1;
+			const width = self.session.bboxWithoutTransform.width * self.session.scale._m.a * sss.sx;
+			const height = self.session.bboxWithoutTransform.height * self.session.scale._m.d * sss.sy;
 			
 			const visM = Snap.matrix(1,0,0,1,cx, cy);
 			self.scaleVis.transform(visM);
+			self.scaleVis.node.classList.toggle('showX', sss.signX !== 0);
+			self.scaleVis.node.classList.toggle('showY', sss.signY !== 0);
 			
-			let transformX = '';
-			let labelX = '';
-			if(sss.sx !== 1 && sss.signX !== 0 && sss.dominantAxis !== 'y'){ // show only if: axis is scaled && handle is scaling this axis && this axis is dominant in proportional scaling
-				if(cy < mouseY){ // show above
-					
-				} else { // show below
-					
-				}
-				transformX = Snap.matrix(width,0,0,mirrorX,0,0)
-				labelX = `${width.toFixed(1)}'mm' / ${(sss.sx*100).toFixed(1)}%`;
-				self.scaleXText.transform(Snap.matrix(1,0,0,1,(cx + mouseX)/2, cy + gap * mirrorX ));
-			} 
+			const xX = (handleX > cx) ? 0 : -width; 
+			const xTextOffset = (handleY > cy) ? -gap/2 : gap; // <text> origin is the baseline, not the vertical center => compensate this
+			const xY = (handleY > cy) ? -gap : +gap; // above or below transform handle bbox
+			const transformX = Snap.matrix(width,0,0,mirrorX,xX,xY);
 			self.scaleXVis.transform(transformX);
+			const labelX = `${width.toFixed(1)}'mm' / ${(sss.sx*100).toFixed(1)}%`;
 			self.scaleXText.node.textContent = labelX;
-			
-			let transformY = '';
-			let labelY = '';
-			if(sss.sy !== 1 && sss.signY !== 0 && sss.dominantAxis !== 'x'){
-				transformY = Snap.matrix(mirrorY,0,0,height,0,0);
-				labelY = `${height.toFixed(1)}mm / ${(sss.sy*100).toFixed(1)}%`;
-				self.scaleYText.transform(Snap.matrix(1,0,0,1, cx + gap * mirrorY, (cy + mouseY)/2));
-			} 
+			self.scaleXText.transform(Snap.matrix(1,0,0,1,xX + width/2, xY + xTextOffset));
+
+			const yX = (handleX > cx) ? -gap : +gap;
+			const yTextOffset = (handleX > cx) ? -gap : gap; // <text> origin is the baseline, not the vertical center => compensate this
+			const yY = (handleY > cy) ? 0 : -height;
+			const transformY = Snap.matrix(mirrorY,0,0,height,yX,yY);
 			self.scaleYVis.transform(transformY);
+			const labelY = `${height.toFixed(1)}mm / ${(sss.sy*100).toFixed(1)}%`;
 			self.scaleYText.node.textContent = labelY;	
+			self.scaleYText.transform(Snap.matrix(0,-1,1,0, yX + yTextOffset, yY + height/2));
 			
 		}
 
