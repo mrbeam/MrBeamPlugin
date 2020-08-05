@@ -725,7 +725,6 @@ class PhotoCreator(object):
 			))
 			self._add_result_to_analytics(
 				session_details,
-				missed=missed,
 				increment_pic=True,
 				error=err,
 				extra=analytics
@@ -760,7 +759,6 @@ class PhotoCreator(object):
 			session_details,
 			colors={},
 			marker_size={},
-			missed=[],
 			increment_pic=False,
 			colorspace='hsv',
 			upload_speed=None,
@@ -793,9 +791,7 @@ class PhotoCreator(object):
 			tot_pics = _s['num_pics']
 			for qd in QD_KEYS:
 				_s_marker = _s['markers'][qd]
-				if qd in self.last_markers.keys() \
-				   and qd not in missed \
-				   and self.last_markers[qd] is not None:
+				if qd in self.last_markers.keys() and self.last_markers[qd] is not None:
 					_marker = np.asarray(self.last_markers[qd])
 					# Position : Avg & Std Deviation
 					_n_avg, _n_std = add_to_stat(
@@ -828,8 +824,6 @@ class PhotoCreator(object):
 				else:
 					_s['errors'][error] = 1
 			_s['avg_shutter_speed'] = updt(_s['avg_shutter_speed'], extra['avg_shutter_speed'], weights=[tot_pics, 1])
-			if len(missed) == 0:
-+				_s['num_all_markers_detected'] += 1
 		except Exception as ex:
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 
