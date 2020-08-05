@@ -2053,11 +2053,8 @@ input.search-query,
     display: inline-block;
 }
 
-#wa_filelist .file_list_entry .dropdown li.mrb_inactive_item {
-    padding: 0.6em 0.8em;
-}
-
 #wa_filelist .file_list_entry .dropdown li {
+    padding: 0 0.7em;
     color: #555;
 }
 
@@ -2920,9 +2917,9 @@ input.search-query,
 }
 
 
-/*MRB Menus*/
+/*Settings and burger Menu items*/
 
-.mrb_menu ul.dropdown-menu,
+#burger_menu ul.dropdown-menu,
 #navbar_login ul.dropdown-menu,
 #navbar_systemmenu ul.dropdown-menu,
 #settings_dialog #settings_dialog_menu ul {
@@ -2936,21 +2933,21 @@ input.search-query,
     border-bottom: 1px solid rgba(0, 0, 0, 0.4);
 }
 
-.mrb_menu ul.dropdown-menu li.divider,
+#burger_menu ul.dropdown-menu li.divider,
 #navbar_systemmenu ul.dropdown-menu li.divider,
 #navbar_login ul.dropdown-menu li.divider{
     margin-top:0;
     margin-bottom: 0;
 }
 
-.mrb_menu ul.dropdown-menu li:last-child,
+#burger_menu ul.dropdown-menu li:last-child,
 #navbar_login ul.dropdown-menu li:last-child,
 #navbar_systemmenu ul.dropdown-menu li:last-child,
 #settings_dialog #settings_dialog_menu ul li:last-child {
     border-bottom: none;
 }
 
-.mrb_menu ul.dropdown-menu li.active,
+#burger_menu ul.dropdown-menu li.active,
 #navbar_login ul.dropdown-menu li.active,
 #navbar_systemmenu ul.dropdown-menu li.active,
 #settings_dialog #settings_dialog_menu ul li.active {
@@ -2958,7 +2955,7 @@ input.search-query,
     margin-bottom: 1px;
 }
 
-.mrb_menu ul.dropdown-menu li.active:hover,
+#burger_menu ul.dropdown-menu li.active:hover,
 #navbar_login ul.dropdown-menu li.active:hover,
 #navbar_systemmenu ul.dropdown-menu li.active:hover,
 #settings_dialog #settings_dialog_menu ul li.active:hover {
@@ -2971,14 +2968,14 @@ input.search-query,
     margin-bottom: 1px;
 }
 
-.mrb_menu ul.dropdown-menu li a,
+#burger_menu ul.dropdown-menu li a,
 #navbar_login ul.dropdown-menu li a,
 #navbar_systemmenu ul.dropdown-menu li a{
     border-radius: 3px;
     padding: 9px 20px;
 }
 
-.mrb_menu ul.dropdown-menu li a i ,
+#burger_menu ul.dropdown-menu li a i ,
 #navbar_login ul.dropdown-menu li a i,
 #navbar_systemmenu ul.dropdown-menu li a i {
     margin-right: 5px;
@@ -2990,10 +2987,10 @@ input.search-query,
     padding: 6px 15px;
 }
 
-.mrb_menu ul.dropdown-menu li a:hover,
+#burger_menu ul.dropdown-menu li a:hover,
 #navbar_login ul.dropdown-menu li a:hover,
 #navbar_systemmenu ul.dropdown-menu li a:hover,
-.mrb_menu ul.dropdown-menu li a:focus,
+#burger_menu ul.dropdown-menu li a:focus,
 #navbar_login ul.dropdown-menu li a:focus,
 #navbar_systemmenu ul.dropdown-menu li a:focus,
 #settings_dialog #settings_dialog_menu ul li a:hover {
@@ -3003,25 +3000,25 @@ input.search-query,
     outline: none;
 }
 
-.mrb_menu ul.dropdown-menu li>a:hover,
+#burger_menu ul.dropdown-menu li>a:hover,
 #navbar_login ul.dropdown-menu li>a:hover,
 #navbar_systemmenu ul.dropdown-menu li>a:hover,
-.mrb_menu ul.dropdown-menu li>a:focus,
+#burger_menu ul.dropdown-menu li>a:focus,
 #navbar_login ul.dropdown-menu li>a:focus,
 #navbar_systemmenu ul.dropdown-menu li>a:focus,
-.mrb_menu ul.dropdown-menu:hover>a,
+#burger_menu ul.dropdown-menu:hover>a,
 #navbar_login ul.dropdown-menu:hover>a,
 #navbar_systemmenu ul.dropdown-menu:hover>a,
-.mrb_menu ul.dropdown-menu .active>a,
+#burger_menu ul.dropdown-menu .active>a,
 #navbar_login ul.dropdown-menu .active>a,
 #navbar_systemmenu ul.dropdown-menu .active>a,
-.mrb_menu ul.dropdown-menu .active>a:hover,
+#burger_menu ul.dropdown-menu .active>a:hover,
 #navbar_login ul.dropdown-menu .active>a:hover,
 #navbar_systemmenu ul.dropdown-menu .active>a:hover {
  background-image: none;
 }
 
-.mrb_menu ul.dropdown-menu li.active a,
+#burger_menu ul.dropdown-menu li.active a,
 #navbar_login ul.dropdown-menu li.active a,
 #navbar_systemmenu ul.dropdown-menu li.active a,
 #settings_dialog #settings_dialog_menu ul li.active a {
@@ -3029,14 +3026,14 @@ input.search-query,
     background-color: #E25303;
 }
 
-.mrb_menu ul.dropdown-menu li.active a:hover,
+#burger_menu ul.dropdown-menu li.active a:hover,
 #navbar_login ul.dropdown-menu li.active a:hover,
 #navbar_systemmenu ul.dropdown-menu li.active a:hover,
 #settings_dialog #settings_dialog_menu ul li.active a:hover {
     background-color: #E25303;
 }
 
-.mrb_menu ul.dropdown-menu .prev,
+#burger_menu ul.dropdown-menu .prev,
 #navbar_login ul.dropdown-menu .prev,
 #navbar_systemmenu ul.dropdown-menu .prev,
 #settings_dialog #settings_dialog_menu ul .prev {
@@ -3044,7 +3041,7 @@ input.search-query,
     margin-bottom: 1px;
 }
 
-/*MRB Menus*/
+/*Settings and burger Menu items*/
 
 /*App font family*/
 

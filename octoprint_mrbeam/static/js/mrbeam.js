@@ -394,56 +394,9 @@ $(function () {
                 self.loginState.loginUser('dev'+String.fromCharCode(0x0040)+'mr-beam.org')
                 self.loginState.loginPass('a')
             }
-        };
+        }
 
-        // Backdrop Temporary Solution - start
-        // Todo: should be removed once OctoPrint is updated
-        const mutationTargetNode = document.body;
-        const mutationConfig = {
-            childList: true,
-            attributes: false,
-            characterData: false,
-            subtree: false,
-            attributeOldValue: false,
-            characterDataOldValue: false
-        };
-        const mutationCallback = function(mutationsList, observer) {
-            for(let mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-                    (function ($) {
-                        $.fn.inlineStyle = function (prop) {
-                            return this.prop("style")[$.camelCase(prop)];
-                        };
-                    }(jQuery));
-                    let modalElement = $(".modal-scrollable");
-                    let backDrop = $('.modal-backdrop');
-                    if(modalElement.length !== 0){
-                        modalElement.each(function() {
-                        if(!$(this)[0].hasChildNodes() && modalElement.length === 1){
-                            $('body').removeClass('modal-open');
-                            backDrop.remove();
-                            $(this)[0].remove();
-                        } else if(!$(this)[0].hasChildNodes() && modalElement.length > 1 && $(this).next().hasClass("modal-backdrop")){
-                            $(this).next().remove();
-                            $(this)[0].remove();
-                        } else if($(this)[0].hasChildNodes() && modalElement.length === 1 && $(this).find(".modal.hide.fade").inlineStyle("display") === "none"){
-                            setTimeout(() => {
-                                if($(this).find(".modal.hide.fade").hasClass("modal") && $(this).find(".modal.hide.fade").inlineStyle("display") === "none") {
-                                    document.body.append($(this).find(".modal.hide.fade")[0]);
-                                }
-                            }, 500);
-                        }
-                    });
-                    } else if(modalElement.length === 0 && backDrop.length !== 0){
-                        backDrop.remove();
-                    }
-                }
-            }
-        };
-        const observer = new MutationObserver(mutationCallback);
-        observer.observe(mutationTargetNode, mutationConfig);
-        // Backdrop Temporary Solution - end
-    }
+    };
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([

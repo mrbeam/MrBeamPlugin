@@ -11,7 +11,6 @@ from os import path
 import shutil
 import logging
 import re
-import yaml
 
 
 from flask.ext.babel import gettext
@@ -420,8 +419,6 @@ class PhotoCreator(object):
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
 		else:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.INFO)
-
-		self.last_markers, self.last_shutter_speed = self.load_camera_settings()
 		if self._settings.get(["cam", "keepOriginals"]):
 			self.tmp_img_raw = self.final_image_path.replace('.jpg', "-tmp{}.jpg".format(time.time()))
 			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
@@ -486,10 +483,9 @@ class PhotoCreator(object):
 			self._logger.debug("Starting the camera now.")
 			camera_worker = MrbPicWorker(maxSize=2, debug=self.debug)
 			with MrbCamera(camera_worker,
-			               framerate=0.8,
-			               shutter_speed=self.last_shutter_speed,
-			               resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
-			               stopEvent=self.stopEvent,) as cam:
+                           framerate=0.8,
+                           resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
+                           stopEvent=self.stopEvent,) as cam:
 				try:
 					self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 				except Exception:
@@ -568,6 +564,8 @@ class PhotoCreator(object):
 			[4 * DEFAULT_MM_TO_PX, LOW_QUALITY]
 		]
 		pic_qual_index = 0
+		# Marker positions detected on the last loop
+		markers = None
 		# waste the first picture : doesn't matter how long we wait to warm up, the colors will be off.
 		cam.wait()
 		while self._plugin.lid_handler._lid_closed:
@@ -673,13 +671,13 @@ class PhotoCreator(object):
 			min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 			# NOTE -- prepareImage is bloat, TODO spill content here
 			saveLensCorrected = True
-			workspaceCorners, self.last_markers, missed, err, analytics, savedPics = prepareImage(
+			workspaceCorners, markers, missed, err, analytics, savedPics = prepareImage(
 				input_image=latest,
 				path_to_output_image=self.tmp_img_prepared,
 				pic_settings=pic_settings,
 				cam_dist=dist,
 				cam_matrix=mtx,
-				last_markers=self.last_markers,
+				last_markers=markers,
 				size=scaled_output_size,
 				quality=quality,
 				zoomed_out=self.zoomed_out,
@@ -699,7 +697,7 @@ class PhotoCreator(object):
 				'markers_recognised': 4 - len(missed),
 				'corners_calculated': None if workspaceCorners is None else list(workspaceCorners),
 				# {k: v.astype(int) for k, v in workspaceCorners.items()},
-				'markers_pos': {qd: pos.tolist() for qd, pos in self.last_markers.items()},
+				'markers_pos': {qd: pos.tolist() for qd, pos in markers.items()},
 				'successful_correction': success,
 				'undistorted_saved': True,
 				'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
@@ -725,6 +723,7 @@ class PhotoCreator(object):
 			))
 			self._add_result_to_analytics(
 				session_details,
+				markers,
 				increment_pic=True,
 				error=err,
 				extra=analytics
@@ -737,15 +736,13 @@ class PhotoCreator(object):
 					or  (loop_counter > 10 and loop_counter % 10 == 0)):
 				count_sent_pictures_analytics += 1
 				self._send_last_img_to_analytics(latest, 'dev_auto',
-								 self.last_markers, missed,
+								 markers, missed,
 								 min_pix_amount,
 								 analytics,
 								 force_upload=(count_sent_pictures_analytics%10==0),
 								 notify_user=False)
 
-		self.last_shutter_speed = cam.shutter_speed
 		cam.stop_preview()
-		self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 		if session_details['num_pics'] > 0:
 			session_details.update(
 				{'settings_min_marker_size': self._settings.get(['cam', 'markerRecognitionMinPixel'])}
@@ -757,6 +754,7 @@ class PhotoCreator(object):
 	def _add_result_to_analytics(
 			self,
 			session_details,
+			markers,
 			colors={},
 			marker_size={},
 			increment_pic=False,
@@ -765,6 +763,7 @@ class PhotoCreator(object):
 			error=None,
 			extra=None):
 		if extra is None: extra={}
+		assert(type(markers) is dict)
 		def add_to_stat(pos, avg, std, mass):
 			# gives a new avg value and approximate std when merging the new position value.
 			# mass is the weight given to the previous avg and std.
@@ -791,8 +790,8 @@ class PhotoCreator(object):
 			tot_pics = _s['num_pics']
 			for qd in QD_KEYS:
 				_s_marker = _s['markers'][qd]
-				if qd in self.last_markers.keys() and self.last_markers[qd] is not None:
-					_marker = np.asarray(self.last_markers[qd])
+				if qd in markers.keys() and markers[qd] is not None:
+					_marker = np.asarray(markers[qd])
 					# Position : Avg & Std Deviation
 					_n_avg, _n_std = add_to_stat(
 						_marker,
@@ -926,72 +925,6 @@ class PhotoCreator(object):
 			shutil.move(src, dest)
 		except Exception as e:
 			self._logger.warn("exception_while_moving_file-_%s", e)
-
-	def load_camera_settings(self, path='/home/pi/.octoprint/cam/last_session.yaml'):
-		"""
-		Loads the settings saved from the last session.
-		The file is located by default at .octoprint/cam/pic_settings.yaml
-		"""
-		backup = '/home/pi/.octoprint/cam/last_markers.json'
-		if os.path.isfile(path):
-			_path = path
-		else:
-			self._logger.info("last_session.yaml does not exist, using legacy backup (last_markers.json)")
-			_path = backup
-		try:
-			ret = []
-			with open(_path) as f:
-				settings = yaml.load(f) or {}
-				if _path == backup:
-					# No shutter speed info
-					settings = {k: v[-1] for k, v in settings.items()}
-					ret = [settings, None]
-				else:
-					for k in ['calibMarkers', 'shutter_speed']:
-						ret.append(settings.get(k, None))
-			return ret
-		except OSError as e:
-			self._logger.error(e)
-			return [None]*2
-
-	@logme(True)
-	def save_camera_settings(
-		self,
-		path='/home/pi/.octoprint/cam/last_session.yaml',
-		markers = None,
-		shutter_speed = None
-	):
-		"""
-		Save the settings given for the next sesison.
-		The file is located by default at .octoprint/cam/pic_settings.yaml
-		"""
-		if markers is None and shutter_speed is None:
-			# Nothing to save
-			return
-		_markers = copy.deepcopy(markers)
-		if type(_markers) is dict:
-			for k, v in _markers.items():
-				if type(v) is np.ndarray:
-					_markers[k] = v.tolist()
-		settings = {}
-		try:
-			with open(path) as f:
-				settings = yaml.load(f)
-		except (OSError, IOError) as e:
-			self._logger.warning("file %s does not exist or could not be read. Overwriting..." % path)
-
-		for k, v in [['calibMarkers', _markers],
-			     ['shutter_speed', shutter_speed]]:
-			if v is not None:
-				settings[k] = v
-		try:
-			with open(path, 'w') as f:
-				f.write(yaml.dump(settings))
-		except (OSError, IOError) as e:
-			self._logger.error(e)
-		except TypeError as e:
-			self._logger.warning("Data that I tried writing to %s :\n%s" % (path, settings))
-
 
 def blank_session_details():
 	"""

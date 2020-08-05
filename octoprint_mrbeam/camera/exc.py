@@ -1,9 +1,7 @@
 try:
-	from picamera.exc import PiCameraError as _Exc
-	from picamera.exc import PiCameraMMALError as _ConnErr
+	import picamera.exc.PiCameraError as _Exc
+	import picamera.exc.PiCameraMMALError as _ConnErr
 except ImportError, OSError:
-	import logging
-	logging.warning("Could not import picamera")
 	_Exc = Exception
 	_ConnErr = Exception
 

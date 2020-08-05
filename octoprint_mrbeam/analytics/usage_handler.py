@@ -35,7 +35,6 @@ class UsageHandler(object):
 		self.start_time_carbon_filter = -1
 		self.start_time_gantry = -1
 		self.start_time_compressor = -1
-		self.start_ntp_synced = None
 
 		self._last_dust_value = None
 		self._dust_mapping_m = (self.MAX_DUST_FACTOR - self.MIN_DUST_FACTOR) / (self.MAX_DUST_VALUE - self.MIN_DUST_VALUE)
@@ -103,7 +102,6 @@ class UsageHandler(object):
 		self.start_time_laser_head = self._usage_data['laser_head'][self._laser_head_serial]['job_time']
 		self.start_time_gantry = self._usage_data['gantry']['job_time']
 		self.start_time_compressor = self._usage_data['compressor']['job_time']
-		self.start_ntp_synced = self._plugin._time_ntp_synced
 
 		self._last_dust_value = None
 
@@ -119,32 +117,16 @@ class UsageHandler(object):
 		if self.start_time_total >= 0:
 			self._update_last_dust_value()
 			self._set_time(payload['time'])
-
 			self.start_time_total = -1
 			self.start_time_laser_head = -1
 			self.start_time_prefilter = -1
 			self.start_time_carbon_filter = -1
 			self.start_time_gantry = -1
 			self.start_time_compressor = -1
-			self.start_ntp_synced = None
-
 			self.write_usage_analytics(action='job_finished')
 
 	def _set_time(self, job_duration):
 		if job_duration is not None and job_duration > 0.0:
-
-			# If it wasn't ntp synced at the beginning of the job, but it is now, we subtract the time shift
-			if self.start_ntp_synced != self._plugin._time_ntp_synced:
-				job_duration_before = job_duration
-				job_duration -= self._plugin._time_ntp_shift
-
-				ntp_details = dict(
-					time_shift=self._plugin._time_ntp_shift,
-					job_duration_before=job_duration_before,
-					job_duration_after=job_duration,
-				)
-				self._analytics_handler.add_job_ntp_sync_details(ntp_details)
-
 			dust_factor = self._calculate_dust_factor()
 			self._usage_data['total']['job_time'] = self.start_time_total + job_duration
 			self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = \
