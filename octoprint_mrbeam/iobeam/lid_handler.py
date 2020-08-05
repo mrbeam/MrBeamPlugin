@@ -829,7 +829,7 @@ class PhotoCreator(object):
 					_s['errors'][error] = 1
 			_s['avg_shutter_speed'] = updt(_s['avg_shutter_speed'], extra['avg_shutter_speed'], weights=[tot_pics, 1])
 			if len(missed) == 0:
-+				_s['num_all_markers_detected'] += 1
+				_s['num_all_markers_detected'] += 1
 		except Exception as ex:
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 
