@@ -787,6 +787,10 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	position: relative;
 }
 
+.camera-status-images .camera-picture {
+	vertical-align: bottom;
+}
+
 .camera-status-images .fa-download {
 	position: absolute;
 	bottom: 7px;

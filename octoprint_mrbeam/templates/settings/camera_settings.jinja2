@@ -36,14 +36,26 @@
             <table class="camera-status-images" data-bind="visible: availablePicUrl()['raw']">
                 <tr>
                     <td>
-                        <g data-bind="attr: { transform: workingArea.zObjectImgTransform() }">
-                           <img data-bind="attr: { src: availablePicUrl()['cropped'] }"/>
-                            <a data-bind="attr: { href: availablePicUrl()['cropped'] }">
-                                <i class="fa fa-download" aria-hidden="true"></i>
-                            </a>
-                        </g>
+                        <svg class="camera-picture" data-bind=" attr: { viewBox: workingArea.zoomViewBox(), } "
+                             xmlns:mb="http://www.mr-beam.org/mbns">
+                            <g transform="scale(1)"
+                               data-bind="attr: { transform: workingArea.zObjectImgTransform() }">
+                                <image id="beamcam_image_svg"
+                                    xlink:href="" x="0" y="0"
+                                    data-bind="attr: {
+                                            width: workingArea.workingAreaWidthMM(),
+                                            height: workingArea.workingAreaHeightMM(),
+                                            opacity: workingArea.previewImgOpacity(),
+                                            'xlink:href': camera.timestampedCroppedImgUrl()
+                                       }">
+                                </image>
+                            </g>
+                        </svg>
+                        <a data-bind="attr: { href: availablePicUrl()['cropped'] }">
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                        </a>
                     </td>
-                    <td>
+                    <td class="camera-picture">
                         <img data-bind="attr: {src: availablePicUrl()['raw']}"/>
                         <a data-bind="attr: { href: availablePicUrl()['raw'] }">
                             <i class="fa fa-download" aria-hidden="true"></i>
