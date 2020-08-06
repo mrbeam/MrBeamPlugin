@@ -11,6 +11,7 @@ from os import path
 import shutil
 import logging
 import re
+import yaml
 
 
 from flask.ext.babel import gettext
@@ -19,16 +20,15 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
+from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE, MrbPicWorker, LEGACY_STILL_RES, save_debug_img
 from octoprint_mrbeam.camera import calibration as calibration
-from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
-from octoprint_mrbeam.util import json_serialisor, logme, get_thread, makedirs
-import octoprint_mrbeam.camera.exc as exc
-import octoprint_mrbeam.camera as camera
+from octoprint_mrbeam.camera import exc as exc
 if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
 		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
+from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
+from octoprint_mrbeam.util import dict_merge, json_serialisor, logme, get_thread, makedirs
 
 SIMILAR_PICS_BEFORE_UPSCALE = 1
 LOW_QUALITY = 65 # low JPEG quality for compressing bigger pictures
@@ -54,7 +54,6 @@ def lidHandler(plugin):
 	if _instance is None:
 		_instance = LidHandler(plugin)
 	return _instance
-
 
 # This guy handles lid Events
 class LidHandler(object):
@@ -123,6 +122,7 @@ class LidHandler(object):
 			self._logger.debug("onEvent() LID_OPENED")
 			self._lid_closed = False
 			self._startStopCamera(event)
+			self.send_mrb_state()
 		if event == IoBeamEvents.INTERLOCK_OPEN:
 			self._logger.debug("onEvent() INTERLOCK_OPEN")
 			self._interlock_closed = False
@@ -133,6 +133,7 @@ class LidHandler(object):
 			self._logger.debug("onEvent() LID_CLOSED")
 			self._lid_closed = True
 			self._startStopCamera(event)
+			self.send_mrb_state()
 		elif event == OctoPrintEvents.CLIENT_OPENED:
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed)
 			self._client_opened = True
@@ -376,6 +377,11 @@ class LidHandler(object):
 			self.refresh_settings()
 		self._plugin_manager.send_plugin_message("mrbeam", dict(chessboardCalibrationState=data))
 
+	def send_mrb_state(self):
+		self._plugin_manager.send_plugin_message("mrbeam", dict(
+			mrb_state=self._plugin.get_mrb_state()))
+
+
 	@property
 	def debugFolder(self):
 		return path.join(path.dirname(self.imagePath),"debug")
@@ -414,6 +420,8 @@ class PhotoCreator(object):
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
 		else:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.INFO)
+
+		self.last_markers, self.last_shutter_speed = self.load_camera_settings()
 		if self._settings.get(["cam", "keepOriginals"]):
 			self.tmp_img_raw = self.final_image_path.replace('.jpg', "-tmp{}.jpg".format(time.time()))
 			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
@@ -476,17 +484,22 @@ class PhotoCreator(object):
 				return
 
 			self._logger.debug("Starting the camera now.")
-			camera_worker = camera.MrbPicWorker(maxSize=2, debug=self.debug)
+			camera_worker = MrbPicWorker(maxSize=2, debug=self.debug)
 			with MrbCamera(camera_worker,
-                           # framerate=8,
-                           resolution=camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
-                           stopEvent=self.stopEvent,) as cam:
-				self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+			               framerate=0.8,
+			               shutter_speed=self.last_shutter_speed,
+			               resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
+			               stopEvent=self.stopEvent,) as cam:
+				try:
+					self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+				except Exception:
+					cam.close()
+					raise
 			if recurse_nb > 0:
 				self._logger.info("Camera recovered")
 				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
 		except exc.CameraConnectionException as e:
-			self._logger.warning(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
+			self._logger.warning(" %s : %s" % (e.__class__.__name__, exc.msg(exc.CAM_CONN)),
 			                       analytics=exc.CAM_CONN)
 			if recurse_nb < MAX_PIC_THREAD_RETRIES:
 				self._logger.info("Restarting work() after some sleep")
@@ -495,10 +508,10 @@ class PhotoCreator(object):
 						notification_id='warn_cam_conn_err',
 						replay=True))
 				self.stopEvent.clear()
-				if not self.stopEvent.wait(5.0):
+				if not self.stopEvent.wait(2.0):
 					self.work(recurse_nb=recurse_nb+1)
 			else:
-				self._logger.exception(" %s, %s : Recursive restart : too many times, displaying Error message." % (e.__class__.__name__, e),
+				self._logger.error(" %s : Recursive restart : too many times, displaying Error message.\n%s, %s" % (exc.msg(exc.CAM_CONN), e.__class__.__name__, e),
 				                       analytics=exc.CAM_CONN)
 				self._plugin.user_notification_system.show_notifications(
 					self._plugin.user_notification_system.get_notification(
@@ -555,8 +568,6 @@ class PhotoCreator(object):
 			[4 * DEFAULT_MM_TO_PX, LOW_QUALITY]
 		]
 		pic_qual_index = 0
-		# Marker positions detected on the last loop
-		markers = None
 		# waste the first picture : doesn't matter how long we wait to warm up, the colors will be off.
 		cam.wait()
 		while self._plugin.lid_handler._lid_closed:
@@ -567,7 +578,6 @@ class PhotoCreator(object):
 		# The lid didn't open during waiting time
 		cam.async_capture()
 		saveNext = False # Lens calibration : save the next picture instead of this one
-		prev_img_sent_to_analytics = False
 		min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 		loop_counter = 0
 		count_sent_pictures_analytics = 0
@@ -585,13 +595,6 @@ class PhotoCreator(object):
 			cam.wait()  # waits until the next picture is ready
 			if self.stopping: break
 
-			# send image to analytics
-			if prev is not None and self._flag_send_img_to_analytics and not prev_img_sent_to_analytics:
-				self._send_last_img_to_analytics(prev, 'user', markers, missed,
-								 min_pix_amount, analytics,
-								 force_upload=True, notify_user=True)
-				prev_img_sent_to_analytics = True
-
 			latest = cam.lastPic() # gets last picture given by cam.worker
 			cam.async_capture()  # starts capture with new settings
 			if latest is None:
@@ -599,8 +602,10 @@ class PhotoCreator(object):
 				self._logger.info("The last picture is empty")
 				continue
 			if self.stopping: break  # check if still active...
-			# TODO start capture with different brightness if we think we need it
-			#     TODO apply shutter speed adjustment from preliminary measurements
+
+			cam.compensate_shutter_speed(latest) # Change exposure if needed
+			curr_shutter_speed = cam.exposure_speed
+			curr_brightness = copy.deepcopy(cam.worker.avg_roi_brightness)
 
 			if self.saveRaw:
 				if isinstance(self.saveRaw, str) and not saveNext:
@@ -609,9 +614,10 @@ class PhotoCreator(object):
 					# FIXME Not perfect. This is the case during the lens calibration where
 					# a new raw picture is requested. Do the save during the next round.
 					self.rawLock.acquire()
-					if camera.save_debug_img(latest,
-								 self.saveRaw,
-								 folder=path.join(path.dirname(self.final_image_path),"debug")):
+					if save_debug_img(
+							latest,
+							self.saveRaw,
+							folder=path.join(path.dirname(self.final_image_path),"debug")):
 						rawSaved = self.saveRaw
 					else:
 						rawSaved = False
@@ -619,7 +625,7 @@ class PhotoCreator(object):
 					saveNext = False
 				else:
 					self.rawLock.acquire()
-					rawSaved = camera.save_debug_img(latest,
+					rawSaved = save_debug_img(latest,
 									 "raw.jpg",
 									 folder=path.join(path.dirname(self.final_image_path),"debug"))
 					self.rawLock.release()
@@ -651,8 +657,8 @@ class PhotoCreator(object):
 				else:
 					time.sleep(.8) # Let the raspberry breathe a bit (prevent overheating)
 					continue
+
 			loop_counter += 1
-			prev_img_sent_to_analytics = False
 			# Get the desired scale and quality of the picture to serve
 			upscale_factor , quality = pic_qualities[pic_qual_index]
 			scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
@@ -667,13 +673,13 @@ class PhotoCreator(object):
 			min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 			# NOTE -- prepareImage is bloat, TODO spill content here
 			saveLensCorrected = True
-			workspaceCorners, markers, missed, err, analytics, savedPics = prepareImage(
+			workspaceCorners, self.last_markers, missed, err, analytics, savedPics = prepareImage(
 				input_image=latest,
 				path_to_output_image=self.tmp_img_prepared,
 				pic_settings=pic_settings,
 				cam_dist=dist,
 				cam_matrix=mtx,
-				last_markers=markers,
+				last_markers=self.last_markers,
 				size=scaled_output_size,
 				quality=quality,
 				zoomed_out=self.zoomed_out,
@@ -693,7 +699,7 @@ class PhotoCreator(object):
 				'markers_recognised': 4 - len(missed),
 				'corners_calculated': None if workspaceCorners is None else list(workspaceCorners),
 				# {k: v.astype(int) for k, v in workspaceCorners.items()},
-				'markers_pos': {qd: pos.tolist() for qd, pos in markers.items()},
+				'markers_pos': {qd: list(pos) for qd, pos in self.last_markers.items()},
 				'successful_correction': success,
 				'undistorted_saved': True,
 				'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
@@ -711,9 +717,15 @@ class PhotoCreator(object):
 			else:
 				# Just tell front end that there was an error
 				self._send_frontend_picture_metadata(correction_result)
+
+			analytics = dict_merge(analytics, dict(
+				{qd: {'brightness': val} for qd, val in curr_brightness.items()},
+				avg_shutter_speed = curr_shutter_speed,
+				success=success,
+			))
 			self._add_result_to_analytics(
 				session_details,
-				markers,
+				missed=missed,
 				increment_pic=True,
 				error=err,
 				extra=analytics
@@ -726,13 +738,15 @@ class PhotoCreator(object):
 					or  (loop_counter > 10 and loop_counter % 10 == 0)):
 				count_sent_pictures_analytics += 1
 				self._send_last_img_to_analytics(latest, 'dev_auto',
-								 markers, missed,
+								 self.last_markers, missed,
 								 min_pix_amount,
 								 analytics,
 								 force_upload=(count_sent_pictures_analytics%10==0),
 								 notify_user=False)
 
+		self.last_shutter_speed = cam.shutter_speed
 		cam.stop_preview()
+		self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 		if session_details['num_pics'] > 0:
 			session_details.update(
 				{'settings_min_marker_size': self._settings.get(['cam', 'markerRecognitionMinPixel'])}
@@ -741,18 +755,18 @@ class PhotoCreator(object):
 		self._logger.debug("PhotoCreator_stopping")
 
 	# @logme(True)
-	def _add_result_to_analytics(self,
-					 session_details,
-					 markers,
-					 colors={},
-					 marker_size={},
-					 increment_pic=False,
-					 colorspace='hsv',
-					 upload_speed=None,
-					 error=None,
-					 extra=None):
+	def _add_result_to_analytics(
+			self,
+			session_details,
+			missed=[],
+			colors={},
+			marker_size={},
+			increment_pic=False,
+			colorspace='hsv',
+			upload_speed=None,
+			error=None,
+			extra=None):
 		if extra is None: extra={}
-		assert(type(markers) is dict)
 		def add_to_stat(pos, avg, std, mass):
 			# gives a new avg value and approximate std when merging the new position value.
 			# mass is the weight given to the previous avg and std.
@@ -765,29 +779,57 @@ class PhotoCreator(object):
 				_new_std = np.zeros(2, dtype=float)
 			return _new_avg, _new_std
 
+		# @logme(True, True)
+		def updt(val_prev, val_new, func=np.average, **kw):
+			# necessary to phrase it that way if val_prev is a numpy array
+			if isinstance(val_prev, np.ndarray) or val_prev or val_prev == 0 :
+				return func([val_prev, val_new], **kw)
+			else:
+				return copy.deepcopy(val_new)
+
 		_s = session_details
 		try:
 			if increment_pic: _s['num_pics'] += 1
-			for qd in octoprint_mrbeam.camera.QD_KEYS:
+			tot_pics = _s['num_pics']
+			for qd in QD_KEYS:
 				_s_marker = _s['markers'][qd]
-				if qd in markers.keys() and markers[qd] is not None:
-					_marker = np.asarray(markers[qd])
-					_n_avg, _n_std = add_to_stat(_marker,
-												 _s_marker['avg_pos'],
-												 _s_marker['std_pos'],
-												 _s_marker['found'])
+				if qd in self.last_markers.keys() \
+				   and qd not in missed \
+				   and self.last_markers[qd] is not None:
+					_marker = np.asarray(self.last_markers[qd])
+					# Position : Avg & Std Deviation
+					_n_avg, _n_std = add_to_stat(
+						_marker,
+						_s_marker['avg_pos'],
+						_s_marker['std_pos'],
+						_s_marker['found']
+					)
 					_s_marker['avg_pos'] = _n_avg.tolist()
 					_s_marker['std_pos'] = _n_std.tolist()
 					_s_marker['found'] += 1
+					if all(k in _s_marker.keys() for k in ['avg_hsv', 'pix_size']):
+						# Color : Avg hue value
+						_s_marker['avg_color'] = updt(_s_marker['avg_color'], extra[qd]['avg_hsv'], weights=[tot_pics, 1], axis=0)
+						# Size of the marker (surface area in pixels)
+						_s_marker['marker_px_size'] = updt(_s_marker['marker_px_size'], extra[qd]['pix_size'], weights=[tot_pics, 1])
 				else:
 					_s_marker['missed'] += 1
+
+				# Brightness : Avg & Min, Max
+				_s_marker['avg_brightness'] = updt(_s_marker['avg_brightness'], extra[qd]['brightness'], weights=[tot_pics, 1])
+				_s_marker['min_brightness'] = updt(_s_marker['min_brightness'], extra[qd]['brightness'], func = np.min)
+				_s_marker['max_brightness'] = updt(_s_marker['max_brightness'], extra[qd]['brightness'], func = np.max)
+			if extra['success']:
+				_s['num_success_pics'] += 1
 			if error:
 				error = error.replace(".","-").replace(",","-")
 				if error in _s['errors']:
 					_s['errors'][error] += 1
 				else:
 					_s['errors'][error] = 1
-
+			_s['avg_shutter_speed'] = updt(_s['avg_shutter_speed'], extra['avg_shutter_speed'], weights=[tot_pics, 1])
+			if len(missed) == 0:
+				_s['num_all_markers_detected'] += 1
 		except Exception as ex:
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 
@@ -821,7 +863,7 @@ class PhotoCreator(object):
 				try:
 					analytics_str = str(analytics_data)
 				except:
-					self._logger.warn("_send_last_img_to_analytics_threaded() Can not convert analytics_data to json: %s", analytics_data)
+					self._logger.warning("_send_last_img_to_analytics_threaded() Can not convert analytics_data to json: %s", analytics_data)
 
 				dist = ''
 				path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
@@ -829,7 +871,7 @@ class PhotoCreator(object):
 					with open(path_to_cam_params, 'r') as f:
 						dist = base64.b64encode(f.read())
 				except:
-					self._logger.warn("_send_last_img_to_analytics_threaded() Can not read npz file: %s", path_to_cam_params)
+					self._logger.warning("_send_last_img_to_analytics_threaded() Can not read npz file: %s", path_to_cam_params)
 
 				payload = {'img_base64': img,
 						   'img_type': img_format,
@@ -842,7 +884,7 @@ class PhotoCreator(object):
 							   'analytics': analytics_str,
 							   'trigger': trigger},
 						   }
-				self._logger.info("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
+				self._logger.debug("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
 								  trigger, len(img), force_upload, payload['metadata'])
 				self._analytics_handler.add_camera_image(payload)
 				if force_upload:
@@ -891,10 +933,172 @@ class PhotoCreator(object):
 		except Exception as e:
 			self._logger.warn("exception_while_moving_file-_%s", e)
 
+	def load_camera_settings(self, path='/home/pi/.octoprint/cam/last_session.yaml'):
+		"""
+		Loads the settings saved from the last session.
+		The file is located by default at .octoprint/cam/pic_settings.yaml
+		"""
+		backup = '/home/pi/.octoprint/cam/last_markers.json'
+		if os.path.isfile(path):
+			_path = path
+		else:
+			self._logger.info("last_session.yaml does not exist, using legacy backup (last_markers.json)")
+			_path = backup
+		try:
+			ret = []
+			with open(_path) as f:
+				settings = yaml.load(f) or {}
+				if _path == backup:
+					# No shutter speed info
+					settings = {k: v[-1] for k, v in settings.items()}
+					ret = [settings, None]
+				else:
+					for k in ['calibMarkers', 'shutter_speed']:
+						ret.append(settings.get(k, None))
+			return ret
+		except OSError as e:
+			self._logger.error(e)
+			return [None]*2
+
+	@logme(True)
+	def save_camera_settings(
+		self,
+		path='/home/pi/.octoprint/cam/last_session.yaml',
+		markers = None,
+		shutter_speed = None
+	):
+		"""
+		Save the settings given for the next sesison.
+		The file is located by default at .octoprint/cam/pic_settings.yaml
+		"""
+		if markers is None and shutter_speed is None:
+			# Nothing to save
+			return
+		_markers = copy.deepcopy(markers)
+		if type(_markers) is dict:
+			for k, v in _markers.items():
+				if type(v) is np.ndarray:
+					_markers[k] = v.tolist()
+		settings = {}
+		try:
+			with open(path) as f:
+				settings = yaml.load(f)
+		except (OSError, IOError) as e:
+			self._logger.warning("file %s does not exist or could not be read. Overwriting..." % path)
+
+		for k, v in [['calibMarkers', _markers],
+			     ['shutter_speed', shutter_speed]]:
+			if v is not None:
+				settings[k] = v
+		try:
+			with open(path, 'w') as f:
+				f.write(yaml.dump(settings))
+		except (OSError, IOError) as e:
+			self._logger.error(e)
+		except TypeError as e:
+			self._logger.warning("Data that I tried writing to %s :\n%s" % (path, settings))
+
+
 def blank_session_details():
 	"""
 	Add to these session details when taking the pictures.
 	Do not send back as-is (won't convert to JSON)
+	example analytics output:
+	{
+	"num_pics": 8,
+	"num_success_pics": 0,
+	"errors": {},
+	"num_all_markers_detected": 0,
+	"avg_upload_speed": null,
+	"settings_min_marker_size": null,
+	"avg_shutter_speed": 75870.666666666672,
+	"markers": {
+		"SW": {
+			"avg_color": [
+			153.83132956630604,
+			96.65563641216431,
+			157.33211938180796
+			],
+			"avg_pos": [
+			1415.0,
+			191.375
+			],
+			"missed": 0,
+			"max_brightness": 222.36003612238798,
+			"avg_brightness": 191.76418726204039,
+			"min_brightness": 132.54071417672597,
+			"found": 8,
+			"std_pos": [
+			0.0,
+			0.14498973996560857
+			],
+			"marker_px_size": 852.88888888888891
+		},
+		"NE": {
+			"avg_color": [
+			145.245669380652,
+			107.38059013940135,
+			87.4850645317796
+			],
+			"avg_pos": [
+			218.875,
+			1952.875
+			],
+			"missed": 0,
+			"max_brightness": 133.5580481163187,
+			"avg_brightness": 103.754267896564,
+			"min_brightness": 61.796808673120474,
+			"found": 8,
+			"std_pos": [
+			0.09077978610301556,
+			0.09077978610301436
+			],
+			"marker_px_size": 872.77777777777783
+		},
+		"SE": {
+			"avg_color": [
+			151.05255352255705,
+			92.30664293555843,
+			176.65584827724854
+			],
+			"avg_pos": [
+			1385.125,
+			1983.0
+			],
+			"missed": 0,
+			"max_brightness": 236.57588634316892,
+			"avg_brightness": 210.56778508779132,
+			"min_brightness": 154.62930727850451,
+			"found": 8,
+			"std_pos": [
+			0.109375,
+			0.0
+			],
+			"marker_px_size": 934.66666666666663
+		},
+		"NW": {
+			"avg_color": [
+			132.75216912060495,
+			113.9216832961036,
+			75.47599677659782
+			],
+			"avg_pos": [
+			267.375,
+			151.125
+			],
+			"missed": 0,
+			"max_brightness": 112.99359963534337,
+			"avg_brightness": 85.321787444997511,
+			"min_brightness": 46.601849096959924,
+			"found": 8,
+			"std_pos": [
+			0.15655504520228197,
+			0.10683497845024859
+			],
+			"marker_px_size": 887.0
+		}
+	},
+	}
 	"""
 	_init_marker = {
 		'missed':  0,
@@ -903,15 +1107,25 @@ def blank_session_details():
 		'std_pos': None,
 		# 'colorspace': 'hsv',
 		'avg_color': [],
+		'avg_brightness': None,
+		'min_brightness': None,
+		'max_brightness': None,
 		#'median_color': [],
 		'marker_px_size': []
 	}
-	session_details = {'num_pics': 0,
-					   'markers': {'NW': copy.deepcopy(_init_marker),
-								   'SE': copy.deepcopy(_init_marker),
-								   'SW': copy.deepcopy(_init_marker),
-								   'NE': copy.deepcopy(_init_marker)},
-					   'errors': {},
-					   'avg_upload_speed': None,
-					   'settings_min_marker_size': None}
+	session_details = {
+		'num_pics': 0,
+		'num_success_pics': 0,
+		'num_all_markers_detected': 0,
+		'markers': {
+			'NW': copy.deepcopy(_init_marker),
+			'SE': copy.deepcopy(_init_marker),
+			'SW': copy.deepcopy(_init_marker),
+			'NE': copy.deepcopy(_init_marker),
+		},
+		'errors': {},
+		'avg_shutter_speed': None,
+		'avg_upload_speed': None,
+		'settings_min_marker_size': None,
+	}
 	return session_details

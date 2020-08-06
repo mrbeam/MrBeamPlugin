@@ -132,7 +132,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._grbl_version = None
 		self._device_series = self._device_info.get('device_series') # '2C'
 		self.called_hosts = []
-		self._current_user = None
 
 		self._boot_grace_period_counter = 0
 
@@ -182,7 +181,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.analytics_handler = analyticsHandler(self)
 		self.user_notification_system = user_notification_system(self)
-		# self.review_handler = reviewHandler(self)  TODO IRATXE: disabled for now
+		self.review_handler = reviewHandler(self)
 		self.onebutton_handler = oneButtonHandler(self)
 		self.interlock_handler = interLockHandler(self)
 		self.lid_handler = lidHandler(self)
@@ -307,6 +306,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			laser_heads=dict(
 				filename='laser_heads.yaml'
 			),
+			review=dict(
+				given=False,
+				ask=False,
+			),
 			focusReminder=True,
 			analyticsEnabled=None,
 			analytics=dict(
@@ -379,6 +382,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			software_update_branches=self.get_update_branch_info(),
 			_version=self._plugin_version,
+			review=dict(
+				given=self._settings.get(['review', 'given']),
+				ask=self._settings.get(['review', 'ask']),
+			),
 			focusReminder=self._settings.get(['focusReminder']),
 			laserHeadSerial=self.laserhead_handler.get_current_used_lh_data()['serial'],
 			usage=dict(
@@ -514,7 +521,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/material_settings.js",
 			    "js/analytics.js",
 			    "js/maintenance.js",
-			    # "js/review.js",  TODO IRATXE: disabled for now
+			    "js/review.js",
 			    "js/util.js",
 			    "js/user_notification_viewmodel.js",
 			    "js/lib/load-image.all.min.js",  # to load custom material images
@@ -721,6 +728,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.global_set_boolean(["accessControl", "enabled"], True)
 			self._user_manager.enable()
 			self._user_manager.addUser(data["user"], data["pass1"], True, ["user", "admin"], overwrite=True)
+
+			# We activate the flag to ask for a review for new users
+			self._settings.set_boolean(['review', 'ask'], True)
 		else:
 			return make_response("Unable to interprete request", 400)
 
@@ -1631,9 +1641,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
-		# TODO IRATXE: disabled for now
-		# elif command == "review_data":
-		# 	return self.review_handler.save_review_data(data)
+		elif command == "review_data":
+			return self.review_handler.save_review_data(data)
 		elif command == "reset_prefilter_usage":
 			return self.usage_handler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
@@ -1671,7 +1680,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "calibration_save_raw_pic":
 			# TODO save next raw image to the buffer
 			# TODO flash LEDs when raw img saved
-			return self.onCalibrationSaveRawPic()
+      return self.sendInitialCalibrationMarkers()
 		elif command == "calibration_lens_start":
 			return self.onLensCalibrationStart()
 		elif command == "calibration_get_raw_pic":
@@ -1684,19 +1693,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.onCalibrationStopLensDistort()
 		elif command == "generate_calibration_markers_svg":
 			return self.generateCalibrationMarkersSvg()  # TODO move this func to other file
-
 		return NO_CONTENT
-
-	# TODO IRATXE: this does not properly work --> necessary for reviews
-	# def get_user_name(self):
-	# 	from flask.ext.login import current_user
-	#
-	# 	# Looks like current_user sometimes does not work, so we save it and the next time if there's no information
-	# 	# we just use the last saved user.
-	# 	if current_user and not current_user.is_anonymous():
-	# 		self._current_user = current_user.get_name()
-	#
-	# 	return self._current_user
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:
@@ -1812,6 +1809,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except IOError:
 			self._logger.debug("previous pic settings were not present")
 			pic_settings = {}
+		pic_settings = pic_settings or {} # pic_settings is None if file exists but empty
 
 		pic_settings['cornersFromImage'] = newCorners
 		pic_settings['calibMarkers'] = newMarkers
@@ -2145,7 +2143,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					compressor_state=self.compressor_handler.get_current_state(),
 					lid_fully_open=self.lid_handler.is_lid_open(),
 					interlocks_closed=self.iobeam.is_interlock_closed(),
-					interlocks_open_ids=self.iobeam.open_interlocks(),
+					interlocks_open=self.iobeam.open_interlocks(),
 					rtl_mode=self.onebutton_handler.is_ready_to_laser(),
 					pause_mode=self._printer.is_paused(),
 					cooling_mode=self.temperature_manager.is_cooling(),

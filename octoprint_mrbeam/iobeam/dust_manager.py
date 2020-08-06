@@ -45,7 +45,8 @@ class DustManager(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
 		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
 		self._event_bus = plugin._event_bus
-		
+		self._printer = plugin._printer
+
 		self.is_final_extraction_mode = False
 
 		self._state = None
@@ -67,6 +68,7 @@ class DustManager(object):
 		self._just_initialized = False
 
 		self._last_rpm_values = deque(maxlen=5)
+		self._job_dust_values = []
 
 		self.extraction_limit = 0.3
 		self.final_extraction_auto_mode_duration = 120 # ANDYTEST
@@ -85,7 +87,7 @@ class DustManager(object):
 		self._start_validation_timer()
 		self._just_initialized = True
 		self._logger.debug("initialized!")
-		
+
 		self._subscribe()
 
 	def get_fan_state(self):
@@ -96,6 +98,13 @@ class DustManager(object):
 
 	def get_dust(self):
 		return self._dust
+
+	def get_mean_job_dust(self):
+		if self._job_dust_values:
+			mean_job_dust = sum(self._job_dust_values) / len(self._job_dust_values)
+		else:
+			mean_job_dust = None
+		return mean_job_dust
 
 	def is_fan_connected(self):
 		return self._connected
@@ -128,6 +137,9 @@ class DustManager(object):
 			err = True
 		if args['dust'] is not None:
 			self._dust = args['dust']
+
+			if self._printer.is_printing():
+				self._job_dust_values.append(self._dust)
 		else:
 			err = True
 		if args['rpm'] is not None:
@@ -174,6 +186,7 @@ class DustManager(object):
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
 			self._last_event = event
 			self._do_final_extraction()
+			self._job_dust_values = []
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 		elif event == IoBeamEvents.CONNECT:
@@ -185,13 +198,13 @@ class DustManager(object):
 		self._logger.debug("FAN_TEST_RPM: Start - setting fan to %s for %ssec", self.FAN_TEST_RPM_PERCENTAGE, self.FAN_TEST_DURATION)
 		self._start_dust_extraction(self.FAN_TEST_RPM_PERCENTAGE, cancel_all_timers=True)
 		self._boost_timer_interval()
-		
+
 		t = threading.Timer(self.FAN_TEST_DURATION, self._finish_test_fan_rpm)
 		t.setName("DustManager:_finish_test_fan_rpm")
 		t.daemon = True
 		t.start()
 		self._fan_timers.append(t)
-		
+
 	def _finish_test_fan_rpm(self):
 		try:
 			# Write to analytics if the values are valid
@@ -261,7 +274,7 @@ class DustManager(object):
 				self._logger.debug("_cancel_all_fan_timers: canceled %s timers: %s", len(c), c)
 		except:
 			self._logger.exception("Exception in _cancel_all_fan_timers:")
-		
+
 
 	def _do_final_extraction(self):
 		if self._final_extraction_thread is None:
@@ -358,7 +371,7 @@ class DustManager(object):
 		if time.time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE:
 			result = False
 			errs.append("data too old. age:{:.2f}".format(time.time() - self._data_ts))
-		
+
 		if self._state is None:
 			result = False
 			errs.append("fan state:{}".format(self._state))

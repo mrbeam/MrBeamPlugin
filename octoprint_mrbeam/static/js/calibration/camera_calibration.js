@@ -431,12 +431,17 @@ $(function () {
 				return;
 
 			if (!self.calibrationScreenShown()) {
-			    return;
-            }
+				return;
+      }
+
+			if ('mrb_state' in data && data['mrb_state']) {
+				window.mrbeam.mrb_state = data['mrb_state'];
+				self.laserViewmodel.updateSettingsAbout()
+			}
 
 			if ('beam_cam_new_image' in data) {
 				// update image
-				var selectedTab = $('#camera-calibration-tabs .active a').attr('id')
+				var selectedTab = $('#camera-calibration-tabs li.active:not(li.tabdrop) a').attr('id')
 				var _d = data['beam_cam_new_image'];
 				if (_d['undistorted_saved'] && !self.cornerCalibrationActive()) {
 					if (_d['available']) {

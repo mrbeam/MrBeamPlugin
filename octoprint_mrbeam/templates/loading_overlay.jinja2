@@ -23,13 +23,17 @@
 
         .loading_overlay_text{
             margin:0;
-            font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+            font-family:RobotoFont, Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif;
             font-size:14px;
             line-height:20px;
+            cursor: default;
         }
 
         .loading_overlay_red {
             color: #e25303;
+        }
+        .loading_overlay_grey {
+            color: #999;
         }
 
         .loading_overlay_wrapper {
@@ -78,6 +82,7 @@
             color: lightgrey;
             font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
             font-size: 10px;
+            cursor: default;
         }
 
         @keyframes pulsate {
@@ -136,11 +141,13 @@
 		#loading_icons {
 			color: #cbcbcb;
 			margin: 1em;
+            cursor: default;
 		}
 		#loading_icons .icon {
 			margin: 0.3em;
             font-size: 17px;
 			display: inline-block;
+            cursor: default;
 		}
 
 		body.loading_step1 #loading_icons .icon:nth-child(1),
@@ -191,7 +198,21 @@
                         <span class="icon">•</span>
                         <span class="icon">•</span>
                         <span class="icon">•</span>
-					</div>
+                    </div>
+                    <div id="loading_overlay_error" style="display: none">
+                        <p id="loading_overlay_error_generic_mac" class="loading_overlay_text loading_overlay_red">
+                            {{ _('Not loading?<br />Try a full reload by pressing <strong>command + shift + r</strong>') }}
+                        </p>
+                        <p id="loading_overlay_error_generic_pc" class="loading_overlay_text loading_overlay_red">
+                            {{ _('Not loading?<br />Try a full reload by pressing <strong>STRG + SHIFT + R</strong>') }}
+                        </p>
+                        <p id="loading_overlay_error_generic_unspecified" class="loading_overlay_text loading_overlay_red">
+                            {{ _('Not loading?<br />Try to reload the page.') }}
+                        </p>
+                        <div id="loading_overlay_error_specific" class="loading_overlay_text loading_overlay_grey">
+                            <p style="color: #e25303; display: inherit">{{ _('Something went wrong') }}:</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -203,5 +224,76 @@
             <div class="loading_overlay_footer_text">© 2020 Mr Beam Lasers GmbH</div>
         </div>
     </div>
+
+    <script lang="javascript" type="text/javascript">
+        /**
+         * In case the system can not fully load (because of an error)
+         * We show some message to the user.
+         * This code needs to work without jQuery or knockout.js, since these are not loaded yet.
+         */
+        let _mrb_loading_overlay_step = 0
+        let _mrb_loading_overlay_step_ts = 0
+        function _mrb_loading_overlay_blocked_check(){
+            let my_step = 0
+            let timeout = 15000
+            if (document.body.classList.contains('loading_step1')) {my_step = 1}
+            if (document.body.classList.contains('loading_step2')) {my_step = 2}
+            if (document.body.classList.contains('loading_step3')) {my_step = 3}
+            if (document.body.classList.contains('loading_step4')) {my_step = 4}
+            if (document.body.classList.contains('loading_step5')) {my_step = 5}
+            if (document.body.classList.contains('loading_step6')) {my_step = 6}
+            if (document.body.classList.contains('loading_step7')) {my_step = 7}
+            if (document.body.classList.contains('loading_step8')) {my_step = 8}
+
+            if (_mrb_loading_overlay_step < my_step) {
+                _mrb_loading_overlay_step = my_step
+                _mrb_loading_overlay_step_ts = Date.now()
+                document.getElementById('loading_overlay_error').style.display = "none"
+            } else if (_mrb_loading_overlay_step > 0 && _mrb_loading_overlay_step < 8 && Date.now() - _mrb_loading_overlay_step_ts > timeout) {
+                let specific_message = _get_mrb_loading_overlay_generate_error_message()
+                if (specific_message) {
+                    document.getElementById('loading_overlay_error_specific').insertAdjacentHTML('beforeend', specific_message);
+                    document.getElementById('loading_overlay_error_specific').style.display = "inherit"
+                    document.getElementById('loading_overlay_error_generic_mac').style.display = "none"
+                    document.getElementById('loading_overlay_error_generic_pc').style.display = "none"
+                    document.getElementById('loading_overlay_error_generic_unspecified').style.display = "none"
+                } else {
+                    document.getElementById('loading_overlay_error_specific').style.display = "none"
+                    document.getElementById('loading_overlay_error_generic_mac').style.display = "none"
+                    document.getElementById('loading_overlay_error_generic_pc').style.display = "none"
+                    document.getElementById('loading_overlay_error_generic_unspecified').style.display = "none"
+                    if ( /(Mac)/i.test(navigator.platform)) {
+                        document.getElementById('loading_overlay_error_generic_mac').style.display = "inherit"
+                    } else if ( /(Win|Linux|FreeBSD)/i.test(navigator.platform)){
+                        document.getElementById('loading_overlay_error_generic_pc').style.display = "inherit"
+                    } else {
+                        document.getElementById('loading_overlay_error_generic_unspecified').style.display = "inherit"
+                    }
+                }
+                document.getElementById('loading_overlay_error').style.display = "inherit"
+
+                // do not run again
+                return;
+            }
+
+            if (_mrb_loading_overlay_step < 8) {
+                setTimeout(_mrb_loading_overlay_blocked_check, 2000)
+            }
+        }
+        function _get_mrb_loading_overlay_generate_error_message(){
+            let result = ""
+            if (console.everything) {
+                console.everything.forEach(function (logData) {
+                    if (logData.level == 'error' || logData.level == 'warn') {
+                        result += logData.msg + "<br />"
+                    }
+                })
+            }
+            return result
+        }
+
+        _mrb_loading_overlay_blocked_check()
+
+    </script>
 </div>
 

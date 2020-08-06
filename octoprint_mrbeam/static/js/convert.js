@@ -61,7 +61,7 @@ $(function(){
 		self.material_settings2 = {};
 		self.material_settings2_updated_trigger= ko.observable();
 
-		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor:3};
+		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor:3, progressive: false};
 		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, eng_compressor: 3, dithering: false };
 
 		self.material_colors = ko.observableArray([]);
@@ -200,7 +200,8 @@ $(function(){
                     cut_f: parseFloat(strongest.feedrate),
                     cut_p: parseInt(strongest.passes),
                     cut_pierce: parseInt(strongest.pierce_time),
-                    cut_compressor: parseInt(strongest.cut_compressor)
+                    cut_compressor: parseInt(strongest.cut_compressor),
+                    progressive: strongest.progressive
 				};
 			} else {
 				thickness = -1; // engrave only
@@ -666,6 +667,7 @@ $(function(){
 				$(job).find('.param_intensity').val(p.cut_i);
 				$(job).find('.param_feedrate').val(p.cut_f);
 				$(job).find('.param_passes').val(p.cut_p || 0);
+				$(job).find('.param_progressive').prop('checked', p.progressive);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
 				$(job).find('.compressor_range').val(p.cut_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
 			}
