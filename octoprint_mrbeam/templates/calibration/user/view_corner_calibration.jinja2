@@ -1,0 +1,136 @@
+<div>
+
+    <div class="camera-calibration-title">
+        <button class="btn" data-bind="click: abortCalibration">
+            <img src="plugin/mrbeam/static/img/back_arrow.svg" alt="">
+        </button>
+        <span>{{ _('Corner Calibration') }}</span>
+    </div>
+
+    <p>{{ _('The corner calibration uses the pink markers to calibrate the camera. Use this in case one of the markers has been changed or if there is a large deviation between the screen position and the laser result.') }}</p>
+    <h4>{{ _('Steps') }}</h4>
+    <ol class="camera-calibration-steps">
+        <li>{{ _('Put a material like cardboard inside your Mr Beam that it covers the whole working area:') }}<br>
+            <div class='calibration_manual img'
+                 style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_material_size.svg)'></div>
+        </li>
+        <li>{{ _('Engrave the calibrations markers on your material by clicking on this button:') }}<br>
+            <button class="btn btn-primary"
+                    data-bind="click: engrave_markers">{{ _('Engrave Calibration Markers') }}</button>
+        </li>
+        <li>{{ _('Wait until the engraving is finished and Mr Beam illuminates green. Open the safety lid again and be carefult NOT to touch the engraved material. The camera will now take a picture of the engraving.') }}</li>
+        <li>{{ _('Start the calibration by clicking on the button, and then follow these steps:') }}
+            <ul>
+                <li>{{ _('Click on the arrow head of the marker in the magnified picture.') }}</li>
+                <li>{{ _('Continue with the other markers as the picture changes.') }}</li>
+                <li>{{ _('Once all arrowheads are marked the calibration is finished and can be saved.') }}</li>
+            </ul>
+            <button class="btn btn-primary" data-bind="click: startCornerCalibration, visible: !cornerCalibrationActive()">
+                {{ _('Start Calibration') }}
+            </button>
+        </li>
+    </ol>
+
+    <svg id="calibration_svg" style="max-width: 80vh; border:1px solid lightgray" width="100%" height="100%"
+         viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
+        <defs>
+            <symbol id="cross">
+                <path data-bind="attr: {d: svgCross()}" fill="none"/>
+            </symbol>
+        </defs>
+        <g id="obj_height_scale">
+            <image style="cursor:crosshair;"
+                   data-bind="attr: {href: cornerCalImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick"/>
+        </g>
+        <g id="corners" class="calibration_click_indicator"
+           style="pointer-events: none;"
+           data-bind="attr: { visibility: correctedMarkersVisibility() }">
+            <use id="click_NW" href="#cross" x="-100" y="-100"/>
+            <use id="click_NE" href="#cross" x="-100" y="-100"/>
+            <use id="click_SE" href="#cross" x="-100" y="-100"/>
+            <use id="click_SW" href="#cross" x="-100" y="-100"/>
+        </g>
+        <g id="cropped_view_corners" class="calibration_click_indicator"
+           transform="scale(1)"
+           data-bind="attr: { transform: zMarkersTransform(), visibility: croppedMarkersVisibility() }">
+            <use href="#cross" stroke="blue"
+                 data-bind="attr: { x: -crossSize(), y: -crossSize() }"/>
+            <use href="#cross" stroke="blue" data-bind="attr: { x: calImgWidth()-crossSize(), y: -crossSize() }"/>
+            <use href="#cross" stroke="blue"
+                 data-bind="attr: { x: -crossSize(), y: calImgHeight()-crossSize() }"/>
+            <use href="#cross" stroke="blue"
+                 data-bind="attr: { x: calImgWidth()-crossSize(), y: calImgHeight()-crossSize() }"/>
+        </g>
+    </svg>
+    <div>
+        <div>
+            <a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i
+                    class="icon-repeat"></i> {{ _('refresh') }}</a>
+            <div class="marker_selection_desc calibration_waiting_for_picture">
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i
+                        class="icon-ok"></i> NW
+                </div>
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i
+                        class="icon-ok"></i> SW
+                </div>
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i
+                        class="icon-ok"></i> SE
+                </div>
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i
+                        class="icon-ok"></i> NE
+                </div>
+                <div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i
+                        class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
+            </div>
+            <a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
+        </div>
+        <div class="marker_selection_desc calibration_help"
+             data-bind="visible: cal_img_ready() && !cornerCalibrationActive()">
+        </div>
+        <div class="marker_selection_desc calibration_summary">
+            <div data-bind="css: {complete: cornerCalibrationComplete()}">
+                <!-- "Debug" values of where the user pointed the tip of the arrow. -->
+                <div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
+                    <div id="NW" class="cal-row" data-bind="click: goToMarker(1)">
+                        <div class="cal-arrow NW"></div>
+                        North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
+                    <div id="SW" class="cal-row" data-bind="click: goToMarker(2)">
+                        <div class="cal-arrow SW"></div>
+                        South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
+                    <div id="SE" class="cal-row" data-bind="click: goToMarker(3)">
+                        <div class="cal-arrow SE"></div>
+                        South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
+                    <div id="NE" class="cal-row" data-bind="click: goToMarker(4)">
+                        <div class="cal-arrow NE"></div>
+                        North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
+                </div>
+            </div>
+            <div style="margin-top:1em;" data-bind="visible: cornerCalibrationActive()">
+                <button class="btn-link"
+                        data-bind="click: previousMarker">
+                    {{ _('Previous') }}</button>
+                <button class="btn-link"
+                        data-bind="click: nextMarker">
+                    {{ _('Next') }}</button>
+                <button class="btn btn-primary"
+                        data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">
+                    {{ _('Save Calibration') }}</button>
+                <button class="btn btn-default"
+                        data-bind="click: abortCalibration">
+                    {{ _('Cancel') }}</button>
+            </div>
+        </div>
+    </div>
+    <!-- Debug images of the marker detection present in each corner of the screen -->
+    <div data-bind="visible: window.mrbeam.isWatterottMode()">
+        <div>
+            <img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
+            <img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
+        </div>
+        <div>
+            <img id="debug_SW_img" class="marker_debug_image" data-bind="attr: {src: dbSWImgUrl()}"/>
+            <img id="debug_SE_img" class="marker_debug_image" data-bind="attr: {src: dbSEImgUrl()}"/>
+        </div>
+    </div>
+</div>
+

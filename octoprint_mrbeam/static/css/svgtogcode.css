@@ -11,13 +11,13 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 
 #settings_dialog.container { width: 100%; }
 
-.calibration_step {
-	display: none;
-}
+/*.calibration_step {*/
+/*	display: none;*/
+/*}*/
 
-.calibration_step.active {
-	display: block;
-}
+/*.calibration_step.active {*/
+/*	display: block;*/
+/*}*/
 
 #gcode_reference .gcommand {
 	font-weight: bold;
@@ -771,10 +771,127 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	position: relative;
 }
 
-.calibration_manual.text {
-    width: 48%;
-	margin-bottom: 2em;
+.camera-settings-section {
+	margin-bottom: 30px;
 }
+
+.camera-status-images {
+	width: 90%;
+    text-align: center;
+    border-collapse: separate;
+    border-spacing: 20px 0;
+	margin-bottom: 15px;
+}
+
+.camera-status-images td {
+	position: relative;
+}
+
+.camera-status-images .camera-picture {
+	vertical-align: bottom;
+}
+
+.camera-status-images .fa-download {
+	position: absolute;
+	bottom: 7px;
+    right: 7px;
+	text-shadow: 0 0 10px white;
+}
+
+.camera-status-images .camera-image-description {
+	vertical-align: top;
+	font-size: small;
+}
+
+.camera-status-support .fa-download {
+	color: #e25303;
+    margin: 0 2px;
+}
+
+.requirement-status::after,
+.requirement::before {
+	font-family: FontAwesome3;
+	-webkit-font-smoothing: antialiased;
+	margin-left: 5px;
+}
+
+.requirement-status.requirement-met::after,
+.requirement.requirement-met::before {
+	content: "\f00c";
+	color: #00d400;
+}
+
+.requirement-status.requirement-not-met::after,
+.requirement.requirement-not-met::before {
+	content: "\f00d";
+	color: red;
+}
+
+.camera-calibrations {
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: 1fr 1fr;
+	width: 95%;
+	margin: 20px 0 0 5px;
+}
+
+.camera-calibrations .calibration-container {
+	padding: 10px 15px;
+    margin: 0 4% 0 0;
+	position: relative;
+}
+
+.calibration-container .rounded_container_title {
+	margin-top: 0;
+}
+
+.calibration-container .rounded_container_hr {
+	margin: 10px -15px;
+}
+
+.calibration-container p {
+	margin-bottom: 50px;
+}
+
+.calibration-container button {
+	position: absolute;
+	bottom: 10px;
+	right: 10px;
+}
+
+.camera-calibration-title {
+	margin: 2px 0 6px 2px;
+}
+
+.camera-calibration-title .btn {
+    border-radius: 100%;
+    padding: 10px 10px;
+    min-width: auto;
+}
+
+.camera-calibration-title .btn img {
+    width: 20px;
+}
+
+.camera-calibration-title span {
+    vertical-align: bottom;
+    font-size: 24.5px;
+    line-height: 40px;
+    margin: 10px 0 10px 5px;
+    font-family: inherit;
+    font-weight: bold;
+    color: inherit;
+    text-rendering: optimizelegibility;
+}
+
+.camera-calibration-steps > li {
+	margin-bottom: 15px;
+}
+
+.camera-calibration-steps > li > button {
+	margin-top: 5px;
+}
+
 .calibration_manual.img {
     width: 48%;
     padding-top: 32%;
@@ -880,8 +997,8 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	grid-template-columns: 1fr 1fr 1fr;
 	margin: 0;
 	width: 100%;
-	max-height: 60vh;
-	overflow-y: scroll;
+	/*max-height: 60vh;*/
+	/*overflow-y: scroll;*/
 }
 
 .lens_correction_image_thumb {
