@@ -14,6 +14,12 @@ const CROPPED_IMG_RES = [500,390]
 const LOADING_IMG_RES = [512, 384]
 const STATIC_URL = "/plugin/mrbeam/static/img/calibration/calpic_wait.svg";
 
+const CUSTOMER_CAMERA_VIEWS = {
+    'settings': '#camera_settings_view',
+    'lens': '#lens_calibration_view',
+    'corner': '#corner_calibration_view',
+}
+
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
@@ -22,7 +28,8 @@ $(function () {
 		self.conversion = parameters[1];
 		self.analytics = parameters[2];
 		self.camera = parameters[3];
-		self.laserViewmodel = parameters[4]; // Only used to show mrb state for Debug info
+		self.state = parameters[4]; // isOperational
+		self.readyToLaser = parameters[5]; // lid_fully_open & debug tab with mrb state
 
 		// calibrationState is constantly refreshed by the backend
 		// as an immutable array that contains the whole state of the calibration
@@ -30,7 +37,7 @@ $(function () {
 
 		self.startupComplete = ko.observable(false);
 		self.calibrationScreenShown = ko.observable(false);
-		self.waitingForRefresh = ko.observable(true)
+		self.waitingForRefresh = ko.observable(true);
 
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
@@ -77,11 +84,45 @@ $(function () {
 		self.currentMarker = 0;
 		self.calibrationMarkers = [
 			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
-			{name: 'NW', desc: 'North West', focus: [0, 0, 4]},
-			{name: 'SW', desc: 'North East', focus: [0, DEFAULT_IMG_RES[1], 4]},
-			{name: 'SE', desc: 'South East', focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
-			{name: 'NE', desc: 'South West', focus: [DEFAULT_IMG_RES[0], 0, 4]}
+			{name: 'NW', desc: self.camera.MARKER_DESCRIPTIONS['NW'], focus: [0, 0, 4]},
+			{name: 'SW', desc: self.camera.MARKER_DESCRIPTIONS['SW'], focus: [0, DEFAULT_IMG_RES[1], 4]},
+			{name: 'SE', desc: self.camera.MARKER_DESCRIPTIONS['SE'], focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
+			{name: 'NE', desc: self.camera.MARKER_DESCRIPTIONS['NE'], focus: [DEFAULT_IMG_RES[0], 0, 4]}
 		];
+
+		// ---------------- CAMERA STATUS ----------------
+		self.cameraStatusOk = ko.computed(function () {
+			return self.readyToLaser.lid_fully_open()
+                && self.state.isOperational()
+                && self.camera.markerState() === 4;
+		})
+
+        self.lidMessage  = ko.computed(function() {
+            return self.readyToLaser.lid_fully_open() ?
+                gettext("The lid is open") :
+                gettext("The lid is closed: Please open the lid to start the camera");
+        });
+
+		self.operationalMessage  = ko.computed(function() {
+            return self.state.isOperational() ?
+                gettext("Mr Beam is in status Operational") :
+                gettext("Mr Beam is not in status Operational: Camera does not work during a laser job");
+        });
+
+		self.markersMessage  = ko.computed(function() {
+		    let notFound = [];
+		    for (const [marker, found] of Object.entries(self.camera.markersFound())) {
+		        console.log(found)
+                if (!found) {
+                    notFound.push(self.camera.MARKER_DESCRIPTIONS[marker]);
+                }
+            }
+		    let notFoundStr = notFound.join(", ")
+
+            return self.camera.markerState() === 4 ?
+                gettext("All 4 pink corner markers are recognized") :
+                gettext("Not all pink corner markers are recognized. Missing markers: ") + notFoundStr;
+        });
 
 		// ---------------- CAMERA ALIGNMENT ----------------
 		self.qa_cameraalignment_image_loaded = ko.observable(false);
@@ -221,10 +262,15 @@ $(function () {
 			}
 			self.calibrationScreenShown(true)
             self.startupComplete(true);
+
+			$('#settings_plugin_mrbeam_camera_link').click(function(){
+                self.abortCalibration()
+            });
 		};
 
 		self.onSettingsShown = function(){
-			self.goto('#calibration_step_1');
+			// self.goto('#camera_settings_view');
+            self.abortCalibration()
 		}
 
 		self.__format_point = function(p){
@@ -274,6 +320,8 @@ $(function () {
 								  self.getRawPicError,
 								  "GET");
 			self.lensCalibrationActive(true);
+
+			self.changeUserView('lens')
 		};
 
 		self.lensCalibrationToggleQA = function (){
@@ -294,6 +342,11 @@ $(function () {
 			var nextStep = self.calibrationMarkers[self.currentMarker];
 			self._highlightStep(nextStep);
 		};
+
+		self.goToMarker = function(markerNum) {
+		    self.currentMarker = markerNum;
+		    self._highlightStep(self.calibrationMarkers[markerNum])
+        }
 
 		self.userClick = function (vm, ev) {
 			// check if picture is loaded
@@ -383,7 +436,7 @@ $(function () {
 
 			if ('mrb_state' in data && data['mrb_state']) {
 				window.mrbeam.mrb_state = data['mrb_state'];
-				self.laserViewmodel.updateSettingsAbout()
+				self.readyToLaser.updateSettingsAbout()
 			}
 
 			if ('beam_cam_new_image' in data) {
@@ -467,7 +520,7 @@ $(function () {
 				}
 
 				// required to refresh the heatmap
-				$('#heatmap_container').html($('#heatmap_container').html());
+				$('.heatmap_container').html($('.heatmap_container').html());
 				arr.sort(function(l,r){
 					return l.index < r.index ? -1 : 1;
 				});
@@ -740,8 +793,7 @@ $(function () {
 				type: "success",
 				hide: true
 			});
-			if(window.mrbeam.isWatterottMode()) self.resetView();
-			else self.goto('#calibration_step_1');
+			self.resetView();
 		};
 
 		self.saveMarkersError = function () {
@@ -754,10 +806,10 @@ $(function () {
 			});
 
 			self.resetView();
-			if(!window.mrbeam.isWatterottMode())
-				self.goto('#calibration_step_1');
 		};
 
+		// todo iratxe: should we abort the corner calibration as well?
+        // for now I call this when going back from the lens calibration...
 		self.abortCalibration = function () {
 			self.cornerCalibrationActive(false);
 			self.resetView();
@@ -768,45 +820,52 @@ $(function () {
 			self.focusY(0);
 			self.calSvgScale(1);
 			self.currentMarker = 0;
+
+			self.resetUserView()
 		};
 
-		// TODO could this be combined with resetView?
-		self.reset_corner_calibration = function () {
-			self.resetView();
-			self.markersFoundPosition({});
-			self.currentResults({});
-			if (!window.mrbeam.isWatterottMode())
-				self.goto('#calibration_step_1');
-			$('.calibration_click_indicator').attr({'x': -100, 'y': -100});
-		};
+        // TODO IRATXE: might not be necessary anymore
+		// self.continue_to_calibration = function () {
+		// 	// self.loadUndistortedPicture(self.next);
+		// 	// simply show the calibration screen, showing the latest cropped img
+		// 	self.next()
+		// 	self.calibrationScreenShown(true)
+		// };
 
-		self.continue_to_calibration = function () {
-			// self.loadUndistortedPicture(self.next);
-			// simply show the calibration screen, showing the latest cropped img
-			self.next()
-			self.calibrationScreenShown(true)
-		};
+		// self.next = function () {
+		// 	var current = $('.calibration_step.active');
+		// 	current.removeClass('active');
+		// 	var next = current.next('.calibration_step');
+		// 	if (next.length === 0) {
+		// 		next = $('#camera_settings_view');
+		// 	}
+        //
+		// 	next.addClass('active');
+		// };
+        //
+		// self.goto = function (target_id) {
+		// 	var el = $(target_id);
+		// 	if (el) {
+		// 		$('.calibration_step.active').removeClass('active');
+		// 		$(target_id).addClass('active');
+		// 	} else {
+		// 		console.error('no element with id' + target_id);
+		// 	}
+		// };
 
-		self.next = function () {
-			var current = $('.calibration_step.active');
-			current.removeClass('active');
-			var next = current.next('.calibration_step');
-			if (next.length === 0) {
-				next = $('#calibration_step_1');
-			}
+        self.changeUserView = function(toView) {
+            Object.entries(CUSTOMER_CAMERA_VIEWS).forEach(([view_name,view_id]) => {
+                if (view_name === toView) {
+                    $(view_id).show()
+                } else {
+                    $(view_id).hide()
+                }
+            })
+        }
 
-			next.addClass('active');
-		};
-
-		self.goto = function (target_id) {
-			var el = $(target_id);
-			if (el) {
-				$('.calibration_step.active').removeClass('active');
-				$(target_id).addClass('active');
-			} else {
-				console.error('no element with id' + target_id);
-			}
-		};
+        self.resetUserView = function() {
+            self.changeUserView('settings')
+        }
 
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {
 			data = data || {}
@@ -839,7 +898,8 @@ $(function () {
 		CameraCalibrationViewModel,
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
-		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel", "readyToLaserViewModel"],
+		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel",
+            "printerStateViewModel", "readyToLaserViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]

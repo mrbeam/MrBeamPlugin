@@ -661,7 +661,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_template_configs(self):
 		result = [
 			dict(type='settings', name=gettext("File Import Settings"), template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
-			dict(type='settings', name=gettext("Camera Calibration"), template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+			dict(type='settings', name=gettext("Camera"), template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
 			dict(type='settings', name=gettext("Precision Calibration"), template='settings/backlash_settings.jinja2', suffix="_backlash", custom_bindings=True),
 			dict(type='settings', name=gettext("Debug"), template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
 			dict(type='settings', name=gettext("About This Mr Beam"), template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
@@ -1601,6 +1601,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			generate_backlash_compenation_pattern_gcode=[],
 			compensate_obj_height=[],
 			calibration_save_raw_pic=[],
+			calibration_lens_start=[],
+			calibration_get_raw_pic=[],
+			calibration_del_pic=[],
+			camera_run_lens_calibration=[],
+			camera_stop_lens_calibration=[],
 			generate_calibration_markers_svg=[],
 		)
 
@@ -1675,10 +1680,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "calibration_save_raw_pic":
 			# TODO save next raw image to the buffer
 			# TODO flash LEDs when raw img saved
-			return self.sendInitialCalibrationMarkers()
+     		 return self.onCalibrationSaveRawPic()
+		elif command == "calibration_lens_start":
+			return self.onLensCalibrationStart()
+		elif command == "calibration_get_raw_pic":
+			return self.onCalibrationGetRawPic()
+		elif command == "calibration_del_pic":
+			return self.onCalibrationDelRawPic()
+		elif command == "camera_run_lens_calibration":
+			return self.onCalibrationRunLensDistort()
+		elif command == "camera_stop_lens_calibration":
+			return self.onCalibrationStopLensDistort()
 		elif command == "generate_calibration_markers_svg":
-			return self.generateCalibrationMarkersSvg() # TODO move this func to other file
-
+			return self.generateCalibrationMarkersSvg()  # TODO move this func to other file
 		return NO_CONTENT
 
 	def analytics_init(self, data):
@@ -2135,7 +2149,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					cooling_mode=self.temperature_manager.is_cooling(),
 					dusting_mode=self.dust_manager.is_final_extraction_mode,
 					state=self._printer.get_state_string(),
-
+					is_homed=self._printer.is_homed(),
 				)
 			except:
 				self._logger.exception("Exception while collecting mrb_state data.")
