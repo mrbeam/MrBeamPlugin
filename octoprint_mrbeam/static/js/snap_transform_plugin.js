@@ -53,7 +53,6 @@
 			self.scaleXText = paper.select('#scaleXText');
 			self.scaleYText = paper.select('#scaleYText');
 			self.rotateText = paper.select('#rotateText');
-			self.transformVisualization = paper.select('#mbtransformVisualization');
 			paper.mbtransform = self;
 			
 			self.initialized = true;
@@ -365,9 +364,6 @@
 
 			self.session.bb = self._transformBBox(self.session.bboxWithoutTransform, self.session.initialMatrix); 
 			
-			if(self.config.visualization){
-				self._visualizeTransform();
-			}
 		}
 		
 		self._sessionUpdate = function(){
@@ -417,9 +413,7 @@
 				}
 //				console.info("S", sx.toFixed(2), sy.toFixed(2), "R", alpha.toFixed(2)+'°', "T", tx.toFixed(2), ty.toFixed(2) );
 
-				if(self.config.visualization){
-					self._visualizeTransform();
-				}
+				self._visualizeTransform();
 
 				self.updateCounter++;
 				self.session.lastUpdate = Date.now();
@@ -432,9 +426,7 @@
 		
 		self._sessionEnd = function(){
 			self.paper.debug.cleanup();
-			if(self.config.visualization){
-				self._visualizeTransformCleanup();
-			}
+			self._visualizeTransformCleanup();
 
 
 //			console.info("Apply Transform: ", self.session.originMatrix.split());
@@ -518,7 +510,6 @@
 			}
 
 			self.transformHandleGroup.node.classList.add('active');
-			self.transformVisualization.node.classList.add('active');
 			
 			self.updateCounter = 0;
 			self.updateFPS = setInterval(function(){
@@ -530,7 +521,6 @@
 		self.deactivate = function(){
 			self.updateFPS = null;
 			self.transformHandleGroup.removeClass('active');
-			self.transformVisualization.removeClass('active');
 
 			// remove drag handlers
 			self.translateHandle.undrag();
@@ -602,7 +592,6 @@
 //		};
 
 		self._alignHandlesToBB = function(bbox_to_wrap){
-			const gap = 1;
 			if(bbox_to_wrap) {
 				// resize translateHandle (rectangle)
 				self.translateHandle.transform('');
@@ -622,10 +611,10 @@
 			self.scaleHandleNE.transform(lm.clone().translate(bbox_to_wrap.x2, bbox_to_wrap.y).add(unscaleMat));
 			self.scaleHandleSE.transform(lm.clone().translate(bbox_to_wrap.x2, bbox_to_wrap.y2).add(unscaleMat));
 			
-			self.scaleHandleN.transform(lm.clone().translate(bbox_to_wrap.cx, (bbox_to_wrap.y - gap)).add(unscaleMat));
-			self.scaleHandleE.transform(lm.clone().translate((bbox_to_wrap.x2 + gap), bbox_to_wrap.cy).add(unscaleMat));
-			self.scaleHandleS.transform(lm.clone().translate(bbox_to_wrap.cx, (bbox_to_wrap.y2 + gap)).add(unscaleMat));
-			self.scaleHandleW.transform(lm.clone().translate((bbox_to_wrap.x - gap), bbox_to_wrap.cy).add(unscaleMat));
+			self.scaleHandleN.transform(lm.clone().translate(bbox_to_wrap.cx, bbox_to_wrap.y).add(unscaleMat));
+			self.scaleHandleE.transform(lm.clone().translate(bbox_to_wrap.x2, bbox_to_wrap.cy).add(unscaleMat));
+			self.scaleHandleS.transform(lm.clone().translate(bbox_to_wrap.cx, bbox_to_wrap.y2).add(unscaleMat));
+			self.scaleHandleW.transform(lm.clone().translate(bbox_to_wrap.x,  bbox_to_wrap.cy).add(unscaleMat));
 			self.rotHandle.transform(lm.clone().translate((bbox_to_wrap.x2+self.config.minTranslateHandleSize), bbox_to_wrap.cy).add(unscaleMat));
 			
 		};
@@ -661,22 +650,27 @@
 		///////////// VISUALIZATIONS ////////////////////
 				
 		self._visualizeTransform = function(){
-			
-			// translate
-			if(self.session.type === 'translate') {
-				self._visualizeTranslate();
-			}
-			if(self.session.type === 'rotate') {
-				self._visualizeRotate();
-			}
-			if(self.session.type === 'scale') {
-				self._visualizeScale();
-			}
 
+			if(self.config.visualization){
+			
+				// translate
+				if(self.session.type === 'translate') {
+					self._visualizeTranslate();
+				}
+				if(self.session.type === 'rotate') {
+					self._visualizeRotate();
+				}
+				if(self.session.type === 'scale') {
+					self._visualizeScale();
+				}
+
+				self.transformHandleGroup.node.classList.toggle('visualize', true);
+
+			}
 		};
 		
 		self._visualizeTransformCleanup = function(){
-			
+			self.transformHandleGroup.node.classList.toggle('visualize', false);
 		};
 
 		self._visualizeTranslate = function(){
@@ -717,8 +711,10 @@
 			const sss = self.session.scale;
 			const handleX = sss.mx + sss.dxMM; 
 			const handleY = sss.my + sss.dyMM; 
-			const cx = sss.cx;
-			const cy = sss.cy;
+			
+			// TODO unproportional scale
+			const cx = sss.prop ? sss.cx : self.session.bboxWithoutTransform.x;
+			const cy = sss.prop ? sss.cy : self.session.bboxWithoutTransform.y;
 			const mirrorX = handleY < cy ? 1 : -1;
 			const mirrorY = handleX < cx ? 1 : -1;
 			const width = self.session.bboxWithoutTransform.width * self.session.scale._m.a * sss.sx;
@@ -739,7 +735,7 @@
 			self.scaleXText.transform(Snap.matrix(1,0,0,1,xX + width/2, xY + xTextOffset));
 
 			const yX = (handleX > cx) ? -gap : +gap;
-			const yTextOffset = (handleX > cx) ? -gap : gap; // <text> origin is the baseline, not the vertical center => compensate this
+			const yTextOffset = (handleX > cx) ? -gap/2 : gap; // <text> origin is the baseline, not the vertical center => compensate this
 			const yY = (handleY > cy) ? 0 : -height;
 			const transformY = Snap.matrix(mirrorY,0,0,height,yX,yY);
 			self.scaleYVis.transform(transformY);

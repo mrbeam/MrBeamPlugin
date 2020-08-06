@@ -689,20 +689,19 @@
                                         </circle>
 									</g>
 									<g id="mbtransformHandleGroup">
-										<g id="mbtransformVisualization">
-											<g id="translateVis">
-												<path id="translateXVis" class="transformVis" d="M0,0v-5h1v5" />
-												<text id="translateXText"></text>
-												<path id="translateYVis" class="transformVis" d='M0,0h-5v1h5' />
-												<text id="translateYText"></text>
-											</g>
 
-											<g id="rotateVis">
-												<path class="transformVis" d="M0,0m-2,0h4m-2,-2v4M35,0h10"/>
-												<path id="rotateVisAngle" class="transformVis" d="M35,0h10" />
-												<text id="rotateText" transform="translate(5,0)"></text>
-											</g>
+										<g id="translateVis" class="transformVisualization">
+											<path id="translateXVis" class="transformGuideline" d="M0,0v-5h1v5" />
+											<text id="translateXText"></text>
+											<path id="translateYVis" class="transformGuideline" d='M0,0h-5v1h5' />
+											<text id="translateYText"></text>
 										</g>
+										<g id="rotateVis" class="transformVisualization">
+											<path class="transformGuideline" d="M0,0m-2,0h4m-2,-2v4M35,0h10"/>
+											<path id="rotateVisAngle" class="transformGuideline" d="M35,0h10" />
+											<text id="rotateText" transform="translate(5,0)"></text>
+										</g>
+											
 										<rect id="translateHandle_2" x="0" y="0" width="0" height="0" ></rect>
 										<g id="mbtransformTranslateGroup">
 											<!--<path id="_dbg_t" d="M0,0m-2,0h4m-2,-2v4"  stroke="#FF0000" stroke-width="1" fill="none" />-->
@@ -710,24 +709,24 @@
 												<path id="debugRotateCenter" d="M0,0m-2,0h4m-2,-2v4"  stroke="#000000" stroke-width="1" fill="none" />
 												<!--<path id="_dbg_r" d="M0,0m-2,0h4m-2,-2v4"  stroke="#FF0000" stroke-width="1" fill="none" />-->
 
-												<g id="scaleVis">
-													<path id="scaleXVis" class="transformVis" d="M0,-5v10m0,-5h1m0,-5v10" />
+												<g id="scaleVis" class="transformVisualization">
+													<path id="scaleXVis" class="transformGuideline" d="M0,-5v10m0,-5h1m0,-5v10" />
 													<text id="scaleXText" text-anchor="middle"></text>
-													<path id="scaleYVis" class="transformVis" d='M-5,0h10m-5,0v1m-5,0h10'/>
+													<path id="scaleYVis" class="transformGuideline" d='M-5,0h10m-5,0v1m-5,0h10'/>
 													<text id="scaleYText" text-anchor="middle"></text>
 												</g>
 												<g id="mbtransformScaleGroup">
 													<!--<path id="_dbg_s" d="M0,0m-2,0h4m-2,-2v4"  stroke="#00FF00" stroke-width="1" fill="none" />-->
 													<rect id="translateHandle" x="0" y="0" width="0" height="0" ></rect>
 												</g>
-												<path id="scaleHandleNW" class="scaleHandle prop" d="M0,0v-8l-2,2 -6,-6 2,-2h-8v8l2,-2 6,6 -2,2z" />
-												<path id="scaleHandleNE" class="scaleHandle prop" d="M0,0v-8l2,2 6,-6 -2,-2h8v8l-2,-2 -6,6 2,2z" />
-												<path id="scaleHandleSE" class="scaleHandle prop" d="M0,0v8l2,-2 6,6-2,2h8v-8l-2,2-6,-6 2,-2z" />
-												<path id="scaleHandleSW" class="scaleHandle prop" d="M0,0v8l-2,-2 -6,6 2,2h-8v-8l2,2 6,-6 -2,-2z" />
-												<path id="scaleHandleNN" class="scaleHandle unprop" d="M0,0h3v-6h2l-6,-6 -6,6h2v6z" />
-												<path id="scaleHandleEE" class="scaleHandle unprop" d="M0,0v-3h6v-2l6,6 -6,6v-2h-6z" />
-												<path id="scaleHandleSS" class="scaleHandle unprop" d="M0,0h3v6h2l-6,6 -6,-6h2v-6z" />
-												<path id="scaleHandleWW" class="scaleHandle unprop" d="M0,0v3h-6v2l-6,-6 6,-6v2h6z" />
+												<path id="scaleHandleNW" class="scaleHandle prop" d="M-1,-1v-8l-2,2 -6,-6 2,-2h-8v8l2,-2 6,6 -2,2z" />
+												<path id="scaleHandleNE" class="scaleHandle prop" d="M1,-1v-8l2,2 6,-6 -2,-2h8v8l-2,-2 -6,6 2,2z" />
+												<path id="scaleHandleSE" class="scaleHandle prop" d="M1,1v8l2,-2 6,6-2,2h8v-8l-2,2-6,-6 2,-2z" />
+												<path id="scaleHandleSW" class="scaleHandle prop" d="M-1,1v8l-2,-2 -6,6 2,2h-8v-8l2,2 6,-6 -2,-2z" />
+												<path id="scaleHandleNN" class="scaleHandle unprop" d="M0,-1h3v-6h2l-6,-6 -6,6h2v6z" />
+												<path id="scaleHandleEE" class="scaleHandle unprop" d="M1,0v-3h6v-2l6,6 -6,6v-2h-6z" />
+												<path id="scaleHandleSS" class="scaleHandle unprop" d="M0,1h3v6h2l-6,6 -6,-6h2v-6z" />
+												<path id="scaleHandleWW" class="scaleHandle unprop" d="M-1,0v3h-6v2l-6,-6 6,-6v2h6z" />
 												<path id="rotHandle" d="M 0,8 C 4.5,8 8,4.5 8,0 H 3 C 3,1.7 1.6,3 0,3 0,3 0,3 0,3 0,3 0,3 -0.3,3 -1.9,2.8 -3,1.5 -3,-0.1 c 0,-1.6 1.4,-3 3,-3 v 1.7 L 4,-5.5 0,-9.6 V -8 c -4.5,0 -8,3.6 -8,8 0,4.5 3.6,8 8,8 z" />
 											</g>
 										</g>
