@@ -30,7 +30,6 @@ $(function () {
 		self.camera = parameters[3];
 		self.state = parameters[4]; // isOperational
 		self.readyToLaser = parameters[5]; // lid_fully_open
-        self.control = parameters[6]; // sendHomeCommand
 
 		// calibrationState is constantly refreshed by the backend
 		// as an immutable array that contains the whole state of the calibration
@@ -895,7 +894,7 @@ $(function () {
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
 		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel",
-            "printerStateViewModel", "readyToLaserViewModel", "controlViewModel"],
+            "printerStateViewModel", "readyToLaserViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]
