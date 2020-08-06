@@ -14,6 +14,7 @@ from copy import copy
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import logme, logtime, logExceptions, makedirs
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 CB_ROWS = 5
 CB_COLS = 6
@@ -57,7 +58,7 @@ class BoardDetectorDaemon(Thread):
 	             event_bus=None,
 		     rawImgLock=None):
 		# runCalibrationAsap : run the lens calibration when we have enough pictures ready
-		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
+		self._logger = mrb_logger(__name__ + '.' + self.__class__.__name__)
 		self._logger.setLevel(logging.DEBUG)
 		self._logger.warning("Initiating the Board Detector Daemon")
 		self.event_bus = event_bus
