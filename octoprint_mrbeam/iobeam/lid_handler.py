@@ -699,7 +699,7 @@ class PhotoCreator(object):
 				'markers_recognised': 4 - len(missed),
 				'corners_calculated': None if workspaceCorners is None else list(workspaceCorners),
 				# {k: v.astype(int) for k, v in workspaceCorners.items()},
-				'markers_pos': {qd: pos.tolist() for qd, pos in self.last_markers.items()},
+				'markers_pos': {qd: list(pos) for qd, pos in self.last_markers.items()},
 				'successful_correction': success,
 				'undistorted_saved': True,
 				'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
@@ -725,6 +725,7 @@ class PhotoCreator(object):
 			))
 			self._add_result_to_analytics(
 				session_details,
+				missed=missed,
 				increment_pic=True,
 				error=err,
 				extra=analytics
@@ -757,6 +758,7 @@ class PhotoCreator(object):
 	def _add_result_to_analytics(
 			self,
 			session_details,
+			missed=[],
 			colors={},
 			marker_size={},
 			increment_pic=False,
@@ -791,7 +793,9 @@ class PhotoCreator(object):
 			tot_pics = _s['num_pics']
 			for qd in QD_KEYS:
 				_s_marker = _s['markers'][qd]
-				if qd in self.last_markers.keys() and self.last_markers[qd] is not None:
+				if qd in self.last_markers.keys() \
+				   and qd not in missed \
+				   and self.last_markers[qd] is not None:
 					_marker = np.asarray(self.last_markers[qd])
 					# Position : Avg & Std Deviation
 					_n_avg, _n_std = add_to_stat(
@@ -824,6 +828,8 @@ class PhotoCreator(object):
 				else:
 					_s['errors'][error] = 1
 			_s['avg_shutter_speed'] = updt(_s['avg_shutter_speed'], extra['avg_shutter_speed'], weights=[tot_pics, 1])
+			if len(missed) == 0:
+				_s['num_all_markers_detected'] += 1
 		except Exception as ex:
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 
