@@ -1680,7 +1680,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "calibration_save_raw_pic":
 			# TODO save next raw image to the buffer
 			# TODO flash LEDs when raw img saved
-     		 return self.onCalibrationSaveRawPic()
+			return self.onCalibrationSaveRawPic()
 		elif command == "calibration_lens_start":
 			return self.onLensCalibrationStart()
 		elif command == "calibration_get_raw_pic":
