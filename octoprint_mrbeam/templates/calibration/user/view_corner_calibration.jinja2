@@ -82,7 +82,7 @@
                 <div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i
                         class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
             </div>
-            <a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
+            <a class="muted" data-bind="attr: { href: cornerCalImgUrl() }"> {{ _('Download this image') }}</a>
         </div>
         <div class="marker_selection_desc calibration_help"
              data-bind="visible: cal_img_ready() && !cornerCalibrationActive()">
