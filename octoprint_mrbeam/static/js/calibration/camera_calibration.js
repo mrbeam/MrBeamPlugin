@@ -29,7 +29,7 @@ $(function () {
 		self.analytics = parameters[2];
 		self.camera = parameters[3];
 		self.state = parameters[4]; // isOperational
-		self.readyToLaser = parameters[5]; // lid_fully_open
+		self.readyToLaser = parameters[5]; // lid_fully_open & debug tab with mrb state
 
 		// calibrationState is constantly refreshed by the backend
 		// as an immutable array that contains the whole state of the calibration
@@ -436,7 +436,7 @@ $(function () {
 
 			if ('mrb_state' in data && data['mrb_state']) {
 				window.mrbeam.mrb_state = data['mrb_state'];
-				self.laserViewmodel.updateSettingsAbout()
+				self.readyToLaser.updateSettingsAbout()
 			}
 
 			if ('beam_cam_new_image' in data) {
