@@ -36,10 +36,12 @@
             <table class="camera-status-images" data-bind="visible: availablePicUrl()['raw']">
                 <tr>
                     <td>
-                        <img data-bind="attr: {src: availablePicUrl()['cropped']}"/>
-                        <a data-bind="attr: { href: availablePicUrl()['cropped'] }">
-                            <i class="fa fa-download" aria-hidden="true"></i>
-                        </a>
+                        <g data-bind="attr: { transform: workingArea.zObjectImgTransform() }">
+                           <img data-bind="attr: { src: availablePicUrl()['cropped'] }"/>
+                            <a data-bind="attr: { href: availablePicUrl()['cropped'] }">
+                                <i class="fa fa-download" aria-hidden="true"></i>
+                            </a>
+                        </g>
                     </td>
                     <td>
                         <img data-bind="attr: {src: availablePicUrl()['raw']}"/>
