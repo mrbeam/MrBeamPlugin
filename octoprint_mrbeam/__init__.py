@@ -50,7 +50,7 @@ from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA, SW_UPDATE_TIER_DEV
-from octoprint_mrbeam.support import set_support_mode, set_calibration_tool_mode
+from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
@@ -541,14 +541,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@property
 	def support_mode(self):
 		"""Get the support mode"""
-		ret = set_support_mode(self)
+		ret = check_support_mode(self)
 		self._fixEmptyUserManager()
 		return ret
 
 	@property
 	def calibration_tool_mode(self):
 		"""Get the calibration tool mode"""
-		ret = set_calibration_tool_mode(self)
+		ret = check_calibration_tool_mode(self)
 		self._fixEmptyUserManager()
 		return ret
 
@@ -976,7 +976,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
 	def calibration_wrapper(self):
 		if not self.calibration_tool_mode:
-			return NO_CONTENT
+			return ("", 403) # FORBIDDEN # NO_CONTENT
 		from flask import make_response, render_template
 		from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
 
@@ -1103,7 +1103,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# @firstrun_only_access #@maintenance_stick_only_access
 	def engraveCalibrationMarkers(self, intensity, feedrate):
 		if not self.calibration_tool_mode:
-			return NO_CONTENT
+			return ("", 403) # FORBIDDEN # NO_CONTENT
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		max_intensity = 1300  # TODO get magic numbers from profile
 		min_intensity = 0
