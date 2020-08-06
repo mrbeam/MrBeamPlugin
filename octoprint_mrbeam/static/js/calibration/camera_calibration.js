@@ -131,22 +131,24 @@ $(function () {
         })
 
 		// ---------------- CORNER CALIBRATION ----------------
-        self.cornerCalibrationActive = ko.observable(false);
+		self.cornerCalibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 		self.indicateRestartCornerCalibration = ko.observable(false)
 
-		self.applySetting = function(picType) {
+		self.applySetting = function(picType, applyCrossVisibility) {
 			// TODO with a dictionnary
 			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
 			                ['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
-			                ['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
+			                ['raw', DEFAULT_IMG_RES, 'visible', 'hidden'],
 			                ['default', LOADING_IMG_RES, 'hidden', 'hidden']]
 			for (let _t of settings)
 				if (_t[0] === picType) {
 					self.calImgWidth(_t[1][0])
 					self.calImgHeight(_t[1][1])
-					self.correctedMarkersVisibility(_t[2])
-					self.croppedMarkersVisibility(_t[3])
+					if(applyCrossVisibility){
+						self.correctedMarkersVisibility(_t[2])
+						self.croppedMarkersVisibility(_t[3])
+					}
 					return
 				}
 			new PNotify({
@@ -176,9 +178,9 @@ $(function () {
 			return `M0,${s} h${2*s} M${s},0 v${2*s} z`
 		})
 
-		self.getImgUrl = function(type) {
+		self.getImgUrl = function(type, applyCrossVisibility) {
 			if (type !== undefined) {
-					self.applySetting(type)
+					self.applySetting(type, applyCrossVisibility)
 					if (type == 'default')
 						return self.staticURL
 					else
@@ -186,7 +188,7 @@ $(function () {
 			}
 			for (let _t of ['cropped', 'lens_corrected', 'raw', 'default'])
 				if (_t === 'default' || self.availablePic()[_t]){
-					self.applySetting(_t)
+					self.applySetting(_t, applyCrossVisibility)
 					if (_t == 'default')
 						return self.staticURL
 					else
@@ -198,7 +200,7 @@ $(function () {
 
 		self.cornerCalImgUrl = ko.computed(function() {
 			if (!self.cornerCalibrationActive())
-				self._cornerCalImgUrl(self.getImgUrl())
+				self._cornerCalImgUrl(self.getImgUrl(undefined, true))
 			return self._cornerCalImgUrl()
 		});
 
@@ -211,8 +213,6 @@ $(function () {
 			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
 			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		})
-
-		self.calImgUrl = ko.computed(self.getImgUrl);
 
 		self.zMarkersTransform = ko.computed( function () {
 			// Like workArea.zObjectImgTransform(), but zooms
@@ -301,7 +301,7 @@ $(function () {
 			self.cornerCalibrationActive(true);
 			self.picType("lens_corrected");
 			// self.applySetting('lens_corrected')
-			self._cornerCalImgUrl(self.getImgUrl('lens_corrected'))
+			self._cornerCalImgUrl(self.getImgUrl('lens_corrected', true))
 			self.markersFoundPositionCopy = self.markersFoundPosition()
 			self.nextMarker();
 		};
@@ -351,7 +351,7 @@ $(function () {
 		self.userClick = function (vm, ev) {
 			// check if picture is loaded
 			if(window.location.href.indexOf('localhost') === -1)
-				if(self.calImgUrl() === STATIC_URL){
+				if(self.cornerCalImgUrl() === STATIC_URL){
 					console.log("Please wait until camera image is loaded...");
 					return;
 				}
@@ -403,9 +403,9 @@ $(function () {
 				if (typeof callback === 'function')
 					callback(data);
 				else {
-                    self.waitingForRefresh(true)
-                    console.log("Calibration picture requested.");
-                }
+					self.waitingForRefresh(true)
+					console.log("Calibration picture requested.");
+				}
 			};
 			var error_callback = function (resp) {
 				new PNotify({
@@ -417,12 +417,12 @@ $(function () {
 				if (typeof callback === 'function')
 					callback(resp);
 			};
-            self.simpleApiCommand(
-                "take_undistorted_picture",
-                {},
-                success_callback,
-                error_callback
-            )
+			self.simpleApiCommand(
+				"take_undistorted_picture",
+				{},
+				success_callback,
+				error_callback
+			)
 		};
 
 
