@@ -149,6 +149,26 @@
                 </div>
             </div>
         </div>
+        <div class="camera-settings-section">
+            <!-- Make this section collapsable -->
+            <h4>{{ _("Settings") }}</h4>
+            <p>
+                {{ _("Some additional settings to tweak the behaviour of the camera.
+                It is recommended not to change the default values, but you can experiment.") }}
+            </p>
+            <div class="controls">
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.cam.remember_markers_across_sessions">
+                    <strong>{{ _("Enable High Confidence mode") }}</strong>
+                    <div>{{ _("Do not enable this option if you have problems with your camera.") }}</div>
+                    <div>
+                        {{ _("This option lets you choose if you only want to see pictures where all of the markers were detected.
+                        Only enable this if you need to place a design on an object that might have covered a marker, and you
+                        were already satisfied with the precision of the first design you lasered on that object.") }}
+                    </div>
+                </label>
+            </div>
+        </div>
     </div>
 
     <div id="lens_calibration_view" class="scrollable">

@@ -575,6 +575,12 @@ class PhotoCreator(object):
 			if self._plugin.lid_handler._interlock_closed or self.stopping:
 				return
 			time.sleep(.2)
+		remember_markers = self._settings.get(['cam', 'remember_markers_across_sessions'])
+		self._logger.info("Remember markers from last session: %s" % remember_markers)
+		if not remember_markers:
+			self._logger.warning("Forgetting markers from previous session.")
+			self.last_markers = None
+
 		# The lid didn't open during waiting time
 		cam.async_capture()
 		saveNext = False # Lens calibration : save the next picture instead of this one
