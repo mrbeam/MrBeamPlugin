@@ -330,6 +330,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				lensCalibrationFile='{}/cam/lens_correction_{}x{}.npz'.format(settings().getBaseFolder('base'), image_default_width, image_default_height),
 				saveCorrectionDebugImages=False,
 				markerRecognitionMinPixel = MIN_MARKER_PIX,
+				remember_markers_across_sessions = True,
 			),
 			gcode_nextgen=dict(
 				enabled=True,
@@ -359,6 +360,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cam=dict(frontendUrl=self._settings.get(['cam', 'frontendUrl']),
 			         previewOpacity=self._settings.get(['cam', 'previewOpacity']),
 			         markerRecognitionMinPixel = self._settings.get(['cam', 'markerRecognitionMinPixel']),
+			         remember_markers_across_sessions = self._settings.get(['cam', 'remember_markers_across_sessions']),
 			         ),
 			dev=dict(
 				env=self.get_env(),
@@ -441,6 +443,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# dev only
 			if self.is_dev_env() and "dev" in data and "design_store_email" in data['dev']:
 				self._settings.set(["dev", "design_store_email"], data['dev']["design_store_email"])
+			if "remember_markers_across_sessions" in data:
+				self._settings.set_boolean(["cam", "remember_markers_across_sessions"], data["remember_markers_across_sessions"])
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
@@ -1605,6 +1609,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			analytics_upload=[],  # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
+			remember_markers_across_sessions=[],
 			review_data=[],
 			reset_prefilter_usage=[],
 			reset_carbon_filter_usage=[],
@@ -1657,6 +1662,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
+		elif command == "remember_markers_across_sessions":
+			return self.remember_markers_across_sessions(data)
 		elif command == "review_data":
 			return self.review_handler.save_review_data(data)
 		elif command == "reset_prefilter_usage":
@@ -1732,6 +1739,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def focus_reminder(self, data):
 		if 'focusReminder' in data:
 			self._settings.set_boolean(["focusReminder"], data['focusReminder'])
+			self._settings.save()  # This is necessary because without it the value is not saved
+		return NO_CONTENT
+
+	def remember_markers_across_sessions(self, data):
+		if 'remember_markers_across_sessions' in data:
+			self._settings.set_boolean(["cam","remember_markers_across_sessions"], data['remember_markers_across_sessions'])
 			self._settings.save()  # This is necessary because without it the value is not saved
 		return NO_CONTENT
 

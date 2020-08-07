@@ -41,8 +41,8 @@
                             <g transform="scale(1)"
                                data-bind="attr: { transform: workingArea.zObjectImgTransform() }">
                                 <image id="beamcam_image_svg"
-                                    xlink:href="" x="0" y="0"
-                                    data-bind="attr: {
+                                       xlink:href="" x="0" y="0"
+                                       data-bind="attr: {
                                             width: workingArea.workingAreaWidthMM(),
                                             height: workingArea.workingAreaHeightMM(),
                                             opacity: workingArea.previewImgOpacity(),
@@ -103,6 +103,35 @@
         {#        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",#}
         {#                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065874_manual_positioning.pdf\')"><i class="icon-external-link"></i>&nbsp;',#}
         {#                closing_tag='</a>') }}</div>#}
+
+        <div class="camera-settings-section">
+            <h4>{{ _("Settings") }}</h4>
+            <h5>{{ _('Marker detection') }}</h5>
+            <p>
+                {{ _('Select one of the two marker detection modes: %(strong_open)sreliable%(strong_close)s to always get an image or %(strong_open)saccurate%(strong_close)s to only get precise images.',
+                        strong_open='<strong>',
+                        strong_close='</strong>') }}
+            </p>
+            <div class="tooltip-inline" data-toggle="tooltip" data-placement="right"
+                 title="{{ _('You can change the marker detection mode depending the desired behavior of the camera.') }}
+                <ul>
+                <li><b>{{ _('Reliable:') }}</b>
+                        {{ _('The system remembers the markers\'s position from the last time it found them.') }}
+                        {{ _('This might lead to lower precision.') }}
+                </li>
+                <li><b>{{ _('Accurate:') }}</b>
+                        {{ _('This option lets you choose if you only want to see pictures where all of the markers were detected.') }}
+                        {{ _('All the pink markers need to be visible and detected when you open the lid. After being detected, you might cover them.') }}
+                </li>
+                </ul>">
+                <div class="btn-group" id="camera_settings_marker_detection" data-toggle="buttons-radio">
+                    <button type="button" value="reliable"
+                            class="btn btn-small btn-default active">{{ _('Reliable') }}</button>
+                    <button type="button" value="accurate"
+                            class="btn btn-small btn-default">{{ _('Accurate') }}</button>
+                </div>
+            </div>
+        </div>
 
         <div class="camera-settings-section">
             <h4>{{ _("Camera calibration") }}</h4>

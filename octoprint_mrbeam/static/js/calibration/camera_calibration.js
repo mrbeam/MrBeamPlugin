@@ -30,6 +30,7 @@ $(function () {
 		self.camera = parameters[3];
 		self.state = parameters[4]; // isOperational
 		self.readyToLaser = parameters[5]; // lid_fully_open & debug tab with mrb state
+        self.settings = parameters[6];
 
 		// calibrationState is constantly refreshed by the backend
 		// as an immutable array that contains the whole state of the calibration
@@ -122,6 +123,32 @@ $(function () {
             return self.camera.markerState() === 4 ?
                 gettext("All 4 pink corner markers are recognized") :
                 gettext("Not all pink corner markers are recognized. Missing markers: ") + notFoundStr;
+        });
+
+		// ---------------- CAMERA SETTINGS ----------------
+        self.setMarkerDetectionMode = function() {
+            // Default is "Reliable". If the user changed it, set "Accurate".
+            if (!self.settings.settings.plugins.mrbeam.cam.remember_markers_across_sessions()) {
+                $('#camera_settings_marker_detection button[value="accurate"]').addClass('active').siblings().removeClass('active');
+            }
+        }
+
+        $('#camera_settings_marker_detection button').click(function() {
+            let remember_markers_across_sessions = $(this).attr('value') === 'reliable';
+
+            let data = { remember_markers_across_sessions: remember_markers_across_sessions }
+            self.simpleApiCommand( "remember_markers_across_sessions", data,
+                function (response) {
+                    console.log("simpleApiCall response for saving remember_markers_across_sessions: ", response);
+                }, function () {
+                    console.error("Unable to save remember_markers_across_sessions: ", data);
+                    new PNotify({
+                        title: gettext("Error while selecting the marker detection mode"),
+                        text: _.sprintf(gettext("Unable to select the marker detection mode at the moment.")),
+                        type: "error",
+                        hide: true
+                    });
+                });
         });
 
 		// ---------------- CAMERA ALIGNMENT ----------------
@@ -262,6 +289,8 @@ $(function () {
 			}
 			self.calibrationScreenShown(true)
             self.startupComplete(true);
+
+			self.setMarkerDetectionMode()
 
 			$('#settings_plugin_mrbeam_camera_link').click(function(){
                 self.abortCalibration()
@@ -853,19 +882,19 @@ $(function () {
 		// 	}
 		// };
 
-        self.changeUserView = function(toView) {
-            Object.entries(CUSTOMER_CAMERA_VIEWS).forEach(([view_name,view_id]) => {
-                if (view_name === toView) {
-                    $(view_id).show()
-                } else {
-                    $(view_id).hide()
-                }
-            })
-        }
+		self.changeUserView = function(toView) {
+			Object.entries(CUSTOMER_CAMERA_VIEWS).forEach(([view_name,view_id]) => {
+				if (view_name === toView) {
+					$(view_id).show()
+				} else {
+					$(view_id).hide()
+				}
+			})
+		}
 
-        self.resetUserView = function() {
-            self.changeUserView('settings')
-        }
+		self.resetUserView = function() {
+			self.changeUserView('settings')
+		}
 
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {
 			data = data || {}
@@ -899,7 +928,7 @@ $(function () {
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
 		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel",
-            "printerStateViewModel", "readyToLaserViewModel"],
+            "printerStateViewModel", "readyToLaserViewModel", "settingsViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]
