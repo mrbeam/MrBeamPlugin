@@ -107,17 +107,23 @@
         <div class="camera-settings-section">
             <h4>{{ _("Camera calibration") }}</h4>
             <p>
-                {{ _("Your Mr Beam's camera is factory calibrated by default, so there is normally no need to calibrate the camera.") }}
+                {{ _("Your Mr Beam's camera is factory calibrated by default, so there is %(open_strong)snormally no need to calibrate the camera%(close_strong)s.",
+                        open_strong='<strong>',
+                        close_strong='</strong>') }}
             </p>
             <div>
-                {{ _("A new calibration of the camera is only necessary if:") }}
+                {{ _("A new calibration of the camera is %(open_strong)sonly necessary if%(close_strong)s:",
+                        open_strong='<strong>',
+                        close_strong='</strong>') }}
                 <div>
                     <ul>
                         <li>
                             {{ _("One of the pink markings has been changed. (For example, if the mark was peeled off and glued in again.)") }}
                         </li>
                         <li>
-                            {{ _("You notice a larger deviation between the screen position on the adjusted (black-and-white image) and the laser result.") }}
+                            {{ _("You notice a %(open_strong)sdeviation larger than 5mm%(close_strong)s between the processed camera picture (as you see it in the software working area) and the laser result.",
+                                    open_strong='<strong>',
+                                    close_strong='</strong>') }}
                         </li>
                     </ul>
                 </div>
