@@ -775,6 +775,10 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	margin-bottom: 30px;
 }
 
+.camera-settings-section .btn-group {
+	margin-left: 2px;
+}
+
 .camera-status-images {
 	width: 90%;
     text-align: center;

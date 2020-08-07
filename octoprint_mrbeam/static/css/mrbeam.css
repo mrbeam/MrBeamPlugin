@@ -2410,6 +2410,10 @@ input.search-query,
     /*border-width: 0 5px 5px;*/
 }
 
+.tooltip-inline {
+    display: inline-block;
+}
+
 /*
 * — for parameter explanations —
 */
