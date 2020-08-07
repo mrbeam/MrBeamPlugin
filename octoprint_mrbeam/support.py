@@ -13,7 +13,7 @@ USER_PW   = 'a'
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.support")
 
-def set_support_mode(plugin):
+def check_support_mode(plugin):
 	"""
 	Enables support_mode IF support file from USB stick is present or if support_mode is enabled in dev settings
 	:param plugin: MrBeam Plugin instance
@@ -35,7 +35,7 @@ def set_support_mode(plugin):
 	return support_mode_enabled
 
 
-def set_calibration_tool_mode(plugin):
+def check_calibration_tool_mode(plugin):
 	"""
 	Enables support_mode IF support file from USB stick is present or if support_mode is enabled in dev settings
 	:param plugin: MrBeam Plugin instance
