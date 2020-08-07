@@ -697,12 +697,10 @@
 			const a = self.session.rotate.alpha;
 			
 			const visM = Snap.matrix(1,0,0,1,cx, cy).rotate(self.session.rotate._alpha);
-//			const visT = Snap.matrix(1,0,0,1,cx, cy).rotate(self.session.rotate._alpha).translate(6,0);
 			self.rotateVis.transform(visM);
 			self.rotateVisAngle.transform(Snap.matrix().rotate(self.session.rotate.alpha));
-			const angleText = ((a + 180) % 360) - 180; // -180° to 180°;
+			const angleText = ((a + 180) % 360) - 180; // TODO -180° to 180°;
 			self.rotateText.node.textContent = `${(angleText>0 ? '+':'')}${angleText.toFixed(1)} °`;
-//			self.rotateText.transform(visT);
 		};
 		
 		self._visualizeScale = function () {
@@ -711,37 +709,47 @@
 			const sss = self.session.scale;
 			const handleX = sss.mx + sss.dxMM; 
 			const handleY = sss.my + sss.dyMM; 
-			
-			// TODO unproportional scale
-			const cx = sss.prop ? sss.cx : self.session.bboxWithoutTransform.x;
-			const cy = sss.prop ? sss.cy : self.session.bboxWithoutTransform.y;
-			const mirrorX = handleY < cy ? 1 : -1;
-			const mirrorY = handleX < cx ? 1 : -1;
 			const width = self.session.bboxWithoutTransform.width * self.session.scale._m.a * sss.sx;
 			const height = self.session.bboxWithoutTransform.height * self.session.scale._m.d * sss.sy;
+			let cx = sss.cx;
+			let cy = sss.cy;
+			const mirrorX = handleY < cy ? 1 : -1;
+			const mirrorY = handleX < cx ? 1 : -1;
+			const handleIsLeft = Math.sign(sss.mx - sss.cx);
+			const handleIsTop = Math.sign(sss.my - sss.cy);
+			const rulerCx = cx + handleIsLeft * width / 2;
+			const rulerCy = cy + handleIsTop * height / 2;
 			
-			const visM = Snap.matrix(1,0,0,1,cx, cy);
-			self.scaleVis.transform(visM);
+			if(!sss.prop){
+				if(sss.signX === 0) cx -= width / 2;
+				if(sss.signY === 0) cy -= height / 2;
+			}
 			self.scaleVis.node.classList.toggle('showX', sss.signX !== 0);
 			self.scaleVis.node.classList.toggle('showY', sss.signY !== 0);
 			
-			const xX = (handleX > cx) ? 0 : -width; 
-			const xTextOffset = (handleY > cy) ? -gap/2 : gap; // <text> origin is the baseline, not the vertical center => compensate this
-			const xY = (handleY > cy) ? -gap : +gap; // above or below transform handle bbox
-			const transformX = Snap.matrix(width,0,0,mirrorX,xX,xY);
+			self.paper.debug.point('scaleVisCenter', rulerCx, rulerCy, '#005303');
+			
+			// move ruler center to the center of the translatehandle bbox
+			const visM = Snap.matrix(1,0,0,1,rulerCx, rulerCy);
+			self.scaleVis.transform(visM);
+			
+			const horizontalEdgeY = -height / 2; // transform handle bbox above edge or below edge
+			const horizontalRulerOffset = handleIsTop * ((handleY > cy) ? -gap : +gap); // gap to add to horizontalEdgeY
+			const horizontalTextOffset = handleIsTop * ((handleY > cy) ? -gap : +gap); // <text> origin is the baseline, not the vertical center => compensate this
+			const transformX = Snap.matrix(width*mirrorX,0,0,1,0,horizontalEdgeY + horizontalRulerOffset);
 			self.scaleXVis.transform(transformX);
 			const labelX = `${width.toFixed(1)}'mm' / ${(sss.sx*100).toFixed(1)}%`;
 			self.scaleXText.node.textContent = labelX;
-			self.scaleXText.transform(Snap.matrix(1,0,0,1,xX + width/2, xY + xTextOffset));
+			self.scaleXText.transform(Snap.matrix(1,0,0,1,0, horizontalEdgeY + horizontalRulerOffset + horizontalTextOffset));
 
-			const yX = (handleX > cx) ? -gap : +gap;
-			const yTextOffset = (handleX > cx) ? -gap/2 : gap; // <text> origin is the baseline, not the vertical center => compensate this
-			const yY = (handleY > cy) ? 0 : -height;
-			const transformY = Snap.matrix(mirrorY,0,0,height,yX,yY);
+			const verticalEdgeX = -width / 2;
+			const verticalRulerOffset = handleIsLeft * ((handleX > cx) ? -gap : +gap);
+			const verticalTextOffset = handleIsLeft * ((handleX > cx) ? -gap : +gap); // <text> origin is the baseline, not the vertical center => compensate this
+			const transformY = Snap.matrix(1,0,0,mirrorY*height,verticalEdgeX + verticalRulerOffset,0);
 			self.scaleYVis.transform(transformY);
 			const labelY = `${height.toFixed(1)}mm / ${(sss.sy*100).toFixed(1)}%`;
 			self.scaleYText.node.textContent = labelY;	
-			self.scaleYText.transform(Snap.matrix(0,-1,1,0, yX + yTextOffset, yY + height/2));
+			self.scaleYText.transform(Snap.matrix(0,-1,1,0, verticalEdgeX + verticalRulerOffset + verticalTextOffset, 0));
 			
 		}
 
