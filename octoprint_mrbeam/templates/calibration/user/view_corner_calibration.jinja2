@@ -10,7 +10,7 @@
     <p>{{ _('The corner calibration uses the pink markers to calibrate the camera. Use this in case one of the markers has been changed or if there is a large deviation between the screen position and the laser result.') }}</p>
     <h4>{{ _('Steps') }}</h4>
     <ol class="camera-calibration-steps">
-        <li>{{ _('Put a material like cardboard inside your Mr Beam that it covers the whole working area:') }}<br>
+        <li>{{ _('Put a material like cardboard inside your Mr Beam that covers the whole working area:') }}<br>
             <div class='calibration_manual img'
                  style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_material_size.svg)'></div>
         </li>
@@ -18,11 +18,11 @@
             <button class="btn btn-primary"
                     data-bind="click: engrave_markers">{{ _('Engrave Calibration Markers') }}</button>
         </li>
-        <li>{{ _('Wait until the engraving is finished and Mr Beam illuminates green. Open the safety lid again and be carefult NOT to touch the engraved material. The camera will now take a picture of the engraving.') }}</li>
+        <li>{{ _('Wait until the engraving is finished and Mr Beam Status Lights are green. Open the safety lid again and be carefult NOT to touch the engraved material. The camera will now take a picture of the engraving.') }}</li>
         <li>{{ _('Start the calibration by clicking on the button, and then follow these steps:') }}
             <ul>
                 <li>{{ _('Click on the arrow head of the marker in the magnified picture.') }}</li>
-                <li>{{ _('Continue with the other markers as the picture changes.') }}</li>
+                <li>{{ _('Click on "next" to continue with the other markers as the picture changes.') }}</li>
                 <li>{{ _('Once all arrowheads are marked the calibration is finished and can be saved.') }}</li>
             </ul>
             <button class="btn btn-primary" data-bind="click: startCornerCalibration, visible: !cornerCalibrationActive()">
