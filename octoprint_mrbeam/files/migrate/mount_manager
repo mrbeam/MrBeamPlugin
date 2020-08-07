@@ -5,7 +5,7 @@
 # clear: if no usb stick plugged in, SELFCHECK_DIR will be deleted
 # if `df /` says that there is little space on disk left, mount_manager deletes all files in var/log and ~/.octoprint/logs
 
-VERSION="1.7.0"
+VERSION="1.7.1"
 APP_DIR=/root/mount_manager
 LOG_FILE="/var/log/mount_manager.log"
 SELFCHECK_MOUNT_TARGET=/media/
@@ -222,8 +222,10 @@ if [ "$1" == "clear" ]; then
 		# clean up if we shadowed our Plugin with a version from usb stick
         if [ -d ${MRBEAM_PLUGIN_SHADOWED_DIR} ]; then
             log_info "Shadowed MrBeam Plugin: Cleaning up... Moving ${MRBEAM_PLUGIN_SHADOWED_DIR} to ${MRBEAM_PLUGIN_DIR}" "${OCTOPRINT_LOG}"
+            sudo systemctl stop octoprint.service
             rm -rf "${MRBEAM_PLUGIN_DIR}"
             mv ${MRBEAM_PLUGIN_SHADOWED_DIR} "${MRBEAM_PLUGIN_DIR}"
+            sudo systemctl restart octoprint.service
         else
             log_info "Shadowed MrBeam Plugin: nothing to do" "${OCTOPRINT_LOG}"
         fi
