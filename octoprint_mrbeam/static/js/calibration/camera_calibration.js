@@ -882,19 +882,19 @@ $(function () {
 		// 	}
 		// };
 
-        self.changeUserView = function(toView) {
-            Object.entries(CUSTOMER_CAMERA_VIEWS).forEach(([view_name,view_id]) => {
-                if (view_name === toView) {
-                    $(view_id).show()
-                } else {
-                    $(view_id).hide()
-                }
-            })
-        }
+		self.changeUserView = function(toView) {
+			Object.entries(CUSTOMER_CAMERA_VIEWS).forEach(([view_name,view_id]) => {
+				if (view_name === toView) {
+					$(view_id).show()
+				} else {
+					$(view_id).hide()
+				}
+			})
+		}
 
-        self.resetUserView = function() {
-            self.changeUserView('settings')
-        }
+		self.resetUserView = function() {
+			self.changeUserView('settings')
+		}
 
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {
 			data = data || {}
