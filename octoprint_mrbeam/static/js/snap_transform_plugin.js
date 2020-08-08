@@ -274,8 +274,11 @@
 
 		self.scaleMove = function( target, dx, dy, x, y, event ){
 			// convert to viewBox coordinates (mm)
-			const dxMM = self._convertToViewBoxUnits(dx);
-			const dyMM = self._convertToViewBoxUnits(dy);
+			let dxMM = self._convertToViewBoxUnits(dx);
+			let dyMM = self._convertToViewBoxUnits(dy);
+
+//			if(self.session.scale._m.a < 0) dxMM *= -1;
+//			if(self.session.scale._m.d < 0) dyMM *= -1;
 
 			const sss = self.session.scale;
 			sss.dxMM = dxMM;
@@ -363,6 +366,10 @@
 			self.session.initialMatrix = self.translateHandle.transform().totalMatrix; // stack of scale, rotate, translate matrices
 
 			self.session.bb = self._transformBBox(self.session.bboxWithoutTransform, self.session.initialMatrix); 
+			
+			self.paper.debug.coords('scale', '#ffaaaa', self.scaleGroup);
+			self.paper.debug.coords('rotate', '#aaffaa', self.rotateGroup);
+			self.paper.debug.coords('translate', '#aaaaff', self.translateGroup);
 			
 		}
 		
@@ -684,10 +691,10 @@
 			const mdy = Snap.matrix().translate(startXv, startYv).scale(1, self.session.translate.dy);
 			self.translateYVis.transform(mdy);
 			
-			self.translateXText.node.textContent = self.session.translate.dx.toFixed(2);
-			self.translateXText.transform(Snap.matrix(1,0,0,1,startXh, startYh+7));
-			self.translateYText.node.textContent = self.session.translate.dy.toFixed(2);
-			self.translateYText.transform(Snap.matrix(1,0,0,1,startXv+8, startYv).rotate(-90));
+			self.translateXText.node.textContent = self.session.translate.dx.toFixed(2) + 'mm';
+			self.translateXText.transform(Snap.matrix(1,0,0,1,startXh + self.session.translate.dx/2, startYh+7));
+			self.translateYText.node.textContent = self.session.translate.dy.toFixed(2) + 'mm';
+			self.translateYText.transform(Snap.matrix(0,-1,1,0,startXv+8, startYv + self.session.translate.dy/2));
 		};
 
 		self._visualizeRotate = function(){
@@ -731,6 +738,8 @@
 			
 //			self.paper.debug.point('scaleVisCenter', 0, 0, '#005303', '#scaleVis');
 			
+			self.paper.debug.coords('scaleVis', '#999999', '#scaleVis');
+			
 			// move ruler center to the center of the translatehandle bbox
 			const visM = Snap.matrix(1,0,0,1,rulerCx, rulerCy);
 			self.scaleVis.transform(visM);
@@ -740,7 +749,7 @@
 			const horizontalTextOffset = horizontalRulerOffset;
 			const transformX = Snap.matrix(width,0,0,1,0,horizontalEdgeY + horizontalRulerOffset);
 			self.scaleXVis.transform(transformX);
-			const labelX = `${width.toFixed(1)}'mm' / ${(sss.sx*100).toFixed(1)}%`;
+			const labelX = `${width.toFixed(1)}mm / ${(sss.sx*100).toFixed(1)}%`;
 			self.scaleXText.node.textContent = labelX;
 			self.scaleXText.transform(Snap.matrix(1,0,0,1,0, horizontalEdgeY + horizontalRulerOffset + horizontalTextOffset));
 //			self.paper.debug.point('hEdge', 0, horizontalEdgeY, '#005303', '#scaleVis');
@@ -862,6 +871,40 @@
 				self.add_to_parent(lineEl, parent);
 			}
 		};
+		
+		self.coords = function(label, color="#ff00ff", parent=null){
+			// TODO parent, implicit label
+			if(!self.isEnabled) return;
+			
+			if(!label){
+				console.error("debug.coords needs a label!");
+				return;
+			}
+			
+			const id = `_dbg_${label}`;
+			
+			// check if exists
+			let axesEl = self.paper.select('#'+id);
+			if(!axesEl) {
+				const axesPath = self.paper.path({
+					d:"M-100,0h200l-5,-5v10l5,-5 m-100,-100v200l-5,-5h10l-5,5 M0,10v5 M0,20v5 M0,30v5 M0,40v5 M0,50v10 M10,0h5 M20,0h5 M30,0h5 M40,0h5 M50,0h10",
+					stroke:color, 
+					strokeWidth: 1,
+					fill:"none"
+				});
+				const coordLabel = self.paper.text({class:'label', x:0, y:0, fill:color, style:'font-size:8px; font-family:monospace; transform:translate(2px,-2px);'});
+				const xLabel = self.paper.text({x:100, y:0, text:'x', fill:color, style:'font-size:8px; font-family:monospace; transform:translate(2px,-2px);'});
+				const yLabel = self.paper.text({x:0, y:100, text:'y', fill:color, style:'font-size:8px; font-family:monospace; transform:translate(2px,-2px);'});
+				axesEl = self.paper.group(axesPath, coordLabel, xLabel, yLabel);
+				axesEl.attr({id: id, class:'_dbg_'}); 
+			}
+			if(parent !== null){
+				self.add_to_parent(axesEl, parent);
+			}
+			const matrixStr = axesEl.transform().totalMatrix.toTransformString();
+			axesEl.select('.label').attr({text:`${label}: ${matrixStr}`});
+			return axesEl;
+		}		
 		
 		self.add_to_parent = function(element, parent){
 			if(!parent){
