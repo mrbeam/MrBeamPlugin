@@ -711,45 +711,49 @@
 			const handleY = sss.my + sss.dyMM; 
 			const width = self.session.bboxWithoutTransform.width * self.session.scale._m.a * sss.sx;
 			const height = self.session.bboxWithoutTransform.height * self.session.scale._m.d * sss.sy;
-			let cx = sss.cx;
-			let cy = sss.cy;
-			const mirrorX = handleY < cy ? 1 : -1;
-			const mirrorY = handleX < cx ? 1 : -1;
-			const handleIsLeft = Math.sign(sss.mx - sss.cx);
-			const handleIsTop = Math.sign(sss.my - sss.cy);
-			const rulerCx = cx + handleIsLeft * width / 2;
-			const rulerCy = cy + handleIsTop * height / 2;
+			const cx = sss.cx;
+			const cy = sss.cy;
 			
+			// where to show visualizations 
+			let handleIsLeft = Math.sign(sss.cx - sss.mx);
+			let handleIsTop = Math.sign(sss.cy - sss.my);
+			const sxPositive = Math.sign(sss.sx);
+			const syPositive = Math.sign(sss.sy);
+			const rulerCx = cx - handleIsLeft * width / 2;
+			const rulerCy = cy - handleIsTop * height / 2;
 			if(!sss.prop){
-				if(sss.signX === 0) cx -= width / 2;
-				if(sss.signY === 0) cy -= height / 2;
+				if(sss.signX === 0) handleIsLeft = 1;
+				if(sss.signY === 0) handleIsTop = 1;
 			}
+
 			self.scaleVis.node.classList.toggle('showX', sss.signX !== 0);
 			self.scaleVis.node.classList.toggle('showY', sss.signY !== 0);
 			
-			self.paper.debug.point('scaleVisCenter', rulerCx, rulerCy, '#005303');
+//			self.paper.debug.point('scaleVisCenter', 0, 0, '#005303', '#scaleVis');
 			
 			// move ruler center to the center of the translatehandle bbox
 			const visM = Snap.matrix(1,0,0,1,rulerCx, rulerCy);
 			self.scaleVis.transform(visM);
 			
-			const horizontalEdgeY = -height / 2; // transform handle bbox above edge or below edge
-			const horizontalRulerOffset = handleIsTop * ((handleY > cy) ? -gap : +gap); // gap to add to horizontalEdgeY
-			const horizontalTextOffset = handleIsTop * ((handleY > cy) ? -gap : +gap); // <text> origin is the baseline, not the vertical center => compensate this
-			const transformX = Snap.matrix(width*mirrorX,0,0,1,0,horizontalEdgeY + horizontalRulerOffset);
+			const horizontalEdgeY = handleIsTop * height / 2; // transform handle bbox above edge or below edge
+			const horizontalRulerOffset = handleIsTop * syPositive * gap; // gap to add to horizontalEdgeY
+			const horizontalTextOffset = horizontalRulerOffset;
+			const transformX = Snap.matrix(width,0,0,1,0,horizontalEdgeY + horizontalRulerOffset);
 			self.scaleXVis.transform(transformX);
 			const labelX = `${width.toFixed(1)}'mm' / ${(sss.sx*100).toFixed(1)}%`;
 			self.scaleXText.node.textContent = labelX;
 			self.scaleXText.transform(Snap.matrix(1,0,0,1,0, horizontalEdgeY + horizontalRulerOffset + horizontalTextOffset));
+//			self.paper.debug.point('hEdge', 0, horizontalEdgeY, '#005303', '#scaleVis');
 
-			const verticalEdgeX = -width / 2;
-			const verticalRulerOffset = handleIsLeft * ((handleX > cx) ? -gap : +gap);
-			const verticalTextOffset = handleIsLeft * ((handleX > cx) ? -gap : +gap); // <text> origin is the baseline, not the vertical center => compensate this
-			const transformY = Snap.matrix(1,0,0,mirrorY*height,verticalEdgeX + verticalRulerOffset,0);
+			const verticalEdgeX = handleIsLeft * width / 2;
+			const verticalRulerOffset = handleIsLeft * sxPositive * gap;
+			const verticalTextOffset = verticalRulerOffset;
+			const transformY = Snap.matrix(1,0,0,height,verticalEdgeX + verticalRulerOffset,0);
 			self.scaleYVis.transform(transformY);
 			const labelY = `${height.toFixed(1)}mm / ${(sss.sy*100).toFixed(1)}%`;
 			self.scaleYText.node.textContent = labelY;	
 			self.scaleYText.transform(Snap.matrix(0,-1,1,0, verticalEdgeX + verticalRulerOffset + verticalTextOffset, 0));
+//			self.paper.debug.point('vEdge', 0, verticalEdgeX, '#005303', '#scaleVis');
 			
 		}
 
@@ -782,7 +786,7 @@
 			self.isEnabled = false;
 		}
 		
-		self.point = function(label, x, y, color="#ff00ff"){
+		self.point = function(label, x, y, color="#ff00ff", parent=null){
 			// TODO parent, implicit label
 			if(!self.isEnabled) return;
 			
@@ -812,11 +816,14 @@
 				pointEl.attr({id: id, class:'_dbg_'}); 
 			}
 			pointEl.transform(`translate(${x},${y})`);
+			if(parent !== null){
+				self.add_to_parent(pointEl, parent);
+			}
 			
 			return pointEl;
 		}
 		
-		self.line = function(label, x1, y1, x2, y2, color='#ff00ff'){
+		self.line = function(label, x1, y1, x2, y2, color='#ff00ff', parent=null){
 			// TODO parent, implicit label
 			if (!self.isEnabled)
 				return;
@@ -850,6 +857,28 @@
 			} 
 			lineEl.select('path').transform(`scale(${sx},${sy})`);
 			lineEl.transform(`translate(${x1},${y1})`);
+			
+			if(parent !== null){
+				self.add_to_parent(lineEl, parent);
+			}
+		};
+		
+		self.add_to_parent = function(element, parent){
+			if(!parent){
+				console.warn("No parent specified. Skip.", parent);
+				return;
+			}
+
+			if(typeof parent === "string"){
+				const selector = parent;
+				parent = self.paper.select(selector);
+				if(parent.length === 0){
+					console.warn("No parent found. Selector was ", selector);
+					return;
+				}
+			}
+			
+			parent.append(element);
 		};
 		
 		// TODO: coord grid, path, circle
