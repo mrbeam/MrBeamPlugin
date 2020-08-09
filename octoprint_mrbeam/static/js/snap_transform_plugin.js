@@ -285,13 +285,13 @@
 			sss.dyMM = dyMM;
 			
 			// mouse position transformed the same way like the handles to calculate scaling distances within rotated coordinate system
-			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM)+ sss.mx;
-			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM)+ sss.my;
+			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) + sss.mx;
+			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM) * Math.sign(sss._m.d) + sss.my;
 			
 			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY)
 
 			const distX = (rotatedMouseX - sss.cx);
-			const distY = (rotatedMouseY - sss.cy);
+			const distY = (rotatedMouseY - sss.cy); // TODO invert if oldscaleY (_m.d) is negative
 			
 			let scaleX = sss.signX * distX / sss.refX
 			let scaleY = sss.signY * distY / sss.refY;
@@ -611,7 +611,7 @@
 
 			const lm = self.scaleGroup.transform().localMatrix;
 			const verbose = lm.split();
-			const unscaleMat = Snap.matrix().scale(1/verbose.scalex, 1/verbose.scaley);
+			const unscaleMat = Snap.matrix().scale(1/Math.abs(verbose.scalex), 1/Math.abs(verbose.scaley));
 			
 			self.scaleHandleNW.transform(lm.clone().translate(bbox_to_wrap.x, bbox_to_wrap.y).add(unscaleMat));
 			self.scaleHandleSW.transform(lm.clone().translate(bbox_to_wrap.x, bbox_to_wrap.y2).add(unscaleMat));
@@ -716,8 +716,10 @@
 			const sss = self.session.scale;
 			const handleX = sss.mx + sss.dxMM; 
 			const handleY = sss.my + sss.dyMM; 
-			const width = self.session.bboxWithoutTransform.width * self.session.scale._m.a * sss.sx;
-			const height = self.session.bboxWithoutTransform.height * self.session.scale._m.d * sss.sy;
+			const totalSx = sss._m.a * sss.sx;
+			const totalSy = sss._m.d * sss.sy;
+			const width = self.session.bboxWithoutTransform.width * totalSx;
+			const height = self.session.bboxWithoutTransform.height * totalSy;
 			const cx = sss.cx;
 			const cy = sss.cy;
 			
@@ -726,8 +728,8 @@
 			let handleIsTop = Math.sign(sss.cy - sss.my);
 			const sxPositive = Math.sign(sss.sx);
 			const syPositive = Math.sign(sss.sy);
-			const rulerCx = cx - handleIsLeft * width / 2;
-			const rulerCy = cy - handleIsTop * height / 2;
+			const rulerCx = cx - handleIsLeft * Math.sign(sss._m.a) * width / 2;
+			const rulerCy = cy - handleIsTop * Math.sign(sss._m.d) * height / 2;
 			if(!sss.prop){
 				if(sss.signX === 0) handleIsLeft = 1;
 				if(sss.signY === 0) handleIsTop = 1;
