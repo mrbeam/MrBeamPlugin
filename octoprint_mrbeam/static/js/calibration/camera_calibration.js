@@ -647,15 +647,20 @@ $(function () {
 		}
 
 		self.rawPicSuccess = function(response) {}
-		self.saveRawPicError = function() {self.rawPicError(gettext("Failed to save the latest image."))}
-		self.delRawPicError  = function() {self.rawPicError(gettext("Failed to delete the latest image."))}
-		self.getRawPicError  = function() {self.rawPicError(gettext("Failed to refresh the list of images."))}
+		self.saveRawPicError = function() {self.rawPicError(gettext("Failed to save the latest image."),
+																												gettext("Please check your connection to the device."))}
+		self.delRawPicError  = function() {self.rawPicError(gettext("Failed to delete the latest image."),
+																												gettext("Please check your connection to the device."))}
+		self.getRawPicError  = function() {self.rawPicError(gettext("Failed to refresh the list of images."),
+																												gettext("Please check your connection to the device."))}
 
 		// TODO review PNotify messages in all file
-		self.rawPicError= function(err) {
+		self.rawPicError= function(err, msg) {
+			if (msg === undefined)
+				msg = gettext("...and I have no clue why. Sorry.")
 			new PNotify({
 				title: err,
-				text: gettext("...and I have no clue why. Sorry."),
+				text: msg,
 				type: "warning",
 				hide: true
 			});
@@ -673,13 +678,13 @@ $(function () {
 				function(){
 					new PNotify({
 						title: gettext("Calibration started"),
-						text: gettext("Please relax, this will take a little while.\nWe will let you know when we are done."),
+						text: gettext("It shouldn't take long. Your device shows a green light when it is done."),
 						type: "info",
 						hide: false})},
 				function(){
 					new PNotify({
 						title: gettext("Couldn't start the lens calibration."),
-						text: gettext("...and I have no clue why. Sorry."),
+						text: gettext("Is the machine on? Have you taken an pictures before starting the calibration?"),
 						type: "warning",
 						hide: true})},
 				"POST");
@@ -700,7 +705,7 @@ $(function () {
 				function(){
 					new PNotify({
 						title: gettext("Couldn't stop the lens calibration."),
-						text: gettext("...and I have no clue why. Sorry."),
+						text: gettext("Please verify your connection to the device. Did you try canceling multiple times?"),
 						type: "warning",
 						hide: true})},
 				"POST");
@@ -829,7 +834,7 @@ $(function () {
 			self.cornerCalibrationActive(false);
 			new PNotify({
 				title: gettext("Couldn't send calibration data."),
-				text: gettext("...and I have no clue why. Sorry."),
+				text: gettext("Please check your connection to the device."),
 				type: "warning",
 				hide: true
 			});
