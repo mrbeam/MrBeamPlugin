@@ -754,9 +754,10 @@ class PhotoCreator(object):
 		cam.stop_preview()
 		self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 		if session_details['num_pics'] > 0:
-			session_details.update(
-				{'settings_min_marker_size': self._settings.get(['cam', 'markerRecognitionMinPixel'])}
-			)
+			session_details.update({
+				'settings_min_marker_size': self._settings.get(['cam', 'markerRecognitionMinPixel']),
+				'remember_markers_across_sessions': self._settings.get(['cam', 'remember_markers_across_sessions']),
+			})
 			self._analytics_handler.add_camera_session_details(session_details)
 		self._logger.debug("PhotoCreator_stopping")
 
@@ -892,7 +893,7 @@ class PhotoCreator(object):
 						   }
 				self._logger.debug("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
 								  trigger, len(img), force_upload, payload['metadata'])
-				self._analytics_handler.add_camera_image(payload)
+				# self._analytics_handler.add_camera_image(payload)
 				if force_upload:
 					self._analytics_handler.upload()
 
