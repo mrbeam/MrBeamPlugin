@@ -13,7 +13,6 @@ except OSError:
 import time
 import threading
 import logging
-from octoprint_mrbeam.util import f_logger
 
 DEFAULT_SHUTTER_SPEED = int(1.5 * 10**5) # (microseconds)
 
@@ -56,7 +55,7 @@ class LoopThread(threading.Thread):
 			except AttributeError as e:
 				connectionErrMsg = "'NoneType' object has no attribute 'outputs'"
 				if connectionErrMsg in str(e):
-					f_logger().warning("Camera was not ready yet, it should restart by itself.")
+					self._logger.warning("Camera was not ready yet, it should restart by itself.")
 			except Exception as e:
 				self._logger.error("Handled exception in picamera: %s, %s", e.__class__.__name__, e)
 				raise
