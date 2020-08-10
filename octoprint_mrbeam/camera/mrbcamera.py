@@ -56,6 +56,8 @@ class LoopThread(threading.Thread):
 				connectionErrMsg = "'NoneType' object has no attribute 'outputs'"
 				if connectionErrMsg in str(e):
 					self._logger.warning("Camera was not ready yet, it should restart by itself.")
+				else:
+					raise e
 			except Exception as e:
 				self._logger.error("Handled exception in picamera: %s, %s", e.__class__.__name__, e)
 				raise
