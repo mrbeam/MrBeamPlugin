@@ -28,7 +28,7 @@ if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
 		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
-from octoprint_mrbeam.util import dict_merge, json_serialisor, logme, get_thread, makedirs
+from octoprint_mrbeam.util import dict_merge, json_serialisor, logme, get_thread, makedirs, f_logger
 
 SIMILAR_PICS_BEFORE_UPSCALE = 1
 LOW_QUALITY = 65 # low JPEG quality for compressing bigger pictures
@@ -313,7 +313,7 @@ class LidHandler(object):
 		# 	self._logger.exception("Exception in _saveRawImgThreaded(): ")
 		# self._logger.info("ANDYTEST _saveRawImgThreaded() thread started")
 
-	@logme(True)
+	# @logme(True)
 	def delRawImg(self, path):
 		try:
 			os.remove(path)
@@ -544,6 +544,7 @@ class PhotoCreator(object):
 		:return: None
 		:rtype: NoneType
 		"""
+		logger = f_logger()
 
 		cam.start_preview()
 		time.sleep(1.5) # camera warmup + prevent quick switch to pic capture
@@ -553,7 +554,7 @@ class PhotoCreator(object):
 		try:
 			cam.start()  # starts capture to the cam.worker
 		except exc.CameraConnectionException as e:
-			self._logger.exception(" %s, %s", e.__class__.__name__, e)
+			logger.exception(" %s, %s", e.__class__.__name__, e)
 			cam.stop(1)
 			raise
 		# --- Decide on the picture quality to give to the user and whether the pic is different ---
@@ -577,7 +578,7 @@ class PhotoCreator(object):
 			time.sleep(.2)
 		remember_markers = self._settings.get(['cam', 'remember_markers_across_sessions'])
 		if not remember_markers:
-			self._logger.debug("Camera mode: Accuracy > forgetting markers from last camera session.")
+			logger.debug("Camera mode: Accuracy > forgetting markers from last camera session.")
 			self.last_markers = None
 
 		# The lid didn't open during waiting time
@@ -593,7 +594,7 @@ class PhotoCreator(object):
 				self.refresh_pic_settings.clear()
 				path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 				path_to_lens_calib = self._settings.get(["cam", "lensCalibrationFile"])
-				self._logger.debug("Refreshing picture settings from %s" % path_to_pic_settings)
+				logger.debug("Refreshing picture settings from %s" % path_to_pic_settings)
 				pic_settings = _getPicSettings(path_to_pic_settings)
 				cam_params = _getCamParams(path_to_lens_calib)
 				prev=None # Forces to take a new picture
@@ -604,7 +605,7 @@ class PhotoCreator(object):
 			cam.async_capture()  # starts capture with new settings
 			if latest is None:
 				# The first picture will be empty, should wait for the 2nd one.
-				self._logger.debug("The last picture is empty")
+				logger.debug("The last picture is empty")
 				continue
 			if self.stopping: break  # check if still active...
 
@@ -668,7 +669,7 @@ class PhotoCreator(object):
 			upscale_factor , quality = pic_qualities[pic_qual_index]
 			scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
 			# --- Correct captured image ---
-			self._logger.debug("Starting with correction...")
+			logger.debug("Starting with correction...")
 			if cam_params is not None:
 				dist, mtx = cam_params[DIST_KEY], cam_params[MTX_KEY]
 			else:
@@ -757,7 +758,7 @@ class PhotoCreator(object):
 				{'settings_min_marker_size': self._settings.get(['cam', 'markerRecognitionMinPixel'])}
 			)
 			self._analytics_handler.add_camera_session_details(session_details)
-		self._logger.debug("PhotoCreator_stopping")
+		logger.debug("PhotoCreator_stopping")
 
 	# @logme(True)
 	def _add_result_to_analytics(
