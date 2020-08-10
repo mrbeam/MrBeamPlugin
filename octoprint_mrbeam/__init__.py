@@ -2375,10 +2375,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		max_offset = 60000  # miliseconds
 		now = time.time()
 		try:
-			# ntpq_out, code = exec_cmd_output("ntpq -p", shell=True, log_cmd=False)
+			# ntpq_out, code = exec_cmd_output("ntpq -p", shell=True, log=False)
 			# self._logger.debug("ntpq -p:\n%s", ntpq_out)
 			cmd = "ntpq -pn | /usr/bin/awk 'BEGIN { ntp_offset=%s } $1 ~ /^\*/ { ntp_offset=$9 } END { print ntp_offset }'" % max_offset
-			output, code = exec_cmd_output(cmd, shell=True, log_cmd=False)
+			output, code = exec_cmd_output(cmd, shell=True, log=False)
 			try:
 				ntp_offset = float(output)
 			except:

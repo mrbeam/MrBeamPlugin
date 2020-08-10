@@ -576,9 +576,8 @@ class PhotoCreator(object):
 				return
 			time.sleep(.2)
 		remember_markers = self._settings.get(['cam', 'remember_markers_across_sessions'])
-		self._logger.info("Remember markers from last session: %s" % remember_markers)
 		if not remember_markers:
-			self._logger.warning("Forgetting markers from previous session.")
+			self._logger.debug("Camera mode: Accuracy > forgetting markers from last camera session.")
 			self.last_markers = None
 
 		# The lid didn't open during waiting time
@@ -594,7 +593,7 @@ class PhotoCreator(object):
 				self.refresh_pic_settings.clear()
 				path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 				path_to_lens_calib = self._settings.get(["cam", "lensCalibrationFile"])
-				self._logger.info("Refreshing picture settings from %s" % path_to_pic_settings)
+				self._logger.debug("Refreshing picture settings from %s" % path_to_pic_settings)
 				pic_settings = _getPicSettings(path_to_pic_settings)
 				cam_params = _getCamParams(path_to_lens_calib)
 				prev=None # Forces to take a new picture
@@ -605,7 +604,7 @@ class PhotoCreator(object):
 			cam.async_capture()  # starts capture with new settings
 			if latest is None:
 				# The first picture will be empty, should wait for the 2nd one.
-				self._logger.info("The last picture is empty")
+				self._logger.debug("The last picture is empty")
 				continue
 			if self.stopping: break  # check if still active...
 
@@ -966,7 +965,7 @@ class PhotoCreator(object):
 			self._logger.error(e)
 			return [None]*2
 
-	@logme(True)
+	# @logme(True)
 	def save_camera_settings(
 		self,
 		path='/home/pi/.octoprint/cam/last_session.yaml',
