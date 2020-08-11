@@ -985,6 +985,9 @@ class PhotoCreator(object):
 			for k, v in _markers.items():
 				if type(v) is np.ndarray:
 					_markers[k] = v.tolist()
+		else:
+			_markers={}
+
 		settings = {}
 		try:
 			with open(path) as f:
@@ -992,10 +995,8 @@ class PhotoCreator(object):
 		except (OSError, IOError) as e:
 			self._logger.warning("file %s does not exist or could not be read. Overwriting..." % path)
 
-		for k, v in [['calibMarkers', _markers],
-			     ['shutter_speed', shutter_speed]]:
-			if v is not None:
-				settings[k] = v
+		settings = dict_merge(settings, {'calibMarkers': _markers,
+						 'shutter_speed': shutter_speed})
 		try:
 			with open(path, 'w') as f:
 				f.write(yaml.dump(settings))
