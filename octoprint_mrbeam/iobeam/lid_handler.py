@@ -962,7 +962,7 @@ class PhotoCreator(object):
 					for k in ['calibMarkers', 'shutter_speed']:
 						ret.append(settings.get(k, None))
 			return ret
-		except OSError as e:
+		except (IOError, OSError) as e:
 			self._logger.error(e)
 			return [None]*2
 
