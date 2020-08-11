@@ -11,7 +11,7 @@
     <form class="form-horizontal">
         <div class="control-group">
 {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
-            <div class="controls" style="width: 400px">
+            <div>
                 <h4>
                     {{ _('Help us improve Mr Beam!') }} <i class="fa fa-heartbeat" aria-hidden="true" style="margin-right: 3px"></i>
                 </h4>
@@ -20,7 +20,7 @@
                     <strong>{{ _('Enable analytics') }}</strong>
                 </label>
                 <p>
-                    {{ _('In order to improve your experience with the Mr Beam II,<br/>we would like to gather some analytics data on the device operations.') }}<br/>
+                    {{ _('In order to improve your experience with the Mr Beam,<br/>we would like to gather some analytics data on the device operations.') }}<br/>
                     {{ _('No information will be shared with external sources.') }}
                 </p>
 
@@ -29,7 +29,7 @@
                   <div class="card">
                     <div class="card-header" id="settings_analytics_what_we_save_heading">
                       <div class="mb-0">
-                        <button class="btn btn-link collapsed analytics-collapsible" type="button" data-toggle="collapse" data-target="#settings_analytics_what_we_save"
+                        <button class="btn-link collapsed analytics-collapsible" type="button" data-toggle="collapse" data-target="#settings_analytics_what_we_save"
                                 aria-expanded="true" aria-controls="collapseOne">
                             {{ _('More information about what data we use') }}
                         </button>
@@ -40,14 +40,15 @@
                         {{ _('Data we would <b>save</b>:') }}
                         <ul>
                             <li>{{ _('Job data like duration, materials or parameters.') }}</li>
-                            <li>{{ _('Mr Beam II device data like serial number, local IP addresses and version numbers.') }}</li>
+                            <li>{{ _('Mr Beam device data like serial number, local IP addresses and version numbers.') }}</li>
                             <li>{{ _('More technical data, including error reports.') }}</li>
                         </ul>
                         {{ _('Data we will <b>not save</b>:') }}
                         <ul>
                             <li>{{ _('Your designs, its content or file names.') }}</li>
                             <li>{{ _('Usernames, email addresses or passwords.') }}</li>
-                            <li>{{ _('Location, camera pictures, public IP addresses.') }}</li>
+                            <li>{{ _('Camera pictures (except if explicitly and actively sent by you.)') }}</li>
+                            <li>{{ _('Location or public IP addresses.') }}</li>
                         </ul>
                       </div>
                     </div>

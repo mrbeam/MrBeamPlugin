@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 26.458333 21.166666"
+   height="80"
+   width="100">
+  <defs
+     id="defs2" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(0,-275.83334)"
+     id="layer1">
+    <g
+       style="stroke-width:2.95306611"
+       transform="matrix(0.33902442,0,0,0.33823823,-15.506936,229.42756)"
+       id="g859">
+      <rect
+         style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:#999999;stroke-width:0.54693246;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:0.54693243, 1.09386486;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+         id="rect828"
+         width="38.742561"
+         height="30.994047"
+         x="65.389877"
+         y="152.99106"
+         ry="2.8063295" />
+      <rect
+         ry="0.70777386"
+         y="155.58965"
+         x="67.941216"
+         height="26.080357"
+         width="33.639881"
+         id="rect830"
+         style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:#999999;stroke-width:0.54693246;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:0.54693243, 1.09386486;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
+      <circle
+         style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:#999999;stroke-width:0.54693246;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:0.54693243, 1.09386486;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+         id="path832"
+         cx="74.277054"
+         cy="162.11449"
+         r="3.8506324" />
+      <path
+         style="fill:none;stroke:#999999;stroke-width:0.54693246;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.54693243, 1.09386486;stroke-dashoffset:0;stroke-opacity:1"
+         d="m 70.480746,178.78794 h 28.45452 v -8.83519 l -8.457215,-8.45722 -10.370722,10.37073 -3.189174,-3.18918 -6.437409,6.49647 z"
+         id="path834" />
+    </g>
+  </g>
+</svg>

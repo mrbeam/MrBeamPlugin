@@ -22,6 +22,8 @@ $(function () {
                     for (let materialKey in self.materialSettingsDatabase) {
                         if (materialKey in materialImportedSettings) {
                             self.materialSettingsDatabase[materialKey].colors = materialImportedSettings[materialKey].colors;
+                            self.materialSettingsDatabase[materialKey].custom = false
+                            self.materialSettingsDatabase[materialKey].img = "/plugin/mrbeam/static/img/materials/" + self.materialSettingsDatabase[materialKey].img
                         } else {
                             delete self.materialSettingsDatabase[materialKey]
                         }
@@ -47,7 +49,7 @@ $(function () {
             'Anodized Aluminum': {
                 name: gettext("Anodized Aluminum"),
                 img: 'Anodized-Aluminum.jpg',
-                description: gettext("Dark anodized aluminum can be engraved. Works on iPhones."),
+                description: gettext("Dark anodized aluminum can be engraved."),
                 hints: gettext("Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefore we suggest to invert photos for engravings."),
                 // colors: {
                 //     '000000': {
@@ -102,6 +104,13 @@ $(function () {
                 description: gettext(' '),
                 hints: gettext(' '),
             },
+            'Felt': { // took settings from IHM fair
+                name: gettext("Felt"),
+                img: 'Felt.jpg',
+                description: gettext("Acrylic felt like the one sold in many arts and craft stores."),
+                hints: gettext("Be aware that natural felt is something else."),
+                safety_notes: '',
+            },
             'Fabric Cotton': null,
             'Fabric Polyester': null,
             'Finn Cardboard': {
@@ -111,12 +120,11 @@ $(function () {
                 hints: '',
                 safety_notes: '',
             },
-            'Felt': { // took settings from IHM fair
-                name: gettext("Felt"),
-                img: 'Felt.jpg',
-                description: gettext("Acrylic felt like the one sold in many arts and craft stores."),
-                hints: gettext("Be aware that natural felt is something else."),
-                safety_notes: '',
+            'Foam': {
+                name: gettext("Foam"),
+                img: 'Polyethylene-Foam.jpg',
+                description: gettext(' '),
+                hints: gettext(' '),
             },
             'Foam Rubber': {
                 name: gettext("Foam Rubber"),
@@ -144,8 +152,8 @@ $(function () {
                 hints: '',
                 safety_notes: '',
             },
-            'Kraftplex Wave': {
-                name: gettext("Kraftplex Wave"),
+            'Kraftplex (wave)': {
+                name: gettext("Kraftplex (wave)"),
                 img: 'Kraftplex-Wave.jpg',
                 description: gettext(' '),
             },
@@ -181,18 +189,6 @@ $(function () {
                 hints: '',
                 safety_notes: gettext("Very fine structures may be subject of ignition."),
             },
-            'Polyethylene Foam': {
-                name: gettext("Foam"),
-                img: 'Polyethylene-Foam.jpg',
-                description: gettext(' '),
-                hints: gettext(' '),
-            },
-            'Polypropylene': {
-                name: gettext("Polypropylene"),
-                img: 'Polypropylene.jpg',
-                description: gettext(' '),
-                hints: gettext(' '),
-            },
             'Plywood Birch': {
                 name: gettext("Plywood Birch"),
                 img: 'Plywood-Birch.jpg',
@@ -206,11 +202,17 @@ $(function () {
                 hints: gettext("Watch out for dedicated laser plywood - it has better surface quality and only natural glue."),
                 safety_notes: gettext("Very fine structures may be subject of ignition."),
             },
+            'Polypropylene': {
+                name: gettext("Polypropylene"),
+                img: 'Polypropylene.jpg',
+                description: gettext(' '),
+                hints: gettext(' '),
+            },
             'Slate': {
                 name: gettext("Slate"),
                 img: 'Slate.jpg',
                 description: gettext(' '),
-                hints: gettext(' '),
+                hints: gettext('When engraving slate, the engraving becomes brighter than the original material. Possibly the design template should be inverted.'),
             },
             'Snappap': {
                 name: gettext("Snappap"),
@@ -223,13 +225,6 @@ $(function () {
                 img: 'Vegan-Leather.jpg',
                 description: gettext(' '),
                 hints: gettext(' '),
-            },
-            'Wellboard': {
-                name: gettext("Wellboard"),
-                img: 'Wellboard.jpg',
-                description: gettext("100% natural fibers similar to Kraftplex, but wavy."),
-                hints: gettext("Thickness is measured over the whole wave."),
-                safety_notes: '',
             },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`

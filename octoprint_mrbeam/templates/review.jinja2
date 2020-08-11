@@ -2,20 +2,31 @@
     <div>
         <div class="modal-body">
             <a href="#" class="close" data-bind='click: exitXBtn' aria-hidden="true">&times;</a>
-            <h3 id="review_question" class="review_title">{{ _('How happy are you with your Mr Beam II?') }}</h3>
+            <h3 id="review_question" class="review_title">{{ _('How likely are you to recommend Mr Beam to a friend or colleague?') }}</h3>
             <div id="rating_block">
                 <div class="rating">
-                    <span class="star" value="5"></span><span class="star" value="4"></span><span class="star" value="3"></span><span class="star" value="2"></span><span value="1" class="star"></span>
+                    <button value="1">1</button>
+                    <button value="2">2</button>
+                    <button value="3">3</button>
+                    <button value="4">4</button>
+                    <button value="5">5</button>
+                    <button value="6">6</button>
+                    <button value="7">7</button>
+                    <button value="8">8</button>
+                    <button value="9">9</button>
+                    <button value="10">10</button>
                 </div>
             </div>
             <div id="review_how_can_we_improve" class="form-group review_hidden_part">
-                <h3 class="review_title">{{ _('How can we improve?') }}</h3>
-                <label for="review_textarea" class="review_explanation">{{ _('We are sorry to hear that you are not completely happy with your Mr Beam II, please share your thoughts with us so we can keep improving:') }}</label>
+                <h3 class="review_title">{{ _('Thank you!') }}</h3>
+                <label for="review_textarea" class="review_explanation">{{ _('Thank you for the feedback, is there anything else you want to tell us? Please share your thoughts with us so we can keep improving:') }}</label>
                 <textarea class="form-control" id="review_textarea" rows="4"></textarea>
             </div>
             <div id="review_thank_you" class="review_hidden_part">
                 <h3 class="review_title">{{ _('Wow, thank you!') }}</h3>
-                <p class="review_explanation">{{ _('We love getting feedback from our customers! Do you have three minutes to leave a review for us? We’d be so excited to read it!') }} <a id="give_review_link" target="_blank" href="https://www.mr-beam.org/">Link to somewhere</a></p>
+                <p class="review_explanation">{{ _('We love getting feedback from our customers! Do you have three minutes to leave a review for us? We’d be so excited to read it!') }}
+                    <a id="give_review_link" target="_blank" href="https://store.mr-beam.org/products/mr-beam-ii-dreamcut-air-filter-ii-bundle?utm_source=beamos&utm_medium=beamos&utm_campaign=review_screen#shopify-product-reviews">{{ _('Give review') }}</a>
+                </p>
             </div>
         </div>
         <div class="modal-footer">

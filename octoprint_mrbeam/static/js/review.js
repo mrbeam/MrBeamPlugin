@@ -2,6 +2,7 @@ $(function () {
     function ReviewViewModel(params) {
         let self = this;
         self.REVIEW_NUMBER = 1;
+        self.SHOW_AFTER_USAGE_H = 5 * 3600; // The usage is in seconds
 
         self.settings = params[0];
         self.analytics = params[1];
@@ -17,13 +18,13 @@ $(function () {
         self.dontShowAgain = ko.observable(false);
         self.justGaveReview = ko.observable(false);
 
-        // TODO IRATXE: handle the first use case (review does not exist in the user settings)
         self.shouldAskForReview = ko.computed(function(){
             if (self.loginState.currentUser() && self.loginState.currentUser().active) {
-                let numSuccJobs = self.loginState.currentUser().settings.mrbeam.review.num_succ_jobs;
-                let reviewGiven = self.loginState.currentUser().settings.mrbeam.review.given;
+                let totalUsage = self.settings.settings.plugins.mrbeam.usage.totalUsage();
+                let shouldAsk = self.settings.settings.plugins.mrbeam.review.ask();
+                let reviewGiven = self.settings.settings.plugins.mrbeam.review.given();
 
-                return numSuccJobs >= 5 && !reviewGiven && !self.justGaveReview()
+                return totalUsage >= self.SHOW_AFTER_USAGE_H && shouldAsk && !reviewGiven && !self.justGaveReview()
             } else {
                 return false
             }
@@ -48,7 +49,7 @@ $(function () {
         };
 
         self.onEventPrintStarted = function(payload) {
-            self.enableRatingStars();
+            self.enableRatingBtns();
 
             setTimeout(function () {
                 // The short jobs are always estimated 60s, so has to be more
@@ -59,34 +60,41 @@ $(function () {
             }, 5000);
         };
 
-        self.enableRatingStars = function() {
-            $('.star').click(function(){
+        self.enableRatingBtns = function() {
+            $('.rating button').hover(function(){
+               $(this).addClass("rating-hover");
+               $(this).prevAll().addClass("rating-hover");
+            }, function() {
+               $(this).removeClass("rating-hover");
+               $(this).prevAll().removeClass("rating-hover");
+            });
+
+            $('.rating button').click(function() {
                 self.ratingGiven = true;
                 let val = $( this ).attr('value');
-                console.log("Clicked "+val+" Stars");
                 self.rating(val);
 
-                self.fillAndDisableRatingStars(val);
+                self.fillAndDisableRating(val);
                 $('#dont_ask_review_link').hide();
                 $('#review_question').hide();
 
-                if (val >= 4) {
+                if (val >= 7) {
                     $('#review_thank_you').show();
-                } else if (val < 4) {
+                } else if (val < 7) {
                     $('#rating_block').hide();
                     $('#review_how_can_we_improve').show();
                 }
             })
-        };
+        }
 
-        self.fillAndDisableRatingStars = function(userRating) {
-            let allStars = $('.star');
-            allStars.off("click");
+        self.fillAndDisableRating = function(userRating) {
+            let allBtns = $('.rating button');
+            allBtns.off("click");
 
-            allStars.each(function(i, obj) {
-                $( this ).addClass('disabled');
-                if ($( this ).attr('value') <= userRating) {
-                    $( this ).addClass('filled');
+            allBtns.each(function(i, obj) {
+                $( this ).prop('disabled', true);
+                if (parseInt($( this ).attr('value')) <= parseInt(userRating)) {
+                    $( this ).addClass('rating-hover');
                 }
             });
 
@@ -97,7 +105,7 @@ $(function () {
             if (self.ratingGiven) {
                 self.dontShowAgain(true);
             }
-            self.exitReview();  //We
+            self.exitReview();
         };
 
         self.exitDontAskAgainLink = function() {
@@ -132,7 +140,7 @@ $(function () {
                 ts: new Date().getTime(),
                 env: MRBEAM_ENV_LOCAL,
                 sw_tier: MRBEAM_SW_TIER,
-                user: self.loginState.username().hashCode(),
+                snr: MRBEAM_SERIAL,
                 number: self.REVIEW_NUMBER
             };
 
@@ -146,7 +154,7 @@ $(function () {
                     console.error("Unable to save review state: ", data);
                     new PNotify({
                         title: gettext("Error while saving review!"),
-                        text: _.sprintf(gettext("Unable to save your review at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                        text: _.sprintf(gettext("Unable to save your review at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });

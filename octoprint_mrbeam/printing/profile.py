@@ -52,14 +52,18 @@ defaults = dict(
 	multicolor=""
 )
 
+
 class SaveError(Exception):
 	pass
+
 
 class CouldNotOverwriteError(SaveError):
 	pass
 
+
 class InvalidProfileError(Exception):
 	pass
+
 
 class LaserCutterProfileManager(object):
 
@@ -97,38 +101,38 @@ class LaserCutterProfileManager(object):
 	# but then more than just one profile had the same name as the default one
 	#    and that confused the whole system.... :-(
 	default = dict(
-		id = 'my_default',
-		name = 'Dummy Laser',
-		model = 'X',
-		axes = dict(
-			x = dict(
-				inverted = False,
-				speed = 5000,
-				overshoot = 1,
-				homing_direction_positive = True
+		id='my_default',
+		name='Dummy Laser',
+		model='X',
+		axes=dict(
+			x=dict(
+				inverted=False,
+				speed=5000,
+				overshoot=1,
+				homing_direction_positive=True
 			),
-			y = dict(
-				inverted = False,
-				speed = 5000,
+			y=dict(
+				inverted=False,
+				speed=5000,
 				overshoot=0,
 				homing_direction_positive=True
 			),
-			z = dict(
-				inverted = False,
-				speed = 1000,
+			z=dict(
+				inverted=False,
+				speed=1000,
 				overshoot=0,
 				homing_direction_positive=True
 			),
 		),
 
 		# False if we need to show focus tab
-		focus = True,
+		focus=True,
 
 		# if True, Mr Beam shows warning to put on safety glasses (MrBeamI)
-		glasses = False,
+		glasses=False,
 
 		# if set to onebutton, MR Beam 2 One Button to start laser is activated.
-		start_method = 'onebutton',
+		start_method='onebutton',
 		laser=dict(
 			max_temperature=55.0,
 			hysteresis_temperature=48.0,
@@ -140,7 +144,7 @@ class LaserCutterProfileManager(object):
 			extraction_limit=0.70,
 			auto_mode_time=60
 		),
-		volume = dict(
+		volume=dict(
 			# Grbl values $130 (x max travel) and $131 (y max travel) need to be set to:
 			# x | $130 (x max travel):  width + (2 * working_area_shift_x) + origin_offset_x
 			# y | $131 (y max travel):  depth + (2 * working_area_shift_y) + origin_offset_y
@@ -152,17 +156,15 @@ class LaserCutterProfileManager(object):
 			#   So $130 (x max travel) will be 515.1, reaching
 			#       from -7.0: 0 - 7.0(working_area_shift_x)
 			#       till 508.1: 500(width) + 7.0(working_area_shift_x) + 1.1(origin_offset_x)
-			depth = 390.0,
-			height = 0.0,
-			origin_offset_x = 1.1,
-			origin_offset_y = 1.1,
-			width = 500.0,
-			working_area_shift_x = 0.0,
-			working_area_shift_y = 0.0,
-
-
+			depth=390.0,  # Wrong terminology, should switch with height
+			height=0.0,
+			origin_offset_x=1.1,
+			origin_offset_y=1.1,
+			width=500.0,
+			working_area_shift_x=0.0,
+			working_area_shift_y=0.0,
 		),
-		grbl = dict(
+		grbl=dict(
 			resetOnConnect=True,
 			# legacy ?
 			homing_debounce=1,
@@ -173,46 +175,46 @@ class LaserCutterProfileManager(object):
 
 			# GRBL settings that will get synced to GRBL
 			settings_count=33,
-		    settings={
-			    0: 10,          # step idle delay must be 255
-			    1: 255,         # step idle delay, msec
-			    2: 0,           # step port invert mask:00000000
-			    3: 2,           # dir port invert mask:00000010
-			    4: 0,           # step enable invert, bool
-			    5: 0,           # limit pins invert, bool
-			    6: 0,           # probe pin invert, bool
-			    10: 31,         # status report mask:00011111
-			    11: 0.020,      # junction deviation, mm
-			    12: 0.002,      # arc tolerance, mm
-			    13: 0,          # report inches, bool
-			    14: 1,          # auto start, bool
-			    20: 1,          # soft limits, bool
-			    21: 0,          # hard limits, bool
-			    22: 1,          # homing cycle, bool
-			    23: 0,          # homing dir invert mask:00000000
-			    24: 25.000,     # homing feed, mm/min
-			    25: 2000.000,   # homing seek, mm/min
-			    26: 100,        # homing debounce, msec
-			    27: 1.000,      # homing pull-off, mm
-			    40: 1,          # turn Laser mode on, bool
-			    100: 100.000,   # x, step/mm
-			    101: 100.000,   # y, step/mm
-			    102: 100.000,   # z, step/mm
-			    110: 5000.000,  # x max rate, mm/min
-			    111: 5000.000,  # y max rate, mm/min
-			    112: 5000.000,  # z max rate, mm/min
-			    120: 700.000,   # x accel, mm/sec^2
-			    121: 700.000,   # y accel, mm/sec^2
-			    122: 100.000,   # z accel, mm/sec^2
-			    130: 515.100,   # x max travel, mm       # !! C-Series: 501.1
-			    131: 391.100,   # y max travel, mm
-			    132: 40.000,    # z max travel, mm
+			settings={
+				0: 10,          # step idle delay must be 255
+				1: 255,         # step idle delay, msec
+				2: 0,           # step port invert mask:00000000
+				3: 2,           # dir port invert mask:00000010
+				4: 0,           # step enable invert, bool
+				5: 0,           # limit pins invert, bool
+				6: 0,           # probe pin invert, bool
+				10: 31,         # status report mask:00011111
+				11: 0.020,      # junction deviation, mm
+				12: 0.002,      # arc tolerance, mm
+				13: 0,          # report inches, bool
+				14: 1,          # auto start, bool
+				20: 1,          # soft limits, bool
+				21: 0,          # hard limits, bool
+				22: 1,          # homing cycle, bool
+				23: 0,          # homing dir invert mask:00000000
+				24: 25.000,     # homing feed, mm/min
+				25: 2000.000,   # homing seek, mm/min
+				26: 100,        # homing debounce, msec
+				27: 1.000,      # homing pull-off, mm
+				40: 1,          # turn Laser mode on, bool
+				100: 100.000,   # x, step/mm
+				101: 100.000,   # y, step/mm
+				102: 100.000,   # z, step/mm
+				110: 5000.000,  # x max rate, mm/min
+				111: 5000.000,  # y max rate, mm/min
+				112: 5000.000,  # z max rate, mm/min
+				120: 700.000,   # x accel, mm/sec^2
+				121: 700.000,   # y accel, mm/sec^2
+				122: 100.000,   # z accel, mm/sec^2
+				130: 515.100,   # x max travel, mm       # !! C-Series: 501.1
+				131: 391.100,   # y max travel, mm
+				132: 40.000,    # z max travel, mm
 				}),
-		zAxis = False,
-		legacy = dict(
+		zAxis=False,
+		legacy=dict(
 			# 2C series only
 			# https: // github.com / mrbeam / MrBeamPlugin / issues / 211
-			job_done_home_position_x = None
+			job_done_home_position_x=None
 		)
 	)
 
@@ -325,7 +327,7 @@ class LaserCutterProfileManager(object):
 	def exists(self, identifier):
 		if identifier is None:
 			return False
-		elif identifier == "_mrbeam_junior" or identifier == "_mrbeam_senior"                                                                                                                               :
+		elif identifier == "_mrbeam_junior" or identifier == "_mrbeam_senior":
 			return True
 		else:
 			path = self._get_profile_path(identifier)
@@ -401,7 +403,7 @@ class LaserCutterProfileManager(object):
 
 	def _load_default(self, defaultModel = None):
 		default = copy.deepcopy(self.__class__.default)
-		if(defaultModel is not None and defaultModel == "_mrbeam_senior"):
+		if defaultModel is not None and defaultModel == "_mrbeam_senior":
 			default['volume']['width'] *= 2
 			default['volume']['depth'] *= 2
 			default['model'] = "Senior"
@@ -447,7 +449,6 @@ class LaserCutterProfileManager(object):
 
 			value[path[-1]] = converter(value[path[-1]])
 
-
 		# convert ints
 		for path in (("axes", "x", "speed"), ("axes", "y", "speed"), ("axes", "z", "speed")):
 			try:
@@ -474,6 +475,7 @@ class LaserCutterProfileManager(object):
 	def _underlay_profile_with_default(self, profile):
 		return update(self._load_default(), profile)
 
+
 def update(d, u):
 	for k, v in u.iteritems():
 		if isinstance(v, collections.Mapping):
@@ -482,7 +484,6 @@ def update(d, u):
 		else:
 			d[k] = u[k]
 	return d
-
 
 
 class Profile(object):

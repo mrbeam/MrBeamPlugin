@@ -16,6 +16,11 @@ def usageHandler(plugin):
 
 
 class UsageHandler(object):
+	MAX_DUST_FACTOR = 1.0
+	MIN_DUST_FACTOR = 0.5
+	MAX_DUST_VALUE = 0.5
+	MIN_DUST_VALUE = 0.2
+
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.usage")
 		self._plugin = plugin
@@ -30,6 +35,11 @@ class UsageHandler(object):
 		self.start_time_carbon_filter = -1
 		self.start_time_gantry = -1
 		self.start_time_compressor = -1
+		self.start_ntp_synced = None
+
+		self._last_dust_value = None
+		self._dust_mapping_m = (self.MAX_DUST_FACTOR - self.MIN_DUST_FACTOR) / (self.MAX_DUST_VALUE - self.MIN_DUST_VALUE)
+		self._dust_mapping_b = self.MIN_DUST_FACTOR - self._dust_mapping_m * self.MIN_DUST_VALUE
 
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
 		if not os.path.isdir(analyticsfolder):
@@ -45,6 +55,7 @@ class UsageHandler(object):
 	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._analytics_handler = self._plugin.analytics_handler
 		self._laserhead_handler = self._plugin.laserhead_handler
+		self._dust_manager = self._plugin.dust_manager
 
 		# Read laser head. If it's None, use 'no_serial'
 		self._lh = self._laserhead_handler.get_current_used_lh_data()
@@ -59,13 +70,13 @@ class UsageHandler(object):
 		self._subscribe()
 
 	def log_usage(self):
-		self._logger.info("Usage: total: {}, pre-filter: {}, main filter: {}, current laser head: {}, mechanics: {}, compressor: {} - {}".format(
-			self._get_duration_humanreadable(self._usage_data['total']['job_time']),
-			self._get_duration_humanreadable(self._usage_data['prefilter']['job_time']),
-			self._get_duration_humanreadable(self._usage_data['carbon_filter']['job_time']),
-			self._get_duration_humanreadable(self._usage_data['laser_head'][self._laser_head_serial]['job_time']),
-			self._get_duration_humanreadable(self._usage_data['compressor']['job_time']),
-			self._get_duration_humanreadable(self._usage_data['gantry']['job_time']),
+		self._logger.info("Usage: total_usage: {}, pre-filter: {}, main filter: {}, current laser head: {}, mechanics: {}, compressor: {} - {}".format(
+			self.get_duration_humanreadable(self._usage_data['total']['job_time']),
+			self.get_duration_humanreadable(self._usage_data['prefilter']['job_time']),
+			self.get_duration_humanreadable(self._usage_data['carbon_filter']['job_time']),
+			self.get_duration_humanreadable(self._usage_data['laser_head'][self._laser_head_serial]['job_time']),
+			self.get_duration_humanreadable(self._usage_data['compressor']['job_time']),
+			self.get_duration_humanreadable(self._usage_data['gantry']['job_time']),
 			self._usage_data))
 
 	def _subscribe(self):
@@ -92,9 +103,13 @@ class UsageHandler(object):
 		self.start_time_laser_head = self._usage_data['laser_head'][self._laser_head_serial]['job_time']
 		self.start_time_gantry = self._usage_data['gantry']['job_time']
 		self.start_time_compressor = self._usage_data['compressor']['job_time']
+		self.start_ntp_synced = self._plugin._time_ntp_synced
+
+		self._last_dust_value = None
 
 	def event_write(self, event, payload):
 		if self.start_time_total >= 0:
+			self._update_last_dust_value()
 			self._set_time(payload['time'])
 
 	def event_stop(self, event, payload):
@@ -102,21 +117,40 @@ class UsageHandler(object):
 			self._usage_data['succ_jobs']['count'] = self._usage_data['succ_jobs']['count'] + 1
 
 		if self.start_time_total >= 0:
+			self._update_last_dust_value()
 			self._set_time(payload['time'])
+
 			self.start_time_total = -1
 			self.start_time_laser_head = -1
 			self.start_time_prefilter = -1
 			self.start_time_carbon_filter = -1
 			self.start_time_gantry = -1
 			self.start_time_compressor = -1
+			self.start_ntp_synced = None
+
 			self.write_usage_analytics(action='job_finished')
 
 	def _set_time(self, job_duration):
 		if job_duration is not None and job_duration > 0.0:
+
+			# If it wasn't ntp synced at the beginning of the job, but it is now, we subtract the time shift
+			if self.start_ntp_synced != self._plugin._time_ntp_synced:
+				job_duration_before = job_duration
+				job_duration -= self._plugin._time_ntp_shift
+
+				ntp_details = dict(
+					time_shift=self._plugin._time_ntp_shift,
+					job_duration_before=job_duration_before,
+					job_duration_after=job_duration,
+				)
+				self._analytics_handler.add_job_ntp_sync_details(ntp_details)
+
+			dust_factor = self._calculate_dust_factor()
 			self._usage_data['total']['job_time'] = self.start_time_total + job_duration
-			self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self.start_time_laser_head + job_duration
-			self._usage_data['prefilter']['job_time'] = self.start_time_prefilter + job_duration
-			self._usage_data['carbon_filter']['job_time'] = self.start_time_carbon_filter + job_duration
+			self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = \
+				self.start_time_laser_head + job_duration * dust_factor
+			self._usage_data['prefilter']['job_time'] = self.start_time_prefilter + job_duration * dust_factor
+			self._usage_data['carbon_filter']['job_time'] = self.start_time_carbon_filter + job_duration * dust_factor
 			self._usage_data['gantry']['job_time'] = self.start_time_gantry + job_duration
 
 			if self._plugin.compressor_handler.has_compressor():
@@ -157,6 +191,7 @@ class UsageHandler(object):
 	def write_usage_analytics(self, action=None):
 		try:
 			usage_data = dict(
+				total=self._usage_data['total']['job_time'],
 				prefilter=self._usage_data['prefilter']['job_time'],
 				carbon_filter=self._usage_data['carbon_filter']['job_time'],
 				laser_head=dict(
@@ -375,9 +410,24 @@ class UsageHandler(object):
 		        and len(data['total']) > 0 \
 		        and 'job_time' in data['total'])
 
-	def _get_duration_humanreadable(self, seconds):
+	def get_duration_humanreadable(self, seconds):
 		seconds = seconds if seconds else 0
 		m, s = divmod(seconds, 60)
 		h, m = divmod(m, 60)
 		return "%d:%02d:%02d" % (h, m, s)
+
+	def _update_last_dust_value(self):
+		new_value = self._dust_manager.get_mean_job_dust()
+		if new_value is not None:
+			self._last_dust_value = new_value
+
+	def _calculate_dust_factor(self):
+		dust_factor = 1
+
+		if self._last_dust_value is not None:
+			dust_factor = round(self._dust_mapping_m * self._last_dust_value + self._dust_mapping_b, 2)
+			if dust_factor < self.MIN_DUST_FACTOR:
+				dust_factor = self.MIN_DUST_FACTOR
+
+		return dust_factor
 

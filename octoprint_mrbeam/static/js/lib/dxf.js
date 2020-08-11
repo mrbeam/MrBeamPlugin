@@ -114,7 +114,7 @@ function () {
 }();
 
 exports["default"] = Helper;
-},{"./denormalise":4,"./groupEntitiesByLayer":7,"./parseString":26,"./toPolylines":27,"./toSVG":28,"./toSVGPaths":29,"./util/logger":36}],2:[function(require,module,exports){
+},{"./denormalise":4,"./groupEntitiesByLayer":7,"./parseString":26,"./toPolylines":27,"./toSVG":28,"./toSVGPaths":29,"./util/logger":35}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -214,8 +214,8 @@ var _default = function _default(parseResult) {
         }
 
         var t = {
-          x: -block.x + insert.x,
-          y: -block.y + insert.y,
+          x: insert.x,
+          y: insert.y,
           scaleX: insert.scaleX,
           scaleY: insert.scaleY,
           scaleZ: insert.scaleZ,
@@ -230,7 +230,51 @@ var _default = function _default(parseResult) {
 
         var blockEntities = block.entities.map(function (be) {
           var be2 = (0, _lodash.cloneDeep)(be);
-          be2.layer = insert.layer;
+          be2.layer = insert.layer; // https://github.com/bjnortier/dxf/issues/52
+          // See Issue 52. If we don't modify the
+          // entity coordinates here it creates an issue with the
+          // transformation matrices (which are only applied AFTER
+          // block insertion modifications has been applied).
+
+          switch (be2.type) {
+            case 'LINE':
+              {
+                be2.start.x -= block.x;
+                be2.start.y -= block.y;
+                be2.end.x -= block.x;
+                be2.end.y -= block.y;
+                break;
+              }
+
+            case 'LWPOLYLINE':
+            case 'POLYLINE':
+              {
+                be2.vertices.forEach(function (v) {
+                  v.x -= block.x;
+                  v.y -= block.y;
+                });
+                break;
+              }
+
+            case 'CIRCLE':
+            case 'ELLIPSE':
+            case 'ARC':
+              {
+                be2.x -= block.x;
+                be2.y -= block.y;
+                break;
+              }
+
+            case 'SPLINE':
+              {
+                be2.controlPoints.forEach(function (cp) {
+                  cp.x -= block.x;
+                  cp.y -= block.y;
+                });
+                break;
+              }
+          }
+
           return be2;
         });
         current = current.concat(gatherEntities(blockEntities, transforms2));
@@ -251,7 +295,7 @@ var _default = function _default(parseResult) {
 };
 
 exports["default"] = _default;
-},{"./util/logger":36,"lodash":40}],5:[function(require,module,exports){
+},{"./util/logger":35,"lodash":40}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -454,7 +498,7 @@ var _default = function _default(entity, options) {
 };
 
 exports["default"] = _default;
-},{"./util/bSpline":32,"./util/createArcForLWPolyline":34,"./util/logger":36}],6:[function(require,module,exports){
+},{"./util/bSpline":31,"./util/createArcForLWPolyline":33,"./util/logger":35}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -490,7 +534,7 @@ var _default = function _default(layers, entity) {
 };
 
 exports["default"] = _default;
-},{"./util/colors":33,"./util/logger":36}],7:[function(require,module,exports){
+},{"./util/colors":32,"./util/logger":35}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -644,7 +688,7 @@ var _default = function _default(tuples) {
     var entityType = tuples[0][1];
     var contentTuples = tuples.slice(1);
 
-    if (handlers.hasOwnProperty(entityType)) {
+    if (handlers[entityType] !== undefined) {
       var e = handlers[entityType].process(contentTuples); // "POLYLINE" cannot be parsed in isolation, it is followed by
       // N "VERTEX" entities and ended with a "SEQEND" entity.
       // Essentially we convert POLYLINE to LWPOLYLINE - the extra
@@ -673,7 +717,7 @@ var _default = function _default(tuples) {
 };
 
 exports["default"] = _default;
-},{"../util/logger":36,"./entity/arc":10,"./entity/circle":11,"./entity/ellipse":13,"./entity/insert":14,"./entity/line":15,"./entity/lwpolyline":16,"./entity/mtext":17,"./entity/point":18,"./entity/polyline":19,"./entity/solid":20,"./entity/spline":21,"./entity/vertex":22}],10:[function(require,module,exports){
+},{"../util/logger":35,"./entity/arc":10,"./entity/circle":11,"./entity/ellipse":13,"./entity/insert":14,"./entity/line":15,"./entity/lwpolyline":16,"./entity/mtext":17,"./entity/point":18,"./entity/polyline":19,"./entity/solid":20,"./entity/spline":21,"./entity/vertex":22}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1233,7 +1277,7 @@ var process = function process(tuples) {
     var type = tuple[0];
     var value = tuple[1];
 
-    if (simpleCodes.hasOwnProperty(type)) {
+    if (simpleCodes[type] !== undefined) {
       entity[simpleCodes[type]] = value;
     } else if (type === 1 || type === 3) {
       entity.string += value;
@@ -1828,7 +1872,7 @@ var _default = function _default(tuples) {
 };
 
 exports["default"] = _default;
-},{"../util/logger":36}],25:[function(require,module,exports){
+},{"../util/logger":35}],25:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1908,7 +1952,7 @@ var _colors = _interopRequireDefault(require("./util/colors"));
 var _Helper = _interopRequireDefault(require("./Helper"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-},{"./Helper":1,"./config":3,"./denormalise":4,"./groupEntitiesByLayer":7,"./parseString":26,"./toPolylines":27,"./toSVG":28,"./toSVGPaths":29,"./util/colors":33}],26:[function(require,module,exports){
+},{"./Helper":1,"./config":3,"./denormalise":4,"./groupEntitiesByLayer":7,"./parseString":26,"./toPolylines":27,"./toSVG":28,"./toSVGPaths":29,"./util/colors":32}],26:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2105,7 +2149,7 @@ var _default = function _default(parsed) {
 };
 
 exports["default"] = _default;
-},{"./applyTransforms":2,"./denormalise":4,"./entityToPolyline":5,"./util/colors":33,"./util/logger":36,"vecks":51}],28:[function(require,module,exports){
+},{"./applyTransforms":2,"./denormalise":4,"./entityToPolyline":5,"./util/colors":32,"./util/logger":35,"vecks":51}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2129,9 +2173,11 @@ var _rotate = _interopRequireDefault(require("./util/rotate"));
 
 var _rgbToColorAttribute = _interopRequireDefault(require("./util/rgbToColorAttribute"));
 
-var _toPiecewiseBezier = _interopRequireDefault(require("./util/toPiecewiseBezier"));
+var _toPiecewiseBezier = _interopRequireWildcard(require("./util/toPiecewiseBezier"));
 
-var _transformBoundingBoxAndElement = _interopRequireDefault(require("./transformBoundingBoxAndElement"));
+var _transformBoundingBoxAndElement = _interopRequireDefault(require("./util/transformBoundingBoxAndElement"));
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj["default"] = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -2206,7 +2252,7 @@ var circle = function circle(entity) {
     y: entity.y - entity.r
   }); // fill="none" avoids svg default fill value: black
 
-  var element0 = "<circle cx=\"".concat(entity.x, "\" cy=\"").concat(entity.y, "\" r=\"").concat(entity.r, "\" fill=\"none\"  />");
+  var element0 = "<circle cx=\"".concat(entity.x, "\" cy=\"").concat(entity.y, "\" r=\"").concat(entity.r, "\" fill=\"none\"/>");
 
   var _addFlipXIfApplicable = addFlipXIfApplicable(entity, {
     bbox: bbox0,
@@ -2223,27 +2269,11 @@ var circle = function circle(entity) {
  */
 
 
-var ellipseOrArc = function ellipseOrArc(cx, cy, rx, ry, startAngle, endAngle, rotationAngle, flipX) {
-  var bbox = [{
-    x: rx,
-    y: ry
-  }, {
-    x: rx,
-    y: ry
-  }, {
-    x: -rx,
-    y: -ry
-  }, {
-    x: -rx,
-    y: ry
-  }].reduce(function (acc, p) {
-    var rotated = (0, _rotate["default"])(p, rotationAngle);
-    acc.expandByPoint({
-      x: cx + rotated.x,
-      y: cy + rotated.y
-    });
-    return acc;
-  }, new _vecks.Box2());
+var ellipseOrArc = function ellipseOrArc(cx, cy, majorX, majorY, axisRatio, startAngle, endAngle, flipX) {
+  var rx = Math.sqrt(majorX * majorX + majorY * majorY);
+  var ry = axisRatio * rx;
+  var rotationAngle = -Math.atan2(-majorY, majorX);
+  var bbox = bboxEllipseOrArc(cx, cy, majorX, majorY, axisRatio, startAngle, endAngle, flipX);
 
   if (Math.abs(startAngle - endAngle) < 1e-9 || Math.abs(startAngle - endAngle + Math.PI * 2) < 1e-9) {
     // Use a native <ellipse> when start and end angles are the same, and
@@ -2283,17 +2313,86 @@ var ellipseOrArc = function ellipseOrArc(cx, cy, rx, ry, startAngle, endAngle, r
   }
 };
 /**
+ * Compute the bounding box of an elliptical arc, given the DXF entity parameters
+ */
+
+
+var bboxEllipseOrArc = function bboxEllipseOrArc(cx, cy, majorX, majorY, axisRatio, startAngle, endAngle, flipX) {
+  // The bounding box will be defined by the starting point of the ellipse, and ending point,
+  // and any extrema on the ellipse that are between startAngle and endAngle.
+  // The extrema are found by setting either the x or y component of the ellipse's
+  // tangent vector to zero and solving for the angle.
+  // Ensure start and end angles are > 0 and well-ordered
+  while (startAngle < 0) {
+    startAngle += Math.PI * 2;
+  }
+
+  while (endAngle <= startAngle) {
+    endAngle += Math.PI * 2;
+  } // When rotated, the extrema of the ellipse will be found at these angles
+
+
+  var angles = [];
+
+  if (Math.abs(majorX) < 1e-12 || Math.abs(majorY) < 1e-12) {
+    // Special case for majorX or majorY = 0
+    for (var i = 0; i < 4; i++) {
+      angles.push(i / 2 * Math.PI);
+    }
+  } else {
+    // reference https://github.com/bjnortier/dxf/issues/47#issuecomment-545915042
+    angles[0] = Math.atan(-majorY * axisRatio / majorX) - Math.PI; // Ensure angles < 0
+
+    angles[1] = Math.atan(majorX * axisRatio / majorY) - Math.PI;
+    angles[2] = angles[0] - Math.PI;
+    angles[3] = angles[1] - Math.PI;
+  } // Remove angles not falling between start and end
+
+
+  for (var _i2 = 4; _i2 >= 0; _i2--) {
+    while (angles[_i2] < startAngle) {
+      angles[_i2] += Math.PI * 2;
+    }
+
+    if (angles[_i2] > endAngle) {
+      angles.splice(_i2, 1);
+    }
+  } // Also to consider are the starting and ending points:
+
+
+  angles.push(startAngle);
+  angles.push(endAngle); // Compute points lying on the unit circle at these angles
+
+  var pts = angles.map(function (a) {
+    return {
+      x: Math.cos(a),
+      y: Math.sin(a)
+    };
+  }); // Transformation matrix, formed by the major and minor axes
+
+  var M = [[majorX, -majorY * axisRatio], [majorY, majorX * axisRatio]]; // Rotate, scale, and translate points
+
+  var rotatedPts = pts.map(function (p) {
+    return {
+      x: p.x * M[0][0] + p.y * M[0][1] + cx,
+      y: p.x * M[1][0] + p.y * M[1][1] + cy
+    };
+  }); // Compute extents of bounding box
+
+  var bbox = rotatedPts.reduce(function (acc, p) {
+    acc.expandByPoint(p);
+    return acc;
+  }, new _vecks.Box2());
+  return bbox;
+};
+/**
  * An ELLIPSE is defined by the major axis, convert to X and Y radius with
  * a rotation angle
  */
 
 
 var ellipse = function ellipse(entity) {
-  var rx = Math.sqrt(entity.majorX * entity.majorX + entity.majorY * entity.majorY);
-  var ry = entity.axisRatio * rx;
-  var majorAxisRotation = -Math.atan2(-entity.majorY, entity.majorX);
-
-  var _ellipseOrArc = ellipseOrArc(entity.x, entity.y, rx, ry, entity.startAngle, entity.endAngle, majorAxisRotation),
+  var _ellipseOrArc = ellipseOrArc(entity.x, entity.y, entity.majorX, entity.majorY, entity.axisRatio, entity.startAngle, entity.endAngle),
       bbox0 = _ellipseOrArc.bbox,
       element0 = _ellipseOrArc.element;
 
@@ -2312,7 +2411,7 @@ var ellipse = function ellipse(entity) {
 
 
 var arc = function arc(entity) {
-  var _ellipseOrArc2 = ellipseOrArc(entity.x, entity.y, entity.r, entity.r, entity.startAngle, entity.endAngle, 0, entity.extrusionZ === -1),
+  var _ellipseOrArc2 = ellipseOrArc(entity.x, entity.y, entity.r, 0, 1, entity.startAngle, entity.endAngle, entity.extrusionZ === -1),
       bbox0 = _ellipseOrArc2.bbox,
       element0 = _ellipseOrArc2.element;
 
@@ -2326,18 +2425,23 @@ var arc = function arc(entity) {
   return (0, _transformBoundingBoxAndElement["default"])(bbox, element, entity.transforms);
 };
 
-var piecewiseToPaths = function piecewiseToPaths(k, controlPoints) {
-  var nSegments = (controlPoints.length - 1) / (k - 1);
+var piecewiseToPaths = function piecewiseToPaths(k, knots, controlPoints) {
   var paths = [];
+  var controlPointIndex = 0;
+  var knotIndex = k;
 
-  for (var i = 0; i < nSegments; ++i) {
-    var cp = controlPoints.slice(i * (k - 1));
+  while (knotIndex < knots.length - k + 1) {
+    var m = (0, _toPiecewiseBezier.multiplicity)(knots, knotIndex);
+    var cp = controlPoints.slice(controlPointIndex, controlPointIndex + k);
 
     if (k === 4) {
       paths.push("<path d=\"M ".concat(cp[0].x, " ").concat(cp[0].y, " C ").concat(cp[1].x, " ").concat(cp[1].y, " ").concat(cp[2].x, " ").concat(cp[2].y, " ").concat(cp[3].x, " ").concat(cp[3].y, "\" fill=\"none\" />"));
     } else if (k === 3) {
       paths.push("<path d=\"M ".concat(cp[0].x, " ").concat(cp[0].y, " Q ").concat(cp[1].x, " ").concat(cp[1].y, " ").concat(cp[2].x, " ").concat(cp[2].y, "\" fill=\"none\" />"));
     }
+
+    controlPointIndex += m;
+    knotIndex += m;
   }
 
   return paths;
@@ -2352,7 +2456,7 @@ var bezier = function bezier(entity) {
   });
   var k = entity.degree + 1;
   var piecewise = (0, _toPiecewiseBezier["default"])(k, entity.controlPoints, entity.knots);
-  var paths = piecewiseToPaths(k, piecewise.controlPoints);
+  var paths = piecewiseToPaths(k, piecewise.knots, piecewise.controlPoints);
   var element = "<g>".concat(paths.join(''), "</g>");
   return (0, _transformBoundingBoxAndElement["default"])(bbox, element, entity.transforms);
 };
@@ -2409,9 +2513,13 @@ var _default = function _default(parsed) {
 
     if (boundsAndElement) {
       var _bbox = boundsAndElement.bbox,
-          element = boundsAndElement.element;
-      acc.bbox.expandByPoint(_bbox.min);
-      acc.bbox.expandByPoint(_bbox.max);
+          element = boundsAndElement.element; // Ignore invalid bounding boxes
+
+      if (_bbox.valid) {
+        acc.bbox.expandByPoint(_bbox.min);
+        acc.bbox.expandByPoint(_bbox.max);
+      }
+
       acc.elements.push("<g stroke=\"".concat((0, _rgbToColorAttribute["default"])(rgb), "\">").concat(element, "</g>"));
     }
 
@@ -2423,22 +2531,22 @@ var _default = function _default(parsed) {
       bbox = _entities$reduce.bbox,
       elements = _entities$reduce.elements;
 
-  var viewBox = bbox.min.x === Infinity ? {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0
-  } : {
+  var viewBox = bbox.valid ? {
     x: bbox.min.x,
     y: -bbox.max.y,
     width: bbox.max.x - bbox.min.x,
     height: bbox.max.y - bbox.min.y
+  } : {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
   };
   return "<?xml version=\"1.0\"?>\n<svg\n  xmlns=\"http://www.w3.org/2000/svg\"\n  xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\"\n  preserveAspectRatio=\"xMinYMin meet\"\n  viewBox=\"".concat(viewBox.x, " ").concat(viewBox.y, " ").concat(viewBox.width, " ").concat(viewBox.height, "\"\n  width=\"100%\" height=\"100%\"\n><!-- Created with mrbeam/dxf.js -->\n  <g class=\"dxf-import\">\n    ").concat(_prettyData.pd.xml(elements.join('\n')), "\n  </g>\n</svg>");
 };
 
 exports["default"] = _default;
-},{"./denormalise":4,"./entityToPolyline":5,"./getRGBForEntity":6,"./transformBoundingBoxAndElement":30,"./util/logger":36,"./util/rgbToColorAttribute":37,"./util/rotate":38,"./util/toPiecewiseBezier":39,"pretty-data":41,"vecks":51}],29:[function(require,module,exports){
+},{"./denormalise":4,"./entityToPolyline":5,"./getRGBForEntity":6,"./util/logger":35,"./util/rgbToColorAttribute":36,"./util/rotate":37,"./util/toPiecewiseBezier":38,"./util/transformBoundingBoxAndElement":39,"pretty-data":41,"vecks":51}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2593,131 +2701,22 @@ var _default = function _default(parsed) {
   } // Mr Beam Modification: "add created" with comment
 
 
-  var viewBox = bbox.min.x === Infinity ? {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0
-  } : {
+  var viewBox = bbox.valid ? {
     x: bbox.min.x,
     y: -bbox.max.y,
     width: bbox.max.x - bbox.min.x,
     height: bbox.max.y - bbox.min.y
+  } : {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
   };
   return "<?xml version=\"1.0\"?>\n<svg\n  xmlns=\"http://www.w3.org/2000/svg\"\n  xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\"\n  preserveAspectRatio=\"xMinYMin meet\"\n  viewBox='".concat(viewBox.x, " ").concat(viewBox.y, " ").concat(viewBox.width, " ").concat(viewBox.height, "'\n  width=\"100%\" height=\"100%\"\n><!-- Created with mrbeam/dxf.js -->\n  <g class=\"dxf-import\" transform=\"matrix(1 0 0 -1 0 ").concat(viewBox.height, ")\">\n    ").concat(_prettyData.pd.xml(elements.join('\n')), "\n  </g>\n</svg>");
 };
 
 exports["default"] = _default;
-},{"./denormalise":4,"./entityToPolyline":5,"./getRGBForEntity":6,"./transformVertices":31,"./util/logger":36,"./util/rgbToColorAttribute":37,"pretty-data":41,"vecks":51}],30:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports["default"] = void 0;
-
-var _vecks = require("vecks");
-
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
-
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-/**
- * Transform the bounding box and the SVG element by the given
- * transforms. The <g> element are created in reverse transform
- * order and the bounding box in the given order.
- */
-var _default = function _default(bbox, element, transforms) {
-  var transformedElement = '';
-  var matrices = transforms.map(function (transform) {
-    // Create the transformation matrix
-    var tx = transform.x || 0;
-    var ty = transform.y || 0;
-    var sx = transform.scaleX || 1;
-    var sy = transform.scaleY || 1;
-    var angle = (transform.rotation || 0) / 180 * Math.PI;
-    var cos = Math.cos,
-        sin = Math.sin;
-    var a, b, c, d, e, f; // In DXF an extrusionZ value of -1 denote a tranform around the Y axis.
-
-    if (transform.extrusionZ === -1) {
-      a = -sx * cos(angle);
-      b = sx * sin(angle);
-      c = sy * sin(angle);
-      d = sy * cos(angle);
-      e = -tx;
-      f = ty;
-    } else {
-      a = sx * cos(angle);
-      b = sx * sin(angle);
-      c = -sy * sin(angle);
-      d = sy * cos(angle);
-      e = tx;
-      f = ty;
-    }
-
-    return [a, b, c, d, e, f];
-  });
-  var bboxPoints = [{
-    x: bbox.min.x,
-    y: bbox.min.y
-  }, {
-    x: bbox.max.x,
-    y: bbox.min.y
-  }, {
-    x: bbox.max.x,
-    y: bbox.max.y
-  }, {
-    x: bbox.min.x,
-    y: bbox.max.y
-  }];
-  matrices.forEach(function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 6),
-        a = _ref2[0],
-        b = _ref2[1],
-        c = _ref2[2],
-        d = _ref2[3],
-        e = _ref2[4],
-        f = _ref2[5];
-
-    bboxPoints = bboxPoints.map(function (point) {
-      return {
-        x: point.x * a + point.y * c + e,
-        y: point.x * b + point.y * d + f
-      };
-    });
-  });
-  var transformedBBox = bboxPoints.reduce(function (acc, point) {
-    return acc.expandByPoint(point);
-  }, new _vecks.Box2());
-  matrices.reverse();
-  matrices.forEach(function (_ref3) {
-    var _ref4 = _slicedToArray(_ref3, 6),
-        a = _ref4[0],
-        b = _ref4[1],
-        c = _ref4[2],
-        d = _ref4[3],
-        e = _ref4[4],
-        f = _ref4[5];
-
-    transformedElement += "<g transform=\"matrix(".concat(a, " ").concat(b, " ").concat(c, " ").concat(d, " ").concat(e, " ").concat(f, ")\">");
-  });
-  transformedElement += element;
-  matrices.forEach(function (transform) {
-    transformedElement += '</g>';
-  });
-  return {
-    bbox: transformedBBox,
-    element: transformedElement
-  };
-};
-
-exports["default"] = _default;
-},{"vecks":51}],31:[function(require,module,exports){
+},{"./denormalise":4,"./entityToPolyline":5,"./getRGBForEntity":6,"./transformVertices":30,"./util/logger":35,"./util/rgbToColorAttribute":36,"pretty-data":41,"vecks":51}],30:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2786,7 +2785,7 @@ var _default = function _default(vertices, transforms) {
 };
 
 exports["default"] = _default;
-},{}],32:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2891,7 +2890,7 @@ var _default = function _default(t, degree, points, knots, weights) {
 };
 
 exports["default"] = _default;
-},{"round10":42}],33:[function(require,module,exports){
+},{"round10":42}],32:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2900,7 +2899,7 @@ Object.defineProperty(exports, "__esModule", {
 exports["default"] = void 0;
 var _default = [[0, 0, 0], [255, 0, 0], [255, 255, 0], [0, 255, 0], [0, 255, 255], [0, 0, 255], [255, 0, 255], [255, 255, 255], [65, 65, 65], [128, 128, 128], [255, 0, 0], [255, 170, 170], [189, 0, 0], [189, 126, 126], [129, 0, 0], [129, 86, 86], [104, 0, 0], [104, 69, 69], [79, 0, 0], [79, 53, 53], [255, 63, 0], [255, 191, 170], [189, 46, 0], [189, 141, 126], [129, 31, 0], [129, 96, 86], [104, 25, 0], [104, 78, 69], [79, 19, 0], [79, 59, 53], [255, 127, 0], [255, 212, 170], [189, 94, 0], [189, 157, 126], [129, 64, 0], [129, 107, 86], [104, 52, 0], [104, 86, 69], [79, 39, 0], [79, 66, 53], [255, 191, 0], [255, 234, 170], [189, 141, 0], [189, 173, 126], [129, 96, 0], [129, 118, 86], [104, 78, 0], [104, 95, 69], [79, 59, 0], [79, 73, 53], [255, 255, 0], [255, 255, 170], [189, 189, 0], [189, 189, 126], [129, 129, 0], [129, 129, 86], [104, 104, 0], [104, 104, 69], [79, 79, 0], [79, 79, 53], [191, 255, 0], [234, 255, 170], [141, 189, 0], [173, 189, 126], [96, 129, 0], [118, 129, 86], [78, 104, 0], [95, 104, 69], [59, 79, 0], [73, 79, 53], [127, 255, 0], [212, 255, 170], [94, 189, 0], [157, 189, 126], [64, 129, 0], [107, 129, 86], [52, 104, 0], [86, 104, 69], [39, 79, 0], [66, 79, 53], [63, 255, 0], [191, 255, 170], [46, 189, 0], [141, 189, 126], [31, 129, 0], [96, 129, 86], [25, 104, 0], [78, 104, 69], [19, 79, 0], [59, 79, 53], [0, 255, 0], [170, 255, 170], [0, 189, 0], [126, 189, 126], [0, 129, 0], [86, 129, 86], [0, 104, 0], [69, 104, 69], [0, 79, 0], [53, 79, 53], [0, 255, 63], [170, 255, 191], [0, 189, 46], [126, 189, 141], [0, 129, 31], [86, 129, 96], [0, 104, 25], [69, 104, 78], [0, 79, 19], [53, 79, 59], [0, 255, 127], [170, 255, 212], [0, 189, 94], [126, 189, 157], [0, 129, 64], [86, 129, 107], [0, 104, 52], [69, 104, 86], [0, 79, 39], [53, 79, 66], [0, 255, 191], [170, 255, 234], [0, 189, 141], [126, 189, 173], [0, 129, 96], [86, 129, 118], [0, 104, 78], [69, 104, 95], [0, 79, 59], [53, 79, 73], [0, 255, 255], [170, 255, 255], [0, 189, 189], [126, 189, 189], [0, 129, 129], [86, 129, 129], [0, 104, 104], [69, 104, 104], [0, 79, 79], [53, 79, 79], [0, 191, 255], [170, 234, 255], [0, 141, 189], [126, 173, 189], [0, 96, 129], [86, 118, 129], [0, 78, 104], [69, 95, 104], [0, 59, 79], [53, 73, 79], [0, 127, 255], [170, 212, 255], [0, 94, 189], [126, 157, 189], [0, 64, 129], [86, 107, 129], [0, 52, 104], [69, 86, 104], [0, 39, 79], [53, 66, 79], [0, 63, 255], [170, 191, 255], [0, 46, 189], [126, 141, 189], [0, 31, 129], [86, 96, 129], [0, 25, 104], [69, 78, 104], [0, 19, 79], [53, 59, 79], [0, 0, 255], [170, 170, 255], [0, 0, 189], [126, 126, 189], [0, 0, 129], [86, 86, 129], [0, 0, 104], [69, 69, 104], [0, 0, 79], [53, 53, 79], [63, 0, 255], [191, 170, 255], [46, 0, 189], [141, 126, 189], [31, 0, 129], [96, 86, 129], [25, 0, 104], [78, 69, 104], [19, 0, 79], [59, 53, 79], [127, 0, 255], [212, 170, 255], [94, 0, 189], [157, 126, 189], [64, 0, 129], [107, 86, 129], [52, 0, 104], [86, 69, 104], [39, 0, 79], [66, 53, 79], [191, 0, 255], [234, 170, 255], [141, 0, 189], [173, 126, 189], [96, 0, 129], [118, 86, 129], [78, 0, 104], [95, 69, 104], [59, 0, 79], [73, 53, 79], [255, 0, 255], [255, 170, 255], [189, 0, 189], [189, 126, 189], [129, 0, 129], [129, 86, 129], [104, 0, 104], [104, 69, 104], [79, 0, 79], [79, 53, 79], [255, 0, 191], [255, 170, 234], [189, 0, 141], [189, 126, 173], [129, 0, 96], [129, 86, 118], [104, 0, 78], [104, 69, 95], [79, 0, 59], [79, 53, 73], [255, 0, 127], [255, 170, 212], [189, 0, 94], [189, 126, 157], [129, 0, 64], [129, 86, 107], [104, 0, 52], [104, 69, 86], [79, 0, 39], [79, 53, 66], [255, 0, 63], [255, 170, 191], [189, 0, 46], [189, 126, 141], [129, 0, 31], [129, 86, 96], [104, 0, 25], [104, 69, 78], [79, 0, 19], [79, 53, 59], [51, 51, 51], [80, 80, 80], [105, 105, 105], [130, 130, 130], [190, 190, 190], [255, 255, 255]];
 exports["default"] = _default;
-},{}],34:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2986,7 +2985,7 @@ var _default = function _default(from, to, bulge, resolution) {
 };
 
 exports["default"] = _default;
-},{"vecks":51}],35:[function(require,module,exports){
+},{"vecks":51}],34:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3066,7 +3065,7 @@ var _default = function _default(k, controlPoints, knots, newKnot) {
 };
 
 exports["default"] = _default;
-},{}],36:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3100,7 +3099,7 @@ var _default = {
   error: error
 };
 exports["default"] = _default;
-},{"../config":3}],37:[function(require,module,exports){
+},{"../config":3}],36:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3121,7 +3120,7 @@ var _default = function _default(rgb) {
 };
 
 exports["default"] = _default;
-},{}],38:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3143,13 +3142,13 @@ var _default = function _default(p, angle) {
 };
 
 exports["default"] = _default;
-},{}],39:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports["default"] = exports.computeInsertions = exports.checkPinned = void 0;
+exports["default"] = exports.computeInsertions = exports.multiplicity = exports.checkPinned = void 0;
 
 var _insertKnot = _interopRequireDefault(require("./insertKnot"));
 
@@ -3200,6 +3199,8 @@ var multiplicity = function multiplicity(knots, index) {
  */
 
 
+exports.multiplicity = multiplicity;
+
 var computeInsertions = function computeInsertions(k, knots) {
   var inserts = [];
   var i = k;
@@ -3232,7 +3233,122 @@ var _default = function _default(k, controlPoints, knots) {
 };
 
 exports["default"] = _default;
-},{"./insertKnot":35}],40:[function(require,module,exports){
+},{"./insertKnot":34}],39:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _vecks = require("vecks");
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+/**
+ * Transform the bounding box and the SVG element by the given
+ * transforms. The <g> element are created in reverse transform
+ * order and the bounding box in the given order.
+ */
+var _default = function _default(bbox, element, transforms) {
+  var transformedElement = '';
+  var matrices = transforms.map(function (transform) {
+    // Create the transformation matrix
+    var tx = transform.x || 0;
+    var ty = transform.y || 0;
+    var sx = transform.scaleX || 1;
+    var sy = transform.scaleY || 1;
+    var angle = (transform.rotation || 0) / 180 * Math.PI;
+    var cos = Math.cos,
+        sin = Math.sin;
+    var a, b, c, d, e, f; // In DXF an extrusionZ value of -1 denote a tranform around the Y axis.
+
+    if (transform.extrusionZ === -1) {
+      a = -sx * cos(angle);
+      b = sx * sin(angle);
+      c = sy * sin(angle);
+      d = sy * cos(angle);
+      e = -tx;
+      f = ty;
+    } else {
+      a = sx * cos(angle);
+      b = sx * sin(angle);
+      c = -sy * sin(angle);
+      d = sy * cos(angle);
+      e = tx;
+      f = ty;
+    }
+
+    return [a, b, c, d, e, f];
+  }); // Only transform the bounding box is it is valid (i.e. not Infinity)
+
+  var transformedBBox = new _vecks.Box2();
+
+  if (bbox.valid) {
+    var bboxPoints = [{
+      x: bbox.min.x,
+      y: bbox.min.y
+    }, {
+      x: bbox.max.x,
+      y: bbox.min.y
+    }, {
+      x: bbox.max.x,
+      y: bbox.max.y
+    }, {
+      x: bbox.min.x,
+      y: bbox.max.y
+    }];
+    matrices.forEach(function (_ref) {
+      var _ref2 = _slicedToArray(_ref, 6),
+          a = _ref2[0],
+          b = _ref2[1],
+          c = _ref2[2],
+          d = _ref2[3],
+          e = _ref2[4],
+          f = _ref2[5];
+
+      bboxPoints = bboxPoints.map(function (point) {
+        return {
+          x: point.x * a + point.y * c + e,
+          y: point.x * b + point.y * d + f
+        };
+      });
+    });
+    transformedBBox = bboxPoints.reduce(function (acc, point) {
+      return acc.expandByPoint(point);
+    }, new _vecks.Box2());
+  }
+
+  matrices.reverse();
+  matrices.forEach(function (_ref3) {
+    var _ref4 = _slicedToArray(_ref3, 6),
+        a = _ref4[0],
+        b = _ref4[1],
+        c = _ref4[2],
+        d = _ref4[3],
+        e = _ref4[4],
+        f = _ref4[5];
+
+    transformedElement += "<g transform=\"matrix(".concat(a, " ").concat(b, " ").concat(c, " ").concat(d, " ").concat(e, " ").concat(f, ")\">");
+  });
+  transformedElement += element;
+  matrices.forEach(function (transform) {
+    transformedElement += '</g>';
+  });
+  return {
+    bbox: transformedBBox,
+    element: transformedElement
+  };
+};
+
+exports["default"] = _default;
+},{"vecks":51}],40:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -20750,39 +20866,63 @@ module.exports.polyfill = function() {
 };
 
 },{}],43:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _V = _interopRequireDefault(require("./V2"));
 
-var _V = require('./V2');
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _V2 = _interopRequireDefault(_V);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Box2 = function () {
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Box2 =
+/*#__PURE__*/
+function () {
   function Box2(min, max) {
     _classCallCheck(this, Box2);
 
-    this.min = min || new _V2.default(Infinity, Infinity);
-    this.max = max || new _V2.default(-Infinity, -Infinity);
+    if (_typeof(min) === 'object' && _typeof(max) === 'object' && min.x !== undefined && min.y !== undefined && max.x !== undefined && max.y !== undefined) {
+      this.min = new _V["default"](min);
+      this.max = new _V["default"](max);
+      this.valid = true;
+    } else if (min === undefined && max === undefined) {
+      this.min = new _V["default"](Infinity, Infinity);
+      this.max = new _V["default"](-Infinity, -Infinity);
+      this.valid = false;
+    } else {
+      throw Error('Illegal construction - must use { x, y } objects');
+    }
   }
 
   _createClass(Box2, [{
-    key: 'expandByPoint',
+    key: "equals",
+    value: function equals(other) {
+      if (!this.valid) {
+        throw Error('Box2 is invalid');
+      }
+
+      return this.min.equals(other.min) && this.max.equals(other.max);
+    }
+  }, {
+    key: "expandByPoint",
     value: function expandByPoint(p) {
-      this.min = new _V2.default(Math.min(this.min.x, p.x), Math.min(this.min.y, p.y));
-      this.max = new _V2.default(Math.max(this.max.x, p.x), Math.max(this.max.y, p.y));
+      this.min = new _V["default"](Math.min(this.min.x, p.x), Math.min(this.min.y, p.y));
+      this.max = new _V["default"](Math.max(this.max.x, p.x), Math.max(this.max.y, p.y));
+      this.valid = true;
       return this;
     }
   }, {
-    key: 'expandByPoints',
+    key: "expandByPoints",
     value: function expandByPoints(points) {
       var _this = this;
 
@@ -20792,9 +20932,27 @@ var Box2 = function () {
       return this;
     }
   }, {
-    key: 'isPointInside',
+    key: "isPointInside",
     value: function isPointInside(p) {
       return p.x >= this.min.x && p.y >= this.min.y && p.x <= this.max.x && p.y <= this.max.y;
+    }
+  }, {
+    key: "width",
+    get: function get() {
+      if (!this.valid) {
+        throw Error('Box2 is invalid');
+      }
+
+      return this.max.x - this.min.x;
+    }
+  }, {
+    key: "height",
+    get: function get() {
+      if (!this.valid) {
+        throw Error('Box2 is invalid');
+      }
+
+      return this.max.y - this.min.y;
     }
   }]);
 
@@ -20805,47 +20963,62 @@ Box2.fromPoints = function (points) {
   return new Box2().expandByPoints(points);
 };
 
-exports.default = Box2;
+var _default = Box2;
+exports["default"] = _default;
 },{"./V2":49}],44:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _V = _interopRequireDefault(require("./V3"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Box3 = function () {
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Box3 =
+/*#__PURE__*/
+function () {
   function Box3(min, max) {
     _classCallCheck(this, Box3);
 
-    this.min = min || {
-      x: Infinity,
-      y: Infinity,
-      z: Infinity
-    };
-    this.max = max || {
-      x: -Infinity,
-      y: -Infinity,
-      z: -Infinity
-    };
+    if (_typeof(min) === 'object' && _typeof(max) === 'object' && min.x !== undefined && min.y !== undefined && min.z !== undefined && max.x !== undefined && max.y !== undefined && max.z !== undefined) {
+      this.min = new _V["default"](min);
+      this.max = new _V["default"](max);
+      this.valid = true;
+    } else if (min === undefined && max === undefined) {
+      this.min = new _V["default"](Infinity, Infinity, Infinity);
+      this.max = new _V["default"](-Infinity, -Infinity, -Infinity);
+      this.valid = false;
+    } else {
+      throw Error('Illegal construction - must use { x, y, z } objects');
+    }
   }
 
   _createClass(Box3, [{
+    key: "equals",
+    value: function equals(other) {
+      if (!this.valid) {
+        throw Error('Box3 is invalid');
+      }
+
+      return this.min.equals(other.min) && this.max.equals(other.max);
+    }
+  }, {
     key: "expandByPoint",
     value: function expandByPoint(p) {
-      this.min = {
-        x: Math.min(this.min.x, p.x),
-        y: Math.min(this.min.y, p.y),
-        z: Math.min(this.min.z, p.z)
-      };
-      this.max = {
-        x: Math.max(this.max.x, p.x),
-        y: Math.max(this.max.y, p.y),
-        z: Math.max(this.max.z, p.z)
-      };
+      this.min = new _V["default"](Math.min(this.min.x, p.x), Math.min(this.min.y, p.y), Math.min(this.min.z, p.z));
+      this.max = new _V["default"](Math.max(this.max.x, p.x), Math.max(this.max.y, p.y), Math.max(this.max.z, p.z));
+      this.valid = true;
       return this;
     }
   }, {
@@ -20863,6 +21036,33 @@ var Box3 = function () {
     value: function isPointInside(p) {
       return p.x >= this.min.x && p.y >= this.min.y && p.z >= this.min.z && p.x <= this.max.x && p.y <= this.max.y && p.z <= this.max.z;
     }
+  }, {
+    key: "width",
+    get: function get() {
+      if (!this.valid) {
+        throw Error('Box3 is invalid');
+      }
+
+      return this.max.x - this.min.x;
+    }
+  }, {
+    key: "depth",
+    get: function get() {
+      if (!this.valid) {
+        throw Error('Box3 is invalid');
+      }
+
+      return this.max.y - this.min.y;
+    }
+  }, {
+    key: "height",
+    get: function get() {
+      if (!this.valid) {
+        throw Error('Box3 is invalid');
+      }
+
+      return this.max.z - this.min.z;
+    }
   }]);
 
   return Box3;
@@ -20872,25 +21072,27 @@ Box3.fromPoints = function (points) {
   return new Box3().expandByPoints(points);
 };
 
-exports.default = Box3;
-},{}],45:[function(require,module,exports){
-'use strict';
+var _default = Box3;
+exports["default"] = _default;
+},{"./V3":50}],45:[function(require,module,exports){
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _V = _interopRequireDefault(require("./V2"));
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _V = require('./V2');
-
-var _V2 = _interopRequireDefault(_V);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var turn = function turn(p1, p2, p3) {
   var a = p1.x;
@@ -20902,9 +21104,9 @@ var turn = function turn(p1, p2, p3) {
   var m = (f - b) * (c - a);
   var n = (d - b) * (e - a);
   return m > n + Number.EPSILON ? 1 : m + Number.EPSILON < n ? -1 : 0;
-};
+}; // http://stackoverflow.com/a/16725715/35448
 
-// http://stackoverflow.com/a/16725715/35448
+
 var isIntersect = function isIntersect(e1, e2) {
   var p1 = e1.a;
   var p2 = e1.b;
@@ -20913,31 +21115,28 @@ var isIntersect = function isIntersect(e1, e2) {
   return turn(p1, p3, p4) !== turn(p2, p3, p4) && turn(p1, p2, p3) !== turn(p1, p2, p4);
 };
 
-var _getIntersection = function _getIntersection(m, n) {
+var _getIntersection = function getIntersection(m, n) {
   // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
   var x1 = m.a.x;
   var x2 = m.b.x;
   var y1 = m.a.y;
   var y2 = m.b.y;
-
   var x3 = n.a.x;
   var x4 = n.b.x;
   var y3 = n.a.y;
   var y4 = n.b.y;
-
   var x12 = x1 - x2;
   var x34 = x3 - x4;
   var y12 = y1 - y2;
   var y34 = y3 - y4;
   var c = x12 * y34 - y12 * x34;
-
   var px = ((x1 * y2 - y1 * x2) * x34 - x12 * (x3 * y4 - y3 * x4)) / c;
   var py = ((x1 * y2 - y1 * x2) * y34 - y12 * (x3 * y4 - y3 * x4)) / c;
 
   if (isNaN(px) || isNaN(py)) {
     return null;
   } else {
-    return new _V2.default(px, py);
+    return new _V["default"](px, py);
   }
 };
 
@@ -20945,35 +21144,40 @@ var dist = function dist(a, b) {
   return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 };
 
-var Line2 = function () {
+var Line2 =
+/*#__PURE__*/
+function () {
   function Line2(a, b) {
     _classCallCheck(this, Line2);
 
-    if ((typeof a === 'undefined' ? 'undefined' : _typeof(a)) !== 'object' || a.x === undefined || a.y === undefined) {
+    if (_typeof(a) !== 'object' || a.x === undefined || a.y === undefined) {
       throw Error('expected first argument to have x and y properties');
     }
-    if ((typeof b === 'undefined' ? 'undefined' : _typeof(b)) !== 'object' || b.x === undefined || b.y === undefined) {
+
+    if (_typeof(b) !== 'object' || b.x === undefined || b.y === undefined) {
       throw Error('expected second argument to have x and y properties');
     }
-    this.a = new _V2.default(a);
-    this.b = new _V2.default(b);
+
+    this.a = new _V["default"](a);
+    this.b = new _V["default"](b);
   }
 
   _createClass(Line2, [{
-    key: 'length',
+    key: "length",
     value: function length() {
       return this.a.sub(this.b).length();
     }
   }, {
-    key: 'intersects',
+    key: "intersects",
     value: function intersects(other) {
       if (!(other instanceof Line2)) {
         throw new Error('expected argument to be an instance of vecks.Line2');
       }
+
       return isIntersect(this, other);
     }
   }, {
-    key: 'getIntersection',
+    key: "getIntersection",
     value: function getIntersection(other) {
       if (this.intersects(other)) {
         return _getIntersection(this, other);
@@ -20982,10 +21186,9 @@ var Line2 = function () {
       }
     }
   }, {
-    key: 'containsPoint',
+    key: "containsPoint",
     value: function containsPoint(point) {
       var eps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1e-12;
-
       return Math.abs(dist(this.a, this.b) - dist(point, this.a) - dist(point, this.b)) < eps;
     }
   }]);
@@ -20993,54 +21196,59 @@ var Line2 = function () {
   return Line2;
 }();
 
-exports.default = Line2;
+var _default = Line2;
+exports["default"] = _default;
 },{"./V2":49}],46:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _V = _interopRequireDefault(require("./V3"));
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _V = require('./V3');
-
-var _V2 = _interopRequireDefault(_V);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var dist = function dist(a, b) {
   return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2) + Math.pow(a.z - b.z, 2));
 };
 
-var Line3 = function () {
+var Line3 =
+/*#__PURE__*/
+function () {
   function Line3(a, b) {
     _classCallCheck(this, Line3);
 
-    if ((typeof a === 'undefined' ? 'undefined' : _typeof(a)) !== 'object' || a.x === undefined || a.y === undefined || a.z === undefined) {
+    if (_typeof(a) !== 'object' || a.x === undefined || a.y === undefined || a.z === undefined) {
       throw Error('expected first argument to have x, y and z properties');
     }
-    if ((typeof b === 'undefined' ? 'undefined' : _typeof(b)) !== 'object' || b.x === undefined || b.y === undefined || b.y === undefined) {
+
+    if (_typeof(b) !== 'object' || b.x === undefined || b.y === undefined || b.y === undefined) {
       throw Error('expected second argument to have x, y and z properties');
     }
-    this.a = new _V2.default(a);
-    this.b = new _V2.default(b);
+
+    this.a = new _V["default"](a);
+    this.b = new _V["default"](b);
   }
 
   _createClass(Line3, [{
-    key: 'length',
+    key: "length",
     value: function length() {
       return this.a.sub(this.b).length();
     }
   }, {
-    key: 'containsPoint',
+    key: "containsPoint",
     value: function containsPoint(point) {
       var eps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1e-12;
-
       return Math.abs(dist(this.a, this.b) - dist(point, this.a) - dist(point, this.b)) < eps;
     }
   }]);
@@ -21048,19 +21256,25 @@ var Line3 = function () {
   return Line3;
 }();
 
-exports.default = Line3;
+var _default = Line3;
+exports["default"] = _default;
 },{"./V3":50}],47:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+exports["default"] = void 0;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Plane3 = function () {
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Plane3 =
+/*#__PURE__*/
+function () {
   function Plane3(a, b, c, d) {
     _classCallCheck(this, Plane3);
 
@@ -21068,25 +21282,23 @@ var Plane3 = function () {
     this.b = b;
     this.c = c;
     this.d = d;
-  }
-
-  // Distance to a point
+  } // Distance to a point
   // http://mathworld.wolfram.com/Point-PlaneDistance.html eq 10
 
 
   _createClass(Plane3, [{
-    key: 'distanceToPoint',
+    key: "distanceToPoint",
     value: function distanceToPoint(p0) {
       var dd = (this.a * p0.x + this.b * p0.y + this.c * p0.z + this.d) / Math.sqrt(this.a * this.a + this.b * this.b + this.c * this.c);
       return dd;
     }
   }, {
-    key: 'equals',
+    key: "equals",
     value: function equals(other) {
       return this.a === other.a && this.b === other.b && this.c === other.c && this.d === other.d;
     }
   }, {
-    key: 'coPlanar',
+    key: "coPlanar",
     value: function coPlanar(other) {
       var coPlanarAndSameNormal = this.a === other.a && this.b === other.b && this.c === other.c && this.d === other.d;
       var coPlanarAndReversedNormal = this.a === -other.a && this.b === -other.b && this.c === -other.c && this.d === -other.d;
@@ -21095,9 +21307,7 @@ var Plane3 = function () {
   }]);
 
   return Plane3;
-}();
-
-// From point and normal
+}(); // From point and normal
 
 
 Plane3.fromPointAndNormal = function (p, n) {
@@ -21109,51 +21319,59 @@ Plane3.fromPointAndNormal = function (p, n) {
 };
 
 Plane3.fromPoints = function (points) {
-  var firstCross = void 0;
+  var firstCross;
+
   for (var i = 0, il = points.length; i < il; ++i) {
     var ab = points[(i + 1) % il].sub(points[i]);
     var bc = points[(i + 2) % il].sub(points[(i + 1) % il]);
     var cross = ab.cross(bc);
+
     if (!(isNaN(cross.length()) || cross.length() === 0)) {
       if (!firstCross) {
         firstCross = cross.norm();
       } else {
         var same = cross.norm().equals(firstCross, 1e-6);
         var opposite = cross.neg().norm().equals(firstCross, 1e-6);
+
         if (!(same || opposite)) {
           throw Error('points not on a plane');
         }
       }
     }
   }
+
   if (!firstCross) {
     throw Error('points not on a plane');
   }
+
   return Plane3.fromPointAndNormal(points[0], firstCross.norm());
 };
 
-exports.default = Plane3;
+var _default = Plane3;
+exports["default"] = _default;
 },{}],48:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _V = _interopRequireDefault(require("./V3"));
 
-var _V = require('./V3');
-
-var _V2 = _interopRequireDefault(_V);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
 // Quaternion implementation heavily adapted from the Quaternion implementation in THREE.js
 // https://github.com/mrdoob/three.js/blob/master/src/math/Quaternion.js
-
-var Quaternion = function () {
+var Quaternion =
+/*#__PURE__*/
+function () {
   function Quaternion(x, y, z, w) {
     _classCallCheck(this, Quaternion);
 
@@ -21164,25 +21382,22 @@ var Quaternion = function () {
   }
 
   _createClass(Quaternion, [{
-    key: 'applyToVec3',
+    key: "applyToVec3",
     value: function applyToVec3(v3) {
       var x = v3.x;
       var y = v3.y;
       var z = v3.z;
-
       var qx = this.x;
       var qy = this.y;
       var qz = this.z;
-      var qw = this.w;
+      var qw = this.w; // calculate quat * vector
 
-      // calculate quat * vector
       var ix = qw * x + qy * z - qz * y;
       var iy = qw * y + qz * x - qx * z;
       var iz = qw * z + qx * y - qy * x;
-      var iw = -qx * x - qy * y - qz * z;
+      var iw = -qx * x - qy * y - qz * z; // calculate result * inverse quat
 
-      // calculate result * inverse quat
-      return new _V2.default(ix * qw + iw * -qx + iy * -qz - iz * -qy, iy * qw + iw * -qy + iz * -qx - ix * -qz, iz * qw + iw * -qz + ix * -qy - iy * -qx);
+      return new _V["default"](ix * qw + iw * -qx + iy * -qz - iz * -qy, iy * qw + iw * -qy + iz * -qx - ix * -qz, iz * qw + iw * -qz + ix * -qy - iy * -qx);
     }
   }]);
 
@@ -21197,25 +21412,31 @@ Quaternion.fromAxisAngle = function (axis, angle) {
   return new Quaternion(axisNorm.x * s, axisNorm.y * s, axisNorm.z * s, Math.cos(halfAngle));
 };
 
-exports.default = Quaternion;
+var _default = Quaternion;
+exports["default"] = _default;
 },{"./V3":50}],49:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var V2 = function () {
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var V2 =
+/*#__PURE__*/
+function () {
   function V2(x, y) {
     _classCallCheck(this, V2);
 
-    if ((typeof x === 'undefined' ? 'undefined' : _typeof(x)) === 'object') {
+    if (_typeof(x) === 'object') {
       this.x = x.x;
       this.y = x.y;
     } else {
@@ -21225,42 +21446,42 @@ var V2 = function () {
   }
 
   _createClass(V2, [{
-    key: 'equals',
+    key: "equals",
     value: function equals(other) {
       return this.x === other.x && this.y === other.y;
     }
   }, {
-    key: 'length',
+    key: "length",
     value: function length() {
       return Math.sqrt(this.dot(this));
     }
   }, {
-    key: 'neg',
+    key: "neg",
     value: function neg() {
       return new V2(-this.x, -this.y);
     }
   }, {
-    key: 'add',
+    key: "add",
     value: function add(b) {
       return new V2(this.x + b.x, this.y + b.y);
     }
   }, {
-    key: 'sub',
+    key: "sub",
     value: function sub(b) {
       return new V2(this.x - b.x, this.y - b.y);
     }
   }, {
-    key: 'multiply',
+    key: "multiply",
     value: function multiply(w) {
       return new V2(this.x * w, this.y * w);
     }
   }, {
-    key: 'norm',
+    key: "norm",
     value: function norm() {
       return this.multiply(1 / this.length());
     }
   }, {
-    key: 'dot',
+    key: "dot",
     value: function dot(b) {
       return this.x * b.x + this.y * b.y;
     }
@@ -21269,25 +21490,31 @@ var V2 = function () {
   return V2;
 }();
 
-exports.default = V2;
+var _default = V2;
+exports["default"] = _default;
 },{}],50:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var V3 = function () {
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var V3 =
+/*#__PURE__*/
+function () {
   function V3(x, y, z) {
     _classCallCheck(this, V3);
 
-    if ((typeof x === 'undefined' ? 'undefined' : _typeof(x)) === 'object') {
+    if (_typeof(x) === 'object') {
       this.x = x.x;
       this.y = x.y;
       this.z = x.z;
@@ -21303,50 +21530,51 @@ var V3 = function () {
   }
 
   _createClass(V3, [{
-    key: 'equals',
+    key: "equals",
     value: function equals(other, eps) {
       if (eps === undefined) {
         eps = 0;
       }
+
       return Math.abs(this.x - other.x) <= eps && Math.abs(this.y - other.y) <= eps && Math.abs(this.z - other.z) <= eps;
     }
   }, {
-    key: 'length',
+    key: "length",
     value: function length() {
       return Math.sqrt(this.dot(this));
     }
   }, {
-    key: 'neg',
+    key: "neg",
     value: function neg() {
       return new V3(-this.x, -this.y, -this.z);
     }
   }, {
-    key: 'add',
+    key: "add",
     value: function add(b) {
       return new V3(this.x + b.x, this.y + b.y, this.z + b.z);
     }
   }, {
-    key: 'sub',
+    key: "sub",
     value: function sub(b) {
       return new V3(this.x - b.x, this.y - b.y, this.z - b.z);
     }
   }, {
-    key: 'multiply',
+    key: "multiply",
     value: function multiply(w) {
       return new V3(this.x * w, this.y * w, this.z * w);
     }
   }, {
-    key: 'norm',
+    key: "norm",
     value: function norm() {
       return this.multiply(1 / this.length());
     }
   }, {
-    key: 'dot',
+    key: "dot",
     value: function dot(b) {
       return this.x * b.x + this.y * b.y + this.z * b.z;
     }
   }, {
-    key: 'cross',
+    key: "cross",
     value: function cross(b) {
       return new V3(this.y * b.z - this.z * b.y, this.z * b.x - this.x * b.z, this.x * b.y - this.y * b.x);
     }
@@ -21355,56 +21583,79 @@ var V3 = function () {
   return V3;
 }();
 
-exports.default = V3;
+var _default = V3;
+exports["default"] = _default;
 },{}],51:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Line3 = exports.Line2 = exports.Quaternion = exports.Plane3 = exports.Box3 = exports.Box2 = exports.V3 = exports.V2 = undefined;
+Object.defineProperty(exports, "V2", {
+  enumerable: true,
+  get: function get() {
+    return _V["default"];
+  }
+});
+Object.defineProperty(exports, "V3", {
+  enumerable: true,
+  get: function get() {
+    return _V2["default"];
+  }
+});
+Object.defineProperty(exports, "Box2", {
+  enumerable: true,
+  get: function get() {
+    return _Box["default"];
+  }
+});
+Object.defineProperty(exports, "Box3", {
+  enumerable: true,
+  get: function get() {
+    return _Box2["default"];
+  }
+});
+Object.defineProperty(exports, "Plane3", {
+  enumerable: true,
+  get: function get() {
+    return _Plane["default"];
+  }
+});
+Object.defineProperty(exports, "Quaternion", {
+  enumerable: true,
+  get: function get() {
+    return _Quaternion["default"];
+  }
+});
+Object.defineProperty(exports, "Line2", {
+  enumerable: true,
+  get: function get() {
+    return _Line["default"];
+  }
+});
+Object.defineProperty(exports, "Line3", {
+  enumerable: true,
+  get: function get() {
+    return _Line2["default"];
+  }
+});
 
-var _V = require('./V2');
+var _V = _interopRequireDefault(require("./V2"));
 
-var _V2 = _interopRequireDefault(_V);
+var _V2 = _interopRequireDefault(require("./V3"));
 
-var _V3 = require('./V3');
+var _Box = _interopRequireDefault(require("./Box2"));
 
-var _V4 = _interopRequireDefault(_V3);
+var _Box2 = _interopRequireDefault(require("./Box3"));
 
-var _Box = require('./Box2');
+var _Plane = _interopRequireDefault(require("./Plane3"));
 
-var _Box2 = _interopRequireDefault(_Box);
+var _Quaternion = _interopRequireDefault(require("./Quaternion"));
 
-var _Box3 = require('./Box3');
+var _Line = _interopRequireDefault(require("./Line2"));
 
-var _Box4 = _interopRequireDefault(_Box3);
+var _Line2 = _interopRequireDefault(require("./Line3"));
 
-var _Plane = require('./Plane3');
-
-var _Plane2 = _interopRequireDefault(_Plane);
-
-var _Quaternion = require('./Quaternion');
-
-var _Quaternion2 = _interopRequireDefault(_Quaternion);
-
-var _Line = require('./Line2');
-
-var _Line2 = _interopRequireDefault(_Line);
-
-var _Line3 = require('./Line3');
-
-var _Line4 = _interopRequireDefault(_Line3);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.V2 = _V2.default;
-exports.V3 = _V4.default;
-exports.Box2 = _Box2.default;
-exports.Box3 = _Box4.default;
-exports.Plane3 = _Plane2.default;
-exports.Quaternion = _Quaternion2.default;
-exports.Line2 = _Line2.default;
-exports.Line3 = _Line4.default;
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 },{"./Box2":43,"./Box3":44,"./Line2":45,"./Line3":46,"./Plane3":47,"./Quaternion":48,"./V2":49,"./V3":50}]},{},[25])(25)
 });

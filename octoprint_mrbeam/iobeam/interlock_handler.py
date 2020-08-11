@@ -12,8 +12,8 @@ def interLockHandler(plugin):
 	global _instance
 	if _instance is None:
 		_instance = InterLockHandler(plugin,
-									 plugin._event_bus,
-									 plugin._plugin_manager)
+                                     plugin._event_bus,
+                                     plugin._plugin_manager)
 	return _instance
 
 
@@ -49,7 +49,8 @@ class InterLockHandler(object):
 	def send_state(self):
 		if self._iobeam:
 			self._plugin_manager.send_plugin_message("mrbeam", dict(
-				interlocks_closed=self._iobeam.is_interlock_closed(),
-				interlocks_open=self._iobeam.open_interlocks()))
+				interlocks_closed=self._iobeam.is_interlock_closed(), # left here for backwards compatibility though fields are included in the mrb_state
+				interlocks_open=self._iobeam.open_interlocks(),
+				mrb_state=self._plugin.get_mrb_state()))
 		else:
 			raise Exception("iobeam handler not available from Plugin. Can't notify frontend about interlock state change.")

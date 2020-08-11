@@ -47,14 +47,18 @@ $(function () {
             tour.push(new TourStepNoArrow({
                 id: 'start_screen',
                 title: [gettext("Step-by-Step Tour Guide To Your First Laser Job")],
-                text: [gettext("Looks like you already set up your Mr Beam II - Congratulations!"),
+                text: [gettext("Looks like you already set up your Mr Beam - Congratulations!"),
                     gettext("Do you want us to guide you through your first laser job with this step-by-step tour?"),
                     "<strong>"+gettext("What do you need for this tour:")+"</strong>",
                     "<ul>" +
-                        "<li>" + gettext("Have a piece of felt on hand. Best to use the one that came with your Mr Beam II.") + "</li>" +
-                        "<li>" + _.sprintf(gettext("The laser head of your Mr Beam II has to be focused according to the thickness of the felt." +
+                        "<li>" + gettext("Have a piece of felt on hand. Best to use the one that came with your Mr Beam.") + "</li>" +
+                        "<li class='show_only_online'>" + _.sprintf(gettext("The laser head of your Mr Beam has to be focused according to the thickness of the felt." +
                             "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."),
-                            {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'>", closing_tag:"</a>"}) +
+                            {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'><i class=\"icon-external-link\"></i>&nbsp;", closing_tag:"</a>"}) +
+                        "</li>" +
+                        "<li class='show_only_offline'>" + _.sprintf(gettext("The laser head of your Mr Beam has to be focused according to the thickness of the felt." +
+                            "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."),
+                            {opening_tag:"<a href='#' onclick=\"mrbeam.openOfflineKbUrl('43000073345_Focusing_the_laser_head.pdf');\"><i class='icon-file-text'></i>&nbsp;", closing_tag:"</a>"}) +
                         "</li>" +
                         "<li>" + gettext("About 5-10 minutes of your time.") + "</li>" +
                     "</ul>",
@@ -80,7 +84,7 @@ $(function () {
             tour.push(new TourStep({
                 id: 'homing_action',
                 title: gettext("First, do the homing cycle"),
-                text: gettext("This is important so the Mr Beam II knows where the laser head is located."),
+                text: gettext("This is important so the Mr Beam knows where the laser head is located."),
                 target: "homing_overlay_homing_btn",
                 placement: "bottom",
                 condition: function () {
@@ -90,7 +94,7 @@ $(function () {
 
             tour.push(new TourStepNoArrow({
                 id: 'homing_process',
-                title: gettext("Look into your Mr Beam II"),
+                title: gettext("Look into your Mr Beam"),
                 text: [gettext("The laser head is now moving to the upper right corner."),
                     gettext("Click \"next\" to proceed.")],
                 condition: function () {
@@ -100,12 +104,12 @@ $(function () {
 
             tour.push(new TourStep({
                 id: 'take_picture',
-                title: gettext("Place the felt material inside Mr Beam II"),
+                title: gettext("Place the felt material inside Mr Beam"),
                 text: ["<ul>" +
-                        "<li>" + gettext("First open the orange lid of your Mr Beam II.") + "</li>" +
-                        "<li>" + gettext("Then place the felt for the laser job somewhere in the middle of Mr Beam II's working area.") + "</li>" +
+                        "<li>" + gettext("First open the orange lid of your Mr Beam.") + "</li>" +
+                        "<li>" + gettext("Then place the felt for the laser job somewhere in the middle of Mr Beam's working area.") + "</li>" +
                         "<li>" + gettext("Wait for the camera to take a picture. You will see a black and white picture of your felt here in your browser.") + "</li>" +
-                        "<li>" + gettext("Once you have a good picture, close the lid of your Mr Beam II and click \"next\".") + "</li>" +
+                        "<li>" + gettext("Once you have a good picture, close the lid of your Mr Beam and click \"next\".") + "</li>" +
                         "</ul>"],
                 target: 'area_preview',
                 placement: "left",
@@ -173,12 +177,35 @@ $(function () {
                 yOffset: -15
             }));
 
+            tour.push(new TourStep({
+                id: 'focus_reminder',
+                title: gettext("Reminder: Is your laser head focused?"),
+                text: [gettext("The height of the laser head needs to be adjusted according to your material."),
+                    gettext("We assumed that it is already focused."),
+                    gettext("<strong>If it is focused</strong> click on \"It's focused!\""),
+                    '<span class="show_only_online">'+_.sprintf(gettext("<strong>If it's NOT focused</strong> you should cancel this tour here and focus it. %(line_break)s%(opening_tag)sLearn how to do this.%(closing_tag)s"),
+                        {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345-focusing-the-laser-head-' target='_blank'><i class='icon-external-link'></i>&nbsp;", closing_tag:"</a>", line_break:"<br/>"})+'</span>',
+                    '<span class="show_only_offline">'+_.sprintf(gettext("<strong>If it's NOT focused</strong> you should cancel this tour here and focus it. %(line_break)s%(opening_tag)sLearn how to do this.%(closing_tag)s"),
+                        {opening_tag:"<a href='#' onclick=\"mrbeam.openOfflineKbUrl('43000073345_Focusing_the_laser_head.pdf');\"><i class='icon-file-text'></i>&nbsp;", closing_tag:"</a>", line_break:"<br/>"})+'</span>'
+                ],
+                target: "start_job_btn_focus_reminder",
+                placement: "right",
+                delay: 200,
+                fixedElement: true,
+                yOffset: -150,
+                arrowOffset: 145,
+                condition: function () {
+                    return self.settings.settings.plugins.mrbeam.focusReminder();
+                }
+            }));
+
+
             ///// material screen /////
             tour.push(new TourStep({
                 id: 'select_material',
                 title: gettext("Select the material"),
                 text: [gettext("For this guide we want to use felt.", "However as you can see there are many different options. :)")],
-                target: $('li.material_entry[mrb_name="felt.jpg"]')[0] || $('li.material_entry')[0],
+                target: $('li.material_entry[mrb_name$="Felt.jpg"]')[0] || $('li.material_entry')[0],
                 additionalJQueryTargets: 'li.material_entry',
                 placement: "bottom",
                 delay: 400,
@@ -190,7 +217,7 @@ $(function () {
                 id: 'select_color',
                 title: gettext("Select the color of the material"),
                 text: [gettext("This is important because different colors absorb the laser differently.")],
-                target: ["#material_color_ff9900", "#color_list :first-child"],
+                target: ["#material_color_eb5a3e", "#color_list :first-child"],
                 additionalJQueryTargets: '#color_list > ',
                 placement: "bottom",
                 delay: 100,
@@ -223,29 +250,11 @@ $(function () {
                 arrowOffset: 270
             }));
 
-            tour.push(new TourStep({
-                id: 'focus_reminder',
-                title: gettext("Reminder: Is your laser head focused?"),
-                text: [gettext("The height of the laser head needs to be adjusted according to your material."),
-                    gettext("We assumed that it is already focused."),
-                    gettext("<strong>If it is focused</strong> click on \"It's focused!\""),
-                    _.sprintf(gettext("<strong>If it's NOT focused</strong> you should cancel this tour here and focus it. %(opening_tag)sLearn how to do this.%(closing_tag)s"),
-                        {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345-focusing-the-laser-head-' target='_blank'>", closing_tag:"</a>"})],
-                target: "start_job_btn_focus_reminder",
-                placement: "right",
-                delay: 200,
-                fixedElement: true,
-                yOffset: -150,
-                arrowOffset: 145,
-                condition: function () {
-                    return self.settings.settings.plugins.mrbeam.focusReminder();
-                }
-            }));
 
             ///// rtl /////
             tour.push(new TourStepNoArrow({
                 id: 'preparing_laserjob',
-                title: gettext("Mr Beam II is now preparing your laser job"),
+                title: gettext("Mr Beam is now preparing your laser job"),
                 text: [gettext("This takes a few seconds. Just relax.")],
                 showNextButton: false,
                 nextOnTargetClick: true,
@@ -256,8 +265,8 @@ $(function () {
                 id: 'start_laserjob',
                 title: gettext("Done! As soon as you click the start button on your Mr&nbsp;Beam&nbsp;II, the magic will begin 🎉"),
                 text: [gettext("Thank you for doing this first laser job with us."),
-                    _.sprintf(gettext("For more in-depth information you can check our %(opening_tag)sknowledge base%(closing_tag)s, where you will find a lot of articles about Mr Beam II."),
-                       {opening_tag:"<a href='http://mr-beam.org/faq' target='_blank'>", closing_tag:"</a>"})],
+                    _.sprintf(gettext("For more in-depth information you can check our %(opening_tag)sKnowledge Base%(closing_tag)s, where you will find a lot of articles about Mr Beam."),
+                       {opening_tag:"<a href='http://mr-beam.org/support' target='_blank'><i class=\"icon-external-link\"></i>&nbsp;", closing_tag:"</a>"})],
                 target: "ready_to_laser_dialog",
                 placement: 'right',
                 delay: 200,

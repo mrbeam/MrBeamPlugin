@@ -5,7 +5,9 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.printing import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
+
 class Laser(Printer):
+	HOMING_POSITION = [-1.0, -1.0, 0]
 
 	def __init__(self, fileManager, analysisQueue, printerProfileManager):
 		Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
@@ -78,11 +80,28 @@ class Laser(Printer):
 		command = "G92X{x}Y{y}Z{z}".format(**params)
 		self.commands(["$H", command, "G90", "G21"])
 
+	def is_homed(self):
+		return self._stateMonitor._machinePosition == self.HOMING_POSITION
+
 	def cancel_print(self):
 		"""
-		 Cancel the current printjob and do homing.
+		Cancel the current printjob and do homing.
 		"""
 		super(Laser, self).cancel_print()
+		time.sleep(0.5)
+		self.home(axes="wtf")
+		eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
+
+	def fail_print(self, error_msg=None):
+		"""
+		Cancel the current printjob (as it failed) and do homing.
+		"""
+		if self._comm is None:
+			return
+
+		# If we want the job to show as failed instead of cancelled, we have to mimic self._printer.cancel_print()
+		self._comm.cancelPrint(failed=True, error_msg=error_msg)
+
 		time.sleep(0.5)
 		self.home(axes="wtf")
 		eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)

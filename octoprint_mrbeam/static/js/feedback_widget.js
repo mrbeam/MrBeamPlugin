@@ -5,18 +5,25 @@ $(function () {
 
         self.loginStateViewModel = params[0];
 
-        self.freshWidgetUrl = "https://s3.amazonaws.com/assets.freshdesk.com/widget/freshwidget.js";
+        self.freshWidgetUrl = "https://widget.freshworks.com/widgets/43000001170.js";
 
         self.isCurtainOpen = false;
 
-
         self.onStartup = function () {
             console.log("FreshWidget: onStartUp()");
+
+            window.fwSettings={
+                'widget_id':43000001170,
+                'locale': LOCALE
+            };
+            !function(){if("function"!=typeof window.FreshworksWidget){var n=function(){n.q.push(arguments)};n.q=[],window.FreshworksWidget=n}}();
+
             $.ajax({
                 url: self.freshWidgetUrl,
                 dataType: "script",
                 cache: false
             }).done(function (script, textStatus) {
+                window.FreshworksWidget('hide', 'launcher');
                 if (self.isCurtainOpen) {
                     self.showWidget();
                 }
@@ -27,7 +34,7 @@ $(function () {
 
         self.onCurtainOpened = function () {
             self.isCurtainOpen = true;
-            if (window.FreshWidget) {
+            if (window.FreshworksWidget) {
                 self.showWidget();
             }
         };
@@ -47,26 +54,42 @@ $(function () {
             }
 
             try {
-                window.FreshWidget.init("", {
-                    "queryString": "&widgetType=popup"
-                        + "&helpdesk_ticket[custom_field][cf_serial_922577]=" + MRBEAM_SERIAL
-                        + "&disable[custom_field][cf_serial_922577]=true"
-                        + "&helpdesk_ticket[requester]=" + user
-                        + "&helpdesk_ticket[custom_field][cf_software_version_922577]=" + BEAMOS_VERSION
-                        + "&disable[custom_field][cf_software_version_922577]=true"
-                        + "&helpdesk_ticket[custom_field][cf_software_channel_922577]=" + channel
-                        + "&disable[custom_field][cf_software_channel_922577]=true",
-                    "utf8": "✓",
-                    "widgetType": "popup",
-                    "buttonType": "text",
-                    "buttonText": "Support",
-                    "buttonColor": "#e25303",
-                    "buttonBg": "white",
-                    "alignment": "4",
-                    "offset": "90%",
-                    "formHeight": "500px",
-                    "url": "https://mr-beam.freshdesk.com",
-                    "loadOnEvent": "immediate"  // This will make the widget initialize immediately instead of waiting for a window.load
+                window.FreshworksWidget('prefill', 'ticketForm', {
+                  email: user,
+                  custom_fields: {
+                      cf_serial: MRBEAM_SERIAL,
+                      cf_software_version: BEAMOS_VERSION,
+                      cf_software_channel: channel
+                  }
+                });
+                window.FreshworksWidget('disable', 'ticketForm',
+                    ['custom_fields.cf_serial', 'custom_fields.cf_software_version','custom_fields.cf_software_channel']);
+                window.FreshworksWidget('hide', 'ticketForm', ['name']);
+                window.FreshworksWidget("setLabels", {
+                  'de': {
+                    banner: "Hilfe & Support",
+                    launcher: "Support",
+                    contact_form: {
+                      title: "Hilfe & Support",
+                      submit: "Nachricht abschicken",
+                      confirmation: "Danke für Deine Nachricht.",
+                    }
+                  }
+
+                });
+                $( "body" ).prepend( "<div id=\"freshwidget-button\" " +
+                    "data-html2canvas-ignore=\"true\" " +
+                    "class=\"freshwidget-button fd-btn-left\" " +
+                    "style=\"display: none; top: 90%;\"><a href=\"javascript:void(0)\" " +
+                    "class=\"freshwidget-theme\" style=\"color: rgb(226, 83, 3); " +
+                    "background-color: white; border-color: rgb(226, 83, 3);\">Support</a></div>" );
+
+                $("#freshwidget-button").click(function() {
+                  if ($("#freshworks-frame-wrapper")[0]) {
+                      FreshworksWidget('close');
+                  } else {
+                      FreshworksWidget('open');
+                  }
                 });
                 console.log("FreshWidget: Shown")
             } catch (e) {
@@ -75,7 +98,7 @@ $(function () {
         };
 
         self.removeFeedbackWidget = function () {
-            $('#freshwidget-button').remove()
+            window.FreshworksWidget('destroy');
         };
 
     }

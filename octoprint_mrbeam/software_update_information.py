@@ -1,4 +1,3 @@
-
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from util.pip_util import get_version_of_pip_module
 
@@ -30,6 +29,7 @@ def get_update_information(self):
 	_config_octoprint(self, tier)
 
 	_set_info_mrbeam_plugin(self, tier)
+	_set_info_mrbeamdoc(self, tier)
 	_set_info_netconnectd_plugin(self, tier)
 	_set_info_findmymrbeam(self, tier)
 	_set_info_mrbeamledstrips(self, tier)
@@ -58,8 +58,8 @@ def software_channels_available(plugin):
 def switch_software_channel(plugin, channel):
 	old_channel = plugin._settings.get(["dev", "software_tier"])
 
-	if (channel in (SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA) \
-	    or (plugin.is_dev_env() and channel in (SW_UPDATE_TIER_DEV, ))) \
+	if (channel in (SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA)
+		or (plugin.is_dev_env() and channel in (SW_UPDATE_TIER_DEV, ))) \
 		and not channel == old_channel:
 		_logger.info("Switching software channel to: %s", channel)
 		plugin._settings.set(["dev", "software_tier"], channel)
@@ -130,11 +130,63 @@ def _set_info_mrbeam_plugin(self, tier):
 				user="mrbeam",
 				repo="MrBeamPlugin",
 				branch="mrbeam2-beta",
-				default_branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
 				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 				restart="octoprint")
+
 	except Exception as e:
 		_logger.exception('Exception during _set_info_mrbeam_plugin: {}'.format(e))
+
+
+def _set_info_mrbeamdoc(self, tier):
+	name = "Mr Beam Documentation"
+	module_id = "mrbeamdoc"
+
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
+
+		current_version = "-"
+		pluginInfo = self._plugin_manager.get_plugin_info(module_id)
+		if pluginInfo is not None:
+			current_version = pluginInfo.version
+
+		sw_update_config[module_id] = dict(
+			displayName= _get_display_name(self, name),
+			displayVersion=current_version,
+			type="github_commit", # "github_release",
+			user="mrbeam",
+			repo="MrBeamDoc",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
+			pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
+			restart="octoprint")
+
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName= _get_display_name(self, name),
+				displayVersion=current_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamDoc",
+				branch="develop",
+				branch_default="develop",
+				pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
+				restart="octoprint")
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName= _get_display_name(self, name),
+				displayVersion=current_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamDoc",
+				branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
+				pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
+				restart="octoprint")
+	except Exception as e:
+		_logger.exception('Exception during _set_info_mrbeamdoc: {}'.format(e))
 
 
 def _set_info_netconnectd_plugin(self, tier):
@@ -517,38 +569,59 @@ def _set_info_mrb_hw_info(self, tier):
 def _set_info_rpiws281x(self, tier):
 	name = "rpi-ws281x"
 	module_id = "rpi-ws281x"
+	# this module is installed outside of our virtualenv therefor we can't use default pip command.
+	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+	pip_command = "sudo /usr/local/bin/pip"
+	pip_name = module_id
 
 	try:
 		if _is_override_in_settings(self, module_id):
 			return
 
+		version = get_version_of_pip_module(pip_name, pip_command)
+
+		# currently only master branch exists. (June 2020)
+		# Should we want to distribute an update, just create the according branches
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
-			displayVersion="1.0",
+			displayVersion=version,
 			type="github_commit",
 			user="mrbeam",
-			repo="rpi_ws281x",
-			branch="master",
-			branch_default="master",
-			update_folder="/home/pi/rpi_ws281x",
-			update_script="/home/pi/rpi_ws281x/update_script.sh",
+			repo="rpi_ws281x_compiled",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
+			pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
+			pip_command = pip_command,
 			restart="environment")
+		
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="github_commit",
+				user="mrbeam",
+				repo="rpi_ws281x_compiled",
+				branch="develop",
+				branch_default="develop",
+				pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
+				pip_command=pip_command,
+				restart="environment")
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="github_commit",
+				user="mrbeam",
+				repo="rpi_ws281x_compiled",
+				branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
+				pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
+				pip_command=pip_command,
+				restart="environment")
 	except Exception as e:
 		_logger.exception('Exception during _set_info_rpiws281x: {}'.format(e))
 
-
-# This is a template to later allow the installation of a new octoprint plugin.
-# The necesarry setup.py and plugin template is in the bitbucket repo linked below.
-# def set_info_testplugin(self, tier):
-# 	sw_update_config["testplugin"] = dict(
-# 		displayName="Test Plugin",
-# 		displayVersion="0.0.2",
-# 		type="bitbucket_commit",
-# 		user="mrbeam",
-# 		repo="testplugin",
-# 		branch="master",
-# 		pip="https://bitbucket.org/mrbeam/testplugin/get/{target_version}.zip",
-# 		restart="environment")
 
 def _get_display_name(self, name):
 	return name
@@ -561,7 +634,3 @@ def _is_override_in_settings(self, module_id):
 		_logger.info("Module %s has overriding config in settings!", module_id)
 		return True
 	return False
-
-
-
-

@@ -42,16 +42,16 @@
             <div class="inner">
                 <div class="content">
 					<div>
-						<i class="icon-question" style="
-							font-size: 8em;
+						<i class="icon-external-link-sign" style="
+							font-size: 6em;
 							color: gray;
-							"></i><br/>
-						{{ _('Mr Beam does not know the current position.') }}<br/>
-						{{ _('First remove any objects blocking the gantry\'s travel range.<br/>Then do a homing cycle.') }}<br/>
+							"></i><br/><br/>
+                        <div style="width: 30%;margin: 0 auto;">
+                            <strong>{{ _('Make sure your Mr Beam is empty.') }}</strong><br/>
+                            {{ _('Then do a homing cycle so that your Mr&nbsp;Beam knows its current position.') }}<br/>
+                        </div>
 						<div style='text-align: center; padding:.5em;'>
-							<div class='btn-group'>
-								<button class="btn btn-default" id="homing_overlay_homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { OctoPrint.printer.home(['x', 'y']) }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button>
-							</div>
+                            <button class="btn btn-default" id="homing_overlay_homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { OctoPrint.printer.home(['x', 'y']) }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button>
 						</div>
 					</div>
                 </div>

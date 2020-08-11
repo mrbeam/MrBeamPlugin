@@ -35,6 +35,7 @@ class TemperatureManager(object):
 		self.temp_timer = None
 		self.is_cooling_since = 0
 		self._msg_is_temperature_recent = None
+		self._id_is_temperature_recent = None
 		self._shutting_down = False
 		self._iobeam = None
 		self._analytics_handler = None
@@ -99,7 +100,7 @@ class TemperatureManager(object):
 		Stop the laser for cooling purpose
 		"""
 		if self._one_button_handler and self._one_button_handler.is_printing():
-			self._logger.error("cooling_stop() %s - _msg_is_temperature_recent: %s", err_msg, self._msg_is_temperature_recent)
+			self._logger.error("cooling_stop() %s - _msg_is_temperature_recent: %s", err_msg, self._msg_is_temperature_recent, analytics=self._id_is_temperature_recent)
 			self._logger.info("cooling_stop()")
 			self.is_cooling_since = time.time()
 			self._one_button_handler.cooling_down_pause()
@@ -123,12 +124,15 @@ class TemperatureManager(object):
 	def is_temperature_recent(self):
 		if self.temperature is None:
 			self._msg_is_temperature_recent = "is_temperature_recent(): Laser temperature is None. never received a temperature value."
+			self._id_is_temperature_recent = "laser-temperature-none"
 			return False
 		age = time.time() - self.temperature_ts
 		if age > self.TEMP_MAX_AGE:
 			self._msg_is_temperature_recent = "is_temperature_recent(): Laser temperature too old: must be more recent than %s s but actual age is %s s" % (self.TEMP_MAX_AGE, age)
+			self._id_is_temperature_recent = "laser-temperature-old"
 			return False
 		self._msg_is_temperature_recent = None
+		self._id_is_temperature_recent = None
 		return True
 
 	def _temp_timer_callback(self):

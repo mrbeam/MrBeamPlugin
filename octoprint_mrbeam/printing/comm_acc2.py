@@ -34,6 +34,7 @@ class MachineCom(octoprint.util.comm.MachineCom):
 
 	DEBUG_PRODUCE_CHECKSUM_ERRORS = False
 	DEBUG_PRODUCE_CHECKSUM_ERRORS_RND = 2000
+	DEBUG_PRODUCE_FAKE_SYNC_ERRORS = False
 
 	### GRBL VERSIONs #######################################
 	# original grbl
@@ -101,6 +102,7 @@ class MachineCom(octoprint.util.comm.MachineCom):
 	STATUS_POLL_FREQUENCY_DEFAULT = STATUS_POLL_FREQUENCY_PRINTING
 
 	GRBL_SYNC_COMMAND_WAIT_STATES = (GRBL_STATE_RUN, GRBL_STATE_QUEUE)
+	GRBL_SYNC_COMMAND_IDLE_STATES = (GRBL_STATE_IDLE,)
 
 	GRBL_HEX_FOLDER = 'files/grbl/'
 
@@ -146,6 +148,7 @@ class MachineCom(octoprint.util.comm.MachineCom):
 		self._status_polling_timer = None
 		self._status_polling_next_ts = 0
 		self._status_polling_interval = self.STATUS_POLL_FREQUENCY_DEFAULT
+		self._status_last_ts = 0
 		self._acc_line_buffer = AccLineBuffer()
 		self._current_feedrate = None
 		self._current_intensity = None
@@ -171,6 +174,7 @@ class MachineCom(octoprint.util.comm.MachineCom):
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
 		self._grbl_rx_status = -1
+		self._grbl_rx_last_change = -1
 		self._grbl_settings_correction_ts = 0
 
 		self.g24_avoided_message = []
@@ -391,6 +395,15 @@ class MachineCom(octoprint.util.comm.MachineCom):
 					self._flush_command_ts = time.time()
 					self._logger.debug("FLUSHing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
 					                  self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
+					if self.DEBUG_PRODUCE_FAKE_SYNC_ERRORS and self._grbl_rx_status > 0:
+						self._acc_line_buffer.add('DUMMY\n',
+						                          intensity=self._current_intensity,
+						                          feedrate=self._current_feedrate,
+						                          pos_x=self._current_pos_x,
+						                          pos_y=self._current_pos_y,
+						                          laser=self._current_laser_on)
+						self._logger.debug("FLUSHing DEBUG_PRODUCE_FAKE_SYNC_ERRORS added fake command (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+								self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
 					return
 				elif self._acc_line_buffer.is_empty():
 					self._cmd.pop('flush', None)
@@ -398,6 +411,14 @@ class MachineCom(octoprint.util.comm.MachineCom):
 						self._cmd.pop('cmd', None)
 					self._logger.debug("FLUSHed ({}ms)".format(int(1000 * (time.time() - self._flush_command_ts))), terminal_as_comm=True)
 					self._flush_command_ts = -1
+				elif (time.time() - self._flush_command_ts) > 3.0 \
+						and (self._status_last_ts > self._flush_command_ts) \
+						and self._grbl_rx_status == 0 \
+						and (time.time() - self._grbl_rx_last_change > self.STATUS_POLL_FREQUENCY_PRINTING*2 + 0.1)\
+						and not self._acc_line_buffer.is_empty():
+					# We used generous timing here to be sure that this state is persistent.
+					self._logger.warn("FLUSHing clogged! Clearing commands in %s", self._acc_line_buffer, terminal_as_comm=True, analytics=True)
+					self._acc_line_buffer.reset_clogged()
 				else:
 					# still flushing. do nothing else for now...
 					return
@@ -409,9 +430,19 @@ class MachineCom(octoprint.util.comm.MachineCom):
 					self._sync_command_ts = time.time()
 					self._sync_command_state_sent = False
 					self._logger.debug("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-						self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
+						self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status),
+						terminal_as_comm=True)
+					if self.DEBUG_PRODUCE_FAKE_SYNC_ERRORS and self._grbl_rx_status > 0:
+						self._acc_line_buffer.add('DUMMY\n',
+						                          intensity=self._current_intensity,
+						                          feedrate=self._current_feedrate,
+						                          pos_x=self._current_pos_x,
+						                          pos_y=self._current_pos_y,
+						                          laser=self._current_laser_on)
+						self._logger.debug("SYNCing DEBUG_PRODUCE_FAKE_SYNC_ERRORS added fake command (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+								self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
 					return
-				if self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
+				elif self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
 					# Successfully synced, let's move on
 					self._cmd.pop('sync', None)
 					if self._cmd.get('cmd', None) == self.COMMAND_SYNC:
@@ -425,6 +456,14 @@ class MachineCom(octoprint.util.comm.MachineCom):
 					self._logger.debug("SYNCing ({}ms) - Sending '?'".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
 					self._sendCommand(self.COMMAND_STATUS)
 					return
+				elif (time.time() - self._sync_command_ts) > 3.0 \
+						and (self._status_last_ts > self._sync_command_ts) \
+						and self._grbl_rx_status == 0 \
+						and (time.time() - self._grbl_rx_last_change > self.STATUS_POLL_FREQUENCY_PRINTING*2 + 0.1)\
+						and not self._acc_line_buffer.is_empty():
+					# We used generous timing here to be sure that this state is persistent.
+					self._logger.warn("SYNCing clogged! Clearing commands in %s", self._acc_line_buffer, terminal_as_comm=True, analytics=True)
+					self._acc_line_buffer.reset_clogged()
 				else:
 					# still syncing. do nothing else for now...
 					return
@@ -672,7 +711,15 @@ class MachineCom(octoprint.util.comm.MachineCom):
 		if 'limit_y' in groups: self.limit_y = time.time() if groups['limit_y'] else 0
 
 		# grbl_character_buffer
-		if 'rx' in groups: self._grbl_rx_status = groups['rx'] if groups['rx'] else -1
+		if 'rx' in groups:
+			rx = -1
+			try:
+				rx = int(groups['rx'])
+			except ValueError:
+				self._logger.error("Can't convert RX value from GRBL status to int. RX value: %s", groups['rx'])
+			if not rx == self._grbl_rx_status:
+				self._grbl_rx_status = rx
+				self._grbl_rx_last_change = time.time()
 
 		# positions
 		try:
@@ -707,6 +754,8 @@ class MachineCom(octoprint.util.comm.MachineCom):
 					                  self._grbl_state, self._flush_command_ts, self._sync_command_ts, analytics=True)
 					self.setPause(False, send_cmd=False, trigger="GRBL_RUN")
 
+		self._status_last_ts = time.time()
+
 	def _handle_laser_intensity_for_analytics(self, laser_state, laser_intensity):
 		if laser_state == 'on' and _mrbeam_plugin_implementation.mrbeam_plugin_initialized:
 			_mrbeam_plugin_implementation.analytics_handler.collect_laser_intensity_value(int(laser_intensity))
@@ -726,12 +775,12 @@ class MachineCom(octoprint.util.comm.MachineCom):
 		if self._state == self.STATE_HOMING:
 			self._changeState(self.STATE_OPERATIONAL)
 
-		# update working pos from acknowledged gcode
-		if item and item['cmd'].startswith('G'):
-			self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
-			# since we just got a postion update we can reset the wait time for the next status poll
-			# ideally we never poll statuses during engravings
-			self._reset_status_polling_waittime()
+		# # update working pos from acknowledged gcode
+		# if item and item['cmd'].startswith('G'):
+		# 	self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
+		# 	# since we just got a postion update we can reset the wait time for the next status poll
+		# 	# ideally we never poll statuses during engravings
+		# 	self._reset_status_polling_waittime()
 
 	def _handle_error_message(self, line):
 		"""
@@ -1301,21 +1350,19 @@ class MachineCom(octoprint.util.comm.MachineCom):
 			self._logger.error(msg_short, terminal_as_comm=True)
 
 			try:
-				# TODO: translating these doesn't work since we do not have a flash request context
-				#       meaning we don't know the user's language here.
-				msg = gettext("The update of the internal component GRBL failed.{br}It is still save to use your Mr Beam II. However, if this error persists consider to contact the {opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}").format(
+				msg = "The update of the internal component GRBL failed.{br}It is still safe to use your Mr Beam. However, if this error persists consider to contact the {opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}".format(
 							opening_tag= '<a href="http://mr-beam.org/support" target="_blank">',
-		                    closing_tag='</a>',
-		                    error="GRBL update '{}' failed: {}...".format(grbl_file, output[:120]),
+							closing_tag='</a>',
+							error="GRBL update '{}' failed: {}...".format(grbl_file, output[:120]),
 							br="<br/>",
 							strong_opening_tag="<strong>",
 							strong_closing_tag="</strong>")
-				_mrbeam_plugin_implementation.notify_frontend(
-					title=gettext("GRBL Update failed"),
-					text=msg,
-					type='warn',
-					sticky=True,
-					replay_when_new_client_connects=True
+				_mrbeam_plugin_implementation.user_notification_system.show_notifications(
+					_mrbeam_plugin_implementation.user_notification_system.get_legacy_notification(
+						title="GRBL Update failed",
+						text=msg,
+						is_err=True
+					)
 				)
 			except:
 				self._logger.exception("Exception while notifying frontend after failed flash_grbl: ")
@@ -1388,7 +1435,7 @@ class MachineCom(octoprint.util.comm.MachineCom):
 				                  self._grbl_version)
 
 
-	def rescue_from_home_pos(self):
+	def rescue_from_home_pos(self, retry=0):
 		"""
 		In case the laserhead is pushed deep into homing corner and constantly keeps endstops/limit switches pushed,
 		this is going to rescue it from there before homing cycle is started.
@@ -1400,25 +1447,30 @@ class MachineCom(octoprint.util.comm.MachineCom):
 
 		Requires GRBL v '0.9g_20180223_61638c5' because we need limit data reported.
 		"""
-		if self._grbl_version is None:
-			self._logger.warn("rescue_from_home_pos() No GRBL version yet.")
-			return
+		if retry <=0:
+			if self._grbl_version is None:
+				self._logger.warn("rescue_from_home_pos() No GRBL version yet.")
+				return
 
-		if not self.grbl_feat_rescue_from_home:
-			self._logger.info("rescue_from_home_pos() Rescue from home not supported by current GRBL version. GRBL version: %s", self._grbl_version)
-			return
-		else:
-			self._logger.info("rescue_from_home_pos() GRBL version: %s", self._grbl_version)
+			if not self.grbl_feat_rescue_from_home:
+				self._logger.info("rescue_from_home_pos() Rescue from home not supported by current GRBL version. GRBL version: %s", self._grbl_version)
+				return
+			else:
+				self._logger.info("rescue_from_home_pos() GRBL version: %s", self._grbl_version)
 
+		elif retry > 3:
+			params = dict(x='X' if self.limit_x > 0 else '',
+			              y='Y' if self.limit_y > 0 else '',
+			              none='None' if self.limit_x == 0 and self.limit_y == 0 else '',
+			              retries=retry)
+			msg = "Can not do homing cycle. Limits:{x}{y}{none}, reties:{retries}".format(**params)
+			self._errorValue = msg
+			self._logger.error("rescue_from_home_pos() Max retries reached! Error: %s", msg)
+			self._changeState(self.STATE_ERROR)
+			eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
+			raise Exception(msg)
 
-		if self.limit_x < 0 or self.limit_y < 0:
-			self._logger.debug("rescue_from_home_pos() No limit data yet. Requesting status update from GRBL...")
-			self._sendCommand(self.COMMAND_STATUS)
-			i=0
-			while i<200 and (self.limit_x < 0 or self.limit_y < 0):
-				i += 1
-				self._logger.debug("rescue_from_home_pos() sleeping... (%s)", i)
-				time.sleep(0.01)
+		self._wait_for_limits_status_update(force=True)
 
 		if self.limit_x < 0 or self.limit_y < 0:
 			self._logger.warn("rescue_from_home_pos() Can't get status with limit data. Returning.")
@@ -1428,7 +1480,7 @@ class MachineCom(octoprint.util.comm.MachineCom):
 			self._logger.debug("rescue_from_home_pos() Not in home pos. nothing to rescue.")
 			return
 
-		self._logger.info("rescue_from_home_pos() Rescuing laserhead from home position...")
+		self._logger.info("rescue_from_home_pos() Rescuing laserhead from home position... (retry: %s)", retry)
 		self.sendCommand('$X')
 		self.sendCommand(self.COMMAND_FLUSH)
 		self.sendCommand('G91')
@@ -1436,6 +1488,26 @@ class MachineCom(octoprint.util.comm.MachineCom):
 		self.sendCommand('G90')
 		self.sendCommand(self.COMMAND_FLUSH)
 		time.sleep(1) # turns out we need this :-/
+
+		self._wait_for_limits_status_update(force=True)
+		if self.limit_x > 0 or self.limit_y > 0:
+			retry += 1
+			self.rescue_from_home_pos(retry=retry)
+
+
+	def _wait_for_limits_status_update(self, force=False):
+		if force:
+			self.limit_x = -1
+			self.limit_y = -1
+		if self.limit_x < 0 or self.limit_y < 0:
+			ts = time.time()
+			self._logger.debug("_wait_for_limits_status_update() No limit data yet. Requesting status update from GRBL...")
+			self._sendCommand(self.COMMAND_STATUS)
+			i=0
+			while i<200 and (self.limit_x < 0 or self.limit_y < 0):
+				i += 1
+				time.sleep(0.01)
+			self._logger.debug("_wait_for_limits_status_update() Limits: limit_x=%s, limit_y=%s (took %.3fms)", self.limit_x, self.limit_y, time.time()-ts)
 
 
 	# def _handle_command_handler_result(self, command, command_type, gcode, handler_result):
@@ -1789,6 +1861,18 @@ class MachineCom(octoprint.util.comm.MachineCom):
 		})
 		self._callback.on_comm_file_selected(filename, self._currentFile.getFilesize(), False)
 
+	def selectGCode(self, gcode):
+		if self.isBusy():
+			return
+
+		self._currentFile = PrintingGcodeFromMemoryInformation(gcode)
+		eventManager().fire(OctoPrintEvents.FILE_SELECTED, {
+			"file": self._currentFile.getFilename(),
+			"filename": os.path.basename(self._currentFile.getFilename()),
+			"origin": self._currentFile.getFileLocation()
+		})
+		self._callback.on_comm_file_selected("In_Memory_GCode", len(gcode), True) # Hack: set SD-Card to true to avoid Octoprint os.stats check (which will fail of course).
+
 	def unselectFile(self):
 		if self.isBusy():
 			return
@@ -1813,10 +1897,10 @@ class MachineCom(octoprint.util.comm.MachineCom):
 
 
 		try:
-			# ensure fan is on whatever gcode follows.
 			self.watch_dog.reset()
 			self.watch_dog.start(self._currentFile)
 
+			# ensure fan is on whatever gcode follows.
 			self.sendCommand("M08")
 
 			self._currentFile.start()
@@ -1833,11 +1917,11 @@ class MachineCom(octoprint.util.comm.MachineCom):
 			self._changeState(self.STATE_ERROR)
 			eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
 
-	def cancelPrint(self):
+	def cancelPrint(self, failed=False, error_msg=False):
 		if not self.isOperational():
 			return
 
-		# first pause (feed hold) bevore doing the soft reset in order to retain machine pos.
+		# first pause (feed hold) before doing the soft reset in order to retain machine pos.
 		self._sendCommand(self.COMMAND_HOLD)
 		time.sleep(0.5)
 
@@ -1852,7 +1936,14 @@ class MachineCom(octoprint.util.comm.MachineCom):
 		self._changeState(self.STATE_LOCKED)
 
 		payload = self._get_printing_file_state()
-		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
+
+		if failed:
+			if not payload.get('error_msg', None):
+				payload['error_msg'] = error_msg
+
+			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
+		else:
+			eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
 	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False):
 		if not self._currentFile:
@@ -2278,6 +2369,72 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		except ValueError:
 			self._logger.error("Can't convert _lines_total to int: value is %s", tmp)
 		return res
+
+class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
+
+	def __init__(self, gcode):
+		PrintingFileInformation.__init__(self, "in_memory_gcode")
+		self._gcode = gcode.split("\n")
+		self._size = len(gcode)
+		self._first_line = None
+		self._offsets_callback = None
+		self._current_tool_callback = None
+		self._pos = 0
+		self._comment_size = 0
+		self._lines_total = len(self._gcode)
+		self._lines_read = 0
+		self._lines_read_bak = 0
+
+	def start(self):
+		PrintingFileInformation.start(self)
+		self._lines_read = 0
+		self._lines_read_bak = 0
+
+	def close(self):
+		PrintingFileInformation.close(self)
+		self._gcode = None
+
+	def resetToBeginning(self):
+		self._logger.debug("resetToBeginning() self._lines_read %s, self._lines_read_bak: %s", self._lines_read, self._lines_read_bak)
+		self._lines_read = 0
+		self._pos = 0
+		self._comment_size = 0
+
+	def getNext(self):
+		"""
+		Retrieves the next line for printing.
+		"""
+		if self._gcode is None:
+			raise ValueError("Line buffer is not filled")
+
+		try:
+			processed = None
+			while processed is None:
+				if self._gcode is None:
+					# file got closed just now
+					self._logger.debug("getNext() self._gcode is None -> returning None")
+					return None
+
+				line = None
+				try:
+					line = self._gcode[self._lines_read]
+					self._lines_read += 1
+					self._lines_read_bak += 1
+					self._pos += len(line)
+				except IndexError:
+					self._logger.debug("getNext() read line raised IndexError -> closing self._gcode")
+					self.close()
+
+				if(line != None):
+					processed = process_gcode_line(line)
+					if processed is None:
+						self._comment_size += len(line)
+
+			return processed
+		except Exception as e:
+			self.close()
+			self._logger.exception("Exception while processing line")
+			raise e
 
 
 def convert_pause_triggers(configured_triggers):

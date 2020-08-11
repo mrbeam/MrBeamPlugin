@@ -15,8 +15,8 @@ def init_mrb_logger(printer):
 	global _printer
 	_printer = printer
 
-def mrb_logger(id):
-	return MrbLogger(id)
+def mrb_logger(id, lvl=logging.DEBUG):
+	return MrbLogger(id, lvl=lvl)
 
 
 class MrbLogger(object):
@@ -27,14 +27,14 @@ class MrbLogger(object):
 
 	terminal_buffer = collections.deque(maxlen=100)
 
-	def __init__(self, id, ignorePrinter=False):
+	def __init__(self, id, ignorePrinter=False, lvl=logging.DEBUG):
 		global _printer
 		self.logger = logging.getLogger(id)
 		self.id = id
 		self.id_short = self._shorten_id(id)
 		self.my_buffer = []
 		# TODO: this line overrides logging.yaml!!!
-		self.logger.setLevel(logging.DEBUG)
+		self.logger.setLevel(lvl)
 
 	def comm(self, msg, *args, **kwargs):
 		kwargs['id'] = ''
@@ -64,6 +64,9 @@ class MrbLogger(object):
 		kwargs['analytics'] = kwargs.get('analytics', True)
 		kwargs['exc_info'] = kwargs.get('exc_info', True)
 		self.log(logging.ERROR, msg, *args, **kwargs)
+		
+	def setLevel(self, *args, **kwargs):
+		self.logger.setLevel(*args, **kwargs)
 
 	def log(self, level, msg, *args, **kwargs):
 		"""
@@ -89,11 +92,18 @@ class MrbLogger(object):
 		analytics =  kwargs.pop('analytics', None)
 		terminal_dump =  kwargs.pop('terminal_dump', False)
 		if terminal_dump:
-			analytics = True if analytics is not False else False
+			analytics = analytics if analytics else False
 			self._dump_terminal_buffer(level=level, analytics=analytics)
 		if analytics:
 			kwargs['terminal_dump'] = terminal_dump
-			self._analytics_log_event(level, msg, *args, **kwargs)
+
+			# Analytics can be a boolean or a string. If it's a string, we use it as the analytics_id
+			if isinstance(analytics, basestring):
+				analytics_id = analytics
+			else:
+				analytics_id = None
+
+			self._analytics_log_event(level, msg, analytics_id, *args, **kwargs)
 		# just to be sure....
 		kwargs.pop('terminal', None)
 		kwargs.pop('terminal_as_comm', None)
@@ -128,7 +138,7 @@ class MrbLogger(object):
 		msg = msg % args if args and msg else msg
 		logging.getLogger("SERIAL").debug(msg)
 
-	def _analytics_log_event(self, level, msg, *args, **kwargs):
+	def _analytics_log_event(self, level, msg, analytics_id, *args, **kwargs):
 		analytics_handler = self._get_analytics_handler()
 		if analytics_handler is not None:
 			try:
@@ -150,6 +160,7 @@ class MrbLogger(object):
 
 				event_details = dict(
 					level=level,
+					analytics_id=analytics_id,
 					msg=msg,
 					module=self.id,
 					component=_mrbeam_plugin_implementation._identifier,

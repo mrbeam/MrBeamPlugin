@@ -18,7 +18,7 @@ def dustManager(plugin):
 
 class DustManager(object):
 
-	DEFAULT_TIMER_INTERVAL = 3.0
+	DEFAULT_VALIDATION_TIMER_INTERVAL = 3.0
 	BOOST_TIMER_INTERVAL = 0.2
 	MAX_TIMER_BOOST_DURATION = 3.0
 
@@ -45,6 +45,9 @@ class DustManager(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
 		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
 		self._event_bus = plugin._event_bus
+		self._printer = plugin._printer
+
+		self.is_final_extraction_mode = False
 
 		self._state = None
 		self._dust = None
@@ -55,19 +58,23 @@ class DustManager(object):
 		self._init_ts = time.time()
 		self._last_event = None
 		self._shutting_down = False
-		self._trail_extraction = None
-		self._timer = None
-		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
+		self._final_extraction_thread = None
+		self._continue_final_extraction = False
+		self._validation_timer = None
+		self._validation_timer_interval = self.DEFAULT_VALIDATION_TIMER_INTERVAL
 		self._timer_boost_ts = 0
-		self._auto_timer = None
+		self._fan_timers = []
 		self._last_command = dict(action=None, value=None)
-		self.is_dust_mode = False
 		self._just_initialized = False
 
 		self._last_rpm_values = deque(maxlen=5)
+		self._job_dust_values = []
 
-		self.extraction_limit = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
-		self.auto_mode_time = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
+		self.extraction_limit = 0.3
+		self.final_extraction_auto_mode_duration = 120 # ANDYTEST
+		# values from profile are not good.
+		# self.extraction_limit = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
+		# self.auto_mode_time = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
 
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
@@ -77,7 +84,7 @@ class DustManager(object):
 		self._analytics_handler = self._plugin.analytics_handler
 		self._one_button_handler = self._plugin.onebutton_handler
 
-		self._start_timer()
+		self._start_validation_timer()
 		self._just_initialized = True
 		self._logger.debug("initialized!")
 
@@ -91,6 +98,13 @@ class DustManager(object):
 
 	def get_dust(self):
 		return self._dust
+
+	def get_mean_job_dust(self):
+		if self._job_dust_values:
+			mean_job_dust = sum(self._job_dust_values) / len(self._job_dust_values)
+		else:
+			mean_job_dust = None
+		return mean_job_dust
 
 	def is_fan_connected(self):
 		return self._connected
@@ -123,6 +137,9 @@ class DustManager(object):
 			err = True
 		if args['dust'] is not None:
 			self._dust = args['dust']
+
+			if self._printer.is_printing():
+				self._job_dust_values.append(self._dust)
 		else:
 			err = True
 		if args['rpm'] is not None:
@@ -151,33 +168,42 @@ class DustManager(object):
 				self._logger.warn("Fan command response doesn't match expected command: expected: {} received: {} args: {}".format(self._last_command, args.get('response', None), args))
 		else:
 			# TODO ANDY stop laser
-			self._logger.error("Fan command responded error: received: fan:{} args: {}".format(args['message'], args))
+			self._logger.error("Fan command responded error: received: fan:{} args: {}".format(args['message'], args), analytics='fan-command-error-response')
 
 	def _onEvent(self, event, payload):
-		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START):  # OctoPrintEvents.PRINT_STARTED):
-			self._start_dust_extraction()
+		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START):
+			self._start_dust_extraction(cancel_all_timers=True)
 			self._boost_timer_interval()
-		elif event == OctoPrintEvents.PRINT_STARTED:  # We start the test of the fan at 50%
-			self._start_dust_extraction(self.FAN_TEST_RPM_PERCENTAGE)
-			self._boost_timer_interval()
-			t = threading.Timer(self.FAN_TEST_DURATION, self._finish_test_fan_rpm)
-			t.daemon = True
-			t.start()
+		elif event == OctoPrintEvents.PRINT_STARTED:
+			# We start the test of the fan at 50%
+			self._start_test_fan_rpm()
 		elif event in (MrBeamEvents.BUTTON_PRESS_REJECT, OctoPrintEvents.PRINT_RESUMED):
 			# just in case reset iobeam to start fan. In case fan got unplugged fanPCB might get restarted.
-			self._start_dust_extraction()
+			self._start_dust_extraction(cancel_all_timers=False)
 		elif event == MrBeamEvents.READY_TO_LASER_CANCELED:
 			self._stop_dust_extraction()
 			self._unboost_timer_interval()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
 			self._last_event = event
-			self._do_end_dusting()
+			self._do_final_extraction()
+			self._job_dust_values = []
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 		elif event == IoBeamEvents.CONNECT:
 			if self._just_initialized:
 				self._stop_dust_extraction()
 				self._just_initialized = False
+
+	def _start_test_fan_rpm(self):
+		self._logger.debug("FAN_TEST_RPM: Start - setting fan to %s for %ssec", self.FAN_TEST_RPM_PERCENTAGE, self.FAN_TEST_DURATION)
+		self._start_dust_extraction(self.FAN_TEST_RPM_PERCENTAGE, cancel_all_timers=True)
+		self._boost_timer_interval()
+
+		t = threading.Timer(self.FAN_TEST_DURATION, self._finish_test_fan_rpm)
+		t.setName("DustManager:_finish_test_fan_rpm")
+		t.daemon = True
+		t.start()
+		self._fan_timers.append(t)
 
 	def _finish_test_fan_rpm(self):
 		try:
@@ -198,31 +224,31 @@ class DustManager(object):
 				self._analytics_handler.add_fan_rpm_test(data)
 
 			# Set fan to auto again
-			self._start_dust_extraction()
+			self._logger.debug("FAN_TEST_RPM: End - setting fan to auto")
+			self._start_dust_extraction(cancel_all_timers=False)
 			self._boost_timer_interval()
 		except:
 			self._logger.exception("Exception in _finish_test_fan_rpm")
 
-	def _pause_laser(self, trigger, log_message=None):
+	def _pause_laser(self, trigger, analytics=None, log_message=None):
 		"""
 		Stops laser and switches to paused mode.
 		Should be called when air filters gets disconnected, dust value gets too high or when any error occurs...
 		:param trigger: A string to identify the cause/trigger that initiated paused mode
 		"""
 		if self._one_button_handler.is_printing():
-			self._logger.error(log_message)
+			self._logger.error(log_message, analytics=analytics)
 			self._logger.info("_pause_laser() trigger: %s", trigger)
 			self._one_button_handler.pause_laser(need_to_release=False, trigger=trigger)
 
-	def _start_dust_extraction(self, value=None):
+	def _start_dust_extraction(self, value=None, cancel_all_timers=True):
 		"""
 		Turn on fan on auto mode or set to constant value.
 		:param value: Default: auto. 0-100 if constant value required.
 		:return:
 		"""
-		if self._auto_timer is not None:
-			self._auto_timer.cancel()
-			self._auto_timer = None
+		if cancel_all_timers:
+			self._cancel_all_fan_timers()
 		if value is None or value == self.FAN_COMMAND_AUTO:
 			self._send_fan_command(self.FAN_COMMAND_AUTO)
 		else:
@@ -235,35 +261,57 @@ class DustManager(object):
 	def _stop_dust_extraction(self):
 		self._send_fan_command(self.FAN_COMMAND_OFF)
 
-	def _do_end_dusting(self):
-		if self._trail_extraction is None:
-			self._trail_extraction = threading.Thread(target=self.__do_end_dusting_thread)
-			self._trail_extraction.daemon = True
-			self._trail_extraction.start()
-
-	def __do_end_dusting_thread(self):
+	def _cancel_all_fan_timers(self):
 		try:
+			c = []
+			for t in self._fan_timers:
+				if t is not None and t.is_alive():
+					c.append(t.getName())
+					t.cancel()
+			self._continue_final_extraction = False
+			self._fan_timers = []
+			if c:
+				self._logger.debug("_cancel_all_fan_timers: canceled %s timers: %s", len(c), c)
+		except:
+			self._logger.exception("Exception in _cancel_all_fan_timers:")
+
+
+	def _do_final_extraction(self):
+		if self._final_extraction_thread is None:
+			self._final_extraction_thread = threading.Thread(target=self.__do_final_extraction_threaded)
+			self._final_extraction_thread.daemon = True
+			self._final_extraction_thread.start()
+
+	def __do_final_extraction_threaded(self):
+		try:
+			self._cancel_all_fan_timers()
 			if self._dust is not None:
-				self._logger.debug("starting trial dust extraction. current: {}, threshold: {}".format(self._dust, self.extraction_limit))
+				self._logger.debug("Final extraction: Starting trial extraction. current: {}, threshold: {}".format(self._dust, self.extraction_limit))
 				dust_start_ts = self._data_ts
+				self._continue_final_extraction = True
 				if self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
-					self.is_dust_mode = True
+					self._logger.debug("Final extraction: DUSTING_MODE_START")
+					self.is_final_extraction_mode = True
 					self._plugin.fire_event(MrBeamEvents.DUSTING_MODE_START)
-					self._start_dust_extraction(self.FAN_MAX_INTENSITY)
-					while self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
+					self._start_dust_extraction(self.FAN_MAX_INTENSITY, cancel_all_timers=False)
+					while self._continue_final_extraction and self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
 						time.sleep(1)
-					self.is_dust_mode = False
-				self._activate_timed_auto_mode(self.auto_mode_time)
-				self._trail_extraction = None
+					self.is_final_extraction_mode = False
+					self._logger.debug("Final extraction: DUSTING_MODE_START end. duration: %s", time.time() - dust_start_ts)
+				if self._continue_final_extraction:
+					self._start_final_extraction_auto_mode(self.final_extraction_auto_mode_duration)
+					self._continue_final_extraction = False
+					self.send_laser_job_event()
+
+				self._final_extraction_thread = None
+				self.is_final_extraction_mode = False
 			else:
 				self._logger.warning("No dust value received so far. Skipping trial dust extraction!")
+				self._stop_dust_extraction()
+				self.is_final_extraction_mode = False
+				self.send_laser_job_event()
 		except:
-			self._logger.exception("Exception in __do_end_dusting_thread(): ")
-		finally:
-			time.sleep(self.FINAL_DUSTING_DURATION)
-			self._iobeam.shutdown_fan()
-		self.is_dust_mode = False
-		self.send_laser_job_event()
+			self._logger.exception("Exception in __do_final_extraction_threaded(): ")
 
 	def send_laser_job_event(self):
 		try:
@@ -289,17 +337,18 @@ class DustManager(object):
 			return False
 		return True
 
-	def _activate_timed_auto_mode(self, value):
-		self._logger.info("starting timed auto mode for {}secs.".format(value))
-		self._start_dust_extraction()
-		self._auto_timer = threading.Timer(value, self._auto_timer_callback)
-		self._auto_timer.daemon = True
-		self._auto_timer.start()
+	def _start_final_extraction_auto_mode(self, value):
+		self._logger.debug("Final extraction: Starting auto_mode for %s secs", value)
+		self._start_dust_extraction(cancel_all_timers=False)
+		my_timer = threading.Timer(value, self._final_extraction_auto_mode_timed)
+		my_timer.setName("DustManager:final_extraction_auto_mode")
+		my_timer.daemon = True
+		my_timer.start()
+		self._fan_timers.append(my_timer)
 
-	def _auto_timer_callback(self):
-		self._logger.info("Stopping timed auto mode.")
+	def _final_extraction_auto_mode_timed(self):
+		self._logger.debug("Final extraction: DONE. Stopping auto_mode")
 		self._stop_dust_extraction()
-		self._auto_timer = None
 
 	def _send_fan_command(self, action, value=None):
 		self._logger.debug("Sending fan command: action: %s, value: %s", action, value)
@@ -318,60 +367,72 @@ class DustManager(object):
 
 	def _validate_values(self):
 		result = True
+		errs = []
 		if time.time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE:
 			result = False
-		if self._state is None or self._rpm is None or self._rpm <= 0 or self._dust is None:
+			errs.append("data too old. age:{:.2f}".format(time.time() - self._data_ts))
+
+		if self._state is None:
 			result = False
+			errs.append("fan state:{}".format(self._state))
+		if self._rpm is None or self._rpm <= 0:
+			result = False
+			errs.append("rpm:{}".format(self._rpm))
+		if self._dust is None:
+			result = False
+			errs.append("dust:{}".format(self._dust))
 
 		if self._one_button_handler.is_printing() and self._state == 0:
 			self._logger.warn("Restarting fan since _state was 0 in printing state.")
-			self._start_dust_extraction()
+			self._start_dust_extraction(cancel_all_timers=False)
 
 		if not result and not self._plugin.is_boot_grace_period():
-			msg = "Invalid or too old fan data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
+			msg = "Fan error: {errs}".format(errs=", ".join(errs))
+			log_message = msg + " - Data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts))
-			self._pause_laser(trigger="Fan values from iobeam invalid or too old.", log_message=msg)
+			self._pause_laser(trigger=msg, analytics='invalid-old-fan-data', log_message=msg)
 
 		elif self._connected == False:
 			result = False
-			msg = "Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
+			msg = "Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts))
 			self._pause_laser(trigger="Air filter not connected.", log_message=msg)
 
 		# TODO: check for error case in connected val (currently, connected == True/False/None)
 		return result
 
-	def _timer_callback(self):
+	def _validation_timer_callback(self):
 		try:
 			# self._request_value(self.DATA_TYPE_DYNAMIC)
 			self._validate_values()
-			self._start_timer(delay=self._timer_interval)
+			self._start_validation_timer(delay=self._validation_timer_interval)
 		except:
-			self._logger.exception("Exception in _timer_callback(): ")
-			self._start_timer(delay=self._timer_interval)
+			self._logger.exception("Exception in _validation_timer_callback(): ")
+			self._start_validation_timer(delay=self._validation_timer_interval)
 
-	def _start_timer(self, delay=0):
-		if self._timer:
-			self._timer.cancel()
+	def _start_validation_timer(self, delay=0):
+		if self._validation_timer:
+			self._validation_timer.cancel()
 		if self._timer_boost_ts > 0 and time.time() - self._timer_boost_ts > self.MAX_TIMER_BOOST_DURATION:
 			self._unboost_timer_interval()
 		if not self._shutting_down:
 			if delay <= 0:
-				self._timer_callback()
+				self._validation_timer_callback()
 			else:
-				self._timer = threading.Timer(delay, self._timer_callback)
-				self._timer.daemon = True
-				self._timer.start()
+				self._validation_timer = threading.Timer(delay, self._validation_timer_callback)
+				self._validation_timer.setName("DustManager:_validation_timer")
+				self._validation_timer.daemon = True
+				self._validation_timer.start()
 		else:
 			self._logger.debug("Shutting down.")
 
 	def _boost_timer_interval(self):
 		self._timer_boost_ts = time.time()
-		self._timer_interval = self.BOOST_TIMER_INTERVAL
+		self._validation_timer_interval = self.BOOST_TIMER_INTERVAL
 		# want the boost immediately, se reset current timer
-		self._start_timer()
+		self._start_validation_timer()
 
 	def _unboost_timer_interval(self):
 		self._timer_boost_ts = 0
-		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
-		# must not call _start_timer()!!
+		self._validation_timer_interval = self.DEFAULT_VALIDATION_TIMER_INTERVAL
+		# must not call _start_validation_timer()!!

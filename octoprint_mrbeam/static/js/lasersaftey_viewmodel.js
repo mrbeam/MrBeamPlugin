@@ -118,6 +118,7 @@ $(function() {
 
         self.showDialog = function() {
             if (!$('#lasersafety_overlay').hasClass('in')) {
+                // KS
                 $('#lasersafety_overlay').modal("show");
             }
         }
@@ -150,6 +151,9 @@ $(function() {
                         title: gettext("You need to agree to all points"),
                         message: gettext("Please read the entire document and indicate that you understood and agree by checking all checkboxes.")
                     });
+
+                    $('#wizard_plugin_corewizard_lasersafety > ul > .wizard_safety_agreement')[0].scrollIntoView(true);
+
                     return false;
                 }
         };

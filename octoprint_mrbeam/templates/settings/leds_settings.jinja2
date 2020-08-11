@@ -1,0 +1,31 @@
+<div id="settings_mrbeam_leds">
+    <h3>{{ _('Mr Beam Lights') }}</h3>
+
+	<form class="form-horizontal">
+        <div class="control-group">
+            <label class="control-label" for="settings-leds-brightness">{{ _('Brightness') }}</label>
+            <div class="controls">
+                <input id="settings-leds-brightness"
+					class="mrb_slider" style="margin: 1.05em 0 2em 0;"
+					type="range" min="7" max="255" step="8" data-bind="value: edge_brightness, valueUpdate: 'input'" />
+                <br />
+                <div><small>{{ _("Adjust the overall brightness of Mr Beam Lights.") }}</small></div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="settings-leds-fps">{{ _('Animation speed') }}</label>
+            <div class="controls">
+                <input id="settings-leds-fps"
+					class="mrb_slider" style="margin: 1.05em 0 2em 0;"
+					type="range" min="15" max="45" step="1" data-bind="value: leds_fps, valueUpdate: 'input'" />
+                <br />
+                <div><small>{{ _("Adjust the animation speed of Mr Beam Lights.") }}</small></div>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: show_reset_btn">
+            <div class="controls">
+                <a data-bind="click: reset_leds_settings"><i class="icon-repeat"></i> Reset to defaults</a><br />
+            </div>
+        </div>
+    </form>
+</div>
