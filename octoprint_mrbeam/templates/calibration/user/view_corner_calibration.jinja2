@@ -25,7 +25,7 @@
                 <li>{{ _('Click on "next" to continue with the other markers as the picture changes.') }}</li>
                 <li>{{ _('Once all arrowheads are marked the calibration is finished and can be saved.') }}</li>
             </ul>
-            <button class="btn btn-primary" data-bind="click: startCornerCalibration, visible: !cornerCalibrationActive()">
+            <button class="btn btn-primary" data-bind="click: startCornerCalibration, visible: cal_img_ready() && !cornerCalibrationActive() && !availablePic()['cropped']">
                 {{ _('Start Calibration') }}
             </button>
         </li>
