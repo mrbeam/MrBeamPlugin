@@ -64,7 +64,7 @@ def set_support_user(plugin, support_mode):
 
 	if support_mode:
 		_logger.info("Enabling support_mode for user: %s", USER_NAME)
-		plugin._user_manager.addUser(USER_NAME, USER_PW, active=True, roles=["user", "admin"], overwrite=True)
+		plugin._user_manager.add_user(USER_NAME, USER_PW, active=True, roles=["user", "admin"], overwrite=True)
 		plugin.setUserSetting(USER_NAME, plugin.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD, time.time())
 		plugin.setUserSetting(USER_NAME, plugin.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, False)
 	else:
