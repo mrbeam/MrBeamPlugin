@@ -233,9 +233,9 @@ class OneButtonHandler(object):
 
 		elif event == OctoPrintEvents.FILE_SELECTED:
 			if not self.is_ready_to_laser(False) \
-				and self._printer.is_operational() \
-				and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED) \
-				and ('filename' in payload or len(payload) == 0):
+					and self._printer.is_operational() \
+					and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED) \
+					and ('filename' in payload or len(payload) == 0):
 				self._logger.debug("onEvent() FILE_SELECTED set_ready_to_laser filename: %s:", 'filename' in payload)
 				try:
 					# OctoPrint 1.3.4 doesn't provide the file name anymore

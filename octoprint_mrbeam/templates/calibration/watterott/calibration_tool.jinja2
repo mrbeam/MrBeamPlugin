@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ displayName }}</title>
+
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+        <link rel="shortcut icon" href="{{ url_for('plugin.mrbeam.static', filename='img/favicon.png') }}">
+        <link rel="icon" sizes="192x192" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb192.png') }}">
+        <link rel="icon" sizes="128x128" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb128.png') }}">
+        <link rel="apple-touch-icon" sizes="128x128" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb128.png') }}">
+        <link rel="apple-touch-icon-precomposed" sizes="128x128" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb128.png') }}">
+        <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
+        <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
+
+        {% include 'stylesheets.jinja2' %}
+        {% include 'initscript.jinja2' %}
+        {% include 'mrbeam_initscript.jinja2' %}
+        <script type="text/javascript">
+			INITIAL_CALIBRATION = true;
+		</script>
+    </head>
+    <body style="padding-top:0;">
+		<div class="octoprint-container">
+			<div class="row-fluid">
+				<div class="span12" id="settings">
+					<div id="settings_plugin_mrbeam_camera" class="container" style="width:100%;">
+						<div class="scrollable" id="settings_dialog_content">
+							<div id="initial_camera_calibration" style="margin: 1em auto; max-width:100vh;">
+                                <div data-bind='visible: !startupComplete()' style="color: #e25303; font-size: 1.5em; position: absolute; top: 40%; left: 50%">
+                                    <div style="position: relative; left: -50%;">
+                                        <i class="icon icon-spinner icon-spin" style="font-weight: bold;"></i>
+                                        <span style="font-weight: 200; padding-left: 12px;"> Mr&nbsp;Beam</span> <span style="font-weight: 400;">Calibration Tool</span>
+                                    </div>
+                                </div>
+                                <div style="position:relative; display:none;" data-bind='visible: startupComplete'>
+                                    <!-- Calibration Selector -->
+                                    <h4><span style="font-weight: 200; padding-left: 12px;">Mr Beam</span> <span style="font-weight: 400;">Calibration Tool</span></h4>
+                                    <ul id="camera-calibration-tabs" class="nav nav-tabs">
+                                        <li class="active"><a href="#tab_camera_alignment" data-toggle="tab" id="camalignment_tab_btn" >{{ _('Camera Alignment') }}</a></li>
+                                        <li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn" data-bind="click: startLensCalibration">{{ _('Lens Calibration') }}
+                                                <i class="icon icon-ok" data-bind="visible: lensCalibrationComplete()"></i>
+                                                <i class="icon icon-remove" data-bind="visible: !lensCalibrationComplete()"></i>
+                                            </a></li>
+                                        <li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn">{{ _('Corner Calibration') }}
+                                            <i class="icon icon-ok" data-bind="visible: cornerCalibrationComplete() || availablePic()['cropped']"></i>
+                                            <!-- <i class="icon icon-remove" data-bind="visible: !cornerCalibrationComplete()"></i> -->
+                                        </a></li>
+                                        <li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('Quality Check') }}</a></li>
+                                        <li><a href="#tab_done_print_labels" data-toggle="tab" id="done_tab_btn">{{ _('Labels') }}</a></li>
+                                        <li><a href="#tab_debug" data-toggle="tab" id="done_tab_btn">{{ _('Debug') }}</a></li>
+                                    </ul>
+                                    <!-- Tab contents -->
+                                    <div class="tabbable">
+                                        <div class="tab-content camera_calibration_tabs">
+                                            <div class="tab-pane active" id="tab_camera_alignment">
+                                                {% include 'calibration/watterott/tab_camera_alignment.jinja2' %}
+                                            </div>
+                                            <div class="tab-pane" id="tab_lens_calibration">
+                                                {% include 'calibration/watterott/tab_lens_calibration.jinja2' %}
+                                            </div>
+                                            <div class="tab-pane" id="tab_corner_calibration">
+                                                {% include 'calibration/watterott/tab_corner_calibration.jinja2' %}
+                                            </div>
+                                            <div class="tab-pane" id="tab_calibration_qa">
+                                                {% include 'calibration/watterott/tab_calibration_qa.jinja2' %}
+                                            </div>
+                                            <div class="tab-pane" id="tab_done_print_labels">
+                                                {% include 'calibration/watterott/tab_done_print_labels.jinja2' %}
+                                            </div>
+                                            <div class="tab-pane" id="tab_debug">
+                                                {% include 'calibration/watterott/tab_debug.jinja2' %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Plugin template files -->
+		{% if templatePlugins %}
+		{% for plugin_name in templatePlugins %}
+		{% include plugin_name+".jinja2" ignore missing %}
+		{% endfor %}
+		{% endif %}
+		<!-- End plugin template files -->
+
+        {% include 'javascripts.jinja2' %}
+
+	</body>
+</html>

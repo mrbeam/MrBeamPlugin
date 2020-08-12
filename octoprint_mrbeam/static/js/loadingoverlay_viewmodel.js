@@ -49,17 +49,26 @@ $(function() {
 
         self.removeLoadingOverlay = function(){
             $('body').addClass('loading_step8');
+            self.hideBlockedMessage();
+
+            callViewModels(self.allViewModels, 'onCurtainOpening');
+
             $('body').addClass('run_loading_overlay_animation');
             if (self.showAnimation) {
                 setTimeout(function () {
                     $('#loading_overlay').fadeOut();
                     self.resetLoadingSteps();
+                    setTimeout(function () {
+                        callViewModels(self.allViewModels, 'onCurtainOpened');
+                    }, 500)
                 }, 3000);
             } else {
                 $('#loading_overlay').fadeOut();
                 self.resetLoadingSteps();
+                setTimeout(function () {
+                    callViewModels(self.allViewModels, 'onCurtainOpened');
+                }, 500)
             }
-            callViewModels(self.allViewModels, 'onCurtainOpened');
         };
 
         self.skipClick = function(){
@@ -84,11 +93,17 @@ $(function() {
         self.showReloading = function(){
             $('body').removeClass('run_loading_overlay_animation');
 			self.display_state(self.TEXT_RELOADING);
+			self.hideBlockedMessage();
             $('#loading_overlay').show();
         };
 
         self.isAnimationRunning = function() {
             return $('body').hasClass('run_loading_overlay_animation');
+        }
+
+        self.hideBlockedMessage = function(){
+            $('#loading_overlay_error').hide();
+            $('#loading_overlay_error_specific').html('');
         }
 
     }

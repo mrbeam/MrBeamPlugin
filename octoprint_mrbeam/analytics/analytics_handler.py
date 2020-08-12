@@ -21,6 +21,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from analytics_keys import AnalyticsKeys as ak
 from timer_handler import TimerHandler
 from uploader import AnalyticsFileUploader
+from octoprint_mrbeam.util.uptime import get_uptime
 
 # singleton
 _instance = None
@@ -35,7 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 10  # bumped in 0.5.5.1
+	ANALYTICS_LOG_VERSION = 16  # bumped in 0.6.14.1 for ntp syncs during the job
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -117,6 +118,11 @@ class AnalyticsHandler(object):
 		return self._analytics_enabled and not self._support_mode
 
 	# -------- EXTERNALLY CALLED METHODS -------------------------------------------------------------------------------
+	def upload(self, delay=5.0):
+		# We have to wait until the last line is written before we upload
+		Timer(interval=delay, function=AnalyticsFileUploader.upload_now,
+		      args=[self._plugin, self._analytics_lock]).start()
+
 	# INIT
 	def analytics_user_permission_change(self, analytics_enabled):
 		try:
@@ -284,6 +290,12 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
 
+	def add_camera_image(self, payload):
+		try:
+			self._add_device_event(ak.Device.Event.CAMERA_IMAGE, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_camera_image: {}'.format(e), analytics=True)
+
 	# IOBEAM_HANDLER
 	def add_iobeam_message_log(self, iobeam_version, message, from_plugin=False):
 		try:
@@ -346,6 +358,13 @@ class AnalyticsHandler(object):
 			self._add_job_event(ak.Job.Event.Slicing.DESIGN_FILE, payload=design_file)
 		except Exception as e:
 			self._logger.exception('Exception during add_design_file_details: {}'.format(e))
+
+	# USAGE
+	def add_job_ntp_sync_details(self, sync_details):
+		try:
+			self._add_job_event(ak.Job.Event.NTP_SYNC, payload=sync_details)
+		except Exception as e:
+			self._logger.exception('Exception during add_job_ntp_sync_details: {}'.format(e))
 
 	# COMM_ACC2
 	def add_grbl_flash_event(self, from_version, to_version, successful, err=None):
@@ -477,7 +496,10 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.Print.STARTED)
 
 	def _event_print_progress(self, event, payload):
-		laser_temp, laser_intensity, dust_value = None
+		laser_temp = None
+		laser_intensity = None
+		dust_value = None
+
 		if self._current_lasertemp_collector:
 			laser_temp = self._current_lasertemp_collector.get_latest_value()
 		if self._current_intensity_collector:
@@ -561,8 +583,7 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.LASERJOB_FINISHED, payload={ak.Job.STATUS: self._current_job_final_status})
 		self._cleanup_job()
 
-		# We have to wait until the 'laserjob_finished' line is written before we upload
-		Timer(interval=5.0, function=AnalyticsFileUploader.upload_now, args=[self._plugin, self._analytics_lock]).start()
+		self.upload()  # delay of 5.0 s
 
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['job_time_estimation']
@@ -570,6 +591,9 @@ class AnalyticsHandler(object):
 		if self._current_job_id:
 			payload = {
 				ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+				ak.Job.Duration.CALC_DURATION_TOTAL: payload['calc_duration_total'],
+				ak.Job.Duration.CALC_DURATION_WOKE: payload['calc_duration_woke'],
+				ak.Job.Duration.CALC_LINES: payload['calc_lines'],
 			}
 			self._add_job_event(ak.Job.Event.JOB_TIME_ESTIMATED, payload=payload)
 
@@ -632,7 +656,7 @@ class AnalyticsHandler(object):
 				ak.Header.VERSION_MRBEAM_PLUGIN: self._plugin_version,
 				ak.Header.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 				ak.Header.DATA: data,
-				ak.Header.UPTIME: self._get_uptime(),
+				ak.Header.UPTIME: get_uptime(),
 				ak.Header.MODEL: self._plugin.get_model_id(),
 			}
 
@@ -710,17 +734,6 @@ class AnalyticsHandler(object):
 		self._cleanup_job()
 		self._current_job_id = 'j_{}_{}'.format(self._snr, time.time())
 		self._add_job_event(ak.Job.Event.LASERJOB_STARTED)
-
-	# http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
-	def _get_uptime(self):
-		try:
-			with open('/proc/uptime', 'r') as f:
-				uptime = float(f.readline().split()[0])
-			return uptime
-
-		except Exception as e:
-			self._logger.exception('Exception during _get_uptime: {}'.format(e), analytics=False)
-			return None
 
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):

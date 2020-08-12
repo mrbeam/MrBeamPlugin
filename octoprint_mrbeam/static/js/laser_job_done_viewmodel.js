@@ -8,8 +8,9 @@ $(function() {
     function LaserJobDoneViewmodel(parameters) {
         var self = this;
         window.mrbeam.viewModels['laserJobDoneViewmodel'] = self;
-        self.readyToLaser = parameters[0];
-        self.analytics = parameters[1];
+        self.files = parameters[0].gcodefiles;
+        self.readyToLaser = parameters[1];
+        self.analytics = parameters[2];
 
         self._switchDelay = 3000;
 
@@ -18,6 +19,7 @@ $(function() {
             closed: null,
             dur: null
         };
+		self.lastJob = null;
 
         self.is_job_done = ko.observable(false);
         self.is_dust_mode = ko.observable(false);
@@ -52,7 +54,8 @@ $(function() {
 
         self.onEventPrintDone = function (payload) {
             self.is_job_done(true);
-            if (payload && 'time' in payload && $.isNumeric(payload['time'])) {
+            self.lastJob = payload;
+			if (payload && 'time' in payload && $.isNumeric(payload['time'])) {
                 self.job_duration(payload['time']);
             }
             self._fromData(payload);
@@ -102,6 +105,16 @@ $(function() {
             $('#laser_job_done_image_text').removeClass('show');
         };
 
+		self.repeat_job = function(){
+			if(self.lastJob !== null){
+				self.cancel_btn();
+				self.files.startGcodeWithSafetyWarning(self.lastJob);
+				self.analytics.send_fontend_event('repeat_job', {})
+			} else {
+				console.error("Repeat job clicked, but self.lastJob is null.");
+			}
+		};
+
         self.cancel_btn = function(){
             self.is_job_done(false);
             self.dialogElement.modal("hide");
@@ -116,7 +129,7 @@ $(function() {
     OCTOPRINT_VIEWMODELS.push([
         LaserJobDoneViewmodel,
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ "readyToLaserViewModel", "analyticsViewModel"],
+        [ "motherViewModel", "readyToLaserViewModel", "analyticsViewModel"],
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ '#laser_job_done_dialog']
     ]);

@@ -1,5 +1,3 @@
-
-
 import threading
 from distutils.version import LooseVersion
 from octoprint.events import Events, CommandTrigger, GenericEventListener
@@ -50,6 +48,22 @@ class LedEventListener(CommandTrigger):
 	# MrBeam Events
 	LED_EVENTS[MrBeamEvents.SLICING_PROGRESS] = "mrbeam_ledstrips_cli SlicingProgress:{__progress}"
 	LED_EVENTS[MrBeamEvents.PRINT_PROGRESS] = "mrbeam_ledstrips_cli progress:{__progress}"
+
+	# Camera Calibration Screen Events
+	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_START] = "mrbeam_ledstrips_cli flash_blue:1"
+	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_DONE]  = "mrbeam_ledstrips_cli blue" # flash_color:200:200:30:1:50" #color:200:200:30" # TODO undo -> last state
+	LED_EVENTS[MrBeamEvents.RAW_IMG_TAKING_LAST]    = "mrbeam_ledstrips_cli flash_green:1:30"
+	LED_EVENTS[MrBeamEvents.RAW_IMG_TAKING_FAIL]    = "mrbeam_ledstrips_cli flash_red:1:30"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_START]       = "mrbeam_ledstrips_cli lens_calibration" # dims interieur for better pictures
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS] = "mrbeam_ledstrips_cli flash_blue:3"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_RUNNING]     = "mrbeam_ledstrips_cli flash_green:2"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_DONE]        = "mrbeam_ledstrips_cli green"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_FAIL]        = "mrbeam_ledstrips_cli orange"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_EXIT]        = "mrbeam_ledstrips_cli ClientOpened"
+	LED_EVENTS[MrBeamEvents.BLINK_PRINT_LABELS]        = "mrbeam_ledstrips_cli upload:0:255:0" # switch to 'blink_green' in future
+
+
+
 	#Shutdown
 	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_START] = "mrbeam_ledstrips_cli ShutdownPrepare"
 	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_CANCEL] = "mrbeam_ledstrips_cli ShutdownPrepareCancel"
@@ -67,6 +81,7 @@ class LedEventListener(CommandTrigger):
 	COMMAND_SET_EDGEBRIGHTNESS =     "mrbeam_ledstrips_cli set:edge_brightness:{__brightness}"
 	COMMAND_SET_INSIDEBRIGHTNESS =   "mrbeam_ledstrips_cli set:inside_brightness:{__brightness}"
 	COMMAND_SET_FPS =                "mrbeam_ledstrips_cli set:fps:{__fps}"
+
 
 	def __init__(self, plugin):
 		CommandTrigger.__init__(self, plugin._printer)

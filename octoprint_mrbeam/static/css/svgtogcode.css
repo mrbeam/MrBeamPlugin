@@ -11,13 +11,13 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 
 #settings_dialog.container { width: 100%; }
 
-.calibration_step {
-	display: none;
-}
+/*.calibration_step {*/
+/*	display: none;*/
+/*}*/
 
-.calibration_step.active {
-	display: block;
-}
+/*.calibration_step.active {*/
+/*	display: block;*/
+/*}*/
 
 #gcode_reference .gcommand {
 	font-weight: bold;
@@ -517,12 +517,13 @@ svg g#camera_markers circle {
 	opacity: 0;
 }
 
+circle#marker_preview_pane,
 g#camera_markers.markerNE circle#markerNE,
 g#camera_markers.markerSE circle#markerSE,
 g#camera_markers.markerNW circle#markerNW,
 g#camera_markers.markerSW circle#markerSW {
 	opacity: 1;
-	animation: blinker 1s linear infinite;
+	animation: blinker 2s linear infinite;
 }
 
 @keyframes blinker {
@@ -759,10 +760,142 @@ li.material_entry span {
 
 svg#area_preview.overModalBG { z-index: 1051; }
 
-.calibration_manual.text {
-    width: 48%;
-	margin-bottom: 2em;
+/** CAMERA CALIBRATION **/
+
+.camera_calibration_tabs {
+	border-width: 1px;
+	padding: 1em;
+	height: 90vh;
+	overflow-y: auto;
+	padding-bottom: 0;
+	position: relative;
 }
+
+.camera-settings-section {
+	margin-bottom: 30px;
+}
+
+.camera-settings-section .btn-group {
+	margin-left: 2px;
+}
+
+.camera-status-images {
+	width: 90%;
+    text-align: center;
+    border-collapse: separate;
+    border-spacing: 20px 0;
+	margin-bottom: 15px;
+}
+
+.camera-status-images td {
+	position: relative;
+}
+
+.camera-status-images .camera-picture {
+	vertical-align: bottom;
+}
+
+.camera-status-images .fa-download {
+	position: absolute;
+	bottom: 7px;
+    right: 7px;
+	text-shadow: 0 0 10px white;
+}
+
+.camera-status-images .camera-image-description {
+	vertical-align: top;
+	font-size: small;
+}
+
+.camera-status-support .fa-download {
+	color: #e25303;
+    margin: 0 2px;
+}
+
+.requirement-status::after,
+.requirement::before {
+	font-family: FontAwesome3;
+	-webkit-font-smoothing: antialiased;
+	margin-left: 5px;
+}
+
+.requirement-status.requirement-met::after,
+.requirement.requirement-met::before {
+	content: "\f00c";
+	color: #00d400;
+}
+
+.requirement-status.requirement-not-met::after,
+.requirement.requirement-not-met::before {
+	content: "\f00d";
+	color: red;
+}
+
+.camera-calibrations {
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: 1fr 1fr;
+	width: 95%;
+	margin: 20px 0 0 5px;
+}
+
+.camera-calibrations .calibration-container {
+	padding: 10px 15px;
+    margin: 0 4% 0 0;
+	position: relative;
+}
+
+.calibration-container .rounded_container_title {
+	margin-top: 0;
+}
+
+.calibration-container .rounded_container_hr {
+	margin: 10px -15px;
+}
+
+.calibration-container p {
+	margin-bottom: 50px;
+}
+
+.calibration-container button {
+	position: absolute;
+	bottom: 10px;
+	right: 10px;
+}
+
+.camera-calibration-title {
+	margin: 2px 0 6px 2px;
+}
+
+.camera-calibration-title .btn {
+    border-radius: 100%;
+    padding: 10px 10px;
+    min-width: auto;
+}
+
+.camera-calibration-title .btn img {
+    width: 20px;
+}
+
+.camera-calibration-title span {
+    vertical-align: bottom;
+    font-size: 24.5px;
+    line-height: 40px;
+    margin: 10px 0 10px 5px;
+    font-family: inherit;
+    font-weight: bold;
+    color: inherit;
+    text-rendering: optimizelegibility;
+}
+
+.camera-calibration-steps > li {
+	margin-bottom: 15px;
+}
+
+.camera-calibration-steps > li > button {
+	margin-top: 5px;
+}
+
 .calibration_manual.img {
     width: 48%;
     padding-top: 32%;
@@ -861,4 +994,238 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	border-radius: 0.75em;
 	background-color: #eee;
 	margin-right: 0.3em;
+}
+
+#lens_correction_image_list {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	margin: 0;
+	width: 100%;
+	/*max-height: 60vh;*/
+	/*overflow-y: scroll;*/
+}
+
+.lens_correction_image_thumb {
+	list-style-type: none;
+	background: top center no-repeat;
+	background-size: contain;
+	background-color: #ddd;
+	padding-top: 70%;
+	margin: .5em;
+	position: relative;
+
+}
+.lens_correction_image_thumb.zoom {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	background-color: black;
+	margin: 0;
+	background-size: 70%;
+	z-index: 999;
+}
+
+.lens_correction_image_thumb i.status_icon {
+	position: absolute;
+	font-size: 4em;
+	width: 100%;
+	top: calc( 50% - 2rem );
+	left: 0;
+	text-align: center;
+}
+
+#lens_correction_image_list .chessboard_cal_duration {
+	padding: 0.5em 0.5em 0.1em;
+	font-size: 10px;
+	line-height: 12px;
+}
+
+#lensCalibrationPhases.qa_active #lensCalibrationPictureTaking,
+#lensCalibrationPhases #lensCalibrationQA { display:none; }
+#lensCalibrationPhases.qa_active #lensCalibrationQA,
+#lensCalibrationPhases #lensCalibrationPictureTaking { display:block; }
+
+#lens_calibration_take_pic {
+	color: #fff;
+	border-radius: 50%;
+	width: 5em;
+	height: 5em;
+	display: inline-block;
+	margin-top: -75px;
+	margin-left: -5px;
+	position: relative;
+	z-index: 1;
+}
+
+#lens_calibration_toggle_qa_btn {
+	position: absolute;
+	bottom: 40px;
+	right: 0;
+}
+
+#recalculate_lens_calibration_btn {
+	height: 5em;
+	margin-bottom: 20px;
+	display: inline-block;
+	right: 0;
+	bottom: 0;
+	z-index: 0;
+	position: absolute;
+}
+
+#heatmap_container {
+	width: 45%;
+	display: inline-block;
+}
+
+#segment_group rect {
+  fill: green;
+  fill-opacity: 0.3;
+}
+#segment_group rect.highlight {
+	fill-opacity: 0.5;
+	stroke: #00ff00;
+	stroke-width: 8px;
+}
+
+.qa_list_and_next {
+	border: 1px solid green;
+	border-radius: 8px;
+	padding: 1em 2em;
+	margin: 1em 0;
+	position: relative;
+	background-color: #fff;
+    font-size: 14pt;
+}
+
+.qa_list_and_next ul {
+	max-width: 85%;
+}
+
+.qa_list_and_next li {
+    line-height: 1.6em;
+}
+
+.qa_list_and_next a.continue_btn {
+	position: absolute;
+	right: -1px;
+	bottom: -1px;
+	border: none;
+	border-radius: 8px 0px;
+}
+
+.qa_list_and_next .continue_btn.btn-group {
+	position: absolute;
+	bottom: 1px;
+	right: -1px;
+}
+.qa_list_and_next .continue_btn.btn-group .btn { position: relative; }
+.qa_list_and_next .continue_btn.btn-group .btn:first-child {
+	border-radius: 8px 0 0 0;
+}
+.qa_list_and_next .continue_btn.btn-group .btn:last-child {
+	border-radius: 0 0 8px 0;
+}
+
+.qa_images h3 {
+	margin-top: 0;
+}
+
+.qa_images {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	margin: 0;
+	width: 100%;
+	grid-row-gap: 1em;
+	grid-column-gap: 1em;
+
+}
+
+.qa_img_wrapper {
+	position: relative;
+}
+
+#qa_undistorted_guides {
+	border: 1px solid #00ff00;
+	position: absolute;
+}
+
+
+#qa_undistorted_guides {
+	--dist_horizontal: 3%;
+	--dist_vertical: 3%;
+	top: var(--dist_vertical);
+	bottom: var(--dist_vertical);
+	left: var(--dist_horizontal);
+	right: var(--dist_horizontal);
+}
+
+.qa_images li.example {
+	position: relative;
+	list-style:none;
+	margin-bottom: 4px;
+	max-width: 200px;
+}
+.qa_images li.example::after {
+	position: absolute;
+	right: 0.5rem;
+	top: 1rem;
+	font-size: 3rem;
+	font-family: FontAwesome3;
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: inherit;
+	-webkit-font-smoothing: antialiased;
+}
+.qa_images li.example.good_example::after {
+	content: "\f00c";
+	color: #00d400;
+}
+.qa_images li.example.bad_example::after {
+	content: "\f00d";
+	color: red;
+}
+
+.qa_done_block {
+    color: green;
+    font-size: 7em;
+    font-weight: bolder;
+    text-align: center;
+    margin: 1em 1em;
+}
+
+.qa_done_buttons {
+	border: 1px solid green;
+	border-radius: 8px;
+	padding: 1em 2em;
+    height: 2.3em;
+	position: relative;
+    text-align: center;
+	background-color: #fff;
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+}
+
+.print_btn i.icon-print {
+    display: inherit !important;
+}
+
+.print_btn:disabled i.icon-print {
+    display: none !important;
+}
+
+.print_btn i.icon-spinner {
+    display: none !important;
+}
+
+.print_btn:disabled i.icon-spinner {
+    display: inherit !important;
+}
+
+#qa_cameraalignment_image {
+    width: 100%;
+    height: 360px;
+    background: url(/plugin/mrbeam/static/img/calibration/calpic_wait.svg) center no-repeat;
+    background-size: cover;
 }

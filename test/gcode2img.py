@@ -77,7 +77,7 @@ def debug_image(gcode, pixelsize = 0.15):
 
 
 	#img = Image.new("L", (w*2,h), "white")
-	img = Image.new("RGB", (w*2,h), "white")
+	img = Image.new("RGB", (w*4,h), "white")
 	pixarray = img.load()
 	last_px = None;
 	for line in pix:
@@ -91,6 +91,7 @@ def debug_image(gcode, pixelsize = 0.15):
 				feedrate = int((line['f'] * f_factor) * 255)
 				s = (255, intensity, intensity)
 				f = (0, feedrate, 0)
+				direction = (0,0,0) if x >= last_px[0] else (255,0,0)
 				if(last_px != None):
 					_min = min(last_px[0], x)
 					_max = max(last_px[0], x)
@@ -98,6 +99,7 @@ def debug_image(gcode, pixelsize = 0.15):
 						try:
 							pixarray[x, y] = s
 							pixarray[x+w, y] = f
+							pixarray[x+2*w, y] = direction
 						except IndexError:
 							print(" ? Px ({},{}) is out of range. Image width: {}, height:{})".format(x,y,w,h))
 					else:
@@ -106,6 +108,7 @@ def debug_image(gcode, pixelsize = 0.15):
 							try:
 								pixarray[px, y] = s
 								pixarray[px+w, y] = f
+								pixarray[x+2*w, y] = direction
 							except IndexError:
 								print(" ? Pixel ({},{}) is out of range. Image width: {}, height:{})".format(px,y,w,h))
 									

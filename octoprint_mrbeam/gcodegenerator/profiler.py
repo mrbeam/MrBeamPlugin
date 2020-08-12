@@ -1,9 +1,8 @@
 
 import time
-from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
+import logging
 
 class Profiler:
-	log = mrb_logger("octoprint.plugins.gcodegenerator.profiler")
 	
 	def __init__(self, sessionName):
 		self.name = sessionName
@@ -11,7 +10,13 @@ class Profiler:
 		self.events = {}
 		self.sessionDuration = -1
 		self.sessionStart = time.time()
-		self.lastStopped = self.sessionStart 
+		self.lastStopped = self.sessionStart
+		try:
+			from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
+			self.log = mrb_logger("octoprint.plugins.gcodegenerator.profiler")
+		except ImportError:
+			# when called via command line
+			self.log = logging.getLogger("octoprint.plugins.gcodegenerator.profiler")
 		
 	def start(self, eventname):
 		ts = time.time()
@@ -60,5 +65,4 @@ class Profiler:
 		summary = map(lambda x: ("% 6.2f%% %s" % (100 * x[0]/self.sessionDuration ,x[1]) ) if(x[2] == 'stop') else None,  self.eventlog)
 		summary = filter(None, summary)
 		return ("Profiling session %s:\n" % self.name) + "\n".join(summary) + "\nTotal: %.4fs" % self.sessionDuration
-	
 	

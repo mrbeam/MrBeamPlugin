@@ -62,7 +62,7 @@ class WorkingAreaHelper {
 	/**
 	 * Workaround of a firefox bug which breaks quotes / brackets.
 	 * Solution is pragmatic - just replacing bogus characters after things got wrong.
-	 * 
+	 *
 	 * @param {type} svgStr
 	 * @returns {string} svgStr
 	 */
@@ -80,7 +80,7 @@ class WorkingAreaHelper {
 
 	/**
 	 * Returns with what program and version the given svg file was created. E.g. 'coreldraw'
-	 * 
+	 *
 	 * @param fragment (result of Snaps .select() .selectAll() .parse(), ...
 	 * @returns {object} keys: generator, version
 	 */
@@ -201,9 +201,32 @@ class WorkingAreaHelper {
 	static isBinaryData(str) {
 		return /[\x00-\x08\x0E-\x1F]/.test(str);
 	}
-	static isEmptyFile(str) {
-		return str === "";
+
+	static isEmptyFile(fragment) {
+	    // https://github.com/mrbeam/MrBeamPlugin/issues/787
+	    return fragment.node.querySelectorAll('svg > *').length <= 0
 	}
+
+	/**
+     * Parses two number values (float or int) from given string.
+     * Tries to accept any comma and any delimiter between the two numbers
+     * @param myString
+     * @returns {null|[float,float]}
+     */
+    static splitStringToTwoValues(myString){
+        let res = null
+        if (myString && !(myString.match(/[a-zA-Z]/) || myString.match(/^\d+$/))) {
+            let m = myString.match(/^(-?\d+)[^0-9-]*(-?\d+)$/) || myString.match(/(-?\d+[.,]?\d*)[^0-9-]*(-?\d+[.,]?\d*)/)
+            if (m) {
+                let x = parseFloat(m[1]);
+                let y = parseFloat(m[2]);
+                if (!isNaN(x) && !isNaN(y)) {
+                    res = [x, y]
+                }
+            }
+        }
+        return res
+    }
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';

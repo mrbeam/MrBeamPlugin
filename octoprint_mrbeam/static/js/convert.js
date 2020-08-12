@@ -61,7 +61,7 @@ $(function(){
 		self.material_settings2 = {};
 		self.material_settings2_updated_trigger= ko.observable();
 
-		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor:3};
+		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor:3, progressive: false};
 		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, eng_compressor: 3, dithering: false };
 
 		self.material_colors = ko.observableArray([]);
@@ -200,7 +200,8 @@ $(function(){
                     cut_f: parseFloat(strongest.feedrate),
                     cut_p: parseInt(strongest.passes),
                     cut_pierce: parseInt(strongest.pierce_time),
-                    cut_compressor: parseInt(strongest.cut_compressor)
+                    cut_compressor: parseInt(strongest.cut_compressor),
+                    progressive: strongest.progressive
 				};
 			} else {
 				thickness = -1; // engrave only
@@ -666,6 +667,7 @@ $(function(){
 				$(job).find('.param_intensity').val(p.cut_i);
 				$(job).find('.param_feedrate').val(p.cut_f);
 				$(job).find('.param_passes').val(p.cut_p || 0);
+				$(job).find('.param_progressive').prop('checked', p.progressive);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
 				$(job).find('.compressor_range').val(p.cut_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
 			}
@@ -898,7 +900,7 @@ $(function(){
 						});
 					});
 				} else {
-					console.log("Skipping vector job ("+1+"), invalid parameters.");
+					console.log("Skipping vector job ("+i+"), invalid parameters.");
 				}
 			});
 
@@ -1278,39 +1280,36 @@ $(function(){
 //			self.settings.settings.plugins.mrbeam.focusReminder(showFocusReminder);
 //			self.settings.saveall(); // fails on getOnlyChangedData
 
-		    let focusReminder = !self.dontRemindMeAgainChecked();
-            let data = {focusReminder: focusReminder};
-            OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
-                .done(function (response) {
-                    self.settings.requestData();
-                    console.log("simpleApiCall response for saving focus reminder state: ", response);
-                })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                    if (jqXHR.status == 401) {
-                        self.loginState.logout();
-                        new PNotify({
-                            title: gettext("Session expired"),
-                            text: gettext("Please login again to continue."),
-                            type: "warn",
-                            tag: "conversion_error",
-                            hide: false
-                        });
-                    } else {
+            if (self.dontRemindMeAgainChecked() == self.showFocusReminder()){
+                let focusReminder = !self.dontRemindMeAgainChecked();
+                self.showFocusReminder(focusReminder);
+                let data = {focusReminder: focusReminder};
+                OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
+                    .done(function (response) {
                         self.settings.requestData();
-                        console.error("Unable to save focus reminder state: ", data);
-                        new PNotify({
-                            title: gettext("Error while saving settings!"),
-                            text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
-                            type: "error",
-                            hide: true
-                        });
-                    }
-                });
-        };
-
-		self.sendDontRemindToServer = function() {
-		    if (self.dontRemindMeAgainChecked()) {
-		        self.sendFocusReminderChoiceToServer();
+                        console.log("simpleApiCall response for saving focus reminder state: ", response);
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        if (jqXHR.status == 401) {
+                            self.loginState.logout();
+                            new PNotify({
+                                title: gettext("Session expired"),
+                                text: gettext("Please login again to continue."),
+                                type: "warn",
+                                tag: "conversion_error",
+                                hide: false
+                            });
+                        } else {
+                            self.settings.requestData();
+                            console.error("Unable to save focus reminder state: ", data);
+                            new PNotify({
+                                title: gettext("Error while saving settings!"),
+                                text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
+                                type: "error",
+                                hide: true
+                            });
+                        }
+                    });
             }
         };
 
@@ -1573,6 +1572,11 @@ $(function(){
             }
         };
 
+		self.onEventSettingsUpdated = function(){
+		    self.showFocusReminder(self.settings.settings.plugins.mrbeam.focusReminder());
+		    self.dontRemindMeAgainChecked(!self.showFocusReminder())
+        };
+
 		self.cancel_conversion = function(){
 			if(self.slicing_in_progress()){
 				// TODO cancel slicing at the backend properly
@@ -1656,7 +1660,7 @@ $(function(){
 
                         let outer = '<div id="' + slider_id + '_out"></div>';
                         let color_circle = '<div class="vector_mapping_color_circle" style="background:' + hex + '"/></div>';
-                        let slider = '<input id="'+slider_id+'" class="svgtogcode_grayscale conversion_range_slider vector_mapping_slider" type="range" min="0" max="255" value="'+val+'" /></div>';
+                        let slider = '<input id="'+slider_id+'" class="svgtogcode_grayscale mrb_slider conversion_range_slider" type="range" min="0" max="255" value="'+val+'" /></div>';
 
                         line_mapping_container.append(outer);
                         $('#' + slider_id + '_out').append(color_circle);
@@ -1685,8 +1689,8 @@ $(function(){
 
                 if (val > 3000) {
                     $(this).val(3000)
-                } else if (val < 100 || val === "") {
-                    $(this).val(100)
+                } else if (val < 50 || val === "") {
+                    $(this).val(50)
                 }
             });
         };

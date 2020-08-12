@@ -1,3 +1,5 @@
+/* global _ */
+
 $(function () {
 
     function MotherViewModel(params) {
@@ -19,6 +21,7 @@ $(function () {
         self.appearance = params[12];
         self.loadingOverlay = params[13];
         self.softwareUpdate = params[14];
+        self.analytics = params[15];
 
         self.isStartupComplete = false;
         self.storedSocketData = [];
@@ -58,16 +61,10 @@ $(function () {
             self.control.manualPosition = function () {
                 $('#manual_position').removeClass('warning');
                 var s = $('#manual_position').val();
-                var tmp = s.split(/[^0-9.,-\\+]+/);
-                if (tmp.length === 2) {
-                    var x = parseFloat(tmp[0]);
-                    var y = parseFloat(tmp[1]);
-                    if (!isNaN(x) && !isNaN(y)) {
-                        self.control.sendCustomCommand({type: 'command', command: "G0X" + x + "Y" + y});
-                        $('#manual_position').val('');
-                    } else {
-                        $('#manual_position').addClass('warning');
-                    }
+                var pos = WorkingAreaHelper.splitStringToTwoValues(s)
+                if (pos) {
+                    self.control.sendCustomCommand({type: 'command', command: "G0X" + pos[0] + "Y" + pos[1]});
+                    $('#manual_position').val('');
                 } else {
                     $('#manual_position').addClass('warning');
                 }
@@ -192,7 +189,7 @@ $(function () {
                 if (!pos) {
                     return "(?, ?)";
                 } else {
-                    return "(" + pos.x + ", " + pos.y + ")";
+                    return pos.x + ", " + pos.y;
                 }
             }, this);
 			self.state.printTimeString = ko.computed(function() {
@@ -232,7 +229,7 @@ $(function () {
                  self.terminal.checkAutoscroll();
             });
             self.terminal.activeAllFilters();
-			
+
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display
@@ -256,6 +253,9 @@ $(function () {
 			self.gcodefiles.setFilter('design');
             self.files.listHelper.removeFilter('model');
             self.files.listHelper.changeSorting('upload');
+
+            $("#design_lib_sort_upload_radio").prop("checked", true);
+            $("#design_lib_filter_design_radio").prop("checked", true);
         };
 
         self.removeLoadingOverlay = function(){
@@ -311,6 +311,8 @@ $(function () {
                     console.log("screenfull: go_fullscreen_menu_item click");
                     screenfull.request();
                     self._updateFullscreenButton(true);
+
+                    self.analytics.send_fontend_event('link_click', {link: 'go_fullscreen_menu_item'})
                 });
                 $('#exit_fullscreen_menu_item').on( "click", function() {
                     console.log("screenfull: exit_fullscreen_menu_item click");
@@ -455,6 +457,67 @@ $(function () {
 
 
         // files.js viewmodel extensions
+		self.gcodefiles.selectedFiles = ko.observable("0 " + gettext("Files"));
+		self.gcodefiles.selectedFilesSize = ko.observable(0);
+		self.gcodefiles.selectedFilesTypes = ko.observable("");
+		self.gcodefiles.updateSelection = function(data, event){
+			event.currentTarget.classList.toggle('selected');
+			let items = $('#files .file_list_entry:has(.selection_box.selected)');
+			let str = items.length === 1 ? gettext("1 File") : items.length + " " + gettext("Files");
+			let totalSelectionSize = 0;
+			let types = {};
+			for (var i = 0; i < items.length; i++) {
+				var elem = items[i];
+				let data = ko.dataFor(elem);
+				totalSelectionSize += data.size;
+				let t;
+				if(data.type === 'recentjob') {
+                    t = gettext('recent job');  // yes, should be translated!!!
+                } else if(_.last(data.typePath) === 'image') {
+				    t = gettext('image');  // yes, should be translated!!!
+				} else {
+					t = _.last(data.typePath);
+				}
+				types[t] = (types[t] + 1) || 1;
+			}
+			let typeStr = _.map(types, function(val, key){ return(val + 'x\u00A0' + key); }).join(', '); // \u00A0 is a non breaking space.
+			self.gcodefiles.selectedFiles(str);
+			self.gcodefiles.selectedFilesTypes(typeStr);
+			self.gcodefiles.selectedFilesSize(totalSelectionSize);
+			if(items.length > 0){
+				$('#bulkActions').slideDown();
+			} else {
+				$('#bulkActions').slideUp();
+			}
+		}
+		self.gcodefiles.cancelSelection = function(){
+			$('#files .file_list_entry .selection_box.selected').removeClass('selected');
+			$('#bulkActions').slideUp();
+		}
+		self.gcodefiles.deleteSelection = function(){
+			let items = $('#files .file_list_entry:has(.selection_box.selected)');
+			for (var i = 0; i < items.length; i++) {
+				var elem = items[i];
+				let data = ko.dataFor(elem);
+				if(data.type === 'folder'){
+					self.gcodefiles.removeFolder(data);
+				}else{
+					self.gcodefiles.removeFile(data);
+				}
+			}
+			items.remove();
+			$('#bulkActions').slideUp();
+		}
+		
+		/**
+		 * gcodefiles viewmodel methods for folder support
+		 * changeFolder: ƒ (data)
+		 * navigateUp: ƒ ()
+		 * changeFolderByPath: ƒ (path)
+		 * showAddFolderDialog: ƒ ()
+		 * addFolder: ƒ ()
+		 * removeFolder: ƒ (folder, event)
+		 */
 
 		// fetches the right templates according to file type for knockouts foreach loop
         self.gcodefiles.templateFor = function (data) {
@@ -465,8 +528,8 @@ $(function () {
             }
         };
 
-		// TODO Mr Beam Kit legacy code ?
-        self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
+        // starts a single GCode file.
+		self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
             self.gcodefiles.loadFile(gcodeFile, false);
             if (self.readyToLaser.oneButton) {
                 self.readyToLaser.setGcodeFile(gcodeFile.path);
@@ -541,14 +604,14 @@ $(function () {
 
         // settings.js viewmodel extensions
 
-        self.settings.saveall = function (e, v) {
+        self.settings.saveall = function (e, v, force) {
             if (self.settings.savetimer !== undefined) {
                 clearTimeout(self.settings.savetimer);
             }
 			// only trigger autosave if there is something changed.
 			// the port scanning from the backend otherwise triggers it frequently
 			var data = getOnlyChangedData(self.settings.getLocalData(), self.settings.lastReceivedSettings);
-			if(Object.getOwnPropertyNames(data).length > 0){
+			if(force || Object.getOwnPropertyNames(data).length > 0){
 			    $("#settingsTabs").find("li.active").addClass('saveInProgress');
 				self.settings.savetimer = setTimeout(function () {
 					self.settings.saveData(undefined, function () {
@@ -616,7 +679,7 @@ $(function () {
         ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "gcodeFilesViewModel",
             "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
             "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel",
-            "loadingOverlayViewModel", "softwareUpdateViewModel"],
+            "loadingOverlayViewModel", "softwareUpdateViewModel", "analyticsViewModel"],
         [document.getElementById("mrb_state"),
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),
