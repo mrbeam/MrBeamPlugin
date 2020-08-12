@@ -2140,7 +2140,12 @@ input.search-query,
 }
 
 .file_list_filter li {
-    list-style-type: none
+    list-style-type: none;
+    display: flex;
+}
+
+.file_list_filter li label{
+    margin-bottom: 0;
 }
 
 .file_list_filter li.divider {
