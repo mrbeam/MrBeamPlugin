@@ -246,7 +246,7 @@ class IoBeamHandler(object):
 	def send_analytics_request(self, *args, **kwargs):
 		"""
 		Requests a analytics dataset from iobeam
-		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
+		:return: True if the command was sent successful (does not mean it was successfully executed)
 		"""
 		return self._send_command(self.get_request_msg([self.DATASET_ANALYTICS]))
 
@@ -702,7 +702,7 @@ class IoBeamHandler(object):
 					new_devices=dataset_data.get('new_devices', []))
 				self._analytics_handler.add_iobeam_i2c_monitoring(**params)
 		self._last_i2c_monitoring_dataset = dataset
-		
+
 	def _handle_reed_switch(self, dataset):
 		self._logger.info("reed_switch: %s", dataset)
 		return 0
@@ -890,7 +890,12 @@ class IoBeamHandler(object):
 		self._logger.info("i2c_state: %s", dataset)
 
 	def _handle_analytics_dataset(self, dataset):
-		self._logger.info("analytics dataset: %s", dataset)
+		if dataset.get('communication_errors', None):
+			self._send_mrbeam_analytics(
+				eventname='communication_errors',
+				data=dataset.get('communication_errors')
+			)
+		return 0
 
 	def _handle_debug(self, dataset):
 		"""
@@ -1126,3 +1131,12 @@ class IoBeamHandler(object):
 		elif value == 'true':
 			connected = True
 		return connected
+
+	def _send_mrbeam_analytics(self, eventname, data):
+		payload = dict(
+			plugin='iobeam',
+			eventname=eventname,
+			data=data
+		)
+
+		self._plugin.fire_event(MrBeamEvents.ANALYTICS_DATA, payload)
