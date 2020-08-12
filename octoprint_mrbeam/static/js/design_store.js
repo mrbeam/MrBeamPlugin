@@ -140,8 +140,8 @@ $(function () {
             refreshButtonElement.text("...");
             setTimeout(function() {
                 refreshButtonElement.text(refreshButtonText);
-            }, 2000);
-            document.getElementById('design_store_iframe').src = document.getElementById('design_store_iframe').src;
+            }, 3000);
+            document.getElementById('design_store_iframe').src = self.DESIGN_STORE_IFRAME_SRC;
         }
     }
 
