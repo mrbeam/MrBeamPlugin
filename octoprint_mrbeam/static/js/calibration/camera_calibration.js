@@ -40,6 +40,8 @@ $(function () {
 		self.calibrationScreenShown = ko.observable(false);
 		self.waitingForRefresh = ko.observable(true);
 
+		self.isLocked = ko.observable(false);
+
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
 
@@ -94,7 +96,7 @@ $(function () {
 		// ---------------- CAMERA STATUS ----------------
 		self.cameraStatusOk = ko.computed(function () {
 			return self.readyToLaser.lid_fully_open()
-                && self.state.isOperational()
+                && !self.isLocked()
                 && self.camera.markerState() === 4;
 		})
 
@@ -104,16 +106,19 @@ $(function () {
                 gettext("The lid is closed: Please open the lid to start the camera");
         });
 
-		self.operationalMessage  = ko.computed(function() {
-            return self.state.isOperational() ?
-                gettext("Mr Beam is in status Operational") :
-                gettext("Mr Beam is not in status Operational: Camera does not work during a laser job");
+		self.lockedMessage  = ko.computed(function() {
+		    if (self.isLocked()) {
+		        return gettext("Mr Beam is not homed: Please go to the working area and do a Homing Cycle")
+            } else if (self.state.isOperational()) {
+		        return gettext("Mr Beam is in state Operational")
+            } else {
+		        return gettext("Mr Beam is not in state Operational: The camera does not work during a laser job.")
+            }
         });
 
 		self.markersMessage  = ko.computed(function() {
 		    let notFound = [];
 		    for (const [marker, found] of Object.entries(self.camera.markersFound())) {
-		        console.log(found)
                 if (!found) {
                     notFound.push(self.camera.MARKER_DESCRIPTIONS[marker]);
                 }
@@ -300,7 +305,16 @@ $(function () {
 		self.onSettingsShown = function(){
 			// self.goto('#camera_settings_view');
             self.abortCalibration()
+            self._updateIsLocked()
 		}
+
+		self._updateIsLocked = function () {
+		    if (self.state.isLocked()) {
+		        self.isLocked(true)
+            } else {
+		        self.isLocked(false)
+            }
+        }
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';

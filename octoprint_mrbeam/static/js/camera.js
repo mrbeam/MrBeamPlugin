@@ -13,10 +13,10 @@ $(function(){
         self.TAB_NAME_WORKING_AREA = '#workingarea';
         self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
         self.MARKER_DESCRIPTIONS = {
-            'NW': gettext('North West'),
-            'SW': gettext('South West'),
-            'NE': gettext('North East'),
-            'SE': gettext('South East')
+            'NW': gettext('Top left'),
+            'SW': gettext('Bottom left'),
+            'NE': gettext('Top right'),
+            'SE': gettext('Bottom right')
         }
 
         self.needsCalibration = false;

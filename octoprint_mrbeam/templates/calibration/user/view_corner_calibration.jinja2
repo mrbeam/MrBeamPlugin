@@ -68,16 +68,16 @@
                     class="icon-repeat"></i> {{ _('refresh') }}</a>
             <div class="marker_selection_desc calibration_waiting_for_picture">
                 <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i
-                        class="icon-ok"></i> NW
+                        class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.NW"></span>
                 </div>
                 <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i
-                        class="icon-ok"></i> SW
+                        class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.SW"></span>
                 </div>
                 <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i
-                        class="icon-ok"></i> SE
+                        class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.SE"></span>
                 </div>
                 <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i
-                        class="icon-ok"></i> NE
+                        class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.NE"></span>
                 </div>
                 <div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i
                         class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
@@ -93,16 +93,16 @@
                 <div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
                     <div id="NW" class="cal-row" data-bind="click: goToMarker(1)">
                         <div class="cal-arrow NW"></div>
-                        North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
+                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.NW"></span>: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
                     <div id="SW" class="cal-row" data-bind="click: goToMarker(2)">
                         <div class="cal-arrow SW"></div>
-                        South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
+                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.SW"></span>: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
                     <div id="SE" class="cal-row" data-bind="click: goToMarker(3)">
                         <div class="cal-arrow SE"></div>
-                        South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
+                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.SE"></span>: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
                     <div id="NE" class="cal-row" data-bind="click: goToMarker(4)">
                         <div class="cal-arrow NE"></div>
-                        North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
+                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.NE"></span>: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
                 </div>
             </div>
             <div style="margin-top:1em;" data-bind="visible: cornerCalibrationActive()">

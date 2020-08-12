@@ -18,8 +18,8 @@
                     <span data-bind="text: lidMessage()"></span>
                 </li>
                 <li class="requirement"
-                    data-bind="css: state.isOperational() ==  true ? 'requirement-met' : 'requirement-not-met'">
-                    <span data-bind="text: operationalMessage()"></span>
+                    data-bind="css: isLocked() ==  false ? 'requirement-met' : 'requirement-not-met'">
+                    <span data-bind="text: lockedMessage()"></span>
                 </li>
                 <li class="requirement"
                     data-bind="css: camera.markerState() == 4 ? 'requirement-met' : 'requirement-not-met'">
