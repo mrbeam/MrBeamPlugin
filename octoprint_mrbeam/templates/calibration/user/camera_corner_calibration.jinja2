@@ -7,9 +7,10 @@
             </symbol>
 		</defs>
         <g id="obj_height_scale">
-            <image style="cursor:crosshair;" data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
+            <image style="cursor:crosshair;" data-bind="attr: {href: cornerCalImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
         </g>
         <g id="corners" class="calibration_click_indicator"
+           style="pointer-events: none;"
            data-bind="attr: { visibility: correctedMarkersVisibility() }">
             <use id="click_NW" href="#cross" x="-100" y="-100" />
             <use id="click_NE" href="#cross" x="-100" y="-100" />
@@ -37,33 +38,19 @@
 			</div>
             <a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
 		</div>
-		<div class="marker_selection_desc calibration_help" data-bind="visible: cal_img_ready() && !calibrationActive()">
+		<div class="marker_selection_desc calibration_help" data-bind="visible: cal_img_ready() && !cornerCalibrationActive()">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>
 			{{_('Continue with the other markers as the picture changes.') }}<br/>
 			{{_('Once all arrowheads are marked the calibration is finished.')}}</div>
-			<div data-bind="visible: isInitialCalibration()">
-				{{_('No calibration arrows visible?')}}
-				<a href="#reengrave_markers" class="dropdown" data-toggle="collapse" aria-expanded="false">
-					{{_('Engrave again')}}
-				</a>
-				<span class="caret" style="vertical-align: middle"></span>
-				<br/>
-				<div class="collapse" id="reengrave_markers" style="display:inline-block;">
-					<div>
-						Intensity: <input id="initialcalibration_intensity" type="number" min="0" max="100" step="1" class="decent_input" value="50" />%,&nbsp;
-						Feedrate: <input id="initialcalibration_feedrate" type="number" min="100" max="3000" step="1" class="decent_input" value="800" />mm/min&nbsp; 
-						<span data-bind="visible: !interlocks_closed()" style="color: red; display: inline-block; padding: 0.8em"><i class="icon icon-warning-sign"></i> {{ _('Close the lid') }}</span>
-						<button class="btn btn-danger" data-bind="click: engrave_markers_without_gui, visible: isInitialCalibration() && interlocks_closed()"><i class="icon-fire"></i>&nbsp;{{ _('Engrave Markers') }}</button>
-					</div>
-				</div>
-			</div>
 			<div style="margin-top:1em;">
-				<button class="btn btn-default" data-bind="click: startCalibration">{{ _('Start Calibration') }}</button>
+				<button class="btn btn-default" data-bind="click: startCornerCalibration">{{ _('Start Calibration') }}</button>
 			</div>
 		</div>
 		<div class="marker_selection_desc calibration_summary">
-			<div data-bind="css: {complete: calibrationComplete()}">
-				<div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: isInitialCalibration()">
+			<div data-bind="css: {complete: cornerCalibrationComplete()}">
+				<div id="calibration_picture_control"
+                     style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;"
+                     data-bind="visible: window.mrbeam.isWatterottMode()">
 					Picture:<br />
 					<input type="radio" name="picture_type" value="raw" data-bind="checked: picType" /> Raw<br />
 					<input type="radio" name="picture_type" value="lens_correction" data-bind="checked: picType" /> Lens corrected<br />
@@ -92,22 +79,32 @@
 
 					</div>
 				</div>
-				<div data-bind="visible: cal_img_ready() && calibrationActive()">
+                <!-- "Debug" values of where the user pointed the tip of the arrow. -->
+				<div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
 					<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
 					<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
 					<div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
 					<div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
 				</div>
 			</div>
-			<div style="margin-top:1em;">
-				<button class="btn btn-default" data-bind="click: previousMarker, visible: calibrationActive()">{{ _('Previous') }}</button>
-				<button class="btn btn-default" data-bind="click: nextMarker, visible: calibrationActive()">{{ _('Next') }}</button>
-				<button class="btn btn-default" data-bind="click: saveCalibrationData, visible: calibrationComplete()">{{ _('Save Calibration') }}</button>
-				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: calibrationActive()">{{ _('Cancel') }}</button>
+			<div style="margin-top:1em;" data-bind="visible: cornerCalibrationActive()">
+          <button class="btn btn-default"
+                  data-bind="click: previousMarker">
+              {{ _('Previous') }}</button>
+          <button class="btn btn-default"
+                  data-bind="click: nextMarker">
+              {{ _('Next') }}</button>
+          <button class="btn btn-default"
+                  data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">
+              {{ _('Save Calibration') }}</button>
+          <button class="btn btn-warning"
+                  data-bind="click: abortCalibration">
+              {{ _('Cancel') }}</button>
 			</div>
 		</div>
 	</div>
-    <div data-bind="visible: isInitialCalibration()">
+    <!-- Debug images of the marker detection present in each corner of the screen -->
+    <div data-bind="visible: window.mrbeam.isWatterottMode()">
         <div>
             <img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
             <img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>

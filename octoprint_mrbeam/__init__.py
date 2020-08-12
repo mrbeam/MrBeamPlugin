@@ -49,8 +49,8 @@ from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA
-from octoprint_mrbeam.support import set_support_mode
+from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA, SW_UPDATE_TIER_DEV
+from octoprint_mrbeam.support import set_support_mode, set_calibration_tool_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
@@ -60,6 +60,9 @@ from octoprint.filemanager.destinations import FileDestinations
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
 from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
 from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
+from octoprint_mrbeam.util.device_info import deviceInfo
+from octoprint_mrbeam.camera.label_printer import labelPrinter
+from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -79,8 +82,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
                    octoprint.plugin.ShutdownPlugin,
                    octoprint.plugin.EnvironmentDetectionPlugin):
 	# CONSTANTS
-	DEVICE_INFO_FILE = '/etc/mrbeam'
-
 	ENV_PROD = "PROD"
 	ENV_DEV = "DEV"
 
@@ -122,19 +123,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.print_progress_last = -1
 		self.slicing_progress_last = -1
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
-		self._hostname = None
+
+		self._device_info = deviceInfo(use_dummy_values=IS_X86)
+		self._hostname = None # see self.getHosetname()
 		self._serial_num = None
 		self._mac_addrs = dict()
 		self._model_id = None
-		self._device_info = dict()
 		self._grbl_version = None
-		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
+		self._device_series = self._device_info.get('device_series') # '2C'
 		self.called_hosts = []
 		self._current_user = None
 
 		self._boot_grace_period_counter = 0
 
-		self._time_ntp_synced = False
+		self._time_ntp_synced = None
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
@@ -166,6 +168,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# Enable or disable internal support user.
 		self.support_mode = set_support_mode(self)
+		self.calibration_tool_mode = set_calibration_tool_mode(self)
+		self._fixEmptyUserManager()
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
 
@@ -245,16 +249,26 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		Mixin: octoprint.plugin.EnvironmentDetectionPlugin
 		:return: dict of environment data
 		"""
+		uptime = get_uptime()
 		return dict(version=self._plugin_version,
 		            model=self.get_model_id(),
 		            host=self.getHostname(),
 		            serial=self._serial_num,
-		            productionn_date=self.get_production_date(),
+		            production_date=self.get_production_date(),
 		            software_tier=self._settings.get(["dev", "software_tier"]),
 		            env=self.get_env(),
 		            beamOS_image=self._octopi_info,
 		            grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-		            laserhead_serial=self.laserhead_handler.get_current_used_lh_data()['serial'])
+		            laserhead_serial=self.laserhead_handler.get_current_used_lh_data()['serial'],
+		            _state=dict(
+						calibration_tool_mode=self.calibration_tool_mode,
+			            support_mode=self.support_mode,
+			            time_ntp_synced=self._time_ntp_synced,
+			            uptime="{} ({:.2f}s)".format(get_uptime_human_readable(uptime), uptime),
+			            total_usage="{} ({:.2f}s)".format(
+				            self.usage_handler.get_duration_humanreadable(self.usage_handler.get_total_usage()),
+				            self.usage_handler.get_total_usage()),
+		            ))
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):
@@ -285,8 +299,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				iobeam_disable_warnings=False,  # for development on non-MrBeam devices
 				suppress_migrations=False,  # for development on non-MrBeam devices
 				support_mode=False,
+				calibration_tool_mode=False,
 				grbl_auto_update_enabled=True,
 				automatic_camera_image_upload=True,  # only in env=DEV
+				design_store_email=None,
 			),
 			laser_heads=dict(
 				filename='laser_heads.yaml'
@@ -348,7 +364,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				env=self.get_env(),
 				software_tier=self._settings.get(["dev", "software_tier"]),
 				software_tiers_available=software_channels_available(self),
-				terminalMaxLines=self._settings.get(['dev', 'terminalMaxLines'])),
+				terminalMaxLines=self._settings.get(['dev', 'terminalMaxLines']),
+				design_store_email=self._settings.get(['dev', 'design_store_email']),
+			),
 			gcode_nextgen=dict(
 				enabled=self._settings.get(['gcode_nextgen', 'enabled']),
 				precision=self._settings.get(['gcode_nextgen', 'precision']),
@@ -416,6 +434,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._settings.set_int(["leds", "brightness"], data["leds"]["brightness"])
 			if "leds" in data and "fps" in data["leds"]:
 				self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
+			# dev only
+			if self.is_dev_env() and "dev" in data and "design_store_email" in data['dev']:
+				self._settings.set(["dev", "design_store_email"], data['dev']["design_store_email"])
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
@@ -449,6 +470,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/lib/jquery.tinycolorpicker.js",
 			    "js/lasercutterprofiles.js",
 			    "js/mother_viewmodel.js",
+			    "js/folder_list_viewmodel.js",
 			    "js/mrbeam.js",
 			    "js/color_classifier.js",
 			    "js/working_area.js",
@@ -474,7 +496,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/lasersaftey_viewmodel.js",
 			    "js/ready_to_laser_viewmodel.js",
 			    "js/lib/screenfull.min.js",
-			    "js/settings/camera_calibration.js",
+			    "js/calibration/camera_calibration.js",
 			    "js/settings/backlash.js",
 			    "js/settings/leds.js",
 			    "js/path_magic.js",
@@ -497,6 +519,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/user_notification_viewmodel.js",
 			    "js/lib/load-image.all.min.js",  # to load custom material images
 			    "js/settings/custom_material.js",
+			    "js/design_store.js",
+			    "js/settings_menu_navigation.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/backlash_settings.css",
@@ -551,6 +575,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		display_version_string = "{} on {}".format(self._plugin_version, self.getHostname())
 		if self._branch:
 			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self.getHostname())
+
+		if self.support_mode:
+			firstRun = False
+			accesscontrol_active = False
+			wizard = False
 
 		render_kwargs.update(dict(
 			webcamStream=self._settings.get(["cam", "frontendUrl"]),
@@ -637,11 +666,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
-		]
-		# if not self.is_prod_env('local'):
-		# 	result.extend([
-		# 		dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
-		# 	])
+		 ]
+		if not self.is_prod_env('local'):
+			result.extend([
+				# dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
+				dict(type='settings', name="DEV Design Store", template='settings/dev_design_store_settings.jinja2', suffix="_design_store", custom_bindings=False)
+			])
 		result.extend(self.wizard_config.get_wizard_config_to_show())
 		return result
 
@@ -879,9 +909,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		srcFile = __builtin__.__package_path__+'/static/gcode/backlash_compensation_x@cardboard.gco'
 		with open(srcFile, 'r') as fh:
 			gcoString = fh.read()
-			
+
 			# TODO replace feedrates and intensity?
-			
+
 			destFile = "precision_calibration.gco"
 
 			class Wrapper(object):
@@ -898,7 +928,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._file_manager.add_file(FileDestinations.LOCAL, destFile, fileObj, links=None, allow_overwrite=True)
 			res = dict(calibration_pattern=destFile, target=FileDestinations.LOCAL)
 			return jsonify(res)
-	
+
 	# ~~ helpers
 
 	# helper method to write data to user settings
@@ -968,7 +998,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		                     gcodeMobileThreshold=0,  # legacy
 		                     )
 
-		r = make_response(render_template("initial_calibration.jinja2", **render_kwargs))
+		r = make_response(render_template("calibration/watterott/calibration_tool.jinja2", **render_kwargs))
 
 		r = add_non_caching_response_headers(r)
 		return r
@@ -983,12 +1013,59 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# return same as the Simple Api Call
 		return self.take_undistorted_picture(is_initial_calibration=True)
 
-	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])
+	@octoprint.plugin.BlueprintPlugin.route("/on_camera_picture_transfer", methods=["GET"])
+	def onCameraPictureTransfer(self):
+		self.lid_handler.on_front_end_pic_received()
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/calibration_save_raw_pic", methods=["GET"])
+	def onCalibrationSaveRawPic(self):
+		self.lid_handler.saveRawImg()
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/calibration_get_raw_pic", methods=["GET"])
+	def onCalibrationGetRawPic(self):
+		self.lid_handler.getRawImg()
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/calibration_lens_start", methods=["GET"])
+	def onLensCalibrationStart(self):
+		self.lid_handler.onLensCalibrationStart()
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/calibration_del_pic", methods=["POST"])
+	def onCalibrationDelRawPic(self):
+		self._logger.debug("Command given : /calibration_del_pic")
+		try:
+			json_data = request.json
+		except JSONBadRequest:
+			return make_response("Malformed JSON body in request", 400)
+
+		if not "name" in json_data.keys():
+			# TODO correct error message
+			return make_response("No profile included in request", 400)
+
+		# TODO catch file not exist error
+		self.lid_handler.delRawImg(json_data['name'])
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/camera_run_lens_calibration", methods=["POST"])
+	def onCalibrationRunLensDistort(self):
+		self._logger.debug("Command given : camera_run_lens_calibration")
+		self.lid_handler.startLensCalibration()
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/camera_stop_lens_calibration", methods=["POST"])
+	def onCalibrationStopLensDistort(self):
+		self._logger.debug("Command given : camera_stop_lens_calibration")
+		self.lid_handler.stopLensCalibration()
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/send_corner_calibration", methods=["POST"])
 	# @firstrun_only_access #@maintenance_stick_only_access
 	def sendInitialCalibrationMarkers(self):
 		if not "application/json" in request.headers["Content-Type"]:
 			return make_response("Expected content-type JSON", 400)
-
 		try:
 			json_data = request.json
 		except JSONBadRequest:
@@ -996,11 +1073,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._logger.debug("INITIAL camera_calibration_markers() data: {}".format(json_data))
 
-		if not "result" in json_data or not all(k in json_data['result'] for k in ['newCorners', 'newMarkers']):
+		if not "result" in json_data or not all(k in json_data['result'].keys() for k in ['newCorners', 'newMarkers']):
+			# TODO correct error message
 			return make_response("No profile included in request", 400)
 
 		self.camera_calibration_markers(json_data)
 		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/print_label", methods=["POST"])
+	def printLabel(self):
+		res = labelPrinter(self, use_dummy_values=IS_X86).print_label(request)
+		return make_response(jsonify(res), 200 if res['success'] else 502)
 
 	@octoprint.plugin.BlueprintPlugin.route("/engrave_calibration_markers/<string:intensity>/<string:feedrate>", methods=["GET"])
 	# @firstrun_only_access #@maintenance_stick_only_access
@@ -1047,7 +1130,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	### Initial Camera Calibration - END ###
 
 
-	
+
 #	@octoprint.plugin.BlueprintPlugin.route("/engrave_precision_calibration_pattern", methods=["GET"])
 #	@restricted_access
 #	def engraveBacklashCalibrationPattern(self):
@@ -1078,7 +1161,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 #			self._printer._comm.selectGCode(gcode)
 #			#self._printer._comm.selectFile(gcfile, False) # only works inside "uploads" folder
 #			self._printer._comm.startPrint()
-#			
+#
 #		return NO_CONTENT
 
 
@@ -1201,9 +1284,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 
-	@octoprint.plugin.BlueprintPlugin.route("/generate_calibration_markers_svg", methods=["GET"])
-	@restricted_access
 	def generateCalibrationMarkersSvg(self):
+		"""Used from the calibration screen to engrave the calibration markers"""
+		# TODO mv this func to other file
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		cm = CalibrationMarker(str(profile['volume']['width']), str(profile['volume']['depth']))
 		svg = cm.getSvg()
@@ -1250,6 +1333,56 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		you'll see only a ERR_CONNECTION_RESET in Chrome.
 		"""
 		return [("POST", r"/convert", 100 * 1024 * 1024)]
+
+	@octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
+	@restricted_access
+	def save_store_bought_svg(self):
+		# valid file commands, dict mapping command name to mandatory parameters
+		valid_commands = {
+			"save_svg": []
+		}
+		command, data, response = get_json_command_from_request(request, valid_commands)
+		if response is not None:
+			return response
+
+		if command == "save_svg":
+			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
+			svg = ''.join(i for i in data['svg_string'] if ord(i) < 128)  # strip non-ascii chars like €
+
+			del data['svg_string']
+			file_name = str(data['file_name']) + ".svg"
+
+			class Wrapper(object):
+				def __init__(self, file_name, content):
+					self.filename = file_name
+					self.content = content
+
+				def save(self, absolute_dest_path):
+					with open(absolute_dest_path, "w") as d:
+						d.write(self.content)
+						d.close()
+
+			# write local/temp.svg to convert it
+			fileObj = Wrapper(file_name, svg)
+			self._file_manager.add_file(FileDestinations.LOCAL, file_name, fileObj, links=None,
+										allow_overwrite=True)  # todo iratxe: what if the user uploads a file with the same name?
+
+			location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True) todo iratxe: what is this for?
+			result = {
+				"name": file_name,
+				"origin": "local",
+				"refs": {
+					"resource": location,
+					"download": url_for("index",
+										_external=True) + "downloads/files/" + FileDestinations.LOCAL + "/" + file_name
+				}
+			}
+
+			r = make_response(jsonify(result), 202)
+			r.headers["Location"] = location
+			return r
+
+		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
@@ -1438,7 +1571,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			intensity=["value"],
 			passes=["value"],
 			lasersafety_confirmation=[],
-			camera_calibration_markers=["result"],
+			send_corner_calibration=["result"],
 			ready_to_laser=[],
 			cli_event=["event"],
 			custom_materials=[],
@@ -1457,6 +1590,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			leds=[],
 			generate_backlash_compenation_pattern_gcode=[],
 			compensate_obj_height=[],
+			calibration_save_raw_pic=[],
+			generate_calibration_markers_svg=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1477,7 +1612,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.custom_materials(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
-		elif command == "camera_calibration_markers":
+		elif command == "send_corner_calibration":
 			return self.camera_calibration_markers(data)
 		elif command == "take_undistorted_picture":
 			# see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
@@ -1525,9 +1660,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				return make_response(resp, 200)
 			except Exception as err:
 				self._logger.exception(err.message)
-				return make_response(err.message, 500)	
+				return make_response(err.message, 500)
 		elif command == "compensate_obj_height":
 			self.lid_handler.compensate_for_obj_height(bool(data))
+		elif command == "calibration_save_raw_pic":
+			# TODO save next raw image to the buffer
+			# TODO flash LEDs when raw img saved
+			return self.sendInitialCalibrationMarkers()
+		elif command == "generate_calibration_markers_svg":
+			return self.generateCalibrationMarkersSvg() # TODO move this func to other file
+
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews
@@ -1586,8 +1728,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return NO_CONTENT
 
 	def take_undistorted_picture(self, is_initial_calibration):
+		from flask import make_response, jsonify
 		if os.environ['HOME'] == "/home/teja":
-			from flask import make_response
 			self._logger.debug("DEBUG MODE: Took dummy picture")
 			meta_data = {
 				"corners_calculated": {
@@ -1623,7 +1765,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("DEBUG MODE: Took dummy picture", 200)
 
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
-		image_response = self.lid_handler.take_undistorted_picture(is_initial_calibration)
+		self.lid_handler._photo_creator.is_initial_calibration = is_initial_calibration
+		self.lid_handler._startStopCamera("initial_calibration")
+		succ = self.lid_handler.takeNewPic()
+		if succ:
+			resp_text = {'msg': gettext("A new picture is being taken, please wait a little...")}
+			code = 200
+		else:
+			resp_text = {'msg': gettext("Either the camera is busy or the lid is not open.")}
+			code = 503
+		image_response = make_response(jsonify(resp_text), code)
 		self._logger.debug("Image_Response: {}".format(image_response))
 		return image_response
 
@@ -1641,11 +1792,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			newMarkers[qd] = data['result']['newMarkers'][qd]
 
 		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
-		pic_settings = self._load_profile(pic_settings_path)
+		try:
+			pic_settings = self._load_profile(pic_settings_path)
+		except IOError:
+			self._logger.debug("previous pic settings were not present")
+			pic_settings = {}
 
 		pic_settings['cornersFromImage'] = newCorners
 		pic_settings['calibMarkers'] = newMarkers
-		pic_settings['calibration_updated'] = True
+		pic_settings['calibration_updated'] = True # DEPRECATED but Necessary for legacy algo
 		pic_settings['hostname_KEY'] = self._hostname
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
@@ -1815,6 +1970,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if payload is None or not isinstance(payload, collections.Iterable) or not 'log' in payload or payload['log']:
 			self._logger.info("on_event() %s: %s", event, payload)
 
+		if event == MrBeamEvents.BOOT_GRACE_PERIOD_END:
+			if self.calibration_tool_mode:
+				self._printer.home('Homing before starting calibration tool')
+				self.lid_handler.onLensCalibrationStart()
+
 		if event == OctoPrintEvents.ERROR:
 			analytics = payload.get('analytics', True)
 			if analytics:
@@ -1970,7 +2130,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					compressor_state=self.compressor_handler.get_current_state(),
 					lid_fully_open=self.lid_handler.is_lid_open(),
 					interlocks_closed=self.iobeam.is_interlock_closed(),
-					interlocks_open_ids=self.iobeam.open_interlocks(),
+					interlocks_open=self.iobeam.open_interlocks(),
 					rtl_mode=self.onebutton_handler.is_ready_to_laser(),
 					pause_mode=self._printer.is_paused(),
 					cooling_mode=self.temperature_manager.is_cooling(),
@@ -1991,6 +2151,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return None, None
 
+	def _fixEmptyUserManager(self):
+		if len(self._user_manager._users) <= 0 and (self._user_manager._customized or not self.isFirstRun()):
+			self._logger.debug("_fixEmptyUserManager")
+			self._user_manager._customized = False
+			self._settings.global_set(["server", "firstRun"], True)
+
 	def getHostname(self):
 		"""
 		Returns device hostname like 'MrBeam2-F930'.
@@ -1998,8 +2164,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: String hostname
 		"""
 		if self._hostname is None:
-			# hostname_dev_info = self._get_val_from_device_info('hostname')
-			hostname_dev_info = self._device_info.get('hostname')
+			hostname_dev_info = self._device_info.get_hostname()
 			hostname_socket = None
 			try:
 				hostname_socket = socket.gethostname()
@@ -2037,7 +2202,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:rtype: String
 		"""
 		if self._serial_num is None:
-			self._serial_num = self._get_val_from_device_info('serial')
+			self._serial_num = self._device_info.get_serial()
 		return self._serial_num
 
 	def get_model_id(self):
@@ -2049,9 +2214,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:rtype: String
 		"""
 		if self._model_id is None:
-			self._model_id = self._get_val_from_device_info('model', default=self.MODEL_MRBEAM2)
+			self._model_id = self._device_info.get_model()
 		return self._model_id
-	
+
 	def get_production_date(self):
 		"""
 		Gives you the device's production date as string
@@ -2060,7 +2225,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: production date
 		:rtype: String
 		"""
-		return self._get_val_from_device_info('production_date', default=None)
+		return self._device_info.get_production_date()
 
 	def getBranch(self):
 		"""
@@ -2091,28 +2256,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._plugin_version
 
 	def get_octopi_info(self):
-		return self._get_val_from_device_info('octopi')
-
-	def _get_val_from_device_info(self, key, default=None):
-		if not self._device_info:
-			try:
-				with open(self.DEVICE_INFO_FILE, 'r') as f:
-					for line in f:
-						line = line.strip()
-						token = line.split('=')
-						if len(token) >= 2:
-							self._device_info[token[0]] = token[1]
-			except Exception as e:
-				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVICE_INFO_FILE, e)
-				if IS_X86:
-					self._device_info = dict(
-						octopi="PROD 2019-12-12 13:05 1576155948",
-						hostname="MrBeam-DEV",
-						device_series="2X",
-						device_type="MrBeam2X",
-						serial="000000000694FD5D-2X",
-						image_correction_markers="MrBeam2C-pink",)
-		return self._device_info.get(key, default)
+		return self._device_info.get('octopi')
 
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])
@@ -2133,6 +2277,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._start_boot_grace_period_thread()
 			else:
 				self._logger.debug("BOOT_GRACE_PERIOD ended")
+				self.fire_event(MrBeamEvents.BOOT_GRACE_PERIOD_END)
 		except:
 			self._logger.exception("Exception in _callback_boot_grace_period_thread()")
 
@@ -2162,6 +2307,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			chunks.append(self._settings.get(['beta_label']))
 		if self.is_beta_channel():
 			chunks.append('<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">BETA</a>')
+		elif self.is_develop_channel():
+			chunks.append("develop")
 		if self.support_mode:
 			chunks.append("SUPPORT")
 
@@ -2233,6 +2380,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def is_beta_channel(self):
 		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
+
+	def is_develop_channel(self):
+		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_DEV
 
 	def is_mrbeam2(self):
 		return self._model_id == self.MODEL_MRBEAM2

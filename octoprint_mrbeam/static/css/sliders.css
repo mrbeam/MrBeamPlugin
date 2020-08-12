@@ -232,10 +232,10 @@ input[type=range]::-ms-thumb {
 /*
 * === IMG ADJUST  ===
 */
-input[type=range].img_adjust {
+/*input[type=range].img_adjust {
   -webkit-appearance: none;
   width: 80% !important;
-  /*margin: 12.5px 0;*/
+  !*margin: 12.5px 0;*!
 }
 input[type=range].img_adjust:focus {
   outline: none;
@@ -316,22 +316,23 @@ input[type=range].img_adjust:focus::-ms-fill-lower {
 }
 input[type=range].img_adjust:focus::-ms-fill-upper {
   background: rgba(166, 166, 166, 0.78);
-}
+}*/
 
 /*
-* === COMPRESSOR and new LINE COLOR MAPPING ===
+* === STANDARD SLIDER (Always use this from v0.7.0 on) ===
 */
-input[type=range].conversion_range_slider{
+
+input[type=range].mrb_slider{
     -webkit-appearance: none;
     max-width: 100%;
     background-color: #888888;
 	width:220px;
-    height: 20px;
+    height: 5px;
 	display: inline-block;
     margin: 6px 0px;
 }
 
-input[type=range].conversion_range_slider::-webkit-slider-thumb {
+input[type=range].mrb_slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     border-radius: 5px;
     height: 26px;
@@ -339,6 +340,40 @@ input[type=range].conversion_range_slider::-webkit-slider-thumb {
     background: #444444;
 }
 
-input[type=range].conversion_range_slider:focus {
+input[type=range].mrb_slider:focus {
     outline: none;
+}
+
+/*
+* === Wider (Line color mapping) ===
+*/
+input[type=range].mrb_slider.conversion_range_slider{
+    -webkit-appearance: none;
+    max-width: 100%;
+    background-color: #888888;
+	width: 220px;
+    height: 20px;
+	display: inline-block;
+    margin: 6px 0px;
+}
+
+/*
+* === Smaller (Image preprocessing) ===
+*/
+input[type=range].mrb_slider.small{
+    -webkit-appearance: none;
+    max-width: 100%;
+    background-color: #888888;
+	width:220px;
+    height: 2px;
+	display: inline-block;
+    margin: 6px 0px;
+}
+
+input[type=range].mrb_slider.small::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border-radius: 5px;
+    height: 18px;
+    width: 5px;
+    background: #444444;
 }
