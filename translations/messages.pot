@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-12 09:11+0200\n"
+"POT-Creation-Date: 2020-08-12 09:20+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1313,7 +1313,7 @@ msgstr ""
 #: octoprint_mrbeam/static/js/calibration/camera_calibration.js:115
 msgid ""
 "Mr Beam is not in state Operational: The camera does not work during a "
-"laser job."
+"laser job"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/calibration/camera_calibration.js:129
@@ -1377,7 +1377,7 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/calibration/camera_calibration.js:701
 msgid ""
-"Is the machine on? Have you taken an pictures before starting the "
+"Is the machine on? Have you taken any pictures before starting the "
 "calibration?"
 msgstr ""
 

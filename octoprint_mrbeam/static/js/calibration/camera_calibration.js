@@ -112,7 +112,7 @@ $(function () {
             } else if (self.state.isOperational()) {
 		        return gettext("Mr Beam is in state Operational")
             } else {
-		        return gettext("Mr Beam is not in state Operational: The camera does not work during a laser job.")
+		        return gettext("Mr Beam is not in state Operational: The camera does not work during a laser job")
             }
         });
 
@@ -698,7 +698,7 @@ $(function () {
 				function(){
 					new PNotify({
 						title: gettext("Couldn't start the lens calibration."),
-						text: gettext("Is the machine on? Have you taken an pictures before starting the calibration?"),
+						text: gettext("Is the machine on? Have you taken any pictures before starting the calibration?"),
 						type: "warning",
 						hide: true})},
 				"POST");
