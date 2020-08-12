@@ -3,8 +3,8 @@ $(function () {
         let self = this;
         window.mrbeam.viewModels['designStore'] = self;
 
-        self.DESIGN_STORE_IFRAME_SRC = 'https://design-store-269610.appspot.com';  // Don't write a "/" at the end!!
-        // self.DESIGN_STORE_IFRAME_SRC = 'http://localhost:8080';
+        // self.DESIGN_STORE_IFRAME_SRC = 'https://design-store-269610.appspot.com';  // Don't write a "/" at the end!!
+        self.DESIGN_STORE_IFRAME_SRC = 'http://localhost:8080';
 
         self.loginState = params[0];
         self.navigation = params[1];
@@ -132,6 +132,16 @@ $(function () {
             if($('#designstore_tab_btn').parent().hasClass("active")){
                 self.sendMessageToDesignStoreIframe('goToStore', {})
             }
+        };
+
+        self.reloadDesignStoreIframe = function () {
+            let refreshButtonElement = $('.refresh-connection');
+            let refreshButtonText = refreshButtonElement.text();
+            refreshButtonElement.text("...");
+            setTimeout(function() {
+                refreshButtonElement.text(refreshButtonText);
+            }, 2000);
+            document.getElementById('design_store_iframe').src = document.getElementById('design_store_iframe').src;
         }
     }
 
