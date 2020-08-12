@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-10 11:11+0200\n"
-"PO-Revision-Date: 2020-08-11 14:18+0200\n"
+"POT-Creation-Date: 2020-08-12 09:20+0200\n"
+"PO-Revision-Date: 2020-08-12 10:03+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -87,20 +87,18 @@ msgstr "Votre utilisateur"
 msgid "For your safety"
 msgstr "Pour votre sécurité"
 
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:159
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:1
 #: octoprint_mrbeam/wizard_config.py:120
-msgid "Zoom"
-msgstr "Zoom"
+msgid "Improved camera"
+msgstr "Caméra améliorée"
 
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:2
 #: octoprint_mrbeam/wizard_config.py:129
-msgid "Quick Shapes"
-msgstr "Formes Rapides"
+msgid "Custom material backup"
+msgstr "Sauvegarde des Matériaux Personnalisés"
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:2
 #: octoprint_mrbeam/wizard_config.py:138
-msgid "New language"
-msgstr "Nouvelle langue"
+msgid "SVG split"
+msgstr "Séparation SVG"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:2
 #: octoprint_mrbeam/wizard_config.py:147
@@ -114,20 +112,20 @@ msgstr ""
 "Veuillez contacter l'équipe de support de Mr Beam et joindre octoprint.log."
 
 #: octoprint_mrbeam/static/js/camera.js:16
-msgid "North West"
-msgstr "Arrière Gauche"
+msgid "Top left"
+msgstr "Arrière gauche"
 
 #: octoprint_mrbeam/static/js/camera.js:17
-msgid "South West"
-msgstr "Avant Gauche"
+msgid "Bottom left"
+msgstr "Avant gauche"
 
 #: octoprint_mrbeam/static/js/camera.js:18
-msgid "North East"
-msgstr "Arrière Droite"
+msgid "Top right"
+msgstr "Arrière gauche"
 
 #: octoprint_mrbeam/static/js/camera.js:19
-msgid "South East"
-msgstr "Avant Droite"
+msgid "Bottom right"
+msgstr "Avant droite"
 
 #: octoprint_mrbeam/static/js/camera.js:129
 msgid "Calibration needed"
@@ -690,20 +688,24 @@ msgstr "1 Fichier"
 msgid "recent job"
 msgstr "tâche récente"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:578
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:477
+msgid "image"
+msgstr "image"
+
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:580
 msgid "Preparation done"
 msgstr "Préparation terminée"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:579
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:581
 #, python-format
 msgid "Converted %(stl)s to %(gcode)s, took %(time).2f seconds"
 msgstr "%(stl)s convertits en %(gcode)s, cela a prit %(time).2f secondes"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:649
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:651
 msgid "Ready to laser?"
 msgstr "Prêt pour la découpe ?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:652
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:654
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:305
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:120
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:101
@@ -714,11 +716,11 @@ msgstr "Prêt pour la découpe ?"
 msgid "Cancel"
 msgstr "Annuler"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:653
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:655
 msgid "Proceed"
 msgstr "Continuer"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:654
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:656
 msgid ""
 "The laser will now start. Protect yourself and everybody in the room "
 "appropriately before proceeding!"
@@ -726,17 +728,17 @@ msgstr ""
 "Le laser va maintenant démarrer. Avant de continuer, protégez-vous ainsi que "
 "tous ceux qui se trouvent dans la pièce de façon appropriée!"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:655
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:657
 msgid "Are you sure you want to proceed?"
 msgstr "Êtes-vous sûr de vouloir continuer?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:659
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:661
 msgid "The laser will now start. Please make sure the lid is closed."
 msgstr ""
 "Le laser va maintenant démarrer. Assurez-vous que le couvercle est bien "
 "fermé."
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:660
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:662
 msgid "Please confirm to proceed."
 msgstr "Veuillez confirmer afin de continuer."
 
@@ -1427,103 +1429,131 @@ msgstr ""
 "vous de fournir le message d'erreur ci-dessous avec le fichier patron "
 "essayez de traiter."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:182
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:739
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:767
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:187
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:758
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:786
 #: octoprint_mrbeam/static/js/working_area.js:1351
 #: octoprint_mrbeam/static/js/working_area.js:1353
 msgid "Error"
 msgstr "Erreur"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:103
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:105
 msgid "The lid is open"
 msgstr "Le couvercle est ouvert"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:104
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:106
 msgid "The lid is closed: Please open the lid to start the camera"
 msgstr ""
 "Le couvercle est fermé: Veuillez ouvrir le couvercle pour démarrer la caméra"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:109
-msgid "Mr Beam is in status Operational"
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:111
+msgid ""
+"Mr Beam is not homed: Please go to the working area and do a Homing Cycle"
+msgstr ""
+"Mr Beam doit retourner au foyer: Veuillez revenir à l'espace de travail et "
+"faire un Retour au Foyer"
+
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:113
+msgid "Mr Beam is in state Operational"
 msgstr "Mr Beam est opérationnel"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:110
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:115
 msgid ""
-"Mr Beam is not in status Operational: Camera does not work during a laser job"
+"Mr Beam is not in state Operational: The camera does not work during a laser "
+"job"
 msgstr ""
-"Mr Beam n'est pas opérationnel: La caméra ne fonctionne pas durant une tâche."
+"Mr Beam n'est pas dans dans son état opérationnel: La caméra ne fonctionne "
+"pas durant une tâche."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:124
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:129
 msgid "All 4 pink corner markers are recognized"
 msgstr "Les 4 cercles rose sont reconnus"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:125
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:130
 msgid "Not all pink corner markers are recognized. Missing markers: "
 msgstr "Tous les cercles rose ne sont pas reconnus. Cercles manquants: "
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:146
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:151
 msgid "Error while selecting the marker detection mode"
 msgstr "Erreur durant la sélection du mode de détection"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:147
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:152
 msgid "Unable to select the marker detection mode at the moment."
 msgstr ""
 "Impossible de sélectionner le mode de détection des marqueurs pour le moment."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:427
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:441
 msgid "Picture requested"
 msgstr "Image réquisitionnée"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:441
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:455
 msgid "Something went wrong. It's not you, it's us."
 msgstr ""
 "Quelque chose s'est mal passé. Ce n'est pas vous le problème, c'est nous."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:650
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:664
 msgid "Failed to save the latest image."
 msgstr "Échec de sauvegarde de la dernière image."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:651
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:665
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:667
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:669
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:851
+msgid "Please check your connection to the device."
+msgstr "Veuillez vérifier votre connection à l'appareil."
+
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:666
 msgid "Failed to delete the latest image."
 msgstr "Échec de suppression de la dernière image."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:652
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:668
 msgid "Failed to refresh the list of images."
 msgstr "Échec lors du rafraîchissement de la liste d'images."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:658
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:682
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:703
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:832
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:674
 msgid "...and I have no clue why. Sorry."
 msgstr "...et je ne sais pas pourquoi. Désolé."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:675
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:694
 msgid "Calibration started"
 msgstr "La calibrage a débuté"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:676
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:695
 msgid ""
-"Please relax, this will take a little while.\n"
-"We will let you know when we are done."
+"It shouldn't take long. Your device shows a green light when it is done."
 msgstr ""
-"Please relax, this will take a little while.\n"
-"We will let you know when we are done."
+"Ça ne va pas être long. Votre machine va s'illuminer en vert quand c'est "
+"fini."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:681
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:700
 msgid "Couldn't start the lens calibration."
 msgstr "Démarrage de la calibration échouée."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:694
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:701
+msgid ""
+"Is the machine on? Have you taken any pictures before starting the "
+"calibration?"
+msgstr ""
+"La machine est allumée? Avez vous pris des photos avant de commencer la "
+"calibration?"
+
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:713
 msgid "Lens Calibration stopped"
 msgstr "Calibration de la lentille arrêtée"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:702
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:721
 msgid "Couldn't stop the lens calibration."
 msgstr "Impossible d'arrêter la calibration de la lentille."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:740
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:722
+msgid ""
+"Please verify your connection to the device. Did you try canceling multiple "
+"times?"
+msgstr ""
+"Veuillez vérifier votre connection à l'appareil. Avez vous annulé plusieurs "
+"fois?"
+
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:759
 #, python-format
 msgid ""
 "Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"
@@ -1531,7 +1561,7 @@ msgstr ""
 "L'étalonnage a échoué.<br><br> Erreur:<br/>%(code)s %(status)s - "
 "%(errorThrown)s"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:768
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:787
 #, python-format
 msgid ""
 "Marker engraving failed: <br>%(errmsg)s<br>Error:<br/>%(code)s %(status)s - "
@@ -1540,23 +1570,23 @@ msgstr ""
 "La gravure a échoué.<br>%(errmsg)s<br> Erreur:<br/>%(code)s %(status)s - "
 "%(errorThrown)s"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:787
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:806
 msgid "Printed: "
 msgstr "Imprimé: "
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:796
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:815
 msgid "Print Error"
 msgstr "Erreur d'impression"
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:820
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:839
 msgid "Camera Calibrated."
 msgstr "Caméra Calibrée."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:821
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:840
 msgid "Camera calibration was successful."
 msgstr "Le calibrage de la caméra a réussi."
 
-#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:831
+#: octoprint_mrbeam/static/js/calibration/camera_calibration.js:850
 msgid "Couldn't send calibration data."
 msgstr "Impossible d'envoyer les données d'étalonnage."
 
@@ -2502,7 +2532,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/loading_overlay.jinja2:207
 msgid ""
-"Not loading?<br />Try a full reload by pressing <strong>STRG + SHIFT + R</"
+"Not loading?<br />Try a full reload by pressing <strong>Ctrl + SHIFT + R</"
 "strong>"
 msgstr ""
 "Ça ne charge pas?<br />Essayez un rafraîchissement complet avec <strong>Ctrl "
@@ -3320,7 +3350,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:111
 msgid ""
-"The upload of your image to Mr Beam's serves will happen in the background. "
+"The upload of your image to Mr Beam's servers will happen in the background. "
 "If you're not online, the image will be uploaded next time you're online."
 msgstr ""
 "L'image est envoyée aux serveurs de Mr Beam en tâche de fond maintenant ou "
@@ -3369,6 +3399,10 @@ msgstr ""
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:145
 msgid "Brightness"
 msgstr "Luminosité"
+
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:159
+msgid "Zoom"
+msgstr "Zoom"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:174
 msgid "Scroll to zoom"
@@ -3582,6 +3616,7 @@ msgstr "Souriez :)"
 
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:7
 #: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:46
+#: octoprint_mrbeam/templates/settings/camera_settings.jinja2:172
 msgid "Corner Calibration"
 msgstr "Etalonnage des coins"
 
@@ -3679,6 +3714,7 @@ msgstr "Enregistrer l'étalonnage"
 
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:7
 #: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:42
+#: octoprint_mrbeam/templates/settings/camera_settings.jinja2:179
 msgid "Lens Calibration"
 msgstr "Calibration de la Lentille"
 
@@ -4123,8 +4159,8 @@ msgstr ""
 #, python-format
 msgid ""
 "For maintenance tips check the %(manual_opening_tag)suser manual"
-"%(link_closing_tag)s our %(kb_opening_tag)sknowledge base"
-"%(link_closing_tag)s and our %(yt_opening_tag)syoutube channel"
+"%(link_closing_tag)s, our %(kb_opening_tag)sknowledge base"
+"%(link_closing_tag)s and our %(yt_opening_tag)sYoutube channel"
 "%(link_closing_tag)s."
 msgstr ""
 "Pour des astuces de maintenance, consultez %(manual_opening_tag)sle manuel "
@@ -4153,22 +4189,12 @@ msgid "Find the most precise line"
 msgstr "Trouvez la ligne la plus précise"
 
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:40
-msgid "Look up the sharpest line on the engraving"
-msgstr "Trouvez la ligne la plus fine sur la gravure"
+msgid "Look up the sharpest line on the engraving."
+msgstr "Trouvez la ligne la plus fine sur la gravure."
 
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:42
 msgid "Enter the line's number (including sign) here: "
 msgstr "Entrez le numéro de la ligne (avec le signe) ici: "
-
-#: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:53
-#: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:56
-#, python-format
-msgid ""
-"For more information, please have a look at our article on "
-"%(opening_tag)sprecision calibration%(closing_tag)s."
-msgstr ""
-"Pour plus d'information, veuillez lire notre article sur la "
-"%(opening_tag)sCalibration de précision%(closing_tag)s."
 
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:9
 msgid "Status"
@@ -4343,19 +4369,11 @@ msgstr ""
 "Pour plus d'information, veuillez lire notre article sur la "
 "%(opening_tag)scalibration de la caméra%(closing_tag)s."
 
-#: octoprint_mrbeam/templates/settings/camera_settings.jinja2:172
-msgid "CORNER CALIBRATION"
-msgstr "ÉTALONNAGE DES COINS"
-
-#: octoprint_mrbeam/templates/settings/camera_settings.jinja2:179
-msgid "LENS CALIBRATION"
-msgstr "CALIBRATION DE LA LENTILLE"
-
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:181
 msgid ""
 "The lens calibration is made to remove the fish-eye effect from the picture. "
 "Only do this if you think that your camera precision is bad, specially in "
-"the corners."
+"the center."
 msgstr ""
 "La calibration de la lentille a pour but d'enlever tout effet \"fish-eye\". "
 "Faites seulement cette calibration en cas de mauvaise précision, surtout au "
@@ -4743,68 +4761,82 @@ msgstr ""
 "Vous pouvez modifier votre choix à tout moment dans le menu \"Paramètres > "
 "Analytics\"."
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:4
-msgid ""
-"Now you can zoom and navigate through the working area to see all the "
-"details by using the navigator panel. You can find this feature in the "
-"\"Preview\" menu, on the left side."
-msgstr ""
-"Vous pouvez maintenant zoomer et naviguer votre espace de travail en "
-"utilisant le panneau de navigation. Cela vous permettra de voir les détails "
-"de votre espace avec minutie! Vous trouverez cette fonctionnalité dans "
-"l'onglet \"Aperçu\", sur la gauche."
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:1
+msgid "Improved Camera"
+msgstr "Caméra améliorée"
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:2
-msgid "Quick Shape attributes"
-msgstr "Paramètres des Formes Rapides"
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:4
+msgid "The camera is much more reliable now!"
+msgstr "La caméra es bien plus fiable maintenant!"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:5
+msgid ""
+"You will feel an improvement specially when using dark materials or with "
+"difficult light conditions, thanks to the self-adjusting shutter speed. "
+msgstr ""
+"Vous aurez un bien meilleur résultat, surtout si vous utilisez souvent des "
+"matériaux sombres ou dans des conditions de luminosité particulières."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:6
+msgid "Check the status of your camera in the new camera settings panel:"
+msgstr ""
+"Vérifiez le statut de la caméra dans le nouvel onglet des Paramètres -> "
+"Caméra:"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:5
+msgid "Backup and restore custom material settings"
+msgstr "Enregistrer et restaurer les réglages personnalisés"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:6
 msgid ""
-"Achieve new results by adding filling to the standard shapes and select "
-"dynamically the color of the edge and the filling."
+"Save a copy of your custom material settings and restore it whenever you "
+"need, or use it in other Mr Beams."
 msgstr ""
-"Obtenez de nouveaux résultats en ajoutant un remplissage à vos designs ainsi "
-"qu'en changeant la couleur du contour ou du remplissage."
+"Enregistrer une copie de vos matériaux personnalisés et restaurez les si "
+"besoin, ou utilisez les sur d'autres Mr Beams."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:2
+msgid "SVG Split"
+msgstr "Séparation SVG"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:5
-msgid "Mr Beam can now also speak Italian!"
-msgstr "Mr Beam peut maintenant aussi parler italien!"
+msgid "Split your SVG files in smaller pieces"
+msgstr "Séparez les éléments de vos fichiers SVG"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:6
 msgid ""
-"When you connect to your Mr Beam, your browser's default language will be "
-"selected."
+"Sometimes a downloaded design does not fit on your material - but with "
+"realignment of the single parts it would. Therefore you can split it now."
 msgstr ""
-"Lorsque vous vous connectez à votre Mr Beam, la langue par défaut de votre "
-"navigateur sera sélectionnée."
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:9
-msgid ""
-"You can manually select another language in the \"User Settings\" menu, "
-"under \"Interface\"."
-msgstr ""
-"Vous pouvez sélectionner manuellement une autre langue dans le menu "
-"\"Options Utilisateurs\", sous \"Interface\"."
+"Parfois un design téléchargé prend trop de place - mais vous pouvez "
+"maintenant réorganiser les éléments qui le compose rentre dans l'espace dont "
+"vous disposez!"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7
-msgid "The laser head's position shown is now more consistent."
+msgid ""
+"Design library: folders (only for new designs) and bulk deletion of files."
 msgstr ""
-"La position de la tête laser est maintenant montrée de manière plus "
-"consistante."
+"Bibliothèqe de Designs: nouveau Dossiers (utilisable avec des nouveaux "
+"designs) et sélection de multiples fichiers pour la suppression."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:8
-msgid "New mechanism to avoid dark edges in engravings."
-msgstr "Nouveau méchanisme de gravure pour éviter les contours sombres."
+msgid "Repeat a job directly from the Job Done screen."
+msgstr ""
+"Répétez une tâche directement depuis le message affiché à la fin d'une tâche."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:9
 msgid ""
-"Improved engraving order: the order of the different engravings was "
-"optimized."
+"Mr Beam Lights: adjust the britness and animation speed from the settings "
+"menu."
 msgstr ""
-"Ordre des gravures amélioré : l'ordre dans lequel se fait les différentes "
-"gravures est optimisé."
+"Lumières Mr Beam: Ajustez la luminosité et la vitesse d'animation dans les "
+"Paramètres."
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:13
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:10
+msgid "New design of the software."
+msgstr "Nouveaux look de l'interface"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:14
 msgid "We hope you enjoy this new experience!"
 msgstr "Nous espérons que vous apprécierez cette nouvelle expérience !"
 
@@ -4916,6 +4948,96 @@ msgstr "Daemon hors ligne"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr "Réinitialiser le daemon"
+
+#~ msgid "Quick Shapes"
+#~ msgstr "Formes Rapides"
+
+#~ msgid "New language"
+#~ msgstr "Nouvelle langue"
+
+#~ msgid "North West"
+#~ msgstr "Arrière Gauche"
+
+#~ msgid "South West"
+#~ msgstr "Avant Gauche"
+
+#~ msgid "North East"
+#~ msgstr "Arrière Droite"
+
+#~ msgid "South East"
+#~ msgstr "Avant Droite"
+
+#~ msgid ""
+#~ "Please relax, this will take a little while.\n"
+#~ "We will let you know when we are done."
+#~ msgstr ""
+#~ "Please relax, this will take a little while.\n"
+#~ "We will let you know when we are done."
+
+#~ msgid ""
+#~ "For more information, please have a look at our article on "
+#~ "%(opening_tag)sprecision calibration%(closing_tag)s."
+#~ msgstr ""
+#~ "Pour plus d'information, veuillez lire notre article sur la "
+#~ "%(opening_tag)sCalibration de précision%(closing_tag)s."
+
+#~ msgid "CORNER CALIBRATION"
+#~ msgstr "ÉTALONNAGE DES COINS"
+
+#~ msgid "LENS CALIBRATION"
+#~ msgstr "CALIBRATION DE LA LENTILLE"
+
+#~ msgid ""
+#~ "Now you can zoom and navigate through the working area to see all the "
+#~ "details by using the navigator panel. You can find this feature in the "
+#~ "\"Preview\" menu, on the left side."
+#~ msgstr ""
+#~ "Vous pouvez maintenant zoomer et naviguer votre espace de travail en "
+#~ "utilisant le panneau de navigation. Cela vous permettra de voir les "
+#~ "détails de votre espace avec minutie! Vous trouverez cette fonctionnalité "
+#~ "dans l'onglet \"Aperçu\", sur la gauche."
+
+#~ msgid "Quick Shape attributes"
+#~ msgstr "Paramètres des Formes Rapides"
+
+#~ msgid ""
+#~ "Achieve new results by adding filling to the standard shapes and select "
+#~ "dynamically the color of the edge and the filling."
+#~ msgstr ""
+#~ "Obtenez de nouveaux résultats en ajoutant un remplissage à vos designs "
+#~ "ainsi qu'en changeant la couleur du contour ou du remplissage."
+
+#~ msgid "Mr Beam can now also speak Italian!"
+#~ msgstr "Mr Beam peut maintenant aussi parler italien!"
+
+#~ msgid ""
+#~ "When you connect to your Mr Beam, your browser's default language will be "
+#~ "selected."
+#~ msgstr ""
+#~ "Lorsque vous vous connectez à votre Mr Beam, la langue par défaut de "
+#~ "votre navigateur sera sélectionnée."
+
+#~ msgid ""
+#~ "You can manually select another language in the \"User Settings\" menu, "
+#~ "under \"Interface\"."
+#~ msgstr ""
+#~ "Vous pouvez sélectionner manuellement une autre langue dans le menu "
+#~ "\"Options Utilisateurs\", sous \"Interface\"."
+
+#~ msgid "The laser head's position shown is now more consistent."
+#~ msgstr ""
+#~ "La position de la tête laser est maintenant montrée de manière plus "
+#~ "consistante."
+
+#~ msgid "New mechanism to avoid dark edges in engravings."
+#~ msgstr "Nouveau méchanisme de gravure pour éviter les contours sombres."
+
+#~ msgid ""
+#~ "Improved engraving order: the order of the different engravings was "
+#~ "optimized."
+#~ msgstr ""
+#~ "Ordre des gravures amélioré : l'ordre dans lequel se fait les différentes "
+#~ "gravures est optimisé."
 
 #~ msgid "You're using Mr Beam's beta software channel. "
 #~ msgstr "Vous utilisez le canal de diffusion beta de Mr Beam. "
@@ -5241,9 +5363,6 @@ msgstr "Réinitialiser le daemon"
 
 #~ msgid "Wifi Setup"
 #~ msgstr "Configuration Wifi"
-
-#~ msgid "Improved find.mr-beam"
-#~ msgstr "Service find.mr-beam amélioré"
 
 #~ msgid "Job Time Estimation"
 #~ msgstr "Estimation de la durée d'une tâche"
