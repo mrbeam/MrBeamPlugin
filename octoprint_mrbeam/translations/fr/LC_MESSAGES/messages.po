@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-12 09:20+0200\n"
-"PO-Revision-Date: 2020-08-12 10:03+0200\n"
+"POT-Creation-Date: 2020-08-12 10:22+0200\n"
+"PO-Revision-Date: 2020-08-12 10:37+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -1203,7 +1203,7 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/user_notification_viewmodel.js:54
 msgid "Thank you"
-msgstr "Merci!"
+msgstr "Merci"
 
 #: octoprint_mrbeam/static/js/user_notification_viewmodel.js:55
 msgid ""
@@ -1321,7 +1321,7 @@ msgstr "Coeur"
 
 #: octoprint_mrbeam/static/js/working_area.js:938
 msgid "Limited split result."
-msgstr "Résultat de la séparaion limitée"
+msgstr "Résultat de la séparation limitée."
 
 #: octoprint_mrbeam/static/js/working_area.js:939
 msgid ""
@@ -1463,7 +1463,7 @@ msgid ""
 "job"
 msgstr ""
 "Mr Beam n'est pas dans dans son état opérationnel: La caméra ne fonctionne "
-"pas durant une tâche."
+"pas durant une tâche"
 
 #: octoprint_mrbeam/static/js/calibration/camera_calibration.js:129
 msgid "All 4 pink corner markers are recognized"
@@ -2544,7 +2544,7 @@ msgstr "Ça ne charge pas?<br />Essayez un rafraîchir la page."
 
 #: octoprint_mrbeam/templates/loading_overlay.jinja2:213
 msgid "Something went wrong"
-msgstr "Quelque chose s'est mal passé."
+msgstr "Quelque chose s'est mal passé"
 
 #: octoprint_mrbeam/templates/loading_overlay.jinja2:222
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:771
@@ -3029,7 +3029,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:75
 msgid "Currently in"
-msgstr "Vous êtes là :"
+msgstr "Dossier"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:80
 msgid "Add Folder"
@@ -3642,7 +3642,7 @@ msgid ""
 "Put a material like cardboard inside your Mr Beam that covers the whole "
 "working area:"
 msgstr ""
-"Placer un matériau tel que du carton qui couvre toute la zone de travail."
+"Placer un matériau tel que du carton qui couvre toute la zone de travail:"
 
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:17
 msgid ""
@@ -3754,7 +3754,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:20
 msgid "Place it inside your Mr Beam."
-msgstr "Placer le à l'intérieur de votre Mr Beam"
+msgstr "Placer le à l'intérieur de votre Mr Beam."
 
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:21
 msgid ""
@@ -4170,7 +4170,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:26
 msgid "Engrave a Test Pattern"
-msgstr "Graver un profil de test."
+msgstr "Gravez un profil de test"
 
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:29
 msgid "Place your cardboard in the center of the working area."
@@ -4223,7 +4223,7 @@ msgstr "Image brute"
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:70
 msgid "as you see it in the working area of Mr Beam software"
 msgstr ""
-"Comme vous pouvez le voir dans l'espace de travail de l'interface Mr Beam"
+"comme vous pouvez le voir dans l'espace de travail de l'interface Mr Beam"
 
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:71
 msgid ""
@@ -4231,7 +4231,7 @@ msgid ""
 "perspective, angle and colour"
 msgstr ""
 "Photo prise par la caméra avant que le programme n'ajuste la perspective et "
-"les contours."
+"les contours"
 
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:77
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:84
@@ -4243,7 +4243,7 @@ msgstr "Avez vous un problème avec la caméra?"
 #, python-format
 msgid ""
 "Please check out our %(opening_tag)stroubleshooting guide%(closing_tag)s."
-msgstr "Consulter notre %(opening_tag)sguide de dépannage%(closing_tag)s"
+msgstr "Consulter notre %(opening_tag)sguide de dépannage%(closing_tag)s."
 
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:92
 msgid ""
@@ -4505,7 +4505,7 @@ msgstr "Vitesse des animations"
 
 #: octoprint_mrbeam/templates/settings/leds_settings.jinja2:22
 msgid "Adjust the animation speed of Mr Beam Lights."
-msgstr "Ajustez la vitesse d'animation des lumières Mr Beam"
+msgstr "Ajustez la vitesse d'animation des lumières Mr Beam."
 
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:12
 msgid "Air Filter: Pre-filter"
@@ -4775,7 +4775,7 @@ msgid ""
 "difficult light conditions, thanks to the self-adjusting shutter speed. "
 msgstr ""
 "Vous aurez un bien meilleur résultat, surtout si vous utilisez souvent des "
-"matériaux sombres ou dans des conditions de luminosité particulières."
+"matériaux sombres ou dans des conditions de luminosité particulières. "
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:6
 msgid "Check the status of your camera in the new camera settings panel:"
@@ -4826,7 +4826,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:9
 msgid ""
-"Mr Beam Lights: adjust the britness and animation speed from the settings "
+"Mr Beam Lights: adjust the brightness and animation speed from the settings "
 "menu."
 msgstr ""
 "Lumières Mr Beam: Ajustez la luminosité et la vitesse d'animation dans les "
@@ -4834,7 +4834,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:10
 msgid "New design of the software."
-msgstr "Nouveaux look de l'interface"
+msgstr "Nouveaux look de l'interface."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:14
 msgid "We hope you enjoy this new experience!"
