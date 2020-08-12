@@ -563,7 +563,7 @@ $(function () {
 				}
 
 				// required to refresh the heatmap
-				$('.heatmap_container').html($('.heatmap_container').html());
+				$('#heatmap_container').html($('#heatmap_container').html());
 				arr.sort(function(l,r){
 					return l.index < r.index ? -1 : 1;
 				});
