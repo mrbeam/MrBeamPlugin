@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-12 09:20+0200\n"
+"POT-Creation-Date: 2020-08-12 10:22+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4308,8 +4308,8 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:9
 msgid ""
-"Mr Beam Lights: adjust the britness and animation speed from the settings"
-" menu."
+"Mr Beam Lights: adjust the brightness and animation speed from the "
+"settings menu."
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:10
