@@ -615,6 +615,7 @@ class PhotoCreator(object):
 			if self.saveRaw:
 				if isinstance(self.saveRaw, str) and not saveNext:
 					saveNext = True
+					rawSaved = False
 				elif isinstance(self.saveRaw, str) and saveNext:
 					# FIXME Not perfect. This is the case during the lens calibration where
 					# a new raw picture is requested. Do the save during the next round.
