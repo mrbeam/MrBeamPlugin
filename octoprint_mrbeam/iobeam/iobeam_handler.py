@@ -170,7 +170,6 @@ class IoBeamHandler(object):
 		self._callbacks_lock = RWLock()
 
 		self._laserhead_handler = None
-		self._analytics_handler = None
 
 		self.iobeam_version = None
 
@@ -189,7 +188,6 @@ class IoBeamHandler(object):
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._laserhead_handler = self._plugin.laserhead_handler
-		self._analytics_handler = self._plugin.analytics_handler
 		self._hw_malfunction_handler = self._plugin.hw_malfunction_handler
 		self._user_notification_system = self._plugin.user_notification_system
 
@@ -694,13 +692,19 @@ class IoBeamHandler(object):
 			self._logger.error("i2c_monitoring state change reported: %s", dataset, analytics=False)
 			if not self._last_i2c_monitoring_dataset is None and not self._last_i2c_monitoring_dataset.get('state', None) == dataset.get('state', None):
 				dataset_data = dataset.get('data', dict())
-				params = dict(iobeam_version=self.iobeam_version,
+				params = dict(
+					iobeam_version=self.iobeam_version,
 					state=dataset.get('state', None),
 					method=dataset_data.get('test_mode', None),
 					current_devices=dataset_data.get('current_devices', []),
 					lost_devices=dataset_data.get('lost_devices', []),
-					new_devices=dataset_data.get('new_devices', []))
-				self._analytics_handler.add_iobeam_i2c_monitoring(**params)
+					new_devices=dataset_data.get('new_devices', [])
+				)
+
+				self.send_iobeam_analytics(
+					eventname='i2c_monitoring',
+					data=params
+				)
 		self._last_i2c_monitoring_dataset = dataset
 
 	def _handle_reed_switch(self, dataset):
@@ -891,7 +895,7 @@ class IoBeamHandler(object):
 
 	def _handle_analytics_dataset(self, dataset):
 		if dataset.get('communication_errors', None):
-			self._send_mrbeam_analytics(
+			self.send_iobeam_analytics(
 				eventname='communication_errors',
 				data=dataset.get('communication_errors')
 			)
@@ -1132,11 +1136,21 @@ class IoBeamHandler(object):
 			connected = True
 		return connected
 
-	def _send_mrbeam_analytics(self, eventname, data):
+	def send_iobeam_analytics(self, eventname, data):
+		"""
+		This will send analytics data using the MrBeam event system, to mimic what the rest of the plugins do.
+		Everything will be saved to the type='iobeam'.
+		Args:
+			eventname: the name of the event for Datastore ('e')
+			data: the payload of the event for Datastore ('data')
+
+		Returns:
+
+		"""
 		payload = dict(
 			plugin='iobeam',
 			eventname=eventname,
-			data=data
+			data=data,
 		)
 
 		self._plugin.fire_event(MrBeamEvents.ANALYTICS_DATA, payload)
