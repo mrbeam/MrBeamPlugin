@@ -206,7 +206,7 @@ class LabelPrinter(object):
 		:return: Tuple (success, output): success: Boolean, output: commands STDOUT & STDERR (should be empty if successful)
 		'''
 		cmd = self.COMMAND_RLPR.format(ip=ip, data=data)
-		out, code = exec_cmd_output(cmd, log_cmd=False, shell=True)
+		out, code = exec_cmd_output(cmd, log=False, shell=True)
 		return (code == 0), out
 
 	def _log_print_result(self, name, ok, output, payload=None):
