@@ -693,7 +693,6 @@ class IoBeamHandler(object):
 			if not self._last_i2c_monitoring_dataset is None and not self._last_i2c_monitoring_dataset.get('state', None) == dataset.get('state', None):
 				dataset_data = dataset.get('data', dict())
 				params = dict(
-					iobeam_version=self.iobeam_version,
 					state=dataset.get('state', None),
 					method=dataset_data.get('test_mode', None),
 					current_devices=dataset_data.get('current_devices', []),
@@ -1149,6 +1148,7 @@ class IoBeamHandler(object):
 		"""
 		payload = dict(
 			plugin='iobeam',
+			plugin_version=self.iobeam_version,
 			eventname=eventname,
 			data=data,
 		)

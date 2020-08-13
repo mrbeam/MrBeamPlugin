@@ -587,6 +587,7 @@ class AnalyticsHandler(object):
 				if plugin:
 					event_name = event_payload.get('eventname')
 					data = event_payload.get('data', None)
+					data.update({'plugin_version': event_payload.get('plugin_version', None)})
 					self._add_event_to_queue(plugin, event_name, payload=data)
 				else:
 					self._logger.warn("Invalid plugin: '%s'. payload: %s", plugin, event_payload)
