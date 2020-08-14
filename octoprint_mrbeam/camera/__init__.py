@@ -9,6 +9,7 @@ from threading import Event
 from abc import ABCMeta, abstractmethod
 import os
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util.img import differed_imwrite
 # Python 3 : use ABC instead of ABCMeta
 
 SUCCESS_WRITE_RETVAL = 1
@@ -255,9 +256,4 @@ def save_debug_img(img, path, folder=None):
 		path = os.path.join(folder, path)
 	if folder and not os.path.exists(folder):
 		os.makedirs(folder)
-	f1, f2 = os.path.splitext(path)
-	tmp_path = f1 + '_tmp' + f2
-	res = cv2.imwrite(tmp_path, img) == SUCCESS_WRITE_RETVAL
-	if res:
-		shutil.move(tmp_path, path)
-	return res
+	return differed_imwrite(path, img)
