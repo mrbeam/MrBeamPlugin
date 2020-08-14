@@ -3,7 +3,6 @@ from fractions import Fraction
 import cv2, logging
 import numpy as np
 from numpy.linalg import norm
-from itertools import chain
 from threading import Event
 from abc import ABCMeta, abstractmethod
 import os
