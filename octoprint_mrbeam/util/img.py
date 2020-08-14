@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import os
+import shutil
 from os.path import isfile, split, join
 from cv2 import imwrite
-import shutil
 
 SUCCESS_WRITE_RETVAL = 1
 
