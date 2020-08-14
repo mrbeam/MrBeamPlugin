@@ -1,5 +1,4 @@
 import io
-import shutil
 from fractions import Fraction
 import cv2, logging
 import numpy as np
