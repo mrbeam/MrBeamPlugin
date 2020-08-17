@@ -28,10 +28,11 @@ def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 	else:
 		return d2
 
-def get_thread(callback=None, logname=None, daemon=False):
+def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
 	"""
 	returns a function that threads an other function and running a callback if provided.
 	Returns the started thread object.
+	It also logs any Exceptions that happen in that function.
 	see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
 	See https://stackoverflow.com/questions/14234547/threads-with-decorators
 	"""
@@ -51,7 +52,7 @@ def get_thread(callback=None, logname=None, daemon=False):
 					# except Exception as e:
 					# 	logger.exception("E")
 
-				t = threading.Thread(target=do_callback, args=a, kwargs=kw)
+				t = threading.Thread(target=do_callback, args=a, kwargs=kw, *th_a, **th_kw)
 			else:
 				t = threading.Thread(target=f, args=a, kwargs=kw)
 			if daemon:

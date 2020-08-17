@@ -163,7 +163,13 @@ class LidHandler(object):
 
 	def send_camera_image_to_analytics(self):
 		if self._photo_creator:
-			self._photo_creator.send_last_img_to_analytics()
+			if self._plugin.is_dev_env():
+				user='dev'
+			else:
+				user='user'
+			self._photo_creator.send_last_img_to_analytics(
+				force_upload=True, trigger=user, notify_user=True
+			)
 
 	def _printerStateChanged(self, event, payload):
 		if payload['state_string'] == 'Operational':
@@ -416,6 +422,8 @@ class PhotoCreator(object):
 		self.saveRaw = True
 		self.rawLock = Lock()
 		self._flag_send_img_to_analytics = None
+		self.cam = None
+		self.analytics = None
 
 		if debug:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
@@ -424,12 +432,10 @@ class PhotoCreator(object):
 
 		self.last_markers, self.last_shutter_speed = self.load_camera_settings()
 		if self._settings.get(["cam", "keepOriginals"]):
-			self.tmp_img_raw = self.final_image_path.replace('.jpg', "-tmp{}.jpg".format(time.time()))
 			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
 		else:
-			self.tmp_img_raw = self.final_image_path.replace('.jpg', '-tmp.jpg')
 			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
-		map(self._createFolder_if_not_existing, [self.final_image_path, self.tmp_img_raw, self.tmp_img_prepared])
+		map(self._createFolder_if_not_existing, [self.final_image_path, self.tmp_img_prepared])
 
 	@property
 	def active(self):
@@ -490,9 +496,9 @@ class PhotoCreator(object):
 			               framerate=0.8,
 			               shutter_speed=self.last_shutter_speed,
 			               resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
-			               stopEvent=self.stopEvent,) as cam:
+			               stopEvent=self.stopEvent,) as self.cam:
 				try:
-					self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+					self.serve_pictures(self.cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 				except Exception:
 					cam.close()
 					raise
@@ -585,8 +591,7 @@ class PhotoCreator(object):
 		cam.async_capture()
 		saveNext = False # Lens calibration : save the next picture instead of this one
 		min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
-		loop_counter = 0
-		count_sent_pictures_analytics = 0
+		pic_counter = 0
 		while not self.stopping:
 			while self.pause.isSet():
 				time.sleep(.5)
@@ -665,7 +670,6 @@ class PhotoCreator(object):
 					time.sleep(.8) # Let the raspberry breathe a bit (prevent overheating)
 					continue
 
-			loop_counter += 1
 			# Get the desired scale and quality of the picture to serve
 			upscale_factor , quality = pic_qualities[pic_qual_index]
 			scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
@@ -725,7 +729,7 @@ class PhotoCreator(object):
 				# Just tell front end that there was an error
 				self._send_frontend_picture_metadata(correction_result)
 
-			analytics = dict_merge(analytics, dict(
+			self.analytics = dict_merge(analytics, dict(
 				{qd: {'brightness': val} for qd, val in curr_brightness.items()},
 				avg_shutter_speed = curr_shutter_speed,
 				success=success,
@@ -735,21 +739,18 @@ class PhotoCreator(object):
 				missed=missed,
 				increment_pic=True,
 				error=err,
-				extra=analytics
+				extra=self.analytics
 			)
 
-			# upload image to analytics if env is dev
-			if self._plugin.is_dev_env() and self._settings.get(['dev', 'automatic_camera_image_upload'])\
-					and latest is not None \
-					and (loop_counter <= 10 \
-					or  (loop_counter > 10 and loop_counter % 10 == 0)):
-				count_sent_pictures_analytics += 1
-				self._send_last_img_to_analytics(latest, 'dev_auto',
-								 self.last_markers, missed,
-								 min_pix_amount,
-								 analytics,
-								 force_upload=(count_sent_pictures_analytics%10==0),
-								 notify_user=False)
+			# upload image to analytics
+			pic_counter += 1
+			if self._plugin.is_dev_env() \
+			        and self._settings.get(['dev', 'automatic_camera_image_upload']) \
+			        and (pic_counter <= 10 \
+			             or pic_counter % 10 == 0):
+				self.send_last_img_to_analytics(
+					trigger='dev_auto', force=(pic_counter%10==0)
+				)
 			self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 
 		self.last_shutter_speed = cam.shutter_speed
@@ -764,16 +765,17 @@ class PhotoCreator(object):
 
 	# @logme(True)
 	def _add_result_to_analytics(
-			self,
-			session_details,
-			missed=[],
-			colors={},
-			marker_size={},
-			increment_pic=False,
-			colorspace='hsv',
-			upload_speed=None,
-			error=None,
-			extra=None):
+		self,
+		session_details,
+		missed=[],
+		colors={},
+		marker_size={},
+		increment_pic=False,
+		colorspace='hsv',
+		upload_speed=None,
+		error=None,
+		extra=None
+	):
 		if extra is None: extra={}
 		def add_to_stat(pos, avg, std, mass):
 			# gives a new avg value and approximate std when merging the new position value.
@@ -841,71 +843,47 @@ class PhotoCreator(object):
 		except Exception as ex:
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 
-	def send_last_img_to_analytics(self):
-		self._flag_send_img_to_analytics = True
+	@get_thread(name='send_last_img_to_analytics',)
+	def send_last_img_to_analytics(self, force_upload=False, trigger='user', notify_user=False):
+		raw_path = os.path.join(os.path.dirname(self.final_image_path), 'debug/raw.jpg')
+		latest = cv2.imread(raw_path)
+		img_format = 'jpg'
+		_, img = cv2.imencode('.{}'.format(img_format), latest, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+		img = base64.b64encode(img)
 
-	def _send_last_img_to_analytics(self, img, trigger, markers, missed, min_pix_amount, analytics, force_upload=False, notify_user=False):
-		self._flag_send_img_to_analytics = False
-		t = threading.Thread(target=self._send_last_img_to_analytics_threaded,
-							 name='send_last_img_to_analytics',
-							 kwargs={'img': img,
-									 'trigger': trigger,
-									 'markers': markers,
-									 'missed': missed,
-									 'min_pix_amount': min_pix_amount,
-									 'analytics_data': analytics,
-									 'force_upload': force_upload,
-									 'notify_user': notify_user,
-									 })
-		t.daemon = True
-		t.start()
-
-	def _send_last_img_to_analytics_threaded(self, img, trigger, markers, missed, min_pix_amount, analytics_data, force_upload=False, notify_user=False):
+		analytics_str = ''
 		try:
-			if img is not None:
-				img_format = 'jpg'
-				_, img = cv2.imencode('.{}'.format(img_format), img, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
-				img = base64.b64encode(img)
-
-				analytics_str = ''
-				try:
-					analytics_str = str(analytics_data)
-				except:
-					self._logger.warning("_send_last_img_to_analytics_threaded() Can not convert analytics_data to json: %s", analytics_data)
-
-				dist = ''
-				path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
-				try:
-					with open(path_to_cam_params, 'r') as f:
-						dist = base64.b64encode(f.read())
-				except:
-					self._logger.warning("_send_last_img_to_analytics_threaded() Can not read npz file: %s", path_to_cam_params)
-
-				payload = {'img_base64': img,
-						   'img_type': img_format,
-						   'distortion_matrix_base64': dist,
-						   'trigger': trigger,
-						   'metadata': {
-							   'markers_found': ', '.join(markers.keys()),
-							   'markers_missed': ', '.join(missed),
-							   'min_pix_amount': min_pix_amount,
-							   'analytics': analytics_str,
-							   'trigger': trigger},
-						   }
-				self._logger.debug("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
-								  trigger, len(img), force_upload, payload['metadata'])
-				# self._analytics_handler.add_camera_image(payload)
-				if force_upload:
-					self._analytics_handler.upload()
-
-				if notify_user:
-					self._plugin.user_notification_system.show_notifications(
-						self._plugin.user_notification_system.get_notification(
-							notification_id='msg_cam_image_analytics_sent'))
-			else:
-				self._logger.info("_send_last_img_to_analytics_threaded() no image available")
+			analytics_str = json.dumps(self.analytics, default=json_serialisor)
 		except:
-			self._logger.exception("Exception in _send_last_img_to_analytics_threaded()")
+			self._logger.warning("_send_last_img_to_analytics_threaded() Can not convert analytics_data to json: %s", self.analytics)
+
+		dist = ''
+		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
+		try:
+			with open(path_to_cam_params, 'r') as f:
+				dist = base64.b64encode(f.read())
+		except:
+			self._logger.warning("_send_last_img_to_analytics_threaded() Can not read npz file: %s", path_to_cam_params)
+
+		payload = {'img_base64': img,
+					'img_type': img_format,
+					'distortion_matrix_base64': dist,
+					'trigger': trigger,
+					'metadata': {
+						'min_pix_amount': self._settings.get(['cam', 'markerRecognitionMinPixel']),
+						'analytics': analytics_str,
+						'trigger': trigger},
+					}
+		self._logger.debug("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
+							trigger, len(img), force_upload, payload['metadata'])
+		self._analytics_handler.add_camera_image(payload)
+		if force_upload:
+			self._analytics_handler.upload()
+
+		if notify_user:
+			self._plugin.user_notification_system.show_notifications(
+				self._plugin.user_notification_system.get_notification(
+					notification_id='msg_cam_image_analytics_sent'))
 
 	def _ready_to_send_pic(self, correction_result, force=False):
 		self.last_correction_result = correction_result
