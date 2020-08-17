@@ -4,7 +4,6 @@ import time
 import numpy as np
 import json
 import logging
-from octoprint_mrbeam.mrb_logger import mrb_logger
 import sys
 from functools import wraps
 
@@ -76,6 +75,7 @@ def logme(input=False, output=False):
 	return decorator
 
 def debug_logger(function=None):
+	from octoprint_mrbeam.mrb_logger import mrb_logger
 	getLogger = mrb_logger
 	if function is None:
 		logger = getLogger("debug logger")
