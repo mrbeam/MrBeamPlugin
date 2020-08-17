@@ -49,7 +49,10 @@ def logExceptions(f):
 	return wrap
 
 def json_serialisor(elm):
-	"""Attempts to return a serialisable element if the given one is not."""
+	"""
+	Attempts to return a serialisable element if the given one is not.
+	@see json.dumps
+	"""
 	if elm is None or type(elm) in [bool, int, float, str, list, tuple, dict]:
 		# These types are already supported
 		return elm
@@ -109,10 +112,11 @@ def debug_logger(function=None):
 	logger.setLevel(logging.DEBUG)
 	return logger
 
-def get_thread(callback=None, logname=None, daemon=False):
+def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
 	"""
 	returns a function that threads an other function and running a callback if provided.
 	Returns the started thread object.
+	It also logs any Exceptions that happen in that function.
 	see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
 	See https://stackoverflow.com/questions/14234547/threads-with-decorators
 	"""
@@ -132,7 +136,7 @@ def get_thread(callback=None, logname=None, daemon=False):
 					# except Exception as e:
 					# 	logger.exception("E")
 
-				t = threading.Thread(target=do_callback, args=a, kwargs=kw)
+				t = threading.Thread(target=do_callback, args=a, kwargs=kw, *th_a, **th_kw)
 			else:
 				t = threading.Thread(target=f, args=a, kwargs=kw)
 			if daemon:
