@@ -10,7 +10,7 @@ SW_UPDATE_TIER_BETA =      "BETA"
 SORT_UP_PREFIX = ' '
 
 
-_logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
+_logger = mrb_logger(__name__)
 
 sw_update_config = dict()
 

@@ -8,7 +8,6 @@ from itertools import chain, repeat, cycle
 from functools import wraps
 from copy import copy
 import threading
-from .log import logExceptions, logtime
 
 def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 	"""Recursive dictionnary update.
@@ -29,6 +28,7 @@ def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 		return d2
 
 def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
+	from .log import logExceptions
 	"""
 	returns a function that threads an other function and running a callback if provided.
 	Returns the started thread object.
@@ -85,3 +85,66 @@ def makedirs(path, parent=False, *a, **kw):
 			pass
 		else:
 			raise
+
+def force_kwargs(**defaultKwargs):
+	"""Assigns default kwarg values if they are not *strictly* defined.
+	Be careful to use *args as well when defining the function.
+	Only necessary for python2.
+
+	```
+	@force_kwargs(b=-3)
+	def g(a, *args, **kwargs):
+	  print("a %s, b %s, args %s, kwargs %s" % (a, b, args, kwargs))
+
+	g(1, 2, 3) # a 1, args (2,3), kwargs {'b' = -3}
+	g(1, 2, b=3) # a 1, args(2,), kwargs {'b' = 3 }
+
+	@force_kwargs(b=-3)
+	def f(a, b=None, *args, **kwargs):
+	  print("a %s, b %s, args %s, kwargs %s" % (a, b, args, kwargs))
+
+	f(1, 2, 3) # a 1, b -3, args (3,), kwargs {}
+	f(1, 2, b=3) # a 1, b 3, args(2,), kwargs {}
+
+	```
+
+	In Python3, this can be overcome with:
+
+	```
+	def f(a, *args, b=-3, **kwargs):
+	  print("a %s, b %s, args %s, kwargs %s" % (a, b, args, kwargs))
+
+	f(1, 2, 3) # a 1, b -3, args (3,), kwargs {}
+	f(1, 2, c=5, b=3) # a 1, b 3, args(2,), kwargs {'c'=5}
+	```
+
+	@see: https://stackoverflow.com/a/50107777/11136955
+	"""
+	def decorator(f):
+		@wraps(f)
+		def g(*args, **kwargs):
+			new_args = {}
+			varnames = f.__code__.co_varnames
+			for k, v in defaultKwargs.items():
+				if k in varnames:
+					i = varnames.index(k)
+					if i >= f.__code__.co_argcount:
+						# named same as args or kwargs as in f(a, *args, **kwargs)
+						# So it must go into kwargs if not already defined
+						if not k in kwargs.keys():
+							kwargs[k] = v
+					elif k in kwargs.keys():
+						new_args[i] = kwargs.pop(k)
+
+					else:
+						new_args[i] = defaultKwargs[k]
+				elif not k in kwargs.keys():
+					kwargs[k] = v
+			# Insert new_args into the correct position of the args.
+			full_args = list(args)
+			for i in sorted(new_args.keys()):
+				full_args.insert(i, new_args[i])
+			# print("\n\nforce kwargs " + f.__name__ + ", args " + str(full_args) + ", final_kwargs " + str(kwargs) +'\n\n')
+			return f(*tuple(full_args), **kwargs)
+		return g
+	return decorator

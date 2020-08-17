@@ -27,7 +27,7 @@ class CompressorHandler(object):
 	MAX_TIMES_RPM_0 = 5
 
 	def __init__(self, plugin):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.compressorhandler")
+		self._logger = mrb_logger(__name__)
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._printer = plugin._printer

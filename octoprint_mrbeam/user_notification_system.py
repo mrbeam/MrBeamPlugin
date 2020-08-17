@@ -23,7 +23,7 @@ class UserNotificationSystem(object):
 
 	def __init__(self, plugin):
 		global _plugin_version, _plugin_env
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.user_notificatation_system")
+		self._logger = mrb_logger(__name__)
 		self._plugin = plugin
 		self._plugin_manager = plugin._plugin_manager
 		self._event_bus = plugin._event_bus

@@ -24,7 +24,7 @@ class JobTimeEstimation:
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.job_time_estimation")
+		self._logger = mrb_logger(__name__)
 
 		self._last_estimation = -1
 		self._meta = dict()

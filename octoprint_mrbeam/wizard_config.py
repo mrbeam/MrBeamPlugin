@@ -6,7 +6,7 @@ class WizardConfig:
 	def __init__(self, plugin):
 		self.WIZARD_VERSION = 19  # (v0.7.0) random number. but we can't go down anymore, just up.
 
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
+		self._logger = mrb_logger(__name__)
 
 		self._plugin = plugin
 		self._user_manager = plugin._user_manager

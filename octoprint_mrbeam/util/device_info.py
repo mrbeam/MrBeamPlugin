@@ -32,7 +32,7 @@ class DeviceInfo(object):
 	MODEL_MRBEAM_2_DC = 'MRBEAM2_DC'
 	
 	def __init__(self, use_dummy_values=False):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.util.device_info")
+		self._logger = mrb_logger(__name__)
 		self._device_data = self._read_file() if not use_dummy_values else self._get_dummy_values()
 	
 	def get(self, key, default=None):

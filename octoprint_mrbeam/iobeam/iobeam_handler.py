@@ -158,7 +158,7 @@ class IoBeamHandler(object):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._socket_file = plugin._settings.get(["dev", "sockets", "iobeam"])
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam")
+		self._logger = mrb_logger(__name__)
 
 		self._shutdown_signaled = False
 		self._isConnected = False

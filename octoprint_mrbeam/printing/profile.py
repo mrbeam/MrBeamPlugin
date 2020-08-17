@@ -224,7 +224,7 @@ class LaserCutterProfileManager(object):
 		self._folder = self.settings.getBaseFolder("printerProfiles")+"/lasercutterprofiles"
 		if not os.path.exists(self._folder):
 			os.makedirs(self._folder)
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.profile")
+		self._logger = mrb_logger(__name__)
 
 	def select(self, identifier):
 		"""

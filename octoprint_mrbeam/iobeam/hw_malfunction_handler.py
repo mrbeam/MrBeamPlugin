@@ -27,7 +27,7 @@ class HwMalfunctionHandler(object):
 	MALFUNCTION_ID_GENERAL = 'hw_malfunction'
 
 	def __init__(self, plugin):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.hw_malfunction")
+		self._logger = mrb_logger(__name__)
 		self._plugin = plugin
 		self._user_notification_system = plugin.user_notification_system
 		self._event_bus = plugin._event_bus

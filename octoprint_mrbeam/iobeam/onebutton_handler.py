@@ -57,7 +57,7 @@ class OneButtonHandler(object):
 		self._settings = settings
 		self._printer = printer
 		self._user_notification_system = plugin.user_notification_system
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.onebutton_handler")
+		self._logger = mrb_logger(__name__)
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 		self.ready_to_laser_ts = -1

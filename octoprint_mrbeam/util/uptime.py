@@ -10,7 +10,7 @@ def get_uptime():
 			uptime = float(f.readline().split()[0])
 		return uptime
 	except Exception as e:
-		mrb_logger("octoprint.plugins.mrbeam.util.uptime").exception('Exception during get_uptime: {}'.format(e), analytics=False)
+		mrb_logger(__name__).exception('Exception during get_uptime: {}'.format(e), analytics=False)
 		return None
 	
 def get_uptime_human_readable(uptime_seconds=None):

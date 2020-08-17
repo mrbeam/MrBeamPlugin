@@ -50,7 +50,7 @@ class LabelPrinter(object):
 
 	def __init__(self, plugin, use_dummy_values=False):
 		self._plugin = plugin
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.camera.label_printer")
+		self._logger = mrb_logger(__name__)
 		self._device_info = deviceInfo(use_dummy_values=use_dummy_values)
 
 	def print_label(self, request):
