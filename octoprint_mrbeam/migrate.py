@@ -48,7 +48,7 @@ class Migration(object):
 
 
 	def __init__(self, plugin):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
+		self._logger = mrb_logger(__name__)
 		self.plugin = plugin
 
 		self.version_previous = self.plugin._settings.get(['version']) or "0.0.0"

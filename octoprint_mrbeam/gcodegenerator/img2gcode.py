@@ -68,7 +68,7 @@ class ImageProcessor:
 	              eng_compressor = 100, # DreamCut.
 	              material = None):
 
-		self.log = mrb_logger("octoprint.plugins.mrbeam.img2gcode")
+		self.log = mrb_logger(__name__)
 		self.profiler = Profiler("img2gcode")
 		self.profiler.start('init')
 

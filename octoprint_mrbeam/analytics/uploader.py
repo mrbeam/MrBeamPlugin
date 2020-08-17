@@ -25,7 +25,7 @@ class FileUploader:
 	STATUS_DONE = 'done'
 
 	def __init__(self, plugin, directory, file, upload_type, lock):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.uploader")
+		self._logger = mrb_logger(__name__)
 		self._plugin = plugin
 		self.directory = directory
 		self.file = file
@@ -199,7 +199,7 @@ class AnalyticsFileUploader(FileUploader):
 				AnalyticsFileUploader._instance._start_uploader_thread()
 				return
 		except Exception as e:
-			mrb_logger("octoprint.plugins.mrbeam.analytics.uploader").exception(
+			mrb_logger(__name__).exception(
 				'Exception during upload_now in AnalyticsFileUploader: {}'.format(e))
 
 
@@ -227,5 +227,5 @@ class ReviewFileUploader(FileUploader):
 				ReviewFileUploader._instance._start_uploader_thread()
 				return
 		except Exception as e:
-			mrb_logger("octoprint.plugins.mrbeam.analytics.uploader").exception(
+			mrb_logger(__name__).exception(
 				'Exception during upload_now in ReviewFileUploader: {}'.format(e))

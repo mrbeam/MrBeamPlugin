@@ -118,7 +118,7 @@ class MachineCom(object):
 	pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
+		self._logger = mrb_logger(__name__)
 
 		if port is None:
 			port = settings().get(["serial", "port"])
@@ -2212,7 +2212,7 @@ class PrintingFileInformation(object):
 	"""
 
 	def __init__(self, filename):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2.PrintingFileInformation")
+		self._logger = mrb_logger(__name__)
 		self._filename = filename
 		self._pos = 0
 		self._size = None

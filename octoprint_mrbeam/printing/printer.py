@@ -11,7 +11,7 @@ class Laser(Printer):
 
 	def __init__(self, fileManager, analysisQueue, printerProfileManager):
 		Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.printer")
+		self._logger = mrb_logger(__name__)
 		self._stateMonitor = LaserStateMonitor(
 			interval=0.5,
 			on_update=self._sendCurrentDataCallbacks,

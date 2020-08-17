@@ -26,7 +26,7 @@ class TimerHandler:
 	ONLINE_CHECK_URL = 'https://find.mr-beam.org/onlinecheck'
 
 	def __init__(self, plugin, analytics_handler, analytics_lock):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.timerhandler")
+		self._logger = mrb_logger(__name__)
 		self._plugin = plugin
 		self._analytics_handler = analytics_handler
 		self._analytics_lock = analytics_lock

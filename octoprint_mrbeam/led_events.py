@@ -87,7 +87,7 @@ class LedEventListener(CommandTrigger):
 		CommandTrigger.__init__(self, plugin._printer)
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.led_events")
+		self._logger = mrb_logger(__name__)
 
 		self._watch_thread = None
 		self._watch_active = False

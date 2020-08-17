@@ -22,7 +22,7 @@ class UsageHandler(object):
 	MIN_DUST_VALUE = 0.2
 
 	def __init__(self, plugin):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.usage")
+		self._logger = mrb_logger(__name__)
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings

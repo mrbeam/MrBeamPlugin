@@ -23,7 +23,7 @@ class TemperatureManager(object):
 	TEMP_MAX_AGE = 10  # seconds
 
 	def __init__(self, plugin):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.temperaturemanager")
+		self._logger = mrb_logger(__name__)
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self.temperature = None

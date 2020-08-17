@@ -11,7 +11,7 @@ SUPPORT_STICK_FILE_MAX_AGE = 60 * 60 * 24
 USER_NAME = 'support@mr-beam.org'
 USER_PW   = 'a'
 
-_logger = mrb_logger("octoprint.plugins.mrbeam.support")
+_logger = mrb_logger(__name__)
 
 def check_support_mode(plugin):
 	"""

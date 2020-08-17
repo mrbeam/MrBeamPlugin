@@ -90,3 +90,30 @@ def debug_logger(function=None):
 	logger.setLevel(logging.DEBUG)
 	return logger
 
+def force_getLogger(name, loggerClass):
+	"""Copied from the logging package, forces the logging utility to use and return given logger class."""
+	import logging
+	manager = logging.Logger.manager
+	rv = None
+	if not isinstance(name, str):
+		raise TypeError('A logger name must be a string')
+	logging._acquireLock()
+
+	try:
+		if name in manager.loggerDict:
+			rv = manager.loggerDict[name]
+			if not isinstance(rv, loggerClass):
+				ph = rv
+				rv = loggerClass(name)
+				rv.manager = logging.Logger.manager
+				rv.manager.loggerDict[name] = rv
+				rv.manager._fixupParents(rv)
+		else:
+			rv = loggerClass(name)
+			rv.manager = manager
+			rv.manager.loggerDict[name] = rv
+			rv.manager._fixupParents(rv)
+	finally:
+		logging._releaseLock()
+	print(__name__ + "FORCE LOGGER " + str(rv))
+	return rv

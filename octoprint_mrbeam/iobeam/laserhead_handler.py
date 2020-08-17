@@ -22,7 +22,7 @@ class LaserheadHandler(object):
 	LASERHEAD_SERIAL_REGEXP = re.compile("^[0-9a-f-]{36}$")
 
 	def __init__(self, plugin):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.laserhead")
+		self._logger = mrb_logger(__name__)
 		self._plugin = plugin
 		self._settings = plugin._settings
 		self._event_bus = plugin._event_bus
