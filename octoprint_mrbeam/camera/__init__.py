@@ -12,7 +12,7 @@ from octoprint_mrbeam.util.img import differed_imwrite
 
 SUCCESS_WRITE_RETVAL = 1
 
-from octoprint_mrbeam.util import logtime, logme
+from octoprint_mrbeam.util.log import logtime, logme
 
 try:
 	import picamera

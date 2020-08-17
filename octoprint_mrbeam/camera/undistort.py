@@ -7,8 +7,9 @@ from numpy.linalg import norm
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
 import octoprint_mrbeam.camera as camera
-from octoprint_mrbeam.util import dict_merge, logme, debug_logger, logExceptions, logtime
+from octoprint_mrbeam.util import dict_merge
 from octoprint_mrbeam.util.img import differed_imwrite
+from octoprint_mrbeam.util.log import logme, debug_logger, logExceptions, logtime
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 CALIB_MARKERS_KEY = 'calibMarkers'
