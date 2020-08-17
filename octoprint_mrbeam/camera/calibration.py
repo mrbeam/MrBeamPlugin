@@ -98,7 +98,6 @@ class BoardDetectorDaemon(Thread):
 		self.path_inc = 0
 
 		Thread.__init__(self, target=self.processInputImages, name=self.__class__.__name__)
-		Logger.__init__(self, name=__name__ + '.' + self.__class__.__name__)
 
 		# self.daemon = False
 		# catch SIGTERM used by Process.terminate()

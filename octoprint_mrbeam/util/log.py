@@ -76,8 +76,6 @@ def logme(input=False, output=False):
 	return decorator
 
 def debug_logger(function=None):
-	# TODO: AXEL should we use mrb_logger here?
-	# TODO could switch to normal getlogger if analytics deactivated?
 	getLogger = mrb_logger
 	if function is None:
 		logger = getLogger("debug logger")
@@ -92,6 +90,3 @@ def debug_logger(function=None):
 	logger.setLevel(logging.DEBUG)
 	return logger
 
-class Logger:
-	def __init__(self, name=__name__, lvl=logging.INFO, *a, **kw):
-		self._logger = mrb_logger(name, lvl=lvl, *a, **kw)
