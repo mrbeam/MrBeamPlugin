@@ -129,20 +129,23 @@
 			self.session.rotate.cy = rcy;
 			
 			// Matrix to unrotate the mouse movement dxMM,dyMM 
-			self.session.rotate._unrotateM = Snap.matrix().rotate(-self.session.rotate._alpha)
+			self.session.rotate._unrotateM = Snap.matrix().rotate(-Math.sign(self.session.originMatrix.a) *  Math.sign(self.session.originMatrix.d) * self.session.rotate._alpha); 
+			self.session.rotate.mirroredY = Math.sign(self.session.scale._m.d); // TODO somehow this must be mergable with the matrix above.
 			
 			self.session.rotate.vcx = self.session.bboxWithoutTransform.cx;
 			self.session.rotate.vcy = self.session.bboxWithoutTransform.cy;
 			
+//			console.log("scales ", Math.sign(self.session.scale._m.a), Math.sign(self.session.scale._m.d));
 		}	
 
 		self.rotateMove = function( target, dx, dy, x, y, event ){
 			// calculate viewbox coordinates incl. zoom & pan (mm)
 			const dxMM = self._convertToViewBoxUnits(dx);
 			const dyMM = self._convertToViewBoxUnits(dy);
+
 			// transform mouse movement into virgin (=unrotated) coord space
-			const rdx = self.session.rotate._unrotateM.x(dxMM, dyMM);
-			const rdy = self.session.rotate._unrotateM.y(dxMM, dyMM);
+			const rdx = self.session.rotate.mirroredY * self.session.rotate._unrotateM.x(dxMM, dyMM);
+			const rdy = self.session.rotate.mirroredY * self.session.rotate._unrotateM.y(dxMM, dyMM);
 			
 			const ax = self.session.rotate.ax;
 			const ay = self.session.rotate.ay;
@@ -288,7 +291,7 @@
 			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) + sss.mx;
 			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM) * Math.sign(sss._m.d) + sss.my;
 			
-			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY)
+			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY);
 
 			const distX = (rotatedMouseX - sss.cx);
 			const distY = (rotatedMouseY - sss.cy); // TODO invert if oldscaleY (_m.d) is negative
@@ -298,7 +301,7 @@
 			
 			if(sss.prop){ // link the factors (min abs value), keep the sign
 
-				let newSx = scaleX * self.session.originTransform.scalex;
+				let newSx = scaleX * self.session.originTransform.scalex; // careful with originTransform - y-scaleing = -1 results in:  x-scaleing =-1 & rotation 180°
 				let newSy = scaleY * self.session.originTransform.scaley;
 				const signX = Math.sign(scaleX);
 				const signY = Math.sign(scaleY);
@@ -578,7 +581,6 @@
 		self._convertToViewBoxUnitsWithTransform = function(dx, dy){
 			const rotation = self.session.originMatrix.split().rotate;
 			
-			console.log("rotation", rotation, self.session.rotate.alpha);
 			const mat = Snap.matrix().rotate(rotation);
 			const dxMM = dx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 			const dyMM = dy * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
@@ -587,16 +589,6 @@
 			return [transformedX, transformedY];
 		};
 		
-//		self._get_pointer_event_position_MM = function(event){
-//			var targetBBox = self.paper.node.getBoundingClientRect();
-//			const xPx = (event.clientX - targetBBox.left);
-//			const yPx = (event.clientY - targetBBox.top);
-//			const xPerc = xPx / targetBBox.width;
-//			const yPerc = yPx / targetBBox.height;
-//			const xMM = xPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[0];
-//			const yMM = yPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[1];
-//			return {xPx: xPx, yPx: yPx, xPerc: xPerc, yPerc: yPerc, xMM: xMM, yMM: yMM};
-//		};
 
 		self._alignHandlesToBB = function(bbox_to_wrap){
 			if(bbox_to_wrap) {
@@ -784,6 +776,7 @@
 			var paper = this;
 			self.paper = paper;
 			self.isEnabled = false;
+			self.positions = 0;
 			
 			paper.debug = self;
 			self.initialized = true;
@@ -906,7 +899,60 @@
 			const matrixStr = axesEl.transform().totalMatrix.toTransformString();
 			axesEl.select('.label').attr({text:`${label}: ${matrixStr}`});
 			return axesEl;
-		}		
+		}
+		
+		self.position = function(label, el, color='#ff00ff'){
+			if(!self.isEnabled) return;
+			
+			if(!label){
+				console.error("debug.position needs a label!");
+				return;
+			}
+			
+			const id = `_dbg_${label}`;
+			
+			// check if exists
+			let posEl = self.paper.select('#'+id);
+			if(!posEl) {
+				const y = self.positions * 8;
+				posEl = self.paper.text({x: 0, y: y, dy:8, fill: color, style: 'font-size:8px; font-family:monospace; vector-effect:non-scaling-stroke;'})
+				self.positions += 1; 
+			}
+			
+			if(typeof el === "string"){
+				const selector = el;
+				el = self.paper.select(selector);
+			}
+			
+			if(!el){
+				console.error("debug.position needs an element or selector to work on!");
+				return;
+			}
+			
+			self.paper.mousemove(function(e){
+				let parentMat = Snap.matrix();
+				if(el !== null){
+					parentMat = el.transform().totalMatrix.invert();
+				}
+				const mmPos = self._get_pointer_event_position_MM(e);
+				const x = parentMat.x(mmPos.xMM, mmPos.yMM);
+				const y = parentMat.y(mmPos.xMM, mmPos.yMM);
+				const text = `${label}: ${x.toFixed(1)},${y.toFixed(1)}`;
+				posEl.attr({text: text});
+				
+			});
+		};
+
+		self._get_pointer_event_position_MM = function(event){
+			var targetBBox = self.paper.node.getBoundingClientRect();
+			const xPx = (event.clientX - targetBBox.left);
+			const yPx = (event.clientY - targetBBox.top);
+			const xPerc = xPx / targetBBox.width;
+			const yPerc = yPx / targetBBox.height;
+			const xMM = xPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[0];
+			const yMM = yPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[1];
+			return {xPx: xPx, yPx: yPx, xPerc: xPerc, yPerc: yPerc, xMM: xMM, yMM: yMM};
+		};
 		
 		self.add_to_parent = function(element, parent){
 			if(!parent){
