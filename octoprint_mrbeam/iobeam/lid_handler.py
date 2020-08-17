@@ -743,11 +743,10 @@ class PhotoCreator(object):
 
 			# upload image to analytics
 			pic_counter += 1
-			force = pic_counter <= 10 \
-			        or  (pic_counter > 10 and pic_counter % 10 == 0)
 			if self._plugin.is_dev_env() \
 			        and self._settings.get(['dev', 'automatic_camera_image_upload']) \
-			        and force:
+			        and (pic_counter <= 10 \
+			             or  (pic_counter > 10 and pic_counter % 10 == 0)):
 				self.send_last_img_to_analytics(
 					trigger='dev_auto', force=(pic_counter%10==0)
 				)
