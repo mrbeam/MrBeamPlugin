@@ -738,17 +738,25 @@ class PhotoCreator(object):
 			)
 
 			# upload image to analytics if env is dev
-			if self._plugin.is_dev_env() and self._settings.get(['dev', 'automatic_camera_image_upload'])\
-					and latest is not None \
-					and (loop_counter <= 10 \
-					or  (loop_counter > 10 and loop_counter % 10 == 0)):
+			if self._plugin.is_dev_env():
+				condition = self._settings.get(['dev', 'automatic_camera_image_upload']) \
+				            and latest is not None \
+				            and (loop_counter <= 10 \
+				                or  (loop_counter > 10 and loop_counter % 10 == 0))
+				name = 'dev_auto'
+				force = (count_sent_pictures_analytics%10==0)
+			else:
+				condition = self._flag_send_img_to_analytics
+				name = 'user'
+				force = True
+			if condition:
 				count_sent_pictures_analytics += 1
-				self._send_last_img_to_analytics(latest, 'dev_auto',
+				self._send_last_img_to_analytics(latest, name,
 								 self.last_markers, missed,
 								 min_pix_amount,
 								 analytics,
-								 force_upload=(count_sent_pictures_analytics%10==0),
-								 notify_user=False)
+								 force_upload=force,
+								 notify_user=(name=='user'))
 			self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 
 		self.last_shutter_speed = cam.shutter_speed
@@ -893,7 +901,7 @@ class PhotoCreator(object):
 						   }
 				self._logger.debug("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
 								  trigger, len(img), force_upload, payload['metadata'])
-				# self._analytics_handler.add_camera_image(payload)
+				self._analytics_handler.add_camera_image(payload)
 				if force_upload:
 					self._analytics_handler.upload()
 
