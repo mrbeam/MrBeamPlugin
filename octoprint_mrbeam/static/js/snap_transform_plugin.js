@@ -399,8 +399,6 @@
 					const rcx = self.session.rotate.cx;
 					const rcy = self.session.rotate.cy;
 					
-					self.paper.select('#debugRotateCenter').transform(`t${rcx},${rcy}`); // TODO: move to visualization or remove
-
 					//const matRotate = Snap.matrix().rotate(alpha, rcx, rcy);
 					const matRotate = self.session.rotate._m.clone().rotate(self.session.rotate.alpha, rcx, rcy);
 					self.rotateGroup.transform(matRotate);
@@ -718,21 +716,27 @@
 			// where to show visualizations 
 			let handleIsLeft = Math.sign(sss.cx - sss.mx);
 			let handleIsTop = Math.sign(sss.cy - sss.my);
-			const sxPositive = Math.sign(sss.sx);
-			const syPositive = Math.sign(sss.sy);
+//			const sxPositive = Math.sign(sss.sx);
+//			const syPositive = Math.sign(sss.sy);
+			const sxPositive = Math.sign(totalSx);
+			const syPositive = Math.sign(totalSy);
 			const rulerCx = cx - handleIsLeft * Math.sign(sss._m.a) * width / 2;
 			const rulerCy = cy - handleIsTop * Math.sign(sss._m.d) * height / 2;
 			if(!sss.prop){
 				if(sss.signX === 0) handleIsLeft = 1;
 				if(sss.signY === 0) handleIsTop = 1;
 			}
+			
+			self.paper.debug.line(`rulerCx`, rulerCx, 0, rulerCx, 300, '#ff0000', '#scaleVis');
+			console.log("handleIsLeft", handleIsLeft, "sxPositive", sxPositive, "rulerCx", rulerCx);
+
 
 			self.scaleVis.node.classList.toggle('showX', sss.signX !== 0);
 			self.scaleVis.node.classList.toggle('showY', sss.signY !== 0);
 			
 //			self.paper.debug.point('scaleVisCenter', 0, 0, '#005303', '#scaleVis');
 			
-			self.paper.debug.coords('scaleVis', '#999999', '#scaleVis');
+//			self.paper.debug.coords('scaleVis', '#999999', '#scaleVis');
 			
 			// move ruler center to the center of the translatehandle bbox
 			const visM = Snap.matrix(1,0,0,1,rulerCx, rulerCy);
@@ -777,6 +781,7 @@
 			self.paper = paper;
 			self.isEnabled = false;
 			self.positions = 0;
+			self.persist = false;
 			
 			paper.debug = self;
 			self.initialized = true;
@@ -975,7 +980,9 @@
 		// TODO: coord grid, path, circle
 		
 		self.cleanup = function(){
-			self.paper.selectAll('._dbg_').remove();
+			if(!self.persist){
+				self.paper.selectAll('._dbg_').remove();
+			}
 		};
 		
 	});
