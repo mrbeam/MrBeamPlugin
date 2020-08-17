@@ -288,7 +288,7 @@
 			sss.dyMM = dyMM;
 			
 			// mouse position transformed the same way like the handles to calculate scaling distances within rotated coordinate system
-			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) + sss.mx;
+			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) * Math.sign(sss._m.d) + sss.mx;
 			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM) * Math.sign(sss._m.d) + sss.my;
 			
 			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY);
@@ -318,8 +318,8 @@
 					sss.dominantAxis = 'y';
 				}
 				
-				sss.sx = scaleX;// * formerScale * formerSignX;
-				sss.sy = scaleY;// * formerScale * formerSignY; 
+				sss.sx = scaleX;
+				sss.sy = scaleY; 
 				
 			} else {
 				
@@ -370,9 +370,9 @@
 
 			self.session.bb = self._transformBBox(self.session.bboxWithoutTransform, self.session.initialMatrix); 
 			
-			self.paper.debug.coords('scale', '#ffaaaa', self.scaleGroup);
-			self.paper.debug.coords('rotate', '#aaffaa', self.rotateGroup);
-			self.paper.debug.coords('translate', '#aaaaff', self.translateGroup);
+//			self.paper.debug.coords('scale', '#ffaaaa', self.scaleGroup);
+//			self.paper.debug.coords('rotate', '#aaffaa', self.rotateGroup);
+//			self.paper.debug.coords('translate', '#aaaaff', self.translateGroup);
 			
 		}
 		
