@@ -28,7 +28,7 @@ if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
 		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
-from octoprint_mrbeam.util import dict_merge, json_serialisor, logme, get_thread, makedirs, logExceptions
+from octoprint_mrbeam.util import dict_merge, json_serialisor, logme, get_thread, makedirs
 
 SIMILAR_PICS_BEFORE_UPSCALE = 1
 LOW_QUALITY = 65 # low JPEG quality for compressing bigger pictures
@@ -748,7 +748,9 @@ class PhotoCreator(object):
 			if self._plugin.is_dev_env() \
 			        and self._settings.get(['dev', 'automatic_camera_image_upload']) \
 			        and force:
-				self.send_last_img_to_analytics(trigger='dev_auto')
+				self.send_last_img_to_analytics(
+					trigger='dev_auto', force=(pic_counter%10==0)
+				)
 			self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 
 		self.last_shutter_speed = cam.shutter_speed
