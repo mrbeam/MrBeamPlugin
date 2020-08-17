@@ -54,7 +54,8 @@ def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
 
 				t = threading.Thread(target=do_callback, args=a, kwargs=kw, *th_a, **th_kw)
 			else:
-				t = threading.Thread(target=f, args=a, kwargs=kw)
+				logged_f = logExceptions(f)
+				t = threading.Thread(target=logged_f, args=a, kwargs=kw)
 			if daemon:
 				t.daemon = True
 			t.start()

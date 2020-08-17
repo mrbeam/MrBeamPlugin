@@ -749,7 +749,7 @@ class PhotoCreator(object):
 			        and (pic_counter <= 10 \
 			             or pic_counter % 10 == 0):
 				self.send_last_img_to_analytics(
-					trigger='dev_auto', force=(pic_counter%10==0)
+					trigger='dev_auto', force_upload=(pic_counter%10==0)
 				)
 			self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 
