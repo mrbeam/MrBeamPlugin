@@ -39,6 +39,8 @@ $(function () {
 		self.startupComplete = ko.observable(false);
 		self.calibrationScreenShown = ko.observable(false);
 		self.waitingForRefresh = ko.observable(true);
+		self.settingsActive = ko.observable(false);
+		self.cameraSettingsActive = ko.observable(false);
 
 		self.isLocked = ko.observable(false);
 
@@ -67,6 +69,14 @@ $(function () {
 			else
 				return ret
 		})
+
+        /**
+         * lazy-loading manually implemented.
+         * Only returns an URL if the image element is visible.
+         */
+        self.statusRawImageUrl = ko.computed(function() {
+            return self.settingsActive() && self.cameraSettingsActive() ? self.availablePicUrl()['raw'] : null
+        })
 
 		self.calSvgOffX = ko.observable(0);
 		self.calSvgOffY = ko.observable(0);
@@ -287,6 +297,12 @@ $(function () {
 
         // ------------------------------------------------
 
+		self.onAllBound = function () {
+		    new MutationObserver(self._testCameraSettingsActive).observe(
+		        document.getElementById('settings_plugin_mrbeam_camera'),
+                { attributes: true});
+        }
+
 		self.onStartupComplete = function () {
 			if(window.mrbeam.isWatterottMode()){
 				self.loadUndistortedPicture();
@@ -303,10 +319,16 @@ $(function () {
 		};
 
 		self.onSettingsShown = function(){
-			// self.goto('#camera_settings_view');
+            self.settingsActive(true)
+            self._testCameraSettingsActive()
             self.abortCalibration()
             self._updateIsLocked()
 		}
+
+		self.onSettingsHidden = function(){
+		    self.settingsActive(false)
+            self._testCameraSettingsActive()
+        }
 
 		self._updateIsLocked = function () {
 		    if (self.state.isLocked()) {
@@ -314,6 +336,11 @@ $(function () {
             } else {
 		        self.isLocked(false)
             }
+        }
+
+        self._testCameraSettingsActive = function(){
+		    var isActive = self.settingsActive() && $('#settings_plugin_mrbeam_camera').hasClass('active')
+            self.cameraSettingsActive(isActive)
         }
 
 		self.__format_point = function(p){

@@ -2054,14 +2054,18 @@ $(function(){
 		};
 
 		self.onTabChange = function(current, prev){
+            // Since Settings is not a BS dialog anymore,
+            // we need to trigger 'show' and 'hidden' events "manually"
+            // for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
 			if(current == '#settings'){
-				// Since Settings is not a BS dialog anymore,
-				// we need to trigger 'show' and 'hidden' events "manually"
-				// for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
 				if (self.settings && self.settings.settingsDialog) {
 					self.settings.settingsDialog.trigger('show');
 				}
-			}
+			} else if(prev == '#settings') {
+			    if (self.settings && self.settings.settingsDialog) {
+					self.settings.settingsDialog.trigger('hide');
+				}
+            }
 		};
 
 		self.onAfterTabChange = function(current, prev){
