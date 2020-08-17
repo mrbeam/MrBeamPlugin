@@ -35,10 +35,9 @@ def mrb_logger(name, lvl=None):
 
 class MrbLogger(Logger):
 
-
 	terminal_buffer = collections.deque(maxlen=100)
 
-	def __init__(self, name, ignorePrinter=False, level=logging.DEBUG):
+	def __init__(self, name, ignorePrinter=False, level=logging.INFO):
 		Logger.__init__(self, name, level)
 		global _printer
 		self.name_short = name.replace('octoprint.plugins.', '').replace('octoprint_mrbeam', 'mrbeam')
@@ -46,37 +45,43 @@ class MrbLogger(Logger):
 
 	@force_kwargs(**DEFAULT_COMM)
 	def comm(self, msg, id=None, *args, **kwargs):
-		self._terminal(LEVEL_COMM, msg, id=id, *args, **kwargs)
+		if self.isEnabledFor(LEVEL_COMM):
+			self._terminal(LEVEL_COMM, msg, id=id, *args, **kwargs)
 
 	@force_kwargs(**DEFAULT_KWARGS)
 	def debug(self, msg, *args, **kwargs):
-		self._log(logging.DEBUG, msg, args, **kwargs)
+		if self.isEnabledFor(logging.DEBUG):
+			self._log(logging.DEBUG, msg, args, **kwargs)
 
 	@force_kwargs(**DEFAULT_KWARGS)
 	def info(self, msg, *args, **kwargs):
-		print(msg, args, kwargs)
-		self._log(logging.INFO, msg, args, **kwargs)
+		if self.isEnabledFor(logging.INFO):
+			self._log(logging.INFO, msg, args, **kwargs)
 
 	@force_kwargs(**DEFAULT_KWARGS)
 	def warning(self, msg, *args, **kwargs):
-		self._log(logging.WARN, msg, args, **kwargs)
+		if self.isEnabledFor(logging.WARNING):
+			self._log(logging.WARNING, msg, args, **kwargs)
 
 	warn = warning
 
 	# Activate analytics by default for log levels > ERROR
 	@force_kwargs(**DEFAULT_KWARGS)
 	def error(self, msg, analytics=True, *args, **kwargs):
-		self._log(logging.ERROR, msg, args, analytics=analytics, **kwargs)
+		if self.isEnabledFor(logging.ERROR):
+			self._log(logging.ERROR, msg, args, analytics=analytics, **kwargs)
 
 	@force_kwargs(**DEFAULT_KWARGS)
 	def critical(self, msg, analytics=True, *args, **kwargs):
-		self._log(logging.CRITICAL, msg, args, analytics=analytics, **kwargs)
+		if self.isEnabledFor(logging.CRITICAL):
+			self._log(logging.CRITICAL, msg, args, analytics=analytics, **kwargs)
 
 	# Disable the exception stacktrace AXEL : but why?
 	@force_kwargs(**DEFAULT_KWARGS)
 	def exception(self, msg, analytics=True, exc_info=False, *args, **kwargs):
 		# kwargs[''] = kwargs.get('exc_info', True) # why?
-		self._log(logging.ERROR, msg, args, analytics=analytics, exc_info=exc_info, **kwargs)
+		if self.isEnabledFor(logging.ERROR):
+			self._log(logging.ERROR, msg, args, analytics=analytics, exc_info=exc_info, **kwargs)
 
 	# @force_kwargs(**DEFAULT_KWARGS)
 	def _log(
