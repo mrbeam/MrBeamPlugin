@@ -14,7 +14,8 @@ from copy import copy
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import makedirs
-from octoprint_mrbeam.util.log import logme, logtime, logExceptions, Logger
+from octoprint_mrbeam.util.img import differed_imwrite
+from octoprint_mrbeam.util.log import logme, logtime, logExceptions
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 CB_ROWS = 5
@@ -47,7 +48,7 @@ TMP_RAW_FNAME_RE_NPZ =  'tmp_raw_img_[0-9]+.jpg.npz$'
 # REMOTE_CALIBRATE_EXEC = path.join(REMOTE_CALIBRATION_FOLDER, "calibrate2.py")
 # MY_HOSTNAME = "MrBeam-8ae9"
 
-class BoardDetectorDaemon(Thread, Logger):
+class BoardDetectorDaemon(Thread):
 	"""Processes images of chessboards to calibrate the lens used to take the pictures."""
 
 	def __init__(self,
@@ -376,7 +377,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 
 	drawnImg = cv2.drawChessboardCorners(img, board_size, found_pattern, success, )
 	height, width, _ = drawnImg.shape
-	cv2.imwrite(path, drawnImg)
+	differed_imwrite(path, drawnImg)
 	if q_out is not None:
 		q_out.put(dict(
 			path=path,

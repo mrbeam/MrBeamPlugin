@@ -8,6 +8,7 @@ from numpy.linalg import norm
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
 import octoprint_mrbeam.camera as camera
 from octoprint_mrbeam.util import dict_merge
+from octoprint_mrbeam.util.img import differed_imwrite
 from octoprint_mrbeam.util.log import logme, debug_logger, logExceptions, logtime
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
@@ -208,7 +209,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	#             img=cv2.resize(warpedImg, size),
 	#             params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
 	# resize and MAKE greyscale, then save it
-	retval = cv2.imwrite(filename=path_to_output_image,
+	retval = differed_imwrite(filename=path_to_output_image,
 	                     img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
 	                     params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
 	if retval == SUCCESS_WRITE_RETVAL: savedPics['cropped'] = True
@@ -305,10 +306,10 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 			if HUE_BAND_LB <= avg_hsv[0] <= 180 or 0 <= avg_hsv[0] <= HUE_BAND_UB:
 				y, x = np.round(center).astype("int")  # y, x
 				debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
-				cv2.imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
+				differed_imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
 				return dict(pos=center, avg_hsv=avg_hsv, pix_size=count)
 	# No marker found
-	cv2.imwrite(debug_quad_path, roiBlurThresh)
+	differed_imwrite(debug_quad_path, roiBlurThresh)
 	return None
 
 def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
