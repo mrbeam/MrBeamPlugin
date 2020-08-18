@@ -143,9 +143,13 @@ $(function () {
             }
 		    let notFoundStr = notFound.join(", ")
 
-            return self.fourMarkersFound ?
-                gettext("All 4 pink corner markers are recognized") :
-                gettext("Not all pink corner markers are recognized. Missing markers: ") + notFoundStr;
+            if (notFound.length === 0) {
+		        return gettext("No markers found since camera did not launch")
+            } else if (self.fourMarkersFound()) {
+		        return gettext("All 4 pink corner markers are recognized")
+            } else {
+		        return gettext("Not all pink corner markers are recognized. Missing markers: ") + notFoundStr;
+            }
         });
 
 		// ---------------- CAMERA SETTINGS ----------------
