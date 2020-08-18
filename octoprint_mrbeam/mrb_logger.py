@@ -136,7 +136,7 @@ class MrbLogger(Logger):
 		if _printer:
 			_printer.on_comm_log(output)
 		else:
-			logging.getLogger(__name__, msg)
+			getLogger(__name__).warn("Can't log to terminal since _printer is None. Message: %s", msg)
 
 	# TODO AXEL - Never used?
 	def _serial(self, msg, *args, **kwargs):

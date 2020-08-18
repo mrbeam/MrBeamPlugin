@@ -8,7 +8,6 @@ from itertools import chain, repeat, cycle
 from functools import wraps
 from copy import copy
 import threading
-from .log import logExceptions, logtime
 
 def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 	"""Recursive dictionnary update.
