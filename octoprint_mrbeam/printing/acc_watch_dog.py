@@ -18,7 +18,7 @@ class AccWatchDog(object):
 		self.interval = interval or self.DEFAULT_WATCH_INTERVAL
 		self.command_num = command_num or self.DEFAULT_COMMAND_NUM
 
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.acc_watch_dog")
+		self._logger = mrb_logger(__name__)
 		self._comm_acc2 = comm_acc2
 		self._currentFile = None
 		self._repeatedTimer = None

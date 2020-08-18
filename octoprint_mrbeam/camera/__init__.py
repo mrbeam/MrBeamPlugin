@@ -19,7 +19,7 @@ try:
 	PICAMERA_AVAILABLE = True
 except ImportError as e:
 	PICAMERA_AVAILABLE = False
-	logging.getLogger("octoprint.plugins.mrbeam.util.camera").error(
+	logging.getLogger(__name__).error(
 		"Could not import module 'mrbcamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
 

@@ -6,7 +6,7 @@ class ValueCollector(object):
 	def __init__(self, name):
 		self.name = name
 		self.valueList = list()
-		# self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
+		# self._logger = mrb_logger(__name__)
 
 	def addValue(self, value):
 		self.valueList.append(value)

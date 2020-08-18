@@ -25,7 +25,7 @@ class InterLockHandler(object):
 		self._plugin = plugin
 		self._event_bus = event_bus
 		self._plugin_manager = plugin_manager
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.interlockhandler")
+		self._logger = mrb_logger(__name__)
 
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 

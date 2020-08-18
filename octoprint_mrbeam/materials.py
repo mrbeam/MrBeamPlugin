@@ -19,7 +19,7 @@ class Materials(object):
 
 
 	def __init__(self, plugin):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.materials")
+		self._logger = mrb_logger(__name__)
 		self.plugin = plugin
 		self.custom_materials_file = os.path.join(self.plugin._settings.getBaseFolder('base'), self.FILE_CUSTOM_MATERIALS)
 

@@ -53,7 +53,7 @@ class Converter():
 	_tempfile = "/tmp/_converter_output.tmp"
 
 	def __init__(self, params, model_path, workingAreaWidth = None, workingAreaHeight = None, min_required_disk_space=0):
-		self._log = mrb_logger("octoprint.plugins.mrbeam.converter")
+		self._log = mrb_logger(__name__)
 		self.workingAreaWidth = workingAreaWidth
 		self.workingAreaHeight = workingAreaHeight
 		self.optimize_path_order = True

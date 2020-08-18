@@ -65,7 +65,7 @@ class LidHandler(object):
 		self._printer = plugin._printer
 		self._plugin_manager = plugin._plugin_manager
 		self._laserCutterProfile = plugin.laserCutterProfileManager.get_current_or_default()
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler",
+		self._logger = mrb_logger(__name__,
 								  logging.INFO)
 		self._lid_closed = True
 		self._interlock_closed = True
@@ -426,9 +426,9 @@ class PhotoCreator(object):
 		self.analytics = None
 
 		if debug:
-			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
+			self._logger = mrb_logger(__name__, logging.DEBUG)
 		else:
-			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.INFO)
+			self._logger = mrb_logger(__name__, logging.INFO)
 
 		self.last_markers, self.last_shutter_speed = self.load_camera_settings()
 		if self._settings.get(["cam", "keepOriginals"]):

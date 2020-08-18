@@ -15,7 +15,7 @@ class OsHealthCare(object):
 	HEALTHCARE_FILES_FOLDER = "files/os_health_care/"
 
 	def __init__(self, plugin):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.os_health_care")
+		self._logger = mrb_logger(__name__)
 		self.plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)

@@ -42,7 +42,7 @@ class DustManager(object):
 
 	def __init__(self, plugin):
 		self._plugin = plugin
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
+		self._logger = mrb_logger(__name__)
 		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
 		self._event_bus = plugin._event_bus
 		self._printer = plugin._printer

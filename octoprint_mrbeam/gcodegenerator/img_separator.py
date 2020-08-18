@@ -29,7 +29,7 @@ class ImageSeparator():
 	MAX_OUTER_CONTOURS = 30
 
 	def __init__( self):
-		self.log = mrb_logger("octoprint.plugins.mrbeam.img_separator")
+		self.log = mrb_logger(__name__)
 		self.img_debug_folder = "/tmp/separate_contours"
 
 		files = glob.glob(self.img_debug_folder+'/*')

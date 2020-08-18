@@ -16,7 +16,7 @@ class Cpu(object):
 	SAVE_TEMP_INTERVAL = 60.0
 
 	def __init__(self, state=None, repeat=False, interval=None):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.cpu")
+		self._logger = mrb_logger(__name__)
 		self._temp = {}
 		self._throttle_warnings = []
 		self._progress = None
