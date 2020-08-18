@@ -14,6 +14,12 @@ import collections
 from subprocess import check_output
 import logging
 
+from octoprint_mrbeam.mrb_logger import init_mrb_logger, getLogger, MrbLogger
+# Hacky - Set the default logging class to MrbLogger asap
+# Allows to use the analytics handler and/or the terminal kwargs
+logging.setLoggerClass(MrbLogger)
+
+
 import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
@@ -45,7 +51,6 @@ from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.analytics.review_handler import reviewHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger, MrbLogger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.wizard_config import WizardConfig
@@ -124,9 +129,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._cancel_job = False
 		self.print_progress_last = -1
 		self.slicing_progress_last = -1
-		# logging.basicConfig(level=logging.INFO)
-		logging.setLoggerClass(MrbLogger)
-		self._logger = logging.getLogger(__name__)
+		self._logger = getLogger(__name__)
 		self._device_info = deviceInfo(use_dummy_values=IS_X86)
 		self._hostname = None # see self.getHosetname()
 		self._serial_num = None
@@ -152,6 +155,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		logging.setLoggerClass(MrbLogger)
 		# Force use the MrbLogger, because initialize is run directly from Octoprint
 		self._logger = force_getLogger(__name__, MrbLogger)
+		# _logger = getLogger(__name__)
 		init_mrb_logger(self._printer)
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
@@ -207,7 +211,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger.info('MrBeamPlugin initialized!')
 		self.mrbeam_plugin_initialized = True
 		self.fire_event(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
-		print(self._logger)
 		self._do_initial_log()
 
 	def _do_initial_log(self):

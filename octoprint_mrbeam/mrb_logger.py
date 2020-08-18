@@ -6,20 +6,13 @@ import copy
 import threading
 import traceback
 from inspect import getframeinfo, stack
-from logging import getLogger, Logger
+from logging import Logger
 from octoprint_mrbeam.util import force_kwargs
 
 
 _printer = None
 LEVEL_COMM = '_COMM_'
 TERMINAL_BUFFER_DELAY = 2.0
-DEFAULT_KWARGS = dict(
-	analytics=False,
-	terminal=None,
-	terminal_dump=False,
-	terminal_as_comm=False,
-	serial=False,
-)
 DEFAULT_COMM = dict(id=None, exc_info=False)
 
 def init_mrb_logger(printer):
@@ -27,17 +20,28 @@ def init_mrb_logger(printer):
 	_printer = printer
 
 def mrb_logger(name, lvl=None):
-	logger = getLogger(name)
-	if lvl is not None:
-		logger.setLevel(lvl)
+	# DEPRECATED
+	return getLogger(name, level=lvl)
+
+def getLogger(name, level=None):
+	"""Get the logger with given name.
+	@param level: the logging level at which the logger should be.
+	              (if logger already existed, it's level gets overriden)
+	"""
+	logger = logging.getLogger(name)
+	if level is not None:
+		logger.setLevel(level)
 	return logger
 
 
 class MrbLogger(Logger):
+	"""Logger class that can be use to send some of the log messages to the Mr Beam analytics.
+	Error, Critical and Exception messages get automatically sent to the analytics.
+	"""
 
 	terminal_buffer = collections.deque(maxlen=100)
 
-	def __init__(self, name, ignorePrinter=False, level=logging.INFO):
+	def __init__(self, name, ignorePrinter=False, level=logging.NOTSET):
 		Logger.__init__(self, name, level)
 		global _printer
 		self.name_short = name.replace('octoprint.plugins.', '').replace('octoprint_mrbeam', 'mrbeam')
@@ -48,42 +52,25 @@ class MrbLogger(Logger):
 		if self.isEnabledFor(LEVEL_COMM):
 			self._terminal(LEVEL_COMM, msg, id=id, *args, **kwargs)
 
-	@force_kwargs(**DEFAULT_KWARGS)
-	def debug(self, msg, *args, **kwargs):
-		if self.isEnabledFor(logging.DEBUG):
-			self._log(logging.DEBUG, msg, args, **kwargs)
-
-	@force_kwargs(**DEFAULT_KWARGS)
-	def info(self, msg, *args, **kwargs):
-		if self.isEnabledFor(logging.INFO):
-			self._log(logging.INFO, msg, args, **kwargs)
-
-	@force_kwargs(**DEFAULT_KWARGS)
-	def warning(self, msg, *args, **kwargs):
-		if self.isEnabledFor(logging.WARNING):
-			self._log(logging.WARNING, msg, args, **kwargs)
-
-	warn = warning
+	warn = Logger.warning # In order to use the deprecated call
 
 	# Activate analytics by default for log levels > ERROR
-	@force_kwargs(**DEFAULT_KWARGS)
+	@force_kwargs(analytics=True)
 	def error(self, msg, analytics=True, *args, **kwargs):
 		if self.isEnabledFor(logging.ERROR):
 			self._log(logging.ERROR, msg, args, analytics=analytics, **kwargs)
 
-	@force_kwargs(**DEFAULT_KWARGS)
+	@force_kwargs(analytics=True)
 	def critical(self, msg, analytics=True, *args, **kwargs):
 		if self.isEnabledFor(logging.CRITICAL):
 			self._log(logging.CRITICAL, msg, args, analytics=analytics, **kwargs)
 
 	# Disable the exception stacktrace AXEL : but why?
-	@force_kwargs(**DEFAULT_KWARGS)
+	@force_kwargs(analytics=True, exc_info=False,)
 	def exception(self, msg, analytics=True, exc_info=False, *args, **kwargs):
-		# kwargs[''] = kwargs.get('exc_info', True) # why?
 		if self.isEnabledFor(logging.ERROR):
 			self._log(logging.ERROR, msg, args, analytics=analytics, exc_info=exc_info, **kwargs)
 
-	# @force_kwargs(**DEFAULT_KWARGS)
 	def _log(
 		self,
 		level,
@@ -112,9 +99,7 @@ class MrbLogger(Logger):
 		if terminal or (terminal is None and level >= logging.WARN):
 			self._terminal(level, msg, *args, **kwargs)
 		if terminal_as_comm or level == LEVEL_COMM:
-			kwargs['id'] = ''
 			self._terminal(LEVEL_COMM, msg, *args, **kwargs)
-			del kwargs['id']
 		if serial:
 			self._serial(msg, *args, **kwargs)
 		if terminal_dump:
@@ -153,8 +138,9 @@ class MrbLogger(Logger):
 		else:
 			logging.getLogger(__name__, msg)
 
+	# TODO AXEL - Never used?
 	def _serial(self, msg, *args, **kwargs):
-		logging.getLogger("SERIAL").debug(msg, *args, **kwargs)
+		getLogger("SERIAL").debug(msg, *args, **kwargs)
 
 	def _analytics_log_event(self, level, msg, analytics_id, exc_info=0, terminal_dump=False, *args, **kwargs):
 		analytics_handler = self._get_analytics_handler()
@@ -212,7 +198,7 @@ class MrbLogger(Logger):
 				temp_timer.start()
 			else:
 				tmp_arr = []
-				my_logger = logging.getLogger('octoprint.plugins.mrbeam.terminal_dump')
+				my_logger = getLogger('octoprint_mrbeam.terminal_dump')
 				my_logger.log(level, " ******* Dumping terminal buffer (len: %s, analytics: %s)", len(self.my_buffer), analytics)
 				for line in self.my_buffer:
 					my_logger.log(level, line)
@@ -223,7 +209,7 @@ class MrbLogger(Logger):
 						analytics_handler.log_terminal_dump(tmp_arr)
 				self.my_buffer.clear()
 		except:
-			self.exception("Exception in MrbLogger::dump_terminal_buffer() ", analytics=analytics)
+			self.exception("dump_terminal_buffer() ", analytics=analytics)
 
 	@classmethod
 	def _getDateString(cls):
