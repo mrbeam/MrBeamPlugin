@@ -153,7 +153,7 @@ $(function () {
             }
 		    let notFoundStr = notFound.join(", ")
 
-            if (notFound.length === 0) {
+            if (!self.fourMarkersFound() && notFound.length === 0) {
 		        return gettext("No markers found since camera did not launch")
             } else if (self.fourMarkersFound()) {
 		        return gettext("All 4 pink corner markers are recognized")
