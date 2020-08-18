@@ -96,14 +96,14 @@ def force_kwargs(**defaultKwargs):
 	def g(a, *args, **kwargs):
 	  print("a %s, b %s, args %s, kwargs %s" % (a, b, args, kwargs))
 
-	g(1, 2, 3) # a 1, args (2,3), kwargs {'b' = -3}
-	g(1, 2, b=3) # a 1, args(2,), kwargs {'b' = 3 }
+	g(1, 2, 3) # a 1, args (2,3), kwargs {'b': -3}
+	g(1, 2, b=3) # a 1, args(2,), kwargs {'b': 3 }
 
 	@force_kwargs(b=-3)
 	def f(a, b=None, *args, **kwargs):
 	  print("a %s, b %s, args %s, kwargs %s" % (a, b, args, kwargs))
 
-	f(1, 2, 3) # a 1, b -3, args (3,), kwargs {}
+	f(1, 2, 3) # a 1, b -3, args (2,3), kwargs {}
 	f(1, 2, b=3) # a 1, b 3, args(2,), kwargs {}
 
 	```
@@ -114,8 +114,8 @@ def force_kwargs(**defaultKwargs):
 	def f(a, *args, b=-3, **kwargs):
 	  print("a %s, b %s, args %s, kwargs %s" % (a, b, args, kwargs))
 
-	f(1, 2, 3) # a 1, b -3, args (3,), kwargs {}
-	f(1, 2, c=5, b=3) # a 1, b 3, args(2,), kwargs {'c'=5}
+	f(1, 2, 3) # a 1, b -3, args (2,3), kwargs {}
+	f(1, 2, c=5, b=3) # a 1, b 3, args(2,), kwargs {'c': 5}
 	```
 
 	@see: https://stackoverflow.com/a/50107777/11136955
