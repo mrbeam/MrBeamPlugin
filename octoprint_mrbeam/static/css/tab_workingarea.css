@@ -167,6 +167,10 @@
 /*
 * === mbTransform styling ===
 */
+body.mbtransform {
+	cursor: crosshair;
+}
+
 #translateHandle {
 	fill: #00000033;
 	stroke: #00aaff;
@@ -188,19 +192,24 @@
 
 #mbtransformHandleGroup { display:none; }
 #mbtransformHandleGroup.active { display: block; }
+
+/* hide scale and rotate handles while translating */
 #mbtransformHandleGroup.active.translate .scaleHandle,  
 #mbtransformHandleGroup.active.translate #rotHandle { 
 	display: none; 
 }
 
+/* hide scale handles while rotating */
 #mbtransformHandleGroup.active.rotate .scaleHandle { display: none; }
 #mbtransformHandleGroup.active.rotate #rotHandle { display: block; }
 
+/* hide rotate handle while scaling */
 #mbtransformHandleGroup.active.scale .scaleHandle,
 #mbtransformHandleGroup.active.scale #rotHandle {
 	display: none;
 }  
 
+/* hide non-used scale handles while scaling */
 #mbtransformHandleGroup.active.scale.scaleHandleNE #scaleHandleNE,
 #mbtransformHandleGroup.active.scale.scaleHandleNW #scaleHandleNW,
 #mbtransformHandleGroup.active.scale.scaleHandleSW #scaleHandleSW,
@@ -209,7 +218,8 @@
 #mbtransformHandleGroup.active.scale.scaleHandleEE #scaleHandleEE,
 #mbtransformHandleGroup.active.scale.scaleHandleSS #scaleHandleSS,
 #mbtransformHandleGroup.active.scale.scaleHandleWW #scaleHandleWW { 
-	display: block; 
+	/*display: block;*/ 
+	display: none; 
 }
 
 #translateVis, #rotateVis, #scaleVis {

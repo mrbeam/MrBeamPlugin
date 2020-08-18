@@ -30,7 +30,7 @@
 			self.rotateGroup = paper.select('#mbtransformRotateGroup');
 			self.translateGroup = paper.select('#mbtransformTranslateGroup');
 			self.translateHandle = paper.select('#translateHandle');
-			self.translateHandle2 = paper.select('#translateHandle_2');
+			self.translateHandle2 = paper.select('#translateHandle_2'); // TODO remove
 			self.scaleHandleNE = paper.select('#scaleHandleNE');
 			self.scaleHandleNW = paper.select('#scaleHandleNW');
 			self.scaleHandleSE = paper.select('#scaleHandleSE');
@@ -163,9 +163,9 @@
 			// c----------a
 			self.session.rotate.alpha = Snap.angle(bx, by, ax, ay, cx, cy);
 
-			self.paper.debug.point('A', ax, ay, '#e25303');
-			self.paper.debug.point('B', bx, by, '#e25303');
-			self.paper.debug.point('C', cx, cy, '#e25303');
+//			self.paper.debug.point('A', ax, ay, '#e25303');
+//			self.paper.debug.point('B', bx, by, '#e25303');
+//			self.paper.debug.point('C', cx, cy, '#e25303');
 
 			self._sessionUpdate();
 		}	
@@ -248,6 +248,7 @@
 			
 			// get "click position" (position of the clicked scale handle, virgin coord space)
 			const handleMatrix = usedHandle.transform().localMatrix;
+			self.session.scale.usedHandle = usedHandle;
 			self.session.scale.mx = handleMatrix.e;
 			self.session.scale.my = handleMatrix.f;
 						
@@ -271,6 +272,7 @@
 			
 			self.paper.debug.point('ctr', self.session.scale.cx, self.session.scale.cy, '#e25303'); // TODO disable / remove
 			self.paper.debug.point('absCtr', self.session.scale.tcx, self.session.scale.tcy, '#00aaff'); // TODO disable / remove
+			self.paper.debug.point('handle', self.session.scale.mx, self.session.scale.my, '#00aaff'); // TODO disable / remove
 			
 			console.log("scale session:", self.session.scale);
 		}	
@@ -291,7 +293,7 @@
 			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) * Math.sign(sss._m.d) + sss.mx;
 			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM) * Math.sign(sss._m.d) + sss.my;
 			
-			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY);
+			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY, '#e25303');
 
 			const distX = (rotatedMouseX - sss.cx);
 			const distY = (rotatedMouseY - sss.cy); // TODO invert if oldscaleY (_m.d) is negative
@@ -331,6 +333,10 @@
 //			console.log("Scale", sss.sx.toFixed(2), sss.sy.toFixed(2));
 
 			// move scaleHandle
+//			const hx = sss.mx * sss.sx;
+//			const hy = sss.mx * sss.sy;
+//			self.session.scale.usedHandle.transform(Snap.matrix().translate(hx, hy));
+
 			self._sessionUpdate(this);
 
 		}	
@@ -347,11 +353,14 @@
 			self.paper.debug.enable(); // TODO remove
 			self.paper.debug.cleanup();
 			
+			// change mouse cursor
+			document.body.classList.toggle('mbtransform', true);
+			
 			// remember current scale factors, rotation and translation
 			const tmp = self.translateHandle.transform().totalMatrix.split();
 			console.debug("sessionInit", calledBy, tmp);
 			
-			self.session.tmpM = self.translateHandle2.transform().localMatrix; // TODO
+			self.session.tmpM = self.translateHandle2.transform().localMatrix; // TODO remove
 			
 			const tmpSM = self.scaleGroup.transform().localMatrix;
 			const tmpRM = self.rotateGroup.transform().localMatrix;
@@ -385,11 +394,6 @@
 					const scy = self.session.scale.vcy;
 					const matScale = self.session.scale._m.clone().scale(self.session.scale.sx, self.session.scale.sy, scx, scy);
 					self.scaleGroup.transform(matScale);
-					
-					const combinedM = self.session.tmpM.clone().multLeft(
-							Snap.matrix().scale(self.session.scale.sx, self.session.scale.sy, self.session.scale.tcx, self.session.scale.tcy)
-						);
-					self.translateHandle2.transform(combinedM);
 				}
 
 				// Rotate
@@ -402,11 +406,6 @@
 					//const matRotate = Snap.matrix().rotate(alpha, rcx, rcy);
 					const matRotate = self.session.rotate._m.clone().rotate(self.session.rotate.alpha, rcx, rcy);
 					self.rotateGroup.transform(matRotate);
-					
-					const combinedM = self.session.tmpM.clone().multLeft(
-							Snap.matrix().rotate(self.session.rotate.alpha, self.session.rotate.ocx, self.session.rotate.ocy)
-						); // TODO: wrong. rotation is applied before scaling.
-					self.translateHandle2.transform(combinedM);
 				}
 
 				// Translate
@@ -415,9 +414,6 @@
 					const ty = self.session.translate.dy + self.session.translate._dy;
 					const matTranslate = self.session.translate._m.clone().translate(self.session.translate.dx, self.session.translate.dy);
 					self.translateGroup.transform(matTranslate);
-					
-					const combinedM = self.session.tmpM.clone().multLeft(Snap.matrix().translate(self.session.translate.dx, self.session.translate.dy));
-					self.translateHandle2.transform(combinedM);
 				}
 //				console.info("S", sx.toFixed(2), sy.toFixed(2), "R", alpha.toFixed(2)+'°', "T", tx.toFixed(2), ty.toFixed(2) );
 
@@ -436,6 +432,9 @@
 			self.paper.debug.cleanup();
 			self._visualizeTransformCleanup();
 
+			// change mouse cursor
+			document.body.classList.toggle('mbtransform', false);
+
 
 //			console.info("Apply Transform: ", self.session.originMatrix.split());
 			
@@ -452,7 +451,7 @@
 				self.deactivate();
 			}
 
-			self.translateHandle2.transform('');
+			self.translateHandle2.transform(''); // TODO remove
 			
 			if(!elements_to_transform){
 				console.warn("Nothing to transform. Element was ", elements_to_transform);
@@ -593,7 +592,7 @@
 				// resize translateHandle (rectangle)
 				self.translateHandle.transform('');
 				self.translateHandle.attr(bbox_to_wrap);
-				self.translateHandle2.attr(bbox_to_wrap); // TODO
+				self.translateHandle2.attr(bbox_to_wrap); // TODO remove
 			} else {
 				// just align scale and rotation arrows
 				bbox_to_wrap = self.translateHandle.getBBox(true);
@@ -728,7 +727,7 @@
 			}
 			
 			self.paper.debug.line(`rulerCx`, rulerCx, 0, rulerCx, 300, '#ff0000', '#scaleVis');
-			console.log("handleIsLeft", handleIsLeft, "sxPositive", sxPositive, "rulerCx", rulerCx);
+//			console.log("handleIsLeft", handleIsLeft, "sxPositive", sxPositive, "rulerCx", rulerCx);
 
 
 			self.scaleVis.node.classList.toggle('showX', sss.signX !== 0);
@@ -851,8 +850,8 @@
 
 			// check if exists
 			let lineEl = self.paper.select('#' + id);
-			const sx = x2-x1;
-			const sy = y2-y1;
+			const sx = (x2 === x1) ? 1 : x2-x1;
+			const sy = (y2 === y1) ? 1 : y2-y1;
 			if (!lineEl) {
 				const line = self.paper.path({
 					d: "M0,0l1,1",
@@ -860,7 +859,7 @@
 					strokeWidth: 1,
 					fill: "none",
 				});
-				const pointLabel = self.paper.text({x: 0, y: 0, text: label, fill: color, style: 'font-size:8px; font-family:monospace; transform:translate(2px,-2px); vector-effect:non-scaling-stroke;'});
+				const pointLabel = self.paper.text({x: 0, y: 0, text: label, fill: color, style: 'vector-effect: non-scaling-stroke; font-size:8px; font-family:monospace; transform:translate(2px,-2px); vector-effect:non-scaling-stroke;'});
 				lineEl = self.paper.group(line, pointLabel);
 				lineEl.attr({id: id, class: '_dbg_'});
 			} 
