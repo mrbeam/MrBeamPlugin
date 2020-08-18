@@ -253,6 +253,9 @@ $(function () {
 			self.gcodefiles.setFilter('design');
             self.files.listHelper.removeFilter('model');
             self.files.listHelper.changeSorting('upload');
+
+            $("#design_lib_sort_upload_radio").prop("checked", true);
+            $("#design_lib_filter_design_radio").prop("checked", true);
         };
 
         self.removeLoadingOverlay = function(){
@@ -468,10 +471,12 @@ $(function () {
 				let data = ko.dataFor(elem);
 				totalSelectionSize += data.size;
 				let t;
-				if(data.type === 'recentjob'){
-					t = gettext('recent job');
+				if(data.type === 'recentjob') {
+                    t = gettext('recent job');  // yes, should be translated!!!
+                } else if(_.last(data.typePath) === 'image') {
+				    t = gettext('image');  // yes, should be translated!!!
 				} else {
-					t = gettext(_.last(data.typePath));
+					t = _.last(data.typePath);
 				}
 				types[t] = (types[t] + 1) || 1;
 			}
@@ -599,14 +604,14 @@ $(function () {
 
         // settings.js viewmodel extensions
 
-        self.settings.saveall = function (e, v) {
+        self.settings.saveall = function (e, v, force) {
             if (self.settings.savetimer !== undefined) {
                 clearTimeout(self.settings.savetimer);
             }
 			// only trigger autosave if there is something changed.
 			// the port scanning from the backend otherwise triggers it frequently
 			var data = getOnlyChangedData(self.settings.getLocalData(), self.settings.lastReceivedSettings);
-			if(Object.getOwnPropertyNames(data).length > 0){
+			if(force || Object.getOwnPropertyNames(data).length > 0){
 			    $("#settingsTabs").find("li.active").addClass('saveInProgress');
 				self.settings.savetimer = setTimeout(function () {
 					self.settings.saveData(undefined, function () {

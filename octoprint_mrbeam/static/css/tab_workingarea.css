@@ -4,10 +4,10 @@
 */
 
 .workingarea {
-	border:1px solid black;
-	height:80vh;
-	width:auto;
-	position:relative;
+	border: 1px solid black;
+	height: 80vh;
+	width: auto;
+	position: relative;
 }
 
 .workingarea .laserpos {

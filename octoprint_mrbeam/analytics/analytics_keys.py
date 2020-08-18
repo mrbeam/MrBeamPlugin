@@ -31,6 +31,7 @@ class AnalyticsKeys:
 			LASERJOB_FINISHED = 'laserjob_finished'
 			CPU = 'cpu'  # This comes both in the slicing and the print
 			JOB_TIME_ESTIMATED = 'job_time_estimated'  # This comes after the slicing but before the printing
+			NTP_SYNC = 'ntp_sync'
 
 			class Slicing:
 				STARTED = 's_started'
@@ -77,6 +78,9 @@ class AnalyticsKeys:
 		class Duration:
 			CURRENT = 'dur'
 			ESTIMATION = 'dur_est'
+			CALC_DURATION_TOTAL = 'calc_duration_total'
+			CALC_DURATION_WOKE = 'calc_duration_woke'
+			CALC_LINES = 'calc_lines'
 
 		class Progress:
 			PERCENT = 'p'

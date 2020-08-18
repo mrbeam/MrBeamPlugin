@@ -6,8 +6,10 @@ from multiprocessing import Pool
 from numpy.linalg import norm
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
-import octoprint_mrbeam.camera as beamcam
-from octoprint_mrbeam.util import dict_merge, logme, debug_logger, logExceptions, logtime
+import octoprint_mrbeam.camera as camera
+from octoprint_mrbeam.util import dict_merge
+from octoprint_mrbeam.util.img import differed_imwrite
+from octoprint_mrbeam.util.log import logme, debug_logger, logExceptions, logtime
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 CALIB_MARKERS_KEY = 'calibMarkers'
@@ -27,6 +29,8 @@ ERR_NEED_CALIB = 'Camera_calibration_is_needed'
 HUE_BAND_LB_KEY = 'hue_lower_bound'
 HUE_BAND_LB = 105
 HUE_BAND_UB = 200 # if value > 180 : loops back to 0
+
+SUCCESS_WRITE_RETVAL = 1
 
 # Minimum and Maximum number of pixels a marker should have
 # as seen on the edge detection masks
@@ -71,6 +75,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  zoomed_out=False,
                  debug_out=False,
                  undistorted=False,
+                 saveRaw=False,
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
@@ -103,15 +108,11 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	else:
 		logger.setLevel(logging.WARNING)
 
-	#@logtime()
-	def save_debug_img(img, name):
-		"""Saves the image in a folder along the given path"""
-		dbg_path = os.path.join(dirname(path_to_output_image), "debug", name + ".jpg")
-		_mkdir(dirname(dbg_path))
-		cv2.imwrite(dbg_path, img)
-
 	err = None
+	savedPics = {'raw': False, 'lens_corrected': False, 'cropped': False}
 
+	def save_debug_img(img, name):
+		return camera.save_debug_img(img, name + ".jpg", folder=path.join(dirname(path_to_output_image), "debug"))
 	if type(input_image) is str:
 		# check image path
 		logger.debug('Starting to prepare Image. \ninput: <{}> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
@@ -120,14 +121,14 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		if not isfile(input_image):
 			no_Image_error_String = 'Could not find a picture under path: <{}>'.format(input_image)
 			logger.error(no_Image_error_String)
-			return None, None, None, no_Image_error_String, {}
+			return None, None, None, no_Image_error_String, {}, savedPics
 
 		# load image
 		img = cv2.imread(input_image, cv2.IMREAD_COLOR) #BGR
 		if img is None:
 			err = 'Could_not_load_Image-_Please_check_Camera_and_-path_to_image'
 			logger.error(err)
-			return None, None, None, err, {}
+			return None, None, None, err, {}, savedPics
 	elif type(input_image) is np.ndarray:
 		logger.debug('Starting to prepare Image. \ninput: <{} shape arr> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
 				input_image.shape, path_to_output_image, cam_dist, cam_matrix,
@@ -136,16 +137,13 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	else:
 		raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
 
-	if debug_out: save_debug_img(img, "raw")
-
 	if cam_dist is not None and cam_matrix is not None:
 		# undistort image with cam_params
 		img = _undistortImage(img, cam_dist, cam_matrix)
+		if debug_out or undistorted:
+			savedPics['lens_corrected'] = save_debug_img(img, "undistorted")
 
-	if debug_out or undistorted:
-		save_debug_img(img, "undistorted")
-
-	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR, {}
+	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR, {}, savedPics
 
 	# search markers on undistorted pic
 	dbg_markers = os.path.join(dirname(path_to_output_image), "debug", ".jpg")
@@ -166,22 +164,15 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 			missed.append(qd)
 		else:
 			markers[qd] = val['pos']
-	# check if picture should be thrown away
-	# if less then 3 markers are found
-	# if len(missed) > 1 and len(markers) == 4:  # elif # filter out None values
-	#     err = 'BAD_QUALITY:Too few markers (circles) recognized.'
-	#     logger.debug(err)
-	#     return None, markers, missed, err, outputPoints
-	# elif len(missed) == 1 and len(markers) == 4:
 	if len(missed) > 1 and len(markers) == 4:
 		err = "Missed marker %s" % missed
 		logger.warning(err)
 	elif len(markers) < 4:
 		err = "Missed marker(s) %s, no(t enough) history to guess missing marker position(s)" % missed
 		logger.warning(err)
-		return None, markers, missed, err, outputPoints
+		return None, markers, missed, err, outputPoints, savedPics
 
-	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints
+	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
 	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
 
@@ -194,13 +185,13 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		else:
 			_pic_settings = pic_settings
 	else:
-		return None, markers, missed, ERR_NEED_CALIB, outputPoints
+		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
 	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
 		if not (k in _pic_settings and _isValidQdDict(_pic_settings[k])):
 			_pic_settings[k] = None
 			logger.warning(ERR_NEED_CALIB)
-			return None, markers, missed, ERR_NEED_CALIB, outputPoints
+			return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 	# get corners of working area
 	workspaceCorners = {qd: markers[qd] - _pic_settings[CALIB_MARKERS_KEY][qd][::-1] + _pic_settings[CORNERS_KEY][qd][::-1] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
@@ -211,18 +202,19 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	warpedImg = _warpImgByCorners(img, workspaceCorners, zoomed_out)
 	if debug_out: save_debug_img(warpedImg, "colorwarp")
 
-	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints
+	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
 	# resize and do NOT make greyscale, then save it
 	# cv2.imwrite(filename=path_to_output_image,
 	#             img=cv2.resize(warpedImg, size),
 	#             params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
 	# resize and MAKE greyscale, then save it
-	cv2.imwrite(filename=path_to_output_image,
-                img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
-                params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
+	retval = differed_imwrite(filename=path_to_output_image,
+	                     img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
+	                     params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
+	if retval == SUCCESS_WRITE_RETVAL: savedPics['cropped'] = True
 
-	return workspaceCorners, markers, missed, err, outputPoints
+	return workspaceCorners, markers, missed, err, outputPoints, savedPics
 
 #@logtime()
 def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min_pix=MIN_MARKER_PIX):
@@ -234,10 +226,7 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 		p = Pool(threads)
 		results = {}
 		brightness = None
-		for roi, pos, qd in beamcam.getRois(img):
-			brightness = np.average(roi)
-			# print("brightness of corner {} : {}".format(qd, brightness))
-			outputPoints[qd] = {'brightness': brightness} # Todo Ignore -> Tested in the MrbImgWorker
+		for roi, pos, qd in camera.getRois(img):
 			results[qd] = (p.apply_async(_getColoredMarkerPosition,
                                          args=(roi,),
                                          kwds=dict(debug_out_path=debug_out_path,
@@ -255,10 +244,7 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 		p.join()
 
 	else:
-		for roi, pos, qd in beamcam.getRois(img):
-			brightness = np.average(roi)
-			# print("brightness of corner {} : {}".format(qd, brightness))
-			outputPoints[qd] = {'brightness': brightness}
+		for roi, pos, qd in camera.getRois(img):
 			outputPoints[qd] = _getColoredMarkerPosition(roi,
                                                                      debug_out_path=debug_out_path,
                                                                      blur=blur,
@@ -304,8 +290,8 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 	roiBlurThresh =  cv2.bitwise_and( roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask))
 	debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
 	for spot, center, start, stop, count in _get_white_spots(cv2.bitwise_or(threshOtsuMask,
-									 gaussianMask),
-	                                                   min_pix=min_pix):
+	                                                                        gaussianMask),
+	                                                         min_pix=min_pix):
 		spot.dtype = np.uint8
 		if visual_debug:
 			cv2.imshow("{} : spot".format(quadrant),
@@ -320,10 +306,10 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 			if HUE_BAND_LB <= avg_hsv[0] <= 180 or 0 <= avg_hsv[0] <= HUE_BAND_UB:
 				y, x = np.round(center).astype("int")  # y, x
 				debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
-				cv2.imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
-				return dict(pos=center, avg_color=avg_hsv, pix_size=count)
+				differed_imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
+				return dict(pos=center, avg_hsv=avg_hsv, pix_size=count)
 	# No marker found
-	cv2.imwrite(debug_quad_path, roiBlurThresh)
+	differed_imwrite(debug_quad_path, roiBlurThresh)
 	return None
 
 def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
@@ -520,7 +506,11 @@ def _isValidQdDict(qdDict):
 	if type(qdDict) is not dict:
 		result = False
 	else:
-		result = all(qd in qdDict and len(qdDict[qd]) == 2 for qd in QD_KEYS)
+		result = all(qd in qdDict and \
+			     len(qdDict[qd]) == 2 and \
+			     all(not x is None for x in qdDict[qd]) \
+			     for qd in QD_KEYS)
+
 	return result
 
 if __name__ == "__main__":

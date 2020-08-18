@@ -27,6 +27,7 @@
         {% include 'initscript.jinja2' %}
         {% include 'mrbeam_initscript.jinja2' %}
         {% include 'lasersafety_standalone.jinja2' %}
+        {% include 'support_standalone.jinja2' %}
         {% include 'ready_to_laser.jinja2' %}
         {% include 'review.jinja2' %}
         {% include 'laser_job_done.jinja2' %}
@@ -50,6 +51,7 @@
 					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn">{{ _('working area') }}</a></li>
                     {# Translatots: Name of the tab #}
 					<li><a href="#designlib" data-toggle="tab" id="designlib_tab_btn">{{ _('design library') }}</a></li>
+                    <li class="experimental_feature_dev"><a href="#designstore" data-toggle="tab" id="designstore_tab_btn" onclick="window.mrbeam.viewModels.designStore.goToStore()">{{ _('design store') }}</a></li>
                     {% if not enableFocus %}
 					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">{{ _('focus') }}</a></li>
                     {% endif %}
@@ -71,7 +73,7 @@
 						{% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- /ko -->{% endif %}
 					{% endfor %}
 
-					<li id="burger_menu" class="dropdown">
+					<li id="burger_menu" class="dropdown mrb_menu">
 						<a href="#" id="burger_menu_link" class="dropdown-toggle" data-toggle="dropdown">
 							<i class="icon-reorder icon-large"></i>
 {#							<i class="icon-cog"></i>#}
@@ -87,9 +89,6 @@
                                 <a href="#" id="exit_fullscreen_menu_item"><i class="icon-fullscreen"></i> {{ _('Exit Fullscreen') }}</a>
                             </li>
 							<li class="divider"></li>
-							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> mr-beam.org</a></li>
-							<li><a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right"></i> {{ _('Find my Mr Beam') }}</a></li>
-							<li class="divider"></li>
                              {% if model in ["MRBEAM2", "MRBEAM2_DC_R1"] %}
                                 <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('QuickstartGuide_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
                                 <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('UserManual_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
@@ -98,10 +97,10 @@
                                 <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('UserManual_dreamcut_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
                             {% endif %}
 							<li class="divider"></li>
-							<li><a href="#tour" id="tour_start_btn" data-bind="click: window.mrbeam.viewModels.tourViewModel.btn_startTour"><i class="icon-youtube-play"></i> {{ _('Take a Tour') }}</a></li>
-							<li class="divider"></li>
-							<li><a href="https://www.mr-beam.org/support" target="_blank"><i class="icon-question-sign"></i> {{ _('Support Portal') }}</a></li>
-						</ul>
+							<li><a href="#" onclick="$('#support_overlay').modal('show')" id="support_menu_item"><i class="fa fa-life-ring"></i> {{ _('Support') }}</a></li>
+							<li class="divider show_only_online"></li>
+							<li class="show_only_online"><a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right"></i> {{ _('Find my Mr Beam') }}</a></li>
+                        </ul>
 					</li>
 				</ul>
 			</div>
@@ -116,6 +115,7 @@
                     {%      include 'tab_terminal.jinja2' %}
                     {% endif %}
 					{% include 'tab_designlib.jinja2' %}
+                    {% include 'tab_designstore.jinja2' %}
 					{% if not enableFocus %}
                     {%      include 'tab_focus.jinja2' %}
                     {% endif %}

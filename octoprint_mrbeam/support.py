@@ -4,6 +4,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 SUPPORT_STICK_FILE_PATH = '/home/pi/usb_mount/support'
+CALIBRATION_STICK_FILE_PATH = '/home/pi/usb_mount/calibration_tool'
 SUPPORT_STICK_FILE_MAX_AGE = 60 * 60 * 24
 
 
@@ -12,7 +13,7 @@ USER_PW   = 'a'
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.support")
 
-def set_support_mode(plugin):
+def check_support_mode(plugin):
 	"""
 	Enables support_mode IF support file from USB stick is present or if support_mode is enabled in dev settings
 	:param plugin: MrBeam Plugin instance
@@ -32,6 +33,27 @@ def set_support_mode(plugin):
 	set_support_user(plugin, support_mode_enabled)
 
 	return support_mode_enabled
+
+
+def check_calibration_tool_mode(plugin):
+	"""
+	Enables support_mode IF support file from USB stick is present or if support_mode is enabled in dev settings
+	:param plugin: MrBeam Plugin instance
+	:returns True if support_mode is enabled, False otherwise
+	"""
+	mode_enabled = False
+	try:
+		if plugin._settings.get(['dev', 'calibration_tool_mode']) or \
+			(os.path.isfile(CALIBRATION_STICK_FILE_PATH) and time.time() - os.path.getmtime(CALIBRATION_STICK_FILE_PATH) < SUPPORT_STICK_FILE_MAX_AGE ):
+			_logger.info("CALIBRATION TOOL MODE ENABLED")
+			mode_enabled = True
+		else:
+			mode_enabled = False
+	except Exception as e:
+		_logger.exception("Error while checking calibration tool mode")
+
+	return mode_enabled
+
 
 def set_support_user(plugin, support_mode):
 	"""

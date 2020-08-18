@@ -15,7 +15,6 @@ $(function () {
             "PROD": gettext('Stable'),
             "BETA": gettext('Beta'),
             "DEV": gettext('Develop'),
-            "DESIGN_STORE": "Design Store"
         };
 
         self.onAllBound = function () {

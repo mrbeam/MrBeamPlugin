@@ -412,6 +412,8 @@ class IoBeamHandler(object):
 						data = None
 						try:
 							sock_data =  self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
+							if len(temp_buffer) > 0:
+								self._logger.warn("ANDYTEST temp_buffer: %s", len(temp_buffer))
 							if len(sock_data) > self.MESSAGE_LENGTH_MAX-6:
 								self._logger.warn("ANDYTEST sock_data: %s", len(sock_data))
 							data = temp_buffer + sock_data
@@ -420,8 +422,7 @@ class IoBeamHandler(object):
 							# 	# self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
 							# 	continue
 							# else:
-							self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
-							self._logger.warn("Warning continuation %s ", e.message)
+							self._logger.warn("Exception while sockect.recv(): %s (message: %s) - Resetting connection...", e, e.message)
 							break
 
 						if not data:
@@ -689,7 +690,7 @@ class IoBeamHandler(object):
 		self._last_i2c_monitoring_dataset = dataset
 		
 	def _handle_reed_switch(self, dataset):
-		self.logger.info("reed_switch: %s", dataset)
+		self._logger.info("reed_switch: %s", dataset)
 		return 0
 
 	def _handle_laser(self, dataset):
@@ -773,15 +774,25 @@ class IoBeamHandler(object):
 		:param dataset: interlock dataset, e.g. {"0": "cl", "1": "cl", ...}
 		:return: error count
 		"""
+		name = {
+			'0': 'Lid Right',
+			'1': 'Lid Left',
+			'2': 'Bottom Left',
+			'3': 'Bottom Right',
+		}
 		if isinstance(dataset, dict):
 			before_state = self.open_interlocks()
 			for lock_id, lock_state in dataset.iteritems():
 				self._logger.debug("_handle_interlock() dataset: %s, lock_id: %s, lock_state: %s, before_state: %s", dataset, lock_id, lock_state, before_state)
 
-				if lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
-					self._interlocks[lock_id] = True
-				elif lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
-					self._interlocks.pop(lock_id, None)
+				if lock_id is not None:
+					lock_name = name[lock_id]
+					if lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
+						self._interlocks[lock_name] = True
+					elif lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
+						self._interlocks.pop(lock_name, None)
+					else:
+						return self._handle_invalid_message(dataset)
 				else:
 					return self._handle_invalid_message(dataset)
 

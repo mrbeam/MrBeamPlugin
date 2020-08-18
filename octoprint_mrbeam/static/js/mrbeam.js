@@ -158,6 +158,10 @@ mrbeam.isProd = function () {
     return MRBEAM_SW_TIER === 'PROD';
 };
 
+mrbeam.isWatterottMode = function () {
+    return INITIAL_CALIBRATION === true;
+}
+
 
 $(function () {
     // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
@@ -175,6 +179,7 @@ $(function () {
         self.wizardacl = parameters[1];
         self.users = parameters[2];
         self.loginState = parameters[3];
+        self.system = parameters[4];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
@@ -221,11 +226,16 @@ $(function () {
 
             // set env flag in body for experimental_feature_beta and  experimental_feature_dev
             if (mrbeam.isDev()) {
-             $('body').addClass('env_dev')
-             $('body').removeClass('env_prod')
+                $('body').addClass('env_dev')
+                $('body').removeClass('env_beta')
+                $('body').removeClass('env_prod')
             } else if (mrbeam.isBeta()) {
-             $('body').addClass('env_beta')
-             $('body').removeClass('env_prod')
+                $('body').addClass('env_beta')
+                $('body').removeClass('env_prod')
+            } else if (mrbeam.isProd()) {
+                $('body').addClass('env_prod')
+                $('body').removeClass('env_dev')
+                $('body').removeClass('env_beta')
             }
 
             $(window).on("orientationchange",self.onOrientationchange);
@@ -243,10 +253,10 @@ $(function () {
         self.onStartupComplete = function(){
             self.presetLoginUser()
         }
-
         self.onCurtainOpened = function(){
+            self.removeOpSafeModeOptionFromSystemMenu();
             self.showBrowserWarning()
-            self.showBetaNotificaitons()
+            self.showBetaNotifications()
         }
 
         self.onOrientationchange = function () {
@@ -353,7 +363,7 @@ $(function () {
             }
         }
 
-        self.showBetaNotificaitons = function() {
+        self.showBetaNotifications = function() {
             if (mrbeam.isBeta() && !self.settings.settings.plugins.mrbeam.analyticsEnabled()) {
                 new PNotify({
                     title: gettext("Beta user: Please consider enabling Mr Beam analytics!"),
@@ -375,25 +385,6 @@ $(function () {
                     $('[title="Close"]')[0].click();
                 })
             }
-
-            if (mrbeam.isBeta()) {
-                new PNotify({
-                    title: gettext("You're using Mr Beam's beta software channel. "),
-                    text: _.sprintf(gettext("Find out%(br)s%(link1_open)swhat's new in the beta channel.%(link1_close)s%(br)s%(br)s" +
-                        "Should you experience any issues you can always switch back to our stable channel in the software update settings.%(br)s%(br)s " +
-                        "Please don't forget to%(br)s%(link2_open)stell us about your experience%(link2_close)s."),
-                        {
-                            br: '</br>',
-                            link1_open: '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-                            link1_close: '</a>',
-                            link2_open: '<a href="https://www.mr-beam.org/ticket" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-                            link2_close: '</a>'
-                        }),
-                    type: 'info',
-                    hide: true
-                });
-
-            }
         }
 
         self.presetLoginUser = function(){
@@ -404,16 +395,72 @@ $(function () {
                 self.loginState.loginUser('dev'+String.fromCharCode(0x0040)+'mr-beam.org')
                 self.loginState.loginPass('a')
             }
-        }
+        };
 
-    };
+        /**
+         * MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+         * Hides the option "Restart OctoPrint in safe mode"
+         * Removes the 4th element from the system menu.
+         */
+        self.removeOpSafeModeOptionFromSystemMenu = function(){
+            self.system.systemActions.remove(function(c){return c.action === "restart_safe"});
+        };
+
+        // Backdrop Temporary Solution - start
+        // Todo: should be removed once OctoPrint is updated
+        const mutationTargetNode = document.body;
+        const mutationConfig = {
+            childList: true,
+            attributes: false,
+            characterData: false,
+            subtree: false,
+            attributeOldValue: false,
+            characterDataOldValue: false
+        };
+        const mutationCallback = function(mutationsList, observer) {
+            for(let mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    (function ($) {
+                        $.fn.inlineStyle = function (prop) {
+                            return this.prop("style")[$.camelCase(prop)];
+                        };
+                    }(jQuery));
+                    let modalElement = $(".modal-scrollable");
+                    let backDrop = $('.modal-backdrop');
+                    if(modalElement.length !== 0){
+                        modalElement.each(function() {
+                        if(!$(this)[0].hasChildNodes() && modalElement.length === 1){
+                            $('body').removeClass('modal-open');
+                            backDrop.remove();
+                            $(this)[0].remove();
+                        } else if(!$(this)[0].hasChildNodes() && modalElement.length > 1 && $(this).next().hasClass("modal-backdrop")){
+                            $(this).next().remove();
+                            $(this)[0].remove();
+                        } else if($(this)[0].hasChildNodes() && modalElement.length === 1 && $(this).find(".modal.hide.fade").inlineStyle("display") === "none"){
+                            setTimeout(() => {
+                                if($(this).find(".modal.hide.fade").hasClass("modal") && $(this).find(".modal.hide.fade").inlineStyle("display") === "none") {
+                                    document.body.append($(this).find(".modal.hide.fade")[0]);
+                                }
+                            }, 500);
+                        }
+                    });
+                    } else if(modalElement.length === 0 && backDrop.length !== 0){
+                        backDrop.remove();
+                    }
+                }
+            }
+        };
+        const observer = new MutationObserver(mutationCallback);
+        observer.observe(mutationTargetNode, mutationConfig);
+        // Backdrop Temporary Solution - end
+    }
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
         MrbeamViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel", "wizardAclViewModel", "usersViewModel", "loginStateViewModel"],
+        ["settingsViewModel", "wizardAclViewModel", "usersViewModel", "loginStateViewModel", "systemViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ /* ... */]

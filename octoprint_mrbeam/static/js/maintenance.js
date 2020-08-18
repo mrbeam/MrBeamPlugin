@@ -10,8 +10,8 @@ $(function () {
         self.CARBON_FILTER = gettext('main filter');
         self.LASER_HEAD = gettext('laser head');
         self.GANTRY = gettext('mechanics');
-        self.PREFILTER_LIFESPAN = 100;
-        self.CARBON_FILTER_LIFESPAN = 400;
+        self.PREFILTER_LIFESPAN = 50;
+        self.CARBON_FILTER_LIFESPAN = 300;
         self.LASER_HEAD_LIFESPAN = 100;
         self.GANTRY_LIFESPAN = 100;
         self.WARN_IF_USED_PERCENT = 100;
@@ -48,21 +48,30 @@ $(function () {
             return Math.floor(self.gantryUsage()/3600);
         });
 
+        self.prefilterPercent = ko.computed(function() {
+            return Math.min(Math.floor(self.prefilterUsageHours()/self.PREFILTER_LIFESPAN*100), 100);
+        });
+        self.carbonFilterPercent = ko.computed(function() {
+            return Math.min(Math.floor(self.carbonFilterUsageHours()/self.CARBON_FILTER_LIFESPAN*100), 100);
+        });
+        self.laserHeadPercent = ko.computed(function() {
+            return Math.min(Math.floor(self.laserHeadUsageHours()/self.LASER_HEAD_LIFESPAN*100), 100);
+        });
+        self.gantryPercent = ko.computed(function() {
+            return Math.min(Math.floor(self.gantryUsageHours()/self.GANTRY_LIFESPAN*100), 100);
+        });
+
         self.prefilterShowWarning = ko.computed(function() {
-            let usedPercent = self.prefilterUsageHours()/self.PREFILTER_LIFESPAN*100;
-            return usedPercent > self.WARN_IF_USED_PERCENT;
+            return self.prefilterPercent() >= self.WARN_IF_USED_PERCENT;
         });
         self.carbonFilterShowWarning = ko.computed(function() {
-            let usedPercent = self.carbonFilterUsageHours()/self.CARBON_FILTER_LIFESPAN*100;
-            return usedPercent > self.WARN_IF_USED_PERCENT;
+            return self.carbonFilterPercent() >= self.WARN_IF_USED_PERCENT;
         });
         self.laserHeadShowWarning = ko.computed(function() {
-            let usedPercent = self.laserHeadUsageHours()/self.LASER_HEAD_LIFESPAN*100;
-            return usedPercent > self.WARN_IF_USED_PERCENT;
+            return self.laserHeadPercent() >= self.WARN_IF_USED_PERCENT;
         });
         self.gantryShowWarning = ko.computed(function() {
-            let usedPercent = self.gantryUsageHours()/self.GANTRY_LIFESPAN*100;
-            return usedPercent > self.WARN_IF_USED_PERCENT;
+            return self.gantryPercent >= self.WARN_IF_USED_PERCENT;
         });
 
         self.needsMaintenance = ko.computed(function () {

@@ -10,7 +10,7 @@ import re
 import uuid
 import collections
 
-from octoprint_mrbeam.util import json_serialisor
+from octoprint_mrbeam.util.log import json_serialisor
 from value_collector import ValueCollector
 from cpu import Cpu
 from threading import Thread, Timer, Lock
@@ -36,7 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 14  # bumped in 0.6.10.1 for frontend console logs
+	ANALYTICS_LOG_VERSION = 16  # bumped in 0.6.14.1 for ntp syncs during the job
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -122,7 +122,7 @@ class AnalyticsHandler(object):
 		# We have to wait until the last line is written before we upload
 		Timer(interval=delay, function=AnalyticsFileUploader.upload_now,
 		      args=[self._plugin, self._analytics_lock]).start()
-		
+
 	# INIT
 	def analytics_user_permission_change(self, analytics_enabled):
 		try:
@@ -289,7 +289,7 @@ class AnalyticsHandler(object):
 			self._add_log_event(ak.Log.Event.CAMERA, payload=session_details)
 		except Exception as e:
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
-	
+
 	def add_camera_image(self, payload):
 		try:
 			self._add_device_event(ak.Device.Event.CAMERA_IMAGE, payload=payload)
@@ -358,6 +358,13 @@ class AnalyticsHandler(object):
 			self._add_job_event(ak.Job.Event.Slicing.DESIGN_FILE, payload=design_file)
 		except Exception as e:
 			self._logger.exception('Exception during add_design_file_details: {}'.format(e))
+
+	# USAGE
+	def add_job_ntp_sync_details(self, sync_details):
+		try:
+			self._add_job_event(ak.Job.Event.NTP_SYNC, payload=sync_details)
+		except Exception as e:
+			self._logger.exception('Exception during add_job_ntp_sync_details: {}'.format(e))
 
 	# COMM_ACC2
 	def add_grbl_flash_event(self, from_version, to_version, successful, err=None):
@@ -476,9 +483,10 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.Slicing.CANCELLED)
 
 	def _add_cpu_data(self, dur=None):
-		payload = self._current_cpu_data.get_cpu_data()
-		payload['dur'] = dur
-		self._add_job_event(ak.Job.Event.CPU, payload=payload)
+		if self._current_cpu_data:
+			payload = self._current_cpu_data.get_cpu_data()
+			payload['dur'] = dur
+			self._add_job_event(ak.Job.Event.CPU, payload=payload)
 
 	def _event_print_started(self, event, payload):
 		# If there's no job_id, it may be a gcode file (no slicing), so we have to start the job here
@@ -576,7 +584,7 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.LASERJOB_FINISHED, payload={ak.Job.STATUS: self._current_job_final_status})
 		self._cleanup_job()
 
-		self.upload() # delay of 5.0 s
+		self.upload()  # delay of 5.0 s
 
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['job_time_estimation']
@@ -584,6 +592,9 @@ class AnalyticsHandler(object):
 		if self._current_job_id:
 			payload = {
 				ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+				ak.Job.Duration.CALC_DURATION_TOTAL: payload['calc_duration_total'],
+				ak.Job.Duration.CALC_DURATION_WOKE: payload['calc_duration_woke'],
+				ak.Job.Duration.CALC_LINES: payload['calc_lines'],
 			}
 			self._add_job_event(ak.Job.Event.JOB_TIME_ESTIMATED, payload=payload)
 

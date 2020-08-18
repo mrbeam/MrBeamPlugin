@@ -1,4 +1,4 @@
-MARKERS = ['NW', 'NE', 'SE', 'SW'];
+const MARKERS = ['NW', 'NE', 'SE', 'SW'];
 
 
 $(function(){
@@ -12,13 +12,19 @@ $(function(){
 
         self.TAB_NAME_WORKING_AREA = '#workingarea';
         self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
+        self.MARKER_DESCRIPTIONS = {
+            'NW': gettext('Top left'),
+            'SW': gettext('Bottom left'),
+            'NE': gettext('Top right'),
+            'SE': gettext('Bottom right')
+        }
 
         self.needsCalibration = false;
 
         self.rawUrl = '/downloads/files/local/cam/debug/raw.jpg'; // TODO get from settings
         self.undistortedUrl = '/downloads/files/local/cam/debug/undistorted.jpg'; // TODO get from settings
         self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
-        self.timestampedImgUrl = ko.observable("");
+        self.timestampedCroppedImgUrl = ko.observable("");
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;
@@ -54,7 +60,7 @@ $(function(){
             });
 
             // trigger initial loading of the image
-            self.loadImage();
+            self.loadImage(self.croppedUrl);
         };
 
         // Image resolution notification //
@@ -65,24 +71,32 @@ $(function(){
         });
 
         self.markerState = ko.computed(function() {
-            count = 0
-            MARKERS.forEach(function(m){
-                if (self.markersFound()[m] === true)
-                    count++
-            });
-            return count
+            // Returns the number of markers found
+            if (MARKERS.reduce((prev, key) => prev || self.markersFound()[key] === undefined, false))
+                return undefined
+            return MARKERS.reduce((prev_val, key) => prev_val + self.markersFound()[key], 0)
         })
 
-        self.markerStateGreen = ko.computed(function() {
-            return self.markerState() >= 4
-        })
+        // self.markerStateColor = ko.computed(function() {
+        //     if (self.markerState() === undefined)
+        //         return undefined
+        //     else if (self.markerState() >= 4)
+        //         return 'green'
+        //     else if (2 <= self.markerState() < 4)
+        //         return 'yellow'
+        //     else if (self.markerState() < 2)
+        //         return 'red'
+        //     else
+        //         return undefined
+        // })
 
-        self.markerStateYellow = ko.computed(function() {
-            return self.markerState() < 4 && self.markerState() >= 2
-        })
-
-        self.markerStateRed = ko.computed(function() {
-            return self.markerState() < 4 && self.markerState() <2
+        self.showMarkerWarning = ko.computed(function() {
+            if (self.markerState() === undefined)
+                return false
+            else if (self.markerState() < 4)
+                return true
+            else
+                return false
         })
 
         self.firstRealimageLoaded = ko.computed(function() {
@@ -96,7 +110,7 @@ $(function(){
         self.markerMissedClass = ko.computed(function() {
             var ret = '';
             MARKERS.forEach(function(m){
-                if (!(self.markersFound()[m] === undefined) && !self.markersFound()[m])
+                if ((self.markersFound()[m] !== undefined) && !self.markersFound()[m])
                     ret = ret + ' marker' + m;
             });
             return ret;
@@ -118,7 +132,7 @@ $(function(){
 
                 if (data['beam_cam_new_image']['error'] === undefined) {
                     self.needsCalibration = false;
-                } else if (data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration) {
+                } else if (data['beam_cam_new_image']['error'] === "Camera_calibration_is_needed" && !self.needsCalibration) {
                     self.needsCalibration = true;
                     new PNotify({
                         title: gettext("Calibration needed"),
@@ -136,7 +150,7 @@ $(function(){
                 } else {
                     self.cornerMargin(0)
                 }
-                self.loadImage();
+                self.loadImage(self.croppedUrl);
             }
 
 			// If camera is not active (lid closed), all marker(NW|NE|SW|SE) classes should be removed.
@@ -145,11 +159,11 @@ $(function(){
 			}
         };
 
-        self.loadImage = function () {
-            var myImageUrl = self.getTimestampedImageUrl(self.croppedUrl);
+        self.loadImage = function (url) {
+            var myImageUrl = self.getTimestampedImageUrl(url);
             var img = $('<img>');
             img.load(function () {
-                self.timestampedImgUrl(myImageUrl);
+                self.timestampedCroppedImgUrl(myImageUrl);
                 if (window.mrbeam.browser.is_safari) {
                     // load() event seems not to fire in Safari.
                     // So as a quick hack, let's set firstImageLoaded to true already here
@@ -158,12 +172,17 @@ $(function(){
                 }
                 if (this.width > 1500 && this.height > 1000) self.imgResolution('High');
                 else self.imgResolution('Low');
-                // TODO respond to backend to tell we have loaded the picture
-                OctoPrint.simpleApiCommand("mrbeam", "on_camera_picture_transfer", {})
+
+                // respond to backend to tell we have loaded the picture
+                if (INITIAL_CALIBRATION) {
+                    $.ajax({type: "GET", url: '/plugin/mrbeam/on_camera_picture_transfer'});
+                } else {
+                    OctoPrint.simpleApiCommand("mrbeam", "on_camera_picture_transfer", {})
+                }
             });
             if (!self.firstImageLoaded) {
                 img.error(function () {
-                    self.timestampedImgUrl(self.FALLBACK_IMAGE_URL);
+                    self.timestampedCroppedImgUrl(self.FALLBACK_IMAGE_URL);
                 });
             }
             img.attr({src: myImageUrl});
@@ -178,7 +197,7 @@ $(function(){
             }
             if (result) {
                 if (result.match(/(\?|&)ts=/))
-                    result = result.replace(/(\?|&)ts=[0-9]*/, "$1ts=" + new Date().getTime())
+                    result = result.replace(/(\?|&)ts=[0-9]+/, "$1ts=" + new Date().getTime())
                 else {
                     result += (result.lastIndexOf("?") > -1) ? '&ts=' : '?ts='
                     result += new Date().getTime();

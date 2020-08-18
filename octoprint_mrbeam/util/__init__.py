@@ -7,6 +7,8 @@ import json
 from itertools import chain, repeat, cycle
 from functools import wraps
 from copy import copy
+import threading
+from .log import logExceptions, logtime
 
 def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 	"""Recursive dictionnary update.
@@ -26,86 +28,60 @@ def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 	else:
 		return d2
 
-def logtime(logger=None):
-	def _logtime(f):
+def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
+	"""
+	returns a function that threads an other function and running a callback if provided.
+	Returns the started thread object.
+	It also logs any Exceptions that happen in that function.
+	see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
+	See https://stackoverflow.com/questions/14234547/threads-with-decorators
+	"""
+	def wrapper(f):
+		# if logname:
+		# 	logger = logging.getLogger(logname)
+		# else:
+		# 	logger = debug_logger(f)
 		@wraps(f)
-		def timed_f(*args, **kw):
-			start = time.clock()
-			ret = f(*args, **kw)
-			debug_logger(f).debug("Elapsed time : %f seconds", time.clock() - start)
-			return ret
-		return timed_f
-	return _logtime
+		def run(*a, **kw):
+			if callback is not None:
+				@logExceptions
+				@wraps(f)
+				def do_callback():
+					# try:
+					callback(f(*a, **kw))
+					# except Exception as e:
+					# 	logger.exception("E")
 
-def logExceptions(f):
-	logger = debug_logger(f)
-	@wraps(f)
-	def wrap(*args, **kw):
-		try:
-			return f(*args, **kw)
-		except Exception as e:
-			logger.exception("%s, %s" % (e.__class__.__name__, e))
-			raise
-	return wrap
-
-
-def json_serialisor(elm):
-	"""Attempts to return a serialisable element if the given one is not."""
-	if elm is None or type(elm) in [bool, int, float, str, list, tuple, dict]:
-		# These types are already supported
-		return elm
-	elif isinstance(elm, np.ndarray):
-		# convert the array elements into serialisable stuff, and change the array to nested lists
-		shape = elm.shape
-		if max(shape) < 10 :
-			_e = elm.reshape((np.prod(shape),))
-			_e = np.asarray(map(json_serialisor, _e))
-			return _e.reshape(shape).tolist()
-		else :
-			return "numpy array with shape %s and type %s " % (elm.shape, elm.dtype)
-	else:
-		try:
-			json.dumps(elm)
-			return elm
-		except TypeError:
-			if "__str__" in dir(elm) or 'tostring' in dir(elm):
-				return str(elm)
-			elif "__repr__" in dir(elm):
-				return repr(elm)
+				t = threading.Thread(target=do_callback, args=a, kwargs=kw, *th_a, **th_kw)
 			else:
-				return "Not JSON serialisable type : {}".format(type(elm))
+				logged_f = logExceptions(f)
+				t = threading.Thread(target=logged_f, args=a, kwargs=kw)
+			if daemon:
+				t.daemon = True
+			t.start()
+			return t
+		return run
+	return wrapper
 
-def log_output(logger, ret):
-	logger.debug("output:\n%s" % json.dumps(ret, indent=2, default=json_serialisor))
-
-def log_input(logger, *a, **kw):
-	argStr = json.dumps(a, indent=2, default=json_serialisor)
-	kwStr = json.dumps(kw, indent=2, default=json_serialisor)
-	logger.debug("\narg: %s\nkwargs: %s" % (argStr, kwStr))
-
-def logme(input=False, output=False):
-	def decorator(f):
-		logger = debug_logger(f)
-		@wraps(f)
-		def wrapped(*a, **kw):
-			if input: log_input(logger, *a, **kw)
-			ret = f(*a, **kw)
-			if output: log_output(logger, ret)
-			return ret
-		return wrapped
-	return decorator
-
-def debug_logger(function=None):
-	# TODO: AXEL should we use mrb_logger here?
-	if function is None:
-		logger = logging.getLogger("debug logger")
-	elif sys.version_info >= (3, 3):
-		# Python version >= 3.3
-		logger = logging.getLogger(function.__qualname__)
+def makedirs(path, parent=False, *a, **kw):
+	"""
+	Same as os.makedirs but doesn't throw exception if dir exists
+	@param parentif: bool create the parent directory for the path given and not the full path
+	                 (avoids having to use os.path.dirname)
+	Python >= 3.5 see mkdir(parents=True, exist_ok=True)
+	See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
+	"""
+	from os.path import dirname, isdir
+	from os import makedirs
+	import errno
+	if parent:
+		_p = dirname(path)
 	else:
-		if function.__module__ is None:
-			logger = logging.getLogger(function.__name__)
+		_p = path
+	try:
+		makedirs(_p, *a, **kw)
+	except OSError as exc:
+		if exc.errno == errno.EEXIST and isdir(_p):
+			pass
 		else:
-			logger = logging.getLogger(function.__module__ + '.' + function.__name__)
-	logger.setLevel(logging.DEBUG)
-	return logger
+			raise

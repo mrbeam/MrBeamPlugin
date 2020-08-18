@@ -36,7 +36,7 @@ $(function () {
                 payload: payload || {}
             };
 
-            return $.ajax({
+            $.ajax({
                 url: "plugin/mrbeam/analytics",
                 type: "POST",
                 dataType: "json",
@@ -52,13 +52,16 @@ $(function () {
         self.onAllBound = function() {
             self._updateAnalyticsEnabledValue()
 
-            console.everything.forEach(function (logData) {
-                if (logData.level == 'error' || logData.level == 'warn') {
-                    self.send_console_event(logData);
-                }
-            })
-            console.callbacks.error = self.send_console_event
-            console.callbacks.warn = self.send_console_event
+            if (console.everything) {
+                console.everything.forEach(function (logData) {
+                    if (logData.level == 'error' || logData.level == 'warn') {
+                        self.send_console_event(logData);
+                    }
+                })
+
+                console.callbacks.error = self.send_console_event
+                console.callbacks.warn = self.send_console_event
+            }
         }
 
         self.onStartupComplete = function(){
