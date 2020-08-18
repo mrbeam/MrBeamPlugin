@@ -421,11 +421,11 @@
 
 				self.updateCounter++;
 				self.session.lastUpdate = Date.now();
-
+				
+				
+				// apply transform to target elements via callback
+				self._apply_transform();
 			}
-			
-			// apply transform to target elements via callback
-			// TODO
 		}
 		
 		self._sessionEnd = function(){
@@ -434,11 +434,26 @@
 
 			// change mouse cursor
 			document.body.classList.toggle('mbtransform', false);
-
-
-//			console.info("Apply Transform: ", self.session.originMatrix.split());
 			
-		};		
+		};
+		
+		self._apply_transform = function(){
+			const m = self.translateHandle.transform().totalMatrix;
+			
+			for (var i = 0; i < self.elements_to_transform.length; i++) {
+				var el = self.elements_to_transform[i];
+				const newM = el.data('mbtransform_original_matrix').clone().multLeft(m);
+				el.transform(newM);
+			}
+		}
+		
+		self._remember_original_transform = function(){
+			for (var i = 0; i < self.elements_to_transform.length; i++) {
+				var el = self.elements_to_transform[i];
+				const m = el.transform().localMatrix;
+				el.data({mbtransform_original_matrix: m});
+			}
+		}
 	
 		/**
 		 * @param {Snap.Element, Snap.Set, CSS-Selector} elements_to_transform
@@ -467,6 +482,7 @@
 				}
 			}
 			
+			
 			// get bounding box of selector
 			const selection_bbox = self._getBBoxFromElementsWithMinSize(elements_to_transform);
 
@@ -477,6 +493,7 @@
 			self.session.bb = selection_bbox;
 
 			self.elements_to_transform = elements_to_transform;
+			self._remember_original_transform();
 
 			self.scaleGroup.transform('');
 			self.rotateGroup.transform('');
