@@ -18,6 +18,7 @@ import os.path
 import glob
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util.img import differed_imwrite
 
 (cvMajor, cvMinor) = cv2.__version__.split('.')[:2]
 isCV2 = cvMajor == "2"
@@ -311,7 +312,7 @@ class ImageSeparator():
 		if(self.debug):
 			path =self.img_debug_folder+"/"+filename
 			if(type(img) is np.ndarray):
-				cv2.imwrite(path, img)
+				differed_imwrite(path, img)
 			elif(type(img) is Image.Image):
 				img.save(path)
 			return path
