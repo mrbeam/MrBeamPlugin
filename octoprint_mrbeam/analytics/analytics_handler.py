@@ -483,9 +483,10 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.Slicing.CANCELLED)
 
 	def _add_cpu_data(self, dur=None):
-		payload = self._current_cpu_data.get_cpu_data()
-		payload['dur'] = dur
-		self._add_job_event(ak.Job.Event.CPU, payload=payload)
+		if self._current_cpu_data:
+			payload = self._current_cpu_data.get_cpu_data()
+			payload['dur'] = dur
+			self._add_job_event(ak.Job.Event.CPU, payload=payload)
 
 	def _event_print_started(self, event, payload):
 		# If there's no job_id, it may be a gcode file (no slicing), so we have to start the job here
