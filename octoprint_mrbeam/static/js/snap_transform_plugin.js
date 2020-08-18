@@ -273,7 +273,6 @@
 			self.paper.debug.point('_C', self.session.scale.tcx, self.session.scale.tcy, '#00aaff'); 
 			self.paper.debug.point('A', self.session.scale.mx, self.session.scale.my, '#00aaff'); 
 			
-			console.log("scale session:", self.session.scale);
 		}	
 
 		self.scaleMove = function( target, dx, dy, x, y, event ){
@@ -348,7 +347,6 @@
 			
 			// remember current scale factors, rotation and translation
 			const tmp = self.translateHandle.transform().totalMatrix.split();
-			console.debug("sessionInit", calledBy, tmp);
 			
 			const tmpSM = self.scaleGroup.transform().localMatrix;
 			const tmpRM = self.rotateGroup.transform().localMatrix;
