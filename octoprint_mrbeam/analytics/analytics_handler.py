@@ -10,7 +10,7 @@ import re
 import uuid
 import collections
 
-from octoprint_mrbeam.util import json_serialisor
+from octoprint_mrbeam.util.log import json_serialisor
 from value_collector import ValueCollector
 from cpu import Cpu
 from threading import Thread, Timer, Lock
