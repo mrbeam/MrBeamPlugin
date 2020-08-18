@@ -104,10 +104,26 @@ $(function () {
 		];
 
 		// ---------------- CAMERA STATUS ----------------
+        // If either of the other two requirements are not met (lid open, operational),
+        // we say that the markers were not found (if they were, of course)
+        self.fourMarkersFound = ko.computed(function () {
+            return self.readyToLaser.lid_fully_open()
+                && self.statusOnlyOperational()
+                && self.camera.markerState() === 4;
+        })
+
+        // If Mr Beam is not locked, printing or paused, we tell to the user it's operational.
+        // state.isOperational wouldn't work, because all of the others are substates of it.
+        self.statusOnlyOperational = ko.computed(function () {
+            return !self.isLocked()
+                && !self.state.isPrinting()
+                && !self.state.isPaused()
+        })
+
 		self.cameraStatusOk = ko.computed(function () {
 			return self.readyToLaser.lid_fully_open()
-                && !self.isLocked()
-                && self.camera.markerState() === 4;
+                && self.statusOnlyOperational()
+                && self.fourMarkersFound(); // This already includes the other two, but just to see it more clear
 		})
 
         self.lidMessage  = ko.computed(function() {
@@ -116,9 +132,11 @@ $(function () {
                 gettext("The lid is closed: Please open the lid to start the camera");
         });
 
-		self.lockedMessage  = ko.computed(function() {
+		self.onlyOperationalMessage  = ko.computed(function() {
 		    if (self.isLocked()) {
 		        return gettext("Mr Beam is not homed: Please go to the working area and do a Homing Cycle")
+            } else if (self.state.isPrinting() || self.state.isPaused()) {
+		        return gettext("Mr Beam is currently performing a laser job. The camera does not work during a laser job")
             } else if (self.state.isOperational()) {
 		        return gettext("Mr Beam is in state Operational")
             } else {
@@ -135,9 +153,13 @@ $(function () {
             }
 		    let notFoundStr = notFound.join(", ")
 
-            return self.camera.markerState() === 4 ?
-                gettext("All 4 pink corner markers are recognized") :
-                gettext("Not all pink corner markers are recognized. Missing markers: ") + notFoundStr;
+            if (!self.fourMarkersFound() && notFound.length === 0) {
+		        return gettext("No markers found since camera did not launch")
+            } else if (self.fourMarkersFound()) {
+		        return gettext("All 4 pink corner markers are recognized")
+            } else {
+		        return gettext("Not all pink corner markers are recognized. Missing markers: ") + notFoundStr;
+            }
         });
 
 		// ---------------- CAMERA SETTINGS ----------------
@@ -330,6 +352,8 @@ $(function () {
             self._testCameraSettingsActive()
         }
 
+    // It's necessary to read state.isLocked and update the value manually because this is injected after the
+    // binding is done (from the MotherVM)
 		self._updateIsLocked = function () {
 		    if (self.state.isLocked()) {
 		        self.isLocked(true)
@@ -502,11 +526,13 @@ $(function () {
 
 			if (!self.calibrationScreenShown()) {
 				return;
-      }
+            }
 
+			// I assume this already done in readyToLaserViewModel.
+            // If not, this piece of code should be moved to readyToLaserViewModel
+            // or even better: the complete handling of mrb_state should go into a dedicated view model.
 			if ('mrb_state' in data && data['mrb_state']) {
-				window.mrbeam.mrb_state = data['mrb_state'];
-				self.readyToLaser.updateSettingsAbout()
+				self.readyToLaser._fromData(data)
 			}
 
 			if ('beam_cam_new_image' in data) {
