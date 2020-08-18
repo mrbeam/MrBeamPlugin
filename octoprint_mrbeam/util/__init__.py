@@ -94,7 +94,7 @@ def force_kwargs(**defaultKwargs):
 	```
 	@force_kwargs(b=-3)
 	def g(a, *args, **kwargs):
-	  print("a %s, b %s, args %s, kwargs %s" % (a, b, args, kwargs))
+	  print("a %s, args %s, kwargs %s" % (a, b, args, kwargs))
 
 	g(1, 2, 3) # a 1, args (2,3), kwargs {'b': -3}
 	g(1, 2, b=3) # a 1, args(2,), kwargs {'b': 3 }
