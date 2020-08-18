@@ -30,7 +30,6 @@
 			self.rotateGroup = paper.select('#mbtransformRotateGroup');
 			self.translateGroup = paper.select('#mbtransformTranslateGroup');
 			self.translateHandle = paper.select('#translateHandle');
-			self.translateHandle2 = paper.select('#translateHandle_2'); // TODO remove
 			self.scaleHandleNE = paper.select('#scaleHandleNE');
 			self.scaleHandleNW = paper.select('#scaleHandleNW');
 			self.scaleHandleSE = paper.select('#scaleHandleSE');
@@ -53,6 +52,9 @@
 			self.scaleXText = paper.select('#scaleXText');
 			self.scaleYText = paper.select('#scaleYText');
 			self.rotateText = paper.select('#rotateText');
+			self.ORIGINAL_MATRIX = 'mbtransform_original_matrix';
+			self.INITIAL_MATRIX = 'mbtransform_initial_matrix';
+			
 			paper.mbtransform = self;
 			
 			self.initialized = true;
@@ -90,7 +92,6 @@
 			self.session.translate.dx = dxMM;
 			self.session.translate.dy = dyMM;
 
-			// move translateHandle
 			self._sessionUpdate();
 
 		}	
@@ -113,7 +114,6 @@
 
 			// rotation center
 			const handleMatrix = this.transform().localMatrix; // handle origin as first point
-			// TODO compensate click position on rotateHandle
 			self.session.rotate.ax = handleMatrix.e;
 			self.session.rotate.ay = handleMatrix.f;
 			self.session.rotate.ocx = self.session.bb.cx;
@@ -135,7 +135,6 @@
 			self.session.rotate.vcx = self.session.bboxWithoutTransform.cx;
 			self.session.rotate.vcy = self.session.bboxWithoutTransform.cy;
 			
-//			console.log("scales ", Math.sign(self.session.scale._m.a), Math.sign(self.session.scale._m.d));
 		}	
 
 		self.rotateMove = function( target, dx, dy, x, y, event ){
@@ -143,7 +142,7 @@
 			const dxMM = self._convertToViewBoxUnits(dx);
 			const dyMM = self._convertToViewBoxUnits(dy);
 
-			// transform mouse movement into virgin (=unrotated) coord space
+			// transform mouse movement into virgin (=unrotated) coord space // TODO merge the mirroredY multiplication into the matrix in 
 			const rdx = self.session.rotate.mirroredY * self.session.rotate._unrotateM.x(dxMM, dyMM);
 			const rdy = self.session.rotate.mirroredY * self.session.rotate._unrotateM.y(dxMM, dyMM);
 			
@@ -163,9 +162,9 @@
 			// c----------a
 			self.session.rotate.alpha = Snap.angle(bx, by, ax, ay, cx, cy);
 
-//			self.paper.debug.point('A', ax, ay, '#e25303');
-//			self.paper.debug.point('B', bx, by, '#e25303');
-//			self.paper.debug.point('C', cx, cy, '#e25303');
+			self.paper.debug.point('A', ax, ay, '#009900');
+			self.paper.debug.point('B', bx, by, '#009900');
+			self.paper.debug.point('C', cx, cy, '#009900');
 
 			self._sessionUpdate();
 		}	
@@ -270,9 +269,9 @@
 			// matrix for transforming mouse moves into rotated coord space
 			self.session.scale.mouseMatrix = Snap.matrix().rotate( -self.session.originTransform.rotate );
 			
-			self.paper.debug.point('ctr', self.session.scale.cx, self.session.scale.cy, '#e25303'); // TODO disable / remove
-			self.paper.debug.point('absCtr', self.session.scale.tcx, self.session.scale.tcy, '#00aaff'); // TODO disable / remove
-			self.paper.debug.point('handle', self.session.scale.mx, self.session.scale.my, '#00aaff'); // TODO disable / remove
+			self.paper.debug.point('c', self.session.scale.cx, self.session.scale.cy, '#e25303'); 
+			self.paper.debug.point('_C', self.session.scale.tcx, self.session.scale.tcy, '#00aaff'); 
+			self.paper.debug.point('A', self.session.scale.mx, self.session.scale.my, '#00aaff'); 
 			
 			console.log("scale session:", self.session.scale);
 		}	
@@ -281,9 +280,6 @@
 			// convert to viewBox coordinates (mm)
 			let dxMM = self._convertToViewBoxUnits(dx);
 			let dyMM = self._convertToViewBoxUnits(dy);
-
-//			if(self.session.scale._m.a < 0) dxMM *= -1;
-//			if(self.session.scale._m.d < 0) dyMM *= -1;
 
 			const sss = self.session.scale;
 			sss.dxMM = dxMM;
@@ -296,7 +292,7 @@
 			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY, '#e25303');
 
 			const distX = (rotatedMouseX - sss.cx);
-			const distY = (rotatedMouseY - sss.cy); // TODO invert if oldscaleY (_m.d) is negative
+			const distY = (rotatedMouseY - sss.cy); 
 			
 			let scaleX = sss.signX * distX / sss.refX
 			let scaleY = sss.signY * distY / sss.refY;
@@ -330,12 +326,6 @@
 				
 			}
 			
-//			console.log("Scale", sss.sx.toFixed(2), sss.sy.toFixed(2));
-
-			// move scaleHandle
-//			const hx = sss.mx * sss.sx;
-//			const hy = sss.mx * sss.sy;
-//			self.session.scale.usedHandle.transform(Snap.matrix().translate(hx, hy));
 
 			self._sessionUpdate(this);
 
@@ -350,7 +340,7 @@
 		}	
 
 		self._sessionInit = function(calledBy){
-			self.paper.debug.enable(); // TODO remove
+			// self.paper.debug.enable(); 
 			self.paper.debug.cleanup();
 			
 			// change mouse cursor
@@ -359,8 +349,6 @@
 			// remember current scale factors, rotation and translation
 			const tmp = self.translateHandle.transform().totalMatrix.split();
 			console.debug("sessionInit", calledBy, tmp);
-			
-			self.session.tmpM = self.translateHandle2.transform().localMatrix; // TODO remove
 			
 			const tmpSM = self.scaleGroup.transform().localMatrix;
 			const tmpRM = self.rotateGroup.transform().localMatrix;
@@ -403,7 +391,6 @@
 					const rcx = self.session.rotate.cx;
 					const rcy = self.session.rotate.cy;
 					
-					//const matRotate = Snap.matrix().rotate(alpha, rcx, rcy);
 					const matRotate = self.session.rotate._m.clone().rotate(self.session.rotate.alpha, rcx, rcy);
 					self.rotateGroup.transform(matRotate);
 				}
@@ -415,13 +402,11 @@
 					const matTranslate = self.session.translate._m.clone().translate(self.session.translate.dx, self.session.translate.dy);
 					self.translateGroup.transform(matTranslate);
 				}
-//				console.info("S", sx.toFixed(2), sy.toFixed(2), "R", alpha.toFixed(2)+'°', "T", tx.toFixed(2), ty.toFixed(2) );
 
 				self._visualizeTransform();
 
 				self.updateCounter++;
 				self.session.lastUpdate = Date.now();
-				
 				
 				// apply transform to target elements via callback
 				self._apply_transform();
@@ -442,7 +427,7 @@
 			
 			for (var i = 0; i < self.elements_to_transform.length; i++) {
 				var el = self.elements_to_transform[i];
-				const newM = el.data('mbtransform_original_matrix').clone().multLeft(m);
+				const newM = el.data(self.ORIGINAL_MATRIX).clone().multLeft(m);
 				el.transform(newM);
 			}
 		}
@@ -451,7 +436,37 @@
 			for (var i = 0; i < self.elements_to_transform.length; i++) {
 				var el = self.elements_to_transform[i];
 				const m = el.transform().localMatrix;
-				el.data({mbtransform_original_matrix: m});
+				el.data(self.ORIGINAL_MATRIX, m);
+				if(!el.data(self.INITIAL_MATRIX)) {
+					el.data(self.INITIAL_MATRIX, m); // store initial matrix for reverting transforms.
+				}
+			}
+		}
+		
+		self.reset_transform = function(elements_to_reset){
+			if(!elements_to_reset){
+				console.warn("Nothing to reset. Element was ", elements_to_reset);
+				return;
+			}
+
+			if(typeof elements_to_reset === "string"){
+				const selector = elements_to_reset;
+				elements_to_reset = self.paper.selectAll(selector);
+				if(elements_to_reset.length === 0){
+					console.warn("No elements to reset. Selector was ", selector);
+					return;
+				}
+			}
+			
+			for (var i = 0; i < elements_to_reset.length; i++) {
+				var el = elements_to_reset[i];
+				if(el.data(self.INITIAL_MATRIX)) {
+					const m = el.data(self.INITIAL_MATRIX);
+					el.transform(m);
+				} else {
+					console.warn("No initial matrix found. Setting transform=''.");
+					el.transform('');
+				}
 			}
 		}
 	
@@ -465,8 +480,6 @@
 			if(self.transformHandleGroup.node.classList.contains('active')){
 				self.deactivate();
 			}
-
-			self.translateHandle2.transform(''); // TODO remove
 			
 			if(!elements_to_transform){
 				console.warn("Nothing to transform. Element was ", elements_to_transform);
@@ -537,7 +550,6 @@
 			
 			self.updateCounter = 0;
 			self.updateFPS = setInterval(function(){
-//				if(self.updateCounter > 0) console.log("updateFPS: ", self.updateCounter);
 				self.updateCounter = 0;
 			}, 1000)
 		};
@@ -609,7 +621,6 @@
 				// resize translateHandle (rectangle)
 				self.translateHandle.transform('');
 				self.translateHandle.attr(bbox_to_wrap);
-				self.translateHandle2.attr(bbox_to_wrap); // TODO remove
 			} else {
 				// just align scale and rotation arrows
 				bbox_to_wrap = self.translateHandle.getBBox(true);
@@ -628,7 +639,7 @@
 			self.scaleHandleE.transform(lm.clone().translate(bbox_to_wrap.x2, bbox_to_wrap.cy).add(unscaleMat));
 			self.scaleHandleS.transform(lm.clone().translate(bbox_to_wrap.cx, bbox_to_wrap.y2).add(unscaleMat));
 			self.scaleHandleW.transform(lm.clone().translate(bbox_to_wrap.x,  bbox_to_wrap.cy).add(unscaleMat));
-			self.rotHandle.transform(lm.clone().translate((bbox_to_wrap.x2+self.config.minTranslateHandleSize), bbox_to_wrap.cy).add(unscaleMat));
+			self.rotHandle.transform(lm.clone().translate(bbox_to_wrap.x2, bbox_to_wrap.cy).add(unscaleMat));
 			
 		};
 
@@ -687,7 +698,6 @@
 		};
 
 		self._visualizeTranslate = function(){
-//			(self.session.translate.dx !== 0 || self.session.translate.dy !== 0)
 			const startXh = self.session.translate.cx;
 			const startYh = 10;
 			const startXv = 10;
@@ -704,7 +714,6 @@
 		};
 
 		self._visualizeRotate = function(){
-//			if(self.session.rotate.alpha !== 0) {
 			const cx = self.session.rotate.ocx;
 			const cy = self.session.rotate.ocy;
 			const a = self.session.rotate.alpha;
@@ -712,12 +721,11 @@
 			const visM = Snap.matrix(1,0,0,1,cx, cy).rotate(self.session.rotate._alpha);
 			self.rotateVis.transform(visM);
 			self.rotateVisAngle.transform(Snap.matrix().rotate(self.session.rotate.alpha));
-			const angleText = ((a + 180) % 360) - 180; // TODO -180° to 180°;
+			const angleText = ((a + 180 + 720) % 360) - 180; // ensures -180° to 180°
 			self.rotateText.node.textContent = `${(angleText>0 ? '+':'')}${angleText.toFixed(1)} °`;
 		};
 		
 		self._visualizeScale = function () {
-//			if(self.session.scale.sx !== 1 || self.session.scale.sy !== 1) {
 			const gap = 15;
 			const sss = self.session.scale;
 			const handleX = sss.mx + sss.dxMM; 
@@ -732,8 +740,6 @@
 			// where to show visualizations 
 			let handleIsLeft = Math.sign(sss.cx - sss.mx);
 			let handleIsTop = Math.sign(sss.cy - sss.my);
-//			const sxPositive = Math.sign(sss.sx);
-//			const syPositive = Math.sign(sss.sy);
 			const sxPositive = Math.sign(totalSx);
 			const syPositive = Math.sign(totalSy);
 			const rulerCx = cx - handleIsLeft * Math.sign(sss._m.a) * width / 2;
@@ -743,16 +749,8 @@
 				if(sss.signY === 0) handleIsTop = 1;
 			}
 			
-			self.paper.debug.line(`rulerCx`, rulerCx, 0, rulerCx, 300, '#ff0000', '#scaleVis');
-//			console.log("handleIsLeft", handleIsLeft, "sxPositive", sxPositive, "rulerCx", rulerCx);
-
-
 			self.scaleVis.node.classList.toggle('showX', sss.signX !== 0);
 			self.scaleVis.node.classList.toggle('showY', sss.signY !== 0);
-			
-//			self.paper.debug.point('scaleVisCenter', 0, 0, '#005303', '#scaleVis');
-			
-//			self.paper.debug.coords('scaleVis', '#999999', '#scaleVis');
 			
 			// move ruler center to the center of the translatehandle bbox
 			const visM = Snap.matrix(1,0,0,1,rulerCx, rulerCy);
@@ -766,7 +764,7 @@
 			const labelX = `${width.toFixed(1)}mm / ${(sss.sx*100).toFixed(1)}%`;
 			self.scaleXText.node.textContent = labelX;
 			self.scaleXText.transform(Snap.matrix(1,0,0,1,0, horizontalEdgeY + horizontalRulerOffset + horizontalTextOffset));
-//			self.paper.debug.point('hEdge', 0, horizontalEdgeY, '#005303', '#scaleVis');
+			self.paper.debug.point('hEdge', 0, horizontalEdgeY, '#005303', '#scaleVis');
 
 			const verticalEdgeX = handleIsLeft * width / 2;
 			const verticalRulerOffset = handleIsLeft * sxPositive * gap;
@@ -776,7 +774,7 @@
 			const labelY = `${height.toFixed(1)}mm / ${(sss.sy*100).toFixed(1)}%`;
 			self.scaleYText.node.textContent = labelY;	
 			self.scaleYText.transform(Snap.matrix(0,-1,1,0, verticalEdgeX + verticalRulerOffset + verticalTextOffset, 0));
-//			self.paper.debug.point('vEdge', 0, verticalEdgeX, '#005303', '#scaleVis');
+			self.paper.debug.point('vEdge', 0, verticalEdgeX, '#005303', '#scaleVis');
 			
 		}
 
@@ -812,7 +810,6 @@
 		}
 		
 		self.point = function(label, x, y, color="#ff00ff", parent=null){
-			// TODO parent, implicit label
 			if(!self.isEnabled) return;
 			
 			if(!label){
@@ -849,7 +846,6 @@
 		}
 		
 		self.line = function(label, x1, y1, x2, y2, color='#ff00ff', parent=null){
-			// TODO parent, implicit label
 			if (!self.isEnabled)
 				return;
 
@@ -889,7 +885,6 @@
 		};
 		
 		self.coords = function(label, color="#ff00ff", parent=null){
-			// TODO parent, implicit label
 			if(!self.isEnabled) return;
 			
 			if(!label){
