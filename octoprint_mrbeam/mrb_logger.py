@@ -198,7 +198,7 @@ class MrbLogger(Logger):
 				temp_timer.start()
 			else:
 				tmp_arr = []
-				my_logger = getLogger('octoprint_mrbeam.terminal_dump')
+				my_logger = getLogger(__name__ + '.dump_terminal_buffer')
 				my_logger.log(level, " ******* Dumping terminal buffer (len: %s, analytics: %s)", len(self.my_buffer), analytics)
 				for line in self.my_buffer:
 					my_logger.log(level, line)
