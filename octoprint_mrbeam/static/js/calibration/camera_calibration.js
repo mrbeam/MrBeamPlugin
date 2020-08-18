@@ -526,11 +526,13 @@ $(function () {
 
 			if (!self.calibrationScreenShown()) {
 				return;
-      }
+            }
 
+			// I assume this already done in readyToLaserViewModel.
+            // If not, this piece of code should be moved to readyToLaserViewModel
+            // or even better: the complete handling of mrb_state should go into a dedicated view model.
 			if ('mrb_state' in data && data['mrb_state']) {
-				window.mrbeam.mrb_state = data['mrb_state'];
-				self.readyToLaser.updateSettingsAbout()
+				self.readyToLaser._fromData(data)
 			}
 
 			if ('beam_cam_new_image' in data) {
