@@ -34,7 +34,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		// add invisible fill for better dragging.
 		elem.add_fill();
-		elem.click(function(){ elem.ftCreateHandles(); });
+//		elem.click(function(){ elem.ftCreateHandles(); });
+		elem.click(function(){ elem.paper.mbtransform.activate(elem); });
 		return elem;
 
 

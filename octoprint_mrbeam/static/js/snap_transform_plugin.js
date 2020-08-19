@@ -491,6 +491,10 @@
 					console.warn("No elements to transform. Selector was ", selector);
 					return;
 				}
+			} else {
+				if(typeof elements_to_transform === "object"){
+					elements_to_transform = Snap.set(elements_to_transform);
+				}
 			}
 			
 			
@@ -503,7 +507,7 @@
 			// set transform session origin
 			self.session.bb = selection_bbox;
 
-			self.elements_to_transform = elements_to_transform;
+			self.elements_to_transform = elements_to_transform; 
 			self._remember_original_transform();
 
 			self.scaleGroup.transform('');
@@ -579,6 +583,37 @@
 			self.session.bb = null;
 
 		};
+		
+		self.toggle = function(elements_to_transform){
+			
+			if(self.transformHandleGroup.node.classList.contains('active')){
+				self.deactivate();
+				return;
+			} else {
+				self.activate(elements_to_transform);
+			}
+			
+		};
+		
+//		self.toggleElements = function(elements_to_transform){
+//			// TODO implementation
+//			if(!elements_to_transform){
+//				console.warn("Nothing to toggle. Elements were ", elements_to_transform);
+//				return;
+//			}
+//
+//			if(typeof elements_to_transform === "string"){
+//				const selector = elements_to_transform;
+//				elements_to_transform = self.paper.selectAll(selector);
+//				if(elements_to_transform.length === 0){
+//					console.warn("No elements to toggle. Selector was ", selector);
+//					return;
+//				}
+//			}
+//			if(self.transformHandleGroup.node.classList.contains('active')){
+//				self.deactivate();
+//			}
+//		};
 		
 		self._transformBBox = function(bbox, matrix){
 			const x = matrix.x(bbox.x, bbox.y);

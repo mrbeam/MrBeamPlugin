@@ -1081,7 +1081,8 @@ $(function(){
 			}
 			var el = snap.select('#'+previewId);
 			if(el){
-				el.ftToggleHandles();
+//				el.ftToggleHandles();
+				snap.mbtransform.toggle(el);
 			}
 		};
 
@@ -1097,9 +1098,11 @@ $(function(){
 			var el = snap.select('#'+previewId);
 			if(el){
 				if (show) {
-					el.ftCreateHandles();
+					snap.mbtransform.activate(el);
+//					el.ftCreateHandles();
 				} else {
-					el.ftRemoveHandles();
+					snap.mbtransform.deactivate();
+//					el.ftRemoveHandles();
 				}
 			}
 		};
@@ -1803,11 +1806,11 @@ $(function(){
 		};
 
 		self.abortFreeTransforms = function(){
-			var tip = snap.selectAll('._freeTransformInProgress');
-			for (var i = 0; i < tip.length; i++) {
-				var el = tip[i];
-				el.ftRemoveHandles();
-			}
+//			var tip = snap.selectAll('._freeTransformInProgress');
+//			for (var i = 0; i < tip.length; i++) {
+//				var el = tip[i];
+//				el.ftRemoveHandles();
+//			}
 			snap.mbtransform.deactivate();
 			//self.check_sizes_and_placements();
 		};
