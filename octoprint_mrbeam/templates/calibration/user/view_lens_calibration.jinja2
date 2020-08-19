@@ -20,7 +20,7 @@
         <li>{{ _('Place it inside your Mr Beam.') }}</li>
         <li>{{ _('Repeat the following until you have at least 9 pictures available (more pictures will increase your chances for higher precision):') }}
             <ul>
-                <li>{{ _('Press the orange picture button or the button on your Mr Beam to take a picture of the chessboard: the orange button will turn gray and the device will flash in blue.') }}</li>
+                <li>{{ _('Press the button on your Mr Beam to take a picture of the chessboard: the Status Lights will flash in blue.') }}</li>
                 <li>{{ _('Wait for the flash to stop or for the button to turn orange again.') }}</li>
                 <li>{{ _('Move the chessboard to a new position.') }}</li>
             </ul>
@@ -48,12 +48,7 @@
                    width="1731.795" height="1407.0836" x="1018.6564" y="562.65308"></rect>
               </g>
               <g id="segment_group" transform="translate(340, 250),scale(1.1, 1.2)"></g>
-              <path d="M2740,2040H3500" stroke="#e25303" stroke-width="15px"></path>
             </svg>
-
-            <button id="lens_calibration_take_pic" class="btn btn-primary" data-bind="click: saveRawPic, enable: !cameraBusy()">
-                <i class="icon icon-camera icon-2x"></i>
-            </button>
 
 {#            <button id="lens_calibration_toggle_qa_btn" class="btn pull-right"#}
 {#                    data-bind="click: lensCalibrationToggleQA,#}
