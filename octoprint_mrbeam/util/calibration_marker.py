@@ -111,6 +111,3 @@ M5
 
 	def getGCode(self, intensity, feedrate):
 		return self.GCODE % {'xmin': self.xmin, 'xmax': self.xmax, 'ymin': self.ymin, 'ymax': self.ymax, 'intensity':intensity, 'feedrate':feedrate}
-
-if __name__ == "__main__":
-	print "Hello World"

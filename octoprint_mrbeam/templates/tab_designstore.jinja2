@@ -1,6 +1,6 @@
 
 <div class="tab-pane" id="designstore">
-    <iframe id="design_store_iframe" scrolling="no" frameBorder="0"></iframe>
+    <iframe id="design_store_iframe" scrolling="auto" frameBorder="0"></iframe>
     <div id="design_store_offline_placeholder">
 {#        Seems like you are not connected to the internet. If you want to use the Design Store, please connect to the internet and reload the page.#}
 
@@ -22,7 +22,7 @@
                                     <p>{{ _('In order to use our store it is necessary that your Mr&nbsp;Beam is connected to the internet.') }}</p>
                                     <p>{{ _('Please connect your Mr&nbsp;Beam to your router with a cable, or via WiFi.') }}</p>
                                     <div>
-                                        <button class="btn refresh-connection" onClick="window.location.reload();">
+                                        <button class="btn refresh-connection"  data-bind="click: $root.reloadDesignStoreIframe">
                                             {{ _('Refresh') }}
                                         </button>
                                     </div>

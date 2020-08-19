@@ -50,7 +50,7 @@ from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA, SW_UPDATE_TIER_DEV
-from octoprint_mrbeam.support import set_support_mode, set_calibration_tool_mode
+from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
@@ -132,7 +132,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._grbl_version = None
 		self._device_series = self._device_info.get('device_series') # '2C'
 		self.called_hosts = []
-		self._current_user = None
 
 		self._boot_grace_period_counter = 0
 
@@ -164,11 +163,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# do migration if needed
 		migrate(self)
 
+		# patch OP filemanager to not accept .stl files
+		self._patch_op_filemanager_full_extension_tree_wrapper()
+
 		self.set_serial_setting()
 
-		# Enable or disable internal support user.
-		self.support_mode = set_support_mode(self)
-		self.calibration_tool_mode = set_calibration_tool_mode(self)
 		self._fixEmptyUserManager()
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
@@ -182,7 +181,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.analytics_handler = analyticsHandler(self)
 		self.user_notification_system = user_notification_system(self)
-		# self.review_handler = reviewHandler(self)  TODO IRATXE: disabled for now
+		self.review_handler = reviewHandler(self)
 		self.onebutton_handler = oneButtonHandler(self)
 		self.interlock_handler = interLockHandler(self)
 		self.lid_handler = lidHandler(self)
@@ -307,6 +306,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			laser_heads=dict(
 				filename='laser_heads.yaml'
 			),
+			review=dict(
+				given=False,
+				ask=False,
+			),
 			focusReminder=True,
 			analyticsEnabled=None,
 			analytics=dict(
@@ -330,6 +333,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				lensCalibrationFile='{}/cam/lens_correction_{}x{}.npz'.format(settings().getBaseFolder('base'), image_default_width, image_default_height),
 				saveCorrectionDebugImages=False,
 				markerRecognitionMinPixel = MIN_MARKER_PIX,
+				remember_markers_across_sessions = True,
 			),
 			gcode_nextgen=dict(
 				enabled=True,
@@ -359,6 +363,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cam=dict(frontendUrl=self._settings.get(['cam', 'frontendUrl']),
 			         previewOpacity=self._settings.get(['cam', 'previewOpacity']),
 			         markerRecognitionMinPixel = self._settings.get(['cam', 'markerRecognitionMinPixel']),
+			         remember_markers_across_sessions = self._settings.get(['cam', 'remember_markers_across_sessions']),
 			         ),
 			dev=dict(
 				env=self.get_env(),
@@ -379,6 +384,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			software_update_branches=self.get_update_branch_info(),
 			_version=self._plugin_version,
+			review=dict(
+				given=self._settings.get(['review', 'given']),
+				ask=self._settings.get(['review', 'ask']),
+			),
 			focusReminder=self._settings.get(['focusReminder']),
 			laserHeadSerial=self.laserhead_handler.get_current_used_lh_data()['serial'],
 			usage=dict(
@@ -437,6 +446,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# dev only
 			if self.is_dev_env() and "dev" in data and "design_store_email" in data['dev']:
 				self._settings.set(["dev", "design_store_email"], data['dev']["design_store_email"])
+			if "remember_markers_across_sessions" in data:
+				self._settings.set_boolean(["cam", "remember_markers_across_sessions"], data["remember_markers_across_sessions"])
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
@@ -514,7 +525,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/material_settings.js",
 			    "js/analytics.js",
 			    "js/maintenance.js",
-			    # "js/review.js",  TODO IRATXE: disabled for now
+			    "js/review.js",
 			    "js/util.js",
 			    "js/user_notification_viewmodel.js",
 			    "js/lib/load-image.all.min.js",  # to load custom material images
@@ -538,6 +549,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._settings.get(["dev", "load_gremlins"]):
 			assets['js'].append('js/lib/gremlins.min.js')
 		return assets
+
+	##~~ Helper attributes for different modes
+	# Enable or disable internal support user.
+	@property
+	def support_mode(self):
+		"""Get the support mode"""
+		ret = check_support_mode(self)
+		self._fixEmptyUserManager()
+		return ret
+
+	@property
+	def calibration_tool_mode(self):
+		"""Get the calibration tool mode"""
+		ret = check_calibration_tool_mode(self)
+		self._fixEmptyUserManager()
+		return ret
 
 	##~~ UiPlugin mixin
 
@@ -654,7 +681,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_template_configs(self):
 		result = [
 			dict(type='settings', name=gettext("File Import Settings"), template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
-			dict(type='settings', name=gettext("Camera Calibration"), template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+			dict(type='settings', name=gettext("Camera"), template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
 			dict(type='settings', name=gettext("Precision Calibration"), template='settings/backlash_settings.jinja2', suffix="_backlash", custom_bindings=True),
 			dict(type='settings', name=gettext("Debug"), template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
 			dict(type='settings', name=gettext("About This Mr Beam"), template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
@@ -721,6 +748,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.global_set_boolean(["accessControl", "enabled"], True)
 			self._user_manager.enable()
 			self._user_manager.addUser(data["user"], data["pass1"], True, ["user", "admin"], overwrite=True)
+
+			# We activate the flag to ask for a review for new users
+			self._settings.set_boolean(['review', 'ask'], True)
 		else:
 			return make_response("Unable to interprete request", 400)
 
@@ -961,8 +991,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return False
 
 	@octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
-	# @firstrun_only_access
 	def calibration_wrapper(self):
+		if not self.calibration_tool_mode:
+			return ("", 403) # FORBIDDEN # NO_CONTENT
 		from flask import make_response, render_template
 		from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
 
@@ -1088,6 +1119,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/engrave_calibration_markers/<string:intensity>/<string:feedrate>", methods=["GET"])
 	# @firstrun_only_access #@maintenance_stick_only_access
 	def engraveCalibrationMarkers(self, intensity, feedrate):
+		if not self.calibration_tool_mode:
+			return ("", 403) # FORBIDDEN # NO_CONTENT
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		max_intensity = 1300  # TODO get magic numbers from profile
 		min_intensity = 0
@@ -1579,6 +1612,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			analytics_upload=[],  # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
+			remember_markers_across_sessions=[],
 			review_data=[],
 			reset_prefilter_usage=[],
 			reset_carbon_filter_usage=[],
@@ -1591,6 +1625,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			generate_backlash_compenation_pattern_gcode=[],
 			compensate_obj_height=[],
 			calibration_save_raw_pic=[],
+			calibration_lens_start=[],
+			calibration_get_raw_pic=[],
+			calibration_del_pic=[],
+			camera_run_lens_calibration=[],
+			camera_stop_lens_calibration=[],
 			generate_calibration_markers_svg=[],
 		)
 
@@ -1626,9 +1665,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
-		# TODO IRATXE: disabled for now
-		# elif command == "review_data":
-		# 	return self.review_handler.save_review_data(data)
+		elif command == "remember_markers_across_sessions":
+			return self.remember_markers_across_sessions(data)
+		elif command == "review_data":
+			return self.review_handler.save_review_data(data)
 		elif command == "reset_prefilter_usage":
 			return self.usage_handler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
@@ -1666,22 +1706,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "calibration_save_raw_pic":
 			# TODO save next raw image to the buffer
 			# TODO flash LEDs when raw img saved
-			return self.sendInitialCalibrationMarkers()
+			return self.onCalibrationSaveRawPic()
+		elif command == "calibration_lens_start":
+			return self.onLensCalibrationStart()
+		elif command == "calibration_get_raw_pic":
+			return self.onCalibrationGetRawPic()
+		elif command == "calibration_del_pic":
+			return self.onCalibrationDelRawPic()
+		elif command == "camera_run_lens_calibration":
+			return self.onCalibrationRunLensDistort()
+		elif command == "camera_stop_lens_calibration":
+			return self.onCalibrationStopLensDistort()
 		elif command == "generate_calibration_markers_svg":
-			return self.generateCalibrationMarkersSvg() # TODO move this func to other file
-
+			return self.generateCalibrationMarkersSvg()  # TODO move this func to other file
 		return NO_CONTENT
-
-	# TODO IRATXE: this does not properly work --> necessary for reviews
-	# def get_user_name(self):
-	# 	from flask.ext.login import current_user
-	#
-	# 	# Looks like current_user sometimes does not work, so we save it and the next time if there's no information
-	# 	# we just use the last saved user.
-	# 	if current_user and not current_user.is_anonymous():
-	# 		self._current_user = current_user.get_name()
-	#
-	# 	return self._current_user
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:
@@ -1704,6 +1742,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def focus_reminder(self, data):
 		if 'focusReminder' in data:
 			self._settings.set_boolean(["focusReminder"], data['focusReminder'])
+			self._settings.save()  # This is necessary because without it the value is not saved
+		return NO_CONTENT
+
+	def remember_markers_across_sessions(self, data):
+		if 'remember_markers_across_sessions' in data:
+			self._settings.set_boolean(["cam","remember_markers_across_sessions"], data['remember_markers_across_sessions'])
 			self._settings.save()  # This is necessary because without it the value is not saved
 		return NO_CONTENT
 
@@ -1797,6 +1841,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except IOError:
 			self._logger.debug("previous pic settings were not present")
 			pic_settings = {}
+		pic_settings = pic_settings or {} # pic_settings is None if file exists but empty
 
 		pic_settings['cornersFromImage'] = newCorners
 		pic_settings['calibMarkers'] = newMarkers
@@ -2111,6 +2156,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
+	def _patch_op_filemanager_full_extension_tree_wrapper(self):
+		# MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+		# Per default OP always accepts .stl files.
+		# Here we monkey-patch the remove of this file type
+		def _op_filemanager_full_extension_tree_wrapper():
+			res = op_filemanager.full_extension_tree_original()
+			res.get('model', {}).pop('stl', None)
+			return res
+
+		if not 'full_extension_tree_original' in dir(op_filemanager):
+			op_filemanager.full_extension_tree_original = op_filemanager.full_extension_tree
+			op_filemanager.full_extension_tree = _op_filemanager_full_extension_tree_wrapper
+
 	def get_mrb_state(self):
 		"""
 		Returns the data set 'mrb_state' which we add to the periodic status messages
@@ -2136,7 +2194,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					cooling_mode=self.temperature_manager.is_cooling(),
 					dusting_mode=self.dust_manager.is_final_extraction_mode,
 					state=self._printer.get_state_string(),
-
+					is_homed=self._printer.is_homed(),
 				)
 			except:
 				self._logger.exception("Exception while collecting mrb_state data.")
@@ -2333,10 +2391,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		max_offset = 60000  # miliseconds
 		now = time.time()
 		try:
-			# ntpq_out, code = exec_cmd_output("ntpq -p", shell=True, log_cmd=False)
+			# ntpq_out, code = exec_cmd_output("ntpq -p", shell=True, log=False)
 			# self._logger.debug("ntpq -p:\n%s", ntpq_out)
 			cmd = "ntpq -pn | /usr/bin/awk 'BEGIN { ntp_offset=%s } $1 ~ /^\*/ { ntp_offset=$9 } END { print ntp_offset }'" % max_offset
-			output, code = exec_cmd_output(cmd, shell=True, log_cmd=False)
+			output, code = exec_cmd_output(cmd, shell=True, log=False)
 			try:
 				ntp_offset = float(output)
 			except:
@@ -2415,18 +2473,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._mac_addrs
 
 
-# MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
-# Per default OP always accepts .stl files.
-# Here we monkey-patch the remove of this file type
-def _op_filemanager_full_extension_tree_wrapper():
-	res = op_filemanager.full_extension_tree_original()
-	res.get('model', {}).pop('stl', None)
-	return res
-
-
-if not 'full_extension_tree_original' in dir(op_filemanager):
-	op_filemanager.full_extension_tree_original = op_filemanager.full_extension_tree
-	op_filemanager.full_extension_tree = _op_filemanager_full_extension_tree_wrapper
+# # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+# # Per default OP always accepts .stl files.
+# # Here we monkey-patch the remove of this file type
+# def _op_filemanager_full_extension_tree_wrapper():
+# 	res = op_filemanager.full_extension_tree_original()
+# 	res.get('model', {}).pop('stl', None)
+# 	return res
+#
+#
+# if not 'full_extension_tree_original' in dir(op_filemanager):
+# 	import logging
+# 	logging.getLogger('ANDYTEST').info("ANDYTEST doing stuff")
+# 	logging.getLogger('ANDYTEST').info("ANDYTEST doing stuff: op_filemanager: %s", op_filemanager)
+# 	op_filemanager.full_extension_tree_original = op_filemanager.full_extension_tree
+# 	op_filemanager.full_extension_tree = _op_filemanager_full_extension_tree_wrapper
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
@@ -2486,5 +2547,4 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
 		"octoprint.cli.commands": get_cli_commands
-
 	}

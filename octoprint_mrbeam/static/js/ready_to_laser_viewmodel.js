@@ -10,7 +10,7 @@ $(function () {
 
 		self.oneButton = false;
 
-		self.dialogElement = undefined;
+		self.dialogElement = $(); // initialize not to undefined
 		self.dialogShouldBeOpen = false;
 		self.dialogIsInTransition = false;
 		self.dialogTimeoutId = -1;
@@ -20,6 +20,7 @@ $(function () {
 		self.is_cooling_mode = ko.observable(false);
 		self.is_fan_connected = ko.observable(true);
 		self.is_rtl_mode = ko.observable(false);
+		self.lid_fully_open = ko.observable(false);
 
 		self.is_pause_mode = ko.observable(false);
 
@@ -30,6 +31,8 @@ $(function () {
 
 
 		self.onStartupComplete = function () {
+		    // I think this should already be done in on Startup()
+            // But I do not want to change it  shortly before a rlease.
 			self.dialogElement = $('#ready_to_laser_dialog');
 
 			/**
@@ -143,7 +146,12 @@ $(function () {
 
 		self.onEventJobTimeEstimated = function (payload) {
 			self.formatJobTimeEstimation(payload['job_time_estimation']);
+			self._fromData(payload);
 		};
+
+		self.onEventMrbPluginVersion = function(payload) {
+            self._fromData(payload);
+        };
 
 		/**
 		 * this is called from the outside once the slicing is done
@@ -201,6 +209,7 @@ $(function () {
 			}
 			var mrb_state = payload['mrb_state'];
 			if (mrb_state) {
+			    // TODO: All the handling of mrb_state data should be moved into a dedicated view model
 				window.mrbeam.mrb_state = mrb_state;
 				window.STATUS = mrb_state;
 				self.updateSettingsAbout();
@@ -210,6 +219,9 @@ $(function () {
 				}
 				if ('interlocks_closed' in mrb_state) {
 					self.interlocks_closed(mrb_state['interlocks_closed']);
+				}
+				if ('lid_fully_open' in mrb_state) {
+					self.lid_fully_open(mrb_state['lid_fully_open']);
 				}
 				if ('cooling_mode' in mrb_state) {
 					self.is_cooling_mode(mrb_state['cooling_mode']);

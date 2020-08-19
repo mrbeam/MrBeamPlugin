@@ -471,10 +471,12 @@ $(function () {
 				let data = ko.dataFor(elem);
 				totalSelectionSize += data.size;
 				let t;
-				if(data.type === 'recentjob'){
-					t = gettext('recent job');
+				if(data.type === 'recentjob') {
+                    t = gettext('recent job');  // yes, should be translated!!!
+                } else if(_.last(data.typePath) === 'image') {
+				    t = gettext('image');  // yes, should be translated!!!
 				} else {
-					t = gettext(_.last(data.typePath));
+					t = _.last(data.typePath);
 				}
 				types[t] = (types[t] + 1) || 1;
 			}

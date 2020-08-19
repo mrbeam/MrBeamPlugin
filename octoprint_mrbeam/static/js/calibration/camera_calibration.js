@@ -14,6 +14,12 @@ const CROPPED_IMG_RES = [500,390]
 const LOADING_IMG_RES = [512, 384]
 const STATIC_URL = "/plugin/mrbeam/static/img/calibration/calpic_wait.svg";
 
+const CUSTOMER_CAMERA_VIEWS = {
+    'settings': '#camera_settings_view',
+    'lens': '#lens_calibration_view',
+    'corner': '#corner_calibration_view',
+}
+
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
@@ -22,7 +28,9 @@ $(function () {
 		self.conversion = parameters[1];
 		self.analytics = parameters[2];
 		self.camera = parameters[3];
-		self.laserViewmodel = parameters[4]; // Only used to show mrb state for Debug info
+		self.state = parameters[4]; // isOperational
+		self.readyToLaser = parameters[5]; // lid_fully_open & debug tab with mrb state
+        self.settings = parameters[6];
 
 		// calibrationState is constantly refreshed by the backend
 		// as an immutable array that contains the whole state of the calibration
@@ -30,7 +38,11 @@ $(function () {
 
 		self.startupComplete = ko.observable(false);
 		self.calibrationScreenShown = ko.observable(false);
-		self.waitingForRefresh = ko.observable(true)
+		self.waitingForRefresh = ko.observable(true);
+		self.settingsActive = ko.observable(false);
+		self.cameraSettingsActive = ko.observable(false);
+
+		self.isLocked = ko.observable(false);
 
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
@@ -58,6 +70,14 @@ $(function () {
 				return ret
 		})
 
+        /**
+         * lazy-loading manually implemented.
+         * Only returns an URL if the image element is visible.
+         */
+        self.statusRawImageUrl = ko.computed(function() {
+            return self.settingsActive() && self.cameraSettingsActive() ? self.availablePicUrl()['raw'] : null
+        })
+
 		self.calSvgOffX = ko.observable(0);
 		self.calSvgOffY = ko.observable(0);
 		self.calSvgDx = ko.observable(0);
@@ -77,11 +97,96 @@ $(function () {
 		self.currentMarker = 0;
 		self.calibrationMarkers = [
 			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
-			{name: 'NW', desc: 'North West', focus: [0, 0, 4]},
-			{name: 'SW', desc: 'North East', focus: [0, DEFAULT_IMG_RES[1], 4]},
-			{name: 'SE', desc: 'South East', focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
-			{name: 'NE', desc: 'South West', focus: [DEFAULT_IMG_RES[0], 0, 4]}
+			{name: 'NW', desc: self.camera.MARKER_DESCRIPTIONS['NW'], focus: [0, 0, 4]},
+			{name: 'SW', desc: self.camera.MARKER_DESCRIPTIONS['SW'], focus: [0, DEFAULT_IMG_RES[1], 4]},
+			{name: 'SE', desc: self.camera.MARKER_DESCRIPTIONS['SE'], focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
+			{name: 'NE', desc: self.camera.MARKER_DESCRIPTIONS['NE'], focus: [DEFAULT_IMG_RES[0], 0, 4]}
 		];
+
+		// ---------------- CAMERA STATUS ----------------
+        // If either of the other two requirements are not met (lid open, operational),
+        // we say that the markers were not found (if they were, of course)
+        self.fourMarkersFound = ko.computed(function () {
+            return self.readyToLaser.lid_fully_open()
+                && self.statusOnlyOperational()
+                && self.camera.markerState() === 4;
+        })
+
+        // If Mr Beam is not locked, printing or paused, we tell to the user it's operational.
+        // state.isOperational wouldn't work, because all of the others are substates of it.
+        self.statusOnlyOperational = ko.computed(function () {
+            return !self.isLocked()
+                && !self.state.isPrinting()
+                && !self.state.isPaused()
+        })
+
+		self.cameraStatusOk = ko.computed(function () {
+			return self.readyToLaser.lid_fully_open()
+                && self.statusOnlyOperational()
+                && self.fourMarkersFound(); // This already includes the other two, but just to see it more clear
+		})
+
+        self.lidMessage  = ko.computed(function() {
+            return self.readyToLaser.lid_fully_open() ?
+                gettext("The lid is open") :
+                gettext("The lid is closed: Please open the lid to start the camera");
+        });
+
+		self.onlyOperationalMessage  = ko.computed(function() {
+		    if (self.isLocked()) {
+		        return gettext("Mr Beam is not homed: Please go to the working area and do a Homing Cycle")
+            } else if (self.state.isPrinting() || self.state.isPaused()) {
+		        return gettext("Mr Beam is currently performing a laser job. The camera does not work during a laser job")
+            } else if (self.state.isOperational()) {
+		        return gettext("Mr Beam is in state Operational")
+            } else {
+		        return gettext("Mr Beam is not in state Operational: The camera does not work during a laser job")
+            }
+        });
+
+		self.markersMessage  = ko.computed(function() {
+		    let notFound = [];
+		    for (const [marker, found] of Object.entries(self.camera.markersFound())) {
+                if (!found) {
+                    notFound.push(self.camera.MARKER_DESCRIPTIONS[marker]);
+                }
+            }
+		    let notFoundStr = notFound.join(", ")
+
+            if (!self.fourMarkersFound() && notFound.length === 0) {
+		        return gettext("No markers found since camera did not launch")
+            } else if (self.fourMarkersFound()) {
+		        return gettext("All 4 pink corner markers are recognized")
+            } else {
+		        return gettext("Not all pink corner markers are recognized. Missing markers: ") + notFoundStr;
+            }
+        });
+
+		// ---------------- CAMERA SETTINGS ----------------
+        self.setMarkerDetectionMode = function() {
+            // Default is "Reliable". If the user changed it, set "Accurate".
+            if (!self.settings.settings.plugins.mrbeam.cam.remember_markers_across_sessions()) {
+                $('#camera_settings_marker_detection button[value="accurate"]').addClass('active').siblings().removeClass('active');
+            }
+        }
+
+        $('#camera_settings_marker_detection button').click(function() {
+            let remember_markers_across_sessions = $(this).attr('value') === 'reliable';
+
+            let data = { remember_markers_across_sessions: remember_markers_across_sessions }
+            self.simpleApiCommand( "remember_markers_across_sessions", data,
+                function (response) {
+                    console.log("simpleApiCall response for saving remember_markers_across_sessions: ", response);
+                }, function () {
+                    console.error("Unable to save remember_markers_across_sessions: ", data);
+                    new PNotify({
+                        title: gettext("Error while selecting the marker detection mode"),
+                        text: _.sprintf(gettext("Unable to select the marker detection mode at the moment.")),
+                        type: "error",
+                        hide: true
+                    });
+                });
+        });
 
 		// ---------------- CAMERA ALIGNMENT ----------------
 		self.qa_cameraalignment_image_loaded = ko.observable(false);
@@ -90,22 +195,24 @@ $(function () {
         })
 
 		// ---------------- CORNER CALIBRATION ----------------
-        self.cornerCalibrationActive = ko.observable(false);
+		self.cornerCalibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 		self.indicateRestartCornerCalibration = ko.observable(false)
 
-		self.applySetting = function(picType) {
+		self.applySetting = function(picType, applyCrossVisibility) {
 			// TODO with a dictionnary
 			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
 			                ['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
-			                ['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
+			                ['raw', DEFAULT_IMG_RES, 'visible', 'hidden'],
 			                ['default', LOADING_IMG_RES, 'hidden', 'hidden']]
 			for (let _t of settings)
 				if (_t[0] === picType) {
 					self.calImgWidth(_t[1][0])
 					self.calImgHeight(_t[1][1])
-					self.correctedMarkersVisibility(_t[2])
-					self.croppedMarkersVisibility(_t[3])
+					if(applyCrossVisibility){
+						self.correctedMarkersVisibility(_t[2])
+						self.croppedMarkersVisibility(_t[3])
+					}
 					return
 				}
 			new PNotify({
@@ -135,9 +242,9 @@ $(function () {
 			return `M0,${s} h${2*s} M${s},0 v${2*s} z`
 		})
 
-		self.getImgUrl = function(type) {
+		self.getImgUrl = function(type, applyCrossVisibility) {
 			if (type !== undefined) {
-					self.applySetting(type)
+					self.applySetting(type, applyCrossVisibility)
 					if (type == 'default')
 						return self.staticURL
 					else
@@ -145,7 +252,7 @@ $(function () {
 			}
 			for (let _t of ['cropped', 'lens_corrected', 'raw', 'default'])
 				if (_t === 'default' || self.availablePic()[_t]){
-					self.applySetting(_t)
+					self.applySetting(_t, applyCrossVisibility)
 					if (_t == 'default')
 						return self.staticURL
 					else
@@ -157,7 +264,7 @@ $(function () {
 
 		self.cornerCalImgUrl = ko.computed(function() {
 			if (!self.cornerCalibrationActive())
-				self._cornerCalImgUrl(self.getImgUrl())
+				self._cornerCalImgUrl(self.getImgUrl(undefined, true))
 			return self._cornerCalImgUrl()
 		});
 
@@ -170,8 +277,6 @@ $(function () {
 			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
 			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		})
-
-		self.calImgUrl = ko.computed(self.getImgUrl);
 
 		self.zMarkersTransform = ko.computed( function () {
 			// Like workArea.zObjectImgTransform(), but zooms
@@ -214,6 +319,12 @@ $(function () {
 
         // ------------------------------------------------
 
+		self.onAllBound = function () {
+		    new MutationObserver(self._testCameraSettingsActive).observe(
+		        document.getElementById('settings_plugin_mrbeam_camera'),
+                { attributes: true});
+        }
+
 		self.onStartupComplete = function () {
 			if(window.mrbeam.isWatterottMode()){
 				self.loadUndistortedPicture();
@@ -221,11 +332,40 @@ $(function () {
 			}
 			self.calibrationScreenShown(true)
             self.startupComplete(true);
+
+			self.setMarkerDetectionMode()
+
+			$('#settings_plugin_mrbeam_camera_link').click(function(){
+                self.abortCalibration()
+            });
 		};
 
 		self.onSettingsShown = function(){
-			self.goto('#calibration_step_1');
+            self.settingsActive(true)
+            self._testCameraSettingsActive()
+            self.abortCalibration()
+            self._updateIsLocked()
 		}
+
+		self.onSettingsHidden = function(){
+		    self.settingsActive(false)
+            self._testCameraSettingsActive()
+        }
+
+    // It's necessary to read state.isLocked and update the value manually because this is injected after the
+    // binding is done (from the MotherVM)
+		self._updateIsLocked = function () {
+		    if (self.state.isLocked()) {
+		        self.isLocked(true)
+            } else {
+		        self.isLocked(false)
+            }
+        }
+
+        self._testCameraSettingsActive = function(){
+		    var isActive = self.settingsActive() && $('#settings_plugin_mrbeam_camera').hasClass('active')
+            self.cameraSettingsActive(isActive)
+        }
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
@@ -255,7 +395,7 @@ $(function () {
 			self.cornerCalibrationActive(true);
 			self.picType("lens_corrected");
 			// self.applySetting('lens_corrected')
-			self._cornerCalImgUrl(self.getImgUrl('lens_corrected'))
+			self._cornerCalImgUrl(self.getImgUrl('lens_corrected', true))
 			self.markersFoundPositionCopy = self.markersFoundPosition()
 			self.nextMarker();
 		};
@@ -274,6 +414,8 @@ $(function () {
 								  self.getRawPicError,
 								  "GET");
 			self.lensCalibrationActive(true);
+
+			self.changeUserView('lens')
 		};
 
 		self.lensCalibrationToggleQA = function (){
@@ -295,10 +437,15 @@ $(function () {
 			self._highlightStep(nextStep);
 		};
 
+		self.goToMarker = function(markerNum) {
+		    self.currentMarker = markerNum;
+		    self._highlightStep(self.calibrationMarkers[markerNum])
+        }
+
 		self.userClick = function (vm, ev) {
 			// check if picture is loaded
 			if(window.location.href.indexOf('localhost') === -1)
-				if(self.calImgUrl() === STATIC_URL){
+				if(self.cornerCalImgUrl() === STATIC_URL){
 					console.log("Please wait until camera image is loaded...");
 					return;
 				}
@@ -350,9 +497,9 @@ $(function () {
 				if (typeof callback === 'function')
 					callback(data);
 				else {
-                    self.waitingForRefresh(true)
-                    console.log("Calibration picture requested.");
-                }
+					self.waitingForRefresh(true)
+					console.log("Calibration picture requested.");
+				}
 			};
 			var error_callback = function (resp) {
 				new PNotify({
@@ -364,12 +511,12 @@ $(function () {
 				if (typeof callback === 'function')
 					callback(resp);
 			};
-            self.simpleApiCommand(
-                "take_undistorted_picture",
-                {},
-                success_callback,
-                error_callback
-            )
+			self.simpleApiCommand(
+				"take_undistorted_picture",
+				{},
+				success_callback,
+				error_callback
+			)
 		};
 
 
@@ -379,11 +526,13 @@ $(function () {
 
 			if (!self.calibrationScreenShown()) {
 				return;
-      }
+            }
 
+			// I assume this already done in readyToLaserViewModel.
+            // If not, this piece of code should be moved to readyToLaserViewModel
+            // or even better: the complete handling of mrb_state should go into a dedicated view model.
 			if ('mrb_state' in data && data['mrb_state']) {
-				window.mrbeam.mrb_state = data['mrb_state'];
-				self.laserViewmodel.updateSettingsAbout()
+				self.readyToLaser._fromData(data)
 			}
 
 			if ('beam_cam_new_image' in data) {
@@ -565,15 +714,20 @@ $(function () {
 		}
 
 		self.rawPicSuccess = function(response) {}
-		self.saveRawPicError = function() {self.rawPicError(gettext("Failed to save the latest image."))}
-		self.delRawPicError  = function() {self.rawPicError(gettext("Failed to delete the latest image."))}
-		self.getRawPicError  = function() {self.rawPicError(gettext("Failed to refresh the list of images."))}
+		self.saveRawPicError = function() {self.rawPicError(gettext("Failed to save the latest image."),
+																												gettext("Please check your connection to the device."))}
+		self.delRawPicError  = function() {self.rawPicError(gettext("Failed to delete the latest image."),
+																												gettext("Please check your connection to the device."))}
+		self.getRawPicError  = function() {self.rawPicError(gettext("Failed to refresh the list of images."),
+																												gettext("Please check your connection to the device."))}
 
 		// TODO review PNotify messages in all file
-		self.rawPicError= function(err) {
+		self.rawPicError= function(err, msg) {
+			if (msg === undefined)
+				msg = gettext("...and I have no clue why. Sorry.")
 			new PNotify({
 				title: err,
-				text: gettext("...and I have no clue why. Sorry."),
+				text: msg,
 				type: "warning",
 				hide: true
 			});
@@ -591,13 +745,13 @@ $(function () {
 				function(){
 					new PNotify({
 						title: gettext("Calibration started"),
-						text: gettext("Please relax, this will take a little while.\nWe will let you know when we are done."),
+						text: gettext("It shouldn't take long. Your device shows a green light when it is done."),
 						type: "info",
 						hide: false})},
 				function(){
 					new PNotify({
 						title: gettext("Couldn't start the lens calibration."),
-						text: gettext("...and I have no clue why. Sorry."),
+						text: gettext("Is the machine on? Have you taken any pictures before starting the calibration?"),
 						type: "warning",
 						hide: true})},
 				"POST");
@@ -618,7 +772,7 @@ $(function () {
 				function(){
 					new PNotify({
 						title: gettext("Couldn't stop the lens calibration."),
-						text: gettext("...and I have no clue why. Sorry."),
+						text: gettext("Please verify your connection to the device. Did you try canceling multiple times?"),
 						type: "warning",
 						hide: true})},
 				"POST");
@@ -740,24 +894,23 @@ $(function () {
 				type: "success",
 				hide: true
 			});
-			if(window.mrbeam.isWatterottMode()) self.resetView();
-			else self.goto('#calibration_step_1');
+			self.resetView();
 		};
 
 		self.saveMarkersError = function () {
 			self.cornerCalibrationActive(false);
 			new PNotify({
 				title: gettext("Couldn't send calibration data."),
-				text: gettext("...and I have no clue why. Sorry."),
+				text: gettext("Please check your connection to the device."),
 				type: "warning",
 				hide: true
 			});
 
 			self.resetView();
-			if(!window.mrbeam.isWatterottMode())
-				self.goto('#calibration_step_1');
 		};
 
+		// todo iratxe: should we abort the corner calibration as well?
+        // for now I call this when going back from the lens calibration...
 		self.abortCalibration = function () {
 			self.cornerCalibrationActive(false);
 			self.resetView();
@@ -768,45 +921,52 @@ $(function () {
 			self.focusY(0);
 			self.calSvgScale(1);
 			self.currentMarker = 0;
+
+			self.resetUserView()
 		};
 
-		// TODO could this be combined with resetView?
-		self.reset_corner_calibration = function () {
-			self.resetView();
-			self.markersFoundPosition({});
-			self.currentResults({});
-			if (!window.mrbeam.isWatterottMode())
-				self.goto('#calibration_step_1');
-			$('.calibration_click_indicator').attr({'x': -100, 'y': -100});
-		};
+        // TODO IRATXE: might not be necessary anymore
+		// self.continue_to_calibration = function () {
+		// 	// self.loadUndistortedPicture(self.next);
+		// 	// simply show the calibration screen, showing the latest cropped img
+		// 	self.next()
+		// 	self.calibrationScreenShown(true)
+		// };
 
-		self.continue_to_calibration = function () {
-			// self.loadUndistortedPicture(self.next);
-			// simply show the calibration screen, showing the latest cropped img
-			self.next()
-			self.calibrationScreenShown(true)
-		};
+		// self.next = function () {
+		// 	var current = $('.calibration_step.active');
+		// 	current.removeClass('active');
+		// 	var next = current.next('.calibration_step');
+		// 	if (next.length === 0) {
+		// 		next = $('#camera_settings_view');
+		// 	}
+        //
+		// 	next.addClass('active');
+		// };
+        //
+		// self.goto = function (target_id) {
+		// 	var el = $(target_id);
+		// 	if (el) {
+		// 		$('.calibration_step.active').removeClass('active');
+		// 		$(target_id).addClass('active');
+		// 	} else {
+		// 		console.error('no element with id' + target_id);
+		// 	}
+		// };
 
-		self.next = function () {
-			var current = $('.calibration_step.active');
-			current.removeClass('active');
-			var next = current.next('.calibration_step');
-			if (next.length === 0) {
-				next = $('#calibration_step_1');
-			}
+		self.changeUserView = function(toView) {
+			Object.entries(CUSTOMER_CAMERA_VIEWS).forEach(([view_name,view_id]) => {
+				if (view_name === toView) {
+					$(view_id).show()
+				} else {
+					$(view_id).hide()
+				}
+			})
+		}
 
-			next.addClass('active');
-		};
-
-		self.goto = function (target_id) {
-			var el = $(target_id);
-			if (el) {
-				$('.calibration_step.active').removeClass('active');
-				$(target_id).addClass('active');
-			} else {
-				console.error('no element with id' + target_id);
-			}
-		};
+		self.resetUserView = function() {
+			self.changeUserView('settings')
+		}
 
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {
 			data = data || {}
@@ -839,7 +999,8 @@ $(function () {
 		CameraCalibrationViewModel,
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
-		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel", "readyToLaserViewModel"],
+		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel",
+            "printerStateViewModel", "readyToLaserViewModel", "settingsViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]

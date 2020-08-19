@@ -73,7 +73,7 @@
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
-                                                    <div data-bind="visible: camera.cameraActive() && camera.markerStateColor() !== 'green'">
+                                                    <div data-bind="visible: camera.cameraActive() && camera.showMarkerWarning">
 
                                                         <div>
                                                             <p style="display: inline-block">
@@ -108,7 +108,7 @@
                                                                             <li>{{ _("Mr Beam Lasers will not publish the image nor sell it to third parties.") }}</li>
                                                                             {% set privacy_policy = _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') %}
                                                                             <li>{{ _("Your image is sent within the context of Mr Beam Analytics. (See %(open)sprivacy policy%(close)s.)", open='<a href="%s" target="_blank">' % privacy_policy, close='</a>')|safe }}</li>
-                                                                            <li>{{ _("The upload of your image to Mr Beam's serves will happen in the background. If you're not online, the image will be uploaded next time you're online.") }}</li>
+                                                                            <li>{{ _("The upload of your image to Mr Beam's servers will happen in the background. If you're not online, the image will be uploaded next time you're online.") }}</li>
                                                                         </ul>
                                                                     </div>
                                                                     <div>
@@ -132,31 +132,25 @@
                                                         </div>
 
 
-{#														<button type="button" data-bind="click: camera.send_camera_image_to_analytics">Send image to Mr Beam</button>#}
 													</div>
 													<div data-bind="style: { display: camera.imgResolutionNoticeDisplay() }">
 													    <span style="font-weight: bold">{{ _('Low') }}</span> {{ _('Picture Quality') }}
 														<span class="muted">
-															{{ _('- Open the lid and keep your hands off the working area
-															for a few seconds to receive a higher resolution image') }}
+															{{ _('- Open the lid and keep your hands off the working area for a few seconds to receive a higher resolution image') }}
 														</span>
 													</div>
 													<div>
-														<label>
+														<label style="cursor: default;">
 															{{ _('Brightness') }}:
 														</label>
 														<i class="icon-adjust"></i>
-{#														<input type="range" min="0" max="1" step="0.01"#}
-{#															   style="width:80%;"#}
-{#															   class="decent_input img_adjust"#}
-{#															   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">#}
                                                         <input id="preview-brightness" type="range" min="0" max="1" step="0.01"
                                                            style="width:80%;"
                                                            class="mrb_slider"
                                                            value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">
 													</div>
 													<div>
-														<label>
+														<label style="cursor: default;">
 															{{ _('Zoom') }}: <span data-bind="text:zoom_factor_text"></span>
 														</label>
 														<div id="zoom_monitor_wrapper">
@@ -164,7 +158,7 @@
 																	style: { 'padding-bottom': (100 * hwRatio())+'%' },
 																	event: { mousewheel: wheel_zoom_monitor }
 																 ">
-                                                <div data-bind="style: {
+                                                                <div data-bind="style: {
 																		width: (100*zoom())+'%',
 																		'padding-bottom': (100*zoom()*hwRatio())+'%',
 																		left: (zoomOffX() / workingAreaWidthMM() * 100) + '%',
@@ -176,7 +170,7 @@
 														</div>
 													</div>
                                                     <div class="experimental_feature_beta">
-                                                        {{ _('Object height') }}
+                                                        <label  style="cursor: default;">{{ _('Object height') }}:</label>
 {#                                                         Translators: millimiters, unit of length#}
                                                         <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input" value="0"
                                                                data-bind="value: camera.objectZ, valueUpdate: 'input'"
@@ -359,17 +353,25 @@
                                                 <a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
-																<div class='dropdown pull-right' style='display:inline-block;' >
+																<div class='dropdown pull-right mrb_menu' style='display:inline-block;' >
 																	<a href="#" class="wa_list_item_burger_menu dropdown-toggle" data-toggle="dropdown">
 																		<i class="icon-reorder"></i><b class="caret"></b>
 																	</a>
 																	<ul class="dropdown-menu">
-																		<li>
-																			<i class="icon-sitemap" title="{{ _('split') }}"></i> split
+																		<li class="mrb_inactive_item">
+																			<i class="icon-sitemap" title="{{ _('split') }}"></i> {{ _('split') }}
+                                                                        </li>
+                                                                        <li>
 																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'stroke-color'); }} ">{{ _('by stroke color') }}</a>
-																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'non-intersecting'); }} ">{{ _('into shapes (keep overlapping)') }}</a>
-																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} ">{{ _('vertically') }}</a>
-																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} ">{{ _('horizontally') }}</a>
+                                                                        </li>
+                                                                        <li>
+                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'non-intersecting'); }} ">{{ _('into shapes (keep overlapping)') }}</a>
+                                                                        </li>
+                                                                        <li>
+                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} ">{{ _('vertically') }}</a>
+                                                                        </li>
+                                                                        <li>
+                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} ">{{ _('horizontally') }}</a>
 																		</li>
 																	</ul>
 																</div>
@@ -550,6 +552,7 @@
                                 <script type="text/html" id="wa_template_quicktext">
                                     <div class="file_list_entry"
                                          data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+                                        <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
                                         <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
                                         <div class="btn-group action-buttons pull-right">
                                             <div class="btn btn-mini"
@@ -768,4 +771,4 @@
 						</div>
 					</div>
 				</div>
-                
+

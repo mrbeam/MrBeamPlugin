@@ -1,82 +1,196 @@
+<div id="settings_camera_calibration" class="scrollable"
+     style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 100px);">
+    <div id="camera_settings_view" class="scrollable">
+        <h3>{{ _("Camera") }}</h3>
 
-<div id="settings_camera_calibration" class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 100px);">
+        <div class="camera-settings-section">
+            <h4 class="requirement-status"
+                data-bind="css: cameraStatusOk() == true ? 'requirement-met' : 'requirement-not-met'">
+                {{ _("Status") }}
+            </h4>
+            <div data-bind="visible: !availablePic()['raw']">
+                <p>{{ _("The camera is not able to take new pictures. Please check the following:") }}</p>
+            </div>
 
-    <div id="calibration_step_1" class="calibration_step active scrollable" data-bind="visible: !window.mrbeam.isWatterottMode()">
-		<h3>{{ _('Camera Calibration') }}</h3>
-        <div class='calibration_manual text'><strong>{{ _("Important") }}:</strong><br />
-            {{ _("Your Mr Beam's camera is factory calibrated by default, so there is normally no need to calibrate the camera.") }}
-        </div>
-        <div>
-            <h5>{{ _("A new calibration of the camera is only necessary if:") }}</h5>
-            <div class='calibration_manual text'>
-                <ul>
-                    <li>
-                        {{ _("One of the pink markings has been changed.<br/ >
-                        (For example, if the mark was peeled off and glued in again.)") }}
-                    </li>
-                    <li>
-                        {{ _("You notice a larger deviation between the screen position on the adjusted<br />
-                        (black-and-white image) and the laser result.") }}
-                    </li>
-                </ul>
+            <ul class="camera-requirements">
+                <li class="requirement"
+                    data-bind="css: readyToLaser.lid_fully_open() == true ? 'requirement-met' : 'requirement-not-met'">
+                    <span data-bind="text: lidMessage()"></span>
+                </li>
+                <li class="requirement"
+                    data-bind="css: statusOnlyOperational() ==  true ? 'requirement-met' : 'requirement-not-met'">
+                    <span data-bind="text: onlyOperationalMessage()"></span>
+                </li>
+                <li class="requirement"
+                    data-bind="css: fourMarkersFound() == true ? 'requirement-met' : 'requirement-not-met'">
+                    <span data-bind="text: markersMessage()"></span>
+                    <span class="muted show_only_online">({{ _("More about markers %(opening_tag)shere%(closing_tag)s.",
+                opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000577720-message-preview-not-accurate-and-pink-circles-flashing-on-working-area" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }})</span>
+                    <span class="muted show_only_offline">({{ _("More about markers %(opening_tag)shere%(closing_tag)s.",
+                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000577720_pink_markers\')"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }})</span>
+                </li>
+            </ul>
+
+            <table class="camera-status-images" data-bind="visible: availablePic()['raw']">
+                <tr>
+                    <td>
+                        <svg class="camera-picture" data-bind=" attr: { viewBox: workingArea.zoomViewBox(), } "
+                             xmlns:mb="http://www.mr-beam.org/mbns">
+                            <g transform="scale(1)"
+                               data-bind="attr: { transform: workingArea.zObjectImgTransform() }">
+                                <image id="beamcam_image_svg"
+                                       xlink:href="" x="0" y="0"
+                                       data-bind="attr: {
+                                            width: workingArea.workingAreaWidthMM(),
+                                            height: workingArea.workingAreaHeightMM(),
+                                            opacity: workingArea.previewImgOpacity(),
+                                            'xlink:href': camera.timestampedCroppedImgUrl()
+                                       }">
+                                </image>
+                            </g>
+                        </svg>
+                        <a data-bind="attr: { href: availablePicUrl()['cropped'] }">
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                        </a>
+                    </td>
+                    <td class="camera-picture">
+                        <img data-bind="attr: {src: statusRawImageUrl}"/>
+                        <a data-bind="attr: { href: statusRawImageUrl }">
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>{{ _("Processed Camera Picture") }}</strong></td>
+                    <td><strong>{{ _("Raw Camera Picture") }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="camera-image-description muted">{{ _("as you see it in the working area of Mr Beam software") }}</td>
+                    <td class="camera-image-description muted">{{ _("actual camera picture, before it is adjusted in the software by fixing the perspective, angle and colour") }}</td>
+                </tr>
+            </table>
+
+            <div class="camera-status-support">
+                <div class='show_only_online'>
+                    <strong>{{ _("Do you have problems with the camera?") }}</strong>
+                    {{ _("Please check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
+                opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000582595-trouble-shooting-how-to-solve-problems-with-the-camera-" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }}
+
+                </div>
+                <div class='show_only_offline'>
+                    <strong>{{ _("Do you have problems with the camera?") }}</strong>
+                    {{ _("Please check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
+                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000582595_camera_troubleshooting\')"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }}
+
+                </div>
+                <small data-bind="visible: availablePic()['raw']">
+                    <i class="fa fa-download"
+                       aria-hidden="true"></i>: {{ _("You can use the download button on the images to save your camera picture and provide it to the support team, if necessary.") }}
+                </small>
             </div>
         </div>
-        <div class='calibration_manual text show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
-                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065908-camera-calibration" target="_blank"><i class="icon-external-link"></i>&nbsp;',
-                closing_tag='</a>') }}</div>
-        <div class='calibration_manual text show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
-                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065908_camer_calibration.pdf\')"><i class="icon-file-text"></i>&nbsp;',
-                closing_tag='</a>') }}</div>
+        {#        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,#}
+        {#        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,#}
+        {#        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",#}
+        {#                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065874-manual-positioning" target="_blank"><i class="icon-external-link"></i>&nbsp;',#}
+        {#                closing_tag='</a>') }}</div>#}
+        {#        <div class='calibration_manual text show_only_offline'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,#}
+        {#        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,#}
+        {#        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",#}
+        {#                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065874_manual_positioning.pdf\')"><i class="icon-external-link"></i>&nbsp;',#}
+        {#                closing_tag='</a>') }}</div>#}
 
-        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,
-        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,
-        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",
-                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065874-manual-positioning" target="_blank"><i class="icon-external-link"></i>&nbsp;',
-                closing_tag='</a>') }}</div>
-        <div class='calibration_manual text show_only_offline'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,
-        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,
-        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",
-                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065874_manual_positioning.pdf\')"><i class="icon-external-link"></i>&nbsp;',
-                closing_tag='</a>') }}</div>
-
-        <div class='calibration_manual text'>
-            {{ _("The following instructions will guide you step by step through the recalibration of your camera:") }}
+        <div class="camera-settings-section">
+            <h4>{{ _("Settings") }}</h4>
+            <h5>{{ _('Marker detection') }}</h5>
+            <p>
+                {{ _('Select one of the two marker detection modes: %(strong_open)sreliable%(strong_close)s to always get an image or %(strong_open)saccurate%(strong_close)s to only get precise images.',
+                        strong_open='<strong>',
+                        strong_close='</strong>') }}
+            </p>
+            <div class="tooltip-inline" data-toggle="tooltip" data-placement="right"
+                 title="{{ _('You can change the marker detection mode depending the desired behavior of the camera.') }}
+                <ul>
+                <li><b>{{ _('Reliable:') }}</b>
+                        {{ _('The system remembers the markers\'s position from the last time it found them.') }}
+                        {{ _('This might lead to lower precision.') }}
+                </li>
+                <li><b>{{ _('Accurate:') }}</b>
+                        {{ _('This option lets you choose if you only want to see pictures where all of the markers were detected.') }}
+                        {{ _('All the pink markers need to be visible and detected when you open the lid. After being detected, you might cover them.') }}
+                </li>
+                </ul>">
+                <div class="btn-group" id="camera_settings_marker_detection" data-toggle="buttons-radio">
+                    <button type="button" value="reliable"
+                            class="btn btn-small btn-default active">{{ _('Reliable') }}</button>
+                    <button type="button" value="accurate"
+                            class="btn btn-small btn-default">{{ _('Accurate') }}</button>
+                </div>
+            </div>
         </div>
-        <div>
-			<button class="btn btn-default" data-bind="click: next">{{ _('Continue') }}</button>
-		</div>
-	</div>
+
+        <div class="camera-settings-section">
+            <h4>{{ _("Camera calibration") }}</h4>
+            <p>
+                {{ _("Your Mr Beam's camera is factory calibrated by default, so there is %(open_strong)snormally no need to calibrate the camera%(close_strong)s.",
+                        open_strong='<strong>',
+                        close_strong='</strong>') }}
+            </p>
+            <div>
+                {{ _("A new calibration of the camera is %(open_strong)sonly necessary if%(close_strong)s:",
+                        open_strong='<strong>',
+                        close_strong='</strong>') }}
+                <div>
+                    <ul>
+                        <li>
+                            {{ _("One of the pink markings has been changed. (For example, if the mark was peeled off and glued in again.)") }}
+                        </li>
+                        <li>
+                            {{ _("You notice a %(open_strong)sdeviation larger than 5mm%(close_strong)s between the processed camera picture (as you see it in the software working area) and the laser result.",
+                                    open_strong='<strong>',
+                                    close_strong='</strong>') }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class='show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
+                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065908-camera-calibration" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }}
+            </div>
+            <div class='show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
+                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065908_camer_calibration.pdf\')"><i class="icon-file-text"></i>&nbsp;',
+                closing_tag='</a>') }}
+            </div>
 
 
-	<div id="calibration_step_2" class="calibration_step scrollable" data-bind="visible: !window.mrbeam.isWatterottMode()">
-        <h3>{{ _('Camera Calibration') }}</h3>
-		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_material_size.svg)'></div>
-		<div class='calibration_manual text'>{{_('Please put a material like cardboard inside your Mr Beam that it covers the whole working area.')}}</div>
-		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_close_lid.svg)'></div>
-		<div class='calibration_manual text'>{{_('Close the lid. Mr Beam will start engraving the calibration markers on the cardboard.')}}</div>
-		<div class='calibration_manual text'>{{_('Do not touch the engraved material. The camera will now take a picture of the engraving.') }}</div>
-		<div>
-			<button class="btn btn-primary" data-bind="click: engrave_markers">{{ _('Engrave Calibration Markers') }}</button>
-			<button class="btn btn-default" data-bind="click: next">{{ _('Continue') }}</button>
-		</div>
-	</div>
+            <div class="camera-calibrations">
+                <div class="rounded_container calibration-container">
+                    <div class="rounded_container_title" style="text-transform: uppercase;">{{ _('Corner Calibration') }}</div>
+                    <hr class="rounded_container_hr">
+                    <p>{{ _('The corner calibration uses the pink markers to calibrate the camera. Use this in case one of the markers has been changed or if there is a large deviation between the screen position and the laser result.') }}</p>
+                    <button class="btn btn-default"
+                            data-bind="click: changeUserView('corner')">{{ _('Start') }}</button>
+                </div>
+                <div class="rounded_container calibration-container experimental_feature_dev" style="display: block">
+                    <div class="rounded_container_title" style="text-transform: uppercase;">{{ _('Lens Calibration') }}</div>
+                    <hr class="rounded_container_hr">
+                    <p>{{ _('The lens calibration is made to remove the fish-eye effect from the picture. Only do this if you think that your camera precision is bad, specially in the center.') }}</p>
+                    <button class="btn btn-default"
+                            data-bind="click: startLensCalibration">{{ _('Start') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <div id="lens_calibration_view" class="scrollable">
+        {% include 'calibration/user/view_lens_calibration.jinja2' %}
+    </div>
 
-	<div id="calibration_step_3" class="calibration_step scrollable" data-bind="visible: !window.mrbeam.isWatterottMode()" style="overflow-y: auto; height: calc(100vh - 100px);">
-        <h3>{{ _('Camera Calibration') }}</h3>
-		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_open_lid.svg)'></div>
-		<div class='calibration_manual text'>{{_('Wait until the engraving is finished and Mr Beam illuminates green. Open the safety lid again') }}</div>
-		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_dont_touch.svg)'></div>
-		<div class='calibration_manual text'>{{_('Do not touch the engraved material. The camera will now take a picture of the engraving.') }}</div>
-		<div>
-			<button class="btn btn-default" data-bind="click: continue_to_calibration">{{ _('Continue') }}</button>
-		</div>
-	</div>
-
-
-	<div id="calibration_step_4" class="calibration_step">
-		<div class="calibration_manual" data-bind="css:{ text: !cornerCalibrationActive() }">
-			{% include 'calibration/user/camera_corner_calibration.jinja2' %}
-		</div>
-	</div>
+    <div id="corner_calibration_view" class="scrollable">
+        {% include 'calibration/user/view_corner_calibration.jinja2' %}
+    </div>
 </div>

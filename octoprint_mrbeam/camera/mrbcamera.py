@@ -47,18 +47,17 @@ class LoopThread(threading.Thread):
 		self.__args = args if args is not None else ()
 		self.__kw = kwargs if kwargs is not None else {}
 
-	# def run(self):
-	# 	try:
-	# 		threading.Thread.run(self)
-	# 	except Exception as e:
-	# 		self._logger.exception("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
-	# 		raise
-
 	def _loop(self):
 		self.running.set()
 		while not self.stopFlag.isSet():
 			try:
 				self.ret = self.t(*self.__args, **self.__kw)
+			except AttributeError as e:
+				connectionErrMsg = "'NoneType' object has no attribute 'outputs'"
+				if connectionErrMsg in str(e):
+					self._logger.warning("Camera was not ready yet, it should restart by itself.")
+				else:
+					raise e
 			except Exception as e:
 				self._logger.error("Handled exception in picamera: %s, %s", e.__class__.__name__, e)
 				raise
@@ -78,7 +77,7 @@ class LoopThread(threading.Thread):
 
 class MrbCamera(PiCamera, Camera):
 
-	def __init__(self, worker, stopEvent=None, *args, **kwargs):
+	def __init__(self, worker, stopEvent=None, shutter_speed=None, *args, **kwargs):
 		"""
 		Record pictures asynchronously in order to perform corrections
 		simultaneously on the previous images.
@@ -110,6 +109,8 @@ class MrbCamera(PiCamera, Camera):
 			stopFlag=self.stopEvent,
 			args=(self.worker,),
 			kwargs={'format': 'jpeg'},)
+		if shutter_speed is not None:
+			self.shutter_speed = shutter_speed
 		# TODO load the default settings
 
 	def start(self):
@@ -166,9 +167,9 @@ class MrbCamera(PiCamera, Camera):
 	# 	for a in args:
 
 
-	### Experimental & unused ###
 
 	def anti_rolling_shutter_banding(self):
+		### Experimental & unused ###
 		"""mitigates the horizontal banding due to rolling shutter interaction with 50Hz/60Hz lights"""
 		# TODO 60Hz countries
 		self._logger.debug("Shutter speed : %i", self.shutter_speed)

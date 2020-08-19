@@ -179,6 +179,7 @@ $(function () {
         self.wizardacl = parameters[1];
         self.users = parameters[2];
         self.loginState = parameters[3];
+        self.system = parameters[4];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
@@ -252,8 +253,8 @@ $(function () {
         self.onStartupComplete = function(){
             self.presetLoginUser()
         }
-
         self.onCurtainOpened = function(){
+            self.removeOpSafeModeOptionFromSystemMenu();
             self.showBrowserWarning()
             self.showBetaNotifications()
         }
@@ -394,16 +395,72 @@ $(function () {
                 self.loginState.loginUser('dev'+String.fromCharCode(0x0040)+'mr-beam.org')
                 self.loginState.loginPass('a')
             }
-        }
+        };
 
-    };
+        /**
+         * MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+         * Hides the option "Restart OctoPrint in safe mode"
+         * Removes the 4th element from the system menu.
+         */
+        self.removeOpSafeModeOptionFromSystemMenu = function(){
+            self.system.systemActions.remove(function(c){return c.action === "restart_safe"});
+        };
+
+        // Backdrop Temporary Solution - start
+        // Todo: should be removed once OctoPrint is updated
+        const mutationTargetNode = document.body;
+        const mutationConfig = {
+            childList: true,
+            attributes: false,
+            characterData: false,
+            subtree: false,
+            attributeOldValue: false,
+            characterDataOldValue: false
+        };
+        const mutationCallback = function(mutationsList, observer) {
+            for(let mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    (function ($) {
+                        $.fn.inlineStyle = function (prop) {
+                            return this.prop("style")[$.camelCase(prop)];
+                        };
+                    }(jQuery));
+                    let modalElement = $(".modal-scrollable");
+                    let backDrop = $('.modal-backdrop');
+                    if(modalElement.length !== 0){
+                        modalElement.each(function() {
+                        if(!$(this)[0].hasChildNodes() && modalElement.length === 1){
+                            $('body').removeClass('modal-open');
+                            backDrop.remove();
+                            $(this)[0].remove();
+                        } else if(!$(this)[0].hasChildNodes() && modalElement.length > 1 && $(this).next().hasClass("modal-backdrop")){
+                            $(this).next().remove();
+                            $(this)[0].remove();
+                        } else if($(this)[0].hasChildNodes() && modalElement.length === 1 && $(this).find(".modal.hide.fade").inlineStyle("display") === "none"){
+                            setTimeout(() => {
+                                if($(this).find(".modal.hide.fade").hasClass("modal") && $(this).find(".modal.hide.fade").inlineStyle("display") === "none") {
+                                    document.body.append($(this).find(".modal.hide.fade")[0]);
+                                }
+                            }, 500);
+                        }
+                    });
+                    } else if(modalElement.length === 0 && backDrop.length !== 0){
+                        backDrop.remove();
+                    }
+                }
+            }
+        };
+        const observer = new MutationObserver(mutationCallback);
+        observer.observe(mutationTargetNode, mutationConfig);
+        // Backdrop Temporary Solution - end
+    }
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
         MrbeamViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel", "wizardAclViewModel", "usersViewModel", "loginStateViewModel"],
+        ["settingsViewModel", "wizardAclViewModel", "usersViewModel", "loginStateViewModel", "systemViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ /* ... */]

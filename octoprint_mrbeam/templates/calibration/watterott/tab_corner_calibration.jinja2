@@ -30,7 +30,7 @@
 </svg>
 <div>
     <div style="margin-bottom:1em;">
-        <a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon icon-refresh"></i> {{ _('Refresh picture') }}</a>
+        <a class="accordion-toggle" data-bind="click:loadUndistortedPicture, visible: !cornerCalibrationActive()"><i class="icon icon-refresh"></i> {{ _('Refresh picture') }}</a>
         <div class="marker_selection_desc calibration_waiting_for_picture"
              data-bind="visible: !cornerCalibrationActive()">
             <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i class="icon-ok"></i> NW</div>
@@ -39,7 +39,7 @@
             <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i class="icon-ok"></i> NE</div>
             <div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
         </div>
-        <a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
+        <a class="muted" data-bind="attr: { href: cornerCalImgUrl() }"> {{ _('Download this image') }}</a>
     </div>
 </div>
 
@@ -88,39 +88,6 @@
 
     <div class="marker_selection_desc calibration_summary">
         <div data-bind="css: {complete: cornerCalibrationComplete()}">
-            <div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: window.mrbeam.isWatterottMode()">
-                {{ _('Picture') }}:<br />
-                <input type="radio" name="picture_type" value="raw"
-                       data-bind="checked: picType, attr: { disabled: !availablePic()['raw'] }" /> {{ _('Raw') }}<br />
-                <input type="radio" name="picture_type" value="lens_corrected"
-                       data-bind="checked: picType, attr: { disabled: !availablePic()['lens_corrected'] }" /> {{ _('Lens corrected') }}<br />
-                <input type="radio" name="picture_type" value="cropped"
-                       data-bind="checked: picType, attr: { disabled: !availablePic()['cropped'] }" /> {{ _('Cropped') }}<br />
-                <br/>
-                {{ _('Zoom') }}: <span data-bind="text: calSvgScale" ></span> <br/>
-                <button class="btn-default" data-bind="click: smaller">-</button><button class="btn-default" data-bind="click: larger">+</button>
-                <br />
-                {{ _('Move') }}:
-                <div>
-                    <div class="btn-group">
-                        <button class="btn-default" data-bind="click: move(-50,-50)">&#8598;</button>
-                        <button class="btn-default" data-bind="click: move(0,-50)">&#8593;</button>
-                        <button class="btn-default" data-bind="click: move(50,-50)">&#8599;</button>
-                    </div><br/>
-                    <div class="btn-group">
-                        <button class="btn-default" data-bind="click: move(-50,0)">&#8592;</button>
-                        <button class="btn-default" data-bind="click: resetMove">*</button>
-                        <button class="btn-default" data-bind="click: move(50,0)">&#8594;</button>
-                    </div><br/>
-                    <div class="btn-group">
-                        <button class="btn-default" data-bind="click: move(-50,50)">&#8601;</button>
-                        <button class="btn-default" data-bind="click: move(0,50)">&#8595;</button>
-                        <button class="btn-default" data-bind="click: move(50,50)">&#8600;</button>
-                    </div>
-
-                </div>
-            </div>
-
             <div data-bind="visible: cornerCalibrationActive()">
                 <div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
                 <div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>

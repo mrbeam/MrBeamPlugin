@@ -13,7 +13,10 @@ import numpy as np
 from copy import copy
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.util import logme, logtime, logExceptions, makedirs
+from octoprint_mrbeam.util import makedirs
+from octoprint_mrbeam.util.img import differed_imwrite
+from octoprint_mrbeam.util.log import logme, logtime, logExceptions
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 CB_ROWS = 5
 CB_COLS = 6
@@ -56,10 +59,8 @@ class BoardDetectorDaemon(Thread):
 		     runCalibrationAsap=False,
 	             event_bus=None,
 		     rawImgLock=None):
+		self._logger = mrb_logger(__name__, lvl=logging.INFO)
 		# runCalibrationAsap : run the lens calibration when we have enough pictures ready
-		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
-		self._logger.setLevel(logging.DEBUG)
-		self._logger.warning("Initiating the Board Detector Daemon")
 		self.event_bus = event_bus
 		self.rawImgLock = rawImgLock
 
@@ -97,7 +98,7 @@ class BoardDetectorDaemon(Thread):
 		self._startWhenIdle.clear()
 		self.path_inc = 0
 
-		super(self.__class__, self).__init__(target=self.processInputImages, name=self.__class__.__name__)
+		Thread.__init__(self, target=self.processInputImages, name=self.__class__.__name__)
 
 		# self.daemon = False
 		# catch SIGTERM used by Process.terminate()
@@ -105,16 +106,16 @@ class BoardDetectorDaemon(Thread):
 		# signal.signal(signal.SIGINT, signal.SIG_IGN) #self.stopAsap)
 
 	def stop(self, signum=signal.SIGTERM, frame=None):
-		self._logger.info("Stopping")
+		self._logger.debug("Stopping")
 		self._stop.set()
 
 	def stopAsap(self, signum=signal.SIGTERM, frame=None):
-		self._logger.warning("Terminating")
+		self._logger.info("Terminating board detector")
 		self._terminate.set()
 		self._stop.set()
 
 	def start(self):
-		self._logger.info("Starting")
+		self._logger.debug("Starting board detector")
 		self._started.set()
 		super(self.__class__, self).start()
 
@@ -123,7 +124,7 @@ class BoardDetectorDaemon(Thread):
 		return self._started.is_set()
 
 	def pause(self):
-		self._logger.info("Pausing")
+		self._logger.debug("Pausing")
 		self._pause.set()
 
 	@property
@@ -148,7 +149,7 @@ class BoardDetectorDaemon(Thread):
 		return found
 
 	def remove(self, path):
-		self._logger.warning("Removing path %s" % path)
+		self._logger.info("Removing picture %s" % path)
 		self.stopQueue.put(path)
 		self.state.remove(path)
 
@@ -192,26 +193,25 @@ class BoardDetectorDaemon(Thread):
 	@logExceptions
 	def processInputImages(self):
 		# state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):
-		self._logger.warning("Starting the Board Detector Daemon")
 		count = 0
 		runningProcs = {}
 		resultQueue = Queue()
 		lensCalibrationProcQueue = Queue()
-		self._logger.warning("Pool started - %i procs" % MAX_PROCS)
+		self._logger.debug("Pool started - %i procs" % MAX_PROCS)
 		lensCalibrationProc = None
 		loopcount = 0
 		stateIdleAndNotEnoughGoodBoard = False
 		while not self._stop.is_set():
 			loopcount += 1
 			if loopcount % 20 == 0 :
-				self._logger.info("Running... %s procs running, stopsignal : %s" %
+				self._logger.debug("Running... %s procs running, stopsignal : %s" %
 						  (len(runningProcs), self._stop.is_set()))
 			self.state.refresh(imgFoundCallback=self.event_bus.fire, args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,))
 			# if self.idle:
 			# self._logger.debug("waiting to be restarted")
 			if (self.state.lensCalibration['state'] == STATE_PENDING or self.startCalibrationWhenIdle) \
 			   and self.detectedBoards >= MIN_BOARDS_DETECTED:
-				self._logger.warning("Start lens calibration.")
+				self._logger.info("Start lens calibration.")
 				self.startCalibrationWhenIdle = False
 
 				availableResults = self.state.getSuccesses()
@@ -221,7 +221,7 @@ class BoardDetectorDaemon(Thread):
 					# TODO add ignored paths list provided by user choice in Front End (could be STATE_IGNORED)
 					objPoints.append(get_object_points(*t['board_size']))
 					imgPoints.append(t['found_pattern'])
-				self._logger.warning("len patterns : %i and %i " % (len(objPoints), len(imgPoints)))
+				self._logger.debug("len patterns : %i and %i " % (len(objPoints), len(imgPoints)))
 				args = (np.asarray(objPoints),
 					np.asarray(imgPoints),
 					self.state.imageSize,
@@ -230,7 +230,7 @@ class BoardDetectorDaemon(Thread):
 				lensCalibrationProc.start()
 				self.state.calibrationBusy()
 				self.event_bus.fire(MrBeamEvents.LENS_CALIB_RUNNING)
-				self._logger.warning("EVENT LENS CALIBRATION RUNNING")
+				self._logger.info("EVENT LENS CALIBRATION RUNNING")
 			elif len(self) >= 9 and self.idle and self.detectedBoards < MIN_BOARDS_DETECTED:
 				if not stateIdleAndNotEnoughGoodBoard:
 					stateIdleAndNotEnoughGoodBoard = True
@@ -244,7 +244,7 @@ class BoardDetectorDaemon(Thread):
 				path = self.state.getPending()
 				self.state.update(path, STATE_PROCESSING)
 				count += 1
-				self._logger.info("%i / %i processes running, adding Process of image %s" % (len(runningProcs.keys()),
+				self._logger.debug("%i / %i processes running, adding Process of image %s" % (len(runningProcs.keys()),
 													     self.procs.value,
 													     path))
 				# self._logger.info("current state :\n%s" % self.state)
@@ -254,18 +254,18 @@ class BoardDetectorDaemon(Thread):
 				runningProcs[path].daemon = True
 				runningProcs[path].start()
 			if not lensCalibrationProcQueue.empty():
-				self._logger.warning("Lens calibration has given a result! ")
+				self._logger.info("Lens calibration has given a result! ")
 				res = lensCalibrationProcQueue.get()
 				self.state.updateCalibration(**res)
 				# self.state.updateCalibration(*tuple(map(lambda x: res[x],
 				# 					['ret', 'mtx', 'dist', 'rvecs', 'tvecs'])
 				lensCalibrationProc.join()
 				self.event_bus.fire(MrBeamEvents.LENS_CALIB_DONE)
-				self._logger.warning("EVENT LENS CALIBRATION DONE")
+				self._logger.info("EVENT LENS CALIBRATION DONE")
 			if lensCalibrationProc and \
 			   lensCalibrationProc.exitcode is not None and \
 			   lensCalibrationProc.exitcode != 0 :
-				self._logger.error("Something went wrong with the lens calibration process")
+				self._logger.warning("Something went wrong with the lens calibration process")
 
 			while not resultQueue.empty():
 				# Need to clean the queue before joining processes
@@ -277,7 +277,7 @@ class BoardDetectorDaemon(Thread):
 			for path, proc in runningProcs.items():
 				if proc.exitcode is not None:
 					if proc.exitcode < 0:
-						self._logger.error("Something went wrong with the process for path\n%s." % path)
+						self._logger.warning("Something went wrong with the process for path\n%s." % path)
 					else:
 						self._logger.debug("Process exited for path %s." % path)
 					runningProcs.pop(path)
@@ -294,10 +294,10 @@ class BoardDetectorDaemon(Thread):
 		self._logger.warning("Stop signal intercepted")
 		resultQueue.close()
 		if self._terminate.is_set():
-			self._logger.warning("Terminating processes")
+			self._logger.info("Terminating processes")
 			for path, proc in runningProcs.items():
 				proc.terminate()
-		self._logger.info("Joining processes")
+		self._logger.debug("Joining processes")
 		for path, proc in runningProcs.items():
 			proc.join()
 		self.event_bus.fire(MrBeamEvents.LENS_CALIB_EXIT)
@@ -377,7 +377,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 
 	drawnImg = cv2.drawChessboardCorners(img, board_size, found_pattern, success, )
 	height, width, _ = drawnImg.shape
-	cv2.imwrite(path, drawnImg)
+	differed_imwrite(path, drawnImg)
 	if q_out is not None:
 		q_out.put(dict(
 			path=path,
@@ -444,8 +444,7 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 
 class calibrationState(dict):
 	def __init__(self, imageSize=camera.LEGACY_STILL_RES, changeCallback=None,  npzPath=None, rawImgLock=None, *args, **kw):
-		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
-		self._logger.setLevel(logging.DEBUG)
+		self._logger = mrb_logger(__name__ + '.' + self.__class__.__name__, lvl=logging.DEBUG)
 		self.changeCallback = changeCallback
 		self.imageSize=imageSize
 		self.output_file =  npzPath
