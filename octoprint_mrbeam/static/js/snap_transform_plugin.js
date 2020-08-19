@@ -20,8 +20,121 @@
 (function() {
 	Snap.plugin(function (Snap, Element, Paper, global) {
 
-		var self = {};
 
+		var self = {};
+		self.ORIGINAL_MATRIX = 'mbtransform_original_matrix';
+		self.INITIAL_MATRIX = 'mbtransform_initial_matrix';
+		self.BEFORE_TRANSFORM_CALLBACKS = 'mbt_before_callbacks';
+		self.ON_TRANSFORM_CALLBACKS = 'mbt_on_callbacks';
+		self.AFTER_TRANSFORM_CALLBACKS = 'mbt_after_callbacks';
+
+
+		/**
+		 *
+		 *
+		 * @returns {undefined}
+		 */
+		Element.prototype.transformable = function () {
+			var elem = this;
+			if (!elem || !elem.paper) // don't handle unplaced elements. this causes double handling.
+				return;
+
+			// add invisible fill for better dragging.
+			elem.add_fill();
+			elem.unclick(); // avoid multiple click actions
+			elem.click(function(){ elem.paper.mbtransform.activate(elem); });
+			return elem;
+
+
+		};
+
+		/**
+		 * Adds transparent fill if not present.
+		 * This is useful for dragging the element around.
+		 *
+		 * @returns {path}
+		 */
+		//TODO add fill for Text (like bounding box or similar)
+		Element.prototype.add_fill = function(){
+			var elem = this;
+			var children = elem.selectAll('*');
+			if (children.length > 0) {
+				for (var i = 0; i < children.length; i++) {
+					var child = children[i];
+					child.add_fill();
+				}
+			} else {
+				var fill = elem.attr('fill');
+				var type = elem.type;
+				if(type === 'path' && (fill === 'none' || fill === '')){
+
+					elem.attr({fill: '#ffffff', "fill-opacity": 0});
+				}
+			}
+			return elem;
+		};
+
+		///////////// CALLBACKS ////////////////////
+		
+		/** 
+		 * The callback functions for each phase in the transform process are stored in the data layer of each element.
+		 * The phases are before, on & after transform.
+		 * */
+		
+		Element.prototype.mbtOnTransform = function(){
+			if(this.data(self.ON_TRANSFORM_CALLBACKS) && this.data(self.ON_TRANSFORM_CALLBACKS).length > 0){
+				for (var idx = 0; idx < this.data(self.ON_TRANSFORM_CALLBACKS).length; idx++) {
+					var cb = this.data(self.ON_TRANSFORM_CALLBACKS)[idx];
+					cb(this);
+				}
+			}
+		};
+		
+		Element.prototype.mbtRegisterOnTransformCallback = function(callback){
+			if(typeof this.data(self.ON_TRANSFORM_CALLBACKS) === 'undefined'){
+				this.data(self.ON_TRANSFORM_CALLBACKS, [callback]);
+			} else {
+				this.data(self.ON_TRANSFORM_CALLBACKS).push(callback);
+			}
+
+			this.mbtOnTransform();
+		};
+
+		Element.prototype.mbtAfterTransform = function(){
+			if(this.data(self.AFTER_TRANSFORM_CALLBACKS) && this.data(self.AFTER_TRANSFORM_CALLBACKS).length > 0){
+				for (var idx = 0; idx < this.data(self.AFTER_TRANSFORM_CALLBACKS).length; idx++) {
+					var cb = this.data(self.AFTER_TRANSFORM_CALLBACKS)[idx];
+					cb(this);
+				}
+			}
+		};
+
+		Element.prototype.mbtRegisterAfterTransformCallback = function(callback){
+			if(typeof this.data(self.AFTER_TRANSFORM_CALLBACKS) === 'undefined'){
+				this.data(self.AFTER_TRANSFORM_CALLBACKS, [callback]);
+			} else {
+				this.data(self.AFTER_TRANSFORM_CALLBACKS).push(callback);
+			}
+		};
+
+		Element.prototype.mbtBeforeTransform = function(){
+			if(this.data(self.BEFORE_TRANSFORM_CALLBACKS) && this.data(self.BEFORE_TRANSFORM_CALLBACKS).length > 0){
+				for (var idx = 0; idx < this.data(self.BEFORE_TRANSFORM_CALLBACKS).length; idx++) {
+					var cb = this.data(self.BEFORE_TRANSFORM_CALLBACKS)[idx];
+					cb(this);
+				}
+			}
+		};
+
+		Element.prototype.mbtRegisterBeforeTransformCallback = function(callback){
+			if(typeof this.data(self.BEFORE_TRANSFORM_CALLBACKS) === 'undefined'){
+				this.data(self.BEFORE_TRANSFORM_CALLBACKS, [callback]);
+			} else {
+				this.data(self.BEFORE_TRANSFORM_CALLBACKS).push(callback);
+			}
+		};
+
+			
 		Paper.prototype.mbtransform_init = function(){
 			var paper = this;
 			self.paper = paper;
@@ -52,8 +165,6 @@
 			self.scaleXText = paper.select('#scaleXText');
 			self.scaleYText = paper.select('#scaleYText');
 			self.rotateText = paper.select('#rotateText');
-			self.ORIGINAL_MATRIX = 'mbtransform_original_matrix';
-			self.INITIAL_MATRIX = 'mbtransform_initial_matrix';
 			
 			paper.mbtransform = self;
 			
@@ -364,6 +475,9 @@
 			self.session.initialMatrix = self.translateHandle.transform().totalMatrix; // stack of scale, rotate, translate matrices
 
 			self.session.bb = self._transformBBox(self.session.bboxWithoutTransform, self.session.initialMatrix); 
+
+			self._apply_before_transform();
+
 			
 //			self.paper.debug.coords('scale', '#ffaaaa', self.scaleGroup);
 //			self.paper.debug.coords('rotate', '#aaffaa', self.rotateGroup);
@@ -407,26 +521,58 @@
 				self.session.lastUpdate = Date.now();
 				
 				// apply transform to target elements via callback
-				self._apply_transform();
+				self._apply_on_transform();
 			}
 		}
 		
 		self._sessionEnd = function(){
 			self.paper.debug.cleanup();
 			self._visualizeTransformCleanup();
+			self._apply_after_transform();
 
 			// change mouse cursor
 			document.body.classList.toggle('mbtransform', false);
 			
 		};
 		
-		self._apply_transform = function(){
+		self._apply_before_transform = function(){
+			for (var i = 0; i < self.elements_to_transform.length; i++) {
+				var el = self.elements_to_transform[i];
+				const callbacks = el.data(self.BEFORE_TRANSFORM_CALLBACKS);
+				for (var c = 0; c < callbacks.length; c++) {
+					var cb = callbacks[c];
+					if(typeof cb === 'function'){
+						cb(el, self.session);
+					}
+				}
+			}
+		}
+		self._apply_on_transform = function(){
 			const m = self.translateHandle.transform().totalMatrix;
 			
 			for (var i = 0; i < self.elements_to_transform.length; i++) {
 				var el = self.elements_to_transform[i];
 				const newM = el.data(self.ORIGINAL_MATRIX).clone().multLeft(m);
 				el.transform(newM);
+				const callbacks = el.data(self.ON_TRANSFORM_CALLBACKS);
+				for (var c = 0; c < callbacks.length; c++) {
+					var cb = callbacks[c];
+					if(typeof cb === 'function'){
+						cb(el, self.session);
+					}
+				}
+			}
+		}
+		self._apply_after_transform = function(){
+			for (var i = 0; i < self.elements_to_transform.length; i++) {
+				var el = self.elements_to_transform[i];
+				const callbacks = el.data(self.AFTER_TRANSFORM_CALLBACKS);
+				for (var c = 0; c < callbacks.length; c++) {
+					var cb = callbacks[c];
+					if(typeof cb === 'function'){
+						cb(el, self.session);
+					}
+				}
 			}
 		}
 		
@@ -702,6 +848,7 @@
 			let h = bb.height;
 			return { x: x, y: y, cx: cx, cy: cy, x2: x2, y2: y2, width: w, height: h };
 		}
+		
 		
 		
 		///////////// VISUALIZATIONS ////////////////////

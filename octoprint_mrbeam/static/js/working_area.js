@@ -344,7 +344,7 @@ $(function(){
 				console.warn("No svg fragment placed for this previewId: "+file.previewId);
 			}
 			// check if it is transformable
-			if(!(elem.data && typeof(elem.data('ftBeforeTransformCallbacks')) === 'object')){
+			if(!(elem.data && typeof(elem.data('mbtBeforeTransformCallbacks')) === 'object')){
 				console.warn("Svg fragment is not transformable: "+file.previewId);
 			}
 
@@ -1058,16 +1058,17 @@ $(function(){
 		};
 
 		self._makeItTransformable = function(fragment){
+			// TODO: snap.mbtransform... callbacks.
 			fragment.transformable();
-			fragment.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-			fragment.ftRegisterBeforeTransformCallback(function () {
+			fragment.mbtRegisterOnTransformCallback(self.svgTransformUpdate);
+			fragment.mbtRegisterBeforeTransformCallback(function () {
 				fragment.clean_gc();
 			});
-			fragment.ftRegisterAfterTransformCallback(function () {
+			fragment.mbtRegisterAfterTransformCallback(function () {
 				var mb_meta = self._set_mb_attributes(fragment);
 			});
 			setTimeout(function () {
-				fragment.ftReportTransformation();
+				fragment.mbtOnTransform();
 			}, 200);
 		}
 
@@ -2430,7 +2431,7 @@ $(function(){
 				// update svg object
 				var g = snap.select('#' + self.currentQuickShapeFile.previewId);
 				setTimeout(function () {
-					g.ftReportTransformation();
+					g.mbtOnTransform();
 				}, 200);
 				var shape = g.select('path');
 				var d;
@@ -2601,7 +2602,7 @@ $(function(){
 				// update svg object
 				var g = snap.select('#' + self.currentQuickTextFile.previewId);
 				setTimeout(function () {
-					g.ftReportTransformation();
+					g.mbtOnTransform();
 				}, 200);
 				var text = g.select('text');
 				var ity = self.currentQuickTextFile.intensity;

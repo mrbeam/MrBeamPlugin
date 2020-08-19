@@ -27,7 +27,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 *
 	 * @returns {undefined}
 	 */
-	Element.prototype.transformable = function () {
+	Element.prototype.___transformable = function () {
 		var elem = this;
 		if (!elem || !elem.paper) // don't handle unplaced elements. this causes double handling.
 			return;
@@ -48,7 +48,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 * @returns {path}
 	 */
 	//TODO add fill for Text (like bounding box or similar)
-	Element.prototype.add_fill = function(){
+	Element.prototype.___add_fill = function(){
 		var elem = this;
 		var children = elem.selectAll('*');
 		if (children.length > 0) {
