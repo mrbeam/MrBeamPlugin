@@ -41,7 +41,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	};
 
-	/**
+/**
 	 * Adds transparent fill if not present.
 	 * This is useful for dragging the element around.
 	 *

@@ -35,6 +35,7 @@
 		 * @returns {undefined}
 		 */
 		Element.prototype.transformable = function () {
+
 			var elem = this;
 			if (!elem || !elem.paper) // don't handle unplaced elements. this causes double handling.
 				return;
@@ -44,7 +45,6 @@
 			elem.unclick(); // avoid multiple click actions
 			elem.click(function(){ elem.paper.mbtransform.activate(elem); });
 			return elem;
-
 
 		};
 
@@ -56,6 +56,7 @@
 		 */
 		//TODO add fill for Text (like bounding box or similar)
 		Element.prototype.add_fill = function(){
+			
 			var elem = this;
 			var children = elem.selectAll('*');
 			if (children.length > 0) {
@@ -72,7 +73,13 @@
 				}
 			}
 			return elem;
+			
 		};
+		
+		Element.prototype.mbtGetTransform = function(){
+			return this.transform().localMatrix.split();
+		};
+		
 
 		///////////// CALLBACKS ////////////////////
 		
@@ -435,7 +442,6 @@
 				sss.sy = (sss.signY !== 0) ?  scaleY : 1;
 				
 			}
-			
 
 			self._sessionUpdate(this);
 
@@ -447,7 +453,71 @@
 			self._sessionEnd();
 			self.transformHandleGroup.node.classList.remove('scale', 'scaleHandleNE', 'scaleHandleNW', 'scaleHandleSW', 'scaleHandleSE', 'scaleHandleNN', 'scaleHandleEE', 'scaleHandleSS', 'scaleHandleWW');
 			
-		}	
+		}
+		
+		/***** Manual transform *****/
+		self.manualTransform = function(elementset_or_selector, params){
+		    self.elements_to_transform = self._getElementSet(elementset_or_selector);
+			
+			// init session
+			self._sessionInit('manualTransform');
+
+			let tx = 0;
+			let ty = 0
+			let scalex = 1;
+			let scaley = 1;
+			let alpha = 0;
+			let mirror = 1;
+
+			const bbox = self.elements_to_transform.getBBox();
+//			calc relative values
+		    if(params.tx !== undefined && !isNaN(params.tx)) tx = params.tx - bbox.x;
+			if(params.ty !== undefined && !isNaN(params.ty)) ty = params.ty - bbox.y2;
+			
+            // if the transformation comes from the keyboard arrows, it looks a bit different
+            if(params.tx_rel !== undefined && !isNaN(params.tx_rel)){
+                tx = params.tx_rel;
+                scalex = 1;
+                alpha = 0;
+            }
+            if(params.ty_rel !== undefined && !isNaN(params.ty_rel)){
+                ty = params.ty_rel;
+                scaley = 1;
+                alpha = 0;
+            }
+            if(params.angle !== undefined && !isNaN(params.angle)) alpha = params.angle - self.session.rotate._alpha;
+			if(params.scale !== undefined && !isNaN(params.scale)){
+				scalex = params.scale / self.session.scale._m.a;
+				scaley = scalex;
+			}
+			if(params.mirror !== undefined) mirror =  params.mirror;
+
+			// set values
+			// Scale
+				const matScale = self.session.scale._m.clone().scale(scalex, scaley, bbox.cx, bbox.cy);
+				self.scaleGroup.transform(matScale);
+
+			// Rotate
+				const matRotate = self.session.rotate._m.clone().rotate(alpha, bbox.cx, bbox.cy);
+				self.rotateGroup.transform(matRotate);
+
+			// Translate
+				const matTranslate = self.session.translate._m.clone().translate(tx, ty);
+				self.translateGroup.transform(matTranslate);
+
+//			self._visualizeTransform();
+
+//			self.updateCounter++;
+//			self.session.lastUpdate = Date.now();
+
+			// apply transform to target elements via callback
+			self._apply_on_transform();
+			
+			// end session
+			self._sessionEnd();
+
+        };
+
 
 		self._sessionInit = function(calledBy){
 			// self.paper.debug.enable(); 
@@ -538,13 +608,14 @@
 		self._apply_before_transform = function(){
 			for (var i = 0; i < self.elements_to_transform.length; i++) {
 				var el = self.elements_to_transform[i];
-				const callbacks = el.data(self.BEFORE_TRANSFORM_CALLBACKS);
-				for (var c = 0; c < callbacks.length; c++) {
-					var cb = callbacks[c];
-					if(typeof cb === 'function'){
-						cb(el, self.session);
-					}
-				}
+				el.mbtBeforeTransform();
+//				const callbacks = el.data(self.BEFORE_TRANSFORM_CALLBACKS);
+//				for (var c = 0; c < callbacks.length; c++) {
+//					var cb = callbacks[c];
+//					if(typeof cb === 'function'){
+//						cb(el, self.session);
+//					}
+//				}
 			}
 		}
 		self._apply_on_transform = function(){
@@ -554,25 +625,27 @@
 				var el = self.elements_to_transform[i];
 				const newM = el.data(self.ORIGINAL_MATRIX).clone().multLeft(m);
 				el.transform(newM);
-				const callbacks = el.data(self.ON_TRANSFORM_CALLBACKS);
-				for (var c = 0; c < callbacks.length; c++) {
-					var cb = callbacks[c];
-					if(typeof cb === 'function'){
-						cb(el, self.session);
-					}
-				}
+				el.mbtOnTransform();
+//				const callbacks = el.data(self.ON_TRANSFORM_CALLBACKS);
+//				for (var c = 0; c < callbacks.length; c++) {
+//					var cb = callbacks[c];
+//					if(typeof cb === 'function'){
+//						cb(el, self.session);
+//					}
+//				}
 			}
 		}
 		self._apply_after_transform = function(){
 			for (var i = 0; i < self.elements_to_transform.length; i++) {
 				var el = self.elements_to_transform[i];
-				const callbacks = el.data(self.AFTER_TRANSFORM_CALLBACKS);
-				for (var c = 0; c < callbacks.length; c++) {
-					var cb = callbacks[c];
-					if(typeof cb === 'function'){
-						cb(el, self.session);
-					}
-				}
+				el.mbtAfterTransform();
+//				const callbacks = el.data(self.AFTER_TRANSFORM_CALLBACKS);
+//				for (var c = 0; c < callbacks.length; c++) {
+//					var cb = callbacks[c];
+//					if(typeof cb === 'function'){
+//						cb(el, self.session);
+//					}
+//				}
 			}
 		}
 		
@@ -587,20 +660,9 @@
 			}
 		}
 		
-		self.reset_transform = function(elements_to_reset){
-			if(!elements_to_reset){
-				console.warn("Nothing to reset. Element was ", elements_to_reset);
-				return;
-			}
-
-			if(typeof elements_to_reset === "string"){
-				const selector = elements_to_reset;
-				elements_to_reset = self.paper.selectAll(selector);
-				if(elements_to_reset.length === 0){
-					console.warn("No elements to reset. Selector was ", selector);
-					return;
-				}
-			}
+		self.reset_transform = function(elementset_or_selector){
+			
+			let elements_to_reset = self._getElementSet(elementset_or_selector)
 			
 			for (var i = 0; i < elements_to_reset.length; i++) {
 				var el = elements_to_reset[i];
@@ -616,33 +678,15 @@
 	
 		/**
 		 * @param {Snap.Element, Snap.Set, CSS-Selector} elements_to_transform
-		 * @param {function} transformMatrixCallback  
 		 *
 		 * @returns {undefined}
 		 */
-		self.activate = function (elements_to_transform, transformMatrixCallback) {
+		self.activate = function (elementset_or_selector) {
 			if(self.transformHandleGroup.node.classList.contains('active')){
 				self.deactivate();
 			}
 			
-			if(!elements_to_transform){
-				console.warn("Nothing to transform. Element was ", elements_to_transform);
-				return;
-			}
-
-			if(typeof elements_to_transform === "string"){
-				const selector = elements_to_transform;
-				elements_to_transform = self.paper.selectAll(selector);
-				if(elements_to_transform.length === 0){
-					console.warn("No elements to transform. Selector was ", selector);
-					return;
-				}
-			} else {
-				if(typeof elements_to_transform === "object"){
-					elements_to_transform = Snap.set(elements_to_transform);
-				}
-			}
-			
+			let elements_to_transform = self._getElementSet(elementset_or_selector);			
 			
 			// get bounding box of selector
 			const selection_bbox = self._getBBoxFromElementsWithMinSize(elements_to_transform);
@@ -704,7 +748,7 @@
 
 		self.deactivate = function(){
 			self.updateFPS = null;
-			self.transformHandleGroup.removeClass('active');
+			self.transformHandleGroup.node.classList.remove('active');
 
 			// remove drag handlers
 			self.translateHandle.undrag();
@@ -743,23 +787,35 @@
 		
 //		self.toggleElements = function(elements_to_transform){
 //			// TODO implementation
-//			if(!elements_to_transform){
-//				console.warn("Nothing to toggle. Elements were ", elements_to_transform);
-//				return;
-//			}
-//
-//			if(typeof elements_to_transform === "string"){
-//				const selector = elements_to_transform;
-//				elements_to_transform = self.paper.selectAll(selector);
-//				if(elements_to_transform.length === 0){
-//					console.warn("No elements to toggle. Selector was ", selector);
-//					return;
-//				}
-//			}
+//			self._getElementSet(elements_to_transform);
 //			if(self.transformHandleGroup.node.classList.contains('active')){
 //				self.deactivate();
 //			}
 //		};
+		
+		self._getElementSet = function(elementset_or_selector){
+			if(!elementset_or_selector){
+				console.warn(`${elementset_or_selector} is neither a selector nor a Snap set of elements.`);
+				return Snap.set();
+			}
+
+			if(typeof elementset_or_selector === "string"){
+				let elementSet = self.paper.selectAll(elementset_or_selector);
+				if(elementset_or_selector.length === 0){
+					console.warn(`Selector '${elementset_or_selector}' got no results.`);
+					return Snap.set();
+				} else {
+					return elementSet;
+				}
+			} else {
+				if(typeof elementset_or_selector === "object"){
+					return Snap.set(elementset_or_selector);
+				} else {
+					console.warn(`'${elementset_or_selector}' is neither a Snap Element nor a Set.`);
+					return Snap.set();
+				}
+			}
+		}
 		
 		self._transformBBox = function(bbox, matrix){
 			const x = matrix.x(bbox.x, bbox.y);
@@ -887,10 +943,12 @@
 			const mdy = Snap.matrix().translate(startXv, startYv).scale(1, self.session.translate.dy);
 			self.translateYVis.transform(mdy);
 			
-			self.translateXText.node.textContent = self.session.translate.dx.toFixed(2) + 'mm';
+			self.translateXText.node.textContent = self.session.translate.dx.toFixed(1) + 'mm';
 			self.translateXText.transform(Snap.matrix(1,0,0,1,startXh + self.session.translate.dx/2, startYh+7));
-			self.translateYText.node.textContent = self.session.translate.dy.toFixed(2) + 'mm';
+			self.translateYText.node.textContent = self.session.translate.dy.toFixed(1) + 'mm';
 			self.translateYText.transform(Snap.matrix(0,-1,1,0,startXv+8, startYv + self.session.translate.dy/2));
+			
+			// TODO distances from working area edges
 		};
 
 		self._visualizeRotate = function(){

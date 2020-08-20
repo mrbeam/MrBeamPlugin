@@ -107,6 +107,10 @@
   margin-bottom: 162px;
 }
 
+#working_area_files .entry.designHighlight .title {
+  font-weight: bold;
+}
+
 #wa_filelist>div {
 	height: 50vh;
 	overflow-y:auto;
