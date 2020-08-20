@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-18 13:07+0200\n"
-"PO-Revision-Date: 2020-08-18 13:11+0200\n"
+"POT-Creation-Date: 2020-08-20 09:34+0200\n"
+"PO-Revision-Date: 2020-08-20 09:36+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -19,64 +19,64 @@ msgstr ""
 "Generated-By: Babel 2.6.0\n"
 "X-Generator: Poedit 2.4.1\n"
 
-#: octoprint_mrbeam/__init__.py:683
+#: octoprint_mrbeam/__init__.py:680
 #: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:2
 msgid "File Import Settings"
 msgstr "Importación de Archivos"
 
-#: octoprint_mrbeam/__init__.py:684
+#: octoprint_mrbeam/__init__.py:681
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:4
 msgid "Camera"
 msgstr "Cámara"
 
-#: octoprint_mrbeam/__init__.py:685
+#: octoprint_mrbeam/__init__.py:682
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:2
 msgid "Precision Calibration"
 msgstr "Calibración de Precisión"
 
-#: octoprint_mrbeam/__init__.py:686
+#: octoprint_mrbeam/__init__.py:683
 #: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:52
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:5
 msgid "Debug"
 msgstr "Debug"
 
-#: octoprint_mrbeam/__init__.py:687
+#: octoprint_mrbeam/__init__.py:684
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
 msgid "About This Mr Beam"
 msgstr "Acerca de este Mr Beam"
 
-#: octoprint_mrbeam/__init__.py:688
+#: octoprint_mrbeam/__init__.py:685
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:8
 #: octoprint_mrbeam/wizard_config.py:98 octoprint_mrbeam/wizard_config.py:156
 msgid "Analytics"
 msgstr "Analytics"
 
-#: octoprint_mrbeam/__init__.py:689
+#: octoprint_mrbeam/__init__.py:686
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
 msgid "Reminders"
 msgstr "Avisos"
 
-#: octoprint_mrbeam/__init__.py:690
+#: octoprint_mrbeam/__init__.py:687
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:2
 msgid "Maintenance"
 msgstr "Mantenimiento"
 
-#: octoprint_mrbeam/__init__.py:691
+#: octoprint_mrbeam/__init__.py:688
 #: octoprint_mrbeam/templates/settings/leds_settings.jinja2:2
 msgid "Mr Beam Lights"
 msgstr "Luces Mr Beam"
 
-#: octoprint_mrbeam/__init__.py:692
+#: octoprint_mrbeam/__init__.py:689
 #: octoprint_mrbeam/templates/settings/custom_material_settings.jinja2:2
 msgid "Custom Material Settings"
 msgstr "Ajustes de Material Personalizados"
 
-#: octoprint_mrbeam/__init__.py:1816
+#: octoprint_mrbeam/__init__.py:1813
 msgid "A new picture is being taken, please wait a little..."
 msgstr "Se está tomando una nueva imagen, espera un poco por favor..."
 
-#: octoprint_mrbeam/__init__.py:1819
+#: octoprint_mrbeam/__init__.py:1816
 msgid "Either the camera is busy or the lid is not open."
 msgstr "La cámara está ocupada o la tapa no está abierta."
 
@@ -356,9 +356,9 @@ msgid ""
 "confirmation. We aren't able to reach our servers therefore we'll show this "
 "warning again."
 msgstr ""
-"Es necesario tener conexión a Internet para enviar tu confirmación. No hemos "
-"podido conectarnos a nuestros servidores, por lo que volveremos a mostrar "
-"este aviso."
+"El dispositivo necesita tener una conexión a Internet que funcione para "
+"enviar su confirmación. No podemos llegar a nuestros servidores, por lo que "
+"mostraremos esta advertencia de nuevo."
 
 #: octoprint_mrbeam/static/js/loadingoverlay_viewmodel.js:9
 msgid "connecting..."
@@ -1303,11 +1303,11 @@ msgstr "Estrella"
 msgid "Heart"
 msgstr "Corazón"
 
-#: octoprint_mrbeam/static/js/working_area.js:938
+#: octoprint_mrbeam/static/js/working_area.js:941
 msgid "Limited split result."
 msgstr "Resultado de división limitado."
 
-#: octoprint_mrbeam/static/js/working_area.js:939
+#: octoprint_mrbeam/static/js/working_area.js:942
 msgid ""
 "Splitting this design would result in too many parts. Here are "
 "${split_result.length} parts. You can split the last one again if necessary."
@@ -1316,27 +1316,27 @@ msgstr ""
 "${split_resultado.longitud} partes. Puedes dividir el último de nuevo si es "
 "necesario."
 
-#: octoprint_mrbeam/static/js/working_area.js:948
+#: octoprint_mrbeam/static/js/working_area.js:951
 msgid "No different line colors found."
 msgstr "No se encontraron diferentes colores de línea."
 
-#: octoprint_mrbeam/static/js/working_area.js:951
+#: octoprint_mrbeam/static/js/working_area.js:954
 msgid "No non-intersecting shapes found."
 msgstr "No se han encontrado formas sin intersecciones."
 
-#: octoprint_mrbeam/static/js/working_area.js:956
+#: octoprint_mrbeam/static/js/working_area.js:959
 msgid "Looks like a single path."
 msgstr "Parece un solo trazado."
 
-#: octoprint_mrbeam/static/js/working_area.js:959
+#: octoprint_mrbeam/static/js/working_area.js:962
 msgid "Element not splittable with this method."
 msgstr "Elemento no divisible con este método."
 
-#: octoprint_mrbeam/static/js/working_area.js:960
+#: octoprint_mrbeam/static/js/working_area.js:963
 msgid "Can't split this design."
 msgstr "No se puede dividir este diseño."
 
-#: octoprint_mrbeam/static/js/working_area.js:1287
+#: octoprint_mrbeam/static/js/working_area.js:1290
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements "
@@ -1345,12 +1345,12 @@ msgstr ""
 "El archivo SVG contiene elementos que no están soportados: %(elemName)s' "
 "Estos elementos han sido eliminados."
 
-#: octoprint_mrbeam/static/js/working_area.js:1289
+#: octoprint_mrbeam/static/js/working_area.js:1292
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr "Elementos no soportados en SVG: '%(elemName)s' s"
 
-#: octoprint_mrbeam/static/js/working_area.js:1297
+#: octoprint_mrbeam/static/js/working_area.js:1300
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their "
@@ -1361,11 +1361,11 @@ msgstr ""
 "contornos, por favor conviértelos a path.%(br)sDe lo contrario, se grabarán "
 "con relleno."
 
-#: octoprint_mrbeam/static/js/working_area.js:1299
+#: octoprint_mrbeam/static/js/working_area.js:1302
 msgid "Text elements found"
 msgstr "Elementos de texto encontrados"
 
-#: octoprint_mrbeam/static/js/working_area.js:1310
+#: octoprint_mrbeam/static/js/working_area.js:1313
 msgid ""
 "The SVG file contained style elements with online references. Since online "
 "references are not supported, we removed them. The image might look a bit "
@@ -1375,11 +1375,11 @@ msgstr ""
 "las referencias online no son compatibles, las hemos eliminado. La imagen "
 "podría parecer un poco diferente ahora."
 
-#: octoprint_mrbeam/static/js/working_area.js:1312
+#: octoprint_mrbeam/static/js/working_area.js:1315
 msgid "Style elements removed"
 msgstr "Elementos de estilo eliminados"
 
-#: octoprint_mrbeam/static/js/working_area.js:1323
+#: octoprint_mrbeam/static/js/working_area.js:1326
 msgid ""
 "The selected design file can not be handled. Please make sure it is a valid "
 "design file."
@@ -1387,25 +1387,25 @@ msgstr ""
 "El archivo seleccionado no puede ser manipulado. Por favor, asegúrate de que "
 "es un archivo de diseño válido."
 
-#: octoprint_mrbeam/static/js/working_area.js:1325
+#: octoprint_mrbeam/static/js/working_area.js:1328
 msgid "File error."
 msgstr "Error de archivo."
 
-#: octoprint_mrbeam/static/js/working_area.js:1336
+#: octoprint_mrbeam/static/js/working_area.js:1339
 msgid "The selected design file does not have any content."
 msgstr "El archivo seleccionado no tiene ningún contenido."
 
-#: octoprint_mrbeam/static/js/working_area.js:1338
+#: octoprint_mrbeam/static/js/working_area.js:1341
 msgid "Empty File."
 msgstr "Archivo vacío."
 
-#: octoprint_mrbeam/static/js/working_area.js:1349
+#: octoprint_mrbeam/static/js/working_area.js:1352
 msgid "An unknown error occurred while processing this design file."
 msgstr ""
 "Se ha producido un error inesperado durante el procesamiento de este archivo "
 "de diseño."
 
-#: octoprint_mrbeam/static/js/working_area.js:1350
+#: octoprint_mrbeam/static/js/working_area.js:1353
 msgid ""
 "Please try reloading this browser window and try again. If this error "
 "remains, contact the Mr Beam Support Team. Make sure you provide the error "
@@ -1419,8 +1419,8 @@ msgstr ""
 #: octoprint_mrbeam/static/js/calibration/camera_calibration.js:219
 #: octoprint_mrbeam/static/js/calibration/camera_calibration.js:811
 #: octoprint_mrbeam/static/js/calibration/camera_calibration.js:839
-#: octoprint_mrbeam/static/js/working_area.js:1351
-#: octoprint_mrbeam/static/js/working_area.js:1353
+#: octoprint_mrbeam/static/js/working_area.js:1354
+#: octoprint_mrbeam/static/js/working_area.js:1356
 msgid "Error"
 msgstr "Error"
 
@@ -4688,7 +4688,7 @@ msgstr ""
 "<p>\n"
 "    Con este diálogo tu Mr Beam estará listo en un par de minutos.<br>\n"
 "    Después, podrás hacer un tour que te guiará a través de tu primer "
-"trabajo.</br>\n"
+"trabajo.\n"
 "</p>\n"
 
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:4
