@@ -163,9 +163,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# do migration if needed
 		migrate(self)
 
-		# patch OP filemanager to not accept .stl files
-		self._patch_op_filemanager_full_extension_tree_wrapper()
-
 		self.set_serial_setting()
 
 		self._fixEmptyUserManager()
@@ -2155,19 +2152,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				gcode=ContentTypeMapping(["nc"], "text/plain")  # already defined by OP: "gcode", "gco", "g"
 			)
 		)
-
-	def _patch_op_filemanager_full_extension_tree_wrapper(self):
-		# MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
-		# Per default OP always accepts .stl files.
-		# Here we monkey-patch the remove of this file type
-		def _op_filemanager_full_extension_tree_wrapper():
-			res = op_filemanager.full_extension_tree_original()
-			res.get('model', {}).pop('stl', None)
-			return res
-
-		if not 'full_extension_tree_original' in dir(op_filemanager):
-			op_filemanager.full_extension_tree_original = op_filemanager.full_extension_tree
-			op_filemanager.full_extension_tree = _op_filemanager_full_extension_tree_wrapper
 
 	def get_mrb_state(self):
 		"""
