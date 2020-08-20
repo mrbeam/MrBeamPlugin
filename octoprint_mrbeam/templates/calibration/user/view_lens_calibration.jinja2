@@ -95,22 +95,20 @@
             </ul>
         </li>
         <li>{{ _('When there are more than 9 successfully detected chessboards the device will flash in green. You can check the result of the calibration by clicking on this button:') }}<br>
-            <button class="btn btn-primary" data-bind="click: lensCalibrationToggleQA,
-                               enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">
-                {{ _('Check result') }}
-            </button>
+{#            <button class="btn btn-primary" data-bind="click: lensCalibrationToggleQA,#}
+{#                               enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">#}
+{#                {{ _('Check result') }}#}
+{#            </button>#}
         </li>
+        <div style="margin-top:1em;" data-bind="visible: cornerCalibrationActive()">
+{#            <button class="btn btn-primary" data-bind="click: saveLensCalibrationData, visible: lensCalibrationComplete()">#}
+            <button class="btn btn-primary" data-bind="visible: lensCalibrationComplete()">
+                {{ _('Save Calibration') }}</button>
+            <button class="btn btn-default"
+                    data-bind="click: abortCalibration">
+                {{ _('Cancel') }}</button>
+        </div>
     </ol>
-
-{#    <div>#}
-{#        {{ _('Notes:') }}#}
-{#        <ul>#}
-{#           <li>{{ _('If dissatisfied, please repeat steps 3 to 6 until you feel like you have a good calibration of the lens.') }}</li>#}
-{#           <li>{{ _('You can make verify that the system didn\'t misdetect a chessboard by using the zoom icon on each of the pictures. You should see a colourful pattern with crosses at each intersection between the squares on the chessboard. If not, please tell the system to ignore that picture by deleting it. It will automatically generate a new distortion matrix based on the updated image list.') }}</li>#}
-{#        </ul>#}
-{#    </div>#}
-
-
 
     <div id="lensCalibrationQA" style="display: none">
         <div data-bind="visible: lensCalibrationNpzFileTs" class="qa_images">
@@ -124,26 +122,5 @@
             </ul>
         </div>
         <div data-bind="text: lensCalibrationNpzFileVerboseDate"></div>
-
-{#        <div class="qa_list_and_next">#}
-{#            <h4>{{ _('Checklist') }}</h4>#}
-{#            <ul>#}
-{#                <li>{{ _('4 markers are within the green rectangle') }}</li>#}
-{#                <li>{{ _('No black pixels are in the green rectangle') }}</li>#}
-{#            </ul>#}
-{#            <div class="continue_btn btn-group">#}
-{#                <a href="#" onclick="$('#lenscal_tab_btn').click()" class="btn continue_btn"#}
-{#                    data-bind="click: lensCalibrationToggleQA">#}
-{#                    <i class="icon icon-2x icon-fixed-width icon-arrow-left"></i>#}
-{#                </a>#}
-{#                <a href="#" class="btn btn-success continue_btn"#}
-{#                    data-bind="xclick: stopLensCalibration,#}
-{#                                click: function(){ $('#cornercal_tab_btn').click() },#}
-{#                                enable: lensCalibrationNpzFileTs && hasMinBoardsFound()">#}
-{#                    <span style="font-size:1.5rem;">{{ _('Yes') }}</span>#}
-{#                    <i class="icon icon-2x icon-fixed-width icon-arrow-right"></i>#}
-{#                </a>#}
-{#            </div>#}
-{#        </div>#}
     </div>
 </div>
