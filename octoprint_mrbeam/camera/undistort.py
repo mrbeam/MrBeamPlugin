@@ -7,13 +7,42 @@ from numpy.linalg import norm
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
 import octoprint_mrbeam.camera as camera
-from octoprint_mrbeam.util import dict_merge
+from octoprint_mrbeam.util import dict_map, dict_merge
 from octoprint_mrbeam.util.img import differed_imwrite
 from octoprint_mrbeam.util.log import logme, debug_logger, logExceptions, logtime
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
-CALIB_MARKERS_KEY = 'calibMarkers'
-CORNERS_KEY = 'cornersFromImage'
+# Position of the pink circles, as found during calibration
+UNDIST_CALIB_MARKERS_KEY = 'calibMarkers'
+RAW_CALIB_MARKERS_KEY = 'raw_alibMarkers'
+FACT_UNDIST_CALIB_MARKERS_KEY = 'factory_undist_calibMarkers'
+FACT_RAW_CALIB_MARKERS_KEY = 'factory_raw_calibMarkers'
+
+# Position of the corners (arrow tips), as found during the calibration
+UNDIST_CORNERS_KEY = 'cornersFromImage'
+RAW_CORNERS_KEY = 'raw_cornersFromImage'
+FACT_UNDIST_CORNERS_KEY = 'factory_undist_cornersFromImage'
+FACT_RAW_CORNERS_KEY = 'factory_raw_cornersFromImage'
+
+CALIB_REFS = dict(
+	markers = dict(
+		user=dict(
+			raw=RAW_CALIB_MARKERS_KEY,
+			undistorted=UNDIST_CALIB_MARKERS_KEY),
+		factory=dict(
+			raw=FACT_RAW_CALIB_MARKERS_KEY,
+			undistorted=FACT_UNDIST_CALIB_MARKERS_KEY,)
+	),
+	corners = dict(
+		user=dict(
+			raw=RAW_CORNERS_KEY,
+			undistorted=UNDIST_CORNERS_KEY),
+		factory=dict(
+			raw=FACT_RAW_CORNERS_KEY,
+			undistorted=FACT_UNDIST_CORNERS_KEY,)
+	)
+)
+
 M2C_VECTOR_KEY = 'marker2cornerVecs' # DEPRECATED Key
 BLUR_FACTOR_THRESHOLD_KEY = 'blur_factor_threshold'
 CALIBRATION_UPDATED_KEY = 'calibration_updated'
@@ -44,7 +73,7 @@ CAMERA_HEIGHT = 582
 MAX_OBJ_HEIGHT = 38
 
 
-PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, CALIBRATION_UPDATED_KEY: False}
+PIC_SETTINGS = {UNDIST_CALIB_MARKERS_KEY: None, UNDIST_CORNERS_KEY: None, CALIBRATION_UPDATED_KEY: False}
 
 import logging
 import time
@@ -56,13 +85,14 @@ import numpy as np
 
 PIXEL_THRESHOLD_MIN = MIN_MARKER_PIX
 
+logger = mrb_logger(__name__)
 
 class MbPicPrepError(Exception):
 	"""Something went wrong when undistorting and aligning the picture for the front-end"""
 	pass
 
 
-@logExceptions
+# @logExceptions # useful if running in thread
 #@logtime()
 def prepareImage(input_image,  #: Union[str, np.ndarray],
                  path_to_output_image,  #: str,
@@ -80,6 +110,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  custom_pic_settings=None,
                  stopEvent=None,
 		 min_pix_amount=MIN_MARKER_PIX,
+		 calibration_pic_size=None, #(2048,1536), # picture size when the camera got calibrated
                  threads=-1):
 	# type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
 	"""
@@ -101,7 +132,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	:param stopEvent: used to exit gracefully
 	:param threads: number of threads to use for the marker detection. Set -1, 1, 2, 3 or 4. (recommended : 4, default: -1)
 	"""
-	logger = mrb_logger("mrbeam.camera.undistort")
 	if debug_out:
 		logger.setLevel(logging.DEBUG)
 		logger.info("DEBUG enabled")
@@ -111,6 +141,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	err = None
 	savedPics = {'raw': False, 'lens_corrected': False, 'cropped': False}
 
+
 	def save_debug_img(img, name):
 		return camera.save_debug_img(img, name + ".jpg", folder=path.join(dirname(path_to_output_image), "debug"))
 	if type(input_image) is str:
@@ -119,16 +150,11 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 				input_image, path_to_output_image, cam_dist, cam_matrix,
 				size, quality, debug_out))
 		if not isfile(input_image):
-			no_Image_error_String = 'Could not find a picture under path: <{}>'.format(input_image)
-			logger.error(no_Image_error_String)
-			return None, None, None, no_Image_error_String, {}, savedPics
-
+			raise IOError('Could not find a picture under path: <{}>'.format(input_image))
 		# load image
 		img = cv2.imread(input_image, cv2.IMREAD_COLOR) #BGR
 		if img is None:
-			err = 'Could_not_load_Image-_Please_check_Camera_and_-path_to_image'
-			logger.error(err)
-			return None, None, None, err, {}, savedPics
+			raise IOError('Image file could not be loaded, path is {}'.format(input_image))
 	elif type(input_image) is np.ndarray:
 		logger.debug('Starting to prepare Image. \ninput: <{} shape arr> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
 				input_image.shape, path_to_output_image, cam_dist, cam_matrix,
@@ -136,12 +162,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		img = input_image
 	else:
 		raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
-
-	if cam_dist is not None and cam_matrix is not None:
-		# undistort image with cam_params
-		img = _undistortImage(img, cam_dist, cam_matrix)
-		if debug_out or undistorted:
-			savedPics['lens_corrected'] = save_debug_img(img, "undistorted")
 
 	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR, {}, savedPics
 
@@ -172,10 +192,18 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		logger.warning(err)
 		return None, markers, missed, err, outputPoints, savedPics
 
+	if cam_dist is not None and cam_matrix is not None:
+		# Can be done simultaneously while the markers get detected on the raw picture
+		# NOTE If in precision mode, there is no point in undistorting the image
+		#      if we don't have enough markers (it doesn't get sent)
+		# TODO do threaded while detecting the corners on raw img.
+		img = undistort(img, cam_matrix, cam_dist)
+		if debug_out or undistorted:
+			savedPics['lens_corrected'] = save_debug_img(img, "undistorted")
+
 	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
 	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
-
 
 	# load pic_settings json
 	if pic_settings is not None:
@@ -187,31 +215,77 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	else:
 		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
-	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
+	for k in [UNDIST_CALIB_MARKERS_KEY, UNDIST_CORNERS_KEY]:
 		if not (k in _pic_settings and _isValidQdDict(_pic_settings[k])):
 			_pic_settings[k] = None
 			logger.warning(ERR_NEED_CALIB)
 			return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
-	# get corners of working area
-	workspaceCorners = {qd: markers[qd] - _pic_settings[CALIB_MARKERS_KEY][qd][::-1] + _pic_settings[CORNERS_KEY][qd][::-1] for qd in QD_KEYS}
+
+	# Optimisation : Markers detected, we don't need the image in color anymore.
+	img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+	# Values taken from the calibration file. Used as a reference to warp the image correctly.
+	# Legacy devices only have the values for the lensCorrected position.
+	# FIXME TODO - Delete the lensCorrected corner calibration every time a lens calibration is made
+	# FIXME move current lensCorrected cornerCalibration to the cornerCalibrationFromFactory
+	#       (can be safely deleted once the user did 1 corner calibration on a raw picture)
+	# warp image
+	# TODO
+	calibrationReferences = dict_map(lambda key: _pic_settings.get(key, None), CALIB_REFS)
+	print("CALIBRAT REF %s" % calibrationReferences)
+	for k in calibrationReferences.keys():
+		calibrationReferences[k]['result'] = None
+	for types, ref in calibrationReferences.items():
+		# Find the correct reference position for both the markers and the corners
+		if savedPics['lens_corrected']:
+			for k in ['user', 'factory']:
+				# Prioritize converting positions from the raw values we have saved.
+				# (It is calibration-agnostic)
+				if ref[k]['raw']:
+					# TODO distort references
+					inPts = [ref[k]['raw'][qd] for qd in QD_KEYS]
+					res_iter = undistPoints(inPts, cam_matrix, cam_dist)
+					ref['result'] = {QD_KEYS[i]: pos for i, pos in enumerate(res_iter)}
+					break # no need to use the factory setting
+				elif ref[k]['undistorted']:
+					ref['result'] = ref[k]['undistorted']
+					break # no need to use the factory setting
+		else:
+			for k in ['user', 'factory']:
+				# Prioritize converting positions from the raw values we have saved.
+				# (It is calibration-agnostic)
+				if ref[k]['raw']:
+					ref['result'] = ref[k]['raw']
+					break # no need to use the factory setting
+				elif ref[k]['undistorted']:
+					# TODO reverse distort references
+					# Could not find how to undistort,
+					# will ask to redo calibration.
+					ref['result'] = None
+					break # no need to use the factory setting
+		if ref['result'] is None:
+			# No corner calibration done,
+			# cannot apply warp perspective
+			pass
+	refMarkers, refCorners = (calibrationReferences[k]['result'] for k in ['markers', 'corners'])
+	if refMarkers is None or refCorners is None:
+		# Wrong config for our needs, please calibrate anew
+		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
+	workspaceCorners = {qd: markers[qd] - refMarkers[qd][::-1] + refCorners[qd][::-1] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
                  % tuple(map(np.ndarray.tolist, map(workspaceCorners.__getitem__, ['NW', 'NE', 'SW', 'SE']))))
 	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners")
 
-	# warp image
-	warpedImg = _warpImgByCorners(img, workspaceCorners, zoomed_out)
-	if debug_out: save_debug_img(warpedImg, "colorwarp")
-
+	img = _warpImgByCorners(img, workspaceCorners, zoomed_out)
+	if debug_out: save_debug_img(img, "colorwarp")
+	# get corners of working area
 	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
-	# resize and do NOT make greyscale, then save it
-	# cv2.imwrite(filename=path_to_output_image,
-	#             img=cv2.resize(warpedImg, size),
-	#             params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
-	# resize and MAKE greyscale, then save it
-	retval = differed_imwrite(filename=path_to_output_image,
-	                     img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
-	                     params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
+	# Resize image to the final size
+	retval = differed_imwrite(
+		filename=path_to_output_image,
+		img=cv2.resize(img, size),
+		params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
 	if retval == SUCCESS_WRITE_RETVAL: savedPics['cropped'] = True
 
 	return workspaceCorners, markers, missed, err, outputPoints, savedPics
@@ -341,14 +415,38 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
 	return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
 
 #@logtime()
-def _undistortImage(img, dist, mtx):
-	"""Apply the camera calibration matrices to distort the picture back straight"""
-	h, w = img.shape[:2]
-	newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
+def undistort(img, mtx, dist, calibration_img_size=None, output_img_size=None):
+	"""Apply the camera calibration matrices to distort the picture back straight.
+	@param calibration_img_size: tuple: size of the image when the calibration was occuring.
+	@param output_img_size: tuple: desired size of the output image.
+	If not declared, the calibration image size and output image are going to be
+	assumed the same as the input.
+	It is faster to upscale/downscale here than to do it in a 2nd step seperately
+	"""
+	# The camera matrix need to be rescaled if the image size changed
+	in_mtx = adjust_mtx_to_pic(img, mtx, dist, calibration_img_size)
+	if output_img_size:
+		h, w = img.shape[:2]
+		dest_mtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, output_img_size)
+	else:
+		dest_mtx = mtx
+	# undistort image with cam_params
+	return cv2.undistort(img, in_mtx, dist, dest_mtx)
 
-	# undistort image
-	mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
-	return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
+def adjust_mtx_to_pic(img, mtx, dist, original_img_size=None):
+	h, w = img.shape[:2]
+	if original_img_size is None:
+		original_img_size = (w,h)
+	newcameramtx, _ = cv2.getOptimalNewCameraMatrix(mtx, dist, original_img_size, 1, (w, h))
+	return newcameramtx
+
+def undistPoints(inPts, mtx, dist, new_mtx=None, reverse=False):
+	# TODO Is it possible to reverse the distortion?
+	in_vecs = np.asarray(inPts, dtype=np.float32).reshape((-1,1,2))
+	if new_mtx is None:
+		new_mtx = mtx
+	for x, y in cv2.undistortPoints(in_vecs, mtx, dist, P=new_mtx).reshape(-1,2):
+		yield x, y
 
 #@logtime()
 def _warpImgByCorners(image, corners, zoomed_out=False):
@@ -481,7 +579,7 @@ def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
 		try:
 			with open(path_to_settings_file) as yaml_file:
 				pic_settings = yaml.safe_load(yaml_file)
-			for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
+			for k in [UNDIST_CALIB_MARKERS_KEY, UNDIST_CORNERS_KEY]:
 				if k in pic_settings.keys() and pic_settings[k] is not None:
 					for qd in QD_KEYS:
 						pic_settings[k][qd] = np.array(pic_settings[k][qd])

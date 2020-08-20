@@ -500,7 +500,7 @@ class PhotoCreator(object):
 				try:
 					self.serve_pictures(self.cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 				except Exception:
-					cam.close()
+					self.cam.close()
 					raise
 			if recurse_nb > 0:
 				self._logger.info("Camera recovered")
@@ -865,15 +865,17 @@ class PhotoCreator(object):
 		except:
 			self._logger.warning("_send_last_img_to_analytics_threaded() Can not read npz file: %s", path_to_cam_params)
 
-		payload = {'img_base64': img,
-					'img_type': img_format,
-					'distortion_matrix_base64': dist,
-					'trigger': trigger,
-					'metadata': {
-						'min_pix_amount': self._settings.get(['cam', 'markerRecognitionMinPixel']),
-						'analytics': analytics_str,
-						'trigger': trigger},
-					}
+		payload = {
+			'img_base64': img,
+			'img_type': img_format,
+			'distortion_matrix_base64': dist,
+			'trigger': trigger,
+			'metadata': {
+				'min_pix_amount': self._settings.get(['cam', 'markerRecognitionMinPixel']),
+				'analytics': analytics_str,
+				'trigger': trigger
+			},
+		}
 		self._logger.debug("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
 							trigger, len(img), force_upload, payload['metadata'])
 		self._analytics_handler.add_camera_image(payload)
