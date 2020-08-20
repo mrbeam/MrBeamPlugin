@@ -14,7 +14,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # Position of the pink circles, as found during calibration
 UNDIST_CALIB_MARKERS_KEY = 'calibMarkers'
-RAW_CALIB_MARKERS_KEY = 'raw_alibMarkers'
+RAW_CALIB_MARKERS_KEY = 'raw_calibMarkers'
 FACT_UNDIST_CALIB_MARKERS_KEY = 'factory_undist_calibMarkers'
 FACT_RAW_CALIB_MARKERS_KEY = 'factory_raw_calibMarkers'
 
@@ -93,7 +93,7 @@ class MbPicPrepError(Exception):
 
 
 # @logExceptions # useful if running in thread
-#@logtime()
+@logtime()
 def prepareImage(input_image,  #: Union[str, np.ndarray],
                  path_to_output_image,  #: str,
                  pic_settings=None,  #: Map or str
@@ -192,6 +192,9 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		logger.warning(err)
 		return None, markers, missed, err, outputPoints, savedPics
 
+	# Optimisation : Markers detected, we don't need the image in color anymore.
+	img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
 	if cam_dist is not None and cam_matrix is not None:
 		# Can be done simultaneously while the markers get detected on the raw picture
 		# NOTE If in precision mode, there is no point in undistorting the image
@@ -221,9 +224,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 			logger.warning(ERR_NEED_CALIB)
 			return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
-	# Optimisation : Markers detected, we don't need the image in color anymore.
-	img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
 	# Values taken from the calibration file. Used as a reference to warp the image correctly.
 	# Legacy devices only have the values for the lensCorrected position.
 	# FIXME TODO - Delete the lensCorrected corner calibration every time a lens calibration is made
@@ -232,7 +232,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	# warp image
 	# TODO
 	calibrationReferences = dict_map(lambda key: _pic_settings.get(key, None), CALIB_REFS)
-	print("CALIBRAT REF %s" % calibrationReferences)
 	for k in calibrationReferences.keys():
 		calibrationReferences[k]['result'] = None
 	for types, ref in calibrationReferences.items():

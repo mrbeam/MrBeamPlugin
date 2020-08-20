@@ -189,7 +189,7 @@ class BoardDetectorDaemon(Thread):
 		self.procs.value = number
 		self._logger.info("Changing to %s simultaneous processes", self.procs.value)
 
-	# @logtime
+	# @logtime()
 	@logExceptions
 	def processInputImages(self):
 		# state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):

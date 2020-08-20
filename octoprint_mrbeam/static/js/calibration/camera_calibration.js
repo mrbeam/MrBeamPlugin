@@ -202,7 +202,7 @@ $(function () {
 		self.applySetting = function(picType, applyCrossVisibility) {
 			// TODO with a dictionnary
 			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
-			                ['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
+			                ['lens_corrected', DEFAULT_IMG_RES, 'hidden', 'hidden'],
 			                ['raw', DEFAULT_IMG_RES, 'visible', 'hidden'],
 			                ['default', LOADING_IMG_RES, 'hidden', 'hidden']]
 			for (let _t of settings)
@@ -244,11 +244,11 @@ $(function () {
 
 		self.getImgUrl = function(type, applyCrossVisibility) {
 			if (type !== undefined) {
-					self.applySetting(type, applyCrossVisibility)
-					if (type == 'default')
-						return self.staticURL
-					else
-						return self.availablePicUrl()[type]
+				self.applySetting(type, applyCrossVisibility)
+				if (type == 'default')
+					return self.staticURL
+				else
+					return self.availablePicUrl()[type]
 			}
 			for (let _t of ['cropped', 'lens_corrected', 'raw', 'default'])
 				if (_t === 'default' || self.availablePic()[_t]){
@@ -263,8 +263,13 @@ $(function () {
 		};
 
 		self.cornerCalImgUrl = ko.computed(function() {
-			if (!self.cornerCalibrationActive())
-				self._cornerCalImgUrl(self.getImgUrl(undefined, true))
+			if (!self.cornerCalibrationActive()){
+				if (self.availablePic()['cropped'])
+					self._cornerCalImgUrl(self.getImgUrl('cropped', true))
+			  else
+					self._cornerCalImgUrl(self.getImgUrl('raw', true))
+
+			}
 			return self._cornerCalImgUrl()
 		});
 
@@ -393,9 +398,9 @@ $(function () {
 			self.analytics.send_fontend_event('corner_calibration_start', {});
 			// self.currentResults({});
 			self.cornerCalibrationActive(true);
-			self.picType("lens_corrected");
+			self.picType("raw");
 			// self.applySetting('lens_corrected')
-			self._cornerCalImgUrl(self.getImgUrl('lens_corrected', true))
+			self._cornerCalImgUrl(self.getImgUrl('raw', true))
 			self.markersFoundPositionCopy = self.markersFoundPosition()
 			self.nextMarker();
 		};

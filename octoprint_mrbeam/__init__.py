@@ -1843,8 +1843,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			pic_settings = {}
 		pic_settings = pic_settings or {} # pic_settings is None if file exists but empty
 
-		pic_settings['cornersFromImage'] = newCorners
-		pic_settings['calibMarkers'] = newMarkers
+		if check_calibration_tool_mode(self):
+			from octoprint_mrbeam.camera.undistort import FACT_RAW_CORNERS_KEY as __CORNERS_KEY, FACT_RAW_CALIB_MARKERS_KEY as __MARKERS_KEY
+		else:
+			from octoprint_mrbeam.camera.undistort import RAW_CORNERS_KEY as __CORNERS_KEY, RAW_CALIB_MARKERS_KEY as __MARKERS_KEY
+
+		pic_settings[__CORNERS_KEY] = newCorners
+		pic_settings[__MARKERS_KEY] = newMarkers
 		pic_settings['calibration_updated'] = True # DEPRECATED but Necessary for legacy algo
 		pic_settings['hostname_KEY'] = self._hostname
 
@@ -2003,7 +2008,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def _save_profile(self, path, profile, allow_overwrite=True):
 		import yaml
 		with open(path, "wb") as f:
-			yaml.safe_dump(profile, f, default_flow_style=False, indent="  ", allow_unicode=True)
+			yaml.safe_dump(profile, f, indent="  ", allow_unicode=True)
 
 	def _convert_to_engine(self, profile_path):
 		profile = Profile(self._load_profile(profile_path))
