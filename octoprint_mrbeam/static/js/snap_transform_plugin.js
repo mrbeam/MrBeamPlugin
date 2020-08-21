@@ -174,6 +174,7 @@
 			self.rotateText = paper.select('#rotateText');
 			
 			paper.mbtransform = self;
+			self.elements_to_transform = Snap.set();
 			
 			self.initialized = true;
 		}
@@ -771,7 +772,7 @@
 			// reset transform session origin
 			self.session.originMatrix = null;
 			self.session.bb = null;
-
+			self.elements_to_transform = Snap.set();
 		};
 		
 		self.toggle = function(elements_to_transform){
@@ -785,13 +786,34 @@
 			
 		};
 		
-//		self.toggleElements = function(elements_to_transform){
-//			// TODO implementation
-//			self._getElementSet(elements_to_transform);
-//			if(self.transformHandleGroup.node.classList.contains('active')){
-//				self.deactivate();
-//			}
-//		};
+		self.toggleElement = function(element_to_toggle){
+			
+			console.log("toggle elementes_to_transform ", self.elements_to_transform.length);
+//			self.deactivate();
+			
+			let elements = self._getElementSet(element_to_toggle);
+			if(elements.length > 0){
+				let toggleEl = elements[0];
+				if(self._setContains(self.elements_to_transform, toggleEl)){
+					self.elements_to_transform.exclude(toggleEl);
+				} else {
+					self.elements_to_transform.push(toggleEl);
+				}
+			}
+			
+			if(self.elements_to_transform.length === 0){
+				self.deactivate();
+			} else {
+				self.activate(self.elements_to_transform);
+			}
+		};
+		
+		self._setContains = function(set, element){
+			for (var i = 0; i < set.length; i++) {
+				if(element === set[i]) return true;
+			}
+			return false;
+		}
 		
 		self._getElementSet = function(elementset_or_selector){
 			if(!elementset_or_selector){
@@ -808,10 +830,12 @@
 					return elementSet;
 				}
 			} else {
-				if(typeof elementset_or_selector === "object"){
+				if(elementset_or_selector.type === "set"){
+					return elementset_or_selector;
+				} else if(typeof elementset_or_selector === "object" && typeof elementset_or_selector.transform === "function"){ // check if snap element
 					return Snap.set(elementset_or_selector);
 				} else {
-					console.warn(`'${elementset_or_selector}' is neither a Snap Element nor a Set.`);
+					console.warn(`'${elementset_or_selector}' is neither a Snap Element nor a Snap Set.`);
 					return Snap.set();
 				}
 			}

@@ -1099,7 +1099,7 @@ $(function(){
 			if (typeof previewId === "object" && previewId.previewId) {
 				previewId = previewId.previewId;
 			}
-			snap.mbtransform.toggle('#'+previewId);
+			snap.mbtransform.toggleElement('#'+previewId);
 		};
 
 		/**
