@@ -43,7 +43,13 @@
 			// add invisible fill for better dragging.
 			elem.add_fill();
 			elem.unclick(); // avoid multiple click actions
-			elem.click(function(){ elem.paper.mbtransform.activate(elem); });
+			elem.click(function(event, i){
+				if(event.ctrlKey){
+					elem.paper.mbtransform.toggleElement(elem); 
+				} else {
+					elem.paper.mbtransform.activate(elem); 
+				}
+			});
 			return elem;
 
 		};
@@ -192,6 +198,10 @@
 		 */
 
 		self.translateStart = function( target, x, y, event ){ // x, y, dx, dy pixel coordinates according to <svg width="..." height="..." >
+			if(event.ctrlKey){
+				console.info("translateStart with ShiftKey down: Should bubble event to target inside. Not supported right now.");
+//				$('#userContent').trigger('click', event);
+			}
 			// store former transformation
 			self._sessionInit("translate");
 
@@ -216,7 +226,7 @@
 		}	
 
 		self.translateEnd = function( target, dx, dy, x, y){
-			
+			console.log("translateEnd");
 			// show scale & rotate handle
 			self._alignHandlesToBB();
 			self.transformHandleGroup.node.classList.remove('translate');
@@ -688,7 +698,10 @@
 			}
 			
 			let elements_to_transform = self._getElementSet(elementset_or_selector);			
-			
+			if(elements_to_transform.length === 0) {
+				console.log("No elements to transfrom. Aborting.");
+				return;
+			}
 			// get bounding box of selector
 			const selection_bbox = self._getBBoxFromElementsWithMinSize(elements_to_transform);
 
@@ -788,9 +801,6 @@
 		
 		self.toggleElement = function(element_to_toggle){
 			
-			console.log("toggle elementes_to_transform ", self.elements_to_transform.length);
-//			self.deactivate();
-			
 			let elements = self._getElementSet(element_to_toggle);
 			if(elements.length > 0){
 				let toggleEl = elements[0];
@@ -823,7 +833,7 @@
 
 			if(typeof elementset_or_selector === "string"){
 				let elementSet = self.paper.selectAll(elementset_or_selector);
-				if(elementset_or_selector.length === 0){
+				if(elementSet.length === 0){
 					console.warn(`Selector '${elementset_or_selector}' got no results.`);
 					return Snap.set();
 				} else {

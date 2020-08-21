@@ -80,6 +80,8 @@ $(function () {
 			});
 
 			$("body").on('keydown', function (event) {
+				
+				self.addClassesForModifierKeys(event);
 
 				if (!self.settings.feature_keyboardControl()) return;
 				if(	event.target.nodeName === "INPUT"
@@ -152,6 +154,21 @@ $(function () {
 					button.click();
 				}
 			});
+
+			$("body").on('keyup', function (event) {
+				self.removeClassesForModifierKeys(event);
+			});
+	
+			self.addClassesForModifierKeys = function(event){
+				if(event.which === 16) document.body.classList.add('shiftKey');
+				if(event.which === 17) document.body.classList.add('ctrlKey');
+				if(event.which === 18) document.body.classList.add('altKey');
+			};
+			self.removeClassesForModifierKeys = function(event){
+				if(event.which === 16) document.body.classList.remove('shiftKey');
+				if(event.which === 17) document.body.classList.remove('ctrlKey');
+				if(event.which === 18) document.body.classList.remove('altKey');
+			};
 
             // TODO forward to control viewmodel
             self.state.isLocked = ko.observable(true);

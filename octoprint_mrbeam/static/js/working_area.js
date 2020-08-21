@@ -1066,7 +1066,8 @@ $(function(){
 		};
 
 		self._addClickAndHoverHandlers = function(fragment, fileObj){
-			console.log("clickhandlers, caller", self._addClickAndHoverHandlers.caller);
+			// TODO check why called twice on add? 
+//			console.log("clickhandlers, caller", self._addClickAndHoverHandlers.caller);
 			// add hover handler to highlight design and list entry
 			fragment.unmouseover();
 			fragment.mouseover(function(){
@@ -2678,7 +2679,7 @@ $(function(){
 		 * @private
 		 */
 		self._qt_currentQuickTextShowTransformHandlesIfNotEmpty = function() {
-			if (self.currentQuickTextFile && self.currentQuickTextFile.previewId) {
+			if (self.currentQuickTextFile && self.currentQuickTextFile.previewId && self.currentQuickTextFile.name !== '') {
 				self.showTransformHandles(self.currentQuickTextFile.previewId, true);
 			}
 		};
@@ -2801,6 +2802,20 @@ $(function(){
 		//  QUICKTEXT end
 		// ***********************************************************
 
+		// general modification keys
+		self.wa_key_down = function(target, ev){
+			console.log("Keydown", target, ev);
+			if (ev.originalEvent.ctrlKey) {
+				target.classList.add('ctrl');
+			}
+		}
+		self.wa_key_up = function(target, ev){
+			if (ev.originalEvent.ctrlKey) {
+				target.classList.remove('ctrl');
+			}
+		}
+		
+		
 		// on working_area: only works if shift key is down
 		self.wheel_zoom_wa = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
