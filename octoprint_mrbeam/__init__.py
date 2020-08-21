@@ -63,6 +63,8 @@ from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
 from octoprint_mrbeam.util.device_info import deviceInfo
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
+from octoprint_mrbeam.camera import calibration
+from octoprint_mrbeam import camera
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -1824,39 +1826,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def camera_calibration_markers(self, data):
 		self._logger.debug("camera_calibration_markers() data: {}".format(data))
-
-		# transform dict
-		newCorners = {}
-		newMarkers = {}
-
-		for qd in data['result']['newCorners']:
-			newCorners[qd] = [data['result']['newCorners'][qd]['x'], data['result']['newCorners'][qd]['y']]
-
-		for qd in data['result']['newMarkers']:
-			newMarkers[qd] = data['result']['newMarkers'][qd]
-
-		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
-		try:
-			pic_settings = self._load_profile(pic_settings_path)
-		except IOError:
-			self._logger.debug("previous pic settings were not present")
-			pic_settings = {}
-		pic_settings = pic_settings or {} # pic_settings is None if file exists but empty
-
-		if check_calibration_tool_mode(self):
-			from octoprint_mrbeam.camera.undistort import FACT_RAW_CORNERS_KEY as __CORNERS_KEY, FACT_RAW_CALIB_MARKERS_KEY as __MARKERS_KEY
-		else:
-			from octoprint_mrbeam.camera.undistort import RAW_CORNERS_KEY as __CORNERS_KEY, RAW_CALIB_MARKERS_KEY as __MARKERS_KEY
-
-		pic_settings[__CORNERS_KEY] = newCorners
-		pic_settings[__MARKERS_KEY] = newMarkers
-		pic_settings['calibration_updated'] = True # DEPRECATED but Necessary for legacy algo
-		pic_settings['hostname_KEY'] = self._hostname
-
-		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
-		self._save_profile(pic_settings_path, pic_settings)
 		self.lid_handler.refresh_settings()
-
+		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
+		camera.corners.save_corner_calibration(
+			pic_settings_path,
+			data['result']['newCorners'],
+			data['result']['newMarkers'],
+			self._hostname,
+			check_calibration_tool_mode(self)
+		)
 		return NO_CONTENT
 
 	##~~ SlicerPlugin API

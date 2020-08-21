@@ -880,6 +880,10 @@ $(function () {
 		}
 
 		self.saveCornerCalibrationData = function () {
+			var _corners = self.currentResults()
+			for (k of Object.keys(_corners)) {
+				_corners[k] = [_corners[k].x, _corners[k].y]
+			}
 			var data = {
 				result: {
 					newMarkers: self.markersFoundPositionCopy,

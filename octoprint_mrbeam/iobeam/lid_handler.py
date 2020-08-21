@@ -19,6 +19,8 @@ from flask.ext.babel import gettext
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
+from octoprint_mrbeam.camera.definitions import TMP_RAW_FNAME_RE, STATE_SUCCESS
+
 # don't crash on a dev computer where you can't install picamera
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE, MrbPicWorker, LEGACY_STILL_RES, save_debug_img
 from octoprint_mrbeam.camera import calibration as calibration
@@ -26,8 +28,8 @@ from octoprint_mrbeam.camera import exc as exc
 if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
-		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
-from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
+		CAMERA_HEIGHT, _getCamParams, DIST_KEY, MTX_KEY
+from octoprint_mrbeam.camera.lens import BoardDetectorDaemon, MIN_BOARDS_DETECTED
 from octoprint_mrbeam.util import dict_merge, get_thread, makedirs
 from octoprint_mrbeam.util.log import json_serialisor, logme
 
@@ -45,6 +47,7 @@ from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 import octoprint_mrbeam
+from octoprint_mrbeam.camera.corners import get_corner_calibration
 
 # singleton
 _instance = None
@@ -229,14 +232,11 @@ class LidHandler(object):
 		cam_params = _getCamParams(path_to_cam_params)
 		self._logger.debug('Loaded cam_params: {}'.format(cam_params))
 
-		# load pic_settings json
-		pic_settings = _getPicSettings(path_to_pic_settings)
-		self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
 		if not self._photo_creator.active:
 			if self._photo_creator.stopping:
-				self._photo_creator.restart(pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+				self._photo_creator.restart(pic_settings=path_to_pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 			else:
-				self._photo_creator.start(pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+				self._photo_creator.start(pic_settings=path_to_pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 		else:
 			self._logger.debug("Another PhotoCreator thread is already active! Not starting a new one.")
 
@@ -333,7 +333,7 @@ class LidHandler(object):
 	def removeAllTmpPictures(self):
 		if os.path.isdir(self.debugFolder):
 			for filename in os.listdir(self.debugFolder):
-				if re.match(calibration.TMP_RAW_FNAME_RE, filename):
+				if re.match(TMP_RAW_FNAME_RE, filename):
 					my_path = path.join(self.debugFolder, filename)
 					self._logger.debug("Removing tmp calibration file %s" % my_path)
 					os.remove(my_path)
@@ -380,7 +380,7 @@ class LidHandler(object):
 		return True
 
 	def updateFrontendCC(self, data):
-		if data['lensCalibration'] == calibration.STATE_SUCCESS:
+		if data['lensCalibration'] == STATE_SUCCESS:
 			self.refresh_settings()
 		self._plugin_manager.send_plugin_message("mrbeam", dict(chessboardCalibrationState=data))
 
@@ -425,17 +425,11 @@ class PhotoCreator(object):
 		self.cam = None
 		self.analytics = None
 
-		if debug:
-			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
-		else:
-			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.INFO)
+		_level=logging.DEBUG if debug else logging.INFO
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", lvl=_level)
 
 		self.last_markers, self.last_shutter_speed = self.load_camera_settings()
-		if self._settings.get(["cam", "keepOriginals"]):
-			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
-		else:
-			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
-		map(self._createFolder_if_not_existing, [self.final_image_path, self.tmp_img_prepared])
+		self._createFolder_if_not_existing(self.final_image_path)
 
 	@property
 	def active(self):
@@ -600,9 +594,9 @@ class PhotoCreator(object):
 				path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 				path_to_lens_calib = self._settings.get(["cam", "lensCalibrationFile"])
 				self._logger.debug("Refreshing picture settings from %s" % path_to_pic_settings)
-				pic_settings = _getPicSettings(path_to_pic_settings)
+				pic_settings = get_corner_calibration(path_to_pic_settings)
 				cam_params = _getCamParams(path_to_lens_calib)
-				prev=None # Forces to take a new picture
+				self.forceNewPic.set()
 			cam.wait()  # waits until the next picture is ready
 			if self.stopping: break
 
@@ -686,10 +680,10 @@ class PhotoCreator(object):
 			saveLensCorrected = True
 			workspaceCorners, self.last_markers, missed, err, analytics, savedPics = prepareImage(
 				input_image=latest,
-				path_to_output_image=self.tmp_img_prepared,
+				path_to_output_image=self.final_image_path,
 				pic_settings=pic_settings,
-				cam_dist=dist,
 				cam_matrix=mtx,
+				cam_dist=dist,
 				last_markers=self.last_markers,
 				size=scaled_output_size,
 				quality=quality,
@@ -895,7 +889,6 @@ class PhotoCreator(object):
 	def send_pic_asap(self, force=False):
 		if force or self._pic_available.isSet() and self._front_ready.isSet():
 			# Both front and backend sould be ready to send/receive a new picture
-			self._move_img(self.tmp_img_prepared, self.final_image_path)
 			self._send_frontend_picture_metadata(self.last_correction_result)
 			self._pic_available.clear()
 			self._front_ready.clear()
@@ -912,14 +905,6 @@ class PhotoCreator(object):
 		if not os.path.exists(path):
 			os.makedirs(path)
 			self._logger.debug("Created folder '%s' for camera images.", path)
-
-	def _move_img(self, src, dest):
-		try:
-			if os.path.exists(dest):
-				os.remove(dest)
-			shutil.move(src, dest)
-		except Exception as e:
-			self._logger.warn("exception_while_moving_file-_%s", e)
 
 	def load_camera_settings(self, path='/home/pi/.octoprint/cam/last_session.yaml'):
 		"""

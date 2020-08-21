@@ -17,6 +17,9 @@ from octoprint_mrbeam.util import makedirs
 from octoprint_mrbeam.util.img import differed_imwrite
 from octoprint_mrbeam.util.log import logme, logtime, logExceptions
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from typing import Mapping
+import yaml
+from octoprint_mrbeam.support import check_calibration_tool_mode
 
 CB_ROWS = 5
 CB_COLS = 6
@@ -47,6 +50,8 @@ TMP_RAW_FNAME_RE_NPZ =  'tmp_raw_img_[0-9]+.jpg.npz$'
 # REMOTE_CALIBRATION_FOLDER = "/home/calibrationfiles/"
 # REMOTE_CALIBRATE_EXEC = path.join(REMOTE_CALIBRATION_FOLDER, "calibrate2.py")
 # MY_HOSTNAME = "MrBeam-8ae9"
+
+_logger = mrb_logger(__name__, lvl=logging.INFO)
 
 class BoardDetectorDaemon(Thread):
 	"""Processes images of chessboards to calibrate the lens used to take the pictures."""

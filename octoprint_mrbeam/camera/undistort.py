@@ -3,9 +3,8 @@ import textwrap
 from collections import Mapping
 from threading import Event
 from multiprocessing import Pool
-from numpy.linalg import norm
 
-from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
+from octoprint_mrbeam.camera import corners, PICAMERA_AVAILABLE, QD_KEYS, RESOLUTIONS
 import octoprint_mrbeam.camera as camera
 from octoprint_mrbeam.util import dict_map, dict_merge
 from octoprint_mrbeam.util.img import differed_imwrite
@@ -141,7 +140,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	err = None
 	savedPics = {'raw': False, 'lens_corrected': False, 'cropped': False}
 
-
 	def save_debug_img(img, name):
 		return camera.save_debug_img(img, name + ".jpg", folder=path.join(dirname(path_to_output_image), "debug"))
 	if type(input_image) is str:
@@ -194,8 +192,8 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
 	# Optimisation : Markers detected, we don't need the image in color anymore.
 	img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-	if cam_dist is not None and cam_matrix is not None:
+	do_undistortion = cam_dist is not None and cam_matrix is not None
+	if do_undistortion:
 		# Can be done simultaneously while the markers get detected on the raw picture
 		# NOTE If in precision mode, there is no point in undistorting the image
 		#      if we don't have enough markers (it doesn't get sent)
@@ -209,73 +207,20 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
 
 	# load pic_settings json
-	if pic_settings is not None:
-		if type(pic_settings) is str:
-			_pic_settings = _getPicSettings(pic_settings, custom_pic_settings)
-			logger.debug('Loaded pic_settings: {}'.format(pic_settings))
-		else:
-			_pic_settings = pic_settings
-	else:
+	if pic_settings is None:
 		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
-	for k in [UNDIST_CALIB_MARKERS_KEY, UNDIST_CORNERS_KEY]:
-		if not (k in _pic_settings and _isValidQdDict(_pic_settings[k])):
-			_pic_settings[k] = None
-			logger.warning(ERR_NEED_CALIB)
-			return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
-
-	# Values taken from the calibration file. Used as a reference to warp the image correctly.
-	# Legacy devices only have the values for the lensCorrected position.
-	# FIXME TODO - Delete the lensCorrected corner calibration every time a lens calibration is made
-	# FIXME move current lensCorrected cornerCalibration to the cornerCalibrationFromFactory
-	#       (can be safely deleted once the user did 1 corner calibration on a raw picture)
-	# warp image
-	# TODO
-	calibrationReferences = dict_map(lambda key: _pic_settings.get(key, None), CALIB_REFS)
-	for k in calibrationReferences.keys():
-		calibrationReferences[k]['result'] = None
-	for types, ref in calibrationReferences.items():
-		# Find the correct reference position for both the markers and the corners
-		if savedPics['lens_corrected']:
-			for k in ['user', 'factory']:
-				# Prioritize converting positions from the raw values we have saved.
-				# (It is calibration-agnostic)
-				if ref[k]['raw']:
-					# TODO distort references
-					inPts = [ref[k]['raw'][qd] for qd in QD_KEYS]
-					res_iter = undistPoints(inPts, cam_matrix, cam_dist)
-					ref['result'] = {QD_KEYS[i]: pos for i, pos in enumerate(res_iter)}
-					break # no need to use the factory setting
-				elif ref[k]['undistorted']:
-					ref['result'] = ref[k]['undistorted']
-					break # no need to use the factory setting
-		else:
-			for k in ['user', 'factory']:
-				# Prioritize converting positions from the raw values we have saved.
-				# (It is calibration-agnostic)
-				if ref[k]['raw']:
-					ref['result'] = ref[k]['raw']
-					break # no need to use the factory setting
-				elif ref[k]['undistorted']:
-					# TODO reverse distort references
-					# Could not find how to undistort,
-					# will ask to redo calibration.
-					ref['result'] = None
-					break # no need to use the factory setting
-		if ref['result'] is None:
-			# No corner calibration done,
-			# cannot apply warp perspective
-			pass
-	refMarkers, refCorners = (calibrationReferences[k]['result'] for k in ['markers', 'corners'])
-	if refMarkers is None or refCorners is None:
+	deltas = corners.get_deltas(pic_settings, do_undistortion, cam_matrix, cam_dist)
+	if deltas is None:
 		# Wrong config for our needs, please calibrate anew
+		logger.warning(ERR_NEED_CALIB)
 		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
-	workspaceCorners = {qd: markers[qd] - refMarkers[qd][::-1] + refCorners[qd][::-1] for qd in QD_KEYS}
+	workspaceCorners = {qd: markers[qd][::-1] + deltas[qd] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
                  % tuple(map(np.ndarray.tolist, map(workspaceCorners.__getitem__, ['NW', 'NE', 'SW', 'SE']))))
 	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners")
 
-	img = _warpImgByCorners(img, workspaceCorners, zoomed_out)
+	img = corners.warpImgByCorners(img, workspaceCorners, zoomed_out)
 	if debug_out: save_debug_img(img, "colorwarp")
 	# get corners of working area
 	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
@@ -447,60 +392,6 @@ def undistPoints(inPts, mtx, dist, new_mtx=None, reverse=False):
 	for x, y in cv2.undistortPoints(in_vecs, mtx, dist, P=new_mtx).reshape(-1,2):
 		yield x, y
 
-#@logtime()
-def _warpImgByCorners(image, corners, zoomed_out=False):
-	"""
-	Warps the region delimited by the corners in order to straighten it.
-	:param image: takes an opencv image
-	:param corners: as qd-dict
-	:param zoomed_out: wether to zoom out the pic to account for object height
-	:return: image with corners warped
-	"""
-
-	def f(qd):
-		return np.array(corners[qd])
-
-	nw, ne, sw, se = map(f, QD_KEYS)
-
-	# calculate maximum width and height for destination points
-	width1 = norm(se - sw)
-	width2 = norm(ne - nw)
-	maxWidth = max(int(width1), int(width2))
-
-	height1 = norm(ne - se)
-	height2 = norm(nw - sw)
-	maxHeight = max(int(height1), int(height2))
-
-	if zoomed_out:
-		factor = float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2
-		min_dst_x = factor * maxWidth
-		max_dst_x = (1+factor) * maxWidth
-		min_dst_y = factor * maxHeight
-		max_dst_y = (1+factor) * maxHeight
-		dst_size = (int((1+2*factor) * maxWidth), int((1+2*factor)*maxHeight))
-	else:
-		min_dst_x, max_dst_x = 0, maxWidth - 1
-		min_dst_y, max_dst_y = 0, maxHeight -1
-		dst_size = (maxWidth, maxHeight)
-
-
-
-	# source points for matrix calculation
-	src = np.array((nw[::-1], ne[::-1], se[::-1], sw[::-1]), dtype="float32")
-
-	# destination points in the same order
-	dst = np.array([[min_dst_x, min_dst_y],  # nw
-                    [max_dst_x, min_dst_y],  # ne
-                    [max_dst_x, max_dst_y],  # sw
-                    [min_dst_x, max_dst_y]], # se
-                   dtype="float32")
-
-	# get the perspective transform matrix
-	transMatrix = cv2.getPerspectiveTransform(src, dst)
-
-	# compute warped image
-	warpedImg = cv2.warpPerspective(image, transMatrix, dst_size)
-	return warpedImg
 
 def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
 	"""Iterates over the white connected spots on the picture (aka white blobs)"""
@@ -561,54 +452,7 @@ def _getCamParams(path_to_params_file):
 			raise MbPicPrepError('CamParams_missing_in_File-_please_do_a_new_Camera_Calibration_(Chessboard)')
 	return valDict
 
-def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
-	"""
-	:param path_to_settings_file: Give Path to pic_settings yaml
-	:param path_to_last_markers_json: needed for overwriting file if updated
-	:return: pic_settings as dict
-	"""
-	if not isfile(path_to_settings_file) or os.stat(path_to_settings_file).st_size == 0:
-		# print("No pic_settings file found, created new one.")
-		pic_settings = PIC_SETTINGS
-		if custom_pic_settings is not None:
-			pic_settings = dict_merge(pic_settings, custom_pic_settings)
-		settings_changed = True
-	else:
-		import yaml
-		try:
-			with open(path_to_settings_file) as yaml_file:
-				pic_settings = yaml.safe_load(yaml_file)
-			for k in [UNDIST_CALIB_MARKERS_KEY, UNDIST_CORNERS_KEY]:
-				if k in pic_settings.keys() and pic_settings[k] is not None:
-					for qd in QD_KEYS:
-						pic_settings[k][qd] = np.array(pic_settings[k][qd])
-			settings_changed = False
-		except:
-			# print("Exception while loading '%s' > pic_settings file not readable, created new one. ", yaml_file)
-			pic_settings = PIC_SETTINGS
-			settings_changed = True
-
-		# if not MARKER_SETTINGS_KEY in pic_settings or not all(param in pic_settings[MARKER_SETTINGS_KEY] for param in PIC_SETTINGS[MARKER_SETTINGS_KEY].keys()):
-		#     logging.info('Bad picture settings file, loaded default marker settings')
-		#     pic_settings[MARKER_SETTINGS_KEY] = PIC_SETTINGS[MARKER_SETTINGS_KEY]
-		#     settings_changed = True
-
-	return pic_settings
-
-def _isValidQdDict(qdDict):
-	"""
-	:param: qd-Dict to test for valid Keys
-	:returns True or False
-	"""
-	if type(qdDict) is not dict:
-		result = False
-	else:
-		result = all(qd in qdDict and \
-			     len(qdDict[qd]) == 2 and \
-			     all(not x is None for x in qdDict[qd]) \
-			     for qd in QD_KEYS)
-
-	return result
+# def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Detect the markers in the pictures provided or from the camera",
@@ -661,7 +505,7 @@ if __name__ == "__main__":
 	cam_params = _getCamParams(args.parameters)
 
 	# load pic_settings json
-	pic_settings = _getPicSettings(args.last)
+	# pic_settings = _getPicSettings(args.last)
 	markers = None
 	for img_path in args.images:
 		img = cv2.imread(img_path)
