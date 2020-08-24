@@ -3,76 +3,14 @@ import textwrap
 from collections import Mapping
 from threading import Event
 from multiprocessing import Pool
-
-from octoprint_mrbeam.camera import corners, PICAMERA_AVAILABLE, QD_KEYS, RESOLUTIONS
+from octoprint_mrbeam.camera.definitions import PICAMERA_AVAILABLE, QD_KEYS, RESOLUTIONS, DIST_KEY, MTX_KEY, STOP_EVENT_ERR, ERR_NEED_CALIB, HUE_BAND_LB, HUE_BAND_UB, SUCCESS_WRITE_RETVAL, MIN_MARKER_PIX, MAX_MARKER_PIX, PIC_SETTINGS
+from octoprint_mrbeam.camera import corners, lens
 import octoprint_mrbeam.camera as camera
 from octoprint_mrbeam.util import dict_map, dict_merge
 from octoprint_mrbeam.util.img import differed_imwrite
 from octoprint_mrbeam.util.log import logme, debug_logger, logExceptions, logtime
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
-# Position of the pink circles, as found during calibration
-UNDIST_CALIB_MARKERS_KEY = 'calibMarkers'
-RAW_CALIB_MARKERS_KEY = 'raw_calibMarkers'
-FACT_UNDIST_CALIB_MARKERS_KEY = 'factory_undist_calibMarkers'
-FACT_RAW_CALIB_MARKERS_KEY = 'factory_raw_calibMarkers'
-
-# Position of the corners (arrow tips), as found during the calibration
-UNDIST_CORNERS_KEY = 'cornersFromImage'
-RAW_CORNERS_KEY = 'raw_cornersFromImage'
-FACT_UNDIST_CORNERS_KEY = 'factory_undist_cornersFromImage'
-FACT_RAW_CORNERS_KEY = 'factory_raw_cornersFromImage'
-
-CALIB_REFS = dict(
-	markers = dict(
-		user=dict(
-			raw=RAW_CALIB_MARKERS_KEY,
-			undistorted=UNDIST_CALIB_MARKERS_KEY),
-		factory=dict(
-			raw=FACT_RAW_CALIB_MARKERS_KEY,
-			undistorted=FACT_UNDIST_CALIB_MARKERS_KEY,)
-	),
-	corners = dict(
-		user=dict(
-			raw=RAW_CORNERS_KEY,
-			undistorted=UNDIST_CORNERS_KEY),
-		factory=dict(
-			raw=FACT_RAW_CORNERS_KEY,
-			undistorted=FACT_UNDIST_CORNERS_KEY,)
-	)
-)
-
-M2C_VECTOR_KEY = 'marker2cornerVecs' # DEPRECATED Key
-BLUR_FACTOR_THRESHOLD_KEY = 'blur_factor_threshold'
-CALIBRATION_UPDATED_KEY = 'calibration_updated'
-VERSION_KEY = 'version'
-DIST_KEY = 'dist'
-MTX_KEY = 'mtx'
-RATIO_W_KEY = 'ratioW'
-RATIO_H_KEY = 'ratioH'
-
-STOP_EVENT_ERR = 'StopEvent_was_raised'
-ERR_NEED_CALIB = 'Camera_calibration_is_needed'
-
-HUE_BAND_LB_KEY = 'hue_lower_bound'
-HUE_BAND_LB = 105
-HUE_BAND_UB = 200 # if value > 180 : loops back to 0
-
-SUCCESS_WRITE_RETVAL = 1
-
-# Minimum and Maximum number of pixels a marker should have
-# as seen on the edge detection masks
-# TODO make scalable with picture resolution
-MIN_MARKER_PIX = 350
-MAX_MARKER_PIX = 1500
-
-# Height (mm) from the bottom of the work area to the camera lens.
-CAMERA_HEIGHT = 582
-# Height (mm) - max height at which the Mr Beam II can laser an object.
-MAX_OBJ_HEIGHT = 38
-
-
-PIC_SETTINGS = {UNDIST_CALIB_MARKERS_KEY: None, UNDIST_CORNERS_KEY: None, CALIBRATION_UPDATED_KEY: False}
 
 import logging
 import time
@@ -81,8 +19,6 @@ import os.path as path
 from os.path import dirname, basename, isfile, exists
 import cv2
 import numpy as np
-
-PIXEL_THRESHOLD_MIN = MIN_MARKER_PIX
 
 logger = mrb_logger(__name__)
 
@@ -198,7 +134,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		# NOTE If in precision mode, there is no point in undistorting the image
 		#      if we don't have enough markers (it doesn't get sent)
 		# TODO do threaded while detecting the corners on raw img.
-		img = undistort(img, cam_matrix, cam_dist)
+		img = lens.undistort(img, cam_matrix, cam_dist)
 		if debug_out or undistorted:
 			savedPics['lens_corrected'] = save_debug_img(img, "undistorted")
 
@@ -230,7 +166,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		filename=path_to_output_image,
 		img=cv2.resize(img, size),
 		params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
-	if retval == SUCCESS_WRITE_RETVAL: savedPics['cropped'] = True
+	savedPics['cropped'] = retval == SUCCESS_WRITE_RETVAL
 
 	return workspaceCorners, markers, missed, err, outputPoints, savedPics
 
@@ -260,7 +196,6 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 			if outputPoints[qd] is not None:
 				outputPoints[qd]['pos'] += pos
 		p.join()
-
 	else:
 		for roi, pos, qd in camera.getRois(img):
 			outputPoints[qd] = _getColoredMarkerPosition(roi,
@@ -357,40 +292,6 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
 	# Tests if the mask is completely inside the marker_mask_tester,
 	# i.e. it didn't change after applying the mask
 	return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
-
-#@logtime()
-def undistort(img, mtx, dist, calibration_img_size=None, output_img_size=None):
-	"""Apply the camera calibration matrices to distort the picture back straight.
-	@param calibration_img_size: tuple: size of the image when the calibration was occuring.
-	@param output_img_size: tuple: desired size of the output image.
-	If not declared, the calibration image size and output image are going to be
-	assumed the same as the input.
-	It is faster to upscale/downscale here than to do it in a 2nd step seperately
-	"""
-	# The camera matrix need to be rescaled if the image size changed
-	in_mtx = adjust_mtx_to_pic(img, mtx, dist, calibration_img_size)
-	if output_img_size:
-		h, w = img.shape[:2]
-		dest_mtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, output_img_size)
-	else:
-		dest_mtx = mtx
-	# undistort image with cam_params
-	return cv2.undistort(img, in_mtx, dist, dest_mtx)
-
-def adjust_mtx_to_pic(img, mtx, dist, original_img_size=None):
-	h, w = img.shape[:2]
-	if original_img_size is None:
-		original_img_size = (w,h)
-	newcameramtx, _ = cv2.getOptimalNewCameraMatrix(mtx, dist, original_img_size, 1, (w, h))
-	return newcameramtx
-
-def undistPoints(inPts, mtx, dist, new_mtx=None, reverse=False):
-	# TODO Is it possible to reverse the distortion?
-	in_vecs = np.asarray(inPts, dtype=np.float32).reshape((-1,1,2))
-	if new_mtx is None:
-		new_mtx = mtx
-	for x, y in cv2.undistortPoints(in_vecs, mtx, dist, P=new_mtx).reshape(-1,2):
-		yield x, y
 
 
 def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):

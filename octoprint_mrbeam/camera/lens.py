@@ -6,45 +6,20 @@ import cv2
 import signal, os
 import numpy as np
 import time
-import octoprint_mrbeam.camera as camera
 import queue
 from os import path
 import numpy as np
 from copy import copy
 
+from octoprint_mrbeam.camera.definitions import LEGACY_STILL_RES, CB_ROWS, CB_COLS, CB_SQUARE_SIZE, REFRESH_RATE_WAIT_CHECK, BOARD_SIZE_MM, MIN_BOARDS_DETECTED, MAX_PROCS, STATE_PENDING_CAMERA, STATE_QUEUED, STATE_PROCESSING, STATE_SUCCESS, STATE_FAIL, STATE_IGNORED, STATE_PENDING, STATES, TMP_PATH, TMP_RAW_FNAME, TMP_RAW_FNAME_RE, TMP_RAW_FNAME_RE_NPZ
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import makedirs
 from octoprint_mrbeam.util.img import differed_imwrite
 from octoprint_mrbeam.util.log import logme, logtime, logExceptions
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from typing import Mapping
 import yaml
 from octoprint_mrbeam.support import check_calibration_tool_mode
 
-CB_ROWS = 5
-CB_COLS = 6
-CB_SQUARE_SIZE = 30  # mm
-
-REFRESH_RATE_WAIT_CHECK = .2 # TODO: use OctoPrint.mrbeam/venv/lib/python2.7/site-packages/watchdog-0.8.3-py2.7.egg/watchdog/observers/fsevents.py
-
-# Chessboard size in mm
-BOARD_SIZE_MM = np.array([220, 190])
-MIN_BOARDS_DETECTED = 9
-MAX_PROCS = 4
-
-STATE_PENDING_CAMERA = "camera_processing"
-STATE_QUEUED = "queued"
-STATE_PROCESSING = "processing"
-STATE_SUCCESS = "success"
-STATE_FAIL = "fail"
-STATE_IGNORED = "ignored"
-STATE_PENDING = "pending"
-STATES = [STATE_QUEUED, STATE_PROCESSING, STATE_SUCCESS, STATE_FAIL, STATE_IGNORED, STATE_PENDING, STATE_PENDING_CAMERA]
-TMP_PATH =  "/tmp/chess_img_{}.jpg"
-
-TMP_RAW_FNAME = 'tmp_raw_img_{0:0>3}.jpg'
-TMP_RAW_FNAME_RE =  'tmp_raw_img_[0-9]+.jpg$'
-TMP_RAW_FNAME_RE_NPZ =  'tmp_raw_img_[0-9]+.jpg.npz$'
 # Remote connection for calibration
 # SSH_FILE = "/home/pi/.ssh/pi_id_rsa"
 # REMOTE_CALIBRATION_FOLDER = "/home/calibrationfiles/"
@@ -53,12 +28,52 @@ TMP_RAW_FNAME_RE_NPZ =  'tmp_raw_img_[0-9]+.jpg.npz$'
 
 _logger = mrb_logger(__name__, lvl=logging.INFO)
 
+
+### LENS UNDISTORTION FUNCTIONS
+
+#@logtime()
+def undistort(img, mtx, dist, calibration_img_size=None, output_img_size=None):
+	"""Apply the camera calibration matrices to distort the picture back straight.
+	@param calibration_img_size: tuple: size of the image when the calibration was occuring.
+	@param output_img_size: tuple: desired size of the output image.
+	If not declared, the calibration image size and output image are going to be
+	assumed the same as the input.
+	It is faster to upscale/downscale here than to do it in a 2nd step seperately
+	"""
+	# The camera matrix need to be rescaled if the image size changed
+	in_mtx = adjust_mtx_to_pic(img, mtx, dist, calibration_img_size)
+	if output_img_size:
+		h, w = img.shape[:2]
+		dest_mtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, output_img_size)
+	else:
+		dest_mtx = mtx
+	# undistort image with cam_params
+	return cv2.undistort(img, in_mtx, dist, dest_mtx)
+
+def adjust_mtx_to_pic(img, mtx, dist, original_img_size=None):
+	h, w = img.shape[:2]
+	if original_img_size is None:
+		original_img_size = (w,h)
+	newcameramtx, _ = cv2.getOptimalNewCameraMatrix(mtx, dist, original_img_size, 1, (w, h))
+	return newcameramtx
+
+def undist_points(inPts, mtx, dist, new_mtx=None, reverse=False):
+	# TODO Is it possible to reverse the distortion?
+	in_vecs = np.asarray(inPts, dtype=np.float32).reshape((-1,1,2))
+	if new_mtx is None:
+		new_mtx = mtx
+	for x, y in cv2.undistortPoints(in_vecs, mtx, dist, P=new_mtx).reshape(-1,2):
+		yield x, y
+
+
+### CAMERA LENS CALIBRATION
+
 class BoardDetectorDaemon(Thread):
 	"""Processes images of chessboards to calibrate the lens used to take the pictures."""
 
 	def __init__(self,
 		     output_calib,
-		     image_size=camera.LEGACY_STILL_RES,
+		     image_size=LEGACY_STILL_RES,
 		     procs=1,
 		     stateChangeCallback=None,
 		     runCalibrationAsap=False,
@@ -448,7 +463,7 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 
 
 class calibrationState(dict):
-	def __init__(self, imageSize=camera.LEGACY_STILL_RES, changeCallback=None,  npzPath=None, rawImgLock=None, *args, **kw):
+	def __init__(self, imageSize=LEGACY_STILL_RES, changeCallback=None,  npzPath=None, rawImgLock=None, *args, **kw):
 		self._logger = mrb_logger(__name__ + '.' + self.__class__.__name__, lvl=logging.DEBUG)
 		self.changeCallback = changeCallback
 		self.imageSize=imageSize

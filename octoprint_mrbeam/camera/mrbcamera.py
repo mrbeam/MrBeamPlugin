@@ -2,6 +2,7 @@ from itertools import chain
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.camera import Camera
+from .definitions import DEFAULT_SHUTTER_SPEED, TARGET_AVG_ROI_BRIGHTNESS, BRIGHTNESS_TOLERANCE
 from . import exc
 try:
 	from picamera import PiCamera
@@ -14,7 +15,6 @@ import time
 import threading
 import logging
 
-DEFAULT_SHUTTER_SPEED = int(1.5 * 10**5) # (microseconds)
 
 
 class LoopThread(threading.Thread):
@@ -178,7 +178,6 @@ class MrbCamera(PiCamera, Camera):
 		# self.shutter_speed = 10
 
 	def compensate_shutter_speed(self, img):
-		from octoprint_mrbeam.camera import TARGET_AVG_ROI_BRIGHTNESS, BRIGHTNESS_TOLERANCE
 		# self._logger.info(
 		# 	"sensor : "+ str(self.sensor_mode)+
 		# 	"\n iso : "+ str(self.iso)+

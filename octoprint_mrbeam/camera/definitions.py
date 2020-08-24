@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-import numpy as np
 from fractions import Fraction
+import logging
+import numpy as np
 
 ########################
 ### General camera
@@ -23,12 +24,13 @@ RESOLUTIONS = {
 		'2592x1952': (2592, 1952),
 }
 
+LEGACY_STILL_RES = RESOLUTIONS['2048x1536'] # from octoprint_mrbeam __init___ : get_settings_defaults
+DEFAULT_STILL_RES = RESOLUTIONS['2592x1944']  # Be careful : Resolutions accepted as increments of 32 horizontally and 16 vertically
+DEFAULT_SHUTTER_SPEED = int(1.5 * 10**5) # (microseconds)
+
 N, W, S, E = 'N','W','S','E'
 NW,NE,SW,SE = N+W, N+E, S+W, S+E
 QD_KEYS = [NW,NE,SW,SE]
-
-LEGACY_STILL_RES = RESOLUTIONS['2048x1536'] # from octoprint_mrbeam __init___ : get_settings_defaults
-DEFAULT_STILL_RES = RESOLUTIONS['2592x1944']  # Be careful : Resolutions accepted as increments of 32 horizontally and 16 vertically
 
 # threshold; 2 consecutive pictures need to have a minimum difference
 # before being undistorted and served

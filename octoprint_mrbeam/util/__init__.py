@@ -9,7 +9,7 @@ from functools import wraps
 from copy import copy, deepcopy
 import threading
 from .log import logExceptions, logtime
-from typing import Mapping
+# from typing import Mapping
 
 def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 	"""Recursive dictionnary update.
@@ -34,9 +34,10 @@ def nested_items(my_dict):
 	Allows you to use the relative parent to modify the values in place.
 	Example: See `dict_map`
 	"""
-	assert isinstance(my_dict, Mapping)
+	# assert isinstance(my_dict, Mapping)
+	assert isinstance(my_dict, dict)
 	for k, v in my_dict.items():
-		if isinstance(v, Mapping):
+		if isinstance(v, dict):
 			for elm in nested_items(v):
 				yield elm
 		else:

@@ -19,17 +19,19 @@ from flask.ext.babel import gettext
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
-from octoprint_mrbeam.camera.definitions import TMP_RAW_FNAME_RE, STATE_SUCCESS
 
 # don't crash on a dev computer where you can't install picamera
-from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE, MrbPicWorker, LEGACY_STILL_RES, save_debug_img
-from octoprint_mrbeam.camera import calibration as calibration
+from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img
+# from octoprint_mrbeam.camera
+from octoprint_mrbeam.camera.definitions import TMP_RAW_FNAME_RE, STATE_SUCCESS
+from octoprint_mrbeam.camera.definitions import QD_KEYS, PICAMERA_AVAILABLE, LEGACY_STILL_RES, MAX_OBJ_HEIGHT, \
+		CAMERA_HEIGHT, DIST_KEY, MTX_KEY, MIN_BOARDS_DETECTED
+from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint_mrbeam.camera import exc as exc
 if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
-	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
-		CAMERA_HEIGHT, _getCamParams, DIST_KEY, MTX_KEY
-from octoprint_mrbeam.camera.lens import BoardDetectorDaemon, MIN_BOARDS_DETECTED
+	from octoprint_mrbeam.camera.undistort import prepareImage, _getCamParams
+from octoprint_mrbeam.camera.lens import BoardDetectorDaemon
 from octoprint_mrbeam.util import dict_merge, get_thread, makedirs
 from octoprint_mrbeam.util.log import json_serialisor, logme
 
@@ -484,6 +486,8 @@ class PhotoCreator(object):
 				self.stopEvent.set()
 				return
 
+			self.last_markers, self.last_shutter_speed = self.load_camera_settings()
+
 			self._logger.debug("Starting the camera now.")
 			camera_worker = MrbPicWorker(maxSize=2, debug=self.debug)
 			with MrbCamera(camera_worker,
@@ -547,7 +551,7 @@ class PhotoCreator(object):
 		"""
 
 		cam.start_preview()
-		time.sleep(1.5) # camera warmup + prevent quick switch to pic capture
+		time.sleep(1.2) # camera warmup + prevent quick switch to pic capture
 
 		session_details = blank_session_details()
 		self._front_ready.set()

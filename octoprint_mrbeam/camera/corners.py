@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Mapping
+# from typing import Mapping
 import yaml
 
 from .definitions import UNDIST_CALIB_MARKERS_KEY, UNDIST_CORNERS_KEY, FACT_RAW_CORNERS_KEY, CALIB_REFS, QD_KEYS, MAX_OBJ_HEIGHT, CAMERA_HEIGHT
@@ -73,15 +73,16 @@ def save_corner_calibration(path, newCorners, newMarkers, hostname=None, from_fa
 
 	# transform dict
 	for new_ in [newCorners, newMarkers]:
-		assert isinstance(new_, Mapping)
+		# assert isinstance(new_, Mapping)
+		assert isinstance(new_, dict)
 		assert all(qd in new_.keys() for qd in QD_KEYS)
 	try:
 		with open(path, "r") as f:
-			pic_settings = yaml.safe_load(f)
+			# yaml.safe_load is None if file exists but empty
+			pic_settings = yaml.safe_load(f) or {}
 	except IOError:
 		_logger.debug("Could not find the previous picture settings.")
 		pic_settings = {}
-	pic_settings = pic_settings or {} # pic_settings is None if file exists but empty
 
 	if from_factory:
 		from .definitions import FACT_RAW_CORNERS_KEY as __CORNERS_KEY, FACT_RAW_CALIB_MARKERS_KEY as __MARKERS_KEY
@@ -129,7 +130,7 @@ def get_deltas(
 	:param path_to_last_markers_json: needed for overwriting file if updated
 	:return: pic_settings as dict
 	"""
-	from octoprint_mrbeam.camera.undistort import undistPoints
+	from octoprint_mrbeam.camera.lens import undist_points
 	if type(settings) is str:
 		pic_settings = get_corner_calibration(settings)
 		if pic_settings is None: return None
@@ -141,11 +142,6 @@ def get_deltas(
 		elif k in pic_settings.keys() and pic_settings[k] is not None:
 			for qd in QD_KEYS:
 				pic_settings[k][qd] = np.array(pic_settings[k][qd])
-
-	# if not MARKER_SETTINGS_KEY in pic_settings or not all(param in pic_settings[MARKER_SETTINGS_KEY] for param in PIC_SETTINGS[MARKER_SETTINGS_KEY].keys()):
-	#     logging.info('Bad picture settings file, loaded default marker settings')
-	#     pic_settings[MARKER_SETTINGS_KEY] = PIC_SETTINGS[MARKER_SETTINGS_KEY]
-	#     settings_changed = True
 
 	# Values taken from the calibration file. Used as a reference to warp the image correctly.
 	# Legacy devices only have the values for the lensCorrected position.
@@ -168,7 +164,7 @@ def get_deltas(
 				if ref[k]['raw'] is not None and matrix is not None and dist is not None:
 					# TODO distort references
 					inPts = [ref[k]['raw'][qd] for qd in QD_KEYS]
-					res_iter = undistPoints(inPts, matrix, dist)
+					res_iter = undist_points(inPts, matrix, dist)
 					ref['result'] = {QD_KEYS[i]: np.array(pos) for i, pos in enumerate(res_iter)}
 					break # no need to go further in the priority list
 				elif ref[k]['undistorted']:
