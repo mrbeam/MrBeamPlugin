@@ -751,9 +751,9 @@ class PhotoCreator(object):
 				self.send_last_img_to_analytics(
 					trigger='dev_auto', force_upload=(pic_counter%10==0)
 				)
+			self.last_shutter_speed = cam.shutter_speed
 			self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 
-		self.last_shutter_speed = cam.shutter_speed
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
 			session_details.update({
