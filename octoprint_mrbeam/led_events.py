@@ -1,7 +1,5 @@
-
-
 import threading
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 from octoprint.events import Events, CommandTrigger, GenericEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -10,7 +8,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 class LedEventListener(CommandTrigger):
 
 	WIFI_CHECK_INTERVAL = 1.0
-	VERSION_MIN_FINDMRBEAM = StrictVersion("0.2.0")
+	VERSION_MIN_FINDMRBEAM = LooseVersion("0.2.0")
 
 
 	LED_EVENTS = {}
@@ -31,9 +29,9 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.LASER_JOB_CANCELLED] = "mrbeam_ledstrips_cli LaserJobCancelled"
 	LED_EVENTS[MrBeamEvents.LASER_JOB_FAILED] = "mrbeam_ledstrips_cli LaserJobFailed"
 	# LaserPauseSafetyTimeout Events
-	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START] = "mrbeam_ledstrips_cli PrintPausedTimeout"
-	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END] = "mrbeam_ledstrips_cli PrintPaused"
-	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK] = "mrbeam_ledstrips_cli PrintPausedTimeoutBlock"
+	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_START] = "mrbeam_ledstrips_cli PrintPausedTimeout"
+	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_END] = "mrbeam_ledstrips_cli PrintPaused"
+	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_BLOCK] = "mrbeam_ledstrips_cli PrintPausedTimeoutBlock"
 
 	LED_EVENTS[MrBeamEvents.BUTTON_PRESS_REJECT] = "mrbeam_ledstrips_cli ButtonPressReject"
 
@@ -50,6 +48,22 @@ class LedEventListener(CommandTrigger):
 	# MrBeam Events
 	LED_EVENTS[MrBeamEvents.SLICING_PROGRESS] = "mrbeam_ledstrips_cli SlicingProgress:{__progress}"
 	LED_EVENTS[MrBeamEvents.PRINT_PROGRESS] = "mrbeam_ledstrips_cli progress:{__progress}"
+
+	# Camera Calibration Screen Events
+	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_START] = "mrbeam_ledstrips_cli flash_blue:1"
+	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_DONE]  = "mrbeam_ledstrips_cli blue" # flash_color:200:200:30:1:50" #color:200:200:30" # TODO undo -> last state
+	LED_EVENTS[MrBeamEvents.RAW_IMG_TAKING_LAST]    = "mrbeam_ledstrips_cli flash_green:1:30"
+	LED_EVENTS[MrBeamEvents.RAW_IMG_TAKING_FAIL]    = "mrbeam_ledstrips_cli flash_red:1:30"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_START]       = "mrbeam_ledstrips_cli lens_calibration" # dims interieur for better pictures
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS] = "mrbeam_ledstrips_cli flash_blue:3"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_RUNNING]     = "mrbeam_ledstrips_cli flash_green:2"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_DONE]        = "mrbeam_ledstrips_cli green"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_FAIL]        = "mrbeam_ledstrips_cli orange"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_EXIT]        = "mrbeam_ledstrips_cli ClientOpened"
+	LED_EVENTS[MrBeamEvents.BLINK_PRINT_LABELS]        = "mrbeam_ledstrips_cli upload:0:255:0" # switch to 'blink_green' in future
+
+
+
 	#Shutdown
 	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_START] = "mrbeam_ledstrips_cli ShutdownPrepare"
 	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_CANCEL] = "mrbeam_ledstrips_cli ShutdownPrepareCancel"
@@ -63,10 +77,16 @@ class LedEventListener(CommandTrigger):
 	COMMAND_LISTENING_NET =          "mrbeam_ledstrips_cli listening_net"
 	COMMAND_LISTENING_AP =           "mrbeam_ledstrips_cli listening_ap"
 
+	# LEDSTRIPS SETTINGS for adjusting brightness and maybe more some time
+	COMMAND_SET_EDGEBRIGHTNESS =     "mrbeam_ledstrips_cli set:edge_brightness:{__brightness}"
+	COMMAND_SET_INSIDEBRIGHTNESS =   "mrbeam_ledstrips_cli set:inside_brightness:{__brightness}"
+	COMMAND_SET_FPS =                "mrbeam_ledstrips_cli set:fps:{__fps}"
 
-	def __init__(self, event_bus, printer):
-		CommandTrigger.__init__(self, printer)
-		self._event_bus = event_bus
+
+	def __init__(self, plugin):
+		CommandTrigger.__init__(self, plugin._printer)
+		self._plugin = plugin
+		self._event_bus = plugin._event_bus
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.led_events")
 
 		self._watch_thread = None
@@ -75,8 +95,37 @@ class LedEventListener(CommandTrigger):
 
 		self._subscriptions = {}
 
-		self._initSubscriptions()
+		self._connections_states = []
 
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def set_brightness(self, brightness):
+		if(isinstance(brightness, int) and brightness > 0 and brightness <= 255):
+			command = self.COMMAND_SET_EDGEBRIGHTNESS.replace('{__brightness}', str(brightness))
+			commandType = "system"
+			debug = False
+			self._execute_command(command, commandType, debug)
+
+	def set_inside_brightness(self, brightness):
+		if(isinstance(brightness, int) and brightness > 0 and brightness <= 255):
+			command = self.COMMAND_SET_INSIDEBRIGHTNESS.replace('{__brightness}', str(brightness))
+			commandType = "system"
+			debug = False
+			self._execute_command(command, commandType, debug)
+
+	def set_fps(self, fps):
+		if(isinstance(fps, int) and fps >= 15 and fps <= 45):
+			command = self.COMMAND_SET_FPS.replace('{__fps}', str(fps))
+			commandType = "system"
+			debug = False
+			self._execute_command(command, commandType, debug)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._analytics_handler = self._plugin.analytics_handler
+
+		self._initSubscriptions()
+		# We need to re-play the Startup Event for the LED system....
+		self.eventCallback(Events.STARTUP)
 
 	def _initSubscriptions(self):
 		for event in self.LED_EVENTS:
@@ -87,7 +136,7 @@ class LedEventListener(CommandTrigger):
 		self.subscribe(self.LED_EVENTS.keys())
 
 
-	def eventCallback(self, event, payload):
+	def eventCallback(self, event, payload=None):
 		# really, just copied this one from OctoPrint to add my debug log line.
 		GenericEventListener.eventCallback(self, event, payload)
 
@@ -129,8 +178,8 @@ class LedEventListener(CommandTrigger):
 		           wired=None,
 		           findmrbeam=None)
 		try:
-			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("findmymrbeam")
-			if pluginInfo is not None and StrictVersion(pluginInfo.version) >= self.VERSION_MIN_FINDMRBEAM:
+			pluginInfo = self._plugin._plugin_manager.get_plugin_info("findmymrbeam")
+			if pluginInfo is not None and LooseVersion(pluginInfo.version) >= self.VERSION_MIN_FINDMRBEAM:
 				res['findmrbeam'] = pluginInfo.implementation.is_registered()
 			else:
 				# we know we can't read find state, so we must assume false
@@ -139,7 +188,7 @@ class LedEventListener(CommandTrigger):
 			self._logger.exception("Exception while reading is_registered state from findmymrbeam:")
 
 		try:
-			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("netconnectd")
+			pluginInfo = self._plugin._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is not None:
 				status = pluginInfo.implementation._get_status()
 				if 'wifi' in status["connections"]:
@@ -148,19 +197,22 @@ class LedEventListener(CommandTrigger):
 					res['ap'] = status["connections"]['ap']
 				if 'wired' in status["connections"]:
 					res['wired'] = status["connections"]['wired']
+
+				if status['connections'] not in self._connections_states:
+					self._connections_states.append(status['connections'])
+					self._analytics_handler.add_connections_state(status['connections'])
 		except Exception as e:
-			self._logger.exception("Exception while reading wifi/ap state from netconnectd:")
+			self._logger.exception("Exception while reading wifi/ap state from netconnectd: {}".format(e))
 
 		return res
 
 	def log_listening_state(self, command=None):
-		self._logger.info("LED Connectivity command: %s , state: %s, is_boot_grace_period: %s", command, self._listening_state, _mrbeam_plugin_implementation.is_boot_grace_period())
+		self._logger.info("LED Connectivity command: %s , state: %s, is_boot_grace_period: %s", command, self._listening_state, self._plugin.is_boot_grace_period())
 
 	def _get_listening_command(self):
 		command = self.LED_EVENTS[Events.STARTUP]
 		if self._listening_state is not None and \
-			(self._listening_state['findmrbeam'] is not None
-			 or not _mrbeam_plugin_implementation.is_boot_grace_period()):
+			(self._listening_state['findmrbeam'] is not None or not self._plugin.is_boot_grace_period()):
 				if self._listening_state['findmrbeam']:
 					command = self.COMMAND_LISTENING_FINDMRBEAM
 				elif self._listening_state['ap'] and (self._listening_state['wifi'] or self._listening_state['wired']):

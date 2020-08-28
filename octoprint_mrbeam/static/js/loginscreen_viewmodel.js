@@ -6,6 +6,7 @@ $(function() {
         var self = this;
 
         self.loginState = parameters[0];
+        self.users = parameters[1];
 
         self.dialogElement = undefined;
         self.loginButton = undefined;
@@ -25,6 +26,15 @@ $(function() {
                  */
                 self.setLoginState(false);
             }
+
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+            let header_elem = $('#mrb_settings_users_header').detach();
+            $('#settings_users > table').before(header_elem);
+            header_elem.show();
+
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+            self.loginState.loginUser.extend({lowercase: true});
+            self.users.editorUsername.extend({lowercase: true});
         };
 
         /**
@@ -105,7 +115,7 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push([
         LoginScreenViewModel,
-        ["loginStateViewModel"],
+        ["loginStateViewModel", "usersViewModel"],
         ["#loginscreen_dialog"]
     ]);
 });

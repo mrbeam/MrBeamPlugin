@@ -510,11 +510,15 @@ var mrbeam = mrbeam || {};
           }]);
           break;
         case "Z": // close path
-          var polyline = peek(polylines);
-          polyline.push({
-            x: polyline[0].x,
-            y: polyline[0].y
-          });
+          if(polylines.length > 0){ // more robust against d="MZ" (=> polylines=[]), sometimes crashed here.
+            var polyline = peek(polylines);
+            polyline.push({
+              x: polyline[0].x,
+              y: polyline[0].y
+            });
+		  } else {
+            console.warn('Closing path attempt while path was empty.');  
+		  }
           break;
         case "L": // line
           var polyline = peek(polylines);
@@ -690,6 +694,8 @@ var mrbeam = mrbeam || {};
 
   module.gcode = function (paths, id, mb_meta) {
     var commands = [];
+	let first_point = {};
+	let last_point = {};
 
     mb_meta = mb_meta || {};
     var meta_str = "";
@@ -697,13 +703,15 @@ var mrbeam = mrbeam || {};
         var val = mb_meta[key].replace === 'function' ? mb_meta[key].replace(" ", '_') : mb_meta[key];
         meta_str += ","+key+":"+val;
     }
-    commands.push(";_gc_nextgen_svg_id:"+id.replace(' ', "_") + meta_str);
+    let my_id = id ? id.replace(' ', "_") : 'null';
+    commands.push(";_gc_nextgen_svg_id:"+my_id + meta_str);
 
     // helper for number formatting
     var fmt = (number) => number.toFixed(2);
 
     paths.forEach(function (path) {
       var pt = path[0];
+	  first_point = first_point || pt;
 
       commands.push(`G0X${fmt(pt.x)}Y${fmt(pt.y)}`);
       commands.push(";_laseron_");
@@ -711,6 +719,7 @@ var mrbeam = mrbeam || {};
       for (let i = 1; i < path.length; i += 1) {
         pt = path[i];
         commands.push(`G1X${fmt(pt.x)}Y${fmt(pt.y)}`);
+		last_point = pt;
       }
 
       commands.push(";_laseroff_");
@@ -718,11 +727,12 @@ var mrbeam = mrbeam || {};
 
     var gcode = commands.join(" ");
 
-    return gcode;
+    return {gcode: gcode, begin: first_point, end: last_point};
   };
 
   module.clip = function (paths, clip, tolerance) {
     ClipperLib.use_lines = true;
+    const pathCountBeforeClip = paths.length;  
 
     var subj = toIntPaths(paths, tolerance);
     var clip = toIntPaths(clip, tolerance);
@@ -763,6 +773,10 @@ var mrbeam = mrbeam || {};
       clipped.push(path);
 
       polynode = polynode.GetNext();
+    }
+    const pathCountAfterClip = clipped.length;
+    if(pathCountAfterClip < pathCountBeforeClip){
+      console.info("clipped path: " + pathCountBeforeClip + " nodes => "+ pathCountAfterClip);
     }
 
     return clipped.reverse();

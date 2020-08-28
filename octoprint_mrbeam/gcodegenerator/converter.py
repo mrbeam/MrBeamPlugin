@@ -13,8 +13,11 @@ import simplestyle
 import simpletransform
 import cubicsuperpath
 
+from profiler import Profiler
 from img2gcode import ImageProcessor
 from svg_util import get_path_d, _add_ns, unittouu
+
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 from lxml import etree
 
@@ -39,19 +42,22 @@ class Converter():
 			"dithering": False,
 			"beam_diameter": 0.2,
 			"pierce_time": 0,
+			"eng_compressor": 100,
 		},
 		"vector": [],
 		"material": None,
 		"design_files": [],
-		"advanced_settings": False
+		"advanced_settings": False,
 	}
 
 	_tempfile = "/tmp/_converter_output.tmp"
 
 	def __init__(self, params, model_path, workingAreaWidth = None, workingAreaHeight = None, min_required_disk_space=0):
-		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
+		self._log = mrb_logger("octoprint.plugins.mrbeam.converter")
 		self.workingAreaWidth = workingAreaWidth
 		self.workingAreaHeight = workingAreaHeight
+		self.optimize_path_order = True
+		self.optimize_max_paths = 500
 
 		# debugging
 		self.transform_matrix = {}
@@ -59,6 +65,7 @@ class Converter():
 		self.orientation_points = {}
 
 		self.colorParams = {}
+		self.colorOrder = []
 		self.gc_options = None
 		self.options = self.defaults
 		self.setoptions(params)
@@ -67,7 +74,7 @@ class Converter():
 		self._min_required_disk_space = min_required_disk_space
 		self._log.info('Converter Initialized: %s', self.options)
 		# todo need material,bounding_box_area here
-		_mrbeam_plugin_implementation._analytics_handler.store_conversion_details(self.options)
+		self._add_conversion_details_analytics()
 
 	def setoptions(self, opts):
 		# set default values if option is missing
@@ -77,9 +84,47 @@ class Converter():
 				self.options[key] = opts[key]
 				if key == "vector":
 					for paramSet in opts['vector']:
+						self.colorOrder.append(paramSet['color'])
 						self.colorParams[paramSet['color']] = paramSet
 			else:
 				self._log.info("Using default %s = %s" %(key, str(self.options[key])))
+
+	@staticmethod
+	def _calculate_mpr_value(intensity, speed, passes=1):
+		if intensity and speed and passes:
+			mpr = round(float(intensity) / float(speed) * int(passes), 2)
+		else:
+			mpr = None
+
+		return mpr
+
+	def _add_conversion_details_analytics(self):
+		if 'material' in self.options:
+			_mrbeam_plugin_implementation.analytics_handler.add_material_details(self.options['material'])
+
+		if 'engrave' in self.options and self.options['engrave'] and 'raster' in self.options:
+			eng_settings = self.options['raster']
+			additional_data = {
+				'svgDPI': self.options['svgDPI'],
+				'mpr_black': self._calculate_mpr_value(eng_settings.get('intensity_black'), eng_settings.get('speed_black')),
+				'mpr_white': self._calculate_mpr_value(eng_settings.get('intensity_white'), eng_settings.get('speed_white')),
+			}
+			eng_settings.update(additional_data)
+			_mrbeam_plugin_implementation.analytics_handler.add_engraving_parameters(eng_settings)
+
+		if 'vector' in self.options and self.options['vector']:
+			for cut_settings in self.options['vector']:
+				additional_data = {
+					'svgDPI': self.options['svgDPI'],
+					'mpr': self._calculate_mpr_value(cut_settings.get('intensity'), cut_settings.get('feedrate'), cut_settings.get('passes')),
+				}
+				cut_settings.update(additional_data)
+				_mrbeam_plugin_implementation.analytics_handler.add_cutting_parameters(cut_settings)
+
+		if 'design_files' in self.options and self.options['design_files']:
+			for design_file in self.options['design_files']:
+				_mrbeam_plugin_implementation.analytics_handler.add_design_file_details(design_file)
+
 
 	def init_output_file(self):
 		# remove old file if exists.
@@ -94,10 +139,10 @@ class Converter():
 		# calculation of disk usage
 		totalBytes = disk.f_bsize * disk.f_blocks # disk size in bytes
 		totalUsedSpace = disk.f_bsize * (disk.f_blocks - disk.f_bfree) # used bytes
-		totalAvailSpace = float(disk.f_bsize * disk.f_bfree) # 
+		totalAvailSpace = float(disk.f_bsize * disk.f_bfree) #
 		totalAvailSpaceNonRoot = float(disk.f_bsize * disk.f_bavail)
 		self._log.info(
-			"Disk space: total: " + self._get_human_readable_bytes(totalBytes) 
+			"Disk space: total: " + self._get_human_readable_bytes(totalBytes)
 			+ ", used: " + self._get_human_readable_bytes(totalUsedSpace)
 			+ ", available: " + self._get_human_readable_bytes(totalAvailSpace)
 			+ ", available for non-super user: " + self._get_human_readable_bytes(totalAvailSpaceNonRoot)
@@ -106,7 +151,7 @@ class Converter():
 		if(self._min_required_disk_space > 0 and totalAvailSpaceNonRoot < self._min_required_disk_space):
 			msg ="Only " + self._get_human_readable_bytes(totalAvailSpaceNonRoot) + " disk space available. Min required: " + self._get_human_readable_bytes(self._min_required_disk_space)
 			raise OutOfSpaceException(msg)
-		
+
 	def _get_human_readable_bytes(self, amount):
 		str = "%d Bytes" % amount
 		if(amount > 1024 and amount <= 1024*1024): # kB
@@ -118,24 +163,29 @@ class Converter():
 		return str
 
 	def convert(self, is_job_cancelled, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
-
-		#TODO check if job cancelled by calling is_job_cancelled()
+		profiler = Profiler('convert')
+		profiler.start('s1_start')
 		self.init_output_file()
 		self.check_free_space() # has to be after init_output_file (which removes old temp files occasionally)
-		
+
+		profiler.stop('s1_start').start('s2_parse')
 		self.parse()
+		is_job_cancelled() # check after parsing svg xml.
+		profiler.stop('s2_parse').start('s3_matrix')
+
 		options = self.options
 		options['doc_root'] = self.document.getroot()
 
 		# Get all Gcodetools data from the scene.
 		self.calculate_conversion_matrix()
+		profiler.stop('s3_matrix').start('s4_paths')
 		self.collect_paths()
+		profiler.stop('s4_paths').start('preparing_progress')
 
-		for p in self.paths :
-			#print "path", etree.tostring(p)
-			pass
 
 		def report_progress(on_progress, on_progress_args, on_progress_kwargs, done, total):
+			is_job_cancelled() # frequent checks between each path / image
+			#self._log.info("#### calling is_job_cancelled @ %i / %i" % (done, total))
 			if(total == 0):
 				total = 1
 
@@ -161,6 +211,7 @@ class Converter():
 
 		processedItemCount = 0
 		report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
+		profiler.stop('preparing_progress').start('write_gco_header')
 
 		with open(self._tempfile, 'a') as fh:
 			# write comments to gcode
@@ -173,6 +224,7 @@ class Converter():
 			fh.write(self._get_gcode_header())
 
 			# images
+			profiler.stop('write_gco_header').start('s5_images')
 			self._log.info( 'Raster conversion: %s' % self.options['engrave'])
 			for layer in self.layers :
 				if layer in self.images and self.options['engrave']:
@@ -214,9 +266,9 @@ class Converter():
 						ip = ImageProcessor(output_filehandle = fh,
 											workingAreaWidth = self.workingAreaWidth,
 											workingAreaHeight = self.workingAreaHeight,
-						                    contrast = rasterParams['contrast'],
-						                    sharpening = rasterParams['sharpening'],
 						                    beam_diameter = rasterParams['beam_diameter'],
+						                    backlash_x = _mrbeam_plugin_implementation._settings.get(["machine", "backlash_compensation_x"]),
+						                    overshoot_distance = 1,
 											intensity_black = rasterParams['intensity_black'],
 											intensity_white = rasterParams['intensity_white'],
 											intensity_black_user = rasterParams['intensity_black_user'],
@@ -226,6 +278,7 @@ class Converter():
 											dithering = rasterParams['dithering'],
 											pierce_time = rasterParams['pierce_time'],
 											engraving_mode = rasterParams['engraving_mode'],
+											eng_compressor = rasterParams['eng_compressor'],
 											material = self.options['material'])
 											# material = rasterParams['material'] if 'material' in rasterParams else None)
 						data = imgNode.get('href')
@@ -239,11 +292,14 @@ class Converter():
 						else:
 							self._log.error("Unable to parse img data", data)
 
+						profiler.nest_data(ip.get_profiler())
+
 						processedItemCount += 1
 						report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 					else:
 						self._log.info("postponing non-image layer %s" % ( layer.get('id') ))
 
+			profiler.stop('s5_images').start('s6_vectors')
 
 			# paths
 			self._log.info( 'Vector conversion: %s paths' % len(self.paths))
@@ -252,20 +308,9 @@ class Converter():
 				if layer in self.paths :
 					paths_by_color = dict()
 					for path in self.paths[layer] :
-						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class'), path.get(_add_ns('gc', 'mb'))[:100] ))
-
-#						if path.get('stroke') is not None: #todo catch None stroke/fill earlier
-#							stroke = path.get('stroke')
-#						elif path.get('fill') is not None:
-#							stroke = path.get('fill')
-#						elif path.get('class') is not None:
-#							stroke = path.get('class')
-#						else:
-#							stroke = 'default'
-							#continue
+						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id', None), path.get('id', None), path.get('stroke', None), path.get('class', None), path.get(_add_ns('gc', 'mb'), '')[:100]))
 
 						strokeInfo = self._get_stroke(path)
-						#print('strokeInfo:', strokeInfo)
 						if(strokeInfo['visible'] == False):
 							continue
 
@@ -281,50 +326,102 @@ class Converter():
 							processedItemCount += 1
 							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
-#					curvesD = dict() #diction
-#					for colorKey in paths_by_color.keys():
-#						if colorKey == 'none':
-#							continue
+					layerId = layer.get('id', '?')
+					pathId = path.get('id', '?')
 
-#						curvesD[colorKey] = self._parse_curve(paths_by_color[colorKey], layer)
-
-					#pierce_time = self.options['pierce_time']
-					layerId = layer.get('id') or '?'
-					pathId = path.get('id') or '?'
+					# path_sorting: set initial laser pos, assuming pleasant left to right, bottom to top processing order
+					current_x = 0
+					current_y = 0
 
 					#for each color generate GCode
-					#for colorKey in curvesD.keys():
-					for colorKey in paths_by_color.keys():
+					for colorKey in self.colorOrder:
 						if colorKey == 'none':
 							continue
-							
-						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
+
+						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0, 'cut_compressor': 100})
 						if(settings['feedrate'] == None or settings['feedrate'] == -1 or settings['intensity'] == None or settings['intensity'] <= 0):
 							self._log.info( "convert() skipping color %s, no valid settings %s." % (colorKey, settings))
 							continue
 
-						for path in paths_by_color[colorKey]:
-							#print('p', path)
+						if(not colorKey in paths_by_color):
+							self._log.info( "convert() skipping color %s, no paths with this color (clipped? path in <defs>?. " % (colorKey))
+							continue
+
+						# gcode_before_job
+						fh.write(machine_settings.gcode_before_job(color=colorKey, compressor=settings.get('cut_compressor', '100')))
+
+						self._log.info( "convert() path sorting active: %s, path size %i below maximum %i." % (self.optimize_path_order, len(paths_by_color[colorKey]), self.optimize_max_paths))
+						# if this O(n^2) algorithm blows performance, limit inner loop to just search within the first 100 items.
+						while len(paths_by_color[colorKey]) > 0:
+							path_sorting = self.optimize_path_order and (len(paths_by_color[colorKey]) < self.optimize_max_paths)
+							# pick closest starting point to (current_x, current_y)
+							closestPath = None
+							if(path_sorting):
+								dist = float('inf')
+								for p in paths_by_color[colorKey]:
+									start_x = p.get(_add_ns('start_x', 'mb'), None)
+									start_y = p.get(_add_ns('start_y', 'mb'), None)
+
+									if(start_x != None and start_y != None):
+										d = pow(float(start_x) - current_x, 2) + pow(float(start_y) - current_y, 2)
+										if(d < dist):
+											dist = d
+											closestPath = p
+
+							path = None
+							if(closestPath != None):
+								path = closestPath
+							else:
+								path = paths_by_color[colorKey][0]
+
+							# process next / closest path...
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
 							if(mbgc != None):
-								curveGCode = self._use_embedded_gcode(mbgc, colorKey, settings)
+								curveGCode = self._use_embedded_gcode(mbgc)
 							else:
 								d = path.get('d')
 								csp = cubicsuperpath.parsePath(d)
 								csp = self._apply_transforms(path, csp)
 								curve = self._parse_curve(csp, layer)
-								curveGCode = self._generate_gcode(curve, settings, colorKey)
+								curveGCode = self._generate_gcode(curve)
 
 
 							fh.write("; Layer:" + layerId + ", outline of:" + pathId + ", stroke:" + colorKey +', '+str(settings)+"\n")
-							for p in range(0, int(settings['passes'])):
+							ity = settings['intensity']
+							pt = settings['pierce_time']
+							fr = int(settings['feedrate'])
+							passes = int(settings['passes'])
+							for p in range(0, passes):
+								if settings.get('progressive', False):
+									f = round(fr * (1 - 0.5 * p/(passes - 1)))
+								else:
+									f = fr
 								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
-								fh.write(curveGCode)
+								# TODO tbd DreamCut different for each pass?
+								gc = self._replace_params_gcode(curveGCode, colorKey, f, ity, pt)
+								fh.write(gc)
 
+							# set current position after processing the path
+							end_x = path.get(_add_ns('end_x', 'mb'), None)
+							end_y = path.get(_add_ns('end_y', 'mb'), None)
+							if(end_x != None and end_y != None):
+								current_x = float(end_x)
+								current_y = float(end_y)
+
+							# finally removed processed path
+							paths_by_color[colorKey].remove(path)
+
+						# TODO check if _after_job should be one(two?) levels less indented
+						# gcode_after_job
+						fh.write(machine_settings.gcode_after_job(color=colorKey))
 			fh.write(self._get_gcode_footer())
 
+		profiler.stop('s6_vectors').start('s7_export')
 		self.export_gcode()
+		profiler.stop('s7_export')
+		summary = profiler.finalize().getShortSummary()
+		self._log.info("conversion finished. Timing: %s", summary)
 
 
 	def collect_paths(self):
@@ -365,6 +462,7 @@ class Converter():
 						or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
 						or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
 
+						# TODO not necessary if path has embedded gcode
 						i.set("d", get_path_d(i))
 						self._handle_node(i, layer)
 
@@ -650,8 +748,8 @@ class Converter():
 ###		Curve definition [start point, type = {'arc','line','move','end'}, arc center, arc angle, end point, [zstart, zend]]
 ###
 ################################################################################
-	def _generate_gcode(self, curve, settings, color='#000000'):
-		self._log.info( "_generate_gcode()")
+	def _generate_gcode(self, curve):
+		self._log.warn( "_generate_gcode() - deprecated")
 
 		def c(c):
 			# returns gcode for coordinates/parameters
@@ -670,28 +768,23 @@ class Converter():
 		g = ""
 
 		lg = 'G00'
-		f = "F%s;%s" % (settings['feedrate'], color)
 		for i in range(1, len(curve)):
 			#	Creating Gcode for curve between s=curve[i-1] and si=curve[i] start at s[0] end at s[4]=si[0]
 			s = curve[i - 1]
 			si = curve[i]
-			feed = f if lg not in ['G01', 'G02', 'G03'] else ''
 			if s[1] == 'move':
-				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
-				pt = int(settings['pierce_time'])
-				if pt > 0:
-					g += "G4P%.3f\n" % (round(pt / 1000.0, 4))
+				g += "G0" + c(si[0]) + "\n" + self.PLACEHOLDER_LASER_ON + "\n"
 				lg = 'G00'
 			elif s[1] == 'end':
-				g += machine_settings.gcode_after_path() + "\n"
+				g += self.PLACEHOLDER_LASER_OFF + "\n"
 				lg = 'G00'
 			elif s[1] == 'line':
-				if lg == "G00": g += "G01 " + feed + "\n"
+				if lg == "G00": g += self.PLACEHOLDER_LASER_ON + "\n"
 				g += "G01 " + c(si[0]) + "\n"
 				lg = 'G01'
 			elif s[1] == 'arc':
 				r = [(s[2][0] - s[0][0]), (s[2][1] - s[0][1])]
-				if lg == "G00": g += "G01" + feed + "\n"
+				if lg == "G00": g += self.PLACEHOLDER_LASER_ON + "\n"
 				if (r[0] ** 2 + r[1] ** 2) > .1:
 					r1, r2 = (Point(s[0]) - Point(s[2])), (Point(si[0]) - Point(s[2]))
 					if abs(r1.mag() - r2.mag()) < 0.001:
@@ -702,24 +795,26 @@ class Converter():
 						g += ("G02" if s[3] < 0 else "G03") + c(si[0]) + " R%f" % (r) + "\n"
 					lg = 'G02'
 				else:
-					g += "G01" + c(si[0]) + feed + "\n"
+					g += "G01" + c(si[0]) + "\n"
 					lg = 'G01'
 		if si[1] == 'end':
-			g += machine_settings.gcode_after_path() + "\n"
+			g += self.PLACEHOLDER_LASER_OFF + "\n"
 		return g
 
-	def _use_embedded_gcode(self, gcode, color, settings) :
+	def _use_embedded_gcode(self, gcode) :
 		self._log.debug( "_use_embedded_gcode() %s", gcode[:100])
-		gcode = gcode.replace(' ', "\n")
-		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
-		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
+		return gcode.replace(' ', "\n")
+
+	def _replace_params_gcode(self, gcode, color, feedrate, intensity, pierce_time) :
+		self._log.debug( "_replace_params_gcode() %i %s", len(gcode), gcode[:100])
+		feedrateCode = "F%s;%s\n" % (feedrate, color)
+		intensityCode = machine_settings.gcode_before_path_color(color, intensity) + "\n"
 		piercetimeCode = ''
-		pt = int(settings['pierce_time'])
+		pt = int(pierce_time)
 		if pt > 0:
 			piercetimeCode = "G4P%.3f\n" % (round(pt / 1000.0, 4))
 		gcode = gcode.replace(self.PLACEHOLDER_LASER_ON, feedrateCode + intensityCode + piercetimeCode) + "\n"
 		gcode = gcode.replace(self.PLACEHOLDER_LASER_OFF, machine_settings.gcode_after_path()) + "\n"
-
 		return gcode
 
 
@@ -731,14 +826,20 @@ class Converter():
 		self._log.info( "wrote file: %s" % destination)
 
 	def _get_gcode_header(self):
+
 		if(self.options['noheaders']):
-			return ""
+			return machine_settings.cooling_fan_speedup_gcode
 		else:
-			return machine_settings.gcode_header + "G21\n\n"
+			return machine_settings.gcode_header + "G21\n\n" + cooling_fan_speedup_gcode + "\n"
 
 	def _get_gcode_footer(self):
 		if(self.options['noheaders']):
-			return "M05\n"
+			gcode = []
+			gcode.append("; end of job")
+			gcode.append("M05")
+			if _mrbeam_plugin_implementation.compressor_handler.has_compressor():
+				gcode.append("M100P0 ; mrbeam_compressor off")
+			return "\n".join(gcode)
 		else:
 			return machine_settings.gcode_footer
 

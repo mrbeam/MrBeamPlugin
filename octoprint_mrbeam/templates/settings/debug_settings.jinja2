@@ -1,42 +1,69 @@
 <div id="settings_mrbeam_debug">
-    <h3>{{ _('Debug') }}</h3>
 
-    <form class="form-horizontal">
-        <div class="control-group">
-{#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal">
-                    <strong>Enable terminal</strong>
-                    <div>Requires full page reload: <strong>Shift + F5</strong> (Windows and Linux) or <strong>Ctrl + Shift + r</strong> (Mac)</div>
-                </label>
+    <div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
+
+        <h3>{{ _('Debug') }}</h3>
+
+        <form class="form-horizontal" onkeydown="return event.key != 'Enter';">
+
+            <h5>{{ _("Camera Marker Recognition") }}</h5>
+            <div class="control-group">
+                <label class="control-label" for="settings_mrbeam_debug-marker-recognition-min-pixel">{{ _('Min requried pixel') }}</label>
+                <div class="controls">
+                    <input id="settings_mrbeam_debug-marker-recognition-min-pixel" type="number" min="200" max="1000" class="input-block-level" style="max-width: 6em;" data-bind="value: settings.plugins.mrbeam.cam.markerRecognitionMinPixel">
+                    <br />
+                    <div><strong>{{ _('Default value: 350 pixel') }}</strong></div>
+                    <div>{{ _('Lower this value if the camera can not recognize the pink markers within the working area. If set too low, the system might recognize other objects of similar color instead of the circles which will result in very poor preview precision.') }}</div>
+                </div>
             </div>
-        </div>
 
-        <div class="control-group">
-{#            <label class="control-label" for="settings-debug-vorlon">{{ _('Enable Vorlon') }}</label>#}
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.vorlon">
-                    <strong>Enable Vorlon</strong>
-                    <div>Requires full page reload: <strong>Shift + F5</strong> (Windows and Linux) or <strong>Ctrl + Shift + r</strong> (Mac)</div>
-                    <div>Experimental Debug Service. Enable only if Mr Beam support team asked you to do so. If enabled it'll send a huge amount of browser debugging data to a Mr Beam server over an unsecured connection. Disables automatically after 6 hours.</div>
-                </label>
+
+            <h5>{{ _("Working Area") }}</h5>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.gcode_nextgen.clip_working_area">
+                        <strong>{{ _('Enable Clipping') }}</strong>
+                        <div>{{ _('Only disable if you\'re experiencing problems.') }}</div>
+                        <div>{{ _('Designs exceeding the working area are clipped if enabled. When disabled you might experience \'machine limit hit\' errors during laserjobs. Since we had some bugs with the clipping algorithm in the past, here is an option to disable it completely.') }}</div>
+                    </label>
+                </div>
             </div>
-        </div>
 
-        <div class="control-group">
-{#            <label class="control-label" for="settings-debug-vorlon">{{ _('Disable Clipping') }}</label>#}
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.gcode_nextgen.clip_working_area">
-                    <strong>Enable Clipping</strong>
-                    <div>Only disable if you're experiencing problems.</div>
-                    <div>Designs exceeding the working area are clipped if enabled. When disabled you might experience 'machine limit hit' errors during laserjobs. Since we had some bugs with the clipping algorithm in the past, here is an option to disable it completely.</div>
-                </label>
+            <h5>{{ _('Terminal') }}</h5>
+
+            <div class="control-group">
+    {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal">
+                        <strong>{{ _('Enable terminal') }}</strong>
+                        <div>{{ _('Requires full page reload: <strong>Shift + F5</strong> (Windows and Linux) or <strong>Ctrl + Shift + r</strong> (Mac)') }}</div>
+                    </label>
+                </div>
             </div>
-        </div>
 
-    </form>
+            <div class="control-group">
+    {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums">
+                        <strong>{{ _('Show checksums') }}</strong>
+                        <div>{{ _('Show gcode command checksums in terminal. Takes effect immediately.') }}</div>
+                    </label>
+                </div>
+            </div>
+
+
+        <h5>{{ _('Device State') }}</h5>
+            <div class="control-group">
+                <div class="controls">
+                    <textarea id="settings_mrbeam_debug_state" readonly style="width: 550px; height: 650px; margin: 0 0 10px 25px;"></textarea>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
 
 </div>

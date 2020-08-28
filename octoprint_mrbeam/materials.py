@@ -1,4 +1,3 @@
-
 import os
 import yaml
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -87,20 +86,26 @@ class Materials(object):
 		return res
 
 
+	def reset_all_custom_materials(self):
+		self._logger.info("Resetting all custom material settings!!!!")
+		self.custom_materials = {}
+		self._save(force=True)
+
+
 	def _load(self, force=False):
 		if not self.custom_materials_loaded or force:
 				try:
 					if os.path.isfile(self.custom_materials_file):
 						with open(self.custom_materials_file) as yaml_file:
 							tmp = yaml.safe_load(yaml_file)
-							self.custom_materials = tmp['custom_materials']
+							self.custom_materials = tmp['custom_materials'] if tmp and 'custom_materials' in tmp else dict()
 						self._logger.debug("Loaded %s custom materials from file %s", len(self.custom_materials), self.custom_materials_file)
 					else:
 						self.custom_materials = dict()
 						self._logger.debug("No custom materials yet. File %s does not exist.", self.custom_materials_file)
 					self.custom_materials_loaded = True
-				except:
-					self._logger.exception("Exception while loading custom materials from file %s", self.custom_materials_file)
+				except Exception as e:
+					self._logger.exception("Exception while loading custom materials from file {}".format(self.custom_materials_file))
 					self.custom_materials = dict()
 					self.custom_materials_loaded = False
 		return self.custom_materials

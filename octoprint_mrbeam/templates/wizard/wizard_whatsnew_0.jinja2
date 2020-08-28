@@ -1,25 +1,9 @@
+<h3>{{ _("Improved Camera") }}</h3>
 
-{% if language == 'de' %}
+<div class="wizard-content">
+    <p><strong>{{ _('The camera is much more reliable now!') }}</strong></p>
+    <p>{{ _('You will feel an improvement specially when using dark materials or with difficult light conditions, thanks to the self-adjusting shutter speed. ') }}</p>
+    <p>{{ _('Check the status of your camera in the new camera settings panel:') }}</p>
+    <img class="wizard-big-img wizard-shadowed-img" src="/plugin/mrbeam/static/img/whatsnew_dialog/camera_status.png">
+</div>
 
-    <script>var wizard_plugin_corewizard_whatsnew_0_title_de = "Was gibt's Neues";</script>
-    <h3>{{ _("Was gibt's Neues") }}</h3>
-    <p>
-        Willkommen bei der neuesten Verision der Mr Beam II Software<br/>
-        und danke, dass du deinen Mr Beam II up to date hälst.
-    </p>
-    <p>
-        Wir geben dir hier eine kurze Übersicht über die neuesten Features und Verbesserungen in dieser Version...
-    </p>
-
-{% else %}
-
-    <h3>{{ _("What's New") }}</h3>
-    <p>
-        Welcome to the latest version of the Mr Beam II software<br/>
-        and thank you for keeping your Mr Beam II up to date.
-    </p>
-    <p>
-        Let us give you a short overview of the new features and improvements of this version...
-    </p>
-
-{% endif %}

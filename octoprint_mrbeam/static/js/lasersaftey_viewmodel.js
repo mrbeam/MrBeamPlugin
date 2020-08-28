@@ -3,7 +3,8 @@ $(function() {
         var self = this;
 
         self.loginStateViewModel = parameters[0];
-
+        self.analytics = parameters[1];
+        self.wizard = parameters[2];
 
         self.checkbox1 = ko.observable(false);
         self.checkbox2 = ko.observable(false);
@@ -30,6 +31,8 @@ $(function() {
         self.agree = function() {
             var result = self._handleExit();
             if (result) {
+                let dialog = 'stand_alone';
+                self._sendLaserSafetyAnalytics(dialog);
                 self.hideDialog();
             }
 		};
@@ -39,13 +42,25 @@ $(function() {
             $('#wizard_dialog .modal-body').addClass('scrollable');
         };
 
-		// for wizard version
         self.onBeforeWizardTabChange = function(next, current) {
-            if (current && _.startsWith(current, "wizard_plugin_corewizard_lasersafety")) {
-                var result = self._handleExit();
-                return result;
+            // If the user goes from Laser Safety to the previous page, we don't check the input data
+            if (current && current === self.wizard.LASER_SAFETY_TAB) {
+                let letContinue = true;
+                if (self.wizard.isGoingToPreviousTab(current, next)) {
+                    // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                    $('#' + current).attr('class', 'wizard-nav-list-past');
+                } else {
+                    letContinue = self._handleExit();
+                    if (letContinue) {
+                        let dialog = 'welcome_wizard';
+                        self._sendLaserSafetyAnalytics(dialog);
+
+                        // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                        $('#' + current).attr('class', 'wizard-nav-list-past');
+                    }
+                }
+                return letContinue;
             }
-            return true;
         };
 
         self.onUserLoggedIn = function(currentUser){
@@ -103,6 +118,7 @@ $(function() {
 
         self.showDialog = function() {
             if (!$('#lasersafety_overlay').hasClass('in')) {
+                // KS
                 $('#lasersafety_overlay').modal("show");
             }
         }
@@ -135,6 +151,9 @@ $(function() {
                         title: gettext("You need to agree to all points"),
                         message: gettext("Please read the entire document and indicate that you understood and agree by checking all checkboxes.")
                     });
+
+                    $('#wizard_plugin_corewizard_lasersafety > ul > .wizard_safety_agreement')[0].scrollIntoView(true);
+
                     return false;
                 }
         };
@@ -150,11 +169,20 @@ $(function() {
                     });
                 });
         };
+
+        self._sendLaserSafetyAnalytics = function(dialog) {
+            let event = 'laser_safety';
+            let payload = {
+                dialog: dialog,
+                show_again: self.showAgain(),
+            };
+            self.analytics.send_fontend_event(event, payload);
+        }
     }
 
     OCTOPRINT_VIEWMODELS.push([
         LaserSafetyViewModel,
-        ["loginStateViewModel"],
+        ["loginStateViewModel", "analyticsViewModel", "wizardWhatsnewViewModel"],
         ["#wizard_plugin_corewizard_lasersafety", "#lasersafety_overlay"]
     ]);
 });

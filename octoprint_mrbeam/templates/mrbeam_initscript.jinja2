@@ -3,11 +3,20 @@
     var BEAMOS_BRANCH = "{{ beamosVersionBranch }}";
     var BEAMOS_DISPLAY_VERSION = "{{ beamosVersionDisplayVersion }}";
     var BEAMOS_IMAGE = "{{ beamosVersionImage }}";
-    var MRBEAM_DISPLAY_NAME = "{{ displayName }}";
+    var MRBEAM_PRODUCT_NAME = "{{ product_name }}";
     var MRBEAM_HOSTNAME = "{{ hostname }}";
     var MRBEAM_SERIAL = "{{ serial }}";
+    var MRBEAM_MODEL = "{{ model }}";
+    var MRBEAM_ENV = "{{ env }}";
     var MRBEAM_ENV_LOCAL = "{{ env_local }}";
+    var MRBEAM_ENV_SUPPORT_MODE = {{ 'true' if env_support_mode else 'false' }};
     var MRBEAM_LANGUAGE = "{{ language }}";
+    var MRBEAM_SW_TIER = "{{ software_tier }}";
+    var MRBEAM_WIZARD_TO_SHOW = "{{ wizard_to_show }}";
+    var MRBEAM_LASER_HEAD_SERIAL = "{{ laserhead_serial }}";
+    var MRBEAM_GRBL_VERSION = "{{ grbl_version }}";
+    var INIT_TS_MS = "{{ init_ts_ms }}";
+    var INITIAL_CALIBRATION = false;
 
     window.mrbeam = {};
 </script>

@@ -7,7 +7,20 @@
 $(function() {
     function LaserJobDoneViewmodel(parameters) {
         var self = this;
-        self.settings = parameters[0];
+        window.mrbeam.viewModels['laserJobDoneViewmodel'] = self;
+        self.files = parameters[0].gcodefiles;
+        self.readyToLaser = parameters[1];
+        self.analytics = parameters[2];
+
+        self._switchDelay = 3000;
+
+        self.jobDoneDialog = {
+            shown: null,
+            closed: null,
+            dur: null
+        };
+		self.lastJob = null;
+
         self.is_job_done = ko.observable(false);
         self.is_dust_mode = ko.observable(false);
         self.job_duration = ko.observable(0);
@@ -27,10 +40,6 @@ $(function() {
 		});
 
         self.onStartupComplete = function(){
-            self.mapOptionEnabled = function () {
-                return MRBEAM_ENV_LOCAL === "DEV";
-            };
-
             self.dialogElement = $('#laser_job_done_dialog');
             self.dialogElement.on('hidden', function (e) {
                 self.is_job_done(false);
@@ -45,9 +54,17 @@ $(function() {
 
         self.onEventPrintDone = function (payload) {
             self.is_job_done(true);
-            if (payload && 'time' in payload && $.isNumeric(payload['time'])) {
+            self.lastJob = payload;
+			if (payload && 'time' in payload && $.isNumeric(payload['time'])) {
                 self.job_duration(payload['time']);
             }
+            self._fromData(payload);
+            self.dialogElement.modal("show");
+            self.switchTimer();
+            self.jobDoneDialog.shown = payload['ts'] || new Date().getTime();
+        };
+
+        self.onEventPrintDonePayload = function(payload) {
             self._fromData(payload);
             self.dialogElement.modal("show");
         };
@@ -58,7 +75,6 @@ $(function() {
 
         self.onEventLaserJobDone = function(payload) {
             self._fromData(payload);
-            self.dialogElement.modal("show");
         };
 
         self.fromCurrentData = function(payload) {
@@ -73,40 +89,39 @@ $(function() {
             if (mrb_state) {
                 self.is_dust_mode(mrb_state['dusting_mode']);
             }
-        }
+        };
+
+        self.switchTimer = function(delay){
+            setTimeout(self._switchNow, delay || self._switchDelay);
+        };
+
+        self._switchNow = function(){
+            $('#laser_job_done_image_check').removeClass('show');
+            $('#laser_job_done_image_text').addClass('show');
+        };
+
+        self._switchBack = function(){
+            $('#laser_job_done_image_check').addClass('show');
+            $('#laser_job_done_image_text').removeClass('show');
+        };
+
+		self.repeat_job = function(){
+			if(self.lastJob !== null){
+				self.cancel_btn();
+				self.files.startGcodeWithSafetyWarning(self.lastJob);
+				self.analytics.send_fontend_event('repeat_job', {})
+			} else {
+				console.error("Repeat job clicked, but self.lastJob is null.");
+			}
+		};
 
         self.cancel_btn = function(){
             self.is_job_done(false);
             self.dialogElement.modal("hide");
-            if (self.mapOptionEnabled()) {
-                // Let modal as it was
-                let mapContainer = $("#mrbeams_map_container");
-                let doneDialog = $('#laser_job_done_dialog');
-
-                mapContainer.empty();
-                mapContainer.hide();
-                doneDialog.removeClass('job-map-modal');
-                $('#job_done_info').show();
-                $('#share_job_and_location_btn').show();
-            }
-        };
-
-        self.map_btn = function(){
-            if (self.mapOptionEnabled()) {
-                let duration = Math.floor(self.job_duration());
-                let url_store_and_load_map = "https://europe-west1-mrb-jobmap.cloudfunctions.net/generate_map?duration=" + duration + "&ts=" + Date.now();
-                console.log(url_store_and_load_map);
-
-                // Add map to modal
-                let mapContainer = $("#mrbeams_map_container");
-                let doneDialog = $('#laser_job_done_dialog');
-
-                mapContainer.append('<iframe src="'+ url_store_and_load_map +'" width="900" height="500" frameborder="0" allowfullscreen=""></iframe>');
-                mapContainer.show();
-                doneDialog.addClass('job-map-modal');
-                $('#job_done_info').hide();
-                $('#share_job_and_location_btn').hide();
-            }
+            self._switchBack();
+            self.jobDoneDialog.closed = new Date().getTime();
+            self.jobDoneDialog.dur = Math.floor(self.jobDoneDialog.closed/1000 - self.jobDoneDialog.shown/1000);
+            self.analytics.send_fontend_event('job_done_dialog', self.jobDoneDialog)
         };
     }
 
@@ -114,7 +129,7 @@ $(function() {
     OCTOPRINT_VIEWMODELS.push([
         LaserJobDoneViewmodel,
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ "settingsViewModel"/* "loginStateViewModel", "settingsViewModel" */ ],
+        [ "motherViewModel", "readyToLaserViewModel", "analyticsViewModel"],
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ '#laser_job_done_dialog']
     ]);

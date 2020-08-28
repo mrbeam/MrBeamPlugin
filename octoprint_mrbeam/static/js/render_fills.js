@@ -106,7 +106,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			canvas.remove();
 			if(typeof callback === 'function'){
 				callback(elem.attr('id'));
-				console.log('embedded img');
+				console.log('embedded img ('+ canvas.width +'*' + canvas.height+' px, dataurl: '+getDataUriSize(dataUrl)+' )');
 			}
 		};
 
@@ -114,10 +114,41 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	};
 
-	Element.prototype.renderPNG = function (wMM, hMM, pxPerMM, callback) {
+	Element.prototype.renderPNG = function (wPT, hPT, wMM, hMM, pxPerMM, renderBBoxMM=null, callback=null) {
 		var elem = this;
+		//console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
+		console.info("renderPNG: SVG " + wPT + '*' + hPT +" (pt) with viewBox " + wMM + '*' + hMM + ' (mm), rendering @ ' + pxPerMM + ' px/mm, cropping to bbox (mm): ', renderBBoxMM);
 
-		// get svg as dataUrl
+		let bboxFromElem = elem.getBBox();
+
+		let bbox; // attention, this bbox uses viewBox coordinates (mm)
+		if(renderBBoxMM === null){
+			// warning: correct result depends upon all resources (img, fonts, ...) have to be fully loaded already.
+			bbox = elem.getBBox();
+			console.log("renderPNG(): fetched render bbox from element: ", bbox);
+		} else {
+			bbox = renderBBoxMM;
+			console.log("renderPNG(): got render bbox from caller: ", bbox, "(elem bbox is ", bboxFromElem, ")");
+		}
+
+        // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
+        const enlargement_x = 0.4; // percentage of the width added to each side
+		const enlargement_y = 0.4; // percentage of the height added to each side
+		const x1 = Math.max(0, bbox.x - bbox.width * enlargement_x);
+		const x2 = Math.min(wMM, bbox.x2 + bbox.width * enlargement_x);
+		const w = x2 - x1;
+		const y1 = Math.max(0, bbox.y - bbox.height * enlargement_y);
+		const y2 = Math.min(wMM, bbox.y2 + bbox.height * enlargement_y);
+		const h = y2 - y1;
+		bbox.x = x1;
+        bbox.y = y1;
+        bbox.w = w;
+        bbox.h = h;
+		
+
+		console.info("enlarged renderBBox (in mm): " + bbox.w +'*'+bbox.h + " @ " + bbox.x + ',' + bbox.y);
+
+		// get svg as dataUrl TODO: check snap's .toDataURL() function instead of a homebrew one.
 		var svgStr = elem.outerSVG();
         // on iOS (Safari and Chrome) embedded images are linked with NS1:href which doesn't work later on...
         svgStr = svgStr.replace(/NS1:href=/gi, 'xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href=');
@@ -126,31 +157,49 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		// init render canvas and attach to page
 		var renderCanvas = document.createElement('canvas');
 		renderCanvas.id = "renderCanvas";
-		renderCanvas.width = wMM * pxPerMM;
-		renderCanvas.height = hMM * pxPerMM;
+		renderCanvas.width = bbox.w * pxPerMM;
+		renderCanvas.height = bbox.h * pxPerMM;
+		if(MRBEAM_DEBUG_RENDERING){
+			renderCanvas.style="position: fixed; bottom: 0; left: 0; width: 95vw; border: 1px solid red;";
+			renderCanvas.addEventListener('click', function(){ this.remove(); });
+		}
 		document.getElementsByTagName('body')[0].appendChild(renderCanvas);
 		var renderCanvasContext = renderCanvas.getContext('2d');
+		renderCanvasContext.fillStyle = 'white'; // avoids one backend rendering step (has to be disabled in the backend)
+		renderCanvasContext.fillRect(0, 0, renderCanvas.width, renderCanvas.height);
 
         var source = new Image();
 
 		// render SVG image to the canvas once it loads.
 		source.onload = function () {
-			renderCanvasContext.drawImage(source, 0, 0, renderCanvas.width, renderCanvas.height);
+
+			const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+			const cx = bbox.x * srcScale;
+			const cy = bbox.y * srcScale;
+			const cw = bbox.w * srcScale;
+			const ch = bbox.h * srcScale;
+			
+			// drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
+			console.log("rasterizing: " + cw +'*'+ch + " @ " + cx + ',' + cy + "(scale: "+srcScale+"+)");
+			renderCanvasContext.drawImage(source, cx, cy, cw, ch, 0, 0, renderCanvas.width, renderCanvas.height);
 
 			// place fill bitmap into svg
 			var fillBitmap = renderCanvas.toDataURL("image/png");
+			console.info("renderPNG rendered dataurl has " + getDataUriSize(fillBitmap));
 			if(typeof callback === 'function'){
-				callback(fillBitmap);
+				callback(fillBitmap, bbox.x, bbox.y, bbox.w, bbox.h);
 			}
-			renderCanvas.remove();
+			if(!MRBEAM_DEBUG_RENDERING){
+				renderCanvas.remove();
+			}
 		};
 
 		// catch browsers without native svg support
 		source.onerror = function(e) {
-            var len = svgDataUri ? svgDataUri.length : -1;
-            var msg = "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length:"+len+")";
+//            var len = svgDataUri ? svgDataUri.length : -1;
+            var len = getDataUriSize(svgDataUri, 'B');
+            var msg = "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length: "+len+")";
             console.error(msg, e);
-            var error = "<p>" + gettext("The SVG file contains clipPath elements.<br/>clipPath is not supported yet and has been removed from file.") + "</p>";
 			new PNotify({
 				title: "Conversion failed",
 				text: msg,
@@ -161,6 +210,23 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		source.src = svgDataUri;
 	};
+
+	function getDataUriSize(datauri, unit){
+		if(! datauri) return -1;
+		var bytes = datauri.length;
+		switch(unit) {
+			case 'B':
+				return bytes;
+			case 'kB':
+				return Math.floor(bytes / 1024);
+			case 'MB':
+				return Math.floor(bytes / (1024*1024));
+			default:
+				if(bytes < 1024) return bytes + " Byte";
+				else if(bytes < 1024*1024) return Math.floor(bytes / 1024) + " kByte";
+				else return Math.floor(bytes / (1024*1024)) + " MByte";
+		}
+	}
 
 
 });

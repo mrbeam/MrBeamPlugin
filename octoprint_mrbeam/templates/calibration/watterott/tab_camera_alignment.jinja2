@@ -1,0 +1,45 @@
+<h3>{{ _('Camera alignment') }}</h3>
+<div class="qa_images">
+    <div>
+        <div class="qa_img_wrapper">
+            <image id="qa_cameraalignment_image" data-bind="attr: {src: availablePicUrl()['raw']}"/>
+        </div>
+        <a href="#" class="btn btn-link" data-bind="click:loadUndistortedPicture">
+            <i class="icon icon-refresh"></i>
+            <span>{{ _('Refresh picture') }}</span>
+        </a>
+    </div>
+    <div class="qa_text">
+        <ul>
+            <li class="example good_example"><img src="/plugin/mrbeam/static/img/calibration/camalignment_ok.jpg" /></li>
+            <li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/camalignment_marker_cropped.jpg" /></li>
+            <li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/camalignment_bottom_cropped.jpg" /></li>
+        </ul>
+    </div>
+</div>
+
+<div class="qa_list_and_next" style="border: 1px solid grey;" data-bind="visible: !qa_cameraalignment_image_loaded()">
+    <h4>{{ _('Wait for a camera image') }}</h4>
+    <ul>
+        <li>{{ _('Is the lid open?') }}</li>
+        <li>{{ _('Red camera light visible?') }}</li>
+    </ul>
+    <a href="#" onclick="$('#lenscal_tab_btn').click()" data-bind="visible: qa_cameraalignment_image_loaded, click: startLensCalibration" class="btn btn-success continue_btn">
+        <span style="font-size:1.5rem;">{{ _('Yes') }}</span>
+        <i class="icon icon-2x icon-fixed-width icon-arrow-right"></i>
+    </a>
+</div>
+
+<div class="qa_list_and_next" data-bind="visible: qa_cameraalignment_image_loaded">
+    <h4>{{ _('Checklist') }}</h4>
+    <ul>
+        <li>{{ _('4 markers are visible.') }}</li>
+        <li>{{ _('Full working area visible.') }}</li>
+        <li>{{ _('Some space below the workinng area visible.') }}</li>
+        <li>{{ _('Laserhead is not covering a marker.') }}</li>
+    </ul>
+    <a href="#" onclick="$('#lenscal_tab_btn').click()" data-bind="visible: qa_cameraalignment_image_loaded, click: startLensCalibration" class="btn btn-success continue_btn">
+        <span style="font-size:1.5rem;">{{ _('Yes') }}</span>
+        <i class="icon icon-2x icon-fixed-width icon-arrow-right"></i>
+    </a>
+</div>

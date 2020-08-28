@@ -15,8 +15,8 @@ def init_mrb_logger(printer):
 	global _printer
 	_printer = printer
 
-def mrb_logger(id):
-	return MrbLogger(id)
+def mrb_logger(id, lvl=logging.DEBUG):
+	return MrbLogger(id, lvl=lvl)
 
 
 class MrbLogger(object):
@@ -27,14 +27,14 @@ class MrbLogger(object):
 
 	terminal_buffer = collections.deque(maxlen=100)
 
-	def __init__(self, id, ignorePrinter=False):
+	def __init__(self, id, ignorePrinter=False, lvl=logging.DEBUG):
 		global _printer
 		self.logger = logging.getLogger(id)
 		self.id = id
 		self.id_short = self._shorten_id(id)
 		self.my_buffer = []
 		# TODO: this line overrides logging.yaml!!!
-		self.logger.setLevel(logging.DEBUG)
+		self.logger.setLevel(lvl)
 
 	def comm(self, msg, *args, **kwargs):
 		kwargs['id'] = ''
@@ -53,15 +53,20 @@ class MrbLogger(object):
 		self.log(logging.WARN, msg, *args, **kwargs)
 
 	def error(self, msg, *args, **kwargs):
+		kwargs['analytics'] = kwargs.get('analytics', True)
 		self.log(logging.ERROR, msg, *args, **kwargs)
 
 	def critical(self, msg, *args, **kwargs):
+		kwargs['analytics'] = kwargs.get('analytics', True)
 		self.log(logging.CRITICAL, msg, *args, **kwargs)
 
 	def exception(self, msg, *args, **kwargs):
-		kwargs['analytics'] = True
-		kwargs['exc_info'] = True
+		kwargs['analytics'] = kwargs.get('analytics', True)
+		kwargs['exc_info'] = kwargs.get('exc_info', True)
 		self.log(logging.ERROR, msg, *args, **kwargs)
+		
+	def setLevel(self, *args, **kwargs):
+		self.logger.setLevel(*args, **kwargs)
 
 	def log(self, level, msg, *args, **kwargs):
 		"""
@@ -78,19 +83,28 @@ class MrbLogger(object):
 		"""
 		if kwargs.pop('terminal', True if level >= logging.WARN else False):
 			self._terminal(level, msg, *args, **kwargs)
-		if kwargs.pop('terminal_as_comm', False):
+		if kwargs.pop('terminal_as_comm', False) or level == self.LEVEL_COMM:
+			kwargs['id'] = ''
 			self._terminal(self.LEVEL_COMM, msg, *args, **kwargs)
+			del kwargs['id']
 		if kwargs.pop('serial', False):
 			self._serial(msg, *args, **kwargs)
 		analytics =  kwargs.pop('analytics', None)
 		terminal_dump =  kwargs.pop('terminal_dump', False)
 		if terminal_dump:
-			analytics = True if analytics is not False else False
+			analytics = analytics if analytics else False
 			self._dump_terminal_buffer(level=level, analytics=analytics)
 		if analytics:
 			kwargs['terminal_dump'] = terminal_dump
-			self._analytics_log_event(level, msg, *args, **kwargs)
-		# just to be shure....
+
+			# Analytics can be a boolean or a string. If it's a string, we use it as the analytics_id
+			if isinstance(analytics, basestring):
+				analytics_id = analytics
+			else:
+				analytics_id = None
+
+			self._analytics_log_event(level, msg, analytics_id, *args, **kwargs)
+		# just to be sure....
 		kwargs.pop('terminal', None)
 		kwargs.pop('terminal_as_comm', None)
 		kwargs.pop('analytics', None)
@@ -124,7 +138,7 @@ class MrbLogger(object):
 		msg = msg % args if args and msg else msg
 		logging.getLogger("SERIAL").debug(msg)
 
-	def _analytics_log_event(self, level, msg, *args, **kwargs):
+	def _analytics_log_event(self, level, msg, analytics_id, *args, **kwargs):
 		analytics_handler = self._get_analytics_handler()
 		if analytics_handler is not None:
 			try:
@@ -142,20 +156,26 @@ class MrbLogger(object):
 					exctype, value, tb = sys.exc_info()
 					exception_str = "{}: '{}'".format(exctype.__name__ if exctype is not None else None, value)
 					stacktrace = traceback.format_tb(tb)
+					msg = "{} - Exception: {}".format(msg, exception_str)
 
-				analytics_handler.log_event(
-					level,
-					msg,
-					module = self.id,
-					component = _mrbeam_plugin_implementation._identifier,
-					component_version = _mrbeam_plugin_implementation._plugin_version,
+				event_details = dict(
+					level=level,
+					analytics_id=analytics_id,
+					msg=msg,
+					module=self.id,
+					component=_mrbeam_plugin_implementation._identifier,
+					component_version=_mrbeam_plugin_implementation.get_plugin_version(),
 					caller=caller,
 					exception_str=exception_str,
 					stacktrace=stacktrace,
-					wait_for_terminal_dump=kwargs.get('terminal_dump', False))
+				)
+
+				analytics_handler.add_logger_event(event_details, wait_for_terminal_dump=kwargs.get('terminal_dump', False))
+
 			except:
 				self.logger.exception("Exception in _analytics_log_event: ")
-
+		else:
+			self.logger.error('Could not write exception to analytics, the analytics handler was not initialized.')
 
 	def _dump_terminal_buffer(self, level=logging.INFO, repeat=True, analytics=True):
 		try:
@@ -195,7 +215,7 @@ class MrbLogger(object):
 	def _get_analytics_handler(self):
 		analytics_handler = None
 		try:
-			analytics_handler = _mrbeam_plugin_implementation._analytics_handler
+			analytics_handler = _mrbeam_plugin_implementation.analytics_handler
 		except:
 			self.logger.error("Not able to get analytics_handler.")
 		return analytics_handler

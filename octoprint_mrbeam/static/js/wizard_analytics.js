@@ -1,8 +1,9 @@
 $(function () {
     function WizardAnalyticsViewModel(parameters) {
         var self = this;
+        window.mrbeam.viewModels['wizardAnalyticsViewModel'] = self;
 
-        self.MY_WIZARD_TAB_NAME = "wizard_plugin_corewizard_analytics_link";
+        self.wizard = parameters[0];
 
         self.analyticsInitialConsent = ko.observable(null);
         self.containsAnalyticsTab = false;
@@ -14,9 +15,20 @@ $(function () {
         };
 
         self.onBeforeWizardTabChange = function(next, current) {
-            if (next !== self.MY_WIZARD_TAB_NAME && current === self.MY_WIZARD_TAB_NAME) {
-                let result = self._handleAnalyticsTabExit();
-                return result;
+            // If the user goes from Analytics to the previous page, we don't check the input data
+            if (current && current === self.wizard.ANALYTICS_TAB) {
+                let letContinue = true;
+                if (self.wizard.isGoingToPreviousTab(current, next)) {
+                    // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                    $('#' + current).attr('class', 'wizard-nav-list-past');
+                } else {
+                    letContinue = self._handleAnalyticsTabExit();
+                    if (letContinue) {
+                        // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                        $('#' + current).attr('class', 'wizard-nav-list-past');
+                    }
+                }
+                return letContinue;
             }
         };
 
@@ -31,9 +43,11 @@ $(function () {
              if (!self.analyticsInitialConsent()) {
                  showMessageDialog({
                      title: gettext("You need to select an option"),
-                     message: gettext("Please make a choice about analytics. <br/>You will be able to change it later in the settings if you want.")
+                     message: _.sprintf(gettext("Please make a choice about analytics.%(br)sYou will be able to change it later in the settings if you want."), {br: "<br/>"})
                  });
                  return false;
+             } else {
+                 return true;
              }
         };
 
@@ -52,8 +66,8 @@ $(function () {
                 .fail(function () {
                     console.error("Unable to save analytics state: ", data);
                     new PNotify({
-                        title: "Error while saving settings!",
-                        text: "Unable to save your analytics state at the moment.<br/>Check connection to Mr Beam II and try again.",
+                        title: gettext("Error while saving settings!"),
+                        text: _.sprintf(gettext("Unable to save your analytics state at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });
@@ -70,7 +84,7 @@ $(function () {
     var DOM_ELEMENT_TO_BIND_TO = "wizard_plugin_corewizard_analytics";
     OCTOPRINT_VIEWMODELS.push([
         WizardAnalyticsViewModel,
-        [],
+        ['wizardWhatsnewViewModel'],
         "#" + DOM_ELEMENT_TO_BIND_TO
     ]);
 });

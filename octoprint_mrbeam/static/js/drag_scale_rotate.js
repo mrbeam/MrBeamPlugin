@@ -103,7 +103,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var bb = ftEl.getBBox();
 			ftEl.ftStoreInitialTransformMatrix();
 
-			var bbT = ftEl.getBBox(1);
+			const bbT = ftEl.getBBox(1);
 			var rad = ftOption.handleRadius * ftOption.unscale;
 
 			var userContent = this.paper.select('#userContent');
@@ -281,6 +281,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             if(params.ty !== undefined && !isNaN(params.ty)){
                 svg.data('ty', params.ty - bbox.y2);
             }
+            // if the transformation comes from the keyboard arrows, it looks a bit different
+            if(params.tx_rel !== undefined && !isNaN(params.tx_rel)){
+                svg.data('tx', params.tx_rel);
+                svg.data('scale', 1);
+                svg.data('angle', 0);
+            }
+            if(params.ty_rel !== undefined && !isNaN(params.ty_rel)){
+                svg.data('ty', params.ty_rel);
+                svg.data('scale', 1);
+                svg.data('angle', 0);
+            }
             if(params.angle !== undefined && !isNaN(params.angle)){
 				svg.data('angle', params.angle - svg.ftGetRotation());
 			}
@@ -314,13 +325,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(this.data("bb")) this.data("bb").remove();
 
 			// outer bbox
-			this.data("bb", this.paper.rect( rectObjFromBB( this.getBBox(), rad ) )
+			this.data("bb", this.paper.rect( rectObjFromBB(this.getBBox()) )
 				.attr({ id: 'bbox', fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
 				.prependTo(this.paper.select('#userContent')));
 			//TODO make more efficiently
 			// this.data('bb');
 			// transformed bbox
-			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1), rad ) )
+			this.data("bbT", this.paper.rect( rectObjFromBB(this.getBBox(1)) )
 							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
 							.transform( this.transform().local.toString() ) );
 			return this;
@@ -404,14 +415,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var w = bb.width;
 		var h = bb.height;
 		if(bb.width < minWidth){
+			let d = minWidth - bb.width;
 			w = minWidth;
-			x = x - minWidth / 2;
+			x = x - d / 2;
 		}
 		if(bb.height < minHeight){
-			bb.height = minHeight;
-			bb.y = bb.y - minHeight / 2;
+			let d = minHeight - bb.height;
+			h = minHeight;
+			y = y - d / 2;
 		}
-		return { x: x, y: bb.y, width: w, height: bb.height };
+		return { x: x, y: y, width: w, height: h };
 	}
 
 	function elementDragStart( mainEl, x, y, ev ) {
@@ -511,7 +524,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	};
 
-	function resizeDraggerEnd( mainEl ) {};
+	function resizeDraggerEnd( mainEl ) {
+		mainEl.ftRemoveHandles();
+		mainEl.ftCreateHandles();
+	};
 
 
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
