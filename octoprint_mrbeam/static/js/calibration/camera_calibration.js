@@ -881,8 +881,8 @@ $(function () {
 
 		self.saveCornerCalibrationData = function () {
 			var _corners = self.currentResults()
-			for (k of Object.keys(_corners)) {
-				_corners[k] = [_corners[k].x, _corners[k].y]
+			for (_k of Object.keys(_corners)) {
+				_corners[_k] = [_corners[_k].x, _corners[_k].y]
 			}
 			var data = {
 				result: {

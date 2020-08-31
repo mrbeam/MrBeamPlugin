@@ -11,6 +11,7 @@ from octoprint_mrbeam.util import dict_map
 import numpy as np
 from numpy.linalg import norm
 import cv2
+from octoprint_mrbeam.camera import lens
 
 # Set this after merging the logging overhaul.
 _logger = logging.getLogger(__name__)
@@ -116,6 +117,7 @@ def get_deltas(
 		undistorted=False,
 		matrix=None,
 		dist=None,
+		new_mtx=None,
 		from_factory=False):
 	"""Returns the relative positions (delta) of the markers and corners according to the calibration (in px)
 	By default, returns delta for the raw pictures.
@@ -138,7 +140,7 @@ def get_deltas(
 		pic_settings = settings
 	for k in [UNDIST_CALIB_MARKERS_KEY, UNDIST_CORNERS_KEY]:
 		if not (k in pic_settings and _isValidQdDict(pic_settings[k])):
-			_pic_settings[k] = None
+			pic_settings[k] = None
 		elif k in pic_settings.keys() and pic_settings[k] is not None:
 			for qd in QD_KEYS:
 				pic_settings[k][qd] = np.array(pic_settings[k][qd])
@@ -164,7 +166,7 @@ def get_deltas(
 				if ref[k]['raw'] is not None and matrix is not None and dist is not None:
 					# TODO distort references
 					inPts = [ref[k]['raw'][qd] for qd in QD_KEYS]
-					res_iter = undist_points(inPts, matrix, dist)
+					res_iter = undist_points(inPts, matrix, dist, new_mtx=new_mtx)
 					ref['result'] = {QD_KEYS[i]: np.array(pos) for i, pos in enumerate(res_iter)}
 					break # no need to go further in the priority list
 				elif ref[k]['undistorted']:
@@ -190,6 +192,27 @@ def get_deltas(
 	refMarkers, refCorners = (calibrationReferences[k]['result'] for k in ['markers', 'corners'])
 	delta = {qd: refCorners[qd] - refMarkers[qd] for qd in QD_KEYS}
 	return delta
+
+def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
+	# _logger.warning(markers)
+	deltas = get_deltas(pic_settings, False, *args, **kwargs)
+	# try getting raw deltas first
+	if undistorted:
+		if deltas:
+			# raw deltas found, more precise
+			raw_res = {qd: markers[qd] + deltas[qd] for qd in QD_KEYS}
+			return lens.undist_dict(raw_res, *args, **kwargs)
+		else:
+			deltas = get_deltas(pic_settings, undistorted, *args, **kwargs)
+			if deltas is None: return None
+			# Use the lens corrected deltas. not as good
+			_markers = lens.undist_dict(markers, *args, **kwargs)
+			return {qd: _markers[qd] + deltas[qd] for qd in QD_KEYS}
+	else:
+		if deltas is None:
+			return None
+		else:
+			return {qd: markers[qd] + deltas[qd] for qd in QD_KEYS}
 
 def _isValidQdDict(qdDict):
 	"""

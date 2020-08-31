@@ -67,6 +67,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	:param stopEvent: used to exit gracefully
 	:param threads: number of threads to use for the marker detection. Set -1, 1, 2, 3 or 4. (recommended : 4, default: -1)
 	"""
+	# debug_out = True
 	if debug_out:
 		logger.setLevel(logging.DEBUG)
 		logger.info("DEBUG enabled")
@@ -125,39 +126,44 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		err = "Missed marker(s) %s, no(t enough) history to guess missing marker position(s)" % missed
 		logger.warning(err)
 		return None, markers, missed, err, outputPoints, savedPics
+	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
 
 	# Optimisation : Markers detected, we don't need the image in color anymore.
 	img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+	# workspaceCorners = corners.add_deltas(markers, pic_settings, False)
+	# if workspaceCorners and debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners_raw")
+
 	do_undistortion = cam_dist is not None and cam_matrix is not None
 	if do_undistortion:
 		# Can be done simultaneously while the markers get detected on the raw picture
 		# NOTE If in precision mode, there is no point in undistorting the image
 		#      if we don't have enough markers (it doesn't get sent)
 		# TODO do threaded while detecting the corners on raw img.
-		img = lens.undistort(img, cam_matrix, cam_dist)
+		img, dest_mtx = lens.undistort(img, cam_matrix, cam_dist)
 		if debug_out or undistorted:
 			savedPics['lens_corrected'] = save_debug_img(img, "undistorted")
-
+	else:
+		dest_mtx = None
 	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
-	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
 
 	# load pic_settings json
 	if pic_settings is None:
 		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
-	deltas = corners.get_deltas(pic_settings, do_undistortion, cam_matrix, cam_dist)
-	if deltas is None:
-		# Wrong config for our needs, please calibrate anew
-		logger.warning(ERR_NEED_CALIB)
+	workspaceCorners = corners.add_deltas(markers, pic_settings, do_undistortion, cam_matrix, cam_dist, new_mtx=dest_mtx)
+
+	if workspaceCorners is None:
+		logger.error("Workspace Corners None??")
+
 		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
-	workspaceCorners = {qd: markers[qd][::-1] + deltas[qd] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
                  % tuple(map(np.ndarray.tolist, map(workspaceCorners.__getitem__, ['NW', 'NE', 'SW', 'SE']))))
-	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners")
+	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners_undist")
 
 	img = corners.warpImgByCorners(img, workspaceCorners, zoomed_out)
-	if debug_out: save_debug_img(img, "colorwarp")
+	if debug_out: save_debug_img(img, "warped")
 	# get corners of working area
 	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
@@ -251,13 +257,13 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 				   cv2.imdecode(np.fromiter(spot, dtype=np.uint8),
 						cv2.IMREAD_GRAYSCALE))
 			cv2.waitKey(0)
-		if isMarkerMask(spot[start[0]:stop[0], start[1]:stop[1]]):
+		if isMarkerMask(spot[start[1]:stop[1], start[0]:stop[0]]):
 			hsv_roi = cv2.cvtColor(roiBlurThresh, cv2.COLOR_BGR2HSV)
 			avg_hsv = np.average(
 				[hsv_roi[pos] for pos in zip(*np.nonzero(spot))],
 				axis=0)
 			if HUE_BAND_LB <= avg_hsv[0] <= 180 or 0 <= avg_hsv[0] <= HUE_BAND_UB:
-				y, x = np.round(center).astype("int")  # y, x
+				x, y = np.round(center).astype("int")  # y, x
 				debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
 				differed_imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
 				return dict(pos=center, avg_hsv=avg_hsv, pix_size=count)
@@ -308,7 +314,7 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
 		non_zeros = np.transpose(np.nonzero(bool_connected_spot))
 		start, stop = np.min(non_zeros, axis=0) , np.max(non_zeros, axis=0)
 		center = (start + stop) / 2
-		yield bool_connected_spot, center, start, stop, count
+		yield bool_connected_spot, center[::-1], start[::-1], stop[::-1], count
 
 def _debug_drawMarkers(raw_img, markers):
 	"""Draw the markers onto an image"""
@@ -317,7 +323,7 @@ def _debug_drawMarkers(raw_img, markers):
 	for qd, pos in markers.items():
 		if pos is None:
 			continue
-		(mh, mw) = map(int, pos)
+		(mw, mh) = map(int, pos)
 		cv2.circle(img, (mw, mh), 15, (0, 150, 0), 4)
 		cv2.putText(img, 'M - '+qd, (mw + 15, mh - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 150, 0), 2, cv2.LINE_AA)
 	return img
@@ -326,7 +332,7 @@ def _debug_drawCorners(raw_img, corners):
 	"""Draw the corners onto an image"""
 	img = raw_img.copy()
 	for qd in corners:
-		(cy, cx) = map(int, corners[qd])
+		(cx, cy) = map(int, corners[qd])
 		cv2.circle(img, (cx, cy), 15, (150, 0, 0), 4)
 		cv2.putText(img, 'C - '+qd, (cx + 15, cy - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 150, 0), 2, cv2.LINE_AA)
 	return img

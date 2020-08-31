@@ -41,20 +41,21 @@ def undistort(img, mtx, dist, calibration_img_size=None, output_img_size=None):
 	It is faster to upscale/downscale here than to do it in a 2nd step seperately
 	"""
 	# The camera matrix need to be rescaled if the image size changed
-	in_mtx = adjust_mtx_to_pic(img, mtx, dist, calibration_img_size)
-	if output_img_size:
-		h, w = img.shape[:2]
-		dest_mtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, output_img_size)
-	else:
-		dest_mtx = mtx
+	# in_mtx = adjust_mtx_to_pic(img, mtx, dist, calibration_img_size)
+	h, w = img.shape[:2]
+	dest_mtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, output_img_size)
+	mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, dest_mtx, (w, h), 5)
+	return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR), dest_mtx
+
 	# undistort image with cam_params
-	return cv2.undistort(img, in_mtx, dist, dest_mtx)
+	# return cv2.undistort(img, mtx, dist, dest_mtx)
 
 def adjust_mtx_to_pic(img, mtx, dist, original_img_size=None):
 	h, w = img.shape[:2]
 	if original_img_size is None:
 		original_img_size = (w,h)
-	newcameramtx, _ = cv2.getOptimalNewCameraMatrix(mtx, dist, original_img_size, 1, (w, h))
+	_logger.warning("im in %s, im calib %s", (w, h), original_img_size)
+	newcameramtx, _ = cv2.getOptimalNewCameraMatrix(mtx, dist, original_img_size, 0, (w, h))
 	return newcameramtx
 
 def undist_points(inPts, mtx, dist, new_mtx=None, reverse=False):
@@ -65,6 +66,11 @@ def undist_points(inPts, mtx, dist, new_mtx=None, reverse=False):
 	for x, y in cv2.undistortPoints(in_vecs, mtx, dist, P=new_mtx).reshape(-1,2):
 		yield x, y
 
+def undist_dict(dict_pts, *a, **kw):
+	keys = dict_pts.keys()
+	inPts = [dict_pts[k] for k in keys]
+	res_iter = undist_points(inPts, *a, **kw)
+	return {keys[i]: np.array(pos) for i, pos in enumerate(res_iter)}
 
 ### CAMERA LENS CALIBRATION
 
