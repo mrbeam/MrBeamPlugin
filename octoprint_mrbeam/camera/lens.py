@@ -68,7 +68,7 @@ def undist_points(inPts, mtx, dist, new_mtx=None, reverse=False):
 
 def undist_dict(dict_pts, *a, **kw):
 	keys = dict_pts.keys()
-	inPts = [dict_pts[k] for k in keys]
+	inPts = [dict_pts[k] for k in keys] # Preserve in the order in which we have the keys
 	res_iter = undist_points(inPts, *a, **kw)
 	return {keys[i]: np.array(pos) for i, pos in enumerate(res_iter)}
 

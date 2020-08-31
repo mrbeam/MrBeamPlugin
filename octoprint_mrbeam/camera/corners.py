@@ -112,7 +112,7 @@ def get_corner_calibration(path):
 		_logger.info("Exception while loading '%s' > pic_settings file not readable", path)
 		return None
 
-def get_deltas(
+def get_deltas_and_refs(
 		settings,
 		undistorted=False,
 		matrix=None,
@@ -165,9 +165,9 @@ def get_deltas(
 				# (It is calibration-agnostic)
 				if ref[k]['raw'] is not None and matrix is not None and dist is not None:
 					# TODO distort references
-					inPts = [ref[k]['raw'][qd] for qd in QD_KEYS]
-					res_iter = undist_points(inPts, matrix, dist, new_mtx=new_mtx)
-					ref['result'] = {QD_KEYS[i]: np.array(pos) for i, pos in enumerate(res_iter)}
+					# inPts = [ref[k]['raw'][qd] for qd in QD_KEYS]
+					# res_iter = undist_points(inPts, matrix, dist, new_mtx=new_mtx)
+					ref['result'] = undist_dict(ref[k]['raw'])  #{QD_KEYS[i]: np.array(pos) for i, pos in enumerate(res_iter)}
 					break # no need to go further in the priority list
 				elif ref[k]['undistorted']:
 					ref['result'] = dict_map(np.array, ref[k]['undistorted'])
@@ -191,7 +191,16 @@ def get_deltas(
 			return None
 	refMarkers, refCorners = (calibrationReferences[k]['result'] for k in ['markers', 'corners'])
 	delta = {qd: refCorners[qd] - refMarkers[qd] for qd in QD_KEYS}
-	return delta
+	return delta, refMarkers, refCorners
+
+def get_deltas(*args, **kwargs):
+	"""Wrapper for get_daltas_and_refs that only returns the deltas."""
+	res = get_deltas_and_refs(*args, **kwargs)
+	if res is not None:
+		deltas, _, _ = res
+		return deltas
+	else:
+		return None
 
 def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
 	# _logger.warning(markers)

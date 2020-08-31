@@ -24,6 +24,7 @@ def test_undist():
         cam_matrix=__cam['mtx'],
         cam_dist=__cam['dist'],
         undistorted=True,
+        debug_out=True,
     )
 
     log_re = '\n\n'.join([str(v) for v in res])

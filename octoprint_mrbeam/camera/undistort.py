@@ -143,6 +143,11 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		img, dest_mtx = lens.undistort(img, cam_matrix, cam_dist)
 		if debug_out or undistorted:
 			savedPics['lens_corrected'] = save_debug_img(img, "undistorted")
+		if debug_out:
+			# undist_markers are not used to correct the picture, only for the debug purposes.
+			undist_markers = lens.undist_dict(markers, cam_matrix, cam_dist, new_mtx=dest_mtx)
+			logger.info("Saving undist drawmarkers")
+			save_debug_img(_debug_drawMarkers(img, undist_markers), "drawmarkers_undist")
 	else:
 		dest_mtx = None
 	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
@@ -177,6 +182,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	return workspaceCorners, markers, missed, err, outputPoints, savedPics
 
 #@logtime()
+# @logme(False, True)
 def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min_pix=MIN_MARKER_PIX):
 	"""Allows a multi-processing implementation of the marker detection algo. Up to 4 processes needed."""
 	outputPoints = {}
@@ -214,7 +220,7 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 	return outputPoints
 
 @logExceptions
-#@logme(False, True)
+# @logme(False, True)
 #@logtime()
 def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8,
 			      d_max=30, visual_debug=False, min_pix=MIN_MARKER_PIX):
@@ -264,7 +270,7 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 				axis=0)
 			if HUE_BAND_LB <= avg_hsv[0] <= 180 or 0 <= avg_hsv[0] <= HUE_BAND_UB:
 				x, y = np.round(center).astype("int")  # y, x
-				debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
+				debug_roi = cv2.drawMarker(cv2.bitwise_or(threshOtsuMask, gaussianMask), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
 				differed_imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
 				return dict(pos=center, avg_hsv=avg_hsv, pix_size=count)
 	# No marker found
@@ -319,12 +325,13 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
 def _debug_drawMarkers(raw_img, markers):
 	"""Draw the markers onto an image"""
 	img = raw_img.copy()
-
+	if len(img.shape) == 2:
+		img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 	for qd, pos in markers.items():
 		if pos is None:
 			continue
 		(mw, mh) = map(int, pos)
-		cv2.circle(img, (mw, mh), 15, (0, 150, 0), 4)
+		cv2.circle(img, (mw, mh), 15, (255, 255, 255), 4)
 		cv2.putText(img, 'M - '+qd, (mw + 15, mh - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 150, 0), 2, cv2.LINE_AA)
 	return img
 
