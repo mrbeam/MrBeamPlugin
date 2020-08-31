@@ -60,7 +60,8 @@ def getRois(img, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFS
 		h, w = img.shape[:2]
 		row, col = _sliceVert.start, _sliceHoriz.start
 		# print("row: {}, col {}".format(row, col))
-		yield img[_sliceVert, _sliceHoriz], np.array([row, col]), pole
+		#                                              x ,  y
+		yield img[_sliceVert, _sliceHoriz], np.array([col, row]), pole
 
 def _roiSlice(img, pole, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFSET_H): #(img: np.ndarray, pole: [str, None], ratioW: int=RATIO_W, ratioH: int=RATIO_H, ):
 	"""
