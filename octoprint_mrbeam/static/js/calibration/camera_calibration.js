@@ -396,7 +396,6 @@ $(function () {
 
 		self.startCornerCalibration = function () {
 			self.analytics.send_fontend_event('corner_calibration_start', {});
-			// self.currentResults({});
 			self.cornerCalibrationActive(true);
 			self.picType("raw");
 			// self.applySetting('lens_corrected')
@@ -412,15 +411,12 @@ $(function () {
 
 		self.startLensCalibration = function () {
 			self.analytics.send_fontend_event('lens_calibration_start', {});
-			// self.picType("raw");
+			self.lensCalibrationActive(true);
 			self.simpleApiCommand("calibration_lens_start",
 								  {},
 								  self.refreshPics,
 								  self.getRawPicError,
 								  "GET");
-			self.lensCalibrationActive(true);
-
-			self.changeUserView('lens')
 		};
 
 		self.lensCalibrationToggleQA = function (){
@@ -767,19 +763,22 @@ $(function () {
 				"camera_stop_lens_calibration",
 				{},
 				function(){
-					new PNotify({
-						title: gettext("Lens Calibration stopped"),
-						// text: "",
-						type: "info",
-						hide: true});
+				    // todo user lens calibration is this necessary?
+					// new PNotify({
+					// 	title: gettext("Lens Calibration stopped"),
+					// 	// text: "",
+					// 	type: "info",
+					// 	hide: true});
 					self.resetLensCalibration();
 				},
 				function(){
-					new PNotify({
-						title: gettext("Couldn't stop the lens calibration."),
-						text: gettext("Please verify your connection to the device. Did you try canceling multiple times?"),
-						type: "warning",
-						hide: true})},
+				    // todo lens calibration: is this necessary?
+					// new PNotify({
+					// 	title: gettext("Couldn't stop the lens calibration."),
+					// 	text: gettext("Please verify your connection to the device. Did you try canceling multiple times?"),
+					// 	type: "warning",
+					// 	hide: true})
+                    },
 				"POST");
 
 		}
@@ -894,6 +893,12 @@ $(function () {
 			self.simpleApiCommand("send_corner_calibration", data, self.saveMarkersSuccess, self.saveMarkersError, "POST");
 		};
 
+        // todo user lens calibration: this is new
+        self.saveLensCalibrationData = function () {
+            // I don't know if this should be called here or what. The idea is that we don't save the calibration until the user clicks on save.
+            self.runLensCalibration();
+        };
+
 		self.saveMarkersSuccess = function (response) {
 			self.cornerCalibrationActive(false);
 			self.analytics.send_fontend_event('corner_calibration_finish', {});
@@ -918,12 +923,18 @@ $(function () {
 			self.resetView();
 		};
 
-		// todo iratxe: should we abort the corner calibration as well?
-        // for now I call this when going back from the lens calibration...
+        // todo user lens calibration
 		self.abortCalibration = function () {
-			self.cornerCalibrationActive(false);
+		    // Please check: stopCornerCalibration wasn't here
+			self.stopCornerCalibration();
 			self.resetView();
 		};
+
+		// todo user lens calibration: this is new, check
+		self.abortLensCalibration = function () {
+		    self.stopLensCalibration();
+			self.resetView();
+        }
 
 		self.resetView = function () {
 			self.focusX(0);
