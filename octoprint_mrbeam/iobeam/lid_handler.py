@@ -267,12 +267,12 @@ class LidHandler(object):
 		When pressing the button 'start lens calibration'
 		Doesn't run the cv2 lens calibration at that point.
 		"""
-		self.getRawImg()
 		self._photo_creator.is_initial_calibration = True
 		self._start_photo_worker()
 		if not self.lensCalibrationStarted and \
 		   self.boardDetectorDaemon.load_dir(self.debugFolder):
 			self._logger.info("Found pictures from previous session")
+		self.getRawImg()
 		self.lensCalibrationStarted = True
 		self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
 		self._logger.warning("EVENT LENS CALIBRATION STARTING")
@@ -347,6 +347,7 @@ class LidHandler(object):
 			self.boardDetectorDaemon.join()
 		except RuntimeError:
 			self._logger.debug("Board Detector wasn't started or had already exited.")
+		self.lensCalibrationStarted = False
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus,

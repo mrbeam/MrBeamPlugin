@@ -327,6 +327,7 @@ class BoardDetectorDaemon(Thread):
 
 			if self._stop.wait(.1): break
 		self._logger.warning("Stop signal intercepted")
+		self.lensCalibrationStarted = False
 		resultQueue.close()
 		if self._terminate.is_set():
 			self._logger.info("Terminating processes")
