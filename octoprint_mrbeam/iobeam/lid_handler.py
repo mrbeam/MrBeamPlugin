@@ -103,7 +103,9 @@ class LidHandler(object):
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus,
 							       rawImgLock = self._photo_creator.rawLock)
-		# self.removeAllTmpPictures() # clean up from the latest calibraton session
+		if not self._plugin.calibration_tool_mode and not self._plugin.is_dev_env():
+			# clean up from the latest calibraton session
+			self.removeAllTmpPictures()
 
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
