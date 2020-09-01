@@ -100,7 +100,6 @@ class LidHandler(object):
 
 		# TODO carefull if photocreator is None
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
-							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus,
 							       rawImgLock = self._photo_creator.rawLock)
@@ -347,10 +346,11 @@ class LidHandler(object):
 		except RuntimeError:
 			self._logger.debug("Board Detector wasn't started or had already exited.")
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
-							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
-		                                               event_bus = self._event_bus)
-		# self.removeAllTmpPictures()
+		                                               event_bus = self._event_bus,
+							       rawImgLock = self._photo_creator.rawLock)
+		if not self._plugin.calibration_tool_mode and not self._plugin.is_dev_env():
+			self.removeAllTmpPictures()
 
 	def ignoreCalibrationImage(self, path):
 		myPath  = path.join(self.debugFolder, "debug", path)

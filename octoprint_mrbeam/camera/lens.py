@@ -84,14 +84,18 @@ class BoardDetectorDaemon(Thread):
 		     stateChangeCallback=None,
 		     runCalibrationAsap=False,
 	             event_bus=None,
-		     rawImgLock=None):
+		     rawImgLock=None,
+		     state=None):
 		self._logger = mrb_logger(__name__, lvl=logging.INFO)
 		# runCalibrationAsap : run the lens calibration when we have enough pictures ready
 		self.event_bus = event_bus
 		self.rawImgLock = rawImgLock
 
 		# State of the detection & calibration
-		self.state = calibrationState(changeCallback=stateChangeCallback, npzPath=output_calib, rawImgLock=rawImgLock)
+		if state is None:
+			self.state = calibrationState(changeCallback=stateChangeCallback, npzPath=output_calib, rawImgLock=rawImgLock)
+		else:
+			self.state = state
 
 		self.output_file = output_calib
 
