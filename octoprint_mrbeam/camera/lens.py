@@ -235,7 +235,8 @@ class BoardDetectorDaemon(Thread):
 			self.state.refresh(imgFoundCallback=self.event_bus.fire, args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,))
 			# if self.idle:
 			# self._logger.debug("waiting to be restarted")
-			if (self.state.lensCalibration['state'] == STATE_PENDING or self.startCalibrationWhenIdle) \
+			if self.state.lensCalibration['state'] == STATE_PENDING \
+			   and self.startCalibrationWhenIdle \
 			   and self.detectedBoards >= MIN_BOARDS_DETECTED:
 				self._logger.info("Start lens calibration.")
 				self.startCalibrationWhenIdle = False

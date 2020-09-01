@@ -325,10 +325,10 @@ $(function () {
         // ------------------------------------------------
 
 		self.onAllBound = function () {
-		    new MutationObserver(self._testCameraSettingsActive).observe(
-		        document.getElementById('settings_plugin_mrbeam_camera'),
-                { attributes: true});
-        }
+			new MutationObserver(self._testCameraSettingsActive).observe(
+				document.getElementById('settings_plugin_mrbeam_camera'),
+				{attributes: true});
+		}
 
 		self.onStartupComplete = function () {
 			if(window.mrbeam.isWatterottMode()){
@@ -336,25 +336,25 @@ $(function () {
 				self.refreshPics();
 			}
 			self.calibrationScreenShown(true)
-            self.startupComplete(true);
+			self.startupComplete(true);
 
 			self.setMarkerDetectionMode()
 
 			$('#settings_plugin_mrbeam_camera_link').click(function(){
-                self.abortCalibration()
-            });
+				self.abortCornerCalibration()
+			});
 		};
 
 		self.onSettingsShown = function(){
-            self.settingsActive(true)
-            self._testCameraSettingsActive()
-            self.abortCalibration()
-            self._updateIsLocked()
+			self.settingsActive(true)
+			self._testCameraSettingsActive()
+			self.abortCornerCalibration()
+			self._updateIsLocked()
 		}
 
 		self.onSettingsHidden = function(){
 		    self.settingsActive(false)
-            self._testCameraSettingsActive()
+				self._testCameraSettingsActive()
         }
 
     // It's necessary to read state.isLocked and update the value manually because this is injected after the
@@ -530,8 +530,8 @@ $(function () {
             }
 
 			// I assume this already done in readyToLaserViewModel.
-            // If not, this piece of code should be moved to readyToLaserViewModel
-            // or even better: the complete handling of mrb_state should go into a dedicated view model.
+			// If not, this piece of code should be moved to readyToLaserViewModel
+			// or even better: the complete handling of mrb_state should go into a dedicated view model.
 			if ('mrb_state' in data && data['mrb_state']) {
 				self.readyToLaser._fromData(data)
 			}
@@ -573,7 +573,6 @@ $(function () {
 				var _d = data['chessboardCalibrationState']
 
 				self.calibrationState(_d);
-				var arr = []
 				// { '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
 				//      state: "processing",
 				//      tm_proc: 1590151819.735044,
@@ -591,13 +590,14 @@ $(function () {
 					self.lensCalibrationNpzFileTs(_d.lensCalibrationNpzFileTs > 0 ? _d.lensCalibrationNpzFileTs*1000 : null)
 				}
 
+				var heatmap_arr = []
 				let found_bboxes = [];
 				let total_score = 0;
 				for (const [path, value] of Object.entries(_d.pictures)) {
 					value.path = path;
 					value.url = path.replace("home/pi/.octoprint/uploads", "downloads/files/local");
 					value.processing_duration = value.tm_end !== null ? (value.tm_end - value.tm_proc).toFixed(1) + ' sec' : '?';
-					arr.push(value);
+					heatmap_arr.push(value);
 					if(value.board_bbox){
 						// TODO individual score should be attributed when all boxes are in the list
 						value.score = self._calc_pic_score(value.board_bbox, found_bboxes);
@@ -607,9 +607,9 @@ $(function () {
 				}
 				self.updateHeatmap(_d.pictures);
 
-				for (var i = arr.length; i < 9; i++) {
-					arr.push({
-						index: i,
+				for (var i = heatmap_arr.length; i < 9; i++) {
+					heatmap_arr.push({
+						index: -1,
 						path: null,
 						url: '',
 						state: 'missing'
@@ -618,11 +618,18 @@ $(function () {
 
 				// required to refresh the heatmap
 				$('#heatmap_container').html($('#heatmap_container').html());
-				arr.sort(function(l,r){
-					return l.index < r.index ? -1 : 1;
+				heatmap_arr.sort(function(l,r){
+					if (l.index == r.index)
+						return true;
+					else if (l.index == -1)
+						return 1;
+					else if (r.index == -1)
+						return -1;
+					else
+						return l.index < r.index ? -1 : 1;
 				});
 
-				self.rawPicSelection(arr);
+				self.rawPicSelection(heatmap_arr);
 			}
 		};
 
@@ -763,7 +770,8 @@ $(function () {
 				"camera_stop_lens_calibration",
 				{},
 				function(){
-				    // todo user lens calibration is this necessary?
+				    // TODO user lens calibration is this necessary?
+					// TODO is there a debug mode?
 					// new PNotify({
 					// 	title: gettext("Lens Calibration stopped"),
 					// 	// text: "",
@@ -772,12 +780,12 @@ $(function () {
 					self.resetLensCalibration();
 				},
 				function(){
-				    // todo lens calibration: is this necessary?
-					// new PNotify({
-					// 	title: gettext("Couldn't stop the lens calibration."),
-					// 	text: gettext("Please verify your connection to the device. Did you try canceling multiple times?"),
-					// 	type: "warning",
-					// 	hide: true})
+					// In case the users experience weird behaviour
+					new PNotify({
+						title: gettext("Couldn't stop the lens calibration."),
+						text: gettext("Please verify your connection to the device. Did you try canceling multiple times?"),
+						type: "warning",
+						hide: true})
                     },
 				"POST");
 
@@ -893,11 +901,12 @@ $(function () {
 			self.simpleApiCommand("send_corner_calibration", data, self.saveMarkersSuccess, self.saveMarkersError, "POST");
 		};
 
-        // todo user lens calibration: this is new
-        self.saveLensCalibrationData = function () {
-            // I don't know if this should be called here or what. The idea is that we don't save the calibration until the user clicks on save.
-            self.runLensCalibration();
-        };
+		self.saveLensCalibrationData = function () {
+			// As of now, there is no distinction between creating a new
+			// calibration file and saving it to the device.
+			// TODO Gray out button when calibration state is STATE_PROCESSING
+			self.runLensCalibration();
+		};
 
 		self.saveMarkersSuccess = function (response) {
 			self.cornerCalibrationActive(false);
@@ -923,18 +932,16 @@ $(function () {
 			self.resetView();
 		};
 
-        // todo user lens calibration
-		self.abortCalibration = function () {
-		    // Please check: stopCornerCalibration wasn't here
+		self.abortCornerCalibration = function () {
 			self.stopCornerCalibration();
 			self.resetView();
 		};
 
-		// todo user lens calibration: this is new, check
 		self.abortLensCalibration = function () {
-		    self.stopLensCalibration();
+			// TODO - Axel - Allow to kill the board detection.
+			self.stopLensCalibration();
 			self.resetView();
-        }
+		}
 
 		self.resetView = function () {
 			self.focusX(0);
@@ -944,35 +951,6 @@ $(function () {
 
 			self.resetUserView()
 		};
-
-        // TODO IRATXE: might not be necessary anymore
-		// self.continue_to_calibration = function () {
-		// 	// self.loadUndistortedPicture(self.next);
-		// 	// simply show the calibration screen, showing the latest cropped img
-		// 	self.next()
-		// 	self.calibrationScreenShown(true)
-		// };
-
-		// self.next = function () {
-		// 	var current = $('.calibration_step.active');
-		// 	current.removeClass('active');
-		// 	var next = current.next('.calibration_step');
-		// 	if (next.length === 0) {
-		// 		next = $('#camera_settings_view');
-		// 	}
-        //
-		// 	next.addClass('active');
-		// };
-        //
-		// self.goto = function (target_id) {
-		// 	var el = $(target_id);
-		// 	if (el) {
-		// 		$('.calibration_step.active').removeClass('active');
-		// 		$(target_id).addClass('active');
-		// 	} else {
-		// 		console.error('no element with id' + target_id);
-		// 	}
-		// };
 
 		self.changeUserView = function(toView) {
 			Object.entries(CUSTOMER_CAMERA_VIEWS).forEach(([view_name,view_id]) => {
