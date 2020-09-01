@@ -1497,9 +1497,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			slicer = "svgtogcode"
 			slicer_instance = self._slicing_manager.get_slicer(slicer)
 			if slicer_instance.get_slicer_properties()["same_device"] and (
-					self._printer.is_printing() or self._printer.is_paused()):
+					self._printer.is_printing() or \
+					self._printer.is_paused() or \
+					self.lidHandler.lensCalibrationStarted):
 				# slicer runs on same device as OctoPrint, slicing while printing is hence disabled
-				msg = "Cannot convert while lasering due to performance reasons".format(**locals())
+				_while = 'calibrating the camera lens' if self.lidHandler.lensCalibrationStarted else 'lasering'
+				msg = "Cannot convert while {} due to performance reasons".format(_while, **locals())
 				self._logger.error("gcodeConvertCommand: %s", msg)
 				return make_response(msg, 409)
 
