@@ -533,9 +533,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/settings/custom_material.js",
 			    "js/design_store.js",
 			    "js/settings_menu_navigation.js",
-				"js/calibration/calibration.js"
-				"js/calibration/corner_calibration.js"
-				"js/calibration/lens_calibration.js"
+				"js/calibration/calibration.js",
+				"js/calibration/corner_calibration.js",
+				"js/calibration/lens_calibration.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/backlash_settings.css",

@@ -21,6 +21,7 @@ $(function () {
 		self.state = parameters[1]; // isOperational
 		self.readyToLaser = parameters[2]; // lid_fully_open & debug tab with mrb state
         self.settings = parameters[3];
+        self.workingArea = parameters[4];
 
 		self.settingsActive = ko.observable(false);
 		self.cameraSettingsActive = ko.observable(false);
@@ -32,7 +33,7 @@ $(function () {
          * Only returns an URL if the image element is visible.
          */
         self.statusRawImageUrl = ko.computed(function() {
-            return self.settingsActive() && self.cameraSettingsActive() ? self.availablePicUrl()['raw'] : null
+            return self.settingsActive() && self.cameraSettingsActive() ? self.camera.availablePicUrl()['raw'] : null
         })
 
 		// ---------------- CAMERA STATUS ----------------
@@ -127,6 +128,10 @@ $(function () {
 
 		self.onStartupComplete = function () {
 			self.setMarkerDetectionMode()
+
+            $('#settings_plugin_mrbeam_camera_link').click(function(){
+                self.changeUserView('settings')
+            });
 		};
 
 		self.onSettingsShown = function(){
@@ -190,9 +195,9 @@ $(function () {
 		CameraSettingsViewModel,
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
-		["cameraViewModel", "printerStateViewModel", "readyToLaserViewModel", "settingsViewModel"],
+		["cameraViewModel", "printerStateViewModel", "readyToLaserViewModel", "settingsViewModel", "workingAreaViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-		["#settings_plugin_mrbeam_camera"]
+		["#camera_settings_view"]
 	]);
 });

@@ -5,13 +5,14 @@
  * License: AGPLv3
  */
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
-
+const STATIC_URL = "/plugin/mrbeam/static/img/calibration/calpic_wait.svg";
 
 $(function () {
 	function CalibrationViewModel(parameters) {
 		let self = this;
 		window.mrbeam.viewModels['calibrationViewModel'] = self;
 		self.cameraSettings = parameters[0]
+        self.camera = parameters[1]
 
         self.calibrationScreenShown = ko.observable(false);
 		self.startupComplete = ko.observable(false);
@@ -23,24 +24,11 @@ $(function () {
 		self.onStartupComplete = function () {
 		    self.calibrationScreenShown(true); // todo user lens calibration: when should we do this?
             self.startupComplete(true);
-
-			$('#settings_plugin_mrbeam_camera_link').click(function(){
-                self.resetUserView()
-            });
 		};
 
 		self.resetUserView = function() {
 			self.cameraSettings.changeUserView('settings')
 		}
-
-		self.resetView = function () {
-			self.focusX(0);
-			self.focusY(0);
-			self.calSvgScale(1);
-			self.currentMarker = 0;
-
-			self.resetUserView()
-		};
 
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {
 			data = data || {}
@@ -102,7 +90,7 @@ $(function () {
 		}
 
 
-		// todo iratxe: delete?
+		// This isn't used for now, but it's planned to use it for Watterott
 		self.engrave_markers_without_gui = function () {
 			var intensity = $('#initialcalibration_intensity').val()
 			var feedrate = $('#initialcalibration_feedrate').val()
@@ -131,9 +119,9 @@ $(function () {
 		CalibrationViewModel,
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
-		["cameraSettingsViewModel"],
+		["cameraSettingsViewModel", "cameraViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-		["#settings_plugin_mrbeam_camera"]
+		[]
 	]);
 });

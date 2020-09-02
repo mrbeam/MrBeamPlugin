@@ -15,6 +15,7 @@ $(function () {
         let self = this;
         window.mrbeam.viewModels['lensCalibrationViewModel'] = self;
         self.calibration = parameters[0]
+        self.analytics = parameters[1]
 
         self.lensCalibrationActive = ko.observable(false);
 
@@ -37,7 +38,8 @@ $(function () {
 		});
 
 		self.lensCalibrationComplete = ko.computed(function(){
-			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
+			return ('lensCalibration' in self.calibration.calibrationState()) ?
+                self.calibration.calibrationState().lensCalibration === "success" : false;
 		});
 
 		self.boardsFound = ko.computed(function() {
@@ -127,7 +129,7 @@ $(function () {
         self.startLensCalibration = function () {
             self.analytics.send_fontend_event('lens_calibration_start', {});
             self.lensCalibrationActive(true);
-            self.simpleApiCommand(
+            self.calibration.simpleApiCommand(
                 "calibration_lens_start",
                 {},
                 self._refreshPics,
@@ -161,7 +163,7 @@ $(function () {
         // todo user lens calibration: this is new, check
         self.abortLensCalibration = function () {
             self.stopLensCalibration();
-            self.calibration.resetView();
+            self.resetView();
         }
 
         self.stopLensCalibration = function () {
@@ -198,6 +200,11 @@ $(function () {
         self.saveLensCalibrationData = function () {
             // I don't know if this should be called here or what. The idea is that we don't save the calibration until the user clicks on save.
             self.runLensCalibration();
+        };
+
+        self.resetView = function () {
+            // todo user lens calibration: is there something else we should do here?
+            self.calibration.resetUserView();
         };
 
         self.saveRawPic = function () {
@@ -330,9 +337,9 @@ $(function () {
         LensCalibrationViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["calibrationViewModel"],
+        ["calibrationViewModel", "analyticsViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-        ["#settings_plugin_mrbeam_camera"]
+        ["#lens_calibration_view"]
     ]);
 });

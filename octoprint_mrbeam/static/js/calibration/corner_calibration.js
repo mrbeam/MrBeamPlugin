@@ -9,7 +9,6 @@
 const DEFAULT_IMG_RES = [2048, 1536]
 const CROPPED_IMG_RES = [500,390]
 const LOADING_IMG_RES = [512, 384]
-const STATIC_URL = "/plugin/mrbeam/static/img/calibration/calpic_wait.svg";
 
 $(function () {
     function CornerCalibrationViewModel(parameters) {
@@ -19,14 +18,10 @@ $(function () {
         self.workingArea = parameters[1];
         self.conversion = parameters[2];
         self.camera = parameters[3];
+        self.analytics = parameters[4];
 
         self.cornerCalibrationActive = ko.observable(false);
         self.waitingForRefresh = ko.observable(true);
-        self.availablePic = ko.observable({
-            'raw': false,
-            'lens_corrected': false,
-            'cropped': false,
-        })
         self.currentResults = ko.observable({});
 
         self.focusX = ko.observable(0);
@@ -64,25 +59,6 @@ $(function () {
 		self.calSvgDy = ko.observable(0);
 		self.calSvgScale = ko.observable(1);
 
-		self._availablePicUrl = ko.observable({'default': STATIC_URL, 'raw': null, 'lens_corrected': null, 'cropped': null, })
-		self.availablePicUrl = ko.computed(function() {
-			var ret = self._availablePicUrl();
-			var before = _.clone(ret); // shallow copy
-			for (let _t of [['cropped', self.camera.croppedUrl],
-							['lens_corrected', self.camera.undistortedUrl],
-							['raw', self.camera.rawUrl]]) {
-				if (self.availablePic()[_t[0]])
-					ret[_t[0]] = (_t[0] === 'cropped')? self.camera.timestampedCroppedImgUrl()
-					                                  : self.camera.getTimestampedImageUrl(_t[1]);
-			}
-			self._availablePicUrl(ret)
-			var selectedTab = $('#camera-calibration-tabs .active a').attr('id')
-			if (selectedTab === 'lenscal_tab_btn')
-				return before
-			else
-				return ret
-		})
-
 		self.calSvgViewBox = ko.computed(function () {
 			var zoom = self.calSvgScale();
 			var w = self.calImgWidth() / zoom;
@@ -99,9 +75,53 @@ $(function () {
 			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		})
 
+        self.applySetting = function(picType, applyCrossVisibility) {
+			// TODO with a dictionary
+			let settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
+			                ['lens_corrected', DEFAULT_IMG_RES, 'hidden', 'hidden'],
+			                ['raw', DEFAULT_IMG_RES, 'visible', 'hidden'],
+			                ['default', LOADING_IMG_RES, 'hidden', 'hidden']]
+			for (let _t of settings)
+				if (_t[0] === picType) {
+					self.calImgWidth(_t[1][0])
+					self.calImgHeight(_t[1][1])
+					if(applyCrossVisibility){
+						self.correctedMarkersVisibility(_t[2])
+						self.croppedMarkersVisibility(_t[3])
+					}
+					return
+				}
+			new PNotify({
+				title: gettext("Error"),
+				text: "Something went wrong (applySettings)",
+				type: 'error',
+				hide: true
+			});
+		};
+
+        self._getImgUrl = function(type, applyCrossVisibility) {
+			if (type !== undefined) {
+				self.applySetting(type, applyCrossVisibility)
+				if (type == 'default')
+					return self.staticURL
+				else
+					return self.camera.availablePicUrl()[type]
+			}
+			for (let _t of ['cropped', 'lens_corrected', 'raw', 'default'])
+				if (_t === 'default' || self.camera.availablePic()[_t]){
+					self.applySetting(_t, applyCrossVisibility)
+					if (_t == 'default')
+						return self.staticURL
+					else
+						return self.camera.availablePicUrl()[_t]
+				}
+			self.applySetting('default')
+			return self.staticURL // precaution
+		};
+
         self.cornerCalImgUrl = ko.computed(function() {
 			if (!self.cornerCalibrationActive()) {
-				if (self.availablePic()['cropped']) {
+				if (self.camera.availablePic()['cropped']) {
 				    self._cornerCalImgUrl(self._getImgUrl('cropped', true))
                 } else {
 				    self._cornerCalImgUrl(self._getImgUrl('raw', true))
@@ -153,7 +173,7 @@ $(function () {
 				let _d = data['beam_cam_new_image'];
 				if (_d['undistorted_saved'] && !self.cornerCalibrationActive()) {
 					if (_d['available']) {
-						self.availablePic(_d['available'])
+						self.camera.availablePic(_d['available'])
 					}
 
 					if (window.mrbeam.isWatterottMode() && (selectedTab === "cornercal_tab_btn" || self.waitingForRefresh())) {
@@ -195,7 +215,7 @@ $(function () {
         self.abortCornerCalibration = function () {
             // Please check: stopCornerCalibration wasn't here
             self.stopCornerCalibration();
-            self.calibration.resetView();
+            self.resetView();
         };
 
 		self.stopCornerCalibration = function () {
@@ -216,8 +236,17 @@ $(function () {
                 }
             };
             console.log('Sending data:', data);
-            self.simpleApiCommand("send_corner_calibration", data, self._saveMarkersSuccess, self._saveMarkersError, "POST");
+            self.calibration.simpleApiCommand("send_corner_calibration", data, self._saveMarkersSuccess, self._saveMarkersError, "POST");
         };
+
+		self.resetView = function () {
+			self.focusX(0);
+			self.focusY(0);
+			self.calSvgScale(1);
+			self.currentMarker = 0;
+
+			self.calibration.resetUserView();
+		};
 
         self._saveMarkersError = function () {
             self.cornerCalibrationActive(false);
@@ -228,7 +257,7 @@ $(function () {
                 hide: true
             });
 
-            self.calibration.resetView();
+            self.resetView();
         };
 
         self._saveMarkersSuccess = function (response) {
@@ -240,7 +269,7 @@ $(function () {
                 type: "success",
                 hide: true
             });
-            self.calibration.resetView();
+            self.resetView();
         };
 
 
@@ -280,33 +309,13 @@ $(function () {
                 })
 			};
 
-		    self.simpleApiCommand(
+		    self.calibration.simpleApiCommand(
 		        "generate_calibration_markers_svg",
                 {},
                 success_callback,
                 error_callback,
                 "GET"
             )
-		};
-
-        self._getImgUrl = function(type, applyCrossVisibility) {
-			if (type !== undefined) {
-				self.applySetting(type, applyCrossVisibility)
-				if (type == 'default')
-					return self.staticURL
-				else
-					return self.availablePicUrl()[type]
-			}
-			for (let _t of ['cropped', 'lens_corrected', 'raw', 'default'])
-				if (_t === 'default' || self.availablePic()[_t]){
-					self.applySetting(_t, applyCrossVisibility)
-					if (_t == 'default')
-						return self.staticURL
-					else
-						return self.availablePicUrl()[_t]
-				}
-			self.applySetting('default')
-			return self.staticURL // precaution
 		};
 
         // MARKER NAVIGATION
@@ -381,30 +390,6 @@ $(function () {
 			return clickpos;
 		};
 
-		self.applySetting = function(picType, applyCrossVisibility) {
-			// TODO with a dictionary
-			let settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
-			                ['lens_corrected', DEFAULT_IMG_RES, 'hidden', 'hidden'],
-			                ['raw', DEFAULT_IMG_RES, 'visible', 'hidden'],
-			                ['default', LOADING_IMG_RES, 'hidden', 'hidden']]
-			for (let _t of settings)
-				if (_t[0] === picType) {
-					self.calImgWidth(_t[1][0])
-					self.calImgHeight(_t[1][1])
-					if(applyCrossVisibility){
-						self.correctedMarkersVisibility(_t[2])
-						self.croppedMarkersVisibility(_t[3])
-					}
-					return
-				}
-			new PNotify({
-				title: gettext("Error"),
-				text: "Something went wrong (applySettings)",
-				type: 'error',
-				hide: true
-			});
-		};
-
 
 		self.loadUndistortedPicture = function (callback) {
 			let success_callback = function (data) {
@@ -431,7 +416,7 @@ $(function () {
 				if (typeof callback === 'function')
 					callback(resp);
 			};
-			self.simpleApiCommand(
+			self.calibration.simpleApiCommand(
 				"take_undistorted_picture",
 				{},
 				success_callback,
@@ -446,9 +431,10 @@ $(function () {
         CornerCalibrationViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["calibrationViewModel", "workingAreaViewModel", "vectorConversionViewModel", "cameraViewModel"],
+        ["calibrationViewModel", "workingAreaViewModel", "vectorConversionViewModel", "cameraViewModel",
+        "analyticsViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-        ["#settings_plugin_mrbeam_camera"]
+        ["#corner_calibration_view"]
     ]);
 });
