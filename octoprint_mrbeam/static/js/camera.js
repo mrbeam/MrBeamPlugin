@@ -19,7 +19,7 @@ $(function(){
             'SE': gettext('Bottom right')
         }
 
-        self.needsCalibration = false;
+        self.needsCalibration = ko.observable(false);
 
         self.rawUrl = '/downloads/files/local/cam/debug/raw.jpg'; // TODO get from settings
         self.undistortedUrl = '/downloads/files/local/cam/debug/undistorted.jpg'; // TODO get from settings
@@ -156,7 +156,7 @@ $(function(){
         };
 
         self._needCalibration = function(val) {
-            if ((val === undefined || val) && !self.needsCalibration) {
+            if ((val === undefined || val) && !self.needsCalibration()) {
                 new PNotify({
                     title: gettext("Corner Calibration needed"),
                     text: gettext("Please calibrate the camera under Settings -> Camera -> Corner Calibration."),
@@ -166,9 +166,9 @@ $(function(){
                 });
             }
             if (val !== undefined)
-                self.needsCalibration = val;
+                self.needsCalibration(val);
             else
-                self.needsCalibration = true;
+                self.needsCalibration(true);
         }
 
         self.loadImage = function (url) {

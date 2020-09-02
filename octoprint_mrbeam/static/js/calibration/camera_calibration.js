@@ -123,7 +123,8 @@ $(function () {
 		self.cameraStatusOk = ko.computed(function () {
 			return self.readyToLaser.lid_fully_open()
                 && self.statusOnlyOperational()
-                && self.fourMarkersFound(); // This already includes the other two, but just to see it more clear
+                && self.fourMarkersFound()
+			          && !self.camera.needsCalibration(); // This already includes the other two, but just to see it more clear
 		})
 
         self.lidMessage  = ko.computed(function() {
