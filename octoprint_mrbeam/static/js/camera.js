@@ -118,6 +118,9 @@ $(function(){
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
+            if ('need_camera_calibration' in data) {
+                self._needCalibration(data['camera_calibration']);
+            }
             if ('beam_cam_new_image' in data) {
                 const mf = data['beam_cam_new_image']['markers_found'];
                 _markersFound = {};
@@ -131,16 +134,9 @@ $(function(){
                 self.markersFound(_markersFound);
 
                 if (data['beam_cam_new_image']['error'] === undefined) {
-                    self.needsCalibration = false;
-                } else if (data['beam_cam_new_image']['error'] === "Camera_calibration_is_needed" && !self.needsCalibration) {
-                    self.needsCalibration = true;
-                    new PNotify({
-                        title: gettext("Calibration needed"),
-                        text: gettext("Please calibrate the camera under Settings -> Camera Calibration"),
-                        type: "warning",
-                        tag: "calibration_needed",
-                        hide: false
-                    });
+                    self._needCalibration(false);
+                } else if (data['beam_cam_new_image']['error'] === "Camera_calibration_is_needed") {
+                    self._needCalibration(true);
                 }
                 if ('workspace_corner_ratio' in data['beam_cam_new_image']) {
                     // workspace_corner_ratio should be a float
@@ -158,6 +154,22 @@ $(function(){
 				self.cameraMarkerElem.attr('class', '');
 			}
         };
+
+        self._needCalibration = function(val) {
+            if ((val === undefined || val) && !self.needsCalibration) {
+                new PNotify({
+                    title: gettext("Corner Calibration needed"),
+                    text: gettext("Please calibrate the camera under Settings -> Camera -> Corner Calibration."),
+                    type: "warning",
+                    tag: "calibration_needed",
+                    hide: false
+                });
+            }
+            if (val !== undefined)
+                self.needsCalibration = val;
+            else
+                self.needsCalibration = true;
+        }
 
         self.loadImage = function (url) {
             var myImageUrl = self.getTimestampedImageUrl(url);

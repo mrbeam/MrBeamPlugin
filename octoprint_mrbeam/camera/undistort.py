@@ -186,12 +186,9 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 			_pic_settings = pic_settings
 	else:
 		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
-
-	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
-		if not (k in _pic_settings and _isValidQdDict(_pic_settings[k])):
-			_pic_settings[k] = None
-			logger.warning(ERR_NEED_CALIB)
-			return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
+	if need_corner_calibration(_pic_settings):
+		logger.warning(ERR_NEED_CALIB)
+		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 	# get corners of working area
 	workspaceCorners = {qd: markers[qd] - _pic_settings[CALIB_MARKERS_KEY][qd][::-1] + _pic_settings[CORNERS_KEY][qd][::-1] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
@@ -497,6 +494,13 @@ def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
 		#     settings_changed = True
 
 	return pic_settings
+
+def need_corner_calibration(pic_settings):
+	# pic settings : path (str) or dict, for now just dict
+	if pic_settings is None: return True
+	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
+		if not (k in pic_settings and _isValidQdDict(pic_settings[k])):
+			return True
 
 def _isValidQdDict(qdDict):
 	"""

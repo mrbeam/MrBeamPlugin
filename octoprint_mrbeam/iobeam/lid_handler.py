@@ -26,7 +26,7 @@ from octoprint_mrbeam.camera import exc as exc
 if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
-		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
+		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY, ERR_NEED_CALIB, need_corner_calibration
 from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
 from octoprint_mrbeam.util import dict_merge, get_thread, makedirs
 from octoprint_mrbeam.util.log import json_serialisor, logme
@@ -138,6 +138,12 @@ class LidHandler(object):
 		elif event == OctoPrintEvents.CLIENT_OPENED:
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed)
 			self._client_opened = True
+			pic_settings = _getPicSettings(self._settings.get(["cam", "correctionSettingsFile"]))
+			if need_corner_calibration(pic_settings):
+				self._logger.warning(ERR_NEED_CALIB)
+				self._plugin_manager.send_plugin_message(
+					"mrbeam",
+					dict(need_camera_calibration=True))
 			self._startStopCamera(event)
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
 			self._client_opened = False
