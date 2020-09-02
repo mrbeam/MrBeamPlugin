@@ -2457,18 +2457,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._mac_addrs
 
 
-# MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
-# Per default OP always accepts .stl files.
-# Here we monkey-patch the remove of this file type
-def _op_filemanager_full_extension_tree_wrapper():
-	res = op_filemanager.full_extension_tree_original()
-	res.get('model', {}).pop('stl', None)
-	return res
-
-
-if not 'full_extension_tree_original' in dir(op_filemanager):
-	op_filemanager.full_extension_tree_original = op_filemanager.full_extension_tree
-	op_filemanager.full_extension_tree = _op_filemanager_full_extension_tree_wrapper
+# # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+# # Per default OP always accepts .stl files.
+# # Here we monkey-patch the remove of this file type
+# def _op_filemanager_full_extension_tree_wrapper():
+# 	res = op_filemanager.full_extension_tree_original()
+# 	res.get('model', {}).pop('stl', None)
+# 	return res
+#
+#
+# if not 'full_extension_tree_original' in dir(op_filemanager):
+# 	import logging
+# 	logging.getLogger('ANDYTEST').info("ANDYTEST doing stuff")
+# 	logging.getLogger('ANDYTEST').info("ANDYTEST doing stuff: op_filemanager: %s", op_filemanager)
+# 	op_filemanager.full_extension_tree_original = op_filemanager.full_extension_tree
+# 	op_filemanager.full_extension_tree = _op_filemanager_full_extension_tree_wrapper
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
@@ -2528,5 +2531,4 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
 		"octoprint.cli.commands": get_cli_commands
-
 	}

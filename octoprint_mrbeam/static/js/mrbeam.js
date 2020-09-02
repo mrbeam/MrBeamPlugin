@@ -179,6 +179,7 @@ $(function () {
         self.wizardacl = parameters[1];
         self.users = parameters[2];
         self.loginState = parameters[3];
+        self.system = parameters[4];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
@@ -252,8 +253,8 @@ $(function () {
         self.onStartupComplete = function(){
             self.presetLoginUser()
         }
-
         self.onCurtainOpened = function(){
+            self.removeOpSafeModeOptionFromSystemMenu();
             self.showBrowserWarning()
             self.showBetaNotifications()
         }
@@ -396,6 +397,15 @@ $(function () {
             }
         };
 
+        /**
+         * MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+         * Hides the option "Restart OctoPrint in safe mode"
+         * Removes the 4th element from the system menu.
+         */
+        self.removeOpSafeModeOptionFromSystemMenu = function(){
+            self.system.systemActions.remove(function(c){return c.action === "restart_safe"});
+        };
+
         // Backdrop Temporary Solution - start
         // Todo: should be removed once OctoPrint is updated
         const mutationTargetNode = document.body;
@@ -450,7 +460,7 @@ $(function () {
         MrbeamViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel", "wizardAclViewModel", "usersViewModel", "loginStateViewModel"],
+        ["settingsViewModel", "wizardAclViewModel", "usersViewModel", "loginStateViewModel", "systemViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ /* ... */]

@@ -669,7 +669,7 @@ $(function(){
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_progressive').prop('checked', p.progressive);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
-				$(job).find('.compressor_range').val(p.cut_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
+				$(job).find('.param_cut_compressor').val(p.cut_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
 			}
 		};
 		self.apply_engraving_proposal = function(){
@@ -878,7 +878,7 @@ $(function(){
 				var piercetime = $(job).find('.param_piercetime').val();
 				var progressive = $(job).find('.param_progressive').prop('checked');
 				var passes = $(job).find('.param_passes').val();
-				let cut_compressor = $(job).find('.compressor_range').val();
+				let cut_compressor = $(job).find('.param_cut_compressor').val();
 
 				if (prepareForBackend) {
 				    cut_compressor = self.mapCompressorValue(cut_compressor);

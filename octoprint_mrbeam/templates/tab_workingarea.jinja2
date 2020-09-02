@@ -73,7 +73,7 @@
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
-                                                    <div data-bind="visible: camera.cameraActive() && camera.markerStateColor() !== 'green'">
+                                                    <div data-bind="visible: camera.cameraActive() && camera.showMarkerWarning">
 
                                                         <div>
                                                             <p style="display: inline-block">
@@ -84,8 +84,10 @@
                                                                 <strong>{{ _('Preview not accurate:') }}</strong><br/>
                                                                 {{ _('The preview camera image might not be completely accurate.
                                                                 Make sure that all four markers are visible.') }}
-                                                                <a href="https://support.mr-beam.org/support/solutions/articles/43000577720-message-preview-not-accurate-and-pink-circles-flashing-on-working-area" target="_blank" style="font-size: 11px"><i class="icon-external-link"></i> More info</a><br/>
-                                                                <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal"><i class="fa fa-heartbeat"></i> Send image to Mr&nbsp;Beam</a>
+                                                                <a href="https://support.mr-beam.org/support/solutions/articles/43000577720-message-preview-not-accurate-and-pink-circles-flashing-on-working-area" target="_blank" style="font-size: 11px">
+                                                                    <i class="icon-external-link"></i> {{ _('More info') }}
+                                                                </a><br/>
+                                                                <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal"><i class="fa fa-heartbeat"></i> {{ _('Send image to Mr&nbsp;Beam') }}</a>
                                                             </p>
                                                         </div>
 
@@ -132,7 +134,6 @@
                                                         </div>
 
 
-{#														<button type="button" data-bind="click: camera.send_camera_image_to_analytics">Send image to Mr Beam</button>#}
 													</div>
 													<div data-bind="style: { display: camera.imgResolutionNoticeDisplay() }">
 													    <span style="font-weight: bold">{{ _('Low') }}</span> {{ _('Picture Quality') }}
@@ -141,21 +142,17 @@
 														</span>
 													</div>
 													<div>
-														<label>
+														<label style="cursor: default;">
 															{{ _('Brightness') }}:
 														</label>
 														<i class="icon-adjust"></i>
-{#														<input type="range" min="0" max="1" step="0.01"#}
-{#															   style="width:80%;"#}
-{#															   class="decent_input img_adjust"#}
-{#															   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">#}
                                                         <input id="preview-brightness" type="range" min="0" max="1" step="0.01"
                                                            style="width:80%;"
                                                            class="mrb_slider"
                                                            value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">
 													</div>
 													<div>
-														<label>
+														<label style="cursor: default;">
 															{{ _('Zoom') }}: <span data-bind="text:zoom_factor_text"></span>
 														</label>
 														<div id="zoom_monitor_wrapper">
@@ -163,7 +160,7 @@
 																	style: { 'padding-bottom': (100 * hwRatio())+'%' },
 																	event: { mousewheel: wheel_zoom_monitor }
 																 ">
-                                                <div data-bind="style: {
+                                                                <div data-bind="style: {
 																		width: (100*zoom())+'%',
 																		'padding-bottom': (100*zoom()*hwRatio())+'%',
 																		left: (zoomOffX() / workingAreaWidthMM() * 100) + '%',
@@ -175,7 +172,7 @@
 														</div>
 													</div>
                                                     <div class="experimental_feature_beta">
-                                                        {{ _('Object height') }}
+                                                        <label  style="cursor: default;">{{ _('Object height') }}:</label>
 {#                                                         Translators: millimiters, unit of length#}
                                                         <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input" value="0"
                                                                data-bind="value: camera.objectZ, valueUpdate: 'input'"
@@ -333,7 +330,7 @@
                                                 <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-                                                </br>
+                                                <br>
                                                 <i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
                                                 <input class="decent_input horizontal" type="text" value="? mm"
                                                        data-bind="event: {
@@ -348,7 +345,7 @@
                                                 <input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
-                                                </br>
+                                                <br>
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
@@ -364,7 +361,7 @@
 																	</a>
 																	<ul class="dropdown-menu">
 																		<li class="mrb_inactive_item">
-																			<i class="icon-sitemap" title="{{ _('split') }}"></i> split
+																			<i class="icon-sitemap" title="{{ _('split') }}"></i> {{ _('split') }}
                                                                         </li>
                                                                         <li>
 																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'stroke-color'); }} ">{{ _('by stroke color') }}</a>
@@ -409,7 +406,7 @@
                                                 <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-                                                </br>
+                                                <br>
                                                 <i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
                                                 <input class="decent_input horizontal" type="text" value="? mm"
                                                        data-bind="event: {
@@ -424,7 +421,7 @@
                                                 <input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
-                                                </br>
+                                                <br>
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
@@ -476,7 +473,7 @@
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
 																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
-                                                                            </br>
+                                                                            <br>
                                                                         </div>
                                                                         <div class="img-preprocess-cont">
                                                                             <i class="icon-magic"
@@ -557,6 +554,7 @@
                                 <script type="text/html" id="wa_template_quicktext">
                                     <div class="file_list_entry"
                                          data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+                                        <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
                                         <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
                                         <div class="btn-group action-buttons pull-right">
                                             <div class="btn btn-mini"
@@ -580,7 +578,7 @@
                                                 <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-                                                </br>
+                                                <br>
                                                 <i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
                                                 <input class="decent_input horizontal" type="text" value="? mm"
                                                        data-bind="event: {
@@ -595,7 +593,7 @@
                                                 <input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
-                                                </br>
+                                                <br>
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
@@ -635,7 +633,7 @@
                                                 <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-                                                </br>
+                                                <br>
                                                 <i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
                                                 <input class="decent_input horizontal" type="text" value="? mm"
                                                        data-bind="event: {
@@ -650,7 +648,7 @@
                                                 <input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
-                                                </br>
+                                                <br>
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },

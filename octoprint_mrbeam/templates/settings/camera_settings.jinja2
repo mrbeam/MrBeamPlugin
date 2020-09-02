@@ -8,7 +8,7 @@
                 data-bind="css: cameraStatusOk() == true ? 'requirement-met' : 'requirement-not-met'">
                 {{ _("Status") }}
             </h4>
-            <div data-bind="visible: !availablePicUrl()['raw']">
+            <div data-bind="visible: !availablePic()['raw']">
                 <p>{{ _("The camera is not able to take new pictures. Please check the following:") }}</p>
             </div>
 
@@ -18,11 +18,11 @@
                     <span data-bind="text: lidMessage()"></span>
                 </li>
                 <li class="requirement"
-                    data-bind="css: isLocked() ==  false ? 'requirement-met' : 'requirement-not-met'">
-                    <span data-bind="text: lockedMessage()"></span>
+                    data-bind="css: statusOnlyOperational() ==  true ? 'requirement-met' : 'requirement-not-met'">
+                    <span data-bind="text: onlyOperationalMessage()"></span>
                 </li>
                 <li class="requirement"
-                    data-bind="css: camera.markerState() == 4 ? 'requirement-met' : 'requirement-not-met'">
+                    data-bind="css: fourMarkersFound() == true ? 'requirement-met' : 'requirement-not-met'">
                     <span data-bind="text: markersMessage()"></span>
                     <span class="muted show_only_online">({{ _("More about markers %(opening_tag)shere%(closing_tag)s.",
                 opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000577720-message-preview-not-accurate-and-pink-circles-flashing-on-working-area" target="_blank"><i class="icon-external-link"></i>&nbsp;',
@@ -33,7 +33,7 @@
                 </li>
             </ul>
 
-            <table class="camera-status-images" data-bind="visible: availablePicUrl()['raw']">
+            <table class="camera-status-images" data-bind="visible: availablePic()['raw']">
                 <tr>
                     <td>
                         <svg class="camera-picture" data-bind=" attr: { viewBox: workingArea.zoomViewBox(), } "
@@ -56,8 +56,8 @@
                         </a>
                     </td>
                     <td class="camera-picture">
-                        <img data-bind="attr: {src: availablePicUrl()['raw']}"/>
-                        <a data-bind="attr: { href: availablePicUrl()['raw'] }">
+                        <img data-bind="attr: {src: statusRawImageUrl}"/>
+                        <a data-bind="attr: { href: statusRawImageUrl }">
                             <i class="fa fa-download" aria-hidden="true"></i>
                         </a>
                     </td>
@@ -87,7 +87,7 @@
                 closing_tag='</a>') }}
 
                 </div>
-                <small data-bind="visible: availablePicUrl()['raw']">
+                <small data-bind="visible: availablePic()['raw']">
                     <i class="fa fa-download"
                        aria-hidden="true"></i>: {{ _("You can use the download button on the images to save your camera picture and provide it to the support team, if necessary.") }}
                 </small>

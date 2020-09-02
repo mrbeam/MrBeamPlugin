@@ -132,6 +132,16 @@ $(function () {
             if($('#designstore_tab_btn').parent().hasClass("active")){
                 self.sendMessageToDesignStoreIframe('goToStore', {})
             }
+        };
+
+        self.reloadDesignStoreIframe = function () {
+            let refreshButtonElement = $('.refresh-connection');
+            let refreshButtonText = refreshButtonElement.text();
+            refreshButtonElement.text("...");
+            setTimeout(function() {
+                refreshButtonElement.text(refreshButtonText);
+            }, 3000);
+            document.getElementById('design_store_iframe').src = self.DESIGN_STORE_IFRAME_SRC;
         }
     }
 

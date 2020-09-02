@@ -873,7 +873,10 @@ $(function(){
 
 				// copy namespaces into group
 				if(attr.name.indexOf("xmlns") === 0){
-					namespaces[attr.name] = attr.value;
+				    // Illustrator uses namespaces that reference a entity defined as ENTITY outside of the xml of the svg.
+                    // like this: xmlns:x="&ns_extend;"
+                    // We replace it to xmlns:x="ENTITYREF_ns_extend"
+					namespaces[attr.name] = attr.value.replace(/&/g, "ENTITYREF_").replace(/;/g, "");
 				}
 			}
 			return namespaces;
@@ -2054,14 +2057,18 @@ $(function(){
 		};
 
 		self.onTabChange = function(current, prev){
+            // Since Settings is not a BS dialog anymore,
+            // we need to trigger 'show' and 'hidden' events "manually"
+            // for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
 			if(current == '#settings'){
-				// Since Settings is not a BS dialog anymore,
-				// we need to trigger 'show' and 'hidden' events "manually"
-				// for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
 				if (self.settings && self.settings.settingsDialog) {
 					self.settings.settingsDialog.trigger('show');
 				}
-			}
+			} else if(prev == '#settings') {
+			    if (self.settings && self.settings.settingsDialog) {
+					self.settings.settingsDialog.trigger('hide');
+				}
+            }
 		};
 
 		self.onAfterTabChange = function(current, prev){
