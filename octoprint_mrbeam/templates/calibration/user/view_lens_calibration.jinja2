@@ -70,7 +70,7 @@
                     data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
                     <li class="lens_correction_image_thumb"
                         data-bind="	style: { backgroundImage: pic.state !== 'camera_processing' ? 'url('+pic.url+'?'+pic.state+')' : '' },
-                            event:{ mouseover: $root.heatmap_highlight, mouseout: $root.heatmap_dehighlight }"
+                            event:{ mouseover: $root.highlightHeatmap, mouseout: $root.dehighlightHeatmap }"
                         onclick="this.classList.remove('zoom')"> <!-- toggle class messes with rm btn -->
                         <div class="btn-group">
                             <button class="btn btn-mini btn-default"

@@ -508,7 +508,7 @@ $(function () {
 			items.remove();
 			$('#bulkActions').slideUp();
 		}
-		
+
 		/**
 		 * gcodefiles viewmodel methods for folder support
 		 * changeFolder: ƒ (data)

@@ -16,7 +16,7 @@
         </li>
         <li>{{ _('Engrave the calibrations markers on your material by clicking on this button:') }}<br>
             <button class="btn btn-primary"
-                    data-bind="click: engrave_markers, enable: (!state.isLocked() && !state.isConnecting())">
+                    data-bind="click: engraveMarkers, enable: (!camera.state.isLocked() && !camera.state.isConnecting())">
                 {{ _('Engrave Calibration Markers') }}
             </button>
         </li>
@@ -27,7 +27,7 @@
                 <li>{{ _('Click on "next" to continue with the other markers as the picture changes.') }}</li>
                 <li>{{ _('Once all arrowheads are marked the calibration is finished and can be saved.') }}</li>
             </ul>
-            <button class="btn btn-primary" data-bind="click: startCornerCalibration, visible: cal_img_ready() && !cornerCalibrationActive()">
+            <button class="btn btn-primary" data-bind="click: startCornerCalibration, visible: calImgReady() && !cornerCalibrationActive()">
                 {{ _('Start Calibration') }}
             </button>
         </li>
@@ -66,7 +66,7 @@
     </svg>
     <div>
         <div>
-            <a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i
+            <a class="accordion-toggle" data-bind="click:calibration.loadUndistortedPicture"><i
                     class="icon-repeat"></i> {{ _('refresh') }}</a>
             <div class="marker_selection_desc calibration_waiting_for_picture">
                 <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i
@@ -81,30 +81,30 @@
                 <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i
                         class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.NE"></span>
                 </div>
-                <div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i
+                <div class="marker_found_indicator" data-bind="visible: !calImgReady()"><i
                         class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
             </div>
             <a class="muted" data-bind="attr: { href: cornerCalImgUrl() }"> {{ _('Download this image') }}</a>
         </div>
         <div class="marker_selection_desc calibration_help"
-             data-bind="visible: cal_img_ready() && !cornerCalibrationActive()">
+             data-bind="visible: calImgReady() && !cornerCalibrationActive()">
         </div>
         <div class="marker_selection_desc calibration_summary">
             <div data-bind="css: {complete: cornerCalibrationComplete()}">
                 <!-- "Debug" values of where the user pointed the tip of the arrow. -->
-                <div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
+                <div data-bind="visible: calImgReady() && cornerCalibrationActive()">
                     <div id="NW" class="cal-row" data-bind="click: goToMarker(1)">
                         <div class="cal-arrow NW"></div>
-                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.NW"></span>: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
+                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.NW"></span>: <span data-bind="text: _formatPoint(currentResults()['NW'])"></span></div>
                     <div id="SW" class="cal-row" data-bind="click: goToMarker(2)">
                         <div class="cal-arrow SW"></div>
-                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.SW"></span>: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
+                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.SW"></span>: <span data-bind="text: _formatPoint(currentResults()['SW'])"></span></div>
                     <div id="SE" class="cal-row" data-bind="click: goToMarker(3)">
                         <div class="cal-arrow SE"></div>
-                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.SE"></span>: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
+                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.SE"></span>: <span data-bind="text: _formatPoint(currentResults()['SE'])"></span></div>
                     <div id="NE" class="cal-row" data-bind="click: goToMarker(4)">
                         <div class="cal-arrow NE"></div>
-                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.NE"></span>: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
+                        <span data-bind="text: camera.MARKER_DESCRIPTIONS.NE"></span>: <span data-bind="text: _formatPoint(currentResults()['NE'])"></span></div>
                 </div>
             </div>
             <div style="margin-top:1em;" data-bind="visible: cornerCalibrationActive()">
