@@ -569,10 +569,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@property
 	def calibration_tool_mode(self):
 		"""Get the calibration tool mode"""
-		# ret = check_calibration_tool_mode(self)
-		# self._fixEmptyUserManager()
-		# return ret
-		return True
+		ret = check_calibration_tool_mode(self)
+		self._fixEmptyUserManager()
+		return ret
 
 	##~~ UiPlugin mixin
 
