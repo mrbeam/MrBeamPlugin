@@ -11,11 +11,12 @@ $(function () {
 	function CalibrationViewModel(parameters) {
 		let self = this;
 		window.mrbeam.viewModels['calibrationViewModel'] = self;
-		self.cameraSettings = parameters[0]
-        self.camera = parameters[1]
+		self.cameraSettings = parameters[0];
+        self.camera = parameters[1];
 
         self.calibrationScreenShown = ko.observable(false);
 		self.startupComplete = ko.observable(false);
+		self.waitingForRefresh = ko.observable(true);
 
 		// calibrationState is constantly refreshed by the backend
 		// as an immutable array that contains the whole state of the calibration
@@ -54,40 +55,39 @@ $(function () {
 			}
 		}
 
-		// ---------------- CAMERA ALIGNMENT ----------------
-		self.qa_cameraalignment_image_loaded = ko.observable(false);
-		$('#qa_cameraalignment_image').load(function(){
-		    self.qa_cameraalignment_image_loaded(true)
-        })
+		self.loadUndistortedPicture = function (callback) {
+			let success_callback = function (data) {
+				new PNotify({
+					title: gettext("Picture requested"),
+					text: data['msg'],
+					type: 'info',
+					hide: true
+				});
+				if (typeof callback === 'function')
+					callback(data);
+				else {
+					self.waitingForRefresh(true)
+					console.log("Calibration picture requested.");
+				}
+			};
+			let error_callback = function (resp) {
+				new PNotify({
+					title: gettext("Something went wrong. It's not you, it's us."),
+					text: resp.responseText,
+					type: 'warning',
+					hide: true
+				});
+				if (typeof callback === 'function')
+					callback(resp);
+			};
+			self.simpleApiCommand(
+				"take_undistorted_picture",
+				{},
+				success_callback,
+				error_callback
+			)
+		};
 
-		// todo iratxe: put this somewhere else?
-        self.printLabel = function (labelType, event) {
-			let button = $(event.target)
-			let label = button.text().trim()
-			button.prop("disabled", true);
-			self.simpleApiCommand('print_label',
-				{labelType: labelType,
-                        blink: true},
-				function () {
-					button.prop("disabled", false);
-					new PNotify({
-						title: gettext("Printed: ") + label,
-						type: "success",
-						hide: false
-					})
-				},
-				function (response) {
-					button.prop("disabled", false);
-					let data = response.responseJSON
-					new PNotify({
-						title: gettext("Print Error") + ': ' + label,
-						text: data ? data.error : '',
-						type: "error",
-						hide: false
-					})
-				},
-				'POST')
-		}
 
 
 		// This isn't used for now, but it's planned to use it for Watterott

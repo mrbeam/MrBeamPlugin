@@ -21,7 +21,6 @@ $(function () {
         self.analytics = parameters[4];
 
         self.cornerCalibrationActive = ko.observable(false);
-        self.waitingForRefresh = ko.observable(true);
         self.currentResults = ko.observable({});
 
         self.focusX = ko.observable(0);
@@ -150,7 +149,7 @@ $(function () {
 
 		self.onStartupComplete = function () {
 		    if(window.mrbeam.isWatterottMode()){
-				self.loadUndistortedPicture();
+				self.calibration.loadUndistortedPicture();
 			}
 		};
 
@@ -176,7 +175,7 @@ $(function () {
 						self.camera.availablePic(_d['available'])
 					}
 
-					if (window.mrbeam.isWatterottMode() && (selectedTab === "cornercal_tab_btn" || self.waitingForRefresh())) {
+					if (window.mrbeam.isWatterottMode() && (selectedTab === "cornercal_tab_btn" || self.calibration.waitingForRefresh())) {
 						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?ts=' + new Date().getTime());
 						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?ts=' + new Date().getTime());
 						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?ts=' + new Date().getTime());
@@ -194,9 +193,9 @@ $(function () {
 					else if(self.cornerCalibrationActive()){
 						console.log("Not all Markers found, are the pink circles obstructed?");
 						// As long as all the corners were not found, the camera will continue to take pictures
-						// self.loadUndistortedPicture();
+						// self.calibration.loadUndistortedPicture();
 					}
-					self.waitingForRefresh(false)
+					self.calibration.waitingForRefresh(false)
 				}
 			}
 		};
@@ -262,6 +261,7 @@ $(function () {
 
         self._saveMarkersSuccess = function (response) {
             self.cornerCalibrationActive(false);
+            self.calibration.cornerCalibrationComplete(true);  // todo user lens calibration: too hacky?
             self.analytics.send_fontend_event('corner_calibration_finish', {});
             new PNotify({
                 title: gettext("Camera Calibrated."),
@@ -390,40 +390,6 @@ $(function () {
 			return clickpos;
 		};
 
-
-		self.loadUndistortedPicture = function (callback) {
-			let success_callback = function (data) {
-				new PNotify({
-					title: gettext("Picture requested"),
-					text: data['msg'],
-					type: 'info',
-					hide: true
-				});
-				if (typeof callback === 'function')
-					callback(data);
-				else {
-					self.waitingForRefresh(true)
-					console.log("Calibration picture requested.");
-				}
-			};
-			let error_callback = function (resp) {
-				new PNotify({
-					title: gettext("Something went wrong. It's not you, it's us."),
-					text: resp.responseText,
-					type: 'warning',
-					hide: true
-				});
-				if (typeof callback === 'function')
-					callback(resp);
-			};
-			self.calibration.simpleApiCommand(
-				"take_undistorted_picture",
-				{},
-				success_callback,
-				error_callback
-			)
-		};
-
     }
 
     // view model class, parameters for constructor, container to bind to
@@ -435,6 +401,6 @@ $(function () {
         "analyticsViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-        ["#corner_calibration_view"]
+        ["#corner_calibration_view", "#tab_corner_calibration", "#tab_corner_calibration_wrap"]
     ]);
 });

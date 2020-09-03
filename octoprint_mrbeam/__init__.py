@@ -536,6 +536,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/calibration/calibration.js",
 				"js/calibration/corner_calibration.js",
 				"js/calibration/lens_calibration.js",
+				"js/calibration/watterott/camera_alignment.js",
+				"js/calibration/watterott/calibration_qa.js",
+				"js/calibration/watterott/label_printer.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/backlash_settings.css",
@@ -566,9 +569,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@property
 	def calibration_tool_mode(self):
 		"""Get the calibration tool mode"""
-		ret = check_calibration_tool_mode(self)
-		self._fixEmptyUserManager()
-		return ret
+		# ret = check_calibration_tool_mode(self)
+		# self._fixEmptyUserManager()
+		# return ret
+		return True
 
 	##~~ UiPlugin mixin
 

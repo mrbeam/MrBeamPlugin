@@ -10,7 +10,7 @@
 
     <div id="lensCalibrationPictureTaking">
         <div style='position:relative;'>
-            <svg id="heatmap_container" version="1.1" enable-background="new 0 0 211 141"
+            <svg id="heatmap_container" style="width: 45%;display: inline-block;" version="1.1" enable-background="new 0 0 211 141"
                viewBox="0 0 3100 2500" height="100%" width="100%" y="0px" x="0px">
               <radialGradient gradientUnits="userSpaceOnUse" gradientTransform="matrix(1,0,0,0.9565,0,-7.4897)"
                  r="91.003799" cy="81.540604" cx="105.5" id="SVGID_1_">
@@ -82,7 +82,7 @@
     <div id="lensCalibrationQA">
         <div data-bind="visible: lensCalibrationNpzFileTs" class="qa_images">
             <div class="qa_img_wrapper">
-                <image data-bind="attr: {src: availablePicUrl()['lens_corrected']}" />
+                <image data-bind="attr: {src: camera.availablePicUrl()['lens_corrected']}" />
                 <div id="qa_undistorted_guides"></div>
             </div>
             <ul>

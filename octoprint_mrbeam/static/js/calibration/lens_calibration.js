@@ -14,8 +14,9 @@ $(function () {
     function LensCalibrationViewModel(parameters) {
         let self = this;
         window.mrbeam.viewModels['lensCalibrationViewModel'] = self;
-        self.calibration = parameters[0]
-        self.analytics = parameters[1]
+        self.calibration = parameters[0];
+        self.analytics = parameters[1];
+        self.camera = parameters[2];
 
         self.lensCalibrationActive = ko.observable(false);
 
@@ -53,6 +54,10 @@ $(function () {
         self.onStartupComplete = function () {
 			if(window.mrbeam.isWatterottMode()){
 				self._refreshPics();
+
+				$('#lenscal_tab_btn').click(function(){
+                    self.startLensCalibration()
+                });
 			}
 		};
 
@@ -337,9 +342,9 @@ $(function () {
         LensCalibrationViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["calibrationViewModel", "analyticsViewModel"],
+        ["calibrationViewModel", "analyticsViewModel", "cameraViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-        ["#lens_calibration_view"]
+        ["#lens_calibration_view", "#tab_lens_calibration", "#tab_lens_calibration_wrap"]
     ]);
 });
