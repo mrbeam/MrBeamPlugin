@@ -16,7 +16,6 @@ $(function () {
 		self.dialogTimeoutId = -1;
 		self.gcodeFile = undefined;
 
-		self.interlocks_closed = ko.observable(true);
 		self.is_cooling_mode = ko.observable(false);
 		self.is_fan_connected = ko.observable(true);
 		self.is_rtl_mode = ko.observable(false);
@@ -218,7 +217,7 @@ $(function () {
 					self.is_pause_mode(mrb_state['pause_mode']);
 				}
 				if ('interlocks_closed' in mrb_state) {
-					self.interlocks_closed(mrb_state['interlocks_closed']);
+					self.state.interlocksClosed(mrb_state['interlocks_closed']);
 				}
 				if ('lid_fully_open' in mrb_state) {
 					self.lid_fully_open(mrb_state['lid_fully_open']);
