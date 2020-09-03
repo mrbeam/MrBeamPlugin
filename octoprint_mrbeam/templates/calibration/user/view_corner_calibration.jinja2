@@ -16,7 +16,9 @@
         </li>
         <li>{{ _('Engrave the calibrations markers on your material by clicking on this button:') }}<br>
             <button class="btn btn-primary"
-                    data-bind="click: engraveMarkers">{{ _('Engrave Calibration Markers') }}</button>
+                    data-bind="click: engraveMarkers, enable: (!state.isLocked() && !state.isConnecting())">
+                {{ _('Engrave Calibration Markers') }}
+            </button>
         </li>
         <li>{{ _('Wait until the engraving is finished and Mr Beam Status Lights are green. Open the safety lid again and be carefult NOT to touch the engraved material. The camera will now take a picture of the engraving.') }}</li>
         <li>{{ _('Start the calibration by clicking on the button, and then follow these steps:') }}

@@ -84,14 +84,18 @@ class BoardDetectorDaemon(Thread):
 		     stateChangeCallback=None,
 		     runCalibrationAsap=False,
 	             event_bus=None,
-		     rawImgLock=None):
+		     rawImgLock=None,
+		     state=None):
 		self._logger = mrb_logger(__name__, lvl=logging.INFO)
 		# runCalibrationAsap : run the lens calibration when we have enough pictures ready
 		self.event_bus = event_bus
 		self.rawImgLock = rawImgLock
 
 		# State of the detection & calibration
-		self.state = calibrationState(changeCallback=stateChangeCallback, npzPath=output_calib, rawImgLock=rawImgLock)
+		if state is None:
+			self.state = calibrationState(changeCallback=stateChangeCallback, npzPath=output_calib, rawImgLock=rawImgLock)
+		else:
+			self.state = state
 
 		self.output_file = output_calib
 
@@ -185,6 +189,10 @@ class BoardDetectorDaemon(Thread):
 	def __getitem__(self, item):
 		return self.state[item]
 
+	def fire_event(self, *args, **kw):
+		if self.event_bus is not None:
+			self.event_bus.fire(*args, **kw)
+
 	def next_tmp_img_name(self):
 		return TMP_RAW_FNAME.format(self.path_inc)
 
@@ -232,14 +240,16 @@ class BoardDetectorDaemon(Thread):
 			if loopcount % 20 == 0 :
 				self._logger.debug("Running... %s procs running, stopsignal : %s" %
 						  (len(runningProcs), self._stop.is_set()))
-			self.state.refresh(imgFoundCallback=self.event_bus.fire, args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,))
+			self.state.refresh(imgFoundCallback=self.fire_event, args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,))
 			# if self.idle:
 			# self._logger.debug("waiting to be restarted")
-			if (self.state.lensCalibration['state'] == STATE_PENDING or self.startCalibrationWhenIdle) \
+			if self.state.lensCalibration['state'] == STATE_PENDING \
+			   and self.startCalibrationWhenIdle \
 			   and self.detectedBoards >= MIN_BOARDS_DETECTED:
 				self._logger.info("Start lens calibration.")
-				self.startCalibrationWhenIdle = False
 
+				self.state.calibrationBusy()
+				self.startCalibrationWhenIdle = False
 				availableResults = self.state.getSuccesses()
 				objPoints = []
 				imgPoints = []
@@ -254,13 +264,12 @@ class BoardDetectorDaemon(Thread):
 					lensCalibrationProcQueue)
 				lensCalibrationProc = Process(target=runLensCalibration, args=args)
 				lensCalibrationProc.start()
-				self.state.calibrationBusy()
-				self.event_bus.fire(MrBeamEvents.LENS_CALIB_RUNNING)
+				self.fire_event(MrBeamEvents.LENS_CALIB_RUNNING)
 				self._logger.info("EVENT LENS CALIBRATION RUNNING")
 			elif len(self) >= 9 and self.idle and self.detectedBoards < MIN_BOARDS_DETECTED:
 				if not stateIdleAndNotEnoughGoodBoard:
 					stateIdleAndNotEnoughGoodBoard = True
-					self.event_bus.fire(MrBeamEvents.LENS_CALIB_FAIL)
+					self.fire_event(MrBeamEvents.LENS_CALIB_FAIL)
 				if loopcount % 20 == 0 :
 					self._logger.debug("Only %i boards detected yet, %i necessary" % (self.detectedBoards , MIN_BOARDS_DETECTED))
 			if not self.idle or self.detectedBoards > MIN_BOARDS_DETECTED:
@@ -286,7 +295,7 @@ class BoardDetectorDaemon(Thread):
 				# self.state.updateCalibration(*tuple(map(lambda x: res[x],
 				# 					['ret', 'mtx', 'dist', 'rvecs', 'tvecs'])
 				lensCalibrationProc.join()
-				self.event_bus.fire(MrBeamEvents.LENS_CALIB_DONE)
+				self.fire_event(MrBeamEvents.LENS_CALIB_DONE)
 				self._logger.info("EVENT LENS CALIBRATION DONE")
 			if lensCalibrationProc and \
 			   lensCalibrationProc.exitcode is not None and \
@@ -318,6 +327,7 @@ class BoardDetectorDaemon(Thread):
 
 			if self._stop.wait(.1): break
 		self._logger.warning("Stop signal intercepted")
+		self.lensCalibrationStarted = False
 		resultQueue.close()
 		if self._terminate.is_set():
 			self._logger.info("Terminating processes")
@@ -326,7 +336,7 @@ class BoardDetectorDaemon(Thread):
 		self._logger.debug("Joining processes")
 		for path, proc in runningProcs.items():
 			proc.join()
-		self.event_bus.fire(MrBeamEvents.LENS_CALIB_EXIT)
+		self.fire_event(MrBeamEvents.LENS_CALIB_EXIT)
 		self._logger.info("Lens calibration exited")
 
 
@@ -493,6 +503,9 @@ class calibrationState(dict):
 			self.changeCallback(returnState)
 
 	def add(self, path, board_size=(CB_ROWS, CB_COLS), state=STATE_PENDING_CAMERA, index=-1):
+		if path in self.keys():
+			# was already added
+			return
 		self[path] = dict(
 			tm_added=time.time(), # when picture was taken
 			state=state,
@@ -502,6 +515,7 @@ class calibrationState(dict):
 			index=index,
 		)
 		dirlist = os.listdir(os.path.dirname(path))
+		self.lensCalibration['state'] = STATE_PENDING
 		if os.path.basename(path) + ".npz" in dirlist:
 			self._logger.debug("Found previous npz file for %s" % path)
 			self.load(path) # Triggers self.onChange()
@@ -573,8 +587,12 @@ class calibrationState(dict):
 			self.onChange()
 		return changed
 
+	def getElmInState(self, state):
+		return dict(filter(lambda _s: _s[1]['state'] == state, self.items()))
+
+
 	def getSuccesses(self):
-		return list(filter(lambda _s: _s['state'] == STATE_SUCCESS, self.values()))
+		return self.getElmInState(STATE_SUCCESS).values()
 
 	def getAll(self):
 		return self
@@ -584,7 +602,7 @@ class calibrationState(dict):
 			if imgState['state'] == STATE_QUEUED: return path
 
 	def getAllPending(self):
-		return list(map(lambda elm: elm[0], filter(lambda elm: elm[1]['state'] == STATE_QUEUED, self.items())))
+		return self.getElmInState(STATE_QUEUED).keys()
 
 	def getProcessing(self):
 		return list(filter(lambda _s: _s['state'] == STATE_PROCESSING, self.values()))

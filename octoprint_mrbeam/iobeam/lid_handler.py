@@ -100,11 +100,12 @@ class LidHandler(object):
 
 		# TODO carefull if photocreator is None
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
-							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus,
 							       rawImgLock = self._photo_creator.rawLock)
-		# self.removeAllTmpPictures() # clean up from the latest calibraton session
+		if not self._plugin.calibration_tool_mode and not self._plugin.is_dev_env():
+			# clean up from the latest calibraton session
+			self.removeAllTmpPictures()
 
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
@@ -266,12 +267,12 @@ class LidHandler(object):
 		When pressing the button 'start lens calibration'
 		Doesn't run the cv2 lens calibration at that point.
 		"""
-		self.getRawImg()
 		self._photo_creator.is_initial_calibration = True
 		self._start_photo_worker()
 		if not self.lensCalibrationStarted and \
 		   self.boardDetectorDaemon.load_dir(self.debugFolder):
 			self._logger.info("Found pictures from previous session")
+		self.getRawImg()
 		self.lensCalibrationStarted = True
 		self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
 		self._logger.warning("EVENT LENS CALIBRATION STARTING")
@@ -346,11 +347,13 @@ class LidHandler(object):
 			self.boardDetectorDaemon.join()
 		except RuntimeError:
 			self._logger.debug("Board Detector wasn't started or had already exited.")
+		self.lensCalibrationStarted = False
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
-							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
-		                                               event_bus = self._event_bus)
-		# self.removeAllTmpPictures()
+		                                               event_bus = self._event_bus,
+							       rawImgLock = self._photo_creator.rawLock)
+		if not self._plugin.calibration_tool_mode and not self._plugin.is_dev_env():
+			self.removeAllTmpPictures()
 
 	def ignoreCalibrationImage(self, path):
 		myPath  = path.join(self.debugFolder, "debug", path)
