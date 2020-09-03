@@ -78,7 +78,6 @@ $(function () {
                 let _d = data['chessboardCalibrationState']
 
                 self.calibration.calibrationState(_d);
-                let arr = []
                 // { '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
                 //      state: "processing",
                 //      tm_proc: 1590151819.735044,
@@ -96,13 +95,14 @@ $(function () {
                     self.lensCalibrationNpzFileTs(_d.lensCalibrationNpzFileTs > 0 ? _d.lensCalibrationNpzFileTs * 1000 : null)
                 }
 
+                let heatmap_arr = []
                 let found_bboxes = [];
                 let total_score = 0;
                 for (const [path, value] of Object.entries(_d.pictures)) {
                     value.path = path;
                     value.url = path.replace("home/pi/.octoprint/uploads", "downloads/files/local");
                     value.processing_duration = value.tm_end !== null ? (value.tm_end - value.tm_proc).toFixed(1) + ' sec' : '?';
-                    arr.push(value);
+                    heatmap_arr.push(value);
                     if (value.board_bbox) {
                         // TODO individual score should be attributed when all boxes are in the list
                         value.score = self._calcPicScore(value.board_bbox, found_bboxes);
@@ -112,9 +112,9 @@ $(function () {
                 }
                 self.updateHeatmap(_d.pictures);
 
-                for (let i = arr.length; i < 9; i++) {
-                    arr.push({
-                        index: i,
+                for (let i = heatmap_arr.length; i < 9; i++) {
+                    heatmap_arr.push({
+                        index: -1,
                         path: null,
                         url: '',
                         state: 'missing'
@@ -123,11 +123,19 @@ $(function () {
 
                 // required to refresh the heatmap
                 $('#heatmap_container').html($('#heatmap_container').html());
-                arr.sort(function (l, r) {
+                heatmap_arr.sort(function (l, r) {
+                    if (l.index == r.index)
+                        return true;
+                    else if (l.index == -1)
+                        return 1;
+                    else if (r.index == -1)
+                        return -1;
+                    else
+                        return l.index < r.index ? -1 : 1;
                     return l.index < r.index ? -1 : 1;
                 });
 
-                self.rawPicSelection(arr);
+                self.rawPicSelection(heatmap_arr);
             }
         };
 
@@ -165,8 +173,8 @@ $(function () {
                 "POST");
         };
 
-        // todo user lens calibration: this is new, check
         self.abortLensCalibration = function () {
+            // TODO - Axel - Allow to kill the board detection.
             self.stopLensCalibration();
             self.resetView();
         }
@@ -185,12 +193,12 @@ $(function () {
                     self.resetLensCalibration();
                 },
                 function () {
-                    // todo lens calibration: is this necessary?
-                    // new PNotify({
-                    // 	title: gettext("Couldn't stop the lens calibration."),
-                    // 	text: gettext("Please verify your connection to the device. Did you try canceling multiple times?"),
-                    // 	type: "warning",
-                    // 	hide: true})
+                    // In case the users experience weird behaviour
+                    new PNotify({
+                    	title: gettext("Couldn't stop the lens calibration."),
+                    	text: gettext("Please verify your connection to the device. Did you try canceling multiple times?"),
+                    	type: "warning",
+                    	hide: true})
                 },
                 "POST");
 
@@ -201,9 +209,8 @@ $(function () {
             self.resetHeatmap();
         };
 
-        // todo user lens calibration: this is new
         self.saveLensCalibrationData = function () {
-            // I don't know if this should be called here or what. The idea is that we don't save the calibration until the user clicks on save.
+            // TODO Gray out button when calibration state is STATE_PROCESSING
             self.runLensCalibration();
         };
 

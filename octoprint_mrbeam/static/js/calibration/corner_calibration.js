@@ -11,24 +11,24 @@ const CROPPED_IMG_RES = [500,390]
 const LOADING_IMG_RES = [512, 384]
 
 $(function () {
-    function CornerCalibrationViewModel(parameters) {
-        let self = this;
-        window.mrbeam.viewModels['cornerCalibrationViewModel'] = self;
-        self.calibration = parameters[0];
-        self.workingArea = parameters[1];
-        self.conversion = parameters[2];
-        self.camera = parameters[3];
-        self.analytics = parameters[4];
+	function CornerCalibrationViewModel(parameters) {
+		let self = this;
+		window.mrbeam.viewModels['cornerCalibrationViewModel'] = self;
+		self.calibration = parameters[0];
+		self.workingArea = parameters[1];
+		self.conversion = parameters[2];
+		self.camera = parameters[3];
+		self.analytics = parameters[4];
 
-        self.cornerCalibrationActive = ko.observable(false);
-        self.currentResults = ko.observable({});
+		self.cornerCalibrationActive = ko.observable(false);
+		self.currentResults = ko.observable({});
 
-        self.focusX = ko.observable(0);
+		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
 
-        self.markersFoundPosition = ko.observable({});
-        self.markersFoundPositionCopy = null;
-        self.dbNWImgUrl = ko.observable("");
+		self.markersFoundPosition = ko.observable({});
+		self.markersFoundPositionCopy = null;
+		self.dbNWImgUrl = ko.observable("");
 		self.dbNEImgUrl = ko.observable("");
 		self.dbSWImgUrl = ko.observable("");
 		self.dbSEImgUrl = ko.observable("");
@@ -74,12 +74,12 @@ $(function () {
 			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		})
 
-        self.applySetting = function(picType, applyCrossVisibility) {
+		self.applySetting = function(picType, applyCrossVisibility) {
 			// TODO with a dictionary
 			let settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
-			                ['lens_corrected', DEFAULT_IMG_RES, 'hidden', 'hidden'],
-			                ['raw', DEFAULT_IMG_RES, 'visible', 'hidden'],
-			                ['default', LOADING_IMG_RES, 'hidden', 'hidden']]
+							['lens_corrected', DEFAULT_IMG_RES, 'hidden', 'hidden'],
+							['raw', DEFAULT_IMG_RES, 'visible', 'hidden'],
+							['default', LOADING_IMG_RES, 'hidden', 'hidden']]
 			for (let _t of settings)
 				if (_t[0] === picType) {
 					self.calImgWidth(_t[1][0])
@@ -98,7 +98,7 @@ $(function () {
 			});
 		};
 
-        self._getImgUrl = function(type, applyCrossVisibility) {
+		self._getImgUrl = function(type, applyCrossVisibility) {
 			if (type !== undefined) {
 				self.applySetting(type, applyCrossVisibility)
 				if (type == 'default')
@@ -118,13 +118,13 @@ $(function () {
 			return self.staticURL // precaution
 		};
 
-        self.cornerCalImgUrl = ko.computed(function() {
+		self.cornerCalImgUrl = ko.computed(function() {
 			if (!self.cornerCalibrationActive()) {
 				if (self.camera.availablePic()['cropped']) {
-				    self._cornerCalImgUrl(self._getImgUrl('cropped', true))
-                } else {
-				    self._cornerCalImgUrl(self._getImgUrl('raw', true))
-                }
+					self._cornerCalImgUrl(self._getImgUrl('cropped', true))
+				} else {
+					self._cornerCalImgUrl(self._getImgUrl('raw', true))
+				}
 			}
 			return self._cornerCalImgUrl()
 		});
@@ -148,23 +148,23 @@ $(function () {
 
 
 		self.onStartupComplete = function () {
-		    if(window.mrbeam.isWatterottMode()){
+			if(window.mrbeam.isWatterottMode()){
 				self.calibration.loadUndistortedPicture();
 			}
 		};
 
 		self.onSettingsShown = function(){
-            self.abortCornerCalibration()
+			self.abortCornerCalibration()
 		};
 
-        // todo user lens calibration: can we simplify/split this?
-        self.onDataUpdaterPluginMessage = function (plugin, data) {
+		// todo user lens calibration: can we simplify/split this?
+		self.onDataUpdaterPluginMessage = function (plugin, data) {
 			if (plugin !== "mrbeam" || !data)
 				return;
 
 			if (!self.calibration.calibrationScreenShown()) {
 				return;
-            }
+			}
 
 			if ('beam_cam_new_image' in data) {
 				// update image
@@ -200,7 +200,7 @@ $(function () {
 			}
 		};
 
-        self.startCornerCalibration = function () {
+		self.startCornerCalibration = function () {
 			self.analytics.send_fontend_event('corner_calibration_start', {});
 			self.cornerCalibrationActive(true);
 			self.picType("raw");
@@ -210,33 +210,33 @@ $(function () {
 			self.nextMarker();
 		};
 
-        // todo user lens calibration
-        self.abortCornerCalibration = function () {
-            // Please check: stopCornerCalibration wasn't here
-            self.stopCornerCalibration();
-            self.resetView();
-        };
+		// todo user lens calibration
+		self.abortCornerCalibration = function () {
+			// Please check: stopCornerCalibration wasn't here
+			self.stopCornerCalibration();
+			self.resetView();
+		};
 
 		self.stopCornerCalibration = function () {
 			self.cornerCalibrationActive(false);
 			self.cornerCalImgUrl() // trigger refresh
 		}
 
-        self.saveCornerCalibrationData = function () {
-            let _corners = self.currentResults()
-            let _k;
-            for (_k of Object.keys(_corners)) {
-                _corners[_k] = [_corners[_k].x, _corners[_k].y]
-            }
-            let data = {
-                result: {
-                    newMarkers: self.markersFoundPositionCopy,
-                    newCorners: self.currentResults()
-                }
-            };
-            console.log('Sending data:', data);
-            self.calibration.simpleApiCommand("send_corner_calibration", data, self._saveMarkersSuccess, self._saveMarkersError, "POST");
-        };
+		self.saveCornerCalibrationData = function () {
+			let _corners = self.currentResults()
+			let _k;
+			for (_k of Object.keys(_corners)) {
+				_corners[_k] = [_corners[_k].x, _corners[_k].y]
+			}
+			let data = {
+				result: {
+					newMarkers: self.markersFoundPositionCopy,
+					newCorners: self.currentResults()
+				}
+			};
+			console.log('Sending data:', data);
+			self.calibration.simpleApiCommand("send_corner_calibration", data, self._saveMarkersSuccess, self._saveMarkersError, "POST");
+		};
 
 		self.resetView = function () {
 			self.focusX(0);
@@ -247,84 +247,84 @@ $(function () {
 			self.calibration.resetUserView();
 		};
 
-        self._saveMarkersError = function () {
-            self.cornerCalibrationActive(false);
-            new PNotify({
-                title: gettext("Couldn't send calibration data."),
-                text: gettext("Please check your connection to the device."),
-                type: "warning",
-                hide: true
-            });
+		self._saveMarkersError = function () {
+			self.cornerCalibrationActive(false);
+			new PNotify({
+				title: gettext("Couldn't send calibration data."),
+				text: gettext("Please check your connection to the device."),
+				type: "warning",
+				hide: true
+			});
 
-            self.resetView();
-        };
-
-        self._saveMarkersSuccess = function (response) {
-            self.cornerCalibrationActive(false);
-            self.calibration.cornerCalibrationComplete(true);  // todo user lens calibration: too hacky?
-            self.analytics.send_fontend_event('corner_calibration_finish', {});
-            new PNotify({
-                title: gettext("Camera Calibrated."),
-                text: gettext("Camera calibration was successful."),
-                type: "success",
-                hide: true
-            });
-            self.resetView();
-        };
-
-
-        self.engraveMarkers = function () {
-		    let success_callback = function (data) {
-				console.log("generated_markers_svg", data);
-                let fileObj = {
-                    "date": Math.floor(Date.now() / 1000),
-                    "name": "CalibrationMarkers.svg",
-                    "origin": "local",
-                    "path": "CalibrationMarkers.svg",
-                    "refs": {
-                        "download": "/downloads/files/local/CalibrationMarkers.svg",
-                        "resource": "/api/files/local/CalibrationMarkers.svg"
-                    },
-                    "size": 594,
-                    "type": "model",
-                    "typePath": [
-                        "model",
-                        "svg"
-                    ]
-                };
-                //clear workingArea from previous designs
-                self.workingArea.clear();
-                // put it on the working area
-                self.workingArea.placeSVG(fileObj, function () {
-                    // start conversion
-                    self.conversion.show_conversion_dialog();
-                });
-			};
-		    let error_callback = function (jqXHR, textStatus, errorThrown) {
-				new PNotify({
-                    title: gettext("Error"),
-                    text: _.sprintf(gettext("Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), {code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
-                    type: "error",
-                    hide: false
-                })
-			};
-
-		    self.calibration.simpleApiCommand(
-		        "generate_calibration_markers_svg",
-                {},
-                success_callback,
-                error_callback,
-                "GET"
-            )
+			self.resetView();
 		};
 
-        // MARKER NAVIGATION
-        self.goToMarker = function(markerNum) {
-		    self.currentMarker = markerNum;
-		    self._highlightStep(self.calibrationMarkers[markerNum])
-        }
+		self._saveMarkersSuccess = function (response) {
+			self.cornerCalibrationActive(false);
+			self.calibration.cornerCalibrationComplete(true);  // todo user lens calibration: too hacky?
+			self.analytics.send_fontend_event('corner_calibration_finish', {});
+			new PNotify({
+				title: gettext("Camera Calibrated."),
+				text: gettext("Camera calibration was successful."),
+				type: "success",
+				hide: true
+			});
+			self.resetView();
+		};
 
-        self.previousMarker = function(){
+
+		self.engraveMarkers = function () {
+			let success_callback = function (data) {
+				console.log("generated_markers_svg", data);
+				let fileObj = {
+					"date": Math.floor(Date.now() / 1000),
+					"name": "CalibrationMarkers.svg",
+					"origin": "local",
+					"path": "CalibrationMarkers.svg",
+					"refs": {
+						"download": "/downloads/files/local/CalibrationMarkers.svg",
+						"resource": "/api/files/local/CalibrationMarkers.svg"
+					},
+					"size": 594,
+					"type": "model",
+					"typePath": [
+						"model",
+						"svg"
+					]
+				};
+				//clear workingArea from previous designs
+				self.workingArea.clear();
+				// put it on the working area
+				self.workingArea.placeSVG(fileObj, function () {
+					// start conversion
+					self.conversion.show_conversion_dialog();
+				});
+			};
+			let error_callback = function (jqXHR, textStatus, errorThrown) {
+				new PNotify({
+					title: gettext("Error"),
+					text: _.sprintf(gettext("Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), {code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
+					type: "error",
+					hide: false
+				})
+			};
+
+			self.calibration.simpleApiCommand(
+				"generate_calibration_markers_svg",
+				{},
+				success_callback,
+				error_callback,
+				"GET"
+			)
+		};
+
+		// MARKER NAVIGATION
+		self.goToMarker = function(markerNum) {
+			self.currentMarker = markerNum;
+			self._highlightStep(self.calibrationMarkers[markerNum])
+		}
+
+		self.previousMarker = function(){
 			let i = self.currentMarker - 1;
 			if(!self.cornerCalibrationComplete() && i === 0) i = -1;
 			if(i < 0) i = self.calibrationMarkers.length - 1;
@@ -333,14 +333,14 @@ $(function () {
 			self._highlightStep(nextStep);
 		};
 
-        self.nextMarker = function(){
+		self.nextMarker = function(){
 			self.currentMarker = (self.currentMarker + 1) % self.calibrationMarkers.length;
 			if(!self.cornerCalibrationComplete() && self.currentMarker === 0) self.currentMarker = 1;
 			let nextStep = self.calibrationMarkers[self.currentMarker];
 			self._highlightStep(nextStep);
 		};
 
-        self._highlightStep = function(step){
+		self._highlightStep = function(step){
 			$('.cal-row').removeClass('active');
 			$('#'+step.name).addClass('active');
 			self.focusX(step.focus[0]);
@@ -390,17 +390,17 @@ $(function () {
 			return clickpos;
 		};
 
-    }
+	}
 
-    // view model class, parameters for constructor, container to bind to
-    OCTOPRINT_VIEWMODELS.push([
-        CornerCalibrationViewModel,
+	// view model class, parameters for constructor, container to bind to
+	OCTOPRINT_VIEWMODELS.push([
+		CornerCalibrationViewModel,
 
-        // e.g. loginStateViewModel, settingsViewModel, ...
-        ["calibrationViewModel", "workingAreaViewModel", "vectorConversionViewModel", "cameraViewModel",
-        "analyticsViewModel"],
+		// e.g. loginStateViewModel, settingsViewModel, ...
+		["calibrationViewModel", "workingAreaViewModel", "vectorConversionViewModel", "cameraViewModel",
+		"analyticsViewModel"],
 
-        // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-        ["#corner_calibration_view", "#tab_corner_calibration", "#tab_corner_calibration_wrap"]
-    ]);
+		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
+		["#corner_calibration_view", "#tab_corner_calibration", "#tab_corner_calibration_wrap"]
+	]);
 });
