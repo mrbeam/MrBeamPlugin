@@ -8,7 +8,7 @@ from abc import ABCMeta, abstractmethod
 import os
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.img import differed_imwrite
-from .definitions import SUCCESS_WRITE_RETVAL, N, S, W, E, QD_KEYS, RATIO_W, RATIO_H, OFFSET_W, OFFSET_H, DIFF_TOLERANCE
+from .definitions import *
 # Python 3 : use ABC instead of ABCMeta
 
 from octoprint_mrbeam.util.log import logtime, logme

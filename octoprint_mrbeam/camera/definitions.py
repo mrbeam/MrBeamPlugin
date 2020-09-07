@@ -144,9 +144,19 @@ STATE_IGNORED = "ignored"
 STATE_PENDING = "pending"
 STATES = [STATE_QUEUED, STATE_PROCESSING, STATE_SUCCESS, STATE_FAIL, STATE_IGNORED, STATE_PENDING, STATE_PENDING_CAMERA]
 
-# Filenames
+# Lens calibration files
+LENS_CALIBRATION = {
+	'path': 'cam', # extra path after the base folder (usually ~/.octoprint/)
+	'legacy': 'lens_correction_2048x1536.npz',
+	'user': 'lens_correction.npz',
+	'factory': 'factory_lens_correction.npz'
+}
+
+
+# Filenames for calibration board pictures
 TMP_PATH =  "/tmp/chess_img_{}.jpg"
 
+# Formated and Regex filenames for calibration board pictures
 TMP_RAW_FNAME = 'tmp_raw_img_{0:0>3}.jpg'
 TMP_RAW_FNAME_RE =  'tmp_raw_img_[0-9]+.jpg$'
 TMP_RAW_FNAME_RE_NPZ =  'tmp_raw_img_[0-9]+.jpg.npz$'

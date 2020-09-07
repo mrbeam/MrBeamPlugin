@@ -280,6 +280,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# -> Multiply all coefficients with the same resize coef. Use cv2.getOptimalNewCameraMatrix to achieve that
 		image_default_width = 2048
 		image_default_height = 1536
+		cam_folder = os.path.join(settings().getBaseFolder('base'), camera.LENS_CALIBRATION['path'])
 
 		return dict(
 			current_profile_id="_mrbeam_junior",  # yea, this needs to be like this # 2018: not so sure anymore...
@@ -331,7 +332,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# TODO: we nee a better and unified solution for our custom paths. Some day...
 				correctionSettingsFile='{}/cam/pic_settings.yaml'.format(settings().getBaseFolder('base')),
 				correctionTmpFile='{}/cam/last_markers.json'.format(settings().getBaseFolder('base')),
-				lensCalibrationFile='{}/cam/lens_correction_{}x{}.npz'.format(settings().getBaseFolder('base'), image_default_width, image_default_height),
+				lensCalibration={ k: os.path.join(cam_folder, camera.LENS_CALIBRATION[k]) for k in ['legacy', 'user', 'factory'] },
 				saveCorrectionDebugImages=False,
 				markerRecognitionMinPixel = MIN_MARKER_PIX,
 				remember_markers_across_sessions = True,

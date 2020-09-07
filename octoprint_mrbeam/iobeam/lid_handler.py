@@ -99,7 +99,8 @@ class LidHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
 		# TODO carefull if photocreator is None
-		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
+
+		self.boardDetectorDaemon = BoardDetectorDaemon(self.get_calibration_file('user'),
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus,
 							       rawImgLock = self._photo_creator.rawLock)
@@ -224,7 +225,7 @@ class LidHandler(object):
 			self._end_photo_worker()
 
 	def _start_photo_worker(self):
-		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
+		path_to_cam_params = self.get_calibration_file()
 		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 
 		mrb_volume = self._laserCutterProfile['volume']
@@ -257,6 +258,30 @@ class LidHandler(object):
 	def refresh_settings(self):
 		# Let's the worker know to refresh the picture settings while running
 		self._photo_creator.refresh_pic_settings.set()
+
+	def get_calibration_file(self, calibration_type=None):
+		"""Gives the location of the best existing lens calibration file, or
+		the demanded type (calibration_type).
+		If in calibration tool mode, it always returns the path to the factory
+		file.
+		"""
+		if self._plugin.calibration_tool_mode:
+			return self._settings.get(["cam", "lensCalibration", 'factory'])
+		def check(t):
+			path = self._settings.get(["cam", "lensCalibration", t])
+			if os.path.isfile(path):
+				return path
+			else:
+				return None
+		if calibration_type is None:
+			ret = check('user') or check('factory') or check('legacy')
+			if ret is not None:
+				return ret
+			else:
+				# Lens calibration by the user is necessary
+				return self._settings.get(["cam", "lensCalibration", 'user'])
+		else:
+			return self._settings.get(["cam", "lensCalibration", calibration_type])
 
 	def compensate_for_obj_height(self, compensate=False):
 		if self._photo_creator is not None:
@@ -348,7 +373,7 @@ class LidHandler(object):
 		except RuntimeError:
 			self._logger.debug("Board Detector wasn't started or had already exited.")
 		self.lensCalibrationStarted = False
-		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
+		self.boardDetectorDaemon = BoardDetectorDaemon(self.get_calibration_file('user'),
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus,
 							       rawImgLock = self._photo_creator.rawLock)
@@ -599,7 +624,7 @@ class PhotoCreator(object):
 			if self.refresh_pic_settings.isSet():
 				self.refresh_pic_settings.clear()
 				path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
-				path_to_lens_calib = self._settings.get(["cam", "lensCalibrationFile"])
+				path_to_lens_calib = self._plugin.lid_handler.get_calibration_file()
 				self._logger.debug("Refreshing picture settings from %s" % path_to_pic_settings)
 				pic_settings = get_corner_calibration(path_to_pic_settings)
 				cam_params = _getCamParams(path_to_lens_calib)
@@ -859,7 +884,7 @@ class PhotoCreator(object):
 			self._logger.warning("_send_last_img_to_analytics_threaded() Can not convert analytics_data to json: %s", self.analytics)
 
 		dist = ''
-		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
+		path_to_cam_params = self._plugin.lid_handler.get_calibration_file()
 		try:
 			with open(path_to_cam_params, 'r') as f:
 				dist = base64.b64encode(f.read())

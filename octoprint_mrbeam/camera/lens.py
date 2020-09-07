@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import datetime
 from multiprocessing import Event, Process, Queue, Value
 from threading import Thread
 import logging
@@ -27,7 +28,7 @@ from octoprint_mrbeam.support import check_calibration_tool_mode
 # MY_HOSTNAME = "MrBeam-8ae9"
 
 _logger = mrb_logger(__name__, lvl=logging.INFO)
-
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 ### LENS UNDISTORTION FUNCTIONS
 
@@ -240,7 +241,11 @@ class BoardDetectorDaemon(Thread):
 			if loopcount % 20 == 0 :
 				self._logger.debug("Running... %s procs running, stopsignal : %s" %
 						  (len(runningProcs), self._stop.is_set()))
-			self.state.refresh(imgFoundCallback=self.fire_event, args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,))
+			if self.state.lensCalibration['state'] == STATE_PENDING \
+			   and len(self) >= MIN_BOARDS_DETECTED:
+				self.state.refresh()
+			else:
+				self.state.refresh(imgFoundCallback=self.fire_event, args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,))
 			# if self.idle:
 			# self._logger.debug("waiting to be restarted")
 			if self.state.lensCalibration['state'] == STATE_PENDING \
@@ -551,7 +556,16 @@ class calibrationState(dict):
 
 	def updateCalibration(self, ret, mtx, dist, rvecs, tvecs):
 		if ret != 0.:
-			self.lensCalibration.update(dict(state=STATE_SUCCESS, err=ret, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs))
+			self.lensCalibration.update(dict(
+				state=STATE_SUCCESS,
+				err=ret,
+				mtx=mtx,
+				dist=dist,
+				rvecs=rvecs,
+				tvecs=tvecs,
+				date=datetime.datetime.now().strftime(DATE_FORMAT),
+				# read with datetime.datetime.strptime(date, DATE_FORMAT)
+				resolution=self.imageSize))
 			self.saveCalibration()
 		# elif state in STATES:
 		# 	self.lastLensCalibrationState = state
@@ -638,6 +652,8 @@ class calibrationState(dict):
 			self.lensCalibration['state'] = STATE_SUCCESS
 		else:
 			self.lensCalibration['state'] = STATE_FAIL
+		if not 'resolution' in self.lensCalibration.keys():
+			self.lensCalibration['resolution'] = LEGACY_STILL_RES
 		self.onChange()
 
 	def clean(self):
