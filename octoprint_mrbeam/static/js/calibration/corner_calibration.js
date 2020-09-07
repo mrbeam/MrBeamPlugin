@@ -185,10 +185,7 @@ $(function () {
 					// check if all markers are found and image is good for calibration
 					if (self.calImgReady() && !self.cornerCalibrationActive()) {
 						// console.log("Remembering markers for Calibration", markers);
-						let _tmp = data['beam_cam_new_image']['markers_pos'];
-						//	i, j -> x, y conversion
-						['NW', 'NE', 'SE', 'SW'].forEach(function(m) {_tmp[m] = _tmp[m].reverse();} );
-						self.markersFoundPosition(_tmp)
+						self.markersFoundPosition(data['beam_cam_new_image']['markers_pos']);
 					}
 					else if(self.cornerCalibrationActive()){
 						console.log("Not all Markers found, are the pink circles obstructed?");
@@ -231,7 +228,7 @@ $(function () {
 			let data = {
 				result: {
 					newMarkers: self.markersFoundPositionCopy,
-					newCorners: self.currentResults()
+					newCorners: _corners
 				}
 			};
 			console.log('Sending data:', data);
