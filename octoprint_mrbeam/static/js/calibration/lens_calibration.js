@@ -62,7 +62,7 @@ $(function () {
 		};
 
         self.onSettingsShown = function(){
-            self.abortLensCalibration()
+            // self.abortLensCalibration()
 		};
 
         // todo user lens calibration: can we simplify/split this?
