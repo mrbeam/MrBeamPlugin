@@ -29,6 +29,7 @@ $(function(){
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;
         self.countImagesLoaded = ko.observable(0);
+        self.imagesInSession = ko.observable(0);
 
         self.markersFound = ko.observable(new Map(MARKERS.map(elm => [elm, undefined])));
 
@@ -104,7 +105,15 @@ $(function(){
         })
 
         self.cameraActive = ko.computed(function() {
-            return self.firstRealimageLoaded() && self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked();
+            let ret = self.firstRealimageLoaded()
+                && self.state.isOperational()
+                && !self.state.isPrinting()
+                && !self.state.isLocked()
+                && !self.state.interlocksClosed();
+            if (!ret) {
+                self.imagesInSession(0);
+            }
+            return ret;
         })
 
         self.markerMissedClass = ko.computed(function() {
@@ -113,6 +122,14 @@ $(function(){
                 if ((self.markersFound()[m] !== undefined) && !self.markersFound()[m])
                     ret = ret + ' marker' + m;
             });
+            if (self.cameraMarkerElem !== undefined){
+                if (self.imagesInSession() == 0) {
+                    ret = ret + ' gray'
+                    // Somehow the filter in css doesn't work
+                    self.cameraMarkerElem.attr({style:"filter: url(#grayscale_filter)"});
+                } else
+                    self.cameraMarkerElem.attr({style:""});
+            }
             return ret;
         })
 
@@ -152,11 +169,6 @@ $(function(){
                 }
                 self.loadImage(self.croppedUrl);
             }
-
-			// If camera is not active (lid closed), all marker(NW|NE|SW|SE) classes should be removed.
-			if('interlocks_closed' in data && data.interlocks_closed === true){
-				self.cameraMarkerElem.attr('class', '');
-			}
         };
 
         self.loadImage = function (url) {
@@ -179,6 +191,7 @@ $(function(){
                 } else {
                     OctoPrint.simpleApiCommand("mrbeam", "on_camera_picture_transfer", {})
                 }
+                self.imagesInSession(self.imagesInSession()+1)
             });
             if (!self.firstImageLoaded) {
                 img.error(function () {
