@@ -123,6 +123,8 @@ class LidHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINTER_STATE_CHANGED,self._printerStateChanged)
 		self._event_bus.subscribe(OctoPrintEvents.LENS_CALIB_START,self._startStopCamera)
+		self._event_bus.subscribe(MrBeamEvents.LENS_CALIB_DONE,self.onEvent)
+
 
 	def onEvent(self, event, payload):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
@@ -159,6 +161,11 @@ class LidHandler(object):
 				self._logger.info("save Img Thread still alive, ignoring request")
 			else:
 				self.saveRawImgThread = get_thread(daemon=True)(self.saveRawImg)()
+
+		elif event == MrBeamEvents.LENS_CALIB_DONE:
+			self._plugin.user_notification_system.show_notifications(
+				self._plugin.user_notification_system.get_notification("lens_calibration_done")
+			)
 
 	def is_lid_open(self):
 		return not self._lid_closed
@@ -317,8 +324,8 @@ class LidHandler(object):
 			if len(self.boardDetectorDaemon) == MIN_BOARDS_DETECTED - 1:
 				self._logger.info("Last picture to be taken")
 				self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
-			elif len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
-				# TODO Only fail for Waterott
+			elif len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED \
+			     and self._plugin.calibration_tool_mode:
 				self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_FAIL)
 				self._logger.info("Ignoring this picture")
 				return
@@ -340,13 +347,12 @@ class LidHandler(object):
 				self.boardDetectorDaemon.waiting.clear()
 			# if n >= MIN_BOARDS_DETECTED - 1:
 			if len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
-				self.startLensCalibration()
-				# TODO If possible, ask the led cli to chain two LED states
+				if self._plugin.calibration_tool_mode:
+					# Watterott - Auto save calibration
+					self.saveLensCalibration()
+				self.boardDetectorDaemon.scaleProcessors(2)
 				t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
 				t.start()
-		# except:
-		# 	self._logger.exception("Exception in _saveRawImgThreaded(): ")
-		# self._logger.info("ANDYTEST _saveRawImgThreaded() thread started")
 
 	@logme(True)
 	def delRawImg(self, path):
@@ -397,13 +403,12 @@ class LidHandler(object):
 			else:
 				return False
 
-	def startLensCalibration(self):
+	def saveLensCalibration(self):
 		if not self.boardDetectorDaemon.is_alive() and not self.boardDetectorDaemon.stopping:
 			self._logger.info("Board detector not alive, starting now")
 			self.boardDetectorDaemon.start()
 
-		self.boardDetectorDaemon.startCalibrationWhenIdle = True
-		self.boardDetectorDaemon.scaleProcessors(4)
+		self.boardDetectorDaemon.saveCalibration()
 		return True
 
 	def updateFrontendCC(self, data):
@@ -635,6 +640,8 @@ class PhotoCreator(object):
 				self._logger.debug("Lens calibraton - wait for the next picture to take")
 				while self._plugin.lid_handler.lensCalibrationStarted:
 					if self.forceNewPic.wait(.05): break
+					if self.stopping: break
+				if self.stopping: break
 				cam.capture()  # starts capture with new settings
 				saveNext = True
 				latest = cam.lastPic()

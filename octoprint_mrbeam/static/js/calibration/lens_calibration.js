@@ -43,6 +43,11 @@ $(function () {
                 self.calibration.calibrationState().lensCalibration === "success" : false;
 		});
 
+        self.lensCalibrationBusy = ko.computed(function(){
+			return ('lensCalibration' in self.calibration.calibrationState()) ?
+                self.calibration.calibrationState().lensCalibration === "processing" : false;
+		});
+
 		self.boardsFound = ko.computed(function() {
 			return self.rawPicSelection().filter(elm => elm.state === "success").length
 		})

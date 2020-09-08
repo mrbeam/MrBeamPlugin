@@ -74,6 +74,7 @@
                         onclick="this.classList.remove('zoom')"> <!-- toggle class messes with rm btn -->
                         <div class="btn-group">
                             <button class="btn btn-mini btn-default"
+                                    data-bind="visible: (pic.path !== null)"
                                     onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
                                 <i class="icon icon-search"></i>
                             </button>
@@ -114,7 +115,11 @@
         {#            </button>#}
         {#        </li>#}
         <div style="margin-top:1em;" data-bind="visible: lensCalibrationActive()">
-            <button class="btn btn-primary" data-bind="click: saveLensCalibrationData, visible: hasMinBoardsFound()">
+            <button class="btn btn-primary"
+                    data-bind="click: saveLensCalibrationData,
+                               visible: hasMinBoardsFound(),
+                           enable: !lensCalibrationBusy()">
+                <!-- " && !lensCalibrationComplete()"> TODO lens calibration data remembers which pictures has beem used with it -->
                 {{ _('Create a new Calibration File') }}</button>
             <button class="btn btn-default" data-bind="click: abortLensCalibration">
                 {{ _('Cancel') }}</button>
