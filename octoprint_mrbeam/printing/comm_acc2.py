@@ -83,6 +83,12 @@ class MachineCom(object):
 	STATE_LOCKED = 12
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
+	# TODO IRATXE do these need to go in a specific order / do the numbers matter?
+	STATE_CANCELLING = 15
+	STATE_STARTING = 16
+	STATE_PAUSING = 17
+	STATE_RESUMING = 18
+	STATE_FINISHING = 19
 
 	GRBL_STATE_QUEUE    = 'Queue'
 	GRBL_STATE_IDLE     = 'Idle'
@@ -2066,6 +2072,30 @@ class MachineCom(object):
 
 	def isPrinting(self):
 		return self._state == self.STATE_PRINTING
+
+	def isCancelling(self):
+		return self._state == self.STATE_CANCELLING
+
+	def isPausing(self):
+		return self._state == self.STATE_PAUSING
+
+	def isResuming(self):
+		return self._state == self.STATE_RESUMING
+
+	def isStarting(self):
+		return self._state == self.STATE_STARTING
+
+	def isFinishing(self):
+		return self._state == self.STATE_FINISHING
+
+	def isSdPrinting(self):
+		return self.isSdFileSelected() and self.isPrinting()
+
+	def isSdFileSelected(self):
+		return self._currentFile is not None and isinstance(self._currentFile, PrintingSdFileInformation)
+
+	def isStreaming(self):
+		return self._currentFile is not None and isinstance(self._currentFile, StreamingGcodeFileInformation) and not self._currentFile.done
 
 	def isPaused(self):
 		return self._state == self.STATE_PAUSED

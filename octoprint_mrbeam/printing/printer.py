@@ -160,7 +160,7 @@ class Laser(Printer):
 		return self._comm is not None and self._comm.isFlashing()
 
 	def _getStateFlags(self):
-		flags = Printer._getStateFlags(self)
+		flags = dict(Printer._getStateFlags(self))  # This returns a frozen dict, so we need to change it
 		flags.update({
 			"locked": self.is_locked(),
 			"flashing": self.is_flashing(),
