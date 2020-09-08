@@ -1510,7 +1510,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# slicer runs on same device as OctoPrint, slicing while printing is hence disabled
 				_while = 'calibrating the camera lens' if self.lid_handler.lensCalibrationStarted else 'lasering'
 				msg = "Cannot convert while {} due to performance reasons".format(_while, **locals())
-				if self.lid_Handler.lensCalibrationStarted:
+				if self.lid_handler.lensCalibrationStarted:
 					msg += '\n  Please abort the lens calibration first.'
 				self._logger.error("gcodeConvertCommand: %s", msg)
 				return make_response(msg, 409)

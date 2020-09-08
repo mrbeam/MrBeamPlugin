@@ -374,7 +374,8 @@ class LidHandler(object):
 
 	def stopLensCalibration(self):
 		self.boardDetectorDaemon.stopAsap()
-		self.boardDetectorDaemon.join()
+		if self.boardDetectorDaemon.is_alive():
+			self.boardDetectorDaemon.join()
 		self.lensCalibrationStarted = False
 		self.boardDetectorDaemon = BoardDetectorDaemon(self.get_calibration_file('user'),
 							       stateChangeCallback=self.updateFrontendCC,
