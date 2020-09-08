@@ -368,10 +368,7 @@ class LidHandler(object):
 
 	def stopLensCalibration(self):
 		self.boardDetectorDaemon.stopAsap()
-		try:
-			self.boardDetectorDaemon.join()
-		except RuntimeError:
-			self._logger.debug("Board Detector wasn't started or had already exited.")
+		self.boardDetectorDaemon.join()
 		self.lensCalibrationStarted = False
 		self.boardDetectorDaemon = BoardDetectorDaemon(self.get_calibration_file('user'),
 							       stateChangeCallback=self.updateFrontendCC,
@@ -633,7 +630,17 @@ class PhotoCreator(object):
 			if self.stopping: break
 
 			latest = cam.lastPic() # gets last picture given by cam.worker
-			cam.async_capture()  # starts capture with new settings
+			if self._plugin.lid_handler.lensCalibrationStarted:
+				# Do not try to do anything fancy during the lens calibration (computationaly lighter)
+				self._logger.debug("Lens calibraton - wait for the next picture to take")
+				while self._plugin.lid_handler.lensCalibrationStarted:
+					if self.forceNewPic.wait(.05): break
+				cam.capture()  # starts capture with new settings
+				saveNext = True
+				latest = cam.lastPic()
+			else:
+				cam.async_capture()  # starts capture with new settings
+
 			if latest is None:
 				# The first picture will be empty, should wait for the 2nd one.
 				self._logger.debug("The last picture is empty")
@@ -667,6 +674,12 @@ class PhotoCreator(object):
 									 "raw.jpg",
 									 folder=path.join(path.dirname(self.final_image_path),"debug"))
 					self.rawLock.release()
+
+			if self._plugin.lid_handler.lensCalibrationStarted:
+				# Do not try to detect markers during the lens
+				# calibration (computationaly light)
+				self.forceNewPic.clear()
+				continue
 
 			# Compare previous image with the current one.
 			if self.forceNewPic.isSet() or prev is None \

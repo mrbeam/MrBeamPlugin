@@ -140,6 +140,11 @@ class MrbCamera(PiCamera, Camera):
 		"""
 		return self.captureLoop.async_next(*args, **kw)
 
+	def capture(self, output=None, format='jpeg', *args, **kwargs):
+		if output is None:
+			output = self.worker
+		PiCamera.capture(self, output, format=format, *args, **kwargs)
+
 	def wait(self):
 		"""
 		Wait for the camera to be done capturing a picture. Blocking call.

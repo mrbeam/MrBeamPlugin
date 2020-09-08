@@ -129,7 +129,7 @@ class BoardDetectorDaemon(Thread):
 		self._startWhenIdle.clear()
 		self.path_inc = 0
 
-		Thread.__init__(self, target=self.processInputImages, name=self.__class__.__name__)
+		Thread.__init__(self, name=self.__class__.__name__)
 
 		# self.daemon = False
 		# catch SIGTERM used by Process.terminate()
@@ -226,7 +226,7 @@ class BoardDetectorDaemon(Thread):
 
 	# @logtime()
 	@logExceptions
-	def processInputImages(self):
+	def run(self):
 		# state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):
 		count = 0
 		runningProcs = {}
@@ -236,8 +236,9 @@ class BoardDetectorDaemon(Thread):
 		lensCalibrationProc = None
 		loopcount = 0
 		stateIdleAndNotEnoughGoodBoard = False
-		while not self._stop.is_set():
+		while not self.stopping:
 			loopcount += 1
+			# self._logger.info("loopcount %i \r", loopcount)
 			if loopcount % 20 == 0 :
 				self._logger.debug("Running... %s procs running, stopsignal : %s" %
 						  (len(runningProcs), self._stop.is_set()))
@@ -280,7 +281,7 @@ class BoardDetectorDaemon(Thread):
 			if not self.idle or self.detectedBoards > MIN_BOARDS_DETECTED:
 				stateIdleAndNotEnoughGoodBoard = False
 			# runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
-			if len(runningProcs.keys()) < self.procs.value and self.state.getPending():
+			if len(runningProcs.keys()) < self.procs.value and self.state.getPending() and not self.stopping:
 				path = self.state.getPending()
 				self.state.update(path, STATE_PROCESSING)
 				count += 1
@@ -321,7 +322,7 @@ class BoardDetectorDaemon(Thread):
 					else:
 						self._logger.debug("Process exited for path %s." % path)
 					runningProcs.pop(path)
-			while not self.stopQueue.empty():
+			while not self.stopQueue.empty() and not self.stopping:
 				path = self.stopQueue.get()
 				if path in runningProcs.keys():
 					self._logger.warning("Killing process for path %s" % path)
@@ -329,8 +330,7 @@ class BoardDetectorDaemon(Thread):
 					# termination might cause the pipe to break if it is in use by the process
 					runningProcs[path].join()
 					runningProcs.pop(path)
-
-			if self._stop.wait(.1): break
+			if self._stop.wait(.02): break
 		self._logger.warning("Stop signal intercepted")
 		self.lensCalibrationStarted = False
 		resultQueue.close()
@@ -375,23 +375,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 	else:
 		raise ValueError("Expected an image or a path to an image in inputFiles.")
 
-	# if callback != None: callback(path, STATE_PROCESSING)
-	# if remote is not None:
-	# 	location = path.join(REMOTE_CALIBRATION_FOLDER, MY_HOSTNAME)
-	# 	remote_loc = remote + ":" + location
-	# 	call(["ssh", "-i", SSH_FILE, remote, "--", "mkdir", "-p", location])
-	# 	call(["scp", '-i', SSH_FILE, state['image_path'], remote_loc])
-	# 	retcode = call(["ssh", '-i', SSH_FILE, remote, "--", "python3", REMOTE_CALIBRATE_EXEC, path.join(location, path.basename(state['image_path']))])
-	# 	if retcode == 0:
-	# 		self.valid_images += 1
-	# 		state['state'] = self.STATE_DONE_OK
-	# 		state['valid'] = True
-	# 	else:
-	# 		state['state'] = self.STATE_DONE_FAIL
-	# 		state['valid'] = False
-	# 		self._logger.warning("Could not calibrate the file :O")
-	# 	return
-
+	logging.info("Finding board")
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	success, found_pattern = findBoard(gray, board_size)
 	_pattern = found_pattern.reshape(-1,2)
@@ -457,17 +441,7 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 	N.B. is supposed to run after the main process has been joined,
 	but can also run in parallel (only uses the available results)
 	"""
-	# if remote is not None:
-	# 	raise NotImplementedError()
-	# 	# retval = call(["ssh", '-i', SSH_FILE, remote, "--", "python3", REMOTE_CALIBRATE_EXEC, "-f", MY_HOSTNAME , "SomeOtherInput" ])
-	# 	# if retval == 0:
-	# 	# 	remote_loc = remote + ":" + path.join(REMOTE_CALIBRATION_FOLDER, MY_HOSTNAME, "/lens_*.npz")
-	# 	# 	retval = call(["scp", '-i', SSH_FILE, remote_loc, "~/.octoprint/cam/"])
-
-	# 	# if retval != 0:
-	# 	# 	raise ValueError("Remote failed to calibrate my camera")
-	# else:
-	signal.signal(signal.SIGTERM, signal.SIG_DFL)
+	# signal.signal(signal.SIGTERM, signal.SIG_DFL)
 	ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints,
 	                                                   imgPoints,
 	                                                   imgRes,
@@ -543,10 +517,11 @@ class calibrationState(dict):
 	def update(self, path, state, **kw):
 		if state in STATES:
 			_data = dict(state = state, **kw)
+			_t = time.time()
 			if(state == STATE_SUCCESS or state == STATE_FAIL):
-				_data["tm_end"] = time.time()
+				_data["tm_end"] = _t
 			if(state == STATE_PROCESSING):
-				_data["tm_proc"] = time.time()
+				_data["tm_proc"] = _t
 			self[path].update(_data)
 			if(state == STATE_SUCCESS or state == STATE_FAIL):
 				self.save(path)
