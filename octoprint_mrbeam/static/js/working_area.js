@@ -2049,8 +2049,9 @@ $(function(){
 			});
 
 			// opens preview pane on the left if hovered over one of the pink markers on the working area
-			$('#camera_markers circle').mouseenter(function(){
-				if (!$('#wa_view_settings_body').hasClass('in')) {
+			$('#camera_markers circle').mouseenter(function(e){
+				if (!$('#wa_view_settings_body').hasClass('in')
+						&& !self.camera.markersFound()[$(e.target).attr('id').replace('marker', '')]) {
 					$('#wa_view_settings_body').collapse('toggle');
 				}
 			});
