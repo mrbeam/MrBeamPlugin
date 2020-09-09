@@ -45,6 +45,8 @@ $(function(){
         self.onAllBound = function () {
             self.cameraActive = ko.computed(function() {
                 // Needs the motherViewModel to set the interlocks
+                // Output not used yet -
+                // Function updates self.imageInSession (Which is used)
                 let ret = self.firstRealimageLoaded()
                     && self.state.isOperational()
                     && !self.state.isPrinting()
