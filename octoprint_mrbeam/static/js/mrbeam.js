@@ -109,6 +109,33 @@ mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
     }
 };
 
+mrbeam._isVersionOrLower = function (actualVersion, expectedVersion) {
+    var VPAT = /^\d+(\.\d+){0,2}$/;
+
+    if (!actualVersion || !expectedVersion || actualVersion.length === 0 || expectedVersion.length === 0)
+        return false;
+    if (actualVersion == expectedVersion)
+        return true;
+    if (VPAT.test(actualVersion) && VPAT.test(expectedVersion)) {
+        var lparts = actualVersion.split('.');
+        while (lparts.length < 3)
+            lparts.push("0");
+        var rparts = expectedVersion.split('.');
+        while (rparts.length < 3)
+            rparts.push("0");
+        for (var i = 0; i < 3; i++) {
+            var l = parseInt(lparts[i], 10);
+            var r = parseInt(rparts[i], 10);
+            if (l === r)
+                continue;
+            return l > r;
+        }
+        return true;
+    } else {
+        return actualVersion <= expectedVersion;
+    }
+};
+
 /**
  * Opens an offline version of the KB (pdf) in a new tab/window respecting user's language
  * @param document - document name without path: '43000431865_custom_materials.pdf'

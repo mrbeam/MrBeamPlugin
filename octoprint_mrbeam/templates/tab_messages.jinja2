@@ -1,0 +1,39 @@
+<div class="tab-pane" id="messages">
+	<div class="container-fluid">
+		<div class="row-fluid">
+			<div class="span12">
+
+
+				<h3>{{ _('Messages') }}</h3>
+
+				<div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
+
+					<div id="message_list" class="scrollable" data-bind="foreach: messages">
+						<div class="message" data-bind="click: $root.unfold_message">
+							<div class="message_pic" data-bind="style: {'background-image': 'url('+images[0]+')' }"></div>
+							<div class="message_text">
+								<div class="text-close"><a href="#" data-bind="click: $root.fold_all_messages, clickBubble: false"><i class="icon icon-remove icon-2x"></i> </a></div>
+								<h5 data-bind="text: content.title"></h5>
+								<div class="message_date" data-bind="text: date"></div>
+								<div class="foldable_content">
+									<span  data-bind="text: content.body"></span>
+									<div class="cta" data-bind="visible: content.cta_url">
+										<a href="#" target="_blank" data-bind="text:content.cta_label, attr: { href: content.cta_url }"></a>
+									</div>
+									<div class="text-fog"><a href="#"> {{ _('more...') }}</a></div>
+									<div class="image_gallery" data-bind="foreach: { data: images, as: 'img' }">
+										<div class="thumb" data-bind="click: $root.img_clicked, style: {'background-image': 'url('+img+')' }"></div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+				</div>
+
+				<br />
+			</div>
+		</div>
+	</div>
+</div>

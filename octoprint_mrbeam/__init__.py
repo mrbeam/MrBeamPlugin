@@ -54,6 +54,7 @@ from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
+from .messages import messages
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
@@ -530,6 +531,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/user_notification_viewmodel.js",
 			    "js/lib/load-image.all.min.js",  # to load custom material images
 			    "js/settings/custom_material.js",
+				"js/messages.js",
 			    "js/design_store.js",
 			    "js/settings_menu_navigation.js",
 			    ],
@@ -543,6 +545,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			     "css/sliders.css",
 			     "css/hopscotch.min.css",
 			     "css/wizard.css",
+				 "css/tab_messages.css",
 			     ],
 			less=["less/mrbeam.less"]
 		)
@@ -690,6 +693,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dict(type='settings', name=gettext("Maintenance"), template='settings/maintenance_settings.jinja2', suffix="_maintenance", custom_bindings=True),
 			dict(type='settings', name=gettext("Mr Beam Lights"), template='settings/leds_settings.jinja2', suffix="_leds", custom_bindings=True),
 			dict(type='settings', name=gettext("Custom Material Settings"), template='settings/custom_material_settings.jinja2', suffix="_custom_material", custom_bindings=True),
+			dict(type='settings', name=gettext("Messages"), template='settings/messages_settings.jinja2', suffix="_messages", custom_bindings=True),
 
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
@@ -906,6 +910,27 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# self._logger.info("custom_material(): response: %s", data)
 		return make_response(jsonify(res), 200)
+
+	# simpleApiCommand: messages;
+	def messages(self, data):
+
+		res = dict(
+			messages=[],
+			put=0)
+
+		try:
+			if 'put' in data and isinstance(data['put'], dict):
+				for key, m in data['put'].iteritems():
+					messages(self).put_custom_message(key, m)
+
+			res['messages'] = messages(self).get_custom_messages()
+
+		except:
+			self._logger.exception("Exception while handling messages(): ")
+			return make_response("Error while handling messages request.", 500)
+
+		return make_response(jsonify(res), 200)
+
 
 	# simpleApiCommand: leds;
 	def set_leds_update(self, data):
@@ -1608,6 +1633,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ready_to_laser=[],
 			cli_event=["event"],
 			custom_materials=[],
+			messages=[],
 			analytics_init=[],  # user's analytics choice from welcome wizard
 			analytics_upload=[],  # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
@@ -1649,6 +1675,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.lasersafety_wizard_api(data)
 		elif command == "custom_materials":
 			return self.custom_materials(data)
+		elif command == "messages":
+			return self.messages(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
 		elif command == "send_corner_calibration":
