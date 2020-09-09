@@ -16,6 +16,7 @@ $(function () {
 		self.dialogTimeoutId = -1;
 		self.gcodeFile = undefined;
 
+		self.state.interlocksClosed = ko.observable(false)
 		self.is_cooling_mode = ko.observable(false);
 		self.is_fan_connected = ko.observable(true);
 		self.is_rtl_mode = ko.observable(false);
