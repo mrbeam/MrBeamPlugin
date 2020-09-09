@@ -154,4 +154,44 @@ input[type="radio"]{
   margin: 50px 0 0 170px;
 }
 
+/*
+* === What's new dialog ===
+*/
+.beta-news-ds-use-case-grid {
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: 1.4fr 0.3fr 0.8fr;
+	width: 90%;
+	margin: 20px 0 0 5px;
+}
 
+.beta-news-ds-info-grid {
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: 1fr 10fr;
+	width: 90%;
+	margin: 20px 0 0 5px;
+}
+
+.beta-news-ds-info-icon {
+  transform: scaleY(0.7);
+  -ms-transform: scaleY(0.7);
+  -moz-transform: scaleY(0.7);
+  -webkit-transform: scaleY(0.7);
+  -o-transform: scaleY(0.7);
+}
+
+.beta-news-arrow {
+  margin: auto;
+  transform: rotate(180deg) scaleY(0.7);
+  -ms-transform: rotate(180deg) scaleY(0.7);
+  -moz-transform: rotate(180deg) scaleY(0.7);
+  -webkit-transform: rotate(180deg) scaleY(0.7);
+  -o-transform: rotate(180deg) scaleY(0.7);
+  filter: invert(41%) sepia(50%) saturate(6758%) hue-rotate(12deg) brightness(99%) contrast(98%);
+}
+
+#ds_title_stars {
+  height: 50px;
+  filter: invert(41%) sepia(50%) saturate(6758%) hue-rotate(12deg) brightness(99%) contrast(98%);
+}
