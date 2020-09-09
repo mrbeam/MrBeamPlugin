@@ -428,8 +428,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				                           data['gcode_nextgen']['clip_working_area'])
 			if "machine" in data and isinstance(data['machine'], collections.Iterable):
 				if "backlash_compensation_x" in data['machine']:
-					self._settings.set_float(["machine", "backlash_compensation_x"],
-				                           data['machine']['backlash_compensation_x'])
+					min_mal = -1.0
+					max_val = 1.0
+					val = data['machine']['backlash_compensation_x']
+					val = max(min(max_val, val), min_mal)
+					self._settings.set_float(["machine", "backlash_compensation_x"], val)
 			if "analyticsEnabled" in data:
 				self.analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 			if "focusReminder" in data:
