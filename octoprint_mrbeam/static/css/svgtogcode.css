@@ -868,7 +868,7 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 
 .camera-calibration-title .btn {
-    border-radius: 100%;
+    border-radius: 999px; /* full size round borders */
     padding: 10px 10px;
     min-width: auto;
 }
@@ -877,7 +877,7 @@ svg#area_preview.overModalBG { z-index: 1051; }
     width: 20px;
 }
 
-.camera-calibration-title span {
+.camera-calibration-title span.title {
     vertical-align: bottom;
     font-size: 24.5px;
     line-height: 40px;
