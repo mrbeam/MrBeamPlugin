@@ -2503,6 +2503,7 @@ def __plugin_load__():
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4",
+						"plugin_mrbeam_beta_news_0",
 				        "plugin_mrbeam_analytics"],
 				settings=['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_mrbeam_maintenance',
 				          'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',

@@ -4,7 +4,10 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class WizardConfig:
 	def __init__(self, plugin):
-		self.WIZARD_VERSION = 19  # (v0.7.0) random number. but we can't go down anymore, just up.
+		# Just a random number, but we can't go down anymore, just up.
+		# If we want to release Beta, then WIZARD_VERSION_BETA should be a higher number than the old WIZARD_VERSION_STABLE
+		self.WIZARD_VERSION_STABLE = 19  # v0.7.0: camera, custom materials backup, SVG split, ...
+		self.WIZARD_VERSION_BETA = 20  # v0.7.4: design store
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
 
@@ -14,18 +17,24 @@ class WizardConfig:
 		self._settings = plugin._settings
 
 		self._is_welcome_wizard = plugin.isFirstRun()
-		self._is_whatsnew_wizard = not plugin.isFirstRun()
+		self._is_whatsnew_wizard = not plugin.isFirstRun() and not self._plugin.is_beta_channel()
+		self._is_beta_news_wizard = not self._plugin.isFirstRun() and self._plugin.is_beta_channel()
 
 		self._current_wizard_config = None
 
 	def get_wizard_version(self):
-		return self.WIZARD_VERSION
+		if self._plugin.is_beta_channel():
+			return self.WIZARD_VERSION_BETA
+		else:
+			return self.WIZARD_VERSION_STABLE
 
 	def get_wizard_name(self):
 		if self._is_welcome_wizard:
 			return "WELCOME"
 		elif self._is_whatsnew_wizard:
 			return "WHATSNEW"
+		elif self._is_beta_news_wizard:
+			return "BETA_NEWS"
 		else:
 			return None
 
@@ -36,6 +45,8 @@ class WizardConfig:
 			self._current_wizard_config = self._welcome_wizard_config()
 		elif self._is_whatsnew_wizard:
 			self._current_wizard_config = self._whatsnew_wizard_config()
+		elif self._is_beta_news_wizard:
+			self._current_wizard_config = self._beta_news_wizard_config()
 
 		for wizard, config in self._current_wizard_config.iteritems():
 			required = config.get('required', False)
@@ -53,6 +64,8 @@ class WizardConfig:
 			wizard_tabs = self._welcome_wizard_config()
 		elif self._is_whatsnew_wizard:
 			wizard_tabs = self._whatsnew_wizard_config()
+		elif self._is_beta_news_wizard:
+			wizard_tabs = self._beta_news_wizard_config()
 
 		for tab, data in wizard_tabs.iteritems():
 			link_ids.append(data['div']+'_link')
@@ -163,6 +176,29 @@ class WizardConfig:
 		)
 
 		return whatsnew_wizard_tabs
+
+	@staticmethod
+	def _beta_news_wizard_config():
+		"""
+		Add here the tabs that should be present in the beta news wizard. Remove when unnecessary.
+		The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
+		The welcome, what's new and beta news wizards are actually the same wizard, so all are configured in the same place.
+
+		Change the "required" to False if that slide should not be present in the dialog, revert otherwise.
+		"""
+		beta_news_wizard_tabs = dict(
+			wizard_beta_news_0=dict(
+				type='wizard',
+				name=gettext("Design Store"),
+				required=True,
+				mandatory=False,
+				suffix='_beta_news_0',
+				template='wizard/wizard_beta_news_0.jinja2',
+				div='wizard_plugin_corewizard_beta_news_0',
+			),
+		)
+
+		return beta_news_wizard_tabs
 
 	def _is_wifi_wizard_required(self):
 		required = False

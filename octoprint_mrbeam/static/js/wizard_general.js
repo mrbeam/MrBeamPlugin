@@ -29,22 +29,21 @@ $(function() {
         self.analytics = parameters[1];
         self.tour = parameters[2];
 
-        self.isWhatsnew = MRBEAM_WIZARD_TO_SHOW === 'WHATSNEW';
         self.isWelcome = MRBEAM_WIZARD_TO_SHOW === 'WELCOME';
+        self.isWhatsnew = MRBEAM_WIZARD_TO_SHOW === 'WHATSNEW';
+        self.isBetaNews = MRBEAM_WIZARD_TO_SHOW === 'BETA_NEWS';
         self.aboutToStart = true;
 
         self.onAfterBinding = function(){
             $('#wizard_dialog div.modal-footer button.button-finish').text(gettext("Let's go!"));
             $('#wizard_dialog div.modal-footer div.text-center').hide();
 
-            if (self.isWhatsnew) {
-                if (!window.mrbeam.isBeta()) {
-                    $('#wizard_dialog div.modal-header h3').text(gettext("What's New"));
-                } else {
-                    $('#wizard_dialog div.modal-header h3').text(gettext("What's New in the Stable Channel"));
-                }
-            } else if (self.isWelcome) {
+            if (self.isWelcome) {
                 $('#wizard_dialog div.modal-header h3').text(gettext("Welcome dialog"));
+            }else if (self.isWhatsnew) {
+                $('#wizard_dialog div.modal-header h3').text(gettext("What's New"));
+            } else if (self.isBetaNews) {
+                $('#wizard_dialog div.modal-header h3').text(gettext("What's New in Beta"));
             }
         };
 
@@ -64,9 +63,11 @@ $(function() {
                 let links = response.mrbeam.details.links;
                 self._changeNavDesignForAllTabsInitialState(links);
 
-                // For the whatsnew we have to manually set the first tab to active
+                // For the whatsnew and beta news we have to manually set the first tab to active
                 if(self.isWhatsnew) {
                     $('#wizard_plugin_corewizard_whatsnew_0_link').attr('class', 'wizard-nav-list-active')
+                } else if (self.isBetaNews) {
+                    $('#wizard_plugin_corewizard_beta_news_0_link').attr('class', 'wizard-nav-list-active')
                 }
             }
         };
