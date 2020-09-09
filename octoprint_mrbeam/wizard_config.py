@@ -4,7 +4,10 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class WizardConfig:
 	def __init__(self, plugin):
-		self.WIZARD_VERSION = 19  # (v0.7.0) random number. but we can't go down anymore, just up.
+		# Just a random number, but we can't go down anymore, just up.
+		# If we want to release Beta, then WIZARD_VERSION_BETA should be a higher number than the old WIZARD_VERSION_STABLE
+		self.WIZARD_VERSION_STABLE = 19  # v0.7.0: camera, custom materials backup, SVG split, ...
+		self.WIZARD_VERSION_BETA = 20  # v0.7.4: design store
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
 
@@ -20,7 +23,10 @@ class WizardConfig:
 		self._current_wizard_config = None
 
 	def get_wizard_version(self):
-		return self.WIZARD_VERSION
+		if self._plugin.is_beta_channel():
+			return self.WIZARD_VERSION_BETA
+		else:
+			return self.WIZARD_VERSION_STABLE
 
 	def get_wizard_name(self):
 		if self._is_welcome_wizard:
