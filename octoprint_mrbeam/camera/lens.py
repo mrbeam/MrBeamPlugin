@@ -183,6 +183,8 @@ class BoardDetectorDaemon(Thread):
 		self._logger.info("Removing picture %s" % path)
 		self.stopQueue.put(path)
 		self.state.remove(path)
+		if self.idle:
+			self.fire_event(MrBeamEvents.LENS_CALIB_IDLE)
 
 	def __len__(self):
 		return len(self.state)
@@ -326,6 +328,8 @@ class BoardDetectorDaemon(Thread):
 				self.state.update(**r)
 				if r['state'] == STATE_SUCCESS:
 					self.state.lensCalibration['state'] = STATE_PENDING
+				if self.idle:
+					self.fire_event(MrBeamEvents.LENS_CALIB_IDLE)
 
 			for path, proc in runningProcs.items():
 				if proc.exitcode is not None:

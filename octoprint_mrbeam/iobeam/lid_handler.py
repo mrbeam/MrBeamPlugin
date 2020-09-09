@@ -339,20 +339,19 @@ class LidHandler(object):
 			# Tell the boardDetector to listen for this file
 			self.boardDetectorDaemon.add(imgPath)
 			_s = self.boardDetectorDaemon.state
-			# n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing()) # Does not include STATE_PENDING_CAMERA
-			# if n >= MIN_BOARDS_DETECTED - 1: # not suitable for waterott
 			if not self.boardDetectorDaemon.is_alive():
 				self.boardDetectorDaemon.start()
 			else:
 				self.boardDetectorDaemon.waiting.clear()
-			# if n >= MIN_BOARDS_DETECTED - 1:
 			if len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
 				if self._plugin.calibration_tool_mode:
 					# Watterott - Auto save calibration
 					self.saveLensCalibration()
+					t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
+					t.start()
+				else:
+					self._event_bus.fire(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS)
 				self.boardDetectorDaemon.scaleProcessors(2)
-				t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
-				t.start()
 
 	@logme(True)
 	def delRawImg(self, path):
