@@ -139,9 +139,11 @@ class LidHandler(object):
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed)
 			self._client_opened = True
 			self._startStopCamera(event)
-		elif event == OctoPrintEvents.CLIENT_CLOSED:
-			self._client_opened = False
-			self._startStopCamera(event)
+		# Please re-enable when the OctoPrint is more reliable at
+		# detecting when a user actually disconnected.
+		# elif event == OctoPrintEvents.CLIENT_CLOSED:
+		# 	self._client_opened = False
+		# 	self._startStopCamera(event)
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 		elif event == IoBeamEvents.ONEBUTTON_RELEASED \
@@ -751,9 +753,9 @@ class PhotoCreator(object):
 				self.send_last_img_to_analytics(
 					trigger='dev_auto', force_upload=(pic_counter%10==0)
 				)
+			self.last_shutter_speed = cam.shutter_speed
 			self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 
-		self.last_shutter_speed = cam.shutter_speed
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
 			session_details.update({
