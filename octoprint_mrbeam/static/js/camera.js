@@ -43,6 +43,18 @@ $(function(){
         // event listener callbacks //
 
         self.onAllBound = function () {
+            self.cameraActive = ko.computed(function() {
+                // Needs the motherViewModel to set the interlocks
+                let ret = self.firstRealimageLoaded()
+                    && self.state.isOperational()
+                    && !self.state.isPrinting()
+                    && !self.state.isLocked()
+                    && !self.state.interlocksClosed();
+                if (!ret) {
+                    self.imagesInSession(0);
+                }
+                return ret;
+            })
             self.webCamImageElem = $("#beamcam_image_svg");
 			self.cameraMarkerElem = $("#camera_markers");
             // self.webCamImageElem.removeAttr('onerror');
@@ -104,17 +116,6 @@ $(function(){
             return self.countImagesLoaded() >= 2;
         })
 
-        self.cameraActive = ko.computed(function() {
-            let ret = self.firstRealimageLoaded()
-                && self.state.isOperational()
-                && !self.state.isPrinting()
-                && !self.state.isLocked()
-                && !self.state.interlocksClosed();
-            if (!ret) {
-                self.imagesInSession(0);
-            }
-            return ret;
-        })
 
         self.markerMissedClass = ko.computed(function() {
             var ret = '';
