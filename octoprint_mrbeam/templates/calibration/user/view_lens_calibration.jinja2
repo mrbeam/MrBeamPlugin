@@ -18,7 +18,7 @@
             closing_tag='</a>') }}</p>
     <small class="muted">
         {{ _('If you do a new lens calibration and later want to go back to the default calibration, you can reset to factory settings here:') }}
-        <button class="btn btn-mini btn-default">{{ _('Restore .npz') }}</button>
+        <button class="btn btn-mini btn-default" data-bind="click: restoreFactory">{{ _('Restore .npz') }}</button>
     </small>
 
     <h4>{{ _('Steps') }}</h4>

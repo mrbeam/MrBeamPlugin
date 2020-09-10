@@ -1637,10 +1637,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			leds=[],
 			generate_backlash_compenation_pattern_gcode=[],
 			compensate_obj_height=[],
-			calibration_save_raw_pic=[],
-			calibration_lens_start=[],
-			calibration_get_raw_pic=[],
 			calibration_del_pic=[],
+			calibration_get_raw_pic=[],
+			calibration_lens_restore_factory=[],
+			calibration_lens_start=[],
+			calibration_save_raw_pic=[],
 			camera_run_lens_calibration=[],
 			camera_stop_lens_calibration=[],
 			generate_calibration_markers_svg=[],
@@ -1730,6 +1731,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.onCalibrationRunLensDistort()
 		elif command == "camera_stop_lens_calibration":
 			return self.onCalibrationStopLensDistort()
+		elif command == "calibration_lens_restore_factory":
+			try:
+				self.lid_handler.revert_factory_lens_calibration()
+				return NO_CONTENT
+			except Exception as e:
+				return make_response("Error %s" % e, 400)
 		elif command == "generate_calibration_markers_svg":
 			return self.generateCalibrationMarkersSvg()  # TODO move this func to other file
 		return NO_CONTENT

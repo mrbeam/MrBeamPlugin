@@ -18,8 +18,6 @@ from flask.ext.babel import gettext
 # from typing import Dict, Any, Union, Callable
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-
-
 # don't crash on a dev computer where you can't install picamera
 from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img
 # from octoprint_mrbeam.camera
@@ -410,6 +408,21 @@ class LidHandler(object):
 
 		self.boardDetectorDaemon.saveCalibration()
 		return True
+
+	def revert_factory_lens_calibration(self):
+		"""
+		The camera reverts to the factory or legacy calibration file.
+		- Removes the user lens calibration file,
+		- Removes the calibration pictures
+		- Refreshes settings.
+
+		"""
+		os.remove(self._settings.get(["cam", "lensCalibration", 'user']))
+		for fname in self.debugFolder:
+			if re.match(TMP_RAW_FNAME_RE, fname) or re.match(TMP_RAW_FNAME_RE_NPZ, fname):
+				fullpath = os.path.join(self.debugFolder, fname)
+				os.remove(fullpath)
+		self.refresh_settings()
 
 	def updateFrontendCC(self, data):
 		if data['lensCalibration'] == STATE_SUCCESS:

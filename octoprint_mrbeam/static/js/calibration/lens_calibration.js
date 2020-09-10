@@ -244,6 +244,28 @@ $(function () {
             );
         }
 
+        self.restoreFactory = function() {
+            // message type not defined - not implemented for Calibration tool
+            self.calibration.simpleApiCommand(
+                "calibration_lens_restore_factory",
+                {},
+                function () {
+                    new PNotify({
+                    	title: gettext("Reverted to factory settings."),
+                    	text: gettext("Your previous calibration and pictures have been deleted."),
+                    	type: "info",
+                    	hide: false})
+                },
+                function () {
+                    new PNotify({
+                    	title: gettext("Failed to revert to factory settings."),
+                    	// text: gettext(""),
+                    	type: "info",
+                    	hide: false})
+                },
+            )
+        }
+
         self._refreshPics = function () {
             self.calibration.simpleApiCommand(
                 "calibration_get_raw_pic",
