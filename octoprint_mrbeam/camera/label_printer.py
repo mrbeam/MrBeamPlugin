@@ -186,13 +186,13 @@ class LabelPrinter(object):
 		return '''
 			^XA
 			^FWN
-			^FO50,20^BY4
-			^BEN,140,Y,N
+			^FO40,20^BY3
+			^BEN,100,Y,N
 			^FD{ean_num}^FS
 			^CF0,30
-			^FO50,212^FDMr Beam II {model}^FS
-			^CF0,40
-			^FO270,205^FD{prod_string}^FS
+			^FO10,180^FDMr Beam II {model}^FS
+			^CF0,45
+			^FO220,168^FD{prod_string}^FS
 			^XZ
 		'''.format(prod_string=prod_string,
 				   model=self._get_model_abbrev(),
