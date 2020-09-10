@@ -26,7 +26,7 @@ function show_in_popup(dataurl) {
 (function(console){
 	/**
 	 * Convenient storing large data objects (json, dataUri, base64 encoded images, ...) from the console.
-	 * 
+	 *
 	 * @param {object} data to save (means download)
 	 * @param {string} filename used for download
 	 * @returns {undefined}

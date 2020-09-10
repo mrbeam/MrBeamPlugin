@@ -166,7 +166,7 @@ mrbeam.isWatterottMode = function () {
 $(function () {
     // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
     // Force input of the "Add User" E-mail address in Settings > Access Control to lowercase.
-    $('#settings-usersDialogAddUserName').attr('data-bind', 'value: $root.users.editorUsername, valueUpdate: \'afterkeydown\'');
+    $('#settings-usersDialogAddUserName').attr('data-bind', 'value: $root.access.users.editor.name, valueUpdate: \'afterkeydown\'');
     // Check if the entered e-mail address is valid and show error if not.
     $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1)').attr('data-bind', 'css: {error: $root.mrbeam.userTyped() && !$root.mrbeam.validUsername()}');
     $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > div').append('<span class="help-inline" data-bind="visible: $root.mrbeam.userTyped() && !$root.mrbeam.validUsername(), text: $root.mrbeam.invalidEmailHelp"></span>');
@@ -177,7 +177,7 @@ $(function () {
 
         self.settings = parameters[0];
         self.wizardacl = parameters[1];
-        self.users = parameters[2];
+        self.access = parameters[2];
         self.loginState = parameters[3];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
@@ -199,15 +199,16 @@ $(function () {
             return target;
         };
 
-        self.users.currentUser.subscribe(function (currentUser) {
+        self.access.users.currentUser.subscribe(function (currentUser) {
+            // todo iratxe
             if (currentUser === undefined) {
                 // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
                 // For "Add User" set the Admin checked by default
-                self.users.editorAdmin(true)
+                // self.access.currentUser.admin(true)
             }
         });
 
-        self.users.editorUsername.subscribe(function (username) {
+        self.access.users.editor.name.subscribe(function (username) {
             if (username) {
                 self.userTyped(true)
             } else {
@@ -216,7 +217,7 @@ $(function () {
         });
 
         self.validUsername = ko.pureComputed(function () {
-            return self.wizardacl.regexValidateEmail.test(self.users.editorUsername())
+            return self.wizardacl.regexValidateEmail.test(self.access.users.editor.name())
         });
 
 
@@ -403,7 +404,7 @@ $(function () {
         MrbeamViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel", "wizardAclViewModel", "usersViewModel", "loginStateViewModel"],
+        ["settingsViewModel", "wizardAclViewModel", "accessViewModel", "loginStateViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ /* ... */]

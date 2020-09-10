@@ -85,7 +85,7 @@ $(function () {
 
 		// ---------------- CAMERA ALIGNMENT ----------------
 		self.qa_cameraalignment_image_loaded = ko.observable(false);
-		$('#qa_cameraalignment_image').load(function(){
+		$('#qa_cameraalignment_image').on('load', function(){
 		    self.qa_cameraalignment_image_loaded(true)
         })
 
@@ -297,7 +297,7 @@ $(function () {
 
 		self.userClick = function (vm, ev) {
 			// check if picture is loaded
-			if(window.location.href.indexOf('localhost') === -1)
+			if(window.location.getAttribute("href").indexOf('localhost') === -1)
 				if(self.calImgUrl() === STATIC_URL){
 					console.log("Please wait until camera image is loaded...");
 					return;

@@ -48,7 +48,7 @@ $(function(){
 
             // loading_overlay disappears only if this is set to true
             // not working in Safari
-            self.webCamImageElem.load(function(){
+            self.webCamImageElem.on('load', function(){
                 self.firstImageLoaded = true;
                 self.countImagesLoaded(self.countImagesLoaded()+1);
             });
@@ -147,7 +147,7 @@ $(function(){
         self.loadImage = function (url) {
             var myImageUrl = self.getTimestampedImageUrl(url);
             var img = $('<img>');
-            img.load(function () {
+            img.on('load', function () {
                 self.timestampedCroppedImgUrl(myImageUrl);
                 if (window.mrbeam.browser.is_safari) {
                     // load() event seems not to fire in Safari.
@@ -166,7 +166,7 @@ $(function(){
                 }
             });
             if (!self.firstImageLoaded) {
-                img.error(function () {
+                img.on('error', function () {
                     self.timestampedCroppedImgUrl(self.FALLBACK_IMAGE_URL);
                 });
             }
