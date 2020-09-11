@@ -352,31 +352,29 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	success, found_pattern = findBoard(gray, board_size)
-	_pattern = found_pattern.reshape(-1,2)
-	
-	center = None
-	bbox = None
-	try:
-		if success:
+	if success:
+		_pattern = found_pattern.reshape(-1,2)
+
+		center = None
+		bbox = None
+		try:
 			_c = np.average(_pattern, axis=0).tolist()
 			center = tuple(_c)
-		else:
+		except:
 			center = None
-	except:
-		center = None
-		# TODO log this
-	try:
-		if success:
+			# TODO log this
+		try:
 			bbox = (tuple(np.min(_pattern, axis=0)), tuple(np.max(_pattern, axis=0)))
-		else:
+		except:
 			bbox = None
-	except:
-		bbox = None
-		# TODO log this
+			# TODO log this
 
-	drawnImg = cv2.drawChessboardCorners(img, board_size, found_pattern, success, )
-	height, width, _ = drawnImg.shape
-	cv2.imwrite(path, drawnImg)
+		drawnImg = cv2.drawChessboardCorners(img, board_size, found_pattern, success, )
+		height, width, _ = drawnImg.shape
+		cv2.imwrite(path, drawnImg)
+	else:
+		center = None
+		bbox=None
 	if q_out is not None:
 		q_out.put(dict(
 			path=path,
