@@ -256,11 +256,11 @@ $(function () {
                     	type: "info",
                     	hide: false})
                 },
-                function () {
+                function (response) {
                     new PNotify({
                     	title: gettext("Failed to revert to factory settings."),
-                    	// text: gettext(""),
-                    	type: "info",
+                    	text: gettext("Information :\n"+response.responseText),
+                    	type: "warning",
                     	hide: false})
                 },
             )

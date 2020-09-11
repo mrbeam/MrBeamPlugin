@@ -24,6 +24,7 @@ from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img
 from octoprint_mrbeam.camera.definitions import TMP_RAW_FNAME_RE, STATE_SUCCESS
 from octoprint_mrbeam.camera.definitions import QD_KEYS, PICAMERA_AVAILABLE, LEGACY_STILL_RES, MAX_OBJ_HEIGHT, \
 		CAMERA_HEIGHT, DIST_KEY, MTX_KEY, MIN_BOARDS_DETECTED
+from octoprint_mrbeam.camera.definitions import *
 from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint_mrbeam.camera import exc as exc
 if PICAMERA_AVAILABLE:
@@ -417,12 +418,23 @@ class LidHandler(object):
 		- Refreshes settings.
 
 		"""
-		os.remove(self._settings.get(["cam", "lensCalibration", 'user']))
-		for fname in self.debugFolder:
-			if re.match(TMP_RAW_FNAME_RE, fname) or re.match(TMP_RAW_FNAME_RE_NPZ, fname):
-				fullpath = os.path.join(self.debugFolder, fname)
-				os.remove(fullpath)
+		files = []
+		for fname in os.listdir(self.debugFolder):
+			if re.match(TMP_RAW_FNAME_RE, fname) \
+			   or re.match(TMP_RAW_FNAME_RE_NPZ, fname):
+				files.append(os.path.join(self.debugFolder, fname))
+			elif fname == self._settings.get(["cam", "lensCalibration", 'user']):
+				files.append(fname)
+		for fname in files:
+			try:
+				os.remove(fname)
+			except OSError as e:
+				self._logger.warning("Err during factory restoration : %s", e)
+				# raising error because I made sure all the files existed before-hand
+				self.refresh_settings()
+				raise
 		self.refresh_settings()
+
 
 	def updateFrontendCC(self, data):
 		if data['lensCalibration'] == STATE_SUCCESS:
