@@ -101,7 +101,7 @@ class MrbCamera(PiCamera, Camera):
 		# self.exposure_mode = ''
 		self.stopEvent = stopEvent or threading.Event()  # creates an unset event if not given
 		self.start_preview()
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.util.camera.mrbcamera", lvl=logging.INFO)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.util.camera.mrbcamera", lvl=logging.DEBUG)
 		self.busy = threading.Event()
 		self.worker = worker
 		self.captureLoop = LoopThread(
