@@ -766,9 +766,18 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	border-width: 1px;
 	padding: 1em;
 	height: 90vh;
-	overflow-y: auto;
+	overflow-y: unset;
 	padding-bottom: 0;
 	position: relative;
+}
+
+#initial_camera_calibration .tab-pane {
+  width: fit-content;
+  margin: auto;
+}
+
+#initial_camera_calibration #tab_lens_calibration.tab-pane {
+  width: 80vw;
 }
 
 .camera-settings-section {
@@ -906,7 +915,6 @@ svg#area_preview.overModalBG { z-index: 1051; }
 
 .marker_selection_desc {
 	margin-top: 0em;
-	margin-bottom: 1em;
 	display:inline-block;
 }
 
@@ -1042,9 +1050,17 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 
 #lensCalibrationPhases.qa_active #lensCalibrationPictureTaking,
-#lensCalibrationPhases #lensCalibrationQA { display:none; }
+#lensCalibrationPhases #lensCalibrationQA {
+  display:none;
+}
 #lensCalibrationPhases.qa_active #lensCalibrationQA,
-#lensCalibrationPhases #lensCalibrationPictureTaking { display:block; }
+#lensCalibrationPhases #lensCalibrationPictureTaking {
+  display:block;
+}
+
+#lensCalibrationPictureTaking {
+  width: calc(min(80vw, 100%));
+}
 
 #lens_calibration_take_pic {
 	color: #fff;
@@ -1075,7 +1091,8 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 
 #heatmap_container {
-	width: 45%;
+	width: fit-content;
+  max-height: 25rem;
 	display: inline-block;
 }
 
@@ -1136,9 +1153,11 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	display: grid;
 	grid-template-columns: 2fr 1fr;
 	margin: 0;
-	width: 100%;
+	width: fit-content;
+	grid-row-gap: 1em;
 	grid-row-gap: 1em;
 	grid-column-gap: 1em;
+  margin: auto;
 
 }
 
@@ -1224,8 +1243,8 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 
 #qa_cameraalignment_image {
-    width: 100%;
-    height: 360px;
+    width: auto;
+    height: calc(max(360px, 50vh));
     background: url(/plugin/mrbeam/static/img/calibration/calpic_wait.svg) center no-repeat;
     background-size: cover;
 }
