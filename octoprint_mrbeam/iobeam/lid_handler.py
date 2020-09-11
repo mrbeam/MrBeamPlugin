@@ -748,10 +748,10 @@ class PhotoCreator(object):
 								 analytics,
 								 force_upload=(count_sent_pictures_analytics%10==0),
 								 notify_user=False)
+			self.last_shutter_speed = cam.shutter_speed
+			self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 
-		self.last_shutter_speed = cam.shutter_speed
 		cam.stop_preview()
-		self.save_camera_settings(markers=self.last_markers, shutter_speed=self.last_shutter_speed)
 		if session_details['num_pics'] > 0:
 			session_details.update({
 				'settings_min_marker_size': self._settings.get(['cam', 'markerRecognitionMinPixel']),
