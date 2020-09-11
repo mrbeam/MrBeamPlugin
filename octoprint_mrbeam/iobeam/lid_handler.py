@@ -612,9 +612,11 @@ class PhotoCreator(object):
 			curr_shutter_speed = cam.exposure_speed
 			curr_brightness = copy.deepcopy(cam.worker.avg_roi_brightness)
 
+			rawSaved = False
 			if self.saveRaw:
 				if isinstance(self.saveRaw, str) and not saveNext:
 					saveNext = True
+					rawSaved = False
 				elif isinstance(self.saveRaw, str) and saveNext:
 					# FIXME Not perfect. This is the case during the lens calibration where
 					# a new raw picture is requested. Do the save during the next round.
@@ -634,6 +636,8 @@ class PhotoCreator(object):
 									 "raw.jpg",
 									 folder=path.join(path.dirname(self.final_image_path),"debug"))
 					self.rawLock.release()
+			else:
+				rawSaved = False
 
 			# Compare previous image with the current one.
 			if self.forceNewPic.isSet() or prev is None \
