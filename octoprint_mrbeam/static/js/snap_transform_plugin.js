@@ -414,8 +414,9 @@
 			sss.dyMM = dyMM;
 			
 			// mouse position transformed the same way like the handles to calculate scaling distances within rotated coordinate system
-			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) * Math.sign(sss._m.d) + sss.mx;
-			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM) * Math.sign(sss._m.d) + sss.my;
+			const alpha = self.session.originTransform.rotate;
+			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) * Math.sign(sss._m.a * Math.sin(alpha)) + sss.mx;
+			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM) * Math.sign(sss._m.d * Math.cos(alpha)) + sss.my;
 			
 			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY, '#e25303');
 
@@ -531,7 +532,7 @@
 
 
 		self._sessionInit = function(calledBy){
-			// self.paper.debug.enable(); 
+			 self.paper.debug.enable(); 
 			self.paper.debug.cleanup();
 			
 			// change mouse cursor

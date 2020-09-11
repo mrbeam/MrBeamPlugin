@@ -181,6 +181,11 @@ body.mbtransform {
 	stroke-width: 2;
 	stroke-dasharray: 5 5;
 }
+
+body.ctrlKey #translateHandle {
+	fill:none;
+}
+
 #translateHandle_2 {
 	fill: #ffffff33;
 	stroke: #aaff00;
