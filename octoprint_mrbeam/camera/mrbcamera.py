@@ -14,7 +14,7 @@ import time
 import threading
 import logging
 
-DEFAULT_SHUTTER_SPEED = int(1.5 * 10**5) # (microseconds)
+DEFAULT_SHUTTER_SPEED = int(1 * 10**5) # (microseconds)
 
 
 class LoopThread(threading.Thread):
