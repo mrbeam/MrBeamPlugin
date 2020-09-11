@@ -155,12 +155,10 @@ class AnalyticsKeys:
 
 		class Event:
 			EVENT_LOG = 'log_event'
-			IOBEAM = 'iobeam'
 			CPU = 'cpu'
 			CAMERA = 'camera'
 			OS_HEALTH = 'os_health'
 			ANALYTICS_FILE_CROP = 'analytics_file_crop'
-			I2C_MONITORING = 'i2c_monitoring'
 
 		class Level:
 			EXCEPTION = 'exception'
@@ -174,19 +172,6 @@ class AnalyticsKeys:
 			FILE = 'file'
 			LINE = 'line'
 			FUNCTION = 'function'
-
-		class Iobeam:
-			VERSION = 'version'
-			MESSAGE = 'message'
-			FROM_PLUGIN = 'from_plugin'
-
-		class I2cMonitoring:
-			VERSION = 'version'
-			STATE = 'state'
-			METHOD = 'method'
-			CURRENT_DEVICES = 'current_devices'
-			LOST_DEVICES = 'lost_devices'
-			NEW_DEVICES = 'new_devices'
 
 		class Cpu:
 			TEMP = 'temp'
