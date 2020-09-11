@@ -13,7 +13,7 @@ from octoprint.events import Events as OctoPrintEvents
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # singleton
@@ -688,7 +688,7 @@ class IoBeamHandler(object):
 					new_devices=dataset_data.get('new_devices', []))
 				self._analytics_handler.add_iobeam_i2c_monitoring(**params)
 		self._last_i2c_monitoring_dataset = dataset
-		
+
 	def _handle_reed_switch(self, dataset):
 		self._logger.info("reed_switch: %s", dataset)
 		return 0

@@ -7,7 +7,7 @@ from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from octoprint_mrbeam.printing.comm_acc2 import PrintingGcodeFromMemoryInformation
 
 # singleton

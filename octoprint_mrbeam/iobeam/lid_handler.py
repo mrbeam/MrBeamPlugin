@@ -13,7 +13,7 @@ import logging
 import re
 
 
-from flask.ext.babel import gettext
+from flask_babel import gettext
 # from typing import Dict, Any, Union, Callable
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents

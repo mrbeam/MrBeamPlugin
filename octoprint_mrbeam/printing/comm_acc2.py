@@ -13,7 +13,7 @@ import re
 import Queue
 import random
 
-from flask.ext.babel import gettext
+from flask_babel import gettext
 
 import octoprint.plugin
 
