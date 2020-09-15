@@ -66,9 +66,6 @@ $(function () {
 			}
 		};
 
-        self.onSettingsShown = function(){
-            // self.abortLensCalibration()
-		};
 
         // todo user lens calibration: can we simplify/split this?
         self.onDataUpdaterPluginMessage = function (plugin, data) {
@@ -153,6 +150,10 @@ $(function () {
                 self._refreshPics,
                 self._getRawPicError,
                 "GET");
+
+            $('#settingsTabs').one('click', function(){
+                self.abortLensCalibration();
+            });
         };
 
         self.runLensCalibration = function () {

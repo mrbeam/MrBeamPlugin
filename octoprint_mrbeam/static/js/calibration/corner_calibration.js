@@ -153,9 +153,6 @@ $(function () {
 			}
 		};
 
-		self.onSettingsShown = function(){
-			self.abortCornerCalibration()
-		};
 
 		// todo user lens calibration: can we simplify/split this?
 		self.onDataUpdaterPluginMessage = function (plugin, data) {
@@ -205,6 +202,10 @@ $(function () {
 			self._cornerCalImgUrl(self._getImgUrl('raw', true))
 			self.markersFoundPositionCopy = self.markersFoundPosition()
 			self.nextMarker();
+
+			$('#settingsTabs').one('click', function(){
+                self.abortCornerCalibration();
+            });
 		};
 
 		// todo user lens calibration
