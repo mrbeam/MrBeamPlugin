@@ -374,7 +374,8 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 		cv2.imwrite(path, drawnImg)
 	else:
 		center = None
-		bbox=None
+		bbox = None
+		height, width = None, None
 	if q_out is not None:
 		q_out.put(dict(
 			path=path,
