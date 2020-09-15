@@ -40,7 +40,6 @@ class HwMalfunctionHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._analytics_handler = self._plugin.analytics_handler
 		self._iobeam_handler = self._plugin.iobeam
 
 	def report_hw_malfunction_from_plugin(self, malfunction_id, msg, payload=None):
@@ -66,7 +65,12 @@ class HwMalfunctionHandler(object):
 			self._messages_to_show[malfunction_id] = data
 			self._plugin.fire_event(MrBeamEvents.HARDWARE_MALFUNCTION, dict(id=malfunction_id, msg=msg, data=data))
 
-		self._analytics_handler.add_iobeam_message_log(self._iobeam_handler.iobeam_version, dataset, from_plugin=from_plugin)
+		dataset.update({'from_plugin': from_plugin})
+		self._iobeam_handler.send_iobeam_analytics(
+			eventname='hw_malfunction',
+			data=dataset,
+		)
+
 		self._start_notification_timer()
 
 	def _start_notification_timer(self):

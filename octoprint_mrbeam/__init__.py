@@ -430,7 +430,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				if "backlash_compensation_x" in data['machine']:
 					min_mal = -1.0
 					max_val = 1.0
-					val = data['machine']['backlash_compensation_x']
+					val = 0.0
+					try:
+						val = float(data['machine']['backlash_compensation_x'])
+					except:
+						pass
 					val = max(min(max_val, val), min_mal)
 					self._settings.set_float(["machine", "backlash_compensation_x"], val)
 			if "analyticsEnabled" in data:
