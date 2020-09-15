@@ -396,7 +396,9 @@
 			self.session.scale.refY = self.session.scale.my - self.session.scale.cy;
 			
 			// matrix for transforming mouse moves into rotated coord space
-			self.session.scale.mouseMatrix = Snap.matrix().rotate( -self.session.originTransform.rotate );
+			self.session.scale.mouseMatrix = Snap.matrix()
+					.scale(Math.sign(self.session.originTransform.scalex), Math.sign(self.session.originTransform.scaley), )
+					.rotate( Math.sign(self.session.originTransform.scalex) * -self.session.originTransform.rotate );
 			
 			self.paper.debug.point('c', self.session.scale.cx, self.session.scale.cy, '#e25303'); 
 			self.paper.debug.point('_C', self.session.scale.tcx, self.session.scale.tcy, '#00aaff'); 
@@ -415,8 +417,8 @@
 			
 			// mouse position transformed the same way like the handles to calculate scaling distances within rotated coordinate system
 			const alpha = self.session.originTransform.rotate;
-			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) * Math.sign(sss._m.a * Math.sin(alpha)) + sss.mx;
-			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM) * Math.sign(sss._m.d * Math.cos(alpha)) + sss.my;
+			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) * Math.sign(sss._m.a) + sss.mx;
+			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM) * Math.sign(sss._m.d) + sss.my;
 			
 			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY, '#e25303');
 
