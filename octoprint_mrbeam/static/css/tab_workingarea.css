@@ -97,6 +97,24 @@
 	transition-delay: 0s;
 }*/
 
+
+/** units mm or % **/
+#working_area_files .entry.show_percent input.unit_mm, 
+#working_area_files .entry input.unit_percent {
+	display:none;
+}
+#working_area_files .entry input.unit_mm, 
+#working_area_files .entry.show_percent input.unit_percent {
+	display:inline-block;	
+}
+#working_area_files .entry:not(.show_percent) div.unit_toggler>div:first-child, 
+#working_area_files .entry.show_percent div.unit_toggler>div:last-child {
+    background: #E4E4E4;
+    border-color: #E4E4E4;
+    box-shadow: none;
+}
+
+
 #working_area_files .entry {
   /*height: 30px;*/
   margin-bottom:.3em;

@@ -416,7 +416,6 @@
 			sss.dyMM = dyMM;
 			
 			// mouse position transformed the same way like the handles to calculate scaling distances within rotated coordinate system
-			const alpha = self.session.originTransform.rotate;
 			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM) * Math.sign(sss._m.a) + sss.mx;
 			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM) * Math.sign(sss._m.d) + sss.my;
 			
@@ -1049,7 +1048,7 @@
 			const labelY = `${height.toFixed(1)}mm / ${(sss.sy*100).toFixed(1)}%`;
 			self.scaleYText.node.textContent = labelY;	
 			self.scaleYText.transform(Snap.matrix(0,-1,1,0, verticalEdgeX + verticalRulerOffset + verticalTextOffset, 0));
-			self.paper.debug.point('vEdge', 0, verticalEdgeX, '#005303', '#scaleVis');
+			self.paper.debug.point('vEdge', verticalEdgeX, 0, '#005303', '#scaleVis');
 			
 		}
 

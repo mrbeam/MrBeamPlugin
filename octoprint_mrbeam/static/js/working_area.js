@@ -1226,6 +1226,9 @@ $(function(){
 				self.check_sizes_and_placements();
 			}
 		};
+		self.svgManualUnitToggle = function(data, event) {
+			$('#'+data.id).toggleClass('show_percent');
+		};
 		self.svgManualMultiply = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				const colsRowsStr = event.target.value;
