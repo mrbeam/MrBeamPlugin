@@ -28,6 +28,9 @@ $(function () {
 
 		self.isLocked = ko.observable(false);
 
+        // Lens calibration status needed in this viewModel.
+        // TODO make it a part of the mrb state (when we have a state wrapper)
+        self.lensDaemonAlive = ko.observable(false)
         /**
          * lazy-loading manually implemented.
          * Only returns an URL if the image element is visible.
@@ -132,7 +135,28 @@ $(function () {
             $('#settings_plugin_mrbeam_camera_link').click(function(){
                 self.changeUserView('settings')
             });
+			if(!window.mrbeam.isWatterottMode()){
+                self.checkCalibStatus()
+            }
 		};
+
+        self.checkCalibStatus = function () {
+            // Get the state of the chessboard detection thread
+            // Can only allow to start the lens calibration if
+            // it is dead
+            OctoPrint.simpleApiCommand("mrbeam", "calibration_get_lens_calib_alive", {})
+                .done(
+                    function (response) {
+                        self.lensDaemonAlive(response.alive)
+                    })
+                .fail(function (response) {
+                    new PNotify({
+                        title: gettext("Failed to update the Lens Calibration Status."),
+                        text: gettext("There is nothing to worry about, but here is some extra information :\n"+response.responseText),
+                        type: "warning",
+                        hide: false})
+                })
+        }
 
 		self.onSettingsShown = function(){
             self.settingsActive(true)
@@ -155,6 +179,18 @@ $(function () {
             }
         }
 
+        self.onDataUpdaterPluginMessage = function (plugin, data) {
+            if ('event' in data) {
+                // calibration daemon state should be synchronised
+                // even when not showing the settings screen
+                console.log(data)
+                if (data['event'] == "lensCalibStart" || data['event'] == "lensCalibAlive") {
+                    self.lensDaemonAlive(true)
+                } else if (data['event'] == "lensCalibExit") {
+                    self.lensDaemonAlive(false)
+                }
+            }
+        }
         self._testCameraSettingsActive = function(){
 		    let isActive = self.settingsActive() && $('#settings_plugin_mrbeam_camera').hasClass('active')
             self.cameraSettingsActive(isActive)

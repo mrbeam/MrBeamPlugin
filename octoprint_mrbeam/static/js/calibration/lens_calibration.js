@@ -59,15 +59,13 @@ $(function () {
         self.onStartupComplete = function () {
 			if(window.mrbeam.isWatterottMode()){
 				self._refreshPics();
-
 				$('#lenscal_tab_btn').click(function(){
                     self.startLensCalibration()
                 });
-			}
+            }
 		};
 
 
-        // todo user lens calibration: can we simplify/split this?
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "mrbeam" || !data)
                 return;
@@ -114,6 +112,7 @@ $(function () {
                 }
                 self.updateHeatmap(_d.pictures);
 
+                // TODO mv this into updateHeatmap
                 for (let i = heatmap_arr.length; i < 9; i++) {
                     heatmap_arr.push({
                         index: -1,
@@ -221,7 +220,6 @@ $(function () {
         };
 
         self.resetView = function () {
-            // todo user lens calibration: is there something else we should do here?
             self.calibration.resetUserView();
         };
 
@@ -352,9 +350,8 @@ $(function () {
                 gettext("Please check your connection to the device."))
         }
 
-        // todo user lens calibration: do we need all those error messages?
-        // Also, we still have the "I have no clue" to change
         self._rawPicError = function (err, msg) {
+            // Shorthand - Only shows "I have no clue why" when no message was defined
             if (msg === undefined)
                 msg = gettext("...and I have no clue why. Sorry.")
             new PNotify({

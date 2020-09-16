@@ -1639,6 +1639,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			compensate_obj_height=[],
 			calibration_del_pic=[],
 			calibration_get_raw_pic=[],
+			calibration_get_lens_calib_alive=[],
 			calibration_lens_restore_factory=[],
 			calibration_lens_start=[],
 			calibration_save_raw_pic=[],
@@ -1736,7 +1737,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self.lid_handler.revert_factory_lens_calibration()
 				return NO_CONTENT
 			except Exception as e:
-				return make_response("Error %s" % e, 400)
+				return make_response("Error %s" % e, 500)
+		elif command == "calibration_get_lens_calib_alive":
+			return make_response(jsonify({
+				'alive': self.lid_handler.boardDetectorDaemon is not None \
+				         and self.lid_handler.boardDetectorDaemon.is_alive(),
+			}), 200)
 		elif command == "generate_calibration_markers_svg":
 			return self.generateCalibrationMarkersSvg()  # TODO move this func to other file
 		return NO_CONTENT

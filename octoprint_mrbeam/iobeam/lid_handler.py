@@ -161,10 +161,12 @@ class LidHandler(object):
 			else:
 				self.saveRawImgThread = get_thread(daemon=True)(self.saveRawImg)()
 
-		elif event == MrBeamEvents.LENS_CALIB_DONE:
-			self._plugin.user_notification_system.show_notifications(
-				self._plugin.user_notification_system.get_notification("lens_calibration_done")
-			)
+		elif event in [MrBeamEvents.LENS_CALIB_EXIT, MrBeamEvents.LENS_CALIB_DONE, MrBeamEvents.LENS_CALIB_START]:
+			self._plugin_manager.send_plugin_message("mrbeam", {'event': event})
+			if event == MrBeamEvents.LENS_CALIB_DONE:
+				self._plugin.user_notification_system.show_notifications(
+					self._plugin.user_notification_system.get_notification("lens_calibration_done")
+				)
 
 	def is_lid_open(self):
 		return not self._lid_closed

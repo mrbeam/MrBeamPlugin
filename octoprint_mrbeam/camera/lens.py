@@ -129,6 +129,7 @@ class BoardDetectorDaemon(Thread):
 		self._startWhenIdle.clear()
 		self.path_inc = 0
 
+		self.runningProcs = {} # img_path: process - processes trying to detect a chessboard
 		Thread.__init__(self, name=self.__class__.__name__)
 
 		# self.daemon = False
@@ -141,9 +142,14 @@ class BoardDetectorDaemon(Thread):
 		self._stop.set()
 
 	def stopAsap(self, signum=signal.SIGTERM, frame=None):
-		self._logger.info("Terminating board detector")
-		self._terminate.set()
-		self._stop.set()
+		if self.is_alive():
+			for path, proc in self.runningProcs.items():
+				self._logger.debug("Killing process %s for image: %s", proc, path)
+				os.kill(proc.pid, signal.SIGKILL)
+			self._logger.info("Terminating board detector")
+			self._terminate.set()
+			self._stop.set()
+		self._logger.debug("Not alive, no need to stop.")
 
 	def start(self):
 		self._logger.debug("Starting board detector")
@@ -259,7 +265,6 @@ class BoardDetectorDaemon(Thread):
 	def run(self):
 		# state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):
 		count = 0
-		runningProcs = {}
 		resultQueue = Queue()
 		# lensCalibrationProcQueue = Queue()
 		self._logger.debug("Pool started - %i procs" % MAX_PROCS)
@@ -271,7 +276,7 @@ class BoardDetectorDaemon(Thread):
 			# self._logger.info("loopcount %i \r", loopcount)
 			if loopcount % 20 == 0 :
 				self._logger.debug("Running... %s procs running, stopsignal : %s" %
-						  (len(runningProcs), self._stop.is_set()))
+						  (len(self.runningProcs), self._stop.is_set()))
 			if self.state.lensCalibration['state'] == STATE_PENDING \
 			   and len(self) >= MIN_BOARDS_DETECTED:
 				self.state.refresh()
@@ -292,20 +297,20 @@ class BoardDetectorDaemon(Thread):
 					self._logger.debug("Only %i boards detected yet, %i necessary" % (self.detectedBoards , MIN_BOARDS_DETECTED))
 			if not self.idle or self.detectedBoards > MIN_BOARDS_DETECTED:
 				stateIdleAndNotEnoughGoodBoard = False
-			# runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
-			if len(runningProcs.keys()) < self.procs.value and self.state.getPending() and not self.stopping:
+			# self.runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
+			if len(self.runningProcs.keys()) < self.procs.value and self.state.getPending() and not self.stopping:
 				path = self.state.getPending()
 				self.state.update(path, STATE_PROCESSING)
 				count += 1
-				self._logger.debug("%i / %i processes running, adding Process of image %s" % (len(runningProcs.keys()),
+				self._logger.debug("%i / %i processes running, adding Process of image %s" % (len(self.runningProcs.keys()),
 													     self.procs.value,
 													     path))
 				# self._logger.info("current state :\n%s" % self.state)
 				board_size = self.state[path]['board_size']
 				args = (path, count, board_size, resultQueue)
-				runningProcs[path] = Process(target=handleBoardPicture, args=args)
-				runningProcs[path].daemon = True
-				runningProcs[path].start()
+				self.runningProcs[path] = Process(target=handleBoardPicture, args=args)
+				# self.runningProcs[path].daemon = True
+				self.runningProcs[path].start()
 			# if not lensCalibrationProcQueue.empty():
 			# 	self._logger.info("Lens calibration has given a result! ")
 			# 	res = lensCalibrationProcQueue.get()
@@ -331,32 +336,29 @@ class BoardDetectorDaemon(Thread):
 				if self.idle:
 					self.fire_event(MrBeamEvents.LENS_CALIB_IDLE)
 
-			for path, proc in runningProcs.items():
+			for path, proc in self.runningProcs.items():
 				if proc.exitcode is not None:
 					if proc.exitcode < 0:
 						self._logger.warning("Something went wrong with the process for path\n%s." % path)
 					else:
 						self._logger.debug("Process exited for path %s." % path)
-					runningProcs.pop(path)
+					self.runningProcs.pop(path)
 			while not self.stopQueue.empty() and not self.stopping:
 				path = self.stopQueue.get()
-				if path in runningProcs.keys():
+				if path in self.runningProcs.keys():
 					self._logger.warning("Killing process for path %s" % path)
-					runningProcs[path].terminate()
+					self.runningProcs[path].terminate()
 					# termination might cause the pipe to break if it is in use by the process
-					runningProcs[path].join()
-					runningProcs.pop(path)
+					self.runningProcs[path].join()
+					self.runningProcs.pop(path)
 			if self._stop.wait(.02): break
 		self._logger.warning("Stop signal intercepted")
-		self.lensCalibrationStarted = False
+		# self.lensCalibrationStarted = False
 		resultQueue.close()
-		if self._terminate.is_set():
-			self._logger.info("Terminating processes")
-			for path, proc in runningProcs.items():
-				proc.terminate()
-		self._logger.debug("Joining processes")
-		for path, proc in runningProcs.items():
+		for path, proc in self.runningProcs.items():
+			self._logger.debug("Joining process %p for path: %s", proc, path)
 			proc.join()
+			self.runningProcs.pop(path)
 		self.fire_event(MrBeamEvents.LENS_CALIB_EXIT)
 		self._logger.info("Lens calibration exited")
 
@@ -571,8 +573,9 @@ class calibrationState(dict):
 		self.onChange()
 
 	def calibrationRunning(self):
-		return self.lensCalibration['state'] == STATE_PROCESSING
+		ret = self.lensCalibration['state'] == STATE_PROCESSING
 		self.onChange()
+		return ret
 
 	def refresh(self, imgFoundCallback=None, args=(), kwargs={}):
 		"""Check if a pending image was taken and saved by the camera"""

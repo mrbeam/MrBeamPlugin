@@ -154,7 +154,6 @@ $(function () {
 		};
 
 
-		// todo user lens calibration: can we simplify/split this?
 		self.onDataUpdaterPluginMessage = function (plugin, data) {
 			if (plugin !== "mrbeam" || !data)
 				return;
@@ -208,9 +207,7 @@ $(function () {
             });
 		};
 
-		// todo user lens calibration
 		self.abortCornerCalibration = function () {
-			// Please check: stopCornerCalibration wasn't here
 			self.stopCornerCalibration();
 			self.resetView();
 		};
