@@ -109,7 +109,10 @@ class MrbLogger(object):
 		kwargs.pop('terminal_as_comm', None)
 		kwargs.pop('analytics', None)
 		kwargs.pop('terminal_dump', None)
-		self.logger.log(level, msg, *args, **kwargs)
+		try:
+			self.logger.log(level, msg, *args, **kwargs)
+		except IOError:
+			print(">>", msg)
 
 	def _terminal(self, level, msg, *args, **kwargs):
 		global _printer
@@ -129,7 +132,7 @@ class MrbLogger(object):
 		if level == self.LEVEL_COMM:
 			MrbLogger.terminal_buffer.append(output)
 
-		if _printer:
+		if _printer is not None:
 			_printer.on_comm_log(output)
 		else:
 			logging.getLogger("octoprint.plugins.mrbeam.terminal").warn("Can't log to terminal since _printer is None. Message: %s", msg)

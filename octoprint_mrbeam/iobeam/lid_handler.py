@@ -94,11 +94,12 @@ class LidHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
 		# TODO carefull if photocreator is None
+		rawLock = self._photo_creator.rawLock if self._photo_creator else None
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
 							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus,
-							       rawImgLock = self._photo_creator.rawLock)
+							       rawImgLock = rawLock)
 		# self.removeAllTmpPictures() # clean up from the latest calibraton session
 
 	def _subscribe(self, event, payload):

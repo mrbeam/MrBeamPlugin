@@ -20,6 +20,9 @@ def get_version_of_pip_module(pip_name, pip_command=None):
 		if returncode == 0:
 			my_freeze = output.splitlines()
 			_freezes[pip_command] = my_freeze
+		elif returncode == 127:
+			_logger.error("`%s` was not found in local $PATH (returncode %s)", pip_command, returncode)
+			return None
 		else:
 			_logger.warning("`%s freeze` returned code %s", pip_command, returncode)
 	for myLine in my_freeze:
