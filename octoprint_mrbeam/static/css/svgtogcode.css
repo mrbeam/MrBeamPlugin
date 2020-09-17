@@ -877,7 +877,7 @@ svg#area_preview.overModalBG { z-index: 1051; }
     width: 20px;
 }
 
-.camera-calibration-title span.title {
+.camera-calibration-title span {
     vertical-align: bottom;
     font-size: 24.5px;
     line-height: 40px;
