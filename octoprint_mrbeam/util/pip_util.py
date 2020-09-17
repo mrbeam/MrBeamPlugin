@@ -2,15 +2,19 @@
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from cmd_exec import exec_cmd_output
 
+DISABLE_PIP_CHECK = "--disable-pip-version-check"
 
 _freezes={}
 
-def get_version_of_pip_module(pip_name, pip_command=None):
+def get_version_of_pip_module(pip_name, pip_command=None, disable_pip_ver_check=True):
 	_logger = mrb_logger(__name__ + "get_version_of_pip_module")
 	global _freezes
 	version = None
 	returncode = -1
 	if pip_command is None: pip_command = "pip"
+	elif isinstance(pip_command, list): pip_command = ' '.join(pip_command)
+	if disable_pip_ver_check and not DISABLE_PIP_CHECK in pip_command:
+		pip_command += ' ' + DISABLE_PIP_CHECK
 	my_freeze = _freezes.get(pip_command, None)
 
 	if my_freeze is None:

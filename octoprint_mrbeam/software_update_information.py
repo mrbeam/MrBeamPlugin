@@ -1,4 +1,4 @@
-import os
+import os, sys
 
 from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -17,9 +17,12 @@ _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
 
 sw_update_config = dict()
 
-REAL_PIP_BIN = "/usr/local/bin/pip"
-REAL_PIP_COMMAND = REAL_PIP_BIN if os.path.isfile(REAL_PIP_BIN) else None
-VENV_PIP_COMMAND = "/home/pi/oprint/bin/pip" if not IS_X86 else None
+# GLOBAL_PY_BIN = "/usr/bin/python2.7"
+# VENV_PY_BIN = sys.executable
+GLOBAL_PIP_BIN = '/usr/local/bin/pip'
+GLOBAL_PIP_COMMAND = 'sudo {}'.format(GLOBAL_PIP_BIN) if os.path.isfile(GLOBAL_PIP_BIN) else None
+# GLOBAL_PIP_COMMAND = "sudo {} -m pip".format(GLOBAL_PY_BIN) if os.path.isfile(GLOBAL_PY_BIN) else None #  --disable-pip-version-check
+# VENV_PIP_COMMAND = ("%s -m pip --disable-pip-version-check" % VENV_PY_BIN).split(' ') if os.path.isfile(VENV_PY_BIN) else None
 
 def get_modules():
 	return sw_update_config
@@ -40,7 +43,6 @@ def get_update_information(self):
 	_set_info_mrbeamledstrips(self, tier)
 	_set_info_netconnectd_daemon(self, tier)
 	_set_info_iobeam(self, tier)
-	_set_info_camera_calibration(self, tier)
 	_set_info_mrb_hw_info(self, tier)
 	_set_info_rpiws281x(self, tier)
 	# set_info_testplugin(self, tier) # See function definition for more details
@@ -299,7 +301,7 @@ def _set_info_mrbeamledstrips(self, tier):
 	module_id = "mrbeam-ledstrips"
 	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-	pip_command = REAL_PIP_COMMAND
+	pip_command = GLOBAL_PIP_COMMAND
 	pip_name = "mrbeam-ledstrips"
 
 	try:
@@ -355,7 +357,7 @@ def _set_info_netconnectd_daemon(self, tier):
 	module_id = "netconnectd-daemon"
 	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-	pip_command = REAL_PIP_COMMAND
+	pip_command = GLOBAL_PIP_COMMAND
 	pip_name = "netconnectd"
 
 	try:
@@ -385,7 +387,7 @@ def _set_info_iobeam(self, tier):
 	module_id = "iobeam"
 	# this module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-	pip_command = REAL_PIP_COMMAND
+	pip_command = GLOBAL_PIP_COMMAND
 	pip_name = "iobeam"
 
 	try:
@@ -445,73 +447,12 @@ def _set_info_iobeam(self, tier):
 		_logger.exception('Exception during _set_info_iobeam: {}'.format(e))
 
 
-def _set_info_camera_calibration(self, tier):
-	name = "mb_camera_calibration"
-	module_id = "mb-camera-calibration"
-	pip_name = module_id
-	# hmmm... I thought, i don't need to provide a special pip command if we are in the venv...
-	pip_command = VENV_PIP_COMMAND
-
-	try:
-		if _is_override_in_settings(self, module_id):
-			return
-
-		version = get_version_of_pip_module(pip_name, pip_command)
-		if version is None: return
-
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			displayVersion=version,
-			type="bitbucket_commit",
-			user="mrbeam",
-			repo="mb_camera_calibration",
-			branch="mrbeam2-stable",
-			branch_default="mrbeam2-stable",
-			api_user="MrBeamDev",
-			api_password="v2T5pFkmdgDqbFBJAqrt",
-			pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
-			restart="octoprint"
-		)
-
-		if tier in [SW_UPDATE_TIER_DEV]:
-			sw_update_config[module_id] = dict(
-				displayName=_get_display_name(self, name),
-				displayVersion=version,
-				type="bitbucket_commit",
-				user="mrbeam",
-				repo="mb_camera_calibration",
-				branch="develop",
-				branch_default="develop",
-				api_user="MrBeamDev",
-				api_password="v2T5pFkmdgDqbFBJAqrt",
-				pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
-				restart="octoprint"
-			)
-
-		if tier in [SW_UPDATE_TIER_BETA]:
-			sw_update_config[module_id] = dict(
-				displayName=_get_display_name(self, name),
-				displayVersion=version,
-				type="bitbucket_commit",
-				user="mrbeam",
-				repo="mb_camera_calibration",
-				branch="mrbeam2-beta",
-				branch_default="mrbeam2-beta",
-				api_user="MrBeamDev",
-				api_password="v2T5pFkmdgDqbFBJAqrt",
-				pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
-				restart="octoprint"
-			)
-	except Exception as e:
-		_logger.exception('Exception during _set_info_camera_calibration: {}'.format(e))
-
-
 def _set_info_mrb_hw_info(self, tier):
 	name = "mrb_hw_info"
 	module_id = "mrb_hw_info"
 	# this module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-	pip_command = REAL_PIP_COMMAND
+	pip_command = GLOBAL_PIP_COMMAND
 	pip_name = "mrb-hw-info"
 
 	try:
@@ -576,7 +517,7 @@ def _set_info_rpiws281x(self, tier):
 	module_id = "rpi-ws281x"
 	# this module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-	pip_command = REAL_PIP_COMMAND
+	pip_command = GLOBAL_PIP_COMMAND
 	pip_name = module_id
 
 	try:
