@@ -36,7 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 16  # bumped in 0.6.14.1 for ntp syncs during the job
+	ANALYTICS_LOG_VERSION = 17  # bumped in 0.7.5.1 for custom materials and changed parameters
 
 	def __init__(self, plugin):
 		self._plugin = plugin
