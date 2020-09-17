@@ -1708,6 +1708,7 @@ $(function(){
         };
 
 		self._apply_binding_new_cut_jobs = function(newJob) {
+		// called from outside of the viewmodel, that's why self to reference VectorConversionViewModel is not available.
 		    ko.applyBindings(window.mrbeam.viewModels.vectorConversionViewModel, newJob)
         }
 
