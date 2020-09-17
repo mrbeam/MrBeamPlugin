@@ -73,7 +73,7 @@
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
-                                                    <div data-bind="visible: camera.cameraActive() && camera.showMarkerWarning">
+                                                    <div data-bind="visible: camera.showMarkerWarning">
 
                                                         <div>
                                                             <p style="display: inline-block">
@@ -171,14 +171,14 @@
 															<div id="zoom_monitor_hint" data-bind="visible: (zoom() === 1)" class="muted">{{ _('Scroll to zoom') }}</div>
 														</div>
 													</div>
-                                                    <div class="experimental_feature_beta">
-                                                        <label  style="cursor: default;">{{ _('Object height') }}:</label>
-{#                                                         Translators: millimiters, unit of length#}
-                                                        <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input" value="0"
-                                                               data-bind="value: camera.objectZ, valueUpdate: 'input'"
-                                                               style="width:3.5em; display: inline; margin: 0; padding-right:0;"
-                                                        /> {{ _('mm') }}
-                                                    </div>
+													<div>
+														<label  style="cursor: default;">{{ _('Object height') }}:</label>
+{#														 Translators: millimiters, unit of length#}
+														<input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input" value="0"
+														       data-bind="value: camera.objectZ, valueUpdate: 'input'"
+														       style="width:3.5em; display: inline; margin: 0; padding-right:0;"
+														/> {{ _('mm') }}
+													</div>
 												</div>
 											</div>
 										</div>
@@ -744,7 +744,7 @@
 										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
 									</g>
 									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5"
-									   data-bind="visible: camera.cameraActive(), attr: { class: camera.markerMissedClass() }">
+									   data-bind="attr: { class: camera.markerMissedClass() }">
                                         <circle id="markerNW" r="5" cx="7" cy="7">
                                             <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>

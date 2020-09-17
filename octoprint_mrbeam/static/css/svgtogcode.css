@@ -526,6 +526,14 @@ g#camera_markers.markerSW circle#markerSW {
 	animation: blinker 2s linear infinite;
 }
 
+g#camera_markers.markerNE.gray circle#markerNE,
+g#camera_markers.markerSE.gray circle#markerSE,
+g#camera_markers.markerNW.gray circle#markerNW,
+g#camera_markers.markerSW.gray circle#markerSW {
+	opacity: .6;
+  animation: none;
+}
+
 @keyframes blinker {
   50% {
     opacity: 0;

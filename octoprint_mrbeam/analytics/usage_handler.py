@@ -145,6 +145,12 @@ class UsageHandler(object):
 				)
 				self._analytics_handler.add_job_ntp_sync_details(ntp_details)
 
+				self._logger.info('NTP shift fix - Job duration before: {}, after: {} --> shift: {}'.format(
+					ntp_details.get('time_shift'),
+					ntp_details.get('job_duration_before'),
+					ntp_details.get('job_duration_after'),
+				))
+
 			dust_factor = self._calculate_dust_factor()
 			self._usage_data['total']['job_time'] = self.start_time_total + job_duration
 			self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = \

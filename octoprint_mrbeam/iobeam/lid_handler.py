@@ -145,9 +145,11 @@ class LidHandler(object):
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed)
 			self._client_opened = True
 			self._startStopCamera(event)
-		elif event == OctoPrintEvents.CLIENT_CLOSED:
-			self._client_opened = False
-			self._startStopCamera(event)
+		# Please re-enable when the OctoPrint is more reliable at
+		# detecting when a user actually disconnected.
+		# elif event == OctoPrintEvents.CLIENT_CLOSED:
+		# 	self._client_opened = False
+		# 	self._startStopCamera(event)
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 		elif event == IoBeamEvents.ONEBUTTON_RELEASED \

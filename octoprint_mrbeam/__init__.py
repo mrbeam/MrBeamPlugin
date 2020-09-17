@@ -18,7 +18,7 @@ import requests
 from flask import request, jsonify, make_response, url_for
 from flask.ext.babel import gettext
 import octoprint.filemanager as op_filemanager
-from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
+from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping, FileManager
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request, \
 	add_non_caching_response_headers
@@ -432,7 +432,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				if "backlash_compensation_x" in data['machine']:
 					min_mal = -1.0
 					max_val = 1.0
-					val = data['machine']['backlash_compensation_x']
+					val = 0.0
+					try:
+						val = float(data['machine']['backlash_compensation_x'])
+					except:
+						pass
 					val = max(min(max_val, val), min_mal)
 					self._settings.set_float(["machine", "backlash_compensation_x"], val)
 			if "analyticsEnabled" in data:
@@ -1391,7 +1395,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			svg = ''.join(i for i in data['svg_string'] if ord(i) < 128)  # strip non-ascii chars like €
 
 			del data['svg_string']
-			file_name = str(data['file_name']) + ".svg"
+			sanitized_name = self._file_manager.sanitize_name(destination=FileDestinations.LOCAL, name=data['file_name'])
+			file_name = sanitized_name + ".svg"
 
 			class Wrapper(object):
 				def __init__(self, file_name, content):
@@ -2510,6 +2515,7 @@ def __plugin_load__():
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4",
+						"plugin_mrbeam_beta_news_0",
 				        "plugin_mrbeam_analytics"],
 				settings=['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_mrbeam_maintenance',
 				          'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
