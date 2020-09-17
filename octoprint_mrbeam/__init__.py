@@ -18,7 +18,7 @@ import requests
 from flask import request, jsonify, make_response, url_for
 from flask.ext.babel import gettext
 import octoprint.filemanager as op_filemanager
-from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
+from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping, FileManager
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request, \
 	add_non_caching_response_headers
@@ -1387,7 +1387,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			svg = ''.join(i for i in data['svg_string'] if ord(i) < 128)  # strip non-ascii chars like €
 
 			del data['svg_string']
-			file_name = str(data['file_name']) + ".svg"
+			sanitized_name = self._file_manager.sanitize_name(destination=FileDestinations.LOCAL, name=data['file_name'])
+			file_name = sanitized_name + ".svg"
 
 			class Wrapper(object):
 				def __init__(self, file_name, content):
