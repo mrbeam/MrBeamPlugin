@@ -1709,6 +1709,11 @@ $(function(){
             return t_a - t_b;
         };
 
+		self._apply_binding_new_cut_jobs = function(newJob) {
+		// called from outside of the viewmodel, that's why self to reference VectorConversionViewModel is not available.
+		    ko.applyBindings(window.mrbeam.viewModels.vectorConversionViewModel, newJob)
+        }
+
 	}
 
 
@@ -1782,6 +1787,9 @@ window.mrbeam.colorDragging = {
 			var color = document.getElementById(data);
 			$(newJob).find('.assigned_colors').append(color);
 			ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+
+			// Apply bindings for newly created cut element
+			ko.dataFor($(newJob)[0])._apply_binding_new_cut_jobs($(newJob)[0]);
 		}
 
         $('[data-toggle="tooltip"]').tooltip({
