@@ -15,7 +15,6 @@ $(function () {
         self.camera = parameters[1];
 
         self.calibrationScreenShown = ko.observable(false);
-		self.startupComplete = ko.observable(false);
 		self.waitingForRefresh = ko.observable(true);
 
 		// calibrationState is constantly refreshed by the backend
@@ -24,7 +23,7 @@ $(function () {
 
 		self.onStartupComplete = function () {
 		    self.calibrationScreenShown(true);
-            self.startupComplete(true);
+            self._showCalibrationTool();
 		};
 
 		self.resetUserView = function() {
@@ -88,6 +87,10 @@ $(function () {
 			)
 		};
 
+		self._showCalibrationTool = function () {
+		    $('#calibration_tool_content').show();
+		    $('#calibration_tool_loading_overlay').hide();
+        }
 
 
 		// This isn't used for now, but it's planned to use it for Watterott
