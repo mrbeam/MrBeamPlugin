@@ -136,7 +136,6 @@ class LaserheadHandler(object):
 
 		return self._correction_settings
 
-	# todo iratxe: not used at all??
 	def _validate_lh_serial(self, serial):
 		try:
 			return bool(self.LASERHEAD_SERIAL_REGEXP.match(serial))

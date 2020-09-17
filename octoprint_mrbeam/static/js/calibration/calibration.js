@@ -23,7 +23,7 @@ $(function () {
 		self.calibrationState = ko.observable({})
 
 		self.onStartupComplete = function () {
-		    self.calibrationScreenShown(true); // todo user lens calibration: when should we do this?
+		    self.calibrationScreenShown(true);
             self.startupComplete(true);
 		};
 
