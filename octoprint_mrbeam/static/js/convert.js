@@ -970,7 +970,9 @@ $(function(){
 				"material_name": self.selected_material_name(),
 				"color": self.selected_material_color(),
 				"thickness_mm": self.selected_material_thickness()['thicknessMM'],
-                "material_key": self.selected_material()['key']
+                "material_key": self.selected_material()['key'],
+                "custom":  self.selected_material()['custom'],
+                "params_changed": self.customized_material(),
 			};
 			return data;
 		};
@@ -1392,7 +1394,7 @@ $(function(){
 							gcode: gcodeFilename,
                             material: material,
                             design_files: design_files,
-                            advanced_settings: advancedSettings
+                            advanced_settings: advancedSettings,
 						};
 
 						if(self.svg !== undefined){
