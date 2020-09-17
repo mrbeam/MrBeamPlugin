@@ -30,7 +30,7 @@ from octoprint_mrbeam.camera import exc as exc
 if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 	from octoprint_mrbeam.camera.undistort import prepareImage, _getCamParams
-from octoprint_mrbeam.camera.lens import BoardDetectorDaemon
+from octoprint_mrbeam.camera.lens import BoardDetectorDaemon, FACTORY
 from octoprint_mrbeam.util import dict_merge, get_thread, makedirs
 from octoprint_mrbeam.util.log import json_serialisor, logme
 
@@ -102,10 +102,8 @@ class LidHandler(object):
 		self.boardDetectorDaemon = BoardDetectorDaemon(self.get_calibration_file('user'),
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus,
-							       rawImgLock = self._photo_creator.rawLock)
-		if not self._plugin.calibration_tool_mode and not self._plugin.is_dev_env():
-			# clean up from the latest calibraton session
-			self.removeAllTmpPictures()
+							       rawImgLock = self._photo_creator.rawLock,
+							       factory=self._plugin.calibration_tool_mode)
 
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
@@ -305,6 +303,10 @@ class LidHandler(object):
 		if not self.lensCalibrationStarted and \
 		   self.boardDetectorDaemon.load_dir(self.debugFolder):
 			self._logger.info("Found pictures from previous session")
+		if not self._plugin.calibration_tool_mode:
+			# clean up from the latest calibraton session
+			self.boardDetectorDaemon.state.rm_unused_images()
+			self.boardDetectorDaemon.state.rm_from_origin(origin=FACTORY)
 		self.getRawImg()
 		self.lensCalibrationStarted = True
 		self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)

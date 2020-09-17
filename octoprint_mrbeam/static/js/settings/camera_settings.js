@@ -183,6 +183,7 @@ $(function () {
             if ('event' in data) {
                 // calibration daemon state should be synchronised
                 // even when not showing the settings screen
+                // TODO AXEL : This doesn't seem to work ...
                 console.log(data)
                 if (data['event'] == "lensCalibStart" || data['event'] == "lensCalibAlive") {
                     self.lensDaemonAlive(true)

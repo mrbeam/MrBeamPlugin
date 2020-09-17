@@ -29,6 +29,8 @@ from octoprint_mrbeam.support import check_calibration_tool_mode
 
 _logger = mrb_logger(__name__, lvl=logging.INFO)
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+FACTORY = 'factory'
+USER = 'user'
 
 ### LENS UNDISTORTION FUNCTIONS
 
@@ -86,8 +88,9 @@ class BoardDetectorDaemon(Thread):
 		     runCalibrationAsap=False,
 	             event_bus=None,
 		     rawImgLock=None,
-		     state=None):
-		self._logger = mrb_logger(__name__, lvl=logging.INFO)
+		     state=None,
+		     factory=False):
+		self._logger = mrb_logger(__name__, lvl=logging.DEBUG)
 		# runCalibrationAsap : run the lens calibration when we have enough pictures ready
 		self.event_bus = event_bus
 		self.rawImgLock = rawImgLock
@@ -97,7 +100,7 @@ class BoardDetectorDaemon(Thread):
 			self.state = calibrationState(changeCallback=stateChangeCallback, npzPath=output_calib, rawImgLock=rawImgLock)
 		else:
 			self.state = state
-
+		self.factory_mode = factory
 		self.output_file = output_calib
 
 		# Arrays to store object points and image points from all the images.
@@ -300,7 +303,7 @@ class BoardDetectorDaemon(Thread):
 			# self.runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
 			if len(self.runningProcs.keys()) < self.procs.value and self.state.getPending() and not self.stopping:
 				path = self.state.getPending()
-				self.state.update(path, STATE_PROCESSING)
+				self.state.update(path, STATE_PROCESSING, origin=FACTORY if self.factory_mode else USER)
 				count += 1
 				self._logger.debug("%i / %i processes running, adding Process of image %s" % (len(self.runningProcs.keys()),
 													     self.procs.value,
@@ -330,7 +333,14 @@ class BoardDetectorDaemon(Thread):
 				self._logger.info("Getting result from board detection.")
 				r = resultQueue.get()
 				self._logger.info("Got result from board detection.")
-				self.state.update(**r)
+				try:
+					self.state.update(origin=FACTORY if self.factory_mode else USER, **r)
+				except KeyError:
+					# can happen if a picture is removed from the state
+					# as the detection is about to finish
+					if self.idle:
+						self.fire_event(MrBeamEvents.LENS_CALIB_IDLE)
+					continue
 				if r['state'] == STATE_SUCCESS:
 					self.state.lensCalibration['state'] = STATE_PENDING
 				if self.idle:
@@ -338,7 +348,7 @@ class BoardDetectorDaemon(Thread):
 
 			for path, proc in self.runningProcs.items():
 				if proc.exitcode is not None:
-					if proc.exitcode < 0:
+					if proc.exitcode < 0 and not self._terminate.is_set():
 						self._logger.warning("Something went wrong with the process for path\n%s." % path)
 					else:
 						self._logger.debug("Process exited for path %s." % path)
@@ -353,7 +363,6 @@ class BoardDetectorDaemon(Thread):
 					self.runningProcs.pop(path)
 			if self._stop.wait(.02): break
 		self._logger.warning("Stop signal intercepted")
-		# self.lensCalibrationStarted = False
 		resultQueue.close()
 		for path, proc in self.runningProcs.items():
 			self._logger.debug("Joining process %p for path: %s", proc, path)
@@ -375,7 +384,7 @@ def get_object_points(rows, cols):
 
 # @logtime
 # @logme(True)
-# @logExceptions
+@logExceptions
 def handleBoardPicture(image, count, board_size, q_out=None):
 	# logger = logging.getLogger()
 	# if self._stop.is_set(): return
@@ -532,9 +541,13 @@ class calibrationState(dict):
 	def ignore(self, path):
 		self.update(path, STATE_IGNORED)
 
-	def update(self, path, state, **kw):
+	def update(self, path, state, date=None, origin=USER, **kw):
+                date = date or datetime.datetime.now().strftime(DATE_FORMAT)
 		if state in STATES:
-			_data = dict(state = state, **kw)
+			_data = dict(state = state,
+				     date=date,
+				     origin=origin,
+				     **kw)
 			_t = time.time()
 			if(state == STATE_SUCCESS or state == STATE_FAIL):
 				_data["tm_end"] = _t
@@ -650,6 +663,22 @@ class calibrationState(dict):
 			self.lensCalibration['state'] = STATE_FAIL
 		if not 'resolution' in self.lensCalibration.keys():
 			self.lensCalibration['resolution'] = LEGACY_STILL_RES
+		self.onChange()
+
+	def rm_unused_images(self):
+		for path, item in self.items():
+			is_used = item['state'] == STATE_SUCCESS \
+				  and 'date' in item \
+				  and 'date' in self.lensCalibration \
+				  and datetime.datetime.strptime(item['date'], DATE_FORMAT) < datetime.datetime.strptime(self.lensCalibration['date'], DATE_FORMAT)
+			if not is_used:
+				self.remove(path)
+		self.onChange()
+
+	def rm_from_origin(self, origin=USER):
+		for path, item in self.items():
+			if 'origin' not in item or item['origin'] == origin:
+				self.remove(path)
 		self.onChange()
 
 	def clean(self):
