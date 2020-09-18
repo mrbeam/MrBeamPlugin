@@ -26,21 +26,22 @@ class LoopThread(threading.Thread):
 
     def __init__(self, target, stopFlag, args=(), kwargs=None):
         """
-		Loops over the target function instead of stopping
-		At the end of each loop, the self.running Event is cleared.
-		To start a new loop, set the Event again ( loopThread.running.set() )
+        Loops over the target function instead of stopping
+        At the end of each loop, the self.running Event is cleared.
+        To start a new loop, set the Event again ( loopThread.running.set() )
 
-		:param target: target function
-		:type target: Callable
-		:param stopFlag: set this flag to break the loop
-		:type stopFlag: threading.Event
-		:param args: args passed to the target
-		:type args: tuple, NoneType
-		:param kwargs: kwargs passed to the target
-		:type kwargs: Map, NoneType
-		"""
+        :param target: target function
+        :type target: Callable
+        :param stopFlag: set this flag to break the loop
+        :type stopFlag: threading.Event
+        :param args: args passed to the target
+        :type args: tuple, NoneType
+        :param kwargs: kwargs passed to the target
+        :type kwargs: Map, NoneType
+        """
         threading.Thread.__init__(
-            self, target=self._loop,
+            self,
+            target=self._loop,
         )
         # self.daemon = False
         self.running = threading.Event()
@@ -92,17 +93,17 @@ class LoopThread(threading.Thread):
 class MrbCamera(PiCamera, Camera):
     def __init__(self, worker, stopEvent=None, shutter_speed=None, *args, **kwargs):
         """
-		Record pictures asynchronously in order to perform corrections
-		simultaneously on the previous images.
-		:param worker: The pictures are recorded into this
-		:type worker: str, "writable", filename or class with a write function (see PiCamera.capture input)
-		:param stopEvent: will exit gracefully when this Event is set
-		:type stopEvent: threading.Event
-		:param args: passed on to Picamera.__init__()
-		:type args: tuple
-		:param kwargs: passed on to Picamera.__init__()
-		:type kwargs: Map
-		"""
+        Record pictures asynchronously in order to perform corrections
+        simultaneously on the previous images.
+        :param worker: The pictures are recorded into this
+        :type worker: str, "writable", filename or class with a write function (see PiCamera.capture input)
+        :param stopEvent: will exit gracefully when this Event is set
+        :type stopEvent: threading.Event
+        :param args: passed on to Picamera.__init__()
+        :type args: tuple
+        :param kwargs: passed on to Picamera.__init__()
+        :type kwargs: Map
+        """
         # TODO set sensor mode and framerate etc...
         super(MrbCamera, self).__init__(*args, **kwargs)
         self.sensor_mode = 2
@@ -146,16 +147,16 @@ class MrbCamera(PiCamera, Camera):
 
     def async_capture(self, *args, **kw):
         """
-		Starts or signals the camera to start taking a new picture.
-		The new picture can be retrieved with MrbCamera.lastPic()
-		Wait for the picture to be taken with MrbCamera.wait()
-		:param args:
-		:type args:
-		:param kw:
-		:type kw:
-		:return:
-		:rtype:
-		"""
+        Starts or signals the camera to start taking a new picture.
+        The new picture can be retrieved with MrbCamera.lastPic()
+        Wait for the picture to be taken with MrbCamera.wait()
+        :param args:
+        :type args:
+        :param kw:
+        :type kw:
+        :return:
+        :rtype:
+        """
         return self.captureLoop.async_next(*args, **kw)
 
     def capture(self, output=None, format="jpeg", *args, **kwargs):
@@ -165,9 +166,9 @@ class MrbCamera(PiCamera, Camera):
 
     def wait(self):
         """
-		Wait for the camera to be done capturing a picture. Blocking call.
-		It is ignored when stopEvent is set.
-		"""
+        Wait for the camera to be done capturing a picture. Blocking call.
+        It is ignored when stopEvent is set.
+        """
         while self.captureLoop.running.isSet() or self.worker.busy.isSet():
             if self.stopEvent.isSet():
                 return
@@ -240,11 +241,11 @@ class MrbCamera(PiCamera, Camera):
 
     def apply_best_shutter_speed(self):
         """
-		Use the corners of the image to do the auto-brightness adjustment.
-		:param fpsAvgDelta:
-		:param shutterSpeedDeltas:
-		:return:
-		"""
+        Use the corners of the image to do the auto-brightness adjustment.
+        :param fpsAvgDelta:
+        :param shutterSpeedDeltas:
+        :return:
+        """
         self.start_preview()
         time.sleep(1)
         autoShutterSpeed = self.exposure_speed

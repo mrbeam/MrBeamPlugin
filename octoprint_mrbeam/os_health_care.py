@@ -85,7 +85,11 @@ class OsHealthCare(object):
             self._logger.info("OK /etc/network/interfaces")
 
     def log_analytics(self, event, success=None, output=None):
-        data = dict(os_health_event=event, success=success, output=output,)
+        data = dict(
+            os_health_event=event,
+            success=success,
+            output=output,
+        )
         self._analytics_handler.add_os_health_log(data)
 
     def _get_full_path_to_file(self, filename):

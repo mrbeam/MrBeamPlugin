@@ -13,11 +13,11 @@ class ValueCollector(object):
 
     def getSummary(self):
         """
-		Returns a dict with all the dust statistics
-		(mean,median,count,std,)
-		:param valueList:
-		:return:
-		"""
+        Returns a dict with all the dust statistics
+        (mean,median,count,std,)
+        :param valueList:
+        :return:
+        """
         count = len(self.valueList)
         # self._logger.debug('Collector <{}> has values: {}'.format(self.name,self.valueList))
 
@@ -44,9 +44,9 @@ class ValueCollector(object):
 
     def get_latest_value(self):
         """
-		Returns the most recent element of the ValueCollector
-		:return:
-		"""
+        Returns the most recent element of the ValueCollector
+        :return:
+        """
         try:
             return round(self.valueList[-1], 4)
         except:  # mainly for IndexError

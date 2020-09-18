@@ -298,9 +298,9 @@ class MachineCom(object):
 
     def get_home_position(self):
         """
-		Returns the home position which usually where the head is after homing. (Except in C series)
-		:return: Tuple of (x, y) position
-		"""
+        Returns the home position which usually where the head is after homing. (Except in C series)
+        :return: Tuple of (x, y) position
+        """
         if self._laserCutterProfile["legacy"]["job_done_home_position_x"] is not None:
             return (
                 self._laserCutterProfile["legacy"]["job_done_home_position_x"],
@@ -461,22 +461,22 @@ class MachineCom(object):
 
     def _sendCommand(self, cmd=None):
         """
-		Takes command from:
-		 - parameter passed to this function, (!! treated as real time command)
-		 - self._cmd or
-		 - self._commandQueue.get()
-		and writes it onto serial.
-		If command is passed as parameter it's treated as a real time command,
-		which means there are no checks if it will exceed grbl buffer current capacity.
-		:param cmd: treated as real time command
+        Takes command from:
+         - parameter passed to this function, (!! treated as real time command)
+         - self._cmd or
+         - self._commandQueue.get()
+        and writes it onto serial.
+        If command is passed as parameter it's treated as a real time command,
+        which means there are no checks if it will exceed grbl buffer current capacity.
+        :param cmd: treated as real time command
 
-		All commands can be either a plain string or an dict object.
-		Object-Commands can have the following keys and are executed in this order:
-		- flush: a FLUSH is performed before any other step is executed. FLUSH waits until we're no longer waiting for any OKs from GRBL
-		- sync: a SYNC is performed before any other step is executed. SYNC is like FLUSH but waits until GRBL reports IDLE state.
-		- compressor: Set the compressor (if present) to the given value. usually in combination with flush.
-		- cmd: a command string (sam as if cmd is a plain string)
-		"""
+        All commands can be either a plain string or an dict object.
+        Object-Commands can have the following keys and are executed in this order:
+        - flush: a FLUSH is performed before any other step is executed. FLUSH waits until we're no longer waiting for any OKs from GRBL
+        - sync: a SYNC is performed before any other step is executed. SYNC is like FLUSH but waits until GRBL reports IDLE state.
+        - compressor: Set the compressor (if present) to the given value. usually in combination with flush.
+        - cmd: a command string (sam as if cmd is a plain string)
+        """
         if cmd is None:
             if self._cmd is None and self._commandQueue.empty():
                 return
@@ -770,10 +770,10 @@ class MachineCom(object):
 
     def _handle_rt_command(self, cmd):
         """
-		If cmd is a RT command, the RT command is sent and True is returned, False otherwise.
-		:param cmd:
-		:return:
-		"""
+        If cmd is a RT command, the RT command is sent and True is returned, False otherwise.
+        :param cmd:
+        :return:
+        """
         cmd = cmd.strip()
         if cmd == self.COMMAND_STATUS:
             self._sendCommand(self.COMMAND_STATUS)
@@ -1105,9 +1105,9 @@ class MachineCom(object):
 
     def _handle_error_message(self, line):
         """
-		Handles error messages from GRBL
-		:param line: GRBL error respnse
-		"""
+        Handles error messages from GRBL
+        :param line: GRBL error respnse
+        """
         line = line.rstrip() if line else line
         # grbl repots an error if there was never any data written to it's eeprom.
         # it's going to write default values to eeprom and everything is fine then....
@@ -1253,21 +1253,21 @@ class MachineCom(object):
 
     def _handle_g24avoided_corrupted_line(self, line):
         """
-		@deprecated: new grbl versions with checksum support do not send G24_AVOIDED anymore
-		#
-		So far this 'Corrupted line' is sent only in combination with G24_AVOIDED
+        @deprecated: new grbl versions with checksum support do not send G24_AVOIDED anymore
+        #
+        So far this 'Corrupted line' is sent only in combination with G24_AVOIDED
 
-		> 11:39:15,866 _COMM_: Send: G1X58.32Y338.49G1X56.78Y338.57
-		> ...
-		> 11:39:16,786 _COMM_: Recv: [G24_AVOIDED]
-		> 11:39:16,789 _COMM_: Recv: Corrupted line: G1X58.32Y338.49
-		> ...
-		> 11:39:17,221 _COMM_: Recv: Corrupted line: G1X56.78Y338.57
+        > 11:39:15,866 _COMM_: Send: G1X58.32Y338.49G1X56.78Y338.57
+        > ...
+        > 11:39:16,786 _COMM_: Recv: [G24_AVOIDED]
+        > 11:39:16,789 _COMM_: Recv: Corrupted line: G1X58.32Y338.49
+        > ...
+        > 11:39:17,221 _COMM_: Recv: Corrupted line: G1X56.78Y338.57
 
-		Results in this output:
-		# WARNING - G24_AVOIDED line: 'G1X58.32Y338.49G1X56.78Y338.57' (hex: [47 31 58 35 38 2E 33 32 59 33 33 38 2E 34 39][47 31 58 35 36 2E 37 38 59 33 33 38 2E 35 37])
-		:param line:
-		"""
+        Results in this output:
+        # WARNING - G24_AVOIDED line: 'G1X58.32Y338.49G1X56.78Y338.57' (hex: [47 31 58 35 38 2E 33 32 59 33 33 38 2E 34 39][47 31 58 35 36 2E 37 38 59 33 33 38 2E 35 37])
+        :param line:
+        """
         data = line[len("Corrupted line: ") :]
         self.g24_avoided_message.append(data)
         if len(self.g24_avoided_message) >= 2:
@@ -1295,9 +1295,9 @@ class MachineCom(object):
 
     def _handle_settings_message(self, line):
         """
-		Handles grbl settings message like '$130=515.1'
-		:param line:
-		"""
+        Handles grbl settings message like '$130=515.1'
+        :param line:
+        """
         match = self.pattern_grbl_setting.match(line)
         # there are a bunch of responses that do not match and it's ok.
         if match:
@@ -1316,23 +1316,23 @@ class MachineCom(object):
 
     def _start_recovery_thread(self):
         """
-		This starts a recovery process in another thread.
-		Recovery is when GRBL reported an MRB_CHECKSUM_ERROR.
-		In this case:
-		GRBL switches to ALARM state and does not process any commands in it's serial buffer
-		however it will proceed with all commands already in the planning buffer.
-		Now our job is to resend all commands that were skipped by GRBL.
-		First we need to send a ALARM_RESET command ($X) to end grbl's alarm state.
-		Then we send all commands which got declined beginning with the one which caused the checksum error.
-		It's important that there are now new commands from the file put into the sending pipeling
-		once we sent the ALARM_RESET until e sent all commands the need to be resent (marked dirty).
-		self._recovery_lock blocks the sending-queue from reading new commands from the file.
-		Once the lock is set and we waited some time for the sending queue to clear (this timeout mechanism should
-		be improved e.g. by using a lock), we can feed the recovery commands lead by a ALARM_RESET into the sending queue.
-		All commands that have been sent after the error are marked as 'dirty', ALARM_RESET is the first 'clean' command
-		after the error. We have to make sure that we re-send all dirty commands before we re-open the sending-queue for
-		new commands from the file.
-		"""
+        This starts a recovery process in another thread.
+        Recovery is when GRBL reported an MRB_CHECKSUM_ERROR.
+        In this case:
+        GRBL switches to ALARM state and does not process any commands in it's serial buffer
+        however it will proceed with all commands already in the planning buffer.
+        Now our job is to resend all commands that were skipped by GRBL.
+        First we need to send a ALARM_RESET command ($X) to end grbl's alarm state.
+        Then we send all commands which got declined beginning with the one which caused the checksum error.
+        It's important that there are now new commands from the file put into the sending pipeling
+        once we sent the ALARM_RESET until e sent all commands the need to be resent (marked dirty).
+        self._recovery_lock blocks the sending-queue from reading new commands from the file.
+        Once the lock is set and we waited some time for the sending queue to clear (this timeout mechanism should
+        be improved e.g. by using a lock), we can feed the recovery commands lead by a ALARM_RESET into the sending queue.
+        All commands that have been sent after the error are marked as 'dirty', ALARM_RESET is the first 'clean' command
+        after the error. We have to make sure that we re-send all dirty commands before we re-open the sending-queue for
+        new commands from the file.
+        """
         if self._recovery_lock and not self._recovery_ignore_further_alarm_responses:
             # Already in recovery
             # Another checksum error doesn't matter until the ALARM_RESET was processed
@@ -1409,8 +1409,8 @@ class MachineCom(object):
 
     def correct_grbl_settings(self, retries=3):
         """
-		This triggers a reload of GRBL settings and does a validation and correction afterwards.
-		"""
+        This triggers a reload of GRBL settings and does a validation and correction afterwards.
+        """
         if (
             time.time() - self._grbl_settings_correction_ts
             > self.GRBL_SETTINGS_READ_WINDOW
@@ -1580,14 +1580,14 @@ class MachineCom(object):
 
     def _gcode_command_for_cmd(self, cmd):
         """
-		Tries to parse the provided ``cmd`` and extract the GCODE command identifier from it (e.g. "G0" for "G0 X10.0").
+        Tries to parse the provided ``cmd`` and extract the GCODE command identifier from it (e.g. "G0" for "G0 X10.0").
 
-		Arguments:
-		    cmd (str): The command to try to parse.
+        Arguments:
+            cmd (str): The command to try to parse.
 
-		Returns:
-		    str or None: The GCODE command identifier if it could be parsed, or None if not.
-		"""
+        Returns:
+            str or None: The GCODE command identifier if it could be parsed, or None if not.
+        """
         if not cmd:
             return None
 
@@ -1659,9 +1659,9 @@ class MachineCom(object):
 
     def _poll_status(self):
         """
-		Called by RepeatedTimer self._status_polling_timer every 0.1 secs
-		We need to descide here if we should send a status request
-		"""
+        Called by RepeatedTimer self._status_polling_timer every 0.1 secs
+        We need to descide here if we should send a status request
+        """
         try:
             if self.isOperational():
                 if time.time() >= self._status_polling_next_ts:
@@ -1675,16 +1675,16 @@ class MachineCom(object):
 
     def _reset_status_polling_waittime(self):
         """
-		Resets wait time till we should do next status polling
-		This is typically called after we received an ok with a position
-		"""
+        Resets wait time till we should do next status polling
+        This is typically called after we received an ok with a position
+        """
         self._status_polling_next_ts = time.time() + self._status_polling_interval
 
     def _set_status_polling_interval_for_state(self, state=None):
         """
-		Sets polling interval according to current state
-		:param state: (optional) state, if None, self._state is used
-		"""
+        Sets polling interval according to current state
+        :param state: (optional) state, if None, self._state is used
+        """
         state = state or self._state
         if state == self.STATE_PRINTING:
             self._status_polling_interval = self.STATUS_POLL_FREQUENCY_PRINTING
@@ -1700,9 +1700,9 @@ class MachineCom(object):
 
     def _log(self, message, is_command=False):
         """
-		deprecated. use mrb_logger with flag serial=True instead
-		:param message:
-		"""
+        deprecated. use mrb_logger with flag serial=True instead
+        :param message:
+        """
         if is_command and not self._terminal_show_checksums:
             checksum = re.compile("\*\d{1,3}\s?")
             message = re.sub(checksum, "", message)
@@ -1710,10 +1710,10 @@ class MachineCom(object):
 
     def _fire_print_failed(self, err_msg=None):
         """
-		Tests it printer is in printing state and fire PRINT_FAILED event if so.
-		:param err_msg:
-		:return:
-		"""
+        Tests it printer is in printing state and fire PRINT_FAILED event if so.
+        :param err_msg:
+        :return:
+        """
         printing = self.isPrinting() or self.isPaused()
         err_msg = err_msg or self.getErrorString()
         if printing:
@@ -1725,12 +1725,12 @@ class MachineCom(object):
 
     def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
         """
-		Flashes the specified grbl file (.hex). This file must not contain a bootloader.
-		:param grbl_file: (optional) if not provided the default grbl file is used.
-		:param verify_only: If true, nothing is written, current grbl is verified only
-		:param is_connected: If True, serial connection to grbl is closed before flashing and reconnected afterwards.
-			Auto updates is executed before connection to grbl is established so in this case this param should be set to False.
-		"""
+        Flashes the specified grbl file (.hex). This file must not contain a bootloader.
+        :param grbl_file: (optional) if not provided the default grbl file is used.
+        :param verify_only: If true, nothing is written, current grbl is verified only
+        :param is_connected: If True, serial connection to grbl is closed before flashing and reconnected afterwards.
+                Auto updates is executed before connection to grbl is established so in this case this param should be set to False.
+        """
         log_verb = "verifying" if verify_only else "flashing"
 
         if self._state in (self.STATE_FLASHING, self.STATE_PRINTING, self.STATE_PAUSED):
@@ -1872,10 +1872,10 @@ class MachineCom(object):
     @staticmethod
     def _get_grbl_file_name(grbl_version=None):
         """
-		Gets you the filename according to the given grbl version.
-		:param grbl_version: (optional) grbl version - If no grbl version is provided it returns you the filename of the default version for this release.
-		:return: filename
-		"""
+        Gets you the filename according to the given grbl version.
+        :param grbl_version: (optional) grbl version - If no grbl version is provided it returns you the filename of the default version for this release.
+        :return: filename
+        """
         grbl_version = grbl_version or MachineCom.GRBL_DEFAULT_VERSION
         grbl_file = "grbl_{}.hex".format(grbl_version)
         if (
@@ -1886,11 +1886,11 @@ class MachineCom(object):
 
     def reset_grbl_auto_update_config(self):
         """
-		Resets grbl auto update configuration in lasercutterProfile if current grbl version is expected version.
-		This makes sure that once the auto update got executed sucessfully it's not done again and again.
-		Only has effect IF:
-		 - grbl_auto_update_enabled in config.yaml is True (default)
-		"""
+        Resets grbl auto update configuration in lasercutterProfile if current grbl version is expected version.
+        This makes sure that once the auto update got executed sucessfully it's not done again and again.
+        Only has effect IF:
+         - grbl_auto_update_enabled in config.yaml is True (default)
+        """
         if (
             self.grbl_auto_update_enabled
             and self._laserCutterProfile["grbl"]["auto_update_version"] is not None
@@ -1922,16 +1922,16 @@ class MachineCom(object):
 
     def rescue_from_home_pos(self, retry=0):
         """
-		In case the laserhead is pushed deep into homing corner and constantly keeps endstops/limit switches pushed,
-		this is going to rescue it from there before homing cycle is started.
+        In case the laserhead is pushed deep into homing corner and constantly keeps endstops/limit switches pushed,
+        this is going to rescue it from there before homing cycle is started.
 
-		This method tests:
-		- If GRBL version supports rescue (means reports limit data)
-		- If laserhead needs to be rescued
-		And then rescues aka moves the laserhead out of the critical zone.
+        This method tests:
+        - If GRBL version supports rescue (means reports limit data)
+        - If laserhead needs to be rescued
+        And then rescues aka moves the laserhead out of the critical zone.
 
-		Requires GRBL v '0.9g_20180223_61638c5' because we need limit data reported.
-		"""
+        Requires GRBL v '0.9g_20180223_61638c5' because we need limit data reported.
+        """
         if retry <= 0:
             if self._grbl_version is None:
                 self._logger.warn("rescue_from_home_pos() No GRBL version yet.")
@@ -1955,8 +1955,10 @@ class MachineCom(object):
                 none="None" if self.limit_x == 0 and self.limit_y == 0 else "",
                 retries=retry,
             )
-            msg = "Can not do homing cycle. Limits:{x}{y}{none}, reties:{retries}".format(
-                **params
+            msg = (
+                "Can not do homing cycle. Limits:{x}{y}{none}, reties:{retries}".format(
+                    **params
+                )
             )
             self._errorValue = msg
             self._logger.error(
@@ -2263,8 +2265,8 @@ class MachineCom(object):
 
     def _handle_user_command(self, cmd):
         """
-		Handles commands the user can enter on the terminal starting with /
-		"""
+        Handles commands the user can enter on the terminal starting with /
+        """
         try:
             cmd = cmd.strip()
             self._log("Command: %s" % cmd)
@@ -2810,11 +2812,11 @@ class MachineComPrintCallback(object):
 
 class PrintingFileInformation(object):
     """
-	Encapsulates information regarding the current file being printed: file name, current position, total size and
-	time the print started.
-	Allows to reset the current file position to 0 and to calculate the current progress as a floating point
-	value between 0 and 1.
-	"""
+    Encapsulates information regarding the current file being printed: file name, current position, total size and
+    time the print started.
+    Allows to reset the current file position to 0 and to calculate the current progress as a floating point
+    value between 0 and 1.
+    """
 
     def __init__(self, filename):
         self._logger = mrb_logger(
@@ -2843,9 +2845,9 @@ class PrintingFileInformation(object):
 
     def getProgress(self):
         """
-		The current progress of the file, calculated as relation between file position and absolute size. Returns -1
-		if file size is None or < 1.
-		"""
+        The current progress of the file, calculated as relation between file position and absolute size. Returns -1
+        if file size is None or < 1.
+        """
         if self._size is None or not self._size > 0:
             return -1
         return float(self._pos - self._comment_size) / float(
@@ -2854,28 +2856,28 @@ class PrintingFileInformation(object):
 
     def reset(self):
         """
-		Resets the current file position to 0.
-		"""
+        Resets the current file position to 0.
+        """
         self._pos = 0
 
     def start(self):
         """
-		Marks the print job as started and remembers the start time.
-		"""
+        Marks the print job as started and remembers the start time.
+        """
         self._start_time = time.time()
 
     def close(self):
         """
-		Closes the print job.
-		"""
+        Closes the print job.
+        """
         pass
 
 
 class PrintingGcodeFileInformation(PrintingFileInformation):
     """
-	Encapsulates information regarding an ongoing direct print. Takes care of the needed file handle and ensures
-	that the file is closed in case of an error.
-	"""
+    Encapsulates information regarding an ongoing direct print. Takes care of the needed file handle and ensures
+    that the file is closed in case of an error.
+    """
 
     def __init__(self, filename, offsets_callback=None, current_tool_callback=None):
         PrintingFileInformation.__init__(self, filename)
@@ -2899,8 +2901,8 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 
     def start(self):
         """
-		Opens the file for reading and determines the file size.
-		"""
+        Opens the file for reading and determines the file size.
+        """
         PrintingFileInformation.start(self)
         self._handle = open(self._filename, "r")
         self._lines_read = 0
@@ -2908,8 +2910,8 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 
     def close(self):
         """
-		Closes the file if it's still open.
-		"""
+        Closes the file if it's still open.
+        """
         PrintingFileInformation.close(self)
         if self._handle is not None:
             try:
@@ -2920,8 +2922,8 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 
     def resetToBeginning(self):
         """
-		resets the file handle so you can read from the beginning again.
-		"""
+        resets the file handle so you can read from the beginning again.
+        """
         self._logger.debug(
             "resetToBeginning() self._lines_read %s, self._lines_read_bak: %s",
             self._lines_read,
@@ -2932,8 +2934,8 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 
     def getNext(self):
         """
-		Retrieves the next line for printing.
-		"""
+        Retrieves the next line for printing.
+        """
         if self._handle is None:
             raise ValueError("File %s is not open for reading" % self._filename)
 
@@ -3030,8 +3032,8 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
 
     def getNext(self):
         """
-		Retrieves the next line for printing.
-		"""
+        Retrieves the next line for printing.
+        """
         if self._gcode is None:
             raise ValueError("Line buffer is not filled")
 

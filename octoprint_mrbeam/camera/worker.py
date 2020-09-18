@@ -11,12 +11,12 @@ import numpy as np
 
 class MrbPicWorker(object):
     """
-	The class that take care of buffering the pictures taken from the camera.
-	It can also do frame-by-frame work, but it could hurt recording speed (better
-	to split the work on a different thread)
-	See "Advanced Recipies" in the PiCamera tutorials:
-	https://picamera.readthedocs.io/en/release-1.13/recipes2.html
-	"""
+    The class that take care of buffering the pictures taken from the camera.
+    It can also do frame-by-frame work, but it could hurt recording speed (better
+    to split the work on a different thread)
+    See "Advanced Recipies" in the PiCamera tutorials:
+    https://picamera.readthedocs.io/en/release-1.13/recipes2.html
+    """
 
     def __init__(self, maxSize=3, debug=False):
         self.images = []
@@ -53,9 +53,9 @@ class MrbPicWorker(object):
 
     def write(self, buf):  # (self, buf: bytearray):
         """
-		Write into the current buffer.
-		Will automatically change buffer when a new JPEG image is detected.
-		"""
+        Write into the current buffer.
+        Will automatically change buffer when a new JPEG image is detected.
+        """
         if buf.startswith(b"\xff\xd8") and self.currentBuf().tell() > 0:
             # New frame; and the current buffer is not flushed.
             self.flush()

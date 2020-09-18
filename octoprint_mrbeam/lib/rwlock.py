@@ -5,29 +5,29 @@ __author__ = "Mateusz Kobos"
 
 class RWLock:
     """Synchronization object used in a solution of so-called second
-	readers-writers problem. In this problem, many readers can simultaneously
-	access a share, and a writer has an exclusive access to this share.
-	Additionally, the following constraints should be met:
-	1) no reader should be kept waiting if the share is currently opened for
-		reading unless a writer is also waiting for the share,
-	2) no writer should be kept waiting for the share longer than absolutely
-		necessary.
+    readers-writers problem. In this problem, many readers can simultaneously
+    access a share, and a writer has an exclusive access to this share.
+    Additionally, the following constraints should be met:
+    1) no reader should be kept waiting if the share is currently opened for
+            reading unless a writer is also waiting for the share,
+    2) no writer should be kept waiting for the share longer than absolutely
+            necessary.
 
-	The implementation is based on [1, secs. 4.2.2, 4.2.6, 4.2.7]
-	with a modification -- adding an additional lock (C{self.__readers_queue})
-	-- in accordance with [2].
+    The implementation is based on [1, secs. 4.2.2, 4.2.6, 4.2.7]
+    with a modification -- adding an additional lock (C{self.__readers_queue})
+    -- in accordance with [2].
 
-	Sources:
-	[1] A.B. Downey: "The little book of semaphores", Version 2.1.5, 2008
-	[2] P.J. Courtois, F. Heymans, D.L. Parnas:
-		"Concurrent Control with 'Readers' and 'Writers'",
-		Communications of the ACM, 1971 (via [3])
-	[3] http://en.wikipedia.org/wiki/Readers-writers_problem
+    Sources:
+    [1] A.B. Downey: "The little book of semaphores", Version 2.1.5, 2008
+    [2] P.J. Courtois, F. Heymans, D.L. Parnas:
+            "Concurrent Control with 'Readers' and 'Writers'",
+            Communications of the ACM, 1971 (via [3])
+    [3] http://en.wikipedia.org/wiki/Readers-writers_problem
 
-	MrBeam Addition:
-	Source: http://code.activestate.com/recipes/577803-reader-writer-lock-with-priority-for-writers/
-	Licensed under the MIT License according to this page.
-	"""
+    MrBeam Addition:
+    Source: http://code.activestate.com/recipes/577803-reader-writer-lock-with-priority-for-writers/
+    Licensed under the MIT License according to this page.
+    """
 
     def __init__(self):
         self.__read_switch = _LightSwitch()
@@ -59,7 +59,7 @@ class RWLock:
 
 class _LightSwitch:
     """An auxiliary "light switch"-like object. The first thread turns on the
-	"switch", the last one turns it off (see [1, sec. 4.2.2] for details)."""
+    "switch", the last one turns it off (see [1, sec. 4.2.2] for details)."""
 
     def __init__(self):
         self.__counter = 0
@@ -94,15 +94,15 @@ import copy
 class Writer(threading.Thread):
     def __init__(self, buffer_, rw_lock, init_sleep_time, sleep_time, to_write):
         """
-		@param buffer_: common buffer_ shared by the readers and writers
-		@type buffer_: list
-		@type rw_lock: L{RWLock}
-		@param init_sleep_time: sleep time before doing any action
-		@type init_sleep_time: C{float}
-		@param sleep_time: sleep time while in critical section
-		@type sleep_time: C{float}
-		@param to_write: data that will be appended to the buffer
-		"""
+        @param buffer_: common buffer_ shared by the readers and writers
+        @type buffer_: list
+        @type rw_lock: L{RWLock}
+        @param init_sleep_time: sleep time before doing any action
+        @type init_sleep_time: C{float}
+        @param sleep_time: sleep time while in critical section
+        @type sleep_time: C{float}
+        @param to_write: data that will be appended to the buffer
+        """
         threading.Thread.__init__(self)
         self.__buffer = buffer_
         self.__rw_lock = rw_lock
@@ -127,14 +127,14 @@ class Writer(threading.Thread):
 class Reader(threading.Thread):
     def __init__(self, buffer_, rw_lock, init_sleep_time, sleep_time):
         """
-		@param buffer_: common buffer shared by the readers and writers
-		@type buffer_: list
-		@type rw_lock: L{RWLock}
-		@param init_sleep_time: sleep time before doing any action
-		@type init_sleep_time: C{float}
-		@param sleep_time: sleep time while in critical section
-		@type sleep_time: C{float}
-		"""
+        @param buffer_: common buffer shared by the readers and writers
+        @type buffer_: list
+        @type rw_lock: L{RWLock}
+        @param init_sleep_time: sleep time before doing any action
+        @type init_sleep_time: C{float}
+        @param sleep_time: sleep time while in critical section
+        @type sleep_time: C{float}
+        """
         threading.Thread.__init__(self)
         self.__buffer = buffer_
         self.__rw_lock = rw_lock

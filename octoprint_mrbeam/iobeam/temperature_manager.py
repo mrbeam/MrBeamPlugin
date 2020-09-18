@@ -28,21 +28,21 @@ class TemperatureManager(object):
         self._event_bus = plugin._event_bus
         self.temperature = None
         self.temperature_ts = 0
-        self.temperature_max = plugin.laserCutterProfileManager.get_current_or_default()[
-            "laser"
-        ][
-            "max_temperature"
-        ]
-        self.hysteresis_temperature = plugin.laserCutterProfileManager.get_current_or_default()[
-            "laser"
-        ][
-            "hysteresis_temperature"
-        ]
-        self.cooling_duration = plugin.laserCutterProfileManager.get_current_or_default()[
-            "laser"
-        ][
-            "cooling_duration"
-        ]
+        self.temperature_max = (
+            plugin.laserCutterProfileManager.get_current_or_default()["laser"][
+                "max_temperature"
+            ]
+        )
+        self.hysteresis_temperature = (
+            plugin.laserCutterProfileManager.get_current_or_default()["laser"][
+                "hysteresis_temperature"
+            ]
+        )
+        self.cooling_duration = (
+            plugin.laserCutterProfileManager.get_current_or_default()["laser"][
+                "cooling_duration"
+            ]
+        )
         self.mode_time_based = self.cooling_duration > 0
         self.temp_timer = None
         self.is_cooling_since = 0
@@ -91,21 +91,21 @@ class TemperatureManager(object):
         self._shutting_down = True
 
     def reset(self):
-        self.temperature_max = self._plugin.laserCutterProfileManager.get_current_or_default()[
-            "laser"
-        ][
-            "max_temperature"
-        ]
-        self.hysteresis_temperature = self._plugin.laserCutterProfileManager.get_current_or_default()[
-            "laser"
-        ][
-            "hysteresis_temperature"
-        ]
-        self.cooling_duration = self._plugin.laserCutterProfileManager.get_current_or_default()[
-            "laser"
-        ][
-            "cooling_duration"
-        ]
+        self.temperature_max = (
+            self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
+                "max_temperature"
+            ]
+        )
+        self.hysteresis_temperature = (
+            self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
+                "hysteresis_temperature"
+            ]
+        )
+        self.cooling_duration = (
+            self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
+                "cooling_duration"
+            ]
+        )
         self.mode_time_based = self.cooling_duration > 0
         self.is_cooling_since = 0
 
@@ -133,8 +133,8 @@ class TemperatureManager(object):
 
     def cooling_stop(self, err_msg=None):
         """
-		Stop the laser for cooling purpose
-		"""
+        Stop the laser for cooling purpose
+        """
         if self._one_button_handler and self._one_button_handler.is_printing():
             self._logger.error(
                 "cooling_stop() %s - _msg_is_temperature_recent: %s",
@@ -151,8 +151,8 @@ class TemperatureManager(object):
 
     def cooling_resume(self):
         """
-		Resume laser once the laser has cooled down enough.
-		"""
+        Resume laser once the laser has cooled down enough.
+        """
         self._logger.debug("cooling_resume()")
         self._plugin.fire_event(
             MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature)

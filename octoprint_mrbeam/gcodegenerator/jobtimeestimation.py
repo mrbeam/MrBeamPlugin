@@ -40,9 +40,9 @@ class JobTimeEstimation:
     def _subscribe(self):
         """Subscribe to OctoPrint's SLICING_DONE event.
 
-		Returns:
-			None
-		"""
+        Returns:
+                None
+        """
 
         self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self.on_event)
         self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.on_event)
@@ -50,13 +50,13 @@ class JobTimeEstimation:
     def on_event(self, event, payload):
         """Start estimation calculation in a new thread when SLICING_DONE.
 
-		Args:
-			event(OctoprintEvent): the name of the event that triggers the function.
-			payload(dict): the payload of the event that triggers the function.
+        Args:
+                event(OctoprintEvent): the name of the event that triggers the function.
+                payload(dict): the payload of the event that triggers the function.
 
-		Returns:
-			None
-		"""
+        Returns:
+                None
+        """
 
         if event == OctoPrintEvents.SLICING_DONE:
             estimation_thread = threading.Thread(
@@ -73,12 +73,12 @@ class JobTimeEstimation:
     def _calculate_estimation_threaded(self, file_name):
         """Calculate the job time estimation from the gcode file.
 
-		Args:
-			file_name(str): the name of the gcode file.
+        Args:
+                file_name(str): the name of the gcode file.
 
-		Returns:
-			None
-		"""
+        Returns:
+                None
+        """
 
         try:
             self._logger.debug("Starting thread for job time estimation")
@@ -106,15 +106,15 @@ class JobTimeEstimation:
     def distance(x1, y1, x2, y2):
         """Calculate the distance between two coordinates (the hypotenuse).
 
-		Args:
-			x1(float): the x value of the first coordinate.
-			y1(float): the y value of the first coordinate.
-			x2(float): the x value of the second coordinate.
-			y2(float): the y value of the second coordinate.
+        Args:
+                x1(float): the x value of the first coordinate.
+                y1(float): the y value of the first coordinate.
+                x2(float): the x value of the second coordinate.
+                y2(float): the y value of the second coordinate.
 
-		Returns:
-			The distance between the coordinates.
-		"""
+        Returns:
+                The distance between the coordinates.
+        """
 
         return hypot(x2 - x1, y2 - y1)
 
@@ -122,15 +122,15 @@ class JobTimeEstimation:
     def longest_axis_distance(x1, y1, x2, y2):
         """Calculate the distance of the longest axis between two coordinates.
 
-		Args:
-			x1(float): the x value of the first coordinate.
-			y1(float): the y value of the first coordinate.
-			x2(float): the x value of the second coordinate.
-			y2(float): the y value of the second coordinate.
+        Args:
+                x1(float): the x value of the first coordinate.
+                y1(float): the y value of the first coordinate.
+                x2(float): the x value of the second coordinate.
+                y2(float): the y value of the second coordinate.
 
-		Returns:
-			The distance of the axis with the longest distance.
-		"""
+        Returns:
+                The distance of the axis with the longest distance.
+        """
 
         if abs(x1 - x2) > abs(y1 - y2):
             return abs(x1 - x2)
@@ -141,12 +141,12 @@ class JobTimeEstimation:
     def seconds_to_time_string(seconds):
         """Format the seconds as a time string.
 
-		Args:
-			seconds(int): the seconds to represent.
+        Args:
+                seconds(int): the seconds to represent.
 
-		Returns:
-			time_string(str): a string with the representation of the time.
-		"""
+        Returns:
+                time_string(str): a string with the representation of the time.
+        """
 
         seconds = int(seconds)
         hours, reminder = divmod(seconds, 3600)
@@ -161,14 +161,14 @@ class JobTimeEstimation:
     def _round_duration_to(total_duration, round_to, to_minutes=True):
         """Round the duration to a determined time.
 
-		Args:
-			total_duration(float): the estimated total duration in seconds.
-			round_to(int): the value to which the duration has to be rounded.
-			to_minutes(bool): indicates if the value to be rounded to is in minutes (default) or seconds.
+        Args:
+                total_duration(float): the estimated total duration in seconds.
+                round_to(int): the value to which the duration has to be rounded.
+                to_minutes(bool): indicates if the value to be rounded to is in minutes (default) or seconds.
 
-		Returns:
-			total_duration(int): the rounded up duration in seconds.
-		"""
+        Returns:
+                total_duration(int): the rounded up duration in seconds.
+        """
 
         if to_minutes:
             seconds = 60
@@ -185,12 +185,12 @@ class JobTimeEstimation:
     def round_total_duration(self, total_duration):
         """Round the total duration depending on its value.
 
-		Args:
-			total_duration(float): the estimated total duration in seconds.
+        Args:
+                total_duration(float): the estimated total duration in seconds.
 
-		Returns:
-			total_duration(int): the estimated total duration after being rounded up.
-		"""
+        Returns:
+                total_duration(int): the estimated total duration after being rounded up.
+        """
 
         # Increase by 10%
         total_duration = total_duration * 1.1
@@ -222,14 +222,14 @@ class JobTimeEstimation:
 
     def estimate_job_duration(self, gcode_file, do_sleep=True):
         """Read a gcode file and calculate what will be the total duration of the job.
-		Reads the G0 and G1 commands to extract the coordinates and the F commands to get the feed rates.
+        Reads the G0 and G1 commands to extract the coordinates and the F commands to get the feed rates.
 
-		Args:
-			gcode_file(str): the path to the gcode file.
+        Args:
+                gcode_file(str): the path to the gcode file.
 
-		Returns:
-			total_duration(float): the calculated total duration of the job.
-		"""
+        Returns:
+                total_duration(float): the calculated total duration of the job.
+        """
 
         with open(gcode_file, "r") as gfile:
             content = gfile.readlines()

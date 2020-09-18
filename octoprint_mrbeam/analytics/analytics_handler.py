@@ -636,10 +636,10 @@ class AnalyticsHandler(object):
 
     def _event_print_paused(self, event, payload):
         """
-		Cooling: payload holds some information if it was a cooling_pause or not. Lid/Button: Currently there is no
-		way to know other than checking the current state: _mrbeam_plugin_implementation.iobeam
-		.is_interlock_closed()
-		"""
+        Cooling: payload holds some information if it was a cooling_pause or not. Lid/Button: Currently there is no
+        way to know other than checking the current state: _mrbeam_plugin_implementation.iobeam
+        .is_interlock_closed()
+        """
         self._add_job_event(
             ak.Job.Event.Print.PAUSED,
             payload={ak.Job.Duration.CURRENT: int(round(payload["time"]))},

@@ -327,10 +327,10 @@ class LidHandler(object):
 
     def get_calibration_file(self, calibration_type=None):
         """Gives the location of the best existing lens calibration file, or
-		the demanded type (calibration_type).
-		If in calibration tool mode, it always returns the path to the factory
-		file.
-		"""
+        the demanded type (calibration_type).
+        If in calibration tool mode, it always returns the path to the factory
+        file.
+        """
         if self._plugin.calibration_tool_mode:
             return self._settings.get(["cam", "lensCalibration", "factory"])
 
@@ -357,9 +357,9 @@ class LidHandler(object):
 
     def onLensCalibrationStart(self):
         """
-		When pressing the button 'start lens calibration'
-		Doesn't run the cv2 lens calibration at that point.
-		"""
+        When pressing the button 'start lens calibration'
+        Doesn't run the cv2 lens calibration at that point.
+        """
         self._photo_creator.is_initial_calibration = True
         self._start_photo_worker()
         if not self.lensCalibrationStarted and self.boardDetectorDaemon.load_dir(
@@ -498,12 +498,12 @@ class LidHandler(object):
 
     def revert_factory_lens_calibration(self):
         """
-		The camera reverts to the factory or legacy calibration file.
-		- Removes the user lens calibration file,
-		- Removes the calibration pictures
-		- Refreshes settings.
+        The camera reverts to the factory or legacy calibration file.
+        - Removes the user lens calibration file,
+        - Removes the calibration pictures
+        - Refreshes settings.
 
-		"""
+        """
         files = []
         for fname in os.listdir(self.debugFolder):
             if re.match(TMP_RAW_FNAME_RE, fname) or re.match(
@@ -729,23 +729,23 @@ class PhotoCreator(object):
         self, cam, pic_settings=None, cam_params=None, out_pic_size=None
     ):
         """
-		Takes pictures, isolates the work area and serves it to the user at progressively better resolutions.
-		After a certain number of similar pictures, Mr Beam serves a better quality pictures
-		As of writing this doc, it will go through these settings:
-		# 500 x 390, 75% JPEG quality ~ 60 kB
-		1000 x 780, 65% JPEG quality ~ 45 kB
-		# 1000 x 780, 75% JPEG quality ~ 200 kB
-		2000 x 1560, 65% JPEG quality ~ 400 kB
-		# 2000 x 1560, 75% JPEG quality ~ 600 kB
-		# 2000 x 1560, 90% JPEG quality (lossless) ~ 1 MB
+        Takes pictures, isolates the work area and serves it to the user at progressively better resolutions.
+        After a certain number of similar pictures, Mr Beam serves a better quality pictures
+        As of writing this doc, it will go through these settings:
+        # 500 x 390, 75% JPEG quality ~ 60 kB
+        1000 x 780, 65% JPEG quality ~ 45 kB
+        # 1000 x 780, 75% JPEG quality ~ 200 kB
+        2000 x 1560, 65% JPEG quality ~ 400 kB
+        # 2000 x 1560, 75% JPEG quality ~ 600 kB
+        # 2000 x 1560, 90% JPEG quality (lossless) ~ 1 MB
 
-		Data used to compare the two algorithms is also retrieved and sent over at the end of this session
+        Data used to compare the two algorithms is also retrieved and sent over at the end of this session
 
-		:param cam: The camera that will record
-		:type cam: MrbCamera
-		:return: None
-		:rtype: NoneType
-		"""
+        :param cam: The camera that will record
+        :type cam: MrbCamera
+        :return: None
+        :rtype: NoneType
+        """
 
         cam.start_preview()
         time.sleep(1.2)  # camera warmup + prevent quick switch to pic capture
@@ -1133,7 +1133,9 @@ class PhotoCreator(object):
         except Exception as ex:
             self._logger.exception("Exception_in-_save__s_for_analytics-_{}".format(ex))
 
-    @get_thread(name="send_last_img_to_analytics",)
+    @get_thread(
+        name="send_last_img_to_analytics",
+    )
     def send_last_img_to_analytics(
         self, force_upload=False, trigger="user", notify_user=False
     ):
@@ -1228,9 +1230,9 @@ class PhotoCreator(object):
 
     def load_camera_settings(self, path="/home/pi/.octoprint/cam/last_session.yaml"):
         """
-		Loads the settings saved from the last session.
-		The file is located by default at .octoprint/cam/pic_settings.yaml
-		"""
+        Loads the settings saved from the last session.
+        The file is located by default at .octoprint/cam/pic_settings.yaml
+        """
         backup = "/home/pi/.octoprint/cam/last_markers.json"
         if os.path.isfile(path):
             _path = path
@@ -1263,9 +1265,9 @@ class PhotoCreator(object):
         shutter_speed=None,
     ):
         """
-		Save the settings given for the next sesison.
-		The file is located by default at .octoprint/cam/pic_settings.yaml
-		"""
+        Save the settings given for the next sesison.
+        The file is located by default at .octoprint/cam/pic_settings.yaml
+        """
         if markers is None and shutter_speed is None:
             # Nothing to save
             return
@@ -1307,105 +1309,105 @@ class PhotoCreator(object):
 
 def blank_session_details():
     """
-	Add to these session details when taking the pictures.
-	Do not send back as-is (won't convert to JSON)
-	example analytics output:
-	{
-	"num_pics": 8,
-	"num_success_pics": 0,
-	"errors": {},
-	"num_all_markers_detected": 0,
-	"avg_upload_speed": null,
-	"settings_min_marker_size": null,
-	"avg_shutter_speed": 75870.666666666672,
-	"markers": {
-		"SW": {
-			"avg_color": [
-			153.83132956630604,
-			96.65563641216431,
-			157.33211938180796
-			],
-			"avg_pos": [
-			1415.0,
-			191.375
-			],
-			"missed": 0,
-			"max_brightness": 222.36003612238798,
-			"avg_brightness": 191.76418726204039,
-			"min_brightness": 132.54071417672597,
-			"found": 8,
-			"std_pos": [
-			0.0,
-			0.14498973996560857
-			],
-			"marker_px_size": 852.88888888888891
-		},
-		"NE": {
-			"avg_color": [
-			145.245669380652,
-			107.38059013940135,
-			87.4850645317796
-			],
-			"avg_pos": [
-			218.875,
-			1952.875
-			],
-			"missed": 0,
-			"max_brightness": 133.5580481163187,
-			"avg_brightness": 103.754267896564,
-			"min_brightness": 61.796808673120474,
-			"found": 8,
-			"std_pos": [
-			0.09077978610301556,
-			0.09077978610301436
-			],
-			"marker_px_size": 872.77777777777783
-		},
-		"SE": {
-			"avg_color": [
-			151.05255352255705,
-			92.30664293555843,
-			176.65584827724854
-			],
-			"avg_pos": [
-			1385.125,
-			1983.0
-			],
-			"missed": 0,
-			"max_brightness": 236.57588634316892,
-			"avg_brightness": 210.56778508779132,
-			"min_brightness": 154.62930727850451,
-			"found": 8,
-			"std_pos": [
-			0.109375,
-			0.0
-			],
-			"marker_px_size": 934.66666666666663
-		},
-		"NW": {
-			"avg_color": [
-			132.75216912060495,
-			113.9216832961036,
-			75.47599677659782
-			],
-			"avg_pos": [
-			267.375,
-			151.125
-			],
-			"missed": 0,
-			"max_brightness": 112.99359963534337,
-			"avg_brightness": 85.321787444997511,
-			"min_brightness": 46.601849096959924,
-			"found": 8,
-			"std_pos": [
-			0.15655504520228197,
-			0.10683497845024859
-			],
-			"marker_px_size": 887.0
-		}
-	},
-	}
-	"""
+    Add to these session details when taking the pictures.
+    Do not send back as-is (won't convert to JSON)
+    example analytics output:
+    {
+    "num_pics": 8,
+    "num_success_pics": 0,
+    "errors": {},
+    "num_all_markers_detected": 0,
+    "avg_upload_speed": null,
+    "settings_min_marker_size": null,
+    "avg_shutter_speed": 75870.666666666672,
+    "markers": {
+            "SW": {
+                    "avg_color": [
+                    153.83132956630604,
+                    96.65563641216431,
+                    157.33211938180796
+                    ],
+                    "avg_pos": [
+                    1415.0,
+                    191.375
+                    ],
+                    "missed": 0,
+                    "max_brightness": 222.36003612238798,
+                    "avg_brightness": 191.76418726204039,
+                    "min_brightness": 132.54071417672597,
+                    "found": 8,
+                    "std_pos": [
+                    0.0,
+                    0.14498973996560857
+                    ],
+                    "marker_px_size": 852.88888888888891
+            },
+            "NE": {
+                    "avg_color": [
+                    145.245669380652,
+                    107.38059013940135,
+                    87.4850645317796
+                    ],
+                    "avg_pos": [
+                    218.875,
+                    1952.875
+                    ],
+                    "missed": 0,
+                    "max_brightness": 133.5580481163187,
+                    "avg_brightness": 103.754267896564,
+                    "min_brightness": 61.796808673120474,
+                    "found": 8,
+                    "std_pos": [
+                    0.09077978610301556,
+                    0.09077978610301436
+                    ],
+                    "marker_px_size": 872.77777777777783
+            },
+            "SE": {
+                    "avg_color": [
+                    151.05255352255705,
+                    92.30664293555843,
+                    176.65584827724854
+                    ],
+                    "avg_pos": [
+                    1385.125,
+                    1983.0
+                    ],
+                    "missed": 0,
+                    "max_brightness": 236.57588634316892,
+                    "avg_brightness": 210.56778508779132,
+                    "min_brightness": 154.62930727850451,
+                    "found": 8,
+                    "std_pos": [
+                    0.109375,
+                    0.0
+                    ],
+                    "marker_px_size": 934.66666666666663
+            },
+            "NW": {
+                    "avg_color": [
+                    132.75216912060495,
+                    113.9216832961036,
+                    75.47599677659782
+                    ],
+                    "avg_pos": [
+                    267.375,
+                    151.125
+                    ],
+                    "missed": 0,
+                    "max_brightness": 112.99359963534337,
+                    "avg_brightness": 85.321787444997511,
+                    "min_brightness": 46.601849096959924,
+                    "found": 8,
+                    "std_pos": [
+                    0.15655504520228197,
+                    0.10683497845024859
+                    ],
+                    "marker_px_size": 887.0
+            }
+    },
+    }
+    """
     _init_marker = {
         "missed": 0,
         "found": 0,

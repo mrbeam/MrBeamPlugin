@@ -58,12 +58,12 @@ USER = "user"
 # @logtime()
 def undistort(img, mtx, dist, calibration_img_size=None, output_img_size=None):
     """Apply the camera calibration matrices to distort the picture back straight.
-	@param calibration_img_size: tuple: size of the image when the calibration was occuring.
-	@param output_img_size: tuple: desired size of the output image.
-	If not declared, the calibration image size and output image are going to be
-	assumed the same as the input.
-	It is faster to upscale/downscale here than to do it in a 2nd step seperately
-	"""
+    @param calibration_img_size: tuple: size of the image when the calibration was occuring.
+    @param output_img_size: tuple: desired size of the output image.
+    If not declared, the calibration image size and output image are going to be
+    assumed the same as the input.
+    It is faster to upscale/downscale here than to do it in a 2nd step seperately
+    """
     # The camera matrix need to be rescaled if the image size changed
     # in_mtx = adjust_mtx_to_pic(img, mtx, dist, calibration_img_size)
     h, w = img.shape[:2]
@@ -515,7 +515,12 @@ def handleBoardPicture(image, count, board_size, q_out=None):
         bbox = None
         # TODO log this
 
-    drawnImg = cv2.drawChessboardCorners(img, board_size, found_pattern, success,)
+    drawnImg = cv2.drawChessboardCorners(
+        img,
+        board_size,
+        found_pattern,
+        success,
+    )
     height, width, _ = drawnImg.shape
     differed_imwrite(path, drawnImg)
     if q_out is not None:
@@ -565,10 +570,10 @@ def findBoard(image, pattern):
 @logExceptions
 def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
     """
-	None the distortion of the lens given the detected chessboards.
-	N.B. is supposed to run after the main process has been joined,
-	but can also run in parallel (only uses the available results)
-	"""
+    None the distortion of the lens given the detected chessboards.
+    N.B. is supposed to run after the main process has been joined,
+    but can also run in parallel (only uses the available results)
+    """
     # signal.signal(signal.SIGTERM, signal.SIG_DFL)
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
         objPoints, imgPoints, imgRes, None, None

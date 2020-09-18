@@ -117,8 +117,10 @@ class OneButtonHandler(object):
         msg += ", payload:{}".format(payload)
 
         msg += " - shutdown_state:{}".format(self.shutdown_state)
-        msg += " - shutdown_prepare_was_initiated_during_pause_saftey_timeout:{}".format(
-            self.shutdown_prepare_was_initiated_during_pause_saftey_timeout
+        msg += (
+            " - shutdown_prepare_was_initiated_during_pause_saftey_timeout:{}".format(
+                self.shutdown_prepare_was_initiated_during_pause_saftey_timeout
+            )
         )
 
         msg += ", is_ready_to_laser():{}".format(self.is_ready_to_laser())
@@ -426,9 +428,9 @@ class OneButtonHandler(object):
 
     def is_intended_pause(self):
         """
-		This is called by com_acc2 to avoid unintended pauses
-		:return: Boolean
-		"""
+        This is called by com_acc2 to avoid unintended pauses
+        :return: Boolean
+        """
         return self.intended_pause or self.behave_cooling_state
 
     def _check_if_still_ready_to_laser(self):
@@ -518,15 +520,17 @@ class OneButtonHandler(object):
 
     def _check_system_integrity(self):
         """
-		We're going to need a concept of what to do if something here fails...
-		:return:
-		"""
+        We're going to need a concept of what to do if something here fails...
+        :return:
+        """
         temp_ok = self._temperature_manager.is_temperature_recent()
         if not temp_ok:
             msg = "iobeam: Laser temperature not available"
             self._user_notification_system.show_notifications(
                 self._user_notification_system.get_legacy_notification(
-                    title="Error", text=msg, is_err=True,
+                    title="Error",
+                    text=msg,
+                    is_err=True,
                 )
             )
             raise Exception(msg)
@@ -578,15 +582,15 @@ class OneButtonHandler(object):
         self, need_to_release=True, force=False, trigger=None, pause_print=True
     ):
         """
-		Pauses laser, switches machine to paused mode
-		:param need_to_release: If True (default), machine does not accept a button press for some period (3sec) and indicates this per leds.
-				This is a safety feature to prevent user from pausing and immediately resuming laser in case if he presses the button multiple times because he's nervous.
-				This is not needed if pause mode is triggered by other mechanisms than the button.
-		:param force: Forwarded to _printer. If False, com_acc isn't called if printer is already in paused state
-		:param trigger: Used for debugging purposes.
-		:param pause_print: Indicates if the pause_print method from Octoprint should be called. This is not necessary
-				if OctoPrint already did (so if the trigger was OctoPrintEvents.PRINT_PAUSED).
-		"""
+        Pauses laser, switches machine to paused mode
+        :param need_to_release: If True (default), machine does not accept a button press for some period (3sec) and indicates this per leds.
+                        This is a safety feature to prevent user from pausing and immediately resuming laser in case if he presses the button multiple times because he's nervous.
+                        This is not needed if pause mode is triggered by other mechanisms than the button.
+        :param force: Forwarded to _printer. If False, com_acc isn't called if printer is already in paused state
+        :param trigger: Used for debugging purposes.
+        :param pause_print: Indicates if the pause_print method from Octoprint should be called. This is not necessary
+                        if OctoPrint already did (so if the trigger was OctoPrintEvents.PRINT_PAUSED).
+        """
         self.pause_laser_ts = time.time()
         self.intended_pause = True
         self.pause_need_to_release = self.pause_need_to_release or need_to_release

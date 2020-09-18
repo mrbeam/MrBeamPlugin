@@ -265,10 +265,10 @@ class DustManager(object):
 
     def _pause_laser(self, trigger, analytics=None, log_message=None):
         """
-		Stops laser and switches to paused mode.
-		Should be called when air filters gets disconnected, dust value gets too high or when any error occurs...
-		:param trigger: A string to identify the cause/trigger that initiated paused mode
-		"""
+        Stops laser and switches to paused mode.
+        Should be called when air filters gets disconnected, dust value gets too high or when any error occurs...
+        :param trigger: A string to identify the cause/trigger that initiated paused mode
+        """
         if self._one_button_handler.is_printing():
             self._logger.error(log_message, analytics=analytics)
             self._logger.info("_pause_laser() trigger: %s", trigger)
@@ -276,10 +276,10 @@ class DustManager(object):
 
     def _start_dust_extraction(self, value=None, cancel_all_timers=True):
         """
-		Turn on fan on auto mode or set to constant value.
-		:param value: Default: auto. 0-100 if constant value required.
-		:return:
-		"""
+        Turn on fan on auto mode or set to constant value.
+        :param value: Default: auto. 0-100 if constant value required.
+        :return:
+        """
         if cancel_all_timers:
             self._cancel_all_fan_timers()
         if value is None or value == self.FAN_COMMAND_AUTO:
@@ -423,10 +423,10 @@ class DustManager(object):
 
     def _send_dust_to_analytics(self, val):
         """
-		Sends dust value periodically to analytics_handler to get overall stats and dust profile.
-		:param val: measured dust value
-		:return:
-		"""
+        Sends dust value periodically to analytics_handler to get overall stats and dust profile.
+        :param val: measured dust value
+        :return:
+        """
         self._analytics_handler.collect_dust_value(val)
 
     def _validate_values(self):
@@ -452,15 +452,12 @@ class DustManager(object):
 
         if not result and not self._plugin.is_boot_grace_period():
             msg = "Fan error: {errs}".format(errs=", ".join(errs))
-            log_message = (
-                msg
-                + " - Data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
-                    state=self._state,
-                    rpm=self._rpm,
-                    dust=self._dust,
-                    connected=self._connected,
-                    age=(time.time() - self._data_ts),
-                )
+            log_message = msg + " - Data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
+                state=self._state,
+                rpm=self._rpm,
+                dust=self._dust,
+                connected=self._connected,
+                age=(time.time() - self._data_ts),
             )
             self._pause_laser(
                 trigger=msg, analytics="invalid-old-fan-data", log_message=msg

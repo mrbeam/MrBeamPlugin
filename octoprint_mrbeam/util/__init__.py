@@ -15,7 +15,7 @@ from .log import logExceptions, logtime
 
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
     """Recursive dictionnary update.
-	Can associate an operation for superposing leaves."""
+    Can associate an operation for superposing leaves."""
     if isinstance(d1, dict) and isinstance(d2, dict):
         out = copy(d1)
         for k in set(chain(d1.keys(), d2.keys())):
@@ -36,9 +36,9 @@ def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
 
 def nested_items(my_dict):
     """Returns an Iterator of the keys, values and relative parent in a nested dict.
-	Allows you to use the relative parent to modify the values in place.
-	Example: See `dict_map`
-	"""
+    Allows you to use the relative parent to modify the values in place.
+    Example: See `dict_map`
+    """
     # assert isinstance(my_dict, Mapping)
     assert isinstance(my_dict, dict)
     for k, v in my_dict.items():
@@ -59,12 +59,12 @@ def dict_map(func, my_dict):
 
 def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
     """
-	returns a function that threads an other function and running a callback if provided.
-	Returns the started thread object.
-	It also logs any Exceptions that happen in that function.
-	see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
-	See https://stackoverflow.com/questions/14234547/threads-with-decorators
-	"""
+    returns a function that threads an other function and running a callback if provided.
+    Returns the started thread object.
+    It also logs any Exceptions that happen in that function.
+    see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
+    See https://stackoverflow.com/questions/14234547/threads-with-decorators
+    """
 
     def wrapper(f):
         # if logname:
@@ -101,12 +101,12 @@ def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
 
 def makedirs(path, parent=False, *a, **kw):
     """
-	Same as os.makedirs but doesn't throw exception if dir exists
-	@param parentif: bool create the parent directory for the path given and not the full path
-	                 (avoids having to use os.path.dirname)
-	Python >= 3.5 see mkdir(parents=True, exist_ok=True)
-	See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
-	"""
+    Same as os.makedirs but doesn't throw exception if dir exists
+    @param parentif: bool create the parent directory for the path given and not the full path
+                     (avoids having to use os.path.dirname)
+    Python >= 3.5 see mkdir(parents=True, exist_ok=True)
+    See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
+    """
     from os.path import dirname, isdir
     from os import makedirs
     import errno

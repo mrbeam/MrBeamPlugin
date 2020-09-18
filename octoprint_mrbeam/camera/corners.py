@@ -27,12 +27,12 @@ _logger = logging.getLogger(__name__)
 # @logtime()
 def warpImgByCorners(image, corners, zoomed_out=False):
     """
-	Warps the region delimited by the corners in order to straighten it.
-	:param image: takes an opencv image
-	:param corners: as qd-dict
-	:param zoomed_out: wether to zoom out the pic to account for object height
-	:return: image with corners warped
-	"""
+    Warps the region delimited by the corners in order to straighten it.
+    :param image: takes an opencv image
+    :param corners: as qd-dict
+    :param zoomed_out: wether to zoom out the pic to account for object height
+    :return: image with corners warped
+    """
 
     def f(qd):
         return np.array(corners[qd])
@@ -148,18 +148,18 @@ def get_deltas_and_refs(
     from_factory=False,
 ):
     """Returns the relative positions (delta) of the markers and corners according to the calibration (in px)
-	By default, returns delta for the raw pictures.
+    By default, returns delta for the raw pictures.
 
-	If `undistorted==True` and matrix and dist are given, will return the undistorted coordinates
-	calculated from the raw settings.
-	Otherwise, try to find the undistorted values written in the calibration file (Legacy mode).
-	:param path_to_settings_file: either settings dict or path to pic_settings yaml
-	:param undistorted: Get the delta for the undistorted version of the picture.
-	:param matrix: lens distortion matrix
-	:param dist: from the lens calibration
-	:param path_to_last_markers_json: needed for overwriting file if updated
-	:return: pic_settings as dict
-	"""
+    If `undistorted==True` and matrix and dist are given, will return the undistorted coordinates
+    calculated from the raw settings.
+    Otherwise, try to find the undistorted values written in the calibration file (Legacy mode).
+    :param path_to_settings_file: either settings dict or path to pic_settings yaml
+    :param undistorted: Get the delta for the undistorted version of the picture.
+    :param matrix: lens distortion matrix
+    :param dist: from the lens calibration
+    :param path_to_last_markers_json: needed for overwriting file if updated
+    :return: pic_settings as dict
+    """
     from octoprint_mrbeam.camera.lens import undist_points
 
     if type(settings) is str:
@@ -269,9 +269,9 @@ def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
 
 def _isValidQdDict(qdDict):
     """
-	:param: qd-Dict to test for valid Keys
-	:returns True or False
-	"""
+    :param: qd-Dict to test for valid Keys
+    :returns True or False
+    """
     return type(qdDict) is dict and all(
         qd in qdDict and len(qdDict[qd]) == 2 and all(not x is None for x in qdDict[qd])
         for qd in QD_KEYS

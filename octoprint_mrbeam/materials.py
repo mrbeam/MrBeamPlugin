@@ -30,19 +30,19 @@ class Materials(object):
 
     def get_custom_materials(self):
         """
-		Get list of currently saved custom materials
-		:return:
-		"""
+        Get list of currently saved custom materials
+        :return:
+        """
         self._load()
         return self.custom_materials
 
     def put_custom_material(self, key, material):
         """
-		Put material. If key exists, material will be overwritten
-		:param key: String unique material key
-		:param material: Dict of material data
-		:return: Boolean success
-		"""
+        Put material. If key exists, material will be overwritten
+        :param key: String unique material key
+        :param material: Dict of material data
+        :return: Boolean success
+        """
         self._load()
         res = None
 
@@ -60,10 +60,10 @@ class Materials(object):
 
     def delete_custom_material(self, key):
         """
-		Deletes custom material if existing.
-		:param keys: String or list: key or list of keys to delete
-		:return: Boolean success
-		"""
+        Deletes custom material if existing.
+        :param keys: String or list: key or list of keys to delete
+        :return: Boolean success
+        """
         self._load()
         count = 0
         res = True

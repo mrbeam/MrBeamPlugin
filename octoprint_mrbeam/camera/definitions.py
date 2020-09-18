@@ -116,12 +116,16 @@ CALIB_REFS = dict(
     markers=dict(
         user=dict(raw=RAW_CALIB_MARKERS_KEY, undistorted=UNDIST_CALIB_MARKERS_KEY),
         factory=dict(
-            raw=FACT_RAW_CALIB_MARKERS_KEY, undistorted=FACT_UNDIST_CALIB_MARKERS_KEY,
+            raw=FACT_RAW_CALIB_MARKERS_KEY,
+            undistorted=FACT_UNDIST_CALIB_MARKERS_KEY,
         ),
     ),
     corners=dict(
         user=dict(raw=RAW_CORNERS_KEY, undistorted=UNDIST_CORNERS_KEY),
-        factory=dict(raw=FACT_RAW_CORNERS_KEY, undistorted=FACT_UNDIST_CORNERS_KEY,),
+        factory=dict(
+            raw=FACT_RAW_CORNERS_KEY,
+            undistorted=FACT_UNDIST_CORNERS_KEY,
+        ),
     ),
 )
 
