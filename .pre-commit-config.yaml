@@ -7,11 +7,13 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
   - repo: https://github.com/psf/black
-    rev: stable
+    rev: 19.10b0
     hooks:
       - id: black
-        language_version: python3.6
+        language_version: /usr/bin/python3
+        args: [-t, py27, -l, "110"]
   - repo: https://github.com/prettier/prettier
     rev: 2.0.5 # Use the sha or tag you want to point at
     hooks:
       - id: prettier
+        files: \.(html|css|js)$
