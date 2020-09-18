@@ -2,32 +2,27 @@
 """
 simplepath.py
 functions for digesting paths into a simple list structure
-
 Copyright (C) 2005 Aaron Spike, aaron@ekips.org
-
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
 """
 import re, math
 
 
 def lexPath(d):
     """
-	returns and iterator that breaks path data
-	identifies command and parameter tokens
-	"""
+    returns and iterator that breaks path data
+    identifies command and parameter tokens
+    """
     offset = 0
     length = len(d)
     delim = re.compile(r"[ \t\r\n,]+")
@@ -52,7 +47,7 @@ def lexPath(d):
             offset = m.end()
             continue
         # TODO: create new exception
-        raise Exception, "Invalid path data!"
+        raise Exception("Invalid path data!")
 
 
 """
@@ -90,18 +85,16 @@ pathdefs = {
 
 def parsePath(d):
     """
-	Parse SVG path and return an array of segments.
-	Removes all shorthand notation.
-	Converts coordinates to absolute.
-	"""
+    Parse SVG path and return an array of segments.
+    Removes all shorthand notation.
+    Converts coordinates to absolute.
+    """
     retval = []
     lexer = lexPath(d)
-
     pen = (0.0, 0.0)
     subPathStart = pen
     lastControl = pen
     lastCommand = ""
-
     while 1:
         try:
             token, isCommand = lexer.next()
@@ -111,7 +104,7 @@ def parsePath(d):
         needParam = True
         if isCommand:
             if not lastCommand and token.upper() != "M":
-                raise Exception, "Invalid path, must begin with moveto."
+                raise Exception("Invalid path, must begin with moveto.")
             else:
                 command = token
         else:
@@ -124,16 +117,16 @@ def parsePath(d):
                 else:
                     command = pathdefs[lastCommand.upper()][0].lower()
             else:
-                raise Exception, "Invalid path, no initial command."
+                raise Exception("Invalid path, no initial command.")
         numParams = pathdefs[command.upper()][1]
         while numParams > 0:
             if needParam:
                 try:
                     token, isCommand = lexer.next()
                     if isCommand:
-                        raise Exception, "Invalid number of parameters"
+                        raise Exception("Invalid number of parameters")
                 except StopIteration:
-                    raise Exception, "Unexpected end of path"
+                    raise Exception("Unexpected end of path")
             cast = pathdefs[command.upper()][2][-numParams]
             param = cast(token)
             if command.islower():
@@ -146,7 +139,6 @@ def parsePath(d):
             numParams -= 1
         # segment is now absolute so
         outputCommand = command.upper()
-
         # Flesh out shortcut notation
         if outputCommand in ("H", "V"):
             if outputCommand == "H":
@@ -161,7 +153,6 @@ def parsePath(d):
                 outputCommand = "C"
             if outputCommand == "T":
                 outputCommand = "Q"
-
         # current values become "last" values
         if outputCommand == "M":
             subPathStart = tuple(params[0:2])
@@ -170,13 +161,11 @@ def parsePath(d):
             pen = subPathStart
         else:
             pen = tuple(params[-2:])
-
         if outputCommand in ("Q", "C"):
             lastControl = tuple(params[-4:-2])
         else:
             lastControl = pen
         lastCommand = command
-
         retval.append([outputCommand, params])
     return retval
 
@@ -228,6 +217,3 @@ def rotatePath(p, a, cx=0, cy=0):
                     theta = math.atan2(y, x) + a
                     params[i] = (r * math.cos(theta)) + cx
                     params[i + 1] = (r * math.sin(theta)) + cy
-
-
-# vim: expandtab shiftwidth=4 tabstop=8 softtabstop=4 encoding=utf-8 textwidth=99

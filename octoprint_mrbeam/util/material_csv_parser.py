@@ -25,14 +25,14 @@ def model_id_to_csv_name(id):
 # Deep merging of dictionaries
 # inspired from in dict_merge in iobeam_protocol
 def dict_merge(dct, merge_dct):
-    """ Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
-	updating only top-level keys, dict_merge recurses down into dicts nested
-	to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
-	``dct``. if the nested item are lists, then concatenate the lists.
-	:param dct: dict / list onto which the merge is executed
-	:param merge_dct: dct merged into dct
-	:return: None
-	"""
+    """Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
+    updating only top-level keys, dict_merge recurses down into dicts nested
+    to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
+    ``dct``. if the nested item are lists, then concatenate the lists.
+    :param dct: dict / list onto which the merge is executed
+    :param merge_dct: dct merged into dct
+    :return: None
+    """
     for k, v in merge_dct.iteritems():
         if (
             k in dct.keys()
@@ -49,13 +49,13 @@ def dict_merge(dct, merge_dct):
 def parse_csv(path=None, laserhead=MRBEAM):
     """
 
-	Assumes following column order:
-	mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, pierce_time, dithering
+    Assumes following column order:
+    mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, pierce_time, dithering
 
-	:param path: path to csv file
-	:param laserhead: the type of laserhead to use. Will return the material settings to use for that laserhead.
-	:return:
-	"""
+    :param path: path to csv file
+    :param laserhead: the type of laserhead to use. Will return the material settings to use for that laserhead.
+    :return:
+    """
     path = path or os.path.join(
         __package_path__, "files/material_settings/materials.csv"
     )
@@ -233,5 +233,5 @@ if __name__ == "__main__":
         ret = parse_csv(path)
     else:
         ret = parse_csv()
-    print json.dumps(ret, indent=2)
+    print(json.dumps(ret, indent=2))
     # f_csv = os.open(path)

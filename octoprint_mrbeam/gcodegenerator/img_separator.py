@@ -57,16 +57,16 @@ class ImageSeparator:
     # 1. separation method called "left pixels first"
     def separate(self, img_data, threshold=255, callback=None):
         """
-		Separates img (a Pillow Image object) according to some magic into a list of img objects.
-		Afterwards all parts merged togehter are equal to the input image.
-		Supports so far only Grayscale images (mode 'L')
-		Arguments:
-		img -- a Pillow Image object
+        Separates img (a Pillow Image object) according to some magic into a list of img objects.
+        Afterwards all parts merged togehter are equal to the input image.
+        Supports so far only Grayscale images (mode 'L')
+        Arguments:
+        img -- a Pillow Image object
 
-		Keyword arguments:
-		threshold -- all pixels brighter than this threshold are used for separation
-		callback -- instead of waiting for the list to return, a callback(img, iteration) can be used to save memory
-		"""
+        Keyword arguments:
+        threshold -- all pixels brighter than this threshold are used for separation
+        callback -- instead of waiting for the list to return, a callback(img, iteration) can be used to save memory
+        """
 
         img = img_data["i"]
         (width, height) = img.size
@@ -146,9 +146,9 @@ class ImageSeparator:
     # 2. contour based separation method
     def separate_contours(self, img, x=0, y=0, threshold=255, callback=None):
         """
-		Arguments:
-		img -- a Pillow Image object
-		"""
+        Arguments:
+        img -- a Pillow Image object
+        """
         w, h = img.size
         monochrome_original = np.array(
             img, dtype=np.uint8
@@ -208,10 +208,10 @@ class ImageSeparator:
 
     def _split_by_outer_contour(self, mask_data, level, monochrome_original):
         """
-		:param mask_data: {'i': cv_np_array, 'x': x_offset, 'y': y_offset, 'id':id_str}
-		:param level: depth of the recursion
-		:param monochrome_original:
-		"""
+        :param mask_data: {'i': cv_np_array, 'x': x_offset, 'y': y_offset, 'id':id_str}
+        :param level: depth of the recursion
+        :param monochrome_original:
+        """
         # This should be improved.
         # If there are too many too little contours found and engraved separately, the way in between these contours
         # becomes more overhead than we save compared to the naive line-by-line algorithm.
@@ -420,13 +420,13 @@ if __name__ == "__main__":
     if img.mode == "RGBA":
         whitebg = Image.new("RGBA", img.size, "white")
         img = Image.alpha_composite(whitebg, img)
-        print ("removed alpha channel.")
+        print("removed alpha channel.")
         if True:
             img.save("/tmp/img2gcode_2_whitebg.png")
     img = img.convert("L")
 
     def write_to_file_callback(part, iteration):
-        print part
+        print(part)
         if part != None:
             part["i"].save(output_name + "{:0>3}".format(iteration) + ".png", "PNG")
 
