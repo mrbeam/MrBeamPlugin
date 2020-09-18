@@ -3,9 +3,11 @@
 import shutil
 from os.path import isfile, split, join
 from cv2 import imwrite
+from .log import logtime
 
 SUCCESS_WRITE_RETVAL = 1
 
+# @logtime()
 def differed_imwrite(filename, *a, **kw):
     """Writes to a temporary file before overwriting any file at the given path"""
     _path = filename

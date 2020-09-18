@@ -52,6 +52,7 @@ class MrBeamEvents(object):
 	LENS_CALIB_START           = "lensCalibStart"
 	LENS_CALIB_PROCESSING_BOARDS = "lensCalibProcessingBoards"
 	LENS_CALIB_RUNNING         = "lensCalibRunning"
+	LENS_CALIB_IDLE            = "lensCalibIdle"
 	LENS_CALIB_DONE            = "lensCalibDone"
 	LENS_CALIB_EXIT            = "lensCalibExit"
 	LENS_CALIB_FAIL            = "lensCalibFail"

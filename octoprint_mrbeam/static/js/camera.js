@@ -29,6 +29,7 @@ $(function(){
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;
         self.countImagesLoaded = ko.observable(0);
+        self.imagesInSession = ko.observable(0);
 
         self.markersFound = ko.observable(new Map(MARKERS.map(elm => [elm, undefined])));
 
@@ -39,9 +40,49 @@ $(function(){
         self.imgHeightScale = ko.computed(function () {
             return self.cornerMargin() * (1 - self.objectZ() / self.maxObjectHeight);
         });
+
+
+        self.availablePic = ko.observable({
+            'raw': false,
+            'lens_corrected': false,
+            'cropped': false,
+        })
+        self._availablePicUrl = ko.observable({'default': STATIC_URL, 'raw': null, 'lens_corrected': null, 'cropped': null, })
+		self.availablePicUrl = ko.computed(function() {
+			var ret = self._availablePicUrl();
+			var before = _.clone(ret); // shallow copy
+			for (let _t of [['cropped', self.croppedUrl],
+							['lens_corrected', self.undistortedUrl],
+							['raw', self.rawUrl]]) {
+				if (self.availablePic()[_t[0]])
+					ret[_t[0]] = (_t[0] === 'cropped')? self.timestampedCroppedImgUrl()
+					                                  : self.getTimestampedImageUrl(_t[1]);
+			}
+			self._availablePicUrl(ret)
+			var selectedTab = $('#camera-calibration-tabs .active a').attr('id')
+			if (selectedTab === 'lenscal_tab_btn')
+				return before
+			else
+				return ret
+		});
+
         // event listener callbacks //
 
         self.onAllBound = function () {
+            self.cameraActive = ko.computed(function() {
+                // Needs the motherViewModel to set the interlocks
+                // Output not used yet -
+                // Function updates self.imageInSession (Which is used)
+                let ret = self.firstRealimageLoaded()
+                    && self.state.isOperational()
+                    && !self.state.isPrinting()
+                    && !self.state.isLocked()
+                    && !self.state.interlocksClosed();
+                if (!ret) {
+                    self.imagesInSession(0);
+                }
+                return ret;
+            })
             self.webCamImageElem = $("#beamcam_image_svg");
 			self.cameraMarkerElem = $("#camera_markers");
             // self.webCamImageElem.removeAttr('onerror');
@@ -77,19 +118,6 @@ $(function(){
             return MARKERS.reduce((prev_val, key) => prev_val + self.markersFound()[key], 0)
         })
 
-        // self.markerStateColor = ko.computed(function() {
-        //     if (self.markerState() === undefined)
-        //         return undefined
-        //     else if (self.markerState() >= 4)
-        //         return 'green'
-        //     else if (2 <= self.markerState() < 4)
-        //         return 'yellow'
-        //     else if (self.markerState() < 2)
-        //         return 'red'
-        //     else
-        //         return undefined
-        // })
-
         self.showMarkerWarning = ko.computed(function() {
             if (self.markerState() === undefined)
                 return false
@@ -103,9 +131,6 @@ $(function(){
             return self.countImagesLoaded() >= 2;
         })
 
-        self.cameraActive = ko.computed(function() {
-            return self.firstRealimageLoaded() && self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked();
-        })
 
         self.markerMissedClass = ko.computed(function() {
             var ret = '';
@@ -113,6 +138,14 @@ $(function(){
                 if ((self.markersFound()[m] !== undefined) && !self.markersFound()[m])
                     ret = ret + ' marker' + m;
             });
+            if (self.cameraMarkerElem !== undefined){
+                if (self.imagesInSession() == 0) {
+                    ret = ret + ' gray'
+                    // Somehow the filter in css doesn't work
+                    self.cameraMarkerElem.attr({style:"filter: url(#grayscale_filter)"});
+                } else
+                    self.cameraMarkerElem.attr({style:""});
+            }
             return ret;
         })
 
@@ -148,11 +181,6 @@ $(function(){
                 }
                 self.loadImage(self.croppedUrl);
             }
-
-			// If camera is not active (lid closed), all marker(NW|NE|SW|SE) classes should be removed.
-			if('interlocks_closed' in data && data.interlocks_closed === true){
-				self.cameraMarkerElem.attr('class', '');
-			}
         };
 
         self._needCalibration = function(val) {
@@ -191,6 +219,7 @@ $(function(){
                 } else {
                     OctoPrint.simpleApiCommand("mrbeam", "on_camera_picture_transfer", {})
                 }
+                self.imagesInSession(self.imagesInSession()+1)
             });
             if (!self.firstImageLoaded) {
                 img.error(function () {

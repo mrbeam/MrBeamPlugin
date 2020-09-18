@@ -36,7 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 16  # bumped in 0.6.14.1 for ntp syncs during the job
+	ANALYTICS_LOG_VERSION = 17  # bumped in 0.7.5.1 for custom materials and changed parameters
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -295,33 +295,6 @@ class AnalyticsHandler(object):
 			self._add_device_event(ak.Device.Event.CAMERA_IMAGE, payload=payload)
 		except Exception as e:
 			self._logger.exception('Exception during add_camera_image: {}'.format(e), analytics=True)
-
-	# IOBEAM_HANDLER
-	def add_iobeam_message_log(self, iobeam_version, message, from_plugin=False):
-		try:
-			iobeam_data = {
-				ak.Log.Iobeam.VERSION: iobeam_version,
-				ak.Log.Iobeam.MESSAGE: message,
-				ak.Log.Iobeam.FROM_PLUGIN: from_plugin,
-			}
-
-			self._add_log_event(ak.Log.Event.IOBEAM, payload=iobeam_data)
-		except Exception as e:
-			self._logger.exception('Exception during add_iobeam_message_log: {}'.format(e), analytics=True)
-
-	def add_iobeam_i2c_monitoring(self, iobeam_version, state, method, current_devices, lost_devices, new_devices):
-		try:
-			iobeam_data = {
-				ak.Log.I2cMonitoring.VERSION: iobeam_version,
-				ak.Log.I2cMonitoring.STATE: state,
-				ak.Log.I2cMonitoring.METHOD: method,
-				ak.Log.I2cMonitoring.CURRENT_DEVICES: current_devices,
-				ak.Log.I2cMonitoring.LOST_DEVICES: lost_devices,
-				ak.Log.I2cMonitoring.NEW_DEVICES: new_devices,
-			}
-			self._add_log_event(ak.Log.Event.I2C_MONITORING, payload=iobeam_data)
-		except Exception as e:
-			self._logger.exception('Exception during add_iobeam_i2c_monitoring: {}'.format(e), analytics=True)
 
 	# ACC_WATCH_DOG
 	def add_cpu_log(self, temp, throttle_alerts):
@@ -615,6 +588,7 @@ class AnalyticsHandler(object):
 				if plugin:
 					event_name = event_payload.get('eventname')
 					data = event_payload.get('data', None)
+					data.update({'plugin_version': event_payload.get('plugin_version', None)})
 					self._add_event_to_queue(plugin, event_name, payload=data)
 				else:
 					self._logger.warn("Invalid plugin: '%s'. payload: %s", plugin, event_payload)

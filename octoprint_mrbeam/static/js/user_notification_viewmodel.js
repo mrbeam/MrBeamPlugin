@@ -55,6 +55,12 @@ $(function () {
                 text: gettext("The last image from your camera was submitted to Mr Beam and is going to be uploaded silently in the background."),
                 type: 'success',
             },
+            lens_calibration_done: {
+                title: gettext("Lens Calibration Over"),
+                text: gettext("A new lens calibration file has been created and is now being used. Please cancel the Lens Calibration to go back to using the device normally."),
+                type: 'success',
+                hide: true,
+            },
         };
 
 

@@ -6,9 +6,10 @@ import numpy as np
 import json
 from itertools import chain, repeat, cycle
 from functools import wraps
-from copy import copy
+from copy import copy, deepcopy
 import threading
 from .log import logExceptions, logtime
+# from typing import Mapping
 
 def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 	"""Recursive dictionnary update.
@@ -27,6 +28,27 @@ def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 		else: return ret
 	else:
 		return d2
+
+def nested_items(my_dict):
+	"""Returns an Iterator of the keys, values and relative parent in a nested dict.
+	Allows you to use the relative parent to modify the values in place.
+	Example: See `dict_map`
+	"""
+	# assert isinstance(my_dict, Mapping)
+	assert isinstance(my_dict, dict)
+	for k, v in my_dict.items():
+		if isinstance(v, dict):
+			for elm in nested_items(v):
+				yield elm
+		else:
+			yield k, v, my_dict
+
+def dict_map(func, my_dict):
+	"""Immutable map function for dictionnaries."""
+	__my_dict = deepcopy(my_dict)
+	for k, v, parent in nested_items(__my_dict):
+		parent[k] = func(v)
+	return __my_dict
 
 def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
 	"""

@@ -239,8 +239,8 @@ class OneButtonHandler(object):
 				self._logger.debug("onEvent() FILE_SELECTED set_ready_to_laser filename: %s:", 'filename' in payload)
 				try:
 					# OctoPrint 1.3.4 doesn't provide the file name anymore
-					filename = payload['filename'] if 'filename' in payload else None
-					self.set_ready_to_laser(filename)
+					path = payload['path'] if 'path' in payload else None
+					self.set_ready_to_laser(path)
 				except Exception as e:
 					self._logger.exception("Error while going into state ReadyToLaser: {}".format(e))
 
