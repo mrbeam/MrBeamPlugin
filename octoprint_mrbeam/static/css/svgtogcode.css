@@ -876,7 +876,7 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 
 .camera-calibration-title .btn {
-    border-radius: 100%;
+    border-radius: 999px; /* full size round borders */
     padding: 10px 10px;
     min-width: auto;
 }
@@ -1082,9 +1082,18 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	position: absolute;
 }
 
+#lens_calibration_steps_and_heatmap {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+}
+
+#lens_calibration_steps_and_heatmap div {
+    margin: 0 4% 0 0;
+	position: relative;
+}
+
 #heatmap_container {
-	width: 45%;
-	display: inline-block;
+	max-width: 100%; height: auto
 }
 
 #segment_group rect {

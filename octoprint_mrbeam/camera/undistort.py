@@ -3,48 +3,14 @@ import textwrap
 from collections import Mapping
 from threading import Event
 from multiprocessing import Pool
-from numpy.linalg import norm
-
-from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
+from octoprint_mrbeam.camera.definitions import PICAMERA_AVAILABLE, QD_KEYS, RESOLUTIONS, DIST_KEY, MTX_KEY, STOP_EVENT_ERR, ERR_NEED_CALIB, HUE_BAND_LB, HUE_BAND_UB, SUCCESS_WRITE_RETVAL, MIN_MARKER_PIX, MAX_MARKER_PIX, PIC_SETTINGS
+from octoprint_mrbeam.camera import corners, lens
 import octoprint_mrbeam.camera as camera
-from octoprint_mrbeam.util import dict_merge
+from octoprint_mrbeam.util import dict_map, dict_merge
 from octoprint_mrbeam.util.img import differed_imwrite
 from octoprint_mrbeam.util.log import logme, debug_logger, logExceptions, logtime
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
-CALIB_MARKERS_KEY = 'calibMarkers'
-CORNERS_KEY = 'cornersFromImage'
-M2C_VECTOR_KEY = 'marker2cornerVecs' # DEPRECATED Key
-BLUR_FACTOR_THRESHOLD_KEY = 'blur_factor_threshold'
-CALIBRATION_UPDATED_KEY = 'calibration_updated'
-VERSION_KEY = 'version'
-DIST_KEY = 'dist'
-MTX_KEY = 'mtx'
-RATIO_W_KEY = 'ratioW'
-RATIO_H_KEY = 'ratioH'
-
-STOP_EVENT_ERR = 'StopEvent_was_raised'
-ERR_NEED_CALIB = 'Camera_calibration_is_needed'
-
-HUE_BAND_LB_KEY = 'hue_lower_bound'
-HUE_BAND_LB = 105
-HUE_BAND_UB = 200 # if value > 180 : loops back to 0
-
-SUCCESS_WRITE_RETVAL = 1
-
-# Minimum and Maximum number of pixels a marker should have
-# as seen on the edge detection masks
-# TODO make scalable with picture resolution
-MIN_MARKER_PIX = 350
-MAX_MARKER_PIX = 1500
-
-# Height (mm) from the bottom of the work area to the camera lens.
-CAMERA_HEIGHT = 582
-# Height (mm) - max height at which the Mr Beam II can laser an object.
-MAX_OBJ_HEIGHT = 38
-
-
-PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, CALIBRATION_UPDATED_KEY: False}
 
 import logging
 import time
@@ -54,16 +20,15 @@ from os.path import dirname, basename, isfile, exists
 import cv2
 import numpy as np
 
-PIXEL_THRESHOLD_MIN = MIN_MARKER_PIX
-
+logger = mrb_logger(__name__)
 
 class MbPicPrepError(Exception):
 	"""Something went wrong when undistorting and aligning the picture for the front-end"""
 	pass
 
 
-@logExceptions
-#@logtime()
+# @logExceptions # useful if running in thread
+@logtime()
 def prepareImage(input_image,  #: Union[str, np.ndarray],
                  path_to_output_image,  #: str,
                  pic_settings=None,  #: Map or str
@@ -80,6 +45,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  custom_pic_settings=None,
                  stopEvent=None,
 		 min_pix_amount=MIN_MARKER_PIX,
+		 calibration_pic_size=None, #(2048,1536), # picture size when the camera got calibrated
                  threads=-1):
 	# type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
 	"""
@@ -101,7 +67,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	:param stopEvent: used to exit gracefully
 	:param threads: number of threads to use for the marker detection. Set -1, 1, 2, 3 or 4. (recommended : 4, default: -1)
 	"""
-	logger = mrb_logger("mrbeam.camera.undistort")
+	# debug_out = True
 	if debug_out:
 		logger.setLevel(logging.DEBUG)
 		logger.info("DEBUG enabled")
@@ -119,16 +85,11 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 				input_image, path_to_output_image, cam_dist, cam_matrix,
 				size, quality, debug_out))
 		if not isfile(input_image):
-			no_Image_error_String = 'Could not find a picture under path: <{}>'.format(input_image)
-			logger.error(no_Image_error_String)
-			return None, None, None, no_Image_error_String, {}, savedPics
-
+			raise IOError('Could not find a picture under path: <{}>'.format(input_image))
 		# load image
 		img = cv2.imread(input_image, cv2.IMREAD_COLOR) #BGR
 		if img is None:
-			err = 'Could_not_load_Image-_Please_check_Camera_and_-path_to_image'
-			logger.error(err)
-			return None, None, None, err, {}, savedPics
+			raise IOError('Image file could not be loaded, path is {}'.format(input_image))
 	elif type(input_image) is np.ndarray:
 		logger.debug('Starting to prepare Image. \ninput: <{} shape arr> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
 				input_image.shape, path_to_output_image, cam_dist, cam_matrix,
@@ -136,12 +97,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		img = input_image
 	else:
 		raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
-
-	if cam_dist is not None and cam_matrix is not None:
-		# undistort image with cam_params
-		img = _undistortImage(img, cam_dist, cam_matrix)
-		if debug_out or undistorted:
-			savedPics['lens_corrected'] = save_debug_img(img, "undistorted")
 
 	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR, {}, savedPics
 
@@ -171,52 +126,63 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		err = "Missed marker(s) %s, no(t enough) history to guess missing marker position(s)" % missed
 		logger.warning(err)
 		return None, markers, missed, err, outputPoints, savedPics
-
-	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
-
 	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
+
+	# Optimisation : Markers detected, we don't need the image in color anymore.
+	img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+	# workspaceCorners = corners.add_deltas(markers, pic_settings, False)
+	# if workspaceCorners and debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners_raw")
+
+	do_undistortion = cam_dist is not None and cam_matrix is not None
+	if do_undistortion:
+		# Can be done simultaneously while the markers get detected on the raw picture
+		# NOTE If in precision mode, there is no point in undistorting the image
+		#      if we don't have enough markers (it doesn't get sent)
+		# TODO do threaded while detecting the corners on raw img.
+		img, dest_mtx = lens.undistort(img, cam_matrix, cam_dist)
+		if debug_out or undistorted:
+			savedPics['lens_corrected'] = save_debug_img(img, "undistorted")
+		if debug_out:
+			# undist_markers are not used to correct the picture, only for the debug purposes.
+			undist_markers = lens.undist_dict(markers, cam_matrix, cam_dist, new_mtx=dest_mtx)
+			logger.info("Saving undist drawmarkers")
+			save_debug_img(_debug_drawMarkers(img, undist_markers), "drawmarkers_undist")
+	else:
+		dest_mtx = None
+	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
 
 	# load pic_settings json
-	if pic_settings is not None:
-		if type(pic_settings) is str:
-			_pic_settings = _getPicSettings(pic_settings, custom_pic_settings)
-			logger.debug('Loaded pic_settings: {}'.format(pic_settings))
-		else:
-			_pic_settings = pic_settings
-	else:
+	if pic_settings is None:
 		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
-	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
-		if not (k in _pic_settings and _isValidQdDict(_pic_settings[k])):
-			_pic_settings[k] = None
-			logger.warning(ERR_NEED_CALIB)
-			return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
-	# get corners of working area
-	workspaceCorners = {qd: markers[qd] - _pic_settings[CALIB_MARKERS_KEY][qd][::-1] + _pic_settings[CORNERS_KEY][qd][::-1] for qd in QD_KEYS}
+	workspaceCorners = corners.add_deltas(markers, pic_settings, do_undistortion, cam_matrix, cam_dist, new_mtx=dest_mtx)
+
+	if workspaceCorners is None:
+		logger.error("Workspace Corners None??")
+
+		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
                  % tuple(map(np.ndarray.tolist, map(workspaceCorners.__getitem__, ['NW', 'NE', 'SW', 'SE']))))
-	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners")
+	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners_undist")
 
-	# warp image
-	warpedImg = _warpImgByCorners(img, workspaceCorners, zoomed_out)
-	if debug_out: save_debug_img(warpedImg, "colorwarp")
-
+	img = corners.warpImgByCorners(img, workspaceCorners, zoomed_out)
+	if debug_out: save_debug_img(img, "warped")
+	# get corners of working area
 	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
-	# resize and do NOT make greyscale, then save it
-	# cv2.imwrite(filename=path_to_output_image,
-	#             img=cv2.resize(warpedImg, size),
-	#             params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
-	# resize and MAKE greyscale, then save it
-	retval = differed_imwrite(filename=path_to_output_image,
-	                     img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
-	                     params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
-	if retval == SUCCESS_WRITE_RETVAL: savedPics['cropped'] = True
+	# Resize image to the final size
+	retval = differed_imwrite(
+		filename=path_to_output_image,
+		img=cv2.resize(img, size),
+		params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
+	savedPics['cropped'] = retval == SUCCESS_WRITE_RETVAL
 
 	return workspaceCorners, markers, missed, err, outputPoints, savedPics
 
 #@logtime()
+# @logme(False, True)
 def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min_pix=MIN_MARKER_PIX):
 	"""Allows a multi-processing implementation of the marker detection algo. Up to 4 processes needed."""
 	outputPoints = {}
@@ -242,7 +208,6 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 			if outputPoints[qd] is not None:
 				outputPoints[qd]['pos'] += pos
 		p.join()
-
 	else:
 		for roi, pos, qd in camera.getRois(img):
 			outputPoints[qd] = _getColoredMarkerPosition(roi,
@@ -255,7 +220,7 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 	return outputPoints
 
 @logExceptions
-#@logme(False, True)
+# @logme(False, True)
 #@logtime()
 def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8,
 			      d_max=30, visual_debug=False, min_pix=MIN_MARKER_PIX):
@@ -298,14 +263,14 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 				   cv2.imdecode(np.fromiter(spot, dtype=np.uint8),
 						cv2.IMREAD_GRAYSCALE))
 			cv2.waitKey(0)
-		if isMarkerMask(spot[start[0]:stop[0], start[1]:stop[1]]):
+		if isMarkerMask(spot[start[1]:stop[1], start[0]:stop[0]]):
 			hsv_roi = cv2.cvtColor(roiBlurThresh, cv2.COLOR_BGR2HSV)
 			avg_hsv = np.average(
 				[hsv_roi[pos] for pos in zip(*np.nonzero(spot))],
 				axis=0)
 			if HUE_BAND_LB <= avg_hsv[0] <= 180 or 0 <= avg_hsv[0] <= HUE_BAND_UB:
-				y, x = np.round(center).astype("int")  # y, x
-				debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
+				x, y = np.round(center).astype("int")  # y, x
+				debug_roi = cv2.drawMarker(cv2.bitwise_or(threshOtsuMask, gaussianMask), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
 				differed_imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
 				return dict(pos=center, avg_hsv=avg_hsv, pix_size=count)
 	# No marker found
@@ -340,70 +305,6 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
 	# i.e. it didn't change after applying the mask
 	return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
 
-#@logtime()
-def _undistortImage(img, dist, mtx):
-	"""Apply the camera calibration matrices to distort the picture back straight"""
-	h, w = img.shape[:2]
-	newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
-
-	# undistort image
-	mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
-	return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
-
-#@logtime()
-def _warpImgByCorners(image, corners, zoomed_out=False):
-	"""
-	Warps the region delimited by the corners in order to straighten it.
-	:param image: takes an opencv image
-	:param corners: as qd-dict
-	:param zoomed_out: wether to zoom out the pic to account for object height
-	:return: image with corners warped
-	"""
-
-	def f(qd):
-		return np.array(corners[qd])
-
-	nw, ne, sw, se = map(f, QD_KEYS)
-
-	# calculate maximum width and height for destination points
-	width1 = norm(se - sw)
-	width2 = norm(ne - nw)
-	maxWidth = max(int(width1), int(width2))
-
-	height1 = norm(ne - se)
-	height2 = norm(nw - sw)
-	maxHeight = max(int(height1), int(height2))
-
-	if zoomed_out:
-		factor = float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2
-		min_dst_x = factor * maxWidth
-		max_dst_x = (1+factor) * maxWidth
-		min_dst_y = factor * maxHeight
-		max_dst_y = (1+factor) * maxHeight
-		dst_size = (int((1+2*factor) * maxWidth), int((1+2*factor)*maxHeight))
-	else:
-		min_dst_x, max_dst_x = 0, maxWidth - 1
-		min_dst_y, max_dst_y = 0, maxHeight -1
-		dst_size = (maxWidth, maxHeight)
-
-
-
-	# source points for matrix calculation
-	src = np.array((nw[::-1], ne[::-1], se[::-1], sw[::-1]), dtype="float32")
-
-	# destination points in the same order
-	dst = np.array([[min_dst_x, min_dst_y],  # nw
-                    [max_dst_x, min_dst_y],  # ne
-                    [max_dst_x, max_dst_y],  # sw
-                    [min_dst_x, max_dst_y]], # se
-                   dtype="float32")
-
-	# get the perspective transform matrix
-	transMatrix = cv2.getPerspectiveTransform(src, dst)
-
-	# compute warped image
-	warpedImg = cv2.warpPerspective(image, transMatrix, dst_size)
-	return warpedImg
 
 def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
 	"""Iterates over the white connected spots on the picture (aka white blobs)"""
@@ -419,17 +320,18 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
 		non_zeros = np.transpose(np.nonzero(bool_connected_spot))
 		start, stop = np.min(non_zeros, axis=0) , np.max(non_zeros, axis=0)
 		center = (start + stop) / 2
-		yield bool_connected_spot, center, start, stop, count
+		yield bool_connected_spot, center[::-1], start[::-1], stop[::-1], count
 
 def _debug_drawMarkers(raw_img, markers):
 	"""Draw the markers onto an image"""
 	img = raw_img.copy()
-
+	if len(img.shape) == 2:
+		img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 	for qd, pos in markers.items():
 		if pos is None:
 			continue
-		(mh, mw) = map(int, pos)
-		cv2.circle(img, (mw, mh), 15, (0, 150, 0), 4)
+		(mw, mh) = map(int, pos)
+		cv2.circle(img, (mw, mh), 15, (255, 255, 255), 4)
 		cv2.putText(img, 'M - '+qd, (mw + 15, mh - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 150, 0), 2, cv2.LINE_AA)
 	return img
 
@@ -437,7 +339,7 @@ def _debug_drawCorners(raw_img, corners):
 	"""Draw the corners onto an image"""
 	img = raw_img.copy()
 	for qd in corners:
-		(cy, cx) = map(int, corners[qd])
+		(cx, cy) = map(int, corners[qd])
 		cv2.circle(img, (cx, cy), 15, (150, 0, 0), 4)
 		cv2.putText(img, 'C - '+qd, (cx + 15, cy - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 150, 0), 2, cv2.LINE_AA)
 	return img
@@ -464,54 +366,7 @@ def _getCamParams(path_to_params_file):
 			raise MbPicPrepError('CamParams_missing_in_File-_please_do_a_new_Camera_Calibration_(Chessboard)')
 	return valDict
 
-def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
-	"""
-	:param path_to_settings_file: Give Path to pic_settings yaml
-	:param path_to_last_markers_json: needed for overwriting file if updated
-	:return: pic_settings as dict
-	"""
-	if not isfile(path_to_settings_file) or os.stat(path_to_settings_file).st_size == 0:
-		# print("No pic_settings file found, created new one.")
-		pic_settings = PIC_SETTINGS
-		if custom_pic_settings is not None:
-			pic_settings = dict_merge(pic_settings, custom_pic_settings)
-		settings_changed = True
-	else:
-		import yaml
-		try:
-			with open(path_to_settings_file) as yaml_file:
-				pic_settings = yaml.safe_load(yaml_file)
-			for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
-				if k in pic_settings.keys() and pic_settings[k] is not None:
-					for qd in QD_KEYS:
-						pic_settings[k][qd] = np.array(pic_settings[k][qd])
-			settings_changed = False
-		except:
-			# print("Exception while loading '%s' > pic_settings file not readable, created new one. ", yaml_file)
-			pic_settings = PIC_SETTINGS
-			settings_changed = True
-
-		# if not MARKER_SETTINGS_KEY in pic_settings or not all(param in pic_settings[MARKER_SETTINGS_KEY] for param in PIC_SETTINGS[MARKER_SETTINGS_KEY].keys()):
-		#     logging.info('Bad picture settings file, loaded default marker settings')
-		#     pic_settings[MARKER_SETTINGS_KEY] = PIC_SETTINGS[MARKER_SETTINGS_KEY]
-		#     settings_changed = True
-
-	return pic_settings
-
-def _isValidQdDict(qdDict):
-	"""
-	:param: qd-Dict to test for valid Keys
-	:returns True or False
-	"""
-	if type(qdDict) is not dict:
-		result = False
-	else:
-		result = all(qd in qdDict and \
-			     len(qdDict[qd]) == 2 and \
-			     all(not x is None for x in qdDict[qd]) \
-			     for qd in QD_KEYS)
-
-	return result
+# def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Detect the markers in the pictures provided or from the camera",
@@ -564,7 +419,7 @@ if __name__ == "__main__":
 	cam_params = _getCamParams(args.parameters)
 
 	# load pic_settings json
-	pic_settings = _getPicSettings(args.last)
+	# pic_settings = _getPicSettings(args.last)
 	markers = None
 	for img_path in args.images:
 		img = cv2.imread(img_path)

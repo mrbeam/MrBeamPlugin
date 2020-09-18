@@ -57,6 +57,7 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_START]       = "mrbeam_ledstrips_cli lens_calibration" # dims interieur for better pictures
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS] = "mrbeam_ledstrips_cli flash_blue:3"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_RUNNING]     = "mrbeam_ledstrips_cli flash_green:2"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_IDLE]        = "mrbeam_ledstrips_cli blue"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_DONE]        = "mrbeam_ledstrips_cli green"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_FAIL]        = "mrbeam_ledstrips_cli orange"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_EXIT]        = "mrbeam_ledstrips_cli ClientOpened"

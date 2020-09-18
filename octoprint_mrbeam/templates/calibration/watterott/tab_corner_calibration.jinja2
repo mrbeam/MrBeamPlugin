@@ -30,14 +30,14 @@
 </svg>
 <div>
     <div style="margin-bottom:1em;">
-        <a class="accordion-toggle" data-bind="click:loadUndistortedPicture, visible: !cornerCalibrationActive()"><i class="icon icon-refresh"></i> {{ _('Refresh picture') }}</a>
+        <a class="accordion-toggle" data-bind="click:calibration.loadUndistortedPicture, visible: !cornerCalibrationActive()"><i class="icon icon-refresh"></i> {{ _('Refresh picture') }}</a>
         <div class="marker_selection_desc calibration_waiting_for_picture"
              data-bind="visible: !cornerCalibrationActive()">
             <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i class="icon-ok"></i> NW</div>
             <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i class="icon-ok"></i> SW</div>
             <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i class="icon-ok"></i> SE</div>
             <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i class="icon-ok"></i> NE</div>
-            <div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
+            <div class="marker_found_indicator" data-bind="visible: !calImgReady()"><i class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
         </div>
         <a class="muted" data-bind="attr: { href: cornerCalImgUrl() }"> {{ _('Download this image') }}</a>
     </div>
@@ -46,15 +46,15 @@
 <div data-bind="visible: !cornerCalibrationActive()" width="100%">
     <div style="margin-top:1em;">
         <button class="btn btn-default"
-                data-bind="visible: cal_img_ready() && !cornerCalibrationComplete() && !availablePic()['cropped'], click: startCornerCalibration">
+                data-bind="visible: calImgReady() && !cornerCalibrationComplete() && !camera.availablePic()['cropped'], click: startCornerCalibration">
             {{ _('Start Corner Calibration') }}
         </button>
     </div>
-    <div data-bind="visible: cornerCalibrationComplete() && !availablePic()['cropped']" >
+    <div data-bind="visible: cornerCalibrationComplete() && !camera.availablePic()['cropped']" >
         <i class="icon icon-spinner icon-spin" style="font-weight: bold"></i>
         <span>&nbsp; {{  _('Loading image...') }}</span>
     </div>
-    <div class="qa_list_and_next" data-bind="visible: availablePic()['cropped']">
+    <div class="qa_list_and_next" data-bind="visible: camera.availablePic()['cropped']">
         <h4>{{ _('Checklist') }}:</h4>
         <ul>
             <li>{{ _('The 4 arrows are aligned with the blue crosses') }}</li>
@@ -89,16 +89,16 @@
     <div class="marker_selection_desc calibration_summary">
         <div data-bind="css: {complete: cornerCalibrationComplete()}">
             <div data-bind="visible: cornerCalibrationActive()">
-                <div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
-                <div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
-                <div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
-                <div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
+                <div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: _formatPoint(currentResults()['NW'])"></span></div>
+                <div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: _formatPoint(currentResults()['SW'])"></span></div>
+                <div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: _formatPoint(currentResults()['SE'])"></span></div>
+                <div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: _formatPoint(currentResults()['NE'])"></span></div>
             </div>
         </div>
         <div style="margin-top:1em;">
             <button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
             <button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
-            <button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
+            <button class="btn btn-warning" data-bind="click: abortCornerCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
             <button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
         </div>
     </div>

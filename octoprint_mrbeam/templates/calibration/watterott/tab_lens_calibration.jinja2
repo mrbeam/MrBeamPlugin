@@ -10,7 +10,7 @@
 
     <div id="lensCalibrationPictureTaking">
         <div style='position:relative;'>
-            <svg id="heatmap_container" version="1.1" enable-background="new 0 0 211 141"
+            <svg id="heatmap_container" style="width: 45%;display: inline-block;" version="1.1" enable-background="new 0 0 211 141"
                viewBox="0 0 3100 2500" height="100%" width="100%" y="0px" x="0px">
               <radialGradient gradientUnits="userSpaceOnUse" gradientTransform="matrix(1,0,0,0.9565,0,-7.4897)"
                  r="91.003799" cy="81.540604" cx="105.5" id="SVGID_1_">
@@ -56,7 +56,7 @@
         <ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
             <li class="lens_correction_image_thumb"
                 data-bind="	style: { backgroundImage: pic.state !== 'camera_processing' ? 'url('+pic.url+'?'+pic.state+')' : '' },
-                            event:{ mouseover: $root.heatmap_highlight, mouseout: $root.heatmap_dehighlight }"
+                            event:{ mouseover: $root.highlightHeatmap, mouseout: $root.dehighlightHeatmap }"
                 onclick="this.classList.remove('zoom')"> <!-- toggle class messes with rm btn -->
                 <div class="btn-group">
                     <button class="btn btn-mini btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
@@ -82,7 +82,7 @@
     <div id="lensCalibrationQA">
         <div data-bind="visible: lensCalibrationNpzFileTs" class="qa_images">
             <div class="qa_img_wrapper">
-                <image data-bind="attr: {src: availablePicUrl()['lens_corrected']}" />
+                <image data-bind="attr: {src: camera.availablePicUrl()['lens_corrected']}" />
                 <div id="qa_undistorted_guides"></div>
             </div>
             <ul>

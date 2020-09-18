@@ -40,6 +40,32 @@ $(function(){
         self.imgHeightScale = ko.computed(function () {
             return self.cornerMargin() * (1 - self.objectZ() / self.maxObjectHeight);
         });
+
+
+        self.availablePic = ko.observable({
+            'raw': false,
+            'lens_corrected': false,
+            'cropped': false,
+        })
+        self._availablePicUrl = ko.observable({'default': STATIC_URL, 'raw': null, 'lens_corrected': null, 'cropped': null, })
+		self.availablePicUrl = ko.computed(function() {
+			var ret = self._availablePicUrl();
+			var before = _.clone(ret); // shallow copy
+			for (let _t of [['cropped', self.croppedUrl],
+							['lens_corrected', self.undistortedUrl],
+							['raw', self.rawUrl]]) {
+				if (self.availablePic()[_t[0]])
+					ret[_t[0]] = (_t[0] === 'cropped')? self.timestampedCroppedImgUrl()
+					                                  : self.getTimestampedImageUrl(_t[1]);
+			}
+			self._availablePicUrl(ret)
+			var selectedTab = $('#camera-calibration-tabs .active a').attr('id')
+			if (selectedTab === 'lenscal_tab_btn')
+				return before
+			else
+				return ret
+		});
+
         // event listener callbacks //
 
         self.onAllBound = function () {
@@ -91,19 +117,6 @@ $(function(){
                 return undefined
             return MARKERS.reduce((prev_val, key) => prev_val + self.markersFound()[key], 0)
         })
-
-        // self.markerStateColor = ko.computed(function() {
-        //     if (self.markerState() === undefined)
-        //         return undefined
-        //     else if (self.markerState() >= 4)
-        //         return 'green'
-        //     else if (2 <= self.markerState() < 4)
-        //         return 'yellow'
-        //     else if (self.markerState() < 2)
-        //         return 'red'
-        //     else
-        //         return undefined
-        // })
 
         self.showMarkerWarning = ko.computed(function() {
             if (self.markerState() === undefined)
