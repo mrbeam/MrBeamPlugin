@@ -1411,9 +1411,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# write local/temp.svg to convert it
 			fileObj = Wrapper(file_name, svg)
 			self._file_manager.add_file(FileDestinations.LOCAL, file_name, fileObj, links=None,
-										allow_overwrite=True)  # todo iratxe: what if the user uploads a file with the same name?
+										allow_overwrite=True)
 
-			location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True) todo iratxe: what is this for?
+			location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
 			result = {
 				"name": file_name,
 				"origin": "local",

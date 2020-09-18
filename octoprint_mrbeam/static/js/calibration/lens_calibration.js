@@ -126,14 +126,13 @@ $(function () {
                 $('#heatmap_container').html($('#heatmap_container').html());
                 heatmap_arr.sort(function (l, r) {
                     if (l.index == r.index)
-                        return true;
+                        return 0;
                     else if (l.index == -1)
                         return 1;
                     else if (r.index == -1)
                         return -1;
                     else
                         return l.index < r.index ? -1 : 1;
-                    return l.index < r.index ? -1 : 1;
                 });
 
                 self.rawPicSelection(heatmap_arr);

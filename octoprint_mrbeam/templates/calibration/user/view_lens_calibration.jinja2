@@ -100,21 +100,6 @@
                 </ul>
             </div>
         </li>
-        {#        <li>{{ _('Check that the chessboard was detected in all of the pictures. If any of them shows a red cross or takes too long, delete it and take a new picture.') }}#}
-        {#            {{ _('Use the grid of pictures to verify that you did not obstruct the view of the chessboard when you took a picture of it. Use the red bin icon to delete any picture that is problematic or takes more than 2 minutes to detect the chessboard. The progress of the detection is shown as either:') }}#}
-        {#            <ul>#}
-        {#                <li>{{ _('Checkmark: the chessboard was found.') }}</li>#}
-        {#                <li>{{ _('Spinner: it is looking for a chessboard.') }}</li>#}
-        {#                <li>{{ _('FloppyDisk: the image will be processed at a later date.') }}</li>#}
-        {#                <li>{{ _('Cross: the chessboard was not detected.') }}</li>#}
-        {#            </ul>#}
-        {#        </li>#}
-        {#        <li>{{ _('When there are more than 9 successfully detected chessboards the device will flash in green. You can check the result of the calibration by clicking on this button:') }}<br>#}
-        {#            <button class="btn btn-primary" data-bind="click: lensCalibrationToggleQA,#}
-        {#                               enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">#}
-        {#                {{ _('Check result') }}#}
-        {#            </button>#}
-        {#        </li>#}
         <div style="margin-top:1em;" data-bind="visible: lensCalibrationActive()">
             <button class="btn btn-primary"
                     data-bind="click: saveLensCalibrationData,

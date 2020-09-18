@@ -31,7 +31,7 @@ if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 	from octoprint_mrbeam.camera.undistort import prepareImage, _getCamParams
 from octoprint_mrbeam.camera.lens import BoardDetectorDaemon, FACTORY
-from octoprint_mrbeam.util import dict_merge, get_thread, makedirs
+from octoprint_mrbeam.util import dict_merge, dict_map, get_thread, makedirs
 from octoprint_mrbeam.util.log import json_serialisor, logme
 
 SIMILAR_PICS_BEFORE_UPSCALE = 1
@@ -787,7 +787,7 @@ class PhotoCreator(object):
 				'markers_recognised': 4 - len(missed),
 				'corners_calculated': None if workspaceCorners is None else list(workspaceCorners),
 				# {k: v.astype(int) for k, v in workspaceCorners.items()},
-				'markers_pos': {qd: list(pos) for qd, pos in self.last_markers.items()},
+				'markers_pos': dict_map(list, self.last_markers),
 				'successful_correction': success,
 				'undistorted_saved': True,
 				'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
@@ -1046,7 +1046,8 @@ class PhotoCreator(object):
 			self._logger.warning("file %s does not exist or could not be read. Overwriting..." % path)
 
 		settings = dict_merge(settings, {'calibMarkers': _markers,
-						 'shutter_speed': shutter_speed})
+						 'shutter_speed': shutter_speed,
+						 'version': octoprint_mrbeam.__version__})
 		try:
 			with open(path, 'w') as f:
 				f.write(yaml.dump(settings))
