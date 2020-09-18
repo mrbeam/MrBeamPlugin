@@ -1,39 +1,113 @@
 <div class="tab-pane" id="messages">
-	<div class="container-fluid">
-		<div class="row-fluid">
-			<div class="span12">
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span4">
+                <div class="announcements-container rounded_container">
+                    <h1 class="announcements-title">Annoucements</h1>
+                    <div class="announcement-list" data-bind="foreach: messages">
+                        <div class="announcement-element rounded_container"
+                             data-bind="css: { selected: $index() == $root.selectedIndex() }, click: $root.onIndexSelected.bind($root, $index())">
+                            <h5 class="announcement-title" data-bind="text: content.title"></h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="span8">
+                <div id="announcement-view" data-bind="with: $root.messages()[$root.selectedIndex()]">
+                    <div class="announcement-content">
+                        <div data-bind="visible: images[0] != undefined">
+                            <div class="row-fluid">
+                                <div class="span12">
+                                    <h2 class="announcement-content-title"
+                                        data-bind="text: content.title"></h2>
+                                    <div class="announcement-date" data-bind="text: date"></div>
+                                </div>
+                            </div>
+                            <div class="row-fluid">
+                                <div class="span6">
+                                    <div class="announcement-text-container rounded_container">
+                                        <div class="announcement-text" data-bind="text: content.body"></div>
+                                        <div class="cta" data-bind="visible: content.cta_url">
+                                            <a href="#" target="_blank"
+                                               data-bind="text:content.cta_label, attr: { href: content.cta_url }"></a>
+                                        </div>
+                                        <div class="thumbnail-list">
+                                            <ul class="thumbnails"
+                                                data-bind="foreach: { data: images, as: 'img' }">
+                                                {#                                                    <li class="span3">#}
+                                                <li>
+                                                    <a href="#"
+                                                       class="thumbnail">
+                                                        <div class="preview"
+                                                             data-bind="click: $root.selectImage, style: {'background-image': 'url('+img+')' }">
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="span6">
 
+                                    {#                                    ------------------#}
 
-				<h3>{{ _('Messages') }}</h3>
+                                    {#                                    <div id="myCarousel" class="carousel slide">#}
+                                    {#                                        <!-- Carousel items -->#}
+                                    {#                                        <div class="carousel-inner" data-bind="foreach: { data: images, as: 'img' }">#}
+                                    {#                                            <div class="item"><img data-bind="attr:{src: img}"></div>#}
+                                    {#                                        </div>#}
+                                    {#                                      <!-- Carousel nav -->#}
+                                    {#                                      <a class="carousel-control left" href="#myCarousel" data-slide="prev">&lsaquo;</a>#}
+                                    {#                                      <a class="carousel-control right" href="#myCarousel" data-slide="next">&rsaquo;</a>#}
+                                    {#                                    </div>#}
 
-				<div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
+                                    {#                                    ------------------#}
 
-					<div id="message_list" class="scrollable" data-bind="foreach: messages">
-						<div class="message" data-bind="click: $root.unfold_message">
-							<div class="message_pic" data-bind="style: {'background-image': 'url('+images[0]+')' }"></div>
-							<div class="message_text">
-								<div class="text-close"><a href="#" data-bind="click: $root.fold_all_messages, clickBubble: false"><i class="icon icon-remove icon-2x"></i> </a></div>
-								<h5 data-bind="text: content.title"></h5>
-								<div class="message_date" data-bind="text: date"></div>
-								<div class="foldable_content">
-									<span  data-bind="text: content.body"></span>
-									<div class="cta" data-bind="visible: content.cta_url">
-										<a href="#" target="_blank" data-bind="text:content.cta_label, attr: { href: content.cta_url }"></a>
-									</div>
-									<div class="text-fog"><a href="#"> {{ _('more...') }}</a></div>
-									<div class="image_gallery" data-bind="foreach: { data: images, as: 'img' }">
-										<div class="thumb" data-bind="click: $root.img_clicked, style: {'background-image': 'url('+img+')' }"></div>
-									</div>
-								</div>
-
-							</div>
-						</div>
-					</div>
-
-				</div>
-
-				<br />
-			</div>
-		</div>
-	</div>
+                                    <div class="single-design-img-gallery rounded_container">
+                                        <div class="inner-container">
+                                            <div class="design-img-container rounded_container">
+                                                <div id="design-img-preview"
+                                                     data-bind="style: {'background-image': 'url('+images[0]+')' }">
+                                                </div>
+                                            </div>
+                                            {#                                            <div class="thumbnail-list">#}
+                                            {#                                                <ul class="thumbnails"#}
+                                            {#                                                    data-bind="foreach: { data: images, as: 'img' }">#}
+                                            {#                                                    <li class="span3">#}
+                                            {#                                                    <li class="">#}
+                                            {#                                                        <a href="#"#}
+                                            {#                                                           class="thumbnail">#}
+                                            {#                                                            <div class="preview"#}
+                                            {#                                                                 data-bind="click: $root.selectImage, style: {'background-image': 'url('+img+')' }">#}
+                                            {#                                                            </div>#}
+                                            {#                                                        </a>#}
+                                            {#                                                    </li>#}
+                                            {#                                                </ul>#}
+                                            {#                                            </div>#}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-bind="visible: images[0] == undefined">
+                            <div class="row-fluid">
+                                <div class="span12">
+                                    <h2 class="announcement-content-title"
+                                        data-bind="text: content.title"></h2>
+                                    <div class="announcement-date" data-bind="text: date"></div>
+                                    <div class="announcement-text-container no-img rounded_container">
+                                        <div class="announcement-text" data-bind="text: content.body"></div>
+                                        <div class="cta" data-bind="visible: content.cta_url">
+                                            <a href="#" target="_blank"
+                                               data-bind="text:content.cta_label, attr: { href: content.cta_url }"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

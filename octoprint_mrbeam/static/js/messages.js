@@ -7,7 +7,7 @@
 
 $(function () {
 	function MessagesViewModel(parameters) {
-		var self = this;
+		let self = this;
 		window.mrbeam.viewModels['messagesViewModel'] = self;
 
 		// MESSAGES_URL = "/plugin/mrbeam/static/messages/messages.json";
@@ -18,20 +18,14 @@ $(function () {
 		self.loginState = parameters[2];
 
 		self.messages = ko.observableArray();
-		// self.localMessages = ko.observable({});
-		// self.remoteMessages = ko.observable({});
+		self.selectedIndex = ko.observable(0);
 		self.unreadCounter = ko.observable(0);
-		// self.currentUser = ko.observable(null)
 		self.lastMessageId = -1;
 		self.notificationsHandled = false;
 		self.messagesLoaded = false;
 
-
 		self.onStartupComplete = function () {
-			// self.loadMessageData();
-            // self.loadLocalMessages();
-            self.loadRemoteMessages();
-			// self.test()
+            // self.loadRemoteMessages();
 		};
 
 		self.onUserLoggedIn = function (user) {
@@ -42,6 +36,12 @@ $(function () {
 			}
 			console.log("ANDYTEST: onUserLoggedIn()  lastMessageId: ", self.lastMessageId);
 			self.showNotifications();
+
+			//-------------
+            if(!self.messagesLoaded){
+                self.loadRemoteMessages();
+            }
+			//-------------
 		};
 
 		self.saveUserSettings = function () {
@@ -53,42 +53,6 @@ $(function () {
 				self.userSettings.updateSettings(self.loginState.currentUser().name, {mrbeam: mrbSettings});
 			}
 		};
-
-		// self.loadMessageData = function () {
-			// $.ajax({
-			// 	type: "GET",
-			// 	async: true,
-            //     contentType: "application/json",
-            //     dataType: 'json',
-			// 	url: MESSAGES_URL,
-			// 	// url: MESSAGES_URL + Date.now(),
-			// 	// url: "/plugin/mrbeam/static/messages/messages.json?ts=" + Date.now(),
-			// })
-			// .done(function (data) {
-			// 	console.log("Messages loaded: ", data);
-			// 	self.handleMessages(data)
-			// })
-			// .fail(function () {
-			// 	console.log("Messages loading failed!");
-			// });
-
-           // self.loadLocalMessages();
-
-		// };
-
-		self.loadLocalMessages = function () {
-            OctoPrint.simpleApiCommand("mrbeam", "messages", {})
-            .done(function (data) {
-                console.log("Local Messages loaded: ", data);
-                // self.localMessages(data);
-                // self.loadRemoteMessages();
-                self.handleMessages(data);
-            })
-            .fail(function (response) {
-                console.log("Local Messages loading failed!");
-                console.log(response);
-            });
-        };
 
 		self.loadRemoteMessages = function () {
 		     fetch(MESSAGES_URL, {
@@ -105,6 +69,18 @@ $(function () {
             });
         };
 
+		self.loadLocalMessages = function () {
+            OctoPrint.simpleApiCommand("mrbeam", "messages", {})
+            .done(function (data) {
+                console.log("Local Messages loaded: ", data);
+                self.handleMessages(data);
+            })
+            .fail(function (response) {
+                console.log("Local Messages loading failed!");
+                console.log(response);
+            });
+        };
+
 		self.saveNewMessages = function (data) {
 
 		    let messages = {};
@@ -113,12 +89,11 @@ $(function () {
                     messages[i] = data.messages[i];
                 }
             }
-
 		    let postData = {
-                        // put: data.messages,
                         put: messages,
                         delete: []
                     };
+
             OctoPrint.simpleApiCommand("mrbeam", "messages", postData)
                 .done(function (response) {
                     console.log("Saved Remote Messages loaded: ", response);
@@ -187,6 +162,14 @@ $(function () {
 
 				self.messages(result);
 				self.showNotifications();
+
+				//-------------
+                // $(".item:first-child").addClass("active");
+                // $('.carousel').carousel({
+                //     interval: false
+                // });
+				//-------------
+
 			}
 		};
 
@@ -285,29 +268,23 @@ $(function () {
 			return true;
 		};
 
-		self.fold_all_messages = function () {
-			$('#message_list .message').removeClass('unfold');
-		};
+        self.onIndexSelected = function (index) {
+            this.selectedIndex(index);
+        };
 
-		self.unfold_message = function (data, event) {
-			if (!event.currentTarget.classList.contains('unfold')) {
-				self.fold_all_messages();
-				event.currentTarget.classList.add('unfold');
-				let scrollPos = $(event.currentTarget).offset().top - 150; // TODO magic number
-				$('#message_list').animate({
-					scrollTop: scrollPos
-				}, 500);
-			}
-		};
+        self.selectedIndex.subscribe(function (result) {
+		   setTimeout(() => {
+		       let thumbnailWidth = $("#messages .thumbnails").width();
+		       let imageCount = self.messages()[result].images.length;
+		       // $("#messages .thumbnails  li").width(Math.floor(((thumbnailWidth - 20*(imageCount-1))/imageCount))-1);
+		       $("#messages .thumbnails  li").width(Math.floor(((thumbnailWidth - 10*(imageCount-1))/imageCount))-1);
+		       }, 100);
+        });
 
-		self.img_clicked = function (data, event) {
-			let el = event.currentTarget.closest('.message').querySelector('.message_pic');
-			el.style.opacity = 0;
-			setTimeout(function(){
-				el.style.backgroundImage = 'url('+data+')';
-				el.style.opacity = 1;
-			}, 200); // has to be the same duration as in the css transition: opacity of .message_pic
-		};
+        self.selectImage = function (img_url) {
+            let imagePreview = $("#design-img-preview");
+            imagePreview.css("background-image", "url('" + img_url + "')");
+        };
 
 	}
 
