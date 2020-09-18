@@ -48,7 +48,7 @@
   vertical-align: top;
 }
 
-.wizard-mrb-orange-button{
+.wizard-mrb-orange-button {
   background: #e25303;
   border-radius: 5px;
   color: white;
@@ -78,7 +78,7 @@
 }
 
 .wizard-shadowed-img {
-  box-shadow: rgba(0,0,0,0.2) 1px 2.5px 6px 0;
+  box-shadow: rgba(0, 0, 0, 0.2) 1px 2.5px 6px 0;
 }
 
 /*
@@ -116,7 +116,7 @@
 
 /* Analytics accordion */
 
-input[type="radio"]{
+input[type="radio"] {
   vertical-align: top;
 }
 
@@ -144,7 +144,6 @@ input[type="radio"]{
   padding: 12px 0;
 }
 
-
 /*
 * === What's new dialog ===
 */
@@ -158,19 +157,19 @@ input[type="radio"]{
 * === What's new dialog ===
 */
 .beta-news-ds-use-case-grid {
-    display: grid;
-    grid-gap: 10px;
-    grid-template-columns: 1.4fr 0.3fr 0.8fr;
-	width: 90%;
-	margin: 20px 0 0 5px;
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: 1.4fr 0.3fr 0.8fr;
+  width: 90%;
+  margin: 20px 0 0 5px;
 }
 
 .beta-news-ds-info-grid {
-    display: grid;
-    grid-gap: 10px;
-    grid-template-columns: 1fr 10fr;
-	width: 90%;
-	margin: 20px 0 0 5px;
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: 1fr 10fr;
+  width: 90%;
+  margin: 20px 0 0 5px;
 }
 
 .beta-news-ds-info-icon {
@@ -188,10 +187,12 @@ input[type="radio"]{
   -moz-transform: rotate(180deg) scaleY(0.7);
   -webkit-transform: rotate(180deg) scaleY(0.7);
   -o-transform: rotate(180deg) scaleY(0.7);
-  filter: invert(41%) sepia(50%) saturate(6758%) hue-rotate(12deg) brightness(99%) contrast(98%);
+  filter: invert(41%) sepia(50%) saturate(6758%) hue-rotate(12deg)
+    brightness(99%) contrast(98%);
 }
 
 #ds_title_stars {
   height: 50px;
-  filter: invert(41%) sepia(50%) saturate(6758%) hue-rotate(12deg) brightness(99%) contrast(98%);
+  filter: invert(41%) sepia(50%) saturate(6758%) hue-rotate(12deg)
+    brightness(99%) contrast(98%);
 }
