@@ -47,7 +47,10 @@ class HwMalfunctionHandler(object):
     def report_hw_malfunction_from_plugin(self, malfunction_id, msg, payload=None):
         if not isinstance(payload, dict):
             payload = {}
-        data = dict(msg=msg, payload=payload,)
+        data = dict(
+            msg=msg,
+            payload=payload,
+        )
         dataset = {malfunction_id: data}
 
         self.report_hw_malfunction(dataset, from_plugin=True)
@@ -67,7 +70,8 @@ class HwMalfunctionHandler(object):
 
         dataset.update({"from_plugin": from_plugin})
         self._iobeam_handler.send_iobeam_analytics(
-            eventname="hw_malfunction", data=dataset,
+            eventname="hw_malfunction",
+            data=dataset,
         )
 
         self._start_notification_timer()

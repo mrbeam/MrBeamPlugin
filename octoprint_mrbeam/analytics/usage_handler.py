@@ -421,7 +421,8 @@ class UsageHandler(object):
             # Otherwise initialize to 0
             else:
                 self._usage_data["laser_head"][self._laser_head_serial] = dict(
-                    complete=True, job_time=0,
+                    complete=True,
+                    job_time=0,
                 )
 
             self._logger.info(
@@ -468,15 +469,36 @@ class UsageHandler(object):
 
     def _get_usage_data_template(self):
         return {
-            "total": {"job_time": 0.0, "complete": self._plugin.isFirstRun(),},
-            "succ_jobs": {"count": 0, "complete": self._plugin.isFirstRun(),},
-            "prefilter": {"job_time": 0.0, "complete": self._plugin.isFirstRun(),},
-            "laser_head": {
-                "no_serial": {"job_time": 0.0, "complete": self._plugin.isFirstRun(),}
+            "total": {
+                "job_time": 0.0,
+                "complete": self._plugin.isFirstRun(),
             },
-            "carbon_filter": {"job_time": 0.0, "complete": self._plugin.isFirstRun(),},
-            "gantry": {"job_time": 0.0, "complete": self._plugin.isFirstRun(),},
-            "compressor": {"job_time": 0.0, "complete": self._plugin.isFirstRun(),},
+            "succ_jobs": {
+                "count": 0,
+                "complete": self._plugin.isFirstRun(),
+            },
+            "prefilter": {
+                "job_time": 0.0,
+                "complete": self._plugin.isFirstRun(),
+            },
+            "laser_head": {
+                "no_serial": {
+                    "job_time": 0.0,
+                    "complete": self._plugin.isFirstRun(),
+                }
+            },
+            "carbon_filter": {
+                "job_time": 0.0,
+                "complete": self._plugin.isFirstRun(),
+            },
+            "gantry": {
+                "job_time": 0.0,
+                "complete": self._plugin.isFirstRun(),
+            },
+            "compressor": {
+                "job_time": 0.0,
+                "complete": self._plugin.isFirstRun(),
+            },
             "first_write": time.time(),
             "restored": 0,
             "version": "0.0.0",

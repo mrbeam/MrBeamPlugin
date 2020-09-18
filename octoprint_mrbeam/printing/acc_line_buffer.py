@@ -28,9 +28,9 @@ class AccLineBuffer(object):
 
     def reset_clogged(self):
         """
-		Should we find out that our counting got incorrect (e.g. we missed an 'ok' from grbl)
-		this resets the command counter. Should be called only when you're sure that grbl's serial buffer is empty.
-		"""
+        Should we find out that our counting got incorrect (e.g. we missed an 'ok' from grbl)
+        this resets the command counter. Should be called only when you're sure that grbl's serial buffer is empty.
+        """
         self._lock.writer_acquire()
         # we need to check again if buffer_cmds is still not empty. (We saw exceptions...!)
         if len(self.buffer_cmds) > 0:
@@ -41,14 +41,14 @@ class AccLineBuffer(object):
 
     def add(self, cmd, intensity, feedrate, pos_x, pos_y, laser):
         """
-		Add a new command (item)
-		:param cmd:
-		:param intensity: (optional) intensity BEFORE this command is executed
-		:param feedrate: (optional) feedrate BEFORE this command is executed
-		:param pos_x:
-		:param pos_y:
-		:param laser:
-		"""
+        Add a new command (item)
+        :param cmd:
+        :param intensity: (optional) intensity BEFORE this command is executed
+        :param feedrate: (optional) feedrate BEFORE this command is executed
+        :param pos_x:
+        :param pos_y:
+        :param laser:
+        """
         self._lock.writer_acquire()
         d = dict(
             cmd=cmd,
@@ -67,10 +67,10 @@ class AccLineBuffer(object):
 
     def acknowledge_cmd(self):
         """
-		Remove the oldest command (item) from buffer
-		Will be still available per get_last_acknowledged() iuntil this method is called next time
-		and is ignored in get_command_count() and is_empty() and get_char_len()
-		"""
+        Remove the oldest command (item) from buffer
+        Will be still available per get_last_acknowledged() iuntil this method is called next time
+        and is ignored in get_command_count() and is_empty() and get_char_len()
+        """
         if self.is_empty():
             return None  # happens after a reset during cancellation of a job
         self._lock.writer_acquire()
@@ -81,9 +81,9 @@ class AccLineBuffer(object):
 
     def decline_cmd(self):
         """
-		Removes the oldest command (item) from the buffer and keeps it as recovery command
-		# TODO: if the error is not recovery, this cmd remains in memory until the next reset()
-		"""
+        Removes the oldest command (item) from the buffer and keeps it as recovery command
+        # TODO: if the error is not recovery, this cmd remains in memory until the next reset()
+        """
         if self.is_empty():
             return None
         self._lock.writer_acquire()
@@ -95,9 +95,9 @@ class AccLineBuffer(object):
 
     def get_first_item(self):
         """
-		Returns the first (oldest) item. This is the one to be removed next.
-		:return: item dict(cmd="", i=1, f=23) or None if empty
-		"""
+        Returns the first (oldest) item. This is the one to be removed next.
+        :return: item dict(cmd="", i=1, f=23) or None if empty
+        """
         if self.is_empty():
             return None
         self._lock.reader_acquire()
@@ -107,9 +107,9 @@ class AccLineBuffer(object):
 
     def get_last_responded(self):
         """
-		returns the last acknowledged command
-		:return: item
-		"""
+        returns the last acknowledged command
+        :return: item
+        """
         self._lock.reader_acquire()
         res = self._last_responded
         self._lock.reader_release()
@@ -126,8 +126,8 @@ class AccLineBuffer(object):
 
     def set_dirty(self):
         """
-		Marks all currently waiting and all new commands as dirty until add_cleaned is called
-		"""
+        Marks all currently waiting and all new commands as dirty until add_cleaned is called
+        """
         self._lock.writer_acquire()
         self.dirty = True
         for c in self.buffer_cmds:
@@ -138,16 +138,16 @@ class AccLineBuffer(object):
 
     def set_clean(self):
         """
-		No further items will be marked as dirty. Once all dirty items left the system, it'll be seen as clean again
-		"""
+        No further items will be marked as dirty. Once all dirty items left the system, it'll be seen as clean again
+        """
         self._lock.writer_acquire()
         self.dirty = False
         self._lock.writer_release()
 
     def is_dirty(self):
         """
-		Returns True if any item in any queue is marked dirty
-		"""
+        Returns True if any item in any queue is marked dirty
+        """
         if self.dirty:
             return True
         res = False
@@ -166,9 +166,9 @@ class AccLineBuffer(object):
 
     def get_command_count(self):
         """
-		Number of commands in buffer (ignores history)
-		:return: int length
-		"""
+        Number of commands in buffer (ignores history)
+        :return: int length
+        """
         self._lock.reader_acquire()
         res = len(self.buffer_cmds)
         self._lock.reader_release()
@@ -176,9 +176,9 @@ class AccLineBuffer(object):
 
     def is_empty(self):
         """
-		True if the buffer is empty
-		:return: boolean
-		"""
+        True if the buffer is empty
+        :return: boolean
+        """
         self._lock.reader_acquire()
         res = len(self.buffer_cmds) == 0
         self._lock.reader_release()
@@ -186,9 +186,9 @@ class AccLineBuffer(object):
 
     def is_recovery_empty(self):
         """
-		True if the buffer is empty
-		:return: boolean
-		"""
+        True if the buffer is empty
+        :return: boolean
+        """
         self._lock.reader_acquire()
         res = len(self.declined_cmds) == 0
         self._lock.reader_release()
@@ -196,9 +196,9 @@ class AccLineBuffer(object):
 
     def get_char_len(self):
         """
-		Character count of all commands in buffer (ignores history)
-		:return:
-		"""
+        Character count of all commands in buffer (ignores history)
+        :return:
+        """
         self._lock.reader_acquire()
         if self.char_len < 0:
             self.char_len = sum([len(x["cmd"]) for x in self.buffer_cmds])

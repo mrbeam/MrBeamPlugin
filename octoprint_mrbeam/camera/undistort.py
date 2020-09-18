@@ -67,24 +67,24 @@ def prepareImage(
 ):
     # type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
     """
-	Loads image from path_to_input_image, does some preparations (undistort, warp)
-	on it and saves it to path_to_output_img.
+    Loads image from path_to_input_image, does some preparations (undistort, warp)
+    on it and saves it to path_to_output_img.
 
-	:param input_image: The image to prepare. Either a filepath or a numpy array (as understood by cv2)
-	:param path_to_output_image: filepath where to save the image to
-	:param cam_dist: camera distance matrix (see cv2.camera_calibrate)
-	:param cam_matrix: camera distortion matrix (see cv2.camera_calibrate)
-	:param pic_settings: path to - or map as given by - pic_config.yaml
-	:param last_markers: used to compensate if a (single) marker is covered or unrecognised
-	:param size : (width,height) of output image size, default is (1000,780)
-	:param quality: set quality of output image from 0 to 100, default is 90
-	:param zoomed_out: zoom out on the final picture in order to account for object height
-	:param debug_out: True if all in between pictures should be saved to output path directory
-	:param blur: Amount of blur for the marker detection
-	:param custom_pic_settings: Map : used to update certain keys of the pic settings file
-	:param stopEvent: used to exit gracefully
-	:param threads: number of threads to use for the marker detection. Set -1, 1, 2, 3 or 4. (recommended : 4, default: -1)
-	"""
+    :param input_image: The image to prepare. Either a filepath or a numpy array (as understood by cv2)
+    :param path_to_output_image: filepath where to save the image to
+    :param cam_dist: camera distance matrix (see cv2.camera_calibrate)
+    :param cam_matrix: camera distortion matrix (see cv2.camera_calibrate)
+    :param pic_settings: path to - or map as given by - pic_config.yaml
+    :param last_markers: used to compensate if a (single) marker is covered or unrecognised
+    :param size : (width,height) of output image size, default is (1000,780)
+    :param quality: set quality of output image from 0 to 100, default is 90
+    :param zoomed_out: zoom out on the final picture in order to account for object height
+    :param debug_out: True if all in between pictures should be saved to output path directory
+    :param blur: Amount of blur for the marker detection
+    :param custom_pic_settings: Map : used to update certain keys of the pic settings file
+    :param stopEvent: used to exit gracefully
+    :param threads: number of threads to use for the marker detection. Set -1, 1, 2, 3 or 4. (recommended : 4, default: -1)
+    """
     # debug_out = True
     if debug_out:
         logger.setLevel(logging.DEBUG)
@@ -312,23 +312,23 @@ def _getColoredMarkerPosition(
     min_pix=MIN_MARKER_PIX,
 ):
     """
-	Tries to find a single pink marker inside the image (or the Region of Interest).
-	It then outputs the information about found marker (for now, just its center position).
-	:param roi:
-	:type roi:
-	:param debug_out_path:
-	:type debug_out_path:
-	:param blur:
-	:type blur:
-	:param quadrant: The corner region of the image ('NW', 'NE', 'SW', 'SE')
-	:type quadrant: basestring
-	:param d_min: minimal diameter of the *inner* (distorted) marker edge
-	:type d_min: int
-	:param d_max: maximal diameter of the *outer* (distorted) marker edge
-	:type d_max: int
-	:return:
-	:rtype:
-	"""
+    Tries to find a single pink marker inside the image (or the Region of Interest).
+    It then outputs the information about found marker (for now, just its center position).
+    :param roi:
+    :type roi:
+    :param debug_out_path:
+    :type debug_out_path:
+    :param blur:
+    :type blur:
+    :param quadrant: The corner region of the image ('NW', 'NE', 'SW', 'SE')
+    :type quadrant: basestring
+    :param d_min: minimal diameter of the *inner* (distorted) marker edge
+    :type d_min: int
+    :param d_max: maximal diameter of the *outer* (distorted) marker edge
+    :type d_max: int
+    :return:
+    :rtype:
+    """
     # Smooth out picture
     roiBlur = cv2.GaussianBlur(roi, (blur, blur), 0)
     # Use the opposite color of Magenta (Green) to contrast the markers the most
@@ -387,12 +387,12 @@ def _getColoredMarkerPosition(
 
 def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
     """
-	Tests the mask to know if it could plausably be a marker
-	:param mask: The mask to compare
-	:type mask: Union[Iterable, numpy.ndarray]
-	:return: True if it is a marker (circle-ish), False if not
-	:rtype: generator[bool]
-	"""
+    Tests the mask to know if it could plausably be a marker
+    :param mask: The mask to compare
+    :type mask: Union[Iterable, numpy.ndarray]
+    :return: True if it is a marker (circle-ish), False if not
+    :rtype: generator[bool]
+    """
     path = os.path.join(os.path.dirname(__file__), "../files/camera/marker_mask.bmp")
     marker_mask_tester = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     if marker_mask_tester is None:
@@ -481,9 +481,9 @@ def _mkdir(folder):
 
 def _getCamParams(path_to_params_file):
     """
-	:param path_to_params_file: Give Path to cam_params file as .npz
-	:returns cam_params as dict
-	"""
+    :param path_to_params_file: Give Path to cam_params file as .npz
+    :returns cam_params as dict
+    """
     if not isfile(path_to_params_file) or os.stat(path_to_params_file).st_size == 0:
         logging.warning("Camera calibration file not found.")
         return None

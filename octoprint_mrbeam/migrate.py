@@ -212,12 +212,12 @@ class Migration(object):
 
     def _compare_versions(self, lower_vers, higher_vers, equal_ok=True):
         """
-		Compares two versions and returns true if lower_vers < higher_vers
-		:param lower_vers: needs to be inferior to higher_vers to be True
-		:param lower_vers: needs to be superior to lower_vers to be True
-		:param equal_ok: returned value if lower_vers and lower_vers are equal.
-		:return: True or False. None if one of the version was not a valid version number
-		"""
+        Compares two versions and returns true if lower_vers < higher_vers
+        :param lower_vers: needs to be inferior to higher_vers to be True
+        :param lower_vers: needs to be superior to lower_vers to be True
+        :param equal_ok: returned value if lower_vers and lower_vers are equal.
+        :return: True or False. None if one of the version was not a valid version number
+        """
         if lower_vers is None or higher_vers is None:
             return None
         try:
@@ -243,16 +243,16 @@ class Migration(object):
 
     def delete_egg_dir_leftovers(self):
         """
-		Deletes egg files/dirs of older versions of MrBeamPlugin
-		Our first mrb_check USB sticks updated MrBeamPlugin per 'pip --ignore-installed'
-		which left old egg directories in site-packages.
-		This then caused the plugin to assume it's version is the old version, even though the new code was executed.
-		2018: Since we still see this happening, let's do this on every startup.
-		Since plugin version num is not reliable if there are old egg folders,
-		we must not call this from within a is_migration_needed()
+        Deletes egg files/dirs of older versions of MrBeamPlugin
+        Our first mrb_check USB sticks updated MrBeamPlugin per 'pip --ignore-installed'
+        which left old egg directories in site-packages.
+        This then caused the plugin to assume it's version is the old version, even though the new code was executed.
+        2018: Since we still see this happening, let's do this on every startup.
+        Since plugin version num is not reliable if there are old egg folders,
+        we must not call this from within a is_migration_needed()
 
-		Also cleans up an old OctoPrint folder which very likely is part of the image...
-		"""
+        Also cleans up an old OctoPrint folder which very likely is part of the image...
+        """
         site_packages_dir = "/home/pi/site-packages"
         folders = []
         keep_version = None
@@ -291,9 +291,9 @@ class Migration(object):
 
     def fix_wifi_ap_name(self):
         """
-		image 'PROD 2018-01-12 19:15 1515784545' has wifi AP name: 'MrBeam-F930'
-		Let's correct it to actual wifi AP name
-		"""
+        image 'PROD 2018-01-12 19:15 1515784545' has wifi AP name: 'MrBeam-F930'
+        Let's correct it to actual wifi AP name
+        """
         host = self.plugin.getHostname()
         # at some point change this to: command = "sudo /root/scripts/change_apname {}".format(host)
         # but make sure that the new change_apname script has already been installed!!! (update_change_hostename_apname_scripts)
@@ -347,9 +347,9 @@ class Migration(object):
 
     def setup_iptables(self):
         """
-		Creates iptables config file.
-		This is required to redirect all incoming traffic to localhost.
-		"""
+        Creates iptables config file.
+        This is required to redirect all incoming traffic to localhost.
+        """
         self._logger.info("setup_iptables() ")
         iptables_file = "/etc/network/if-up.d/iptables"
         iptables_body = """#!/bin/sh
@@ -394,9 +394,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def add_grbl_130_maxTravel(self):
         """
-		Since we introduced GRBL settings sync (aka correct_settings), we have grbl settings in machine profiles
-		So we need to add the old value for 'x max travel' for C-Series devices there.
-		"""
+        Since we introduced GRBL settings sync (aka correct_settings), we have grbl settings in machine profiles
+        So we need to add the old value for 'x max travel' for C-Series devices there.
+        """
         if self.plugin._device_series == "2C":
             default_profile = laserCutterProfileManager().get_default()
             default_profile["grbl"]["settings"][130] = 501.1
@@ -592,9 +592,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def is_lasercutterProfile_set(self):
         """
-		Is a non-generic lasercutterProfile set as default profile?
-		:return: True if a non-generic lasercutterProfile is set as default
-		"""
+        Is a non-generic lasercutterProfile set as default profile?
+        :return: True if a non-generic lasercutterProfile is set as default
+        """
         return laserCutterProfileManager().get_default()["id"] != "my_default"
 
     def set_lasercutterProfile(self):
@@ -635,9 +635,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def set_lasercutterPorfile_2C(self):
         """
-		Series C came with no default lasercutterProfile set.
-		FYI: the image contained only a profile called 'MrBeam2B' which was never used since it wasn't set as default
-		"""
+        Series C came with no default lasercutterProfile set.
+        FYI: the image contained only a profile called 'MrBeam2B' which was never used since it wasn't set as default
+        """
         profile_id = "MrBeam2C"
         model = "C"
 
@@ -666,9 +666,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def set_lasercutterPorfile_2DEF(self, series):
         """
-		In case lasercutterProfile does not exist
-		:return:
-		"""
+        In case lasercutterProfile does not exist
+        :return:
+        """
         series = series.upper()
         profile_id = "MrBeam2{}".format(series)
         model = series

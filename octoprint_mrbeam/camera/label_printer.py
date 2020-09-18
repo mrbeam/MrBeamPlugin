@@ -72,7 +72,11 @@ class LabelPrinter(object):
         elif blink is False:
             self._plugin.fire_event(MrBeamEvents.LENS_CALIB_DONE)
 
-        res = dict(labelType=label_type, success=ok, error=out,)
+        res = dict(
+            labelType=label_type,
+            success=ok,
+            error=out,
+        )
 
         return res
 
@@ -193,11 +197,11 @@ class LabelPrinter(object):
 
     def _print(self, ip, data):
         """
-		pritns data to printer at IP using rlpr
-		:param ip: printer's ip address
-		:param data: data to print
-		:return: Tuple (success, output): success: Boolean, output: commands STDOUT & STDERR (should be empty if successful)
-		"""
+        pritns data to printer at IP using rlpr
+        :param ip: printer's ip address
+        :param data: data to print
+        :return: Tuple (success, output): success: Boolean, output: commands STDOUT & STDERR (should be empty if successful)
+        """
         cmd = self.COMMAND_RLPR.format(ip=ip, data=data)
         out, code = exec_cmd_output(cmd, log_cmd=False, shell=True)
         return (code == 0), out
@@ -221,9 +225,9 @@ class LabelPrinter(object):
 
     def _get_production_date_formatted(self):
         """
-		Converts production_date from "2020-06-10" to "Jun 2020"
-		:return:
-		"""
+        Converts production_date from "2020-06-10" to "Jun 2020"
+        :return:
+        """
         prod_date_str = self._device_info.get_production_date()
         if prod_date_str is None:
             return ""

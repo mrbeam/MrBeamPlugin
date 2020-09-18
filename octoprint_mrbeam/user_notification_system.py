@@ -47,7 +47,11 @@ class UserNotificationSystem(object):
 
     @staticmethod
     def get_legacy_notification(title, text, err_msg=[], replay=False, is_err=False):
-        res = dict(title=title, text=text, replay=replay,)
+        res = dict(
+            title=title,
+            text=text,
+            replay=replay,
+        )
         if err_msg or is_err:
             res["type"] = "error"
             res["hide"] = False
@@ -73,5 +77,10 @@ class UserNotificationSystem(object):
 
     def _send(self, notifications):
         self._plugin_manager.send_plugin_message(
-            "mrbeam", dict(user_notification_system=dict(notifications=notifications,))
+            "mrbeam",
+            dict(
+                user_notification_system=dict(
+                    notifications=notifications,
+                )
+            ),
         )

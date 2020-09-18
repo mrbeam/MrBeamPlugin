@@ -71,17 +71,17 @@ class MrbLogger(object):
 
     def log(self, level, msg, *args, **kwargs):
         """
-		Logs the given message like the regular python logger. Still there are mrb-specific options available.
-		:param level: log level
-		:param msg: the message to log
-		:param args: arguments to logger or to the message
-		:param terminal: log this message also in Mr Beam frontend terminal
-		:param terminal_as_comm: log this message also in Mr Beam frontend terminal as like it comes from COMM
-		:param serial: log this message also in getLogger("SERIAL")
-		:param analytics: Log this log event to analytics
-		:param terminal_dump: Collect and log a terminal dump. Terminal dumps are also sent to analytics if analytics is not explicitly set to False.
-		:type kwargs:
-		"""
+        Logs the given message like the regular python logger. Still there are mrb-specific options available.
+        :param level: log level
+        :param msg: the message to log
+        :param args: arguments to logger or to the message
+        :param terminal: log this message also in Mr Beam frontend terminal
+        :param terminal_as_comm: log this message also in Mr Beam frontend terminal as like it comes from COMM
+        :param serial: log this message also in getLogger("SERIAL")
+        :param analytics: Log this log event to analytics
+        :param terminal_dump: Collect and log a terminal dump. Terminal dumps are also sent to analytics if analytics is not explicitly set to False.
+        :type kwargs:
+        """
         if kwargs.pop("terminal", True if level >= logging.WARN else False):
             self._terminal(level, msg, *args, **kwargs)
         if kwargs.pop("terminal_as_comm", False) or level == self.LEVEL_COMM:

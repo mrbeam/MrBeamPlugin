@@ -178,15 +178,15 @@ class ImageProcessor:
 
     def img_prepare(self, img, w_mm, h_mm):
         """
-		1. pixel reduction (w,h)
-		2. remove transparency
-		3. contrast
-		4. greyscale
-		5. sharpen
-		(? .contrast / curves (material))
-		6. dithering
-		7. separation (optimizes duration)
-		"""
+        1. pixel reduction (w,h)
+        2. remove transparency
+        3. contrast
+        4. greyscale
+        5. sharpen
+        (? .contrast / curves (material))
+        6. dithering
+        7. separation (optimizes duration)
+        """
         self.debugPreprocessing = False
         orig_w, orig_h = img.size
         if w_mm < 0:
@@ -380,22 +380,22 @@ class ImageProcessor:
 
     def generate_gcode(self, imgArray, xMM, yMM, wMM, hMM, file_id):
         """
-		takes an array of objects containing the separated image and converts them to gcode.
-		:param imgArray: array of imagedata containing dicts
-		:param xMM: x position of the image in mm (origin: left bottom)
-		:param yMM: y position of the image in mm (origin: left bottom)
-		:param wMM: width of the image in mm
-		:param hMM: height of the image in mm
-		:param file_id: origin file id, stored in comment for debugging / analysis
-		:type imgArray: [{i: imgdata, x: x_offset_px, y: y_offset_px }]
-		:type x: int, float
-		:type y: int, float
-		:type w: int, float
-		:type h: int, float
-		:type file_id: string
-		:returns: gcode
-		:rtype: string
-		"""
+        takes an array of objects containing the separated image and converts them to gcode.
+        :param imgArray: array of imagedata containing dicts
+        :param xMM: x position of the image in mm (origin: left bottom)
+        :param yMM: y position of the image in mm (origin: left bottom)
+        :param wMM: width of the image in mm
+        :param hMM: height of the image in mm
+        :param file_id: origin file id, stored in comment for debugging / analysis
+        :type imgArray: [{i: imgdata, x: x_offset_px, y: y_offset_px }]
+        :type x: int, float
+        :type y: int, float
+        :type w: int, float
+        :type h: int, float
+        :type file_id: string
+        :returns: gcode
+        :rtype: string
+        """
 
         # write all parameters used for generating the gcode into the file
         self.profiler.start("settings_as_comment")
@@ -587,12 +587,12 @@ class ImageProcessor:
         self, y, img_pos_mm, pixelArray, line_info, direction_positive, debug=False
     ):
         """
-		Writes GCode to ensure the precondition of a line gcode.
-		This includes:
-		- Move laserhead to correct starting position with G0
-		- Do the overshoot move if necessary
-		- Activate laser with 0 intensity
-		"""
+        Writes GCode to ensure the precondition of a line gcode.
+        This includes:
+        - Move laserhead to correct starting position with G0
+        - Do the overshoot move if necessary
+        - Activate laser with 0 intensity
+        """
 
         # Calculate line start coordinates (including overshoot distance)
         if direction_positive:
@@ -642,10 +642,10 @@ class ImageProcessor:
         self, img_pos_mm, line_info, direction_positive, debug=False
     ):
         """
-		Writes GCode to ensure the postcondition of a line gcode.
-		This includes:
-		- set laser intensity to 0
-		"""
+        Writes GCode to ensure the postcondition of a line gcode.
+        This includes:
+        - set laser intensity to 0
+        """
         comment = ""
         if debug:
             arrow = "->" if direction_positive else "<-"
@@ -676,11 +676,11 @@ class ImageProcessor:
         self, img_pos_mm, pixelArray, line_info, direction_positive, debug=False
     ):
         """
-		Writes GCode for one line of juicy pixels.
-		Preconditions:
-		- Laserhead is already moved to correct starting position with G0
-		- Laser is active (still active or switched on with M3S0)
-		"""
+        Writes GCode for one line of juicy pixels.
+        Preconditions:
+        - Laserhead is already moved to correct starting position with G0
+        - Laser is active (still active or switched on with M3S0)
+        """
 
         # iterate over juicy pixels
         if direction_positive:
@@ -730,12 +730,12 @@ class ImageProcessor:
         self, brightness, target_x, comment=None, debug=False
     ):
         """
-		Writes gcode for a sequence of equal pixels.
-		Chooses G1 or G0 depending on brightness, adds pierce-time gcode after G0 command
-		Preconditions:
-		- laser in position
-		- laser activated
-		"""
+        Writes gcode for a sequence of equal pixels.
+        Chooses G1 or G0 depending on brightness, adds pierce-time gcode after G0 command
+        Preconditions:
+        - laser in position
+        - laser activated
+        """
         if debug:
             comment = "brightness: {}".format(brightness)
 
@@ -948,8 +948,8 @@ class ImageProcessor:
 
 class GC_Context:
     """
-	Helper class to track last gcode values
-	"""
+    Helper class to track last gcode values
+    """
 
     def __init__(self):
         self.x = None

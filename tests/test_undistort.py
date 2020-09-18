@@ -15,7 +15,8 @@ from octoprint_mrbeam.camera.undistort import prepareImage
 
 
 @pytest.mark.datafiles(
-    join(CAM_DIR, "raw.jpg"), join(CAM_DIR, "lens_calib_bad.npz"),
+    join(CAM_DIR, "raw.jpg"),
+    join(CAM_DIR, "lens_calib_bad.npz"),
 )
 def test_undist(datafiles):
     in_img = cv2.imread(str(datafiles / "raw.jpg"))

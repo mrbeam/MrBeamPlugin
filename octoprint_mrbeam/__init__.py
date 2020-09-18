@@ -240,10 +240,10 @@ class MrBeamPlugin(
 
     def _do_initial_log(self):
         """
-		Kicks an identifying log line
-		Was really important before we had
-		@see self.get_additional_environment()
-		"""
+        Kicks an identifying log line
+        Was really important before we had
+        @see self.get_additional_environment()
+        """
         msg = "MrBeam Plugin"
         msg += " version:{}".format(self._plugin_version)
         msg += ", model:{}".format(self.get_model_id())
@@ -287,9 +287,9 @@ class MrBeamPlugin(
 
     def get_additional_environment(self):
         """
-		Mixin: octoprint.plugin.EnvironmentDetectionPlugin
-		:return: dict of environment data
-		"""
+        Mixin: octoprint.plugin.EnvironmentDetectionPlugin
+        :return: dict of environment data
+        """
         uptime = get_uptime()
         return dict(
             version=self._plugin_version,
@@ -358,7 +358,10 @@ class MrBeamPlugin(
                 design_store_email=None,
             ),
             laser_heads=dict(filename="laser_heads.yaml"),
-            review=dict(given=False, ask=False,),
+            review=dict(
+                given=False,
+                ask=False,
+            ),
             focusReminder=True,
             analyticsEnabled=None,
             analytics=dict(
@@ -464,7 +467,9 @@ class MrBeamPlugin(
                 gantryUsage=self.usage_handler.get_gantry_usage(),
             ),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
-            hw_features=dict(has_compressor=self.compressor_handler.has_compressor(),),
+            hw_features=dict(
+                has_compressor=self.compressor_handler.has_compressor(),
+            ),
             leds=dict(
                 brightness=self._settings.get(["leds", "brightness"]),
                 fps=self._settings.get(["leds", "fps"]),
@@ -894,9 +899,9 @@ class MrBeamPlugin(
 
     def get_template_vars(self):
         """
-		Needed to have analytics settings page in German
-		while we do not have real internationalization yet.
-		"""
+        Needed to have analytics settings page in German
+        while we do not have real internationalization yet.
+        """
         from flask import g
 
         return dict(language=g.locale.language if g.locale else "en")
@@ -906,7 +911,9 @@ class MrBeamPlugin(
         return True
 
     def get_wizard_details(self):
-        details = dict(links=self.wizard_config.get_current_wizard_link_ids(),)
+        details = dict(
+            links=self.wizard_config.get_current_wizard_link_ids(),
+        )
         return details
 
     def get_wizard_version(self):
@@ -1676,10 +1683,10 @@ class MrBeamPlugin(
 
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
         """
-		Defines the maximum size that is accepted for upload.
-		If the uploaded file size exeeds this limit,
-		you'll see only a ERR_CONNECTION_RESET in Chrome.
-		"""
+        Defines the maximum size that is accepted for upload.
+        If the uploaded file size exeeds this limit,
+        you'll see only a ERR_CONNECTION_RESET in Chrome.
+        """
         return [("POST", r"/convert", 100 * 1024 * 1024)]
 
     @octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
@@ -2561,10 +2568,10 @@ class MrBeamPlugin(
 
     def fire_event(self, event, payload=None):
         """
-		Fire an event into octoPrint's event system and adds mrb_check as payload
-		:param event:
-		:param payload: payload. If None, a payload object with mrb_state is added
-		"""
+        Fire an event into octoPrint's event system and adds mrb_check as payload
+        :param event:
+        :param payload: payload. If None, a payload object with mrb_state is added
+        """
         if payload is None:
             payload = dict()
         if not "mrb_state" in payload:
@@ -2627,11 +2634,11 @@ class MrBeamPlugin(
 
     def get_update_branch_info(self):
         """
-		Gets you a list of plugins which are currently not configured to be updated from their default branch.
-		Why do we need this? Frontend injects these data into SWupdate settings. So we can see if we put
-		a component like Mr Beam Plugin to a special branch (for development.)
-		:return: dict
-		"""
+        Gets you a list of plugins which are currently not configured to be updated from their default branch.
+        Why do we need this? Frontend injects these data into SWupdate settings. So we can see if we put
+        a component like Mr Beam Plugin to a special branch (for development.)
+        :return: dict
+        """
         result = dict()
         configured_checks = None
         try:
@@ -2694,7 +2701,9 @@ class MrBeamPlugin(
                 dxf=ContentTypeMapping(["dxf"], "application/dxf"),
             ),
             # .mrb files are svgs, representing the whole working area of a job
-            recentjob=dict(svg=ContentTypeMapping(["mrb"], "image/svg+xml"),),
+            recentjob=dict(
+                svg=ContentTypeMapping(["mrb"], "image/svg+xml"),
+            ),
             # extensions for printable machine code
             machinecode=dict(
                 gcode=ContentTypeMapping(
@@ -2705,12 +2714,12 @@ class MrBeamPlugin(
 
     def get_mrb_state(self):
         """
-		Returns the data set 'mrb_state' which we add to the periodic status messages
-		and almost all events which are sent to the frontend.
-		Called (among others) by LaserStateMonitor.get_current_data in printer.py
-		:return: mrb_state
-		:rtype: dict
-		"""
+        Returns the data set 'mrb_state' which we add to the periodic status messages
+        and almost all events which are sent to the frontend.
+        Called (among others) by LaserStateMonitor.get_current_data in printer.py
+        :return: mrb_state
+        :rtype: dict
+        """
         if self.mrbeam_plugin_initialized:
             try:
                 return dict(
@@ -2757,10 +2766,10 @@ class MrBeamPlugin(
 
     def getHostname(self):
         """
-		Returns device hostname like 'MrBeam2-F930'.
-		If system hostname (/etc/hostname) is different it'll be set (overwritten!!) to the value from device_info
-		:return: String hostname
-		"""
+        Returns device hostname like 'MrBeam2-F930'.
+        If system hostname (/etc/hostname) is different it'll be set (overwritten!!) to the value from device_info
+        :return: String hostname
+        """
         if self._hostname is None:
             hostname_dev_info = self._device_info.get_hostname()
             hostname_socket = None
@@ -2804,43 +2813,43 @@ class MrBeamPlugin(
 
     def getSerialNum(self):
         """
-		Gives you the device's Mr Beam serieal number eg "00000000E79B0313-2C"
-		The value is soley read from device_info file (/etc/mrbeam)
-		and it's cached once read.
-		:return: serial number
-		:rtype: String
-		"""
+        Gives you the device's Mr Beam serieal number eg "00000000E79B0313-2C"
+        The value is soley read from device_info file (/etc/mrbeam)
+        and it's cached once read.
+        :return: serial number
+        :rtype: String
+        """
         if self._serial_num is None:
             self._serial_num = self._device_info.get_serial()
         return self._serial_num
 
     def get_model_id(self):
         """
-		Gives you the device's model id liek MRBEAM2 or MRBEAM2-DC
-		The value is soley read from device_info file (/etc/mrbeam)
-		and it's cached once read.
-		:return: model id
-		:rtype: String
-		"""
+        Gives you the device's model id liek MRBEAM2 or MRBEAM2-DC
+        The value is soley read from device_info file (/etc/mrbeam)
+        and it's cached once read.
+        :return: model id
+        :rtype: String
+        """
         if self._model_id is None:
             self._model_id = self._device_info.get_model()
         return self._model_id
 
     def get_production_date(self):
         """
-		Gives you the device's production date as string
-		The value is soley read from device_info file (/etc/mrbeam)
-		and it's cached once read.
-		:return: production date
-		:rtype: String
-		"""
+        Gives you the device's production date as string
+        The value is soley read from device_info file (/etc/mrbeam)
+        and it's cached once read.
+        :return: production date
+        :rtype: String
+        """
         return self._device_info.get_production_date()
 
     def getBranch(self):
         """
-		DEPRECATED
-		:return:
-		"""
+        DEPRECATED
+        :return:
+        """
         branch = ""
         try:
             command = "git branch | grep '*'"
@@ -2933,13 +2942,13 @@ class MrBeamPlugin(
 
     def __calc_time_ntp_offset(self, log_out_of_sync=False):
         """
-		Checks if we have a NTP time and if the offset is < 1min.
-		- If not, this function is called again. The first times with 10s delay, then 120sec.
-		- If yes, this fact is logged with a shift_time which indicates the time the device was off from ntp utc time
-		    Technically it's the difference in time between the time that should have passed theoretically and
-		    that actually passed due to invisible ntp corrections.
-		:param log_out_of_sync: do not log if time is not synced
-		"""
+        Checks if we have a NTP time and if the offset is < 1min.
+        - If not, this function is called again. The first times with 10s delay, then 120sec.
+        - If yes, this fact is logged with a shift_time which indicates the time the device was off from ntp utc time
+            Technically it's the difference in time between the time that should have passed theoretically and
+            that actually passed due to invisible ntp corrections.
+        :param log_out_of_sync: do not log if time is not synced
+        """
         ntp_offset = None
         max_offset = 60000  # miliseconds
         now = time.time()

@@ -215,10 +215,10 @@ class LaserCutterProfileManager(object):
 
     def select(self, identifier):
         """
-		Selects a profile non-persistently
-		:param identifier:
-		:return:
-		"""
+        Selects a profile non-persistently
+        :param identifier:
+        :return:
+        """
         if identifier is None or not self.exists(identifier):
             self._current = self.get_default()
             return False
@@ -250,12 +250,12 @@ class LaserCutterProfileManager(object):
 
     def save(self, profile, allow_overwrite=False, make_default=False):
         """
-		Saves given profile to file.
-		:param profile:
-		:param allow_overwrite:
-		:param make_default:
-		:return:
-		"""
+        Saves given profile to file.
+        :param profile:
+        :param allow_overwrite:
+        :param make_default:
+        :return:
+        """
         if "id" in profile and profile["id"] != "":
             identifier = profile["id"]
         elif "name" in profile:

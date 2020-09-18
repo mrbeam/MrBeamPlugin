@@ -135,7 +135,12 @@ class LaserheadHandler(object):
                 info=self._lh_cache[self._current_used_lh_serial],
             )
         else:
-            data = dict(serial=None, info=dict(correction_factor=1,))
+            data = dict(
+                serial=None,
+                info=dict(
+                    correction_factor=1,
+                ),
+            )
         return data
 
     def get_current_used_lh_power(self):

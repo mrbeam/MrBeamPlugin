@@ -29,8 +29,8 @@ def ioBeamHandler(plugin):
 
 class IoBeamEvents(object):
     """
-	These events are meant to be handled by OctoPrints event system
-	"""
+    These events are meant to be handled by OctoPrints event system
+    """
 
     CONNECT = "iobeam.connect"
     DISCONNECT = "iobeam.disconnect"
@@ -45,9 +45,9 @@ class IoBeamEvents(object):
 
 class IoBeamValueEvents(object):
     """
-	These Values / events are not intended to be handled byt OctoPrints event system
-	but by IoBeamHandler's own event system
-	"""
+    These Values / events are not intended to be handled byt OctoPrints event system
+    but by IoBeamHandler's own event system
+    """
 
     LASER_TEMP = "iobeam.laser.temp"
     DUST_VALUE = "iobeam.dust.value"
@@ -227,19 +227,19 @@ class IoBeamHandler(object):
 
     def send_temperature_request(self):
         """
-		Request a single temperature value from iobeam.
-		:return: True if the command was sent sucessfully.
-		"""
+        Request a single temperature value from iobeam.
+        :return: True if the command was sent sucessfully.
+        """
         return self._send_command(
             self.get_request_msg([self.MESSAGE_DEVICE_LASER + "_temp"])
         )
 
     def send_fan_command(self, action, value=None):
         """
-		Send the specified command as fan:<command>
-		:param command: One of the three values (ON:<0-100>/OFF/AUTO)
-		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
-		"""
+        Send the specified command as fan:<command>
+        :param command: One of the three values (ON:<0-100>/OFF/AUTO)
+        :return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
+        """
         command = self.get_command_msg(self.MESSAGE_DEVICE_FAN, action, value)
         return self._send_command(command), command["request_id"]
 
@@ -255,17 +255,17 @@ class IoBeamHandler(object):
 
     def send_analytics_request(self, *args, **kwargs):
         """
-		Requests a analytics dataset from iobeam
-		:return: True if the command was sent successful (does not mean it was successfully executed)
-		"""
+        Requests a analytics dataset from iobeam
+        :return: True if the command was sent successful (does not mean it was successfully executed)
+        """
         return self._send_command(self.get_request_msg([self.DATASET_ANALYTICS]))
 
     def _send_command(self, command):
         """
-		Sends a command to iobeam
-		:param command: Must not be None. May or may not end with a new line.
-		:return: Boolean success
-		"""
+        Sends a command to iobeam
+        :param command: Must not be None. May or may not end with a new line.
+        :return: Boolean success
+        """
         if command is None:
             raise ValueError("Command must not be None in send_command().")
         if self._shutdown_signaled:
@@ -332,10 +332,10 @@ class IoBeamHandler(object):
 
     def subscribe(self, event, callback):
         """
-		Subscibe to an event
-		:param event:
-		:param callback:
-		"""
+        Subscibe to an event
+        :param event:
+        :param callback:
+        """
         try:
             self._callbacks_lock.writer_acquire()
             if event in self._callbacks:
@@ -567,10 +567,10 @@ class IoBeamHandler(object):
 
     def _handle_messages(self, messages):
         """
-		Handles incoming list of messages from the socket.
-		:param messages: list of incoming dict messages
-		:return: int: number of invalid messages 0 means all messages were handled correctly
-		"""
+        Handles incoming list of messages from the socket.
+        :param messages: list of incoming dict messages
+        :return: int: number of invalid messages 0 means all messages were handled correctly
+        """
         error_count = 0
         message_count = 0
         try:
@@ -648,11 +648,11 @@ class IoBeamHandler(object):
 
     def _handle_dataset(self, name, dataset):
         """
-		Handle dataset
-		:param name: name of the dataset
-		:param dataset: the contents of the dataset
-		:return: error count
-		"""
+        Handle dataset
+        :param name: name of the dataset
+        :param dataset: the contents of the dataset
+        :return: error count
+        """
         # self._logger.info("ANDYTEST _handle_dataset() %s: %s", name, dataset)
         error_count = 0
         processing_start = time.time()
@@ -721,10 +721,10 @@ class IoBeamHandler(object):
 
     def _handle_fan_dynamic(self, dataset):
         """
-		Handle dynamic fan data
-		:param dataset:
-		:return: error count
-		"""
+        Handle dynamic fan data
+        :param dataset:
+        :return: error count
+        """
         if isinstance(dataset, dict) and len(dataset) > 3:
             vals = dict(
                 state=self._as_number(dataset[self.MESSAGE_ACTION_FAN_STATE]),
@@ -799,10 +799,10 @@ class IoBeamHandler(object):
 
     def _handle_fan_static(self, dataset):
         """
-		Handle static fan data
-		:param dataset:
-		:return: error count
-		"""
+        Handle static fan data
+        :param dataset:
+        :return: error count
+        """
         if self.MESSAGE_ACTION_FAN_VERSION in dataset:
             self._logger.info(
                 "fan_static: fanPCB v%s, factor: %s - %s",
@@ -818,10 +818,10 @@ class IoBeamHandler(object):
 
     def _handle_compressor_static(self, dataset):
         """
-		Handle static compressor data
-		:param dataset:
-		:return: error count
-		"""
+        Handle static compressor data
+        :param dataset:
+        :return: error count
+        """
         # self._logger.info("compressor_static: %s", dataset)
         self._call_callback(IoBeamValueEvents.COMPRESSOR_STATIC, dataset)
         return 0
@@ -831,10 +831,10 @@ class IoBeamHandler(object):
             self._logger.error(
                 "i2c_monitoring state change reported: %s", dataset, analytics=False
             )
-            if not self._last_i2c_monitoring_dataset is None and not self._last_i2c_monitoring_dataset.get(
-                "state", None
-            ) == dataset.get(
-                "state", None
+            if (
+                not self._last_i2c_monitoring_dataset is None
+                and not self._last_i2c_monitoring_dataset.get("state", None)
+                == dataset.get("state", None)
             ):
                 dataset_data = dataset.get("data", dict())
                 params = dict(
@@ -854,10 +854,10 @@ class IoBeamHandler(object):
 
     def _handle_laser(self, dataset):
         """
-		Handle laser dataset, which may contain laser temperature, serial and power
-		:param dataset:
-		:return: error count
-		"""
+        Handle laser dataset, which may contain laser temperature, serial and power
+        :param dataset:
+        :return: error count
+        """
         if self.MESSAGE_ACTION_LASER_TEMP in dataset:
             if dataset[self.MESSAGE_ACTION_LASER_TEMP]:
                 self._call_callback(
@@ -870,10 +870,10 @@ class IoBeamHandler(object):
 
     def _handle_laserhead(self, dataset):
         """
-		Handle laserhead dataset, iobeam sends the whole laserhead data.
-		:param dataset:
-		:return: error count
-		"""
+        Handle laserhead dataset, iobeam sends the whole laserhead data.
+        :param dataset:
+        :return: error count
+        """
         try:
             self._laserhead_handler.set_current_used_lh_data(dataset)
         except:
@@ -882,10 +882,10 @@ class IoBeamHandler(object):
 
     def _handle_pcf(self, dataset):
         """
-		Handle pcf dataset, which includes onbutton, interlocks, lid and steprun
-		:param dataset: pcf dataset, e.g. {"intlk": {...}, "lid": {...}, ...}
-		:return: error count
-		"""
+        Handle pcf dataset, which includes onbutton, interlocks, lid and steprun
+        :param dataset: pcf dataset, e.g. {"intlk": {...}, "lid": {...}, ...}
+        :return: error count
+        """
         if self.MESSAGE_DEVICE_ONEBUTTON in dataset:
             self._handle_onebutton(dataset[self.MESSAGE_DEVICE_ONEBUTTON])
 
@@ -901,10 +901,10 @@ class IoBeamHandler(object):
 
     def _handle_onebutton(self, dataset):
         """
-		Handle onebtn dataset
-		:param dataset: onebtn dataset, e.g. {"state": "dn", "duration": "1.2"}
-		:return: error count
-		"""
+        Handle onebtn dataset
+        :param dataset: onebtn dataset, e.g. {"state": "dn", "duration": "1.2"}
+        :return: error count
+        """
         duration = None
         if "state" in dataset and dataset["state"]:
             state = dataset["state"]
@@ -940,10 +940,10 @@ class IoBeamHandler(object):
 
     def _handle_interlock(self, dataset):
         """
-		Handle interlock message
-		:param dataset: interlock dataset, e.g. {"0": "cl", "1": "cl", ...}
-		:return: error count
-		"""
+        Handle interlock message
+        :param dataset: interlock dataset, e.g. {"0": "cl", "1": "cl", ...}
+        :return: error count
+        """
         name = {
             "0": "Lid Right",
             "1": "Lid Left",
@@ -984,10 +984,10 @@ class IoBeamHandler(object):
 
     def _handle_lid(self, action):
         """
-		Handle lid message
-		:param action: lid action, e.g. "cl" or "op"
-		:return: error count
-		"""
+        Handle lid message
+        :param action: lid action, e.g. "cl" or "op"
+        :return: error count
+        """
         self._logger.debug("_handle_lid() action: %s", action)
 
         if action == self.MESSAGE_ACTION_LID_OPENED:
@@ -1003,10 +1003,10 @@ class IoBeamHandler(object):
 
     def _handle_iobeam(self, dataset):
         """
-		Handle iobeam dataset
-		:param dataset:
-		:return: error count
-		"""
+        Handle iobeam dataset
+        :param dataset:
+        :return: error count
+        """
         if "version" in dataset:
             if dataset["version"]:
                 self.iobeam_version = dataset["version"]
@@ -1044,10 +1044,10 @@ class IoBeamHandler(object):
 
     def _handle_hw_malfunction(self, dataset):
         """
-		Handle hw malfunction dataset.
-		:param dataset:
-		:return: error count
-		"""
+        Handle hw malfunction dataset.
+        :param dataset:
+        :return: error count
+        """
         try:
             if dataset:
                 self._hw_malfunction_handler.report_hw_malfunction(dataset)
@@ -1068,48 +1068,48 @@ class IoBeamHandler(object):
 
     def _handle_debug(self, dataset):
         """
-		Handle debug dataset
-		:param dataset:
-		:return: error count
-		"""
+        Handle debug dataset
+        :param dataset:
+        :return: error count
+        """
         self._logger.info("iobeam debug dataset: '%s'", dataset)
         return 0
 
     def _handle_exhaust(self, dataset):
         """
-		Handle exhaust dataset
-		:param dataset:
-		:return: error count
-		"""
+        Handle exhaust dataset
+        :param dataset:
+        :return: error count
+        """
         # self._logger.info("exhaust dataset: '%s'", dataset)
         return 0
 
     def _handle_link_quality(self, dataset):
         """
-		Handle link quality dataset
-		:param dataset:
-		:return: error count
-		"""
+        Handle link quality dataset
+        :param dataset:
+        :return: error count
+        """
         # self._logger.info("link quality dataset: '%s'", dataset)
         return 0
 
     def _handle_invalid_dataset(self, name, dataset):
         """
-		Handle datasets of an invalid format, or datasets which have some missing data
-		:param name:
-		:param dataset:
-		:return:
-		"""
+        Handle datasets of an invalid format, or datasets which have some missing data
+        :param name:
+        :param dataset:
+        :return:
+        """
         # self._logger.debug("Received invalid dataset %s: '%s'", name, dataset)
         return 0
 
     def _handle_unknown_dataset(self, name, dataset):
         """
-		Handle dataset which has unknown name
-		:param name:
-		:param dataset:
-		:return:
-		"""
+        Handle dataset which has unknown name
+        :param name:
+        :param dataset:
+        :return:
+        """
         if name not in self._unknown_datasets:
             self._unknown_datasets.append(name)
             self._logger.warn("Received unknown dataset %s: %s", name, dataset)
@@ -1117,19 +1117,19 @@ class IoBeamHandler(object):
 
     def _handle_invalid_message(self, message):
         """
-		Handle invalid message, which could be any unexpected message
-		:param message:
-		:return:
-		"""
+        Handle invalid message, which could be any unexpected message
+        :param message:
+        :return:
+        """
         self._logger.warn("Received invalid message: '%s'", message)
         return 1
 
     def _handle_error_message(self, message):
         """
-		Handle error message
-		:param message:
-		:return:
-		"""
+        Handle error message
+        :param message:
+        :return:
+        """
         # TODO: A better way to extract?
         action = message.values()[0]
         if action == "reconnect":
@@ -1138,10 +1138,10 @@ class IoBeamHandler(object):
 
     def _handle_response(self, message):
         """
-		Handle response, which is typically a response to a command sent earlier
-		:param message: response message, e.g. {"response": {"command": {"device": "fan", ...}, "state": "ok"}}
-		:return: error count
-		"""
+        Handle response, which is typically a response to a command sent earlier
+        :param message: response message, e.g. {"response": {"command": {"device": "fan", ...}, "state": "ok"}}
+        :return: error count
+        """
         # self._logger.info("ANDYTEST _handle_response(): %s", message)
         error_count = 0
         processing_start = time.time()
@@ -1229,10 +1229,10 @@ class IoBeamHandler(object):
 
     def log_debug_processing_stats(self):
         """
-		Not exactly sure what my idea was with this...
-		# TODO: find a way to trigger this manually for debugging and general curiosity.
-		:return:
-		"""
+        Not exactly sure what my idea was with this...
+        # TODO: find a way to trigger this manually for debugging and general curiosity.
+        :return:
+        """
         min = sys.maxint
         max = 0
         sum = 0
@@ -1282,12 +1282,12 @@ class IoBeamHandler(object):
 
     def get_command_msg(self, device, action, value=None):
         """
-		Make and return command in required format
-		:param device: device for which command should be executed
-		:param action: action to be executed for given device
-		:param value: additional value (optional, but required for some commands like fan:on:50)
-		:return: command message
-		"""
+        Make and return command in required format
+        :param device: device for which command should be executed
+        :param action: action to be executed for given device
+        :param value: additional value (optional, but required for some commands like fan:on:50)
+        :return: command message
+        """
         command = {
             self.MESSAGE_COMMAND: {"device": device, "action": action},
             "request_id": self.next_request_id(),
@@ -1298,17 +1298,17 @@ class IoBeamHandler(object):
 
     def get_request_msg(self, datasets):
         """
-		Make and return data request message in required format
-		:param datasets:
-		:return: data request message
-		"""
+        Make and return data request message in required format
+        :param datasets:
+        :return: data request message
+        """
         return {self.MESSAGE_REQUEST: datasets, "request_id": self.next_request_id()}
 
     def get_client_msg(self):
         """
-		Make and return client identification message in required format
-		:return: client identification message
-		"""
+        Make and return client identification message in required format
+        :return: client identification message
+        """
         return {
             "client": {
                 "name": self.CLIENT_NAME,
@@ -1319,9 +1319,9 @@ class IoBeamHandler(object):
 
     def next_request_id(self):
         """
-		Get next request id for a command or data request
-		:return: next request id
-		"""
+        Get next request id for a command or data request
+        :return: next request id
+        """
         with self._request_id_lock:
             self.request_id += 1
             return self.request_id
@@ -1342,15 +1342,15 @@ class IoBeamHandler(object):
 
     def send_iobeam_analytics(self, eventname, data):
         """
-		This will send analytics data using the MrBeam event system, to mimic what the rest of the plugins do.
-		Everything will be saved to the type='iobeam'.
-		Args:
-			eventname: the name of the event for Datastore ('e')
-			data: the payload of the event for Datastore ('data')
+        This will send analytics data using the MrBeam event system, to mimic what the rest of the plugins do.
+        Everything will be saved to the type='iobeam'.
+        Args:
+                eventname: the name of the event for Datastore ('e')
+                data: the payload of the event for Datastore ('data')
 
-		Returns:
+        Returns:
 
-		"""
+        """
         payload = dict(
             plugin="iobeam",
             plugin_version=self.iobeam_version,

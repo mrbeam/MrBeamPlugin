@@ -221,8 +221,12 @@ class TimerHandler:
         try:
             # must end with /
             folders = {
-                "mrbeam": {"src_path": "/home/pi/site-packages/octoprint_mrbeam/",},
-                "iobeam": {"src_path": "/home/pi/dist-packages/iobeam/",},
+                "mrbeam": {
+                    "src_path": "/home/pi/site-packages/octoprint_mrbeam/",
+                },
+                "iobeam": {
+                    "src_path": "/home/pi/dist-packages/iobeam/",
+                },
                 "findmymrbeam": {
                     "src_path": "/home/pi/site-packages/octoprint_findmymrbeam/",
                 },
@@ -232,13 +236,21 @@ class TimerHandler:
                 "netconnectd": {
                     "src_path": "/home/pi/site-packages/octoprint_netconnectd/",
                 },
-                "mrb_hw_info": {"src_path": "/home/pi/dist-packages/mrb_hw_info/",},
+                "mrb_hw_info": {
+                    "src_path": "/home/pi/dist-packages/mrb_hw_info/",
+                },
                 "mrbeam-ledstrips": {
                     "src_path": "/home/pi/dist-packages/mrbeam_ledstrips/",
                 },
-                "octoprint": {"src_path": "/home/pi/site-packages/octoprint/",},
-                "_dist-packages": {"src_path": "/home/pi/dist-packages/",},
-                "_site-packages": {"src_path": "/home/pi/site-packages/",},
+                "octoprint": {
+                    "src_path": "/home/pi/site-packages/octoprint/",
+                },
+                "_dist-packages": {
+                    "src_path": "/home/pi/dist-packages/",
+                },
+                "_site-packages": {
+                    "src_path": "/home/pi/site-packages/",
+                },
             }
             sw_versions = self._get_software_versions()
 
