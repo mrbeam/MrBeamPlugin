@@ -78,6 +78,7 @@ from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
 from octoprint_mrbeam.util.device_info import deviceInfo
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
+from octoprint_mrbeam import camera
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -328,6 +329,9 @@ class MrBeamPlugin(
         # -> Multiply all coefficients with the same resize coef. Use cv2.getOptimalNewCameraMatrix to achieve that
         image_default_width = 2048
         image_default_height = 1536
+        cam_folder = os.path.join(
+            settings().getBaseFolder("base"), camera.LENS_CALIBRATION["path"]
+        )
 
         return dict(
             current_profile_id="_mrbeam_junior",  # yea, this needs to be like this # 2018: not so sure anymore...
@@ -383,11 +387,10 @@ class MrBeamPlugin(
                 correctionTmpFile="{}/cam/last_markers.json".format(
                     settings().getBaseFolder("base")
                 ),
-                lensCalibrationFile="{}/cam/lens_correction_{}x{}.npz".format(
-                    settings().getBaseFolder("base"),
-                    image_default_width,
-                    image_default_height,
-                ),
+                lensCalibration={
+                    k: os.path.join(cam_folder, camera.LENS_CALIBRATION[k])
+                    for k in ["legacy", "user", "factory"]
+                },
                 saveCorrectionDebugImages=False,
                 markerRecognitionMinPixel=MIN_MARKER_PIX,
                 remember_markers_across_sessions=True,
@@ -609,7 +612,7 @@ class MrBeamPlugin(
                 "js/lasersaftey_viewmodel.js",
                 "js/ready_to_laser_viewmodel.js",
                 "js/lib/screenfull.min.js",
-                "js/calibration/camera_calibration.js",
+                "js/settings/camera_settings.js",
                 "js/settings/backlash.js",
                 "js/settings/leds.js",
                 "js/path_magic.js",
@@ -634,6 +637,12 @@ class MrBeamPlugin(
                 "js/settings/custom_material.js",
                 "js/design_store.js",
                 "js/settings_menu_navigation.js",
+                "js/calibration/calibration.js",
+                "js/calibration/corner_calibration.js",
+                "js/calibration/lens_calibration.js",
+                "js/calibration/watterott/camera_alignment.js",
+                "js/calibration/watterott/calibration_qa.js",
+                "js/calibration/watterott/label_printer.js",
             ],
             css=[
                 "css/mrbeam.css",
@@ -1354,7 +1363,7 @@ class MrBeamPlugin(
     )
     def onCalibrationRunLensDistort(self):
         self._logger.debug("Command given : camera_run_lens_calibration")
-        self.lid_handler.startLensCalibration()
+        self.lid_handler.saveLensCalibration()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route(
@@ -1720,9 +1729,9 @@ class MrBeamPlugin(
                 fileObj,
                 links=None,
                 allow_overwrite=True,
-            )  # todo iratxe: what if the user uploads a file with the same name?
+            )
 
-            location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True) todo iratxe: what is this for?
+            location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
             result = {
                 "name": file_name,
                 "origin": "local",
@@ -1839,12 +1848,21 @@ class MrBeamPlugin(
             slicer = "svgtogcode"
             slicer_instance = self._slicing_manager.get_slicer(slicer)
             if slicer_instance.get_slicer_properties()["same_device"] and (
-                self._printer.is_printing() or self._printer.is_paused()
+                self._printer.is_printing()
+                or self._printer.is_paused()
+                or self.lid_handler.lensCalibrationStarted
             ):
                 # slicer runs on same device as OctoPrint, slicing while printing is hence disabled
-                msg = "Cannot convert while lasering due to performance reasons".format(
-                    **locals()
+                _while = (
+                    "calibrating the camera lens"
+                    if self.lid_handler.lensCalibrationStarted
+                    else "lasering"
                 )
+                msg = "Cannot convert while {} due to performance reasons".format(
+                    _while, **locals()
+                )
+                if self.lid_handler.lensCalibrationStarted:
+                    msg += "\n  Please abort the lens calibration first."
                 self._logger.error("gcodeConvertCommand: %s", msg)
                 return make_response(msg, 409)
 
@@ -1999,10 +2017,12 @@ class MrBeamPlugin(
             leds=[],
             generate_backlash_compenation_pattern_gcode=[],
             compensate_obj_height=[],
-            calibration_save_raw_pic=[],
-            calibration_lens_start=[],
-            calibration_get_raw_pic=[],
             calibration_del_pic=[],
+            calibration_get_raw_pic=[],
+            calibration_get_lens_calib_alive=[],
+            calibration_lens_restore_factory=[],
+            calibration_lens_start=[],
+            calibration_save_raw_pic=[],
             camera_run_lens_calibration=[],
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
@@ -2096,6 +2116,22 @@ class MrBeamPlugin(
             return self.onCalibrationRunLensDistort()
         elif command == "camera_stop_lens_calibration":
             return self.onCalibrationStopLensDistort()
+        elif command == "calibration_lens_restore_factory":
+            try:
+                self.lid_handler.revert_factory_lens_calibration()
+                return NO_CONTENT
+            except Exception as e:
+                return make_response("Error %s" % e, 500)
+        elif command == "calibration_get_lens_calib_alive":
+            return make_response(
+                jsonify(
+                    {
+                        "alive": self.lid_handler.boardDetectorDaemon is not None
+                        and self.lid_handler.boardDetectorDaemon.is_alive(),
+                    }
+                ),
+                200,
+            )
         elif command == "generate_calibration_markers_svg":
             return (
                 self.generateCalibrationMarkersSvg()
@@ -2284,41 +2320,15 @@ class MrBeamPlugin(
 
     def camera_calibration_markers(self, data):
         self._logger.debug("camera_calibration_markers() data: {}".format(data))
-
-        # transform dict
-        newCorners = {}
-        newMarkers = {}
-
-        for qd in data["result"]["newCorners"]:
-            newCorners[qd] = [
-                data["result"]["newCorners"][qd]["x"],
-                data["result"]["newCorners"][qd]["y"],
-            ]
-
-        for qd in data["result"]["newMarkers"]:
-            newMarkers[qd] = data["result"]["newMarkers"][qd]
-
-        pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
-        try:
-            pic_settings = self._load_profile(pic_settings_path)
-        except IOError:
-            self._logger.debug("previous pic settings were not present")
-            pic_settings = {}
-        pic_settings = (
-            pic_settings or {}
-        )  # pic_settings is None if file exists but empty
-
-        pic_settings["cornersFromImage"] = newCorners
-        pic_settings["calibMarkers"] = newMarkers
-        pic_settings[
-            "calibration_updated"
-        ] = True  # DEPRECATED but Necessary for legacy algo
-        pic_settings["hostname_KEY"] = self._hostname
-
-        self._logger.debug("picSettings new to save: {}".format(pic_settings))
-        self._save_profile(pic_settings_path, pic_settings)
         self.lid_handler.refresh_settings()
-
+        pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
+        camera.corners.save_corner_calibration(
+            pic_settings_path,
+            data["result"]["newCorners"],
+            data["result"]["newMarkers"],
+            self._hostname,
+            check_calibration_tool_mode(self),
+        )
         return NO_CONTENT
 
     ##~~ SlicerPlugin API
@@ -2505,9 +2515,7 @@ class MrBeamPlugin(
         import yaml
 
         with open(path, "wb") as f:
-            yaml.safe_dump(
-                profile, f, default_flow_style=False, indent="  ", allow_unicode=True
-            )
+            yaml.safe_dump(profile, f, indent="  ", allow_unicode=True)
 
     def _convert_to_engine(self, profile_path):
         profile = Profile(self._load_profile(profile_path))
