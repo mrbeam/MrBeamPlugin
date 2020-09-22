@@ -35,7 +35,8 @@ def bench(lines=60, sortby="tottime", bench_time=None, out_file=None):
 
     profiler = cProfile.Profile()
 
-    atexit.register(dump_stats, profiler, lines, sortby, filename=out_file)
+    # dump_stats when OctoPrint exits
+    atexit.register(dump_stats, profiler, lines, sortby, out_file)
     if bench_time is not None:
         _t = Timer(bench_time, os.kill, args=(os.getpid(), signal.SIGTERM))
         _t.start()
@@ -57,7 +58,6 @@ def dump_stats(
     profiler,
     lines=60,
     sortby="tottime",
-    release=True,
     filename=None,
 ):
     """Save the content of the given profiler."""
@@ -73,9 +73,8 @@ def dump_stats(
 
 
 def read_bench(filename, sortby="tottime", lines=60, regex=None):
-    """Print the Profile.
+    """Print some lines from the Profile.
     Poor man's analysis tool - It is recommended to use RunSnakeRun.
-
     """
     s = StringIO.StringIO()
     stats = pstats.Stats(filename, stream=s).sort_stats(sortby)
