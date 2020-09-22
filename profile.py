@@ -9,9 +9,7 @@ except ImportError:
     print("Please install cProfile and pstats.")
     exit(1)
 
-from multiprocessing import Process
-from threading import Timer, Lock
-import signal
+from threading import Timer
 import StringIO
 import time
 
@@ -19,8 +17,6 @@ BENCH_FILE = "octoprint.profile"
 
 AXEL_BENCH_TIME = 25
 RPI3_BENCH_TIME = 180
-
-bench_running = Lock()
 
 
 def bench(lines=60, sortby="tottime", bench_time=None, out_file=None):
@@ -61,8 +57,6 @@ def dump_stats(
     profiler,
     lines=60,
     sortby="tottime",
-    signum=signal.SIGTERM,
-    frame=None,
     release=True,
     filename=None,
 ):
@@ -76,8 +70,6 @@ def dump_stats(
     if lines:
         stats.print_stats(lines)
         print(s.getvalue())
-    # if release:
-    # bench_running.release()
 
 
 def read_bench(filename, sortby="tottime", lines=60, regex=None):
