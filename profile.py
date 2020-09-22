@@ -13,7 +13,7 @@ from threading import Timer
 import StringIO
 import time
 
-BENCH_FILE = "octoprint.profile"
+BENCH_FILE = "octoprint.pstats"
 
 AXEL_BENCH_TIME = 25
 RPI3_BENCH_TIME = 180
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         "--out",
         "-o",
         type=str,
-        default="octoprint.profile",
+        default=BENCH_FILE,
         help="Dump the profile to this file for further analysis.",
     )
     args = parser.parse_args()
