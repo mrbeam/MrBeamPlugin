@@ -22,12 +22,14 @@ This snippet creates a file `my_octoprint.profile` (By default it ouptuts `octop
 
 kcachegrind is a very well rounded profile analysis tool for other languages. However [pyprof2calltree] makes the pstats output digestible to it.
 
+```sh
+python2 -m pyprof2calltree -k -i octoprint.pstats
+```
+
 Warning: The python3 version of [pyprof2calltree] cannot read .pstats files written in our Python2 environment
 
 ```sh
-
 python2 -m pip install pyprof2calltree
-
 ```
 
 ### RunSnakeRun
