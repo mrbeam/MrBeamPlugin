@@ -39,7 +39,7 @@ class DeviceInfo(object):
         )
 
     def get(self, key, default=None):
-        self._device_data.get(key, default)
+        return self._device_data.get(key, default)
 
     def get_serial(self):
         return self._device_data.get(self.KEY_SERIAL)
