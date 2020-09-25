@@ -4,12 +4,17 @@ from octoprint.events import eventManager, Events
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.printing import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
 
 
 class Laser(Printer):
     HOMING_POSITION = [-1.0, -1.0, 0]
 
     def __init__(self, fileManager, analysisQueue, printerProfileManager):
+        # TODO OP v1.4 : Remove the followingline - see octoprint_mrbeam.__plugin_load__
+        analysisQueue._queues.update(
+            beam_analysis_queue_factory(callback=analysisQueue._analysis_finished)
+        )
         Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
         self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.printer")
         self._stateMonitor = LaserStateMonitor(
