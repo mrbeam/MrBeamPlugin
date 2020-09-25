@@ -1,5 +1,9 @@
 from contextlib import contextmanager
 from itertools import chain
+import logging
+import time
+import threading
+from threading import Thread, Event
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.camera.camera import BaseCamera, DummyCamera, __camera__
@@ -11,8 +15,10 @@ from .definitions import (
 )
 from . import exc
 
+
 try:
     import picamera
+    from picamera import PiCamera
 
     PICAMERA_AVAILABLE = True
 except (ImportError, OSError) as e:
@@ -22,11 +28,6 @@ except (ImportError, OSError) as e:
         e.__class__.__name__,
         e,
     )
-
-import time
-import threading
-from threading import Thread, Event
-import logging
 
 
 def mrbCamera():
@@ -40,7 +41,7 @@ def mrbCamera():
     return __camera__
 
 
-CameraClass = PiCamera if PICAMERA else DummyCamera
+CameraClass = PiCamera if PICAMERA_AVAILABLE else DummyCamera
 
 
 class MrbCamera(CameraClass, BaseCamera):
@@ -62,7 +63,7 @@ class MrbCamera(CameraClass, BaseCamera):
         # might need to change if inheriting from multiple classes
         BaseCamera.__init__(self, worker, shutter_speed=shutter_speed)
         CameraClass.__init__(self, worker, shutter_speed=shutter_speed, *args, **kwargs)
-        if PICAMERA:
+        if PICAMERA_AVAILABLE:
             self.sensor_mode = 2
             self.vflip = True
             self.hflip = True

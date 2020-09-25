@@ -19,14 +19,14 @@ class MrbPicWorker(deque):
     https://picamera.readthedocs.io/en/release-1.13/recipes2.html
     """
 
-    def __init__(self, debug=False, *args, **kwargs):
-        deque.__init__(self, *args, **kwargs)
+    def __init__(self, debug=False, maxlen=2, *args, **kwargs):
+        deque.__init__(self, maxlen=maxlen, *args, **kwargs)
         self.firstImg = True
-        for _ in range(maxSize):
+        assert maxlen > 0
+        for _ in range(maxlen):
             self.append(io.BytesIO())
         self.latest = None
         self.avg_roi_brightness = {}
-        assert maxSize > 0
         self._maxSize = maxSize
         self.busy = Event()
         self._logger = mrb_logger("mrbeam.camera.MrbPicWorker")

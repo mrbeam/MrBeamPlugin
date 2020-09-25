@@ -39,8 +39,9 @@ from octoprint_mrbeam.camera.definitions import *
 from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint_mrbeam.camera import exc as exc
 
+from octoprint_mrbeam.camera.mrbcamera import mrbCamera
+
 if PICAMERA_AVAILABLE:
-    from octoprint_mrbeam.camera.mrbcamera import MrbCamera
     from octoprint_mrbeam.camera.undistort import prepareImage, _getCamParams
 from octoprint_mrbeam.camera.lens import BoardDetectorDaemon, FACTORY
 from octoprint_mrbeam.util import dict_merge, dict_map, get_thread, makedirs
@@ -663,7 +664,7 @@ class PhotoCreator(object):
 
             self._logger.debug("Starting the camera now.")
             camera_worker = MrbPicWorker(maxlen=2, debug=self.debug)
-            with MrbCamera(
+            with mrbCamera(
                 camera_worker,
                 framerate=0.8,
                 shutter_speed=self.last_shutter_speed,
