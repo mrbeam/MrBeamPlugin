@@ -527,7 +527,7 @@ class Converter:
                             fr = int(settings["feedrate"])
                             passes = int(settings["passes"])
                             for p in range(0, passes):
-                                if settings.get("progressive", False):
+                                if passes > 1 and settings.get("progressive", False):
                                     f = round(fr * (1 - 0.5 * p / (passes - 1)))
                                 else:
                                     f = fr
