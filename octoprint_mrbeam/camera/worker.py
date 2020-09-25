@@ -1,3 +1,4 @@
+from collections import deque
 from definitions import SUCCESS_WRITE_RETVAL
 import cv2
 import io
@@ -9,34 +10,29 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 import numpy as np
 
 
-class MrbPicWorker(object):
+class MrbPicWorker(deque):
     """
-    The class that take care of buffering the pictures taken from the camera.
-    It can also do frame-by-frame work, but it could hurt recording speed (better
+    Circular raw I/O buffer designed for storing pictures.
+    It could also do frame-by-frame work, but it could hurt recording speed (better
     to split the work on a different thread)
     See "Advanced Recipies" in the PiCamera tutorials:
     https://picamera.readthedocs.io/en/release-1.13/recipes2.html
     """
 
-    def __init__(self, maxSize=3, debug=False):
-        self.images = []
+    def __init__(self, debug=False, *args, **kwargs):
+        deque.__init__(self, *args, **kwargs)
         self.firstImg = True
-        self.buffers = [io.BytesIO() for _ in range(maxSize)]
-        self.bufferIndex = 0
+        for _ in range(maxSize):
+            self.append(io.BytesIO())
         self.latest = None
         self.avg_roi_brightness = {}
         assert maxSize > 0
         self._maxSize = maxSize
-        self.times = []  # exposure time values
         self.busy = Event()
         self._logger = mrb_logger("mrbeam.camera.MrbPicWorker")
-        if debug:
-            self._logger.setLevel(logging.DEBUG)
-        else:
-            self._logger.setLevel(logging.WARNING)
 
     def currentBuf(self):
-        return self.buffers[self.bufferIndex]
+        return self[0]
 
     def flush(self):
         # Is called when the camera is done writing the whole image into the buffer
@@ -44,7 +40,7 @@ class MrbPicWorker(object):
         self.latest = cv2.imdecode(
             np.fromstring(self.currentBuf().getvalue(), np.int8), cv2.IMREAD_COLOR
         )
-        self.bufferIndex = (self.bufferIndex + 1) % self._maxSize
+        self.rotate()
         self.currentBuf().seek(0)
         self.currentBuf().truncate()
         self.avg_roi_brightness = brightness_result(self.latest)
@@ -67,7 +63,7 @@ class MrbPicWorker(object):
         """Saves the last image or the n-th last buffer"""
         # Unused atm
         assert 0 < n <= self._maxSize
-        f = io.open(path, "wb")
-        ret = f.write(self.buffers[-n])
-        f.close()
+        ret = None
+        with io.open(path, "wb") as f:
+            ret = f.write(self[-n])
         return ret

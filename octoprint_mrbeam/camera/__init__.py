@@ -14,32 +14,6 @@ from .definitions import *
 
 from octoprint_mrbeam.util.log import logtime, logme
 
-try:
-    import picamera
-
-    PICAMERA_AVAILABLE = True
-except (ImportError, OSError) as e:
-    PICAMERA_AVAILABLE = False
-    logging.getLogger("octoprint.plugins.mrbeam.util.camera").error(
-        "Could not import module 'mrbcamera'. Disabling camera integration. (%s: %s)",
-        e.__class__.__name__,
-        e,
-    )
-
-
-class Camera:
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def __init__(self, stopEvent=None, *args, **kw):
-        pass
-
-    @abstractmethod
-    def async_capture(self):
-        pass
-
-    pass
-
 
 def brightness_result(pic):
     """
