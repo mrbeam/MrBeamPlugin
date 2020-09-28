@@ -40,9 +40,7 @@ from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint_mrbeam.camera import exc as exc
 
 from octoprint_mrbeam.camera.mrbcamera import mrbCamera
-
-if PICAMERA_AVAILABLE:
-    from octoprint_mrbeam.camera.undistort import prepareImage, _getCamParams
+from octoprint_mrbeam.camera.undistort import prepareImage, _getCamParams
 from octoprint_mrbeam.camera.lens import BoardDetectorDaemon, FACTORY
 from octoprint_mrbeam.util import dict_merge, dict_map, get_thread, makedirs
 from octoprint_mrbeam.util.log import json_serialisor, logme
