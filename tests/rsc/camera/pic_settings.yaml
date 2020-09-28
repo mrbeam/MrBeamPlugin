@@ -1,45 +1,45 @@
 blur_factor_threshold: 20
 calibMarkers:
   NE:
-  - 1918
-  - 318
+    - 1918
+    - 318
   NW:
-  - 125
-  - 246
+    - 125
+    - 246
   SE:
-  - 1916
-  - 1428
+    - 1916
+    - 1428
   SW:
-  - 194
-  - 1478
+    - 194
+    - 1478
 calibration_updated: true
 cornersFromImage:
   NE:
-  - 1878
-  - 193
+    - 1878
+    - 193
   NW:
-  - 198
-  - 178
+    - 198
+    - 178
   SE:
-  - 1880
-  - 1490
+    - 1880
+    - 1490
   SW:
-  - 241
-  - 1534
+    - 241
+    - 1534
 hostname_KEY: MrBeam-7DBC
 marker2cornerVecs:
   NE:
-  - -40
-  - -125
+    - -40
+    - -125
   NW:
-  - 31
-  - -135
+    - 31
+    - -135
   SE:
-  - -37
-  - 61
+    - -37
+    - 61
   SW:
-  - 45
-  - 56
+    - 45
+    - 56
 markerSettings:
   hueMax:
     NE: 180

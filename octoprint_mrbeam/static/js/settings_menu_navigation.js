@@ -6,6 +6,7 @@ $(document).ready(function () {
             $(this).prev().addClass("prev");
         },
         function () {
-                $(this).prev().removeClass("prev");
-        });
+            $(this).prev().removeClass("prev");
+        }
+    );
 });
