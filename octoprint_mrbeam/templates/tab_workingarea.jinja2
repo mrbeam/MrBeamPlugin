@@ -648,7 +648,7 @@
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													
-													<div class="btn btn-mini scale_prop_btn scale_proportional" data-bind="click: $root.svgManualProportionalToggle($data, event)">
+													<div class="btn btn-mini btn-link scale_prop_btn scale_proportional" data-bind="event: { mousedown: $root.svgManualProportionalToggle($data, event)}">
 														<i class="icon-link" title="{{ _('proportional') }}"></i>
 														<i class="icon-unlink" title="{{ _('unproportional') }}"></i>
 													</div>
@@ -662,18 +662,13 @@
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																				blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-<!--													<i class="icon-resize-full" title="{{ _('scale') }}"></i>
-													<input class="decent_input scale" type="text" value="100%" data-bind="event: {
-																				keyup: function(d, event){ $root.svgManualScale($data, event); },
-																				blur: function(d, event){ $root.svgManualScale($data, event); }} "/>-->
-													<div class="btn-group action-buttons pull-right unit_toggler">
-														<div class="btn btn-mini" data-bind="click: $root.svgManualUnitToggle($data, event);">{{ _('mm') }}</div>
-														<div class="btn btn-mini" data-bind="click: $root.svgManualUnitToggle($data, event);">{{ _('%%') }}</div>
+													<div class=" pull-right unit_toggler" data-bind="click: $root.svgManualUnitToggle($data, event);">
+														<span class="unit_label">{{ _('mm') }}</span>
+														<span class="unit_label unit_label_switch"><div></div></span>
+														<span class="unit_label">{{ _('%%') }}</span>
 													</div>
+												</div><!-- /scale switch between mm and % --> 
 
-												</div>
-
-                                                <br/>
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },

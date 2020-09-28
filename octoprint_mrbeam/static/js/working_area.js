@@ -1233,6 +1233,7 @@ $(function(){
 			$('#'+data.id).toggleClass('show_percent');
 		};
 		self.svgManualProportionalToggle = function(data, event) {
+			event.preventDefault();
 			$(event.target).toggleClass('scale_proportional');
 		};
 		self.svgManualMultiply = function(data, event) {
