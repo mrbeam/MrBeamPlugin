@@ -1125,7 +1125,9 @@ $(function(){
 				previewId = previewId.previewId;
 			}
 			self.abortFreeTransforms();
-			snap.mbtransform.reset_transform('#'+previewId);
+			const selector = `#${previewId}`;
+			snap.mbtransform.reset_transform(selector);
+			self.svgTransformUpdate(snap.select(selector));
 		};
 
 		self.svgTransformUpdate = function(svg) {
@@ -1148,7 +1150,9 @@ $(function(){
 			$('#'+label_id+' .horizontal').val(`${horizontal.toFixed(1)} mm`);
 			$('#'+label_id+' .vertical').val(`${vertical.toFixed(1)} mm`);
 			$('#'+label_id+' .rotation').val(`${rot.toFixed(1)} °`);
-			$('#'+label_id+' .scale').val(`${(scalex*100).toFixed(1)} %, ${(scaley*100).toFixed(1)} %`);
+//			$('#'+label_id+' .scale').val(`${(scalex*100).toFixed(1)} %, ${(scaley*100).toFixed(1)} %`);
+			$('#'+label_id+' .horizontal_percent').val(`${(scalex*100).toFixed(1)} %`);
+			$('#'+label_id+' .vertical_percent').val(`${(scaley*100).toFixed(1)} %`);
 			self.check_sizes_and_placements();
 		};
 
@@ -1180,50 +1184,49 @@ $(function(){
 				self.check_sizes_and_placements();
 			}
 		};
-		self.svgManualScale = function(data, event) {
-			if (event.keyCode === 13 || event.type === 'blur') {
-				self.abortFreeTransforms();
-				var svg = snap.select('#'+data.previewId);
-				var newScale = parseFloat(event.target.value) / 100.0;
-				snap.mbtransform.manualTransform(svg, {scale: newScale});
-				self.check_sizes_and_placements();
-			}
-		};
-		self.svgManualMirror = function(data, event) {
-			if (event.type === 'click') {
-				self.abortFreeTransforms();
-				var svg = snap.select('#'+data.previewId);
-				var mirror = !svg.data('mirror');
-				snap.mbtransform.manualTransform(svg, {mirror: mirror});
-				self.check_sizes_and_placements();
-			}
-		};
+//		self.svgManualScale = function(data, event) {
+//			if (event.keyCode === 13 || event.type === 'blur') {
+//				self.abortFreeTransforms();
+//				var svg = snap.select('#'+data.previewId);
+//				var newScale = parseFloat(event.target.value) / 100.0;
+//				snap.mbtransform.manualTransform(svg, {scale: newScale});
+//				self.check_sizes_and_placements();
+//			}
+//		};
+//		self.svgManualMirror = function(data, event) {
+//			if (event.type === 'click') {
+//				self.abortFreeTransforms();
+//				var svg = snap.select('#'+data.previewId);
+//				var mirror = !svg.data('mirror');
+//				snap.mbtransform.manualTransform(svg, {mirror: mirror});
+//				self.check_sizes_and_placements();
+//			}
+//		};
 		self.svgManualWidth = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();
-				var svg = snap.select('#'+data.previewId);
-				const currentTransform = svg.mbtGetTransform();
-				var desiredW = parseFloat(event.target.value);
-				var currentW = svg.getBBox().w;
-				var globalScale = self.scaleMatrix().a;
-				var newRelativeScale = (desiredW / globalScale) / currentW;
-				var newScale = newRelativeScale * currentTransform.scalex;
-				snap.mbtransform.manualTransform(svg, {scale: newScale});
+				const svg = snap.select(`#${data.previewId}`);
+				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
+				let value = parseFloat(event.target.value);
+				if(event.target.classList.contains('unit_mm')){
+					snap.mbtransform.manualTransform(svg, {width: value, proportional: isProp });
+				} else if(event.target.classList.contains('unit_percent')){
+					snap.mbtransform.manualTransform(svg, {scalex: value/100.0, proportional: isProp });
+				}
 				self.check_sizes_and_placements();
 			}
 		};
 		self.svgManualHeight = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();
-				var svg = snap.select('#'+data.previewId);
-				const currentTransform = svg.mbtGetTransform();
-				var desiredH = parseFloat(event.target.value);
-				var currentH = svg.getBBox().h;
-				var globalScale = self.scaleMatrix().a;
-				var newRelativeScale = (desiredH / globalScale) / currentH;
-				var newScale = newRelativeScale * currentTransform.scaley;
-				snap.mbtransform.manualTransform(svg, {scale: newScale});
-				self.check_sizes_and_placements();
+				const svg = snap.select('#'+data.previewId);
+				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
+				let value = parseFloat(event.target.value);
+				if(event.target.classList.contains('unit_mm')){
+					snap.mbtransform.manualTransform(svg, {height: value, proportional: isProp });
+				} else if(event.target.classList.contains('unit_percent')){
+					snap.mbtransform.manualTransform(svg, {scaley: value/100.0, proportional: isProp });
+				}self.check_sizes_and_placements();
 			}
 		};
 		self.svgManualUnitToggle = function(data, event) {

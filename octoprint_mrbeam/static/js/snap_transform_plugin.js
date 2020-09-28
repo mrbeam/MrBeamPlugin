@@ -499,9 +499,34 @@
                 alpha = 0;
             }
             if(params.angle !== undefined && !isNaN(params.angle)) alpha = params.angle - self.session.rotate._alpha;
-			if(params.scale !== undefined && !isNaN(params.scale)){
-				scalex = params.scale / self.session.scale._m.a;
-				scaley = scalex;
+			
+			if(params.width !== undefined && !isNaN(params.width)){
+				scalex = params.width / bbox.width;
+				if(params.proportional){
+					scaley = scalex;
+				}
+			}
+			if(params.height !== undefined && !isNaN(params.height)){
+				scaley = params.height / bbox.height;
+				if(params.proportional){
+					scalex = scaley;
+				}
+			}
+//			if(params.scale !== undefined && !isNaN(params.scale)){
+//				scalex = params.scale / self.session.scale._m.a;
+//				scaley = scalex;
+//			}
+			if(params.scalex !== undefined && !isNaN(params.scalex)){
+				scalex = params.scalex / self.session.scale._m.a;
+				if(params.proportional){
+					scaley = scalex;
+				}
+			}
+			if(params.scaley !== undefined && !isNaN(params.scaley)){
+				scaley = params.scaley / self.session.scale._m.d;
+				if(params.proportional){
+					scalex = scaley;
+				}
 			}
 			if(params.mirror !== undefined) mirror =  params.mirror;
 
