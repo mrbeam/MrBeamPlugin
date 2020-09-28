@@ -21,13 +21,13 @@ class MrbPicWorker(deque):
 
     def __init__(self, debug=False, maxlen=2, *args, **kwargs):
         deque.__init__(self, maxlen=maxlen, *args, **kwargs)
-        self.firstImg = True
         assert maxlen > 0
         for _ in range(maxlen):
             self.append(io.BytesIO())
         self.latest = None
         self.avg_roi_brightness = {}
         self.busy = Event()
+        self.count = 0
         self._logger = mrb_logger("mrbeam.camera.MrbPicWorker")
 
     def currentBuf(self):
@@ -35,6 +35,8 @@ class MrbPicWorker(deque):
 
     def flush(self):
         # Is called when the camera is done writing the whole image into the buffer
+        # PiCamera.capture calls this automatically when it done
+        self.count += 1
         self.currentBuf().seek(0)
         self.latest = cv2.imdecode(
             np.fromstring(self.currentBuf().getvalue(), np.int8), cv2.IMREAD_COLOR

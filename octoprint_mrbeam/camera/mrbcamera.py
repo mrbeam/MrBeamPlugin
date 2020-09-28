@@ -58,15 +58,15 @@ class MrbCamera(CameraClass, BaseCamera):
         # TODO set sensor mode and framerate etc...
         # This is a bit hacky but it makes sure that we don't try using PiCamera in case it's not imported
         # might need to change if inheriting from multiple classes
-        BaseCamera.__init__(self, worker, shutter_speed=shutter_speed)
-        CameraClass.__init__(self, *args, **kwargs)
-        # PiCamera constructor does not take a worker or shutter_speed
-        # https://picamera.readthedocs.io/en/release-1.13/api_camera.html#picamera.PiCamera
-
         self._logger = mrb_logger(
             "octoprint.plugins.mrbeam.util.camera.mrbcamera", lvl=logging.DEBUG
         )
+        BaseCamera.__init__(self, worker, shutter_speed=shutter_speed)
+        # PiCamera constructor does not take a worker or shutter_speed
+        # https://picamera.readthedocs.io/en/release-1.13/api_camera.html#picamera.PiCamera
+
         if PICAMERA_AVAILABLE:
+            PiCamera.__init__(self, *args, **kwargs)
             self.sensor_mode = 2
             self.vflip = True
             self.hflip = True
@@ -74,6 +74,9 @@ class MrbCamera(CameraClass, BaseCamera):
             self.awb_mode = "auto"
             self.meter_mode = "matrix"
             self.start_preview()
+        else:
+            DummyCamera.__init__(self, worker, *args, **kwargs)
+
         # self.exposure_mode = ''
         self.stopEvent = stopEvent or Event()  # creates an unset event if not given
 
@@ -95,13 +98,15 @@ class MrbCamera(CameraClass, BaseCamera):
     def capture(self, output=None, format="jpeg", *args, **kwargs):
         if output is None:
             output = self.worker
-        if self._busy.locked():
-            raise MrbCameraError("Camera already busy taking a picture")
-        self._busy.acquire()
+        if PICAMERA_AVAILABLE:
+            if self._busy.locked():
+                raise MrbCameraError("Camera already busy taking a picture")
+            self._busy.acquire()
         try:
             CameraClass.capture(self, output, format=format, *args, **kwargs)
         finally:
-            self._busy.release()
+            if PICAMERA_AVAILABLE:
+                self._busy.release()
 
     def apply_best_shutter_speed(self):
         """

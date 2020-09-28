@@ -3,6 +3,7 @@
 from collections import deque
 import logging
 from threading import Thread, Lock, Event
+import time
 
 from exc import MrbCameraError
 
@@ -142,21 +143,29 @@ class BaseCamera(object):
 
 class DummyCamera(BaseCamera):
     from octoprint_mrbeam.camera.worker import MrbPicWorker
-
-    DEFAULT_PIC = settings().get(
-        ["mrbeam", "mock", "img_static"], defaults=settings().get(["webcam"])
-    )
-    # DEFAULT_PIC = DEFAULT_PIC or settings().get(["webcam"])
-    DEFAULT_FOLDER = settings().get(["mrbeam", "mock", "img_folder"])
+    from os.path import dirname, basename, join, split, realpath
 
     def __init__(self, *args, **kwargs):
         BaseCamera.__init__(self, *args, **kwargs)
+        path = dirname(realpath(__file__))
+        CAM_DIR = join(path, "rsc", "camera")
+        try:
+            self.def_pic = settings().get(
+                ["mrbeam", "mock", "img_static"], defaults=settings().get(["webcam"])
+            )
+            self.def_folder = settings().get(["mrbeam", "mock", "img_folder"])
+        except ValueError:
+            sett = settings(init=True)
+            self.def_pic = sett.get(
+                ["mrbeam", "mock", "img_static"], defaults=sett.get(["webcam"])
+            )
+            self.def_folder = sett.get(["mrbeam", "mock", "img_folder"])
         self._input_files = deque([])
-        if DEFAULT_FOLDER:
-            for path in DEFAULT_FOLDER:
+        if self.def_folder:
+            for path in self.def_folder:
                 self._input_files.append(path)
-        elif DEFAULT_PIC:
-            self._input_files.append(path)
+        elif self.def_pic:
+            self._input_files.append(self.def_pic)
         else:
             raise MrbCameraError(
                 "No picture paths have been defined for the dummy camera."
@@ -164,17 +173,26 @@ class DummyCamera(BaseCamera):
 
     def capture(self, output=None, format="jpeg", *args, **kwargs):
         """Mocks the behaviour of picamera.PiCamera.capture, with the caviat that"""
+        import numpy as np
+        import cv2
+
         if self._busy.locked():
             raise MrbCameraError("Camera already busy taking a picture")
         self._busy.acquire()
+        if self._shutter_speed and self._shutter_speed > 0:
+            time.sleep(1 / _shutter_speed)
+        else:
+            time.sleep(0.3)
         if not output:
             output = self.worker
-        _input = self.input_files[0]
+        _input = self._input_files[0]
         if isinstance(output, basestring):
             os.copy2(_input, output)
         elif "write" in dir(output):
             with open(_input, "rb") as f:
-                output.write(f)
+                output.write(f.read())
+            if "flush" in dir(output):
+                output.flush()
         else:
             raise MrbCameraError(
                 "Nothing to write into - either output or the worker are no a path or writeable objects"

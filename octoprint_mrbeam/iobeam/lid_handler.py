@@ -374,10 +374,7 @@ class LidHandler(object):
         self.getRawImg()
         self.lensCalibrationStarted = True
         self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
-        self._logger.warning("EVENT LENS CALIBRATION STARTING")
-        self._logger.warning(
-            "Lens calibration Started : %s" % self.lensCalibrationStarted
-        )
+        self._logger.info("Lens calibration Started : %s" % self.lensCalibrationStarted)
 
     def getRawImg(self):
         # Sends the current state to the front end
@@ -406,7 +403,7 @@ class LidHandler(object):
                 self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
             imgName = self.boardDetectorDaemon.next_tmp_img_name()
             self._photo_creator.saveRaw = imgName
-            self._logger.warning("Saving new picture %s" % imgName)
+            self._logger.info("Saving new picture %s" % imgName)
             self.takeNewPic()
             imgPath = path.join(self.debugFolder, imgName)
             # Tell the boardDetector to listen for this file
@@ -765,9 +762,6 @@ class PhotoCreator(object):
             [4 * DEFAULT_MM_TO_PX, LOW_QUALITY],
         ]
         pic_qual_index = 0
-        self._logger.warning(
-            "Waiting in case camera is busy: cam._busy.locked %s", cam._busy.locked()
-        )
         # waste the first picture : doesn't matter how long we wait to warm up, the colors will be off.
         cam.wait()
         while self._plugin.lid_handler._lid_closed:
@@ -784,10 +778,6 @@ class PhotoCreator(object):
             )
             self.last_markers = None
 
-        # The lid didn't open during waiting time
-        self._logger.warning(
-            "Start async capture: cam._busy.locked %s", cam._busy.locked()
-        )
         th = cam.async_capture()
         saveNext = False  # Lens calibration : save the next picture instead of this one
         min_pix_amount = self._settings.get(["cam", "markerRecognitionMinPixel"])
