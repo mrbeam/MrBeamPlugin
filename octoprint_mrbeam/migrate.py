@@ -178,6 +178,12 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.disable_wifi_power_management()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    "0.7.7",
+                    equal_ok=False,
+                ):
+                    rm_camera_calibration_repo()
 
                 # migrations end
 
@@ -698,3 +704,15 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 profile_id,
                 default_profile,
             )
+
+
+def rm_camera_calibration_repo():
+    """Delete the legacy camera calibration and detection repo."""
+    from octoprint.settings import settings
+
+    sett = settings()  # .octoprint/config.yaml
+    sett.remove(
+        ["plugins", "softwareupdate", "check_prviders", "mb-camera-calibration"]
+    )
+    sett.remove(["plugins", "softwareupdate", "checks", "mb-camera-calibration"])
+    sett.save()
