@@ -1,59 +1,74 @@
 #!/usr/bin/env python
 
 from collections import deque
-from contextlib import contextmanager
+import logging
 from threading import Thread, Lock, Event
 
 from exc import MrbCameraError
 
 from octoprint.settings import settings
+from .definitions import (
+    DEFAULT_SHUTTER_SPEED,
+    TARGET_AVG_ROI_BRIGHTNESS,
+    BRIGHTNESS_TOLERANCE,
+)
+from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util import get_thread
 
 # global camera
 __camera__ = None
 __camera_lock__ = Lock()
 
 
-def camera():
+def camera(*args, **kwargs):
     """Make sure we only use one camera element at a time."""
     global __camera__
     if not isinstance(__camera__, Camera):
-        __camera__ = DummyCamera()
+        __camera__ = DummyCamera(*args, **kwargs)
     return __camera__
 
 
 class BaseCamera(object):
     """Base Camera class for the plugin."""
 
-    @contextmanager
-    def __init__(self, worker, shutter_speed=None, *args, **kwargs):
+    # @contextmanager
+    def __init__(self, worker, shutter_speed=0, *args, **kwargs):
         """
         :param worker: The pictures are recorded into this
         :type worker: str, "writable", filename or class with a write function (see PiCamera.capture input)
         """
+        self._busy = Lock()  # When the camera is taking a picture
+        # Thread that takes the picture asynchronously
+        self._logger = mrb_logger(__name__, lvl=logging.DEBUG)
+        self._async_capture_thread = None
+        self.worker = worker
+        self._shutter_speed = shutter_speed
+        self._capture_args = (self.worker,)
+        self._capture_kwargs = dict(format="jpeg")
+        self.__closed = False
+
+    def __enter__(self):
         global __camera_lock__
         if __camera_lock__.locked():
             raise MrbCameraError("Camera already in use in an other thread")
         __camera_lock__.acquire()
+        self._logger.info("Starting the camera")
 
-        self._busy = Event()  # When the camera is taking a picture
-        self._async_capture_thread = (
-            None  # Thread that takes the picture asynchronously
-        )
-        self.worker = worker
-        self.shutter_speed = shutter_speed
-        self._capture_args = (self.worker,)
-        self._capture_kwargs = dict(format="jpeg")
+    def __exit__(self, exc_type, exc_value, traceback):
+        global __camera_lock__
+        self._logger.info("Stopping the camera")
+        __camera_lock__.release()
+        self.__closed = True
 
-        try:
-            yield self
-        finally:
-            __camera_lock__.release()
+    def close(self):
+        self.__closed = True
 
     def capture(self, output=None, *args, **kwargs):
         """Take a picture immediatly and return the picture object
 
-        Should set the ``self._busy`` event during the capture
+        Should acquire the ``self._busy`` lock during the capture
         """
+        self._logger.error("capturing from BaseCamera")
         raise NotImplementedError
 
     def async_capture(self, **kwargs):
@@ -66,21 +81,63 @@ class BaseCamera(object):
         :return:
         :rtype:
         """
+        if self.__closed:
+            raise MrbCameraError("The camera is closed.")
         _args = self._capture_args
         _kwargs = self._capture_kwargs
         _kwargs.update(kwargs)
-        t = Thread(target=self.capture, args=_args, kwargs=_kwargs)
-        self._async_capture_thread = t
-        t.start()
-        return t
+        self._async_capture_thread = get_thread(daemon=True,)(
+            self.capture
+        )(*_args, **_kwargs)
+        return self._async_capture_thread
 
     def wait(self, timeout=None):
         """Wait until the camera is available again to take a picture"""
-        return self._busy.wait(timeout=timeout)
+        self._busy.acquire()
+        self._busy.release()
 
     def lastPic(self):
         """Returns the last picture taken"""
         return self.worker.latest
+
+    def compensate_shutter_speed(self, img):
+        # self._logger.info(
+        # 	"sensor : "+ str(self.sensor_mode)+
+        # 	"\n iso : "+ str(self.iso)+
+        # 	"\n gain : "+ str(self.analog_gain)+
+        # 	"\n digital gain : "+ str(self.digital_gain)+
+        # 	"\n brightness : "+ str(self.worker.avg_roi_brightness)+
+        # 	"\n exposure_speed : "+ str(self.exposure_speed))
+        min_bright = TARGET_AVG_ROI_BRIGHTNESS - BRIGHTNESS_TOLERANCE
+        max_bright = TARGET_AVG_ROI_BRIGHTNESS + BRIGHTNESS_TOLERANCE
+        brightness = self.worker.avg_roi_brightness
+        _minb, _maxb = min(brightness.values()), max(brightness.values())
+        compensate = 1
+        self._logger.debug(
+            "Brightnesses: \nMin %s  Max %s\nCurrent %s"
+            % (min_bright, max_bright, brightness)
+        )
+        if _minb < min_bright and _maxb > max_bright:
+            self._logger.debug("Outside brightness bounds.")
+            compensate = float(max_bright) / _maxb
+        elif _minb >= min_bright and _maxb > max_bright:
+            self._logger.debug("Brghtness over compensated")
+            compensate = float(max_bright) / _maxb
+        elif _minb < min_bright and _maxb <= max_bright:
+            self._logger.debug("Brightness under compensated")
+            compensate = float(min_bright) / _minb
+        else:
+            return
+        # change the speed of compensation
+        #     smoothe > 1 : aggressive, smoothe < 1 : slow
+        #     /!\ Can add instability in the case of smoothe > 1
+        # smoothe = 1.4/2
+        # compensate = compensate ** smoothe
+        if self.shutter_speed == 0 and self.exposure_speed > 0:
+            self.shutter_speed = self.exposure_speed
+        elif self.shutter_speed == 0:
+            self.shutter_speed = DEFAULT_SHUTTER_SPEED
+        self.shutter_speed = int(self.shutter_speed * compensate)
 
 
 class DummyCamera(BaseCamera):
@@ -107,9 +164,9 @@ class DummyCamera(BaseCamera):
 
     def capture(self, output=None, format="jpeg", *args, **kwargs):
         """Mocks the behaviour of picamera.PiCamera.capture, with the caviat that"""
-        if self._busy.is_set():
+        if self._busy.locked():
             raise MrbCameraError("Camera already busy taking a picture")
-        self._busy.set()
+        self._busy.acquire()
         if not output:
             output = self.worker
         _input = self.input_files[0]
@@ -122,5 +179,5 @@ class DummyCamera(BaseCamera):
             raise MrbCameraError(
                 "Nothing to write into - either output or the worker are no a path or writeable objects"
             )
-        self._busy.clear()
+        self._busy.release()
         self._input_files.rotate()

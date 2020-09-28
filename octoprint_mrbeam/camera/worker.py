@@ -27,7 +27,6 @@ class MrbPicWorker(deque):
             self.append(io.BytesIO())
         self.latest = None
         self.avg_roi_brightness = {}
-        self._maxSize = maxSize
         self.busy = Event()
         self._logger = mrb_logger("mrbeam.camera.MrbPicWorker")
 
@@ -60,9 +59,9 @@ class MrbPicWorker(deque):
         self.currentBuf().write(buf)
 
     def saveImg(self, path, n=1):
-        """Saves the last image or the n-th last buffer"""
+        """Saves the last image or the n-th buffer starting from the end"""
         # Unused atm
-        assert 0 < n <= self._maxSize
+        assert 0 < n <= self.maxlen
         ret = None
         with io.open(path, "wb") as f:
             ret = f.write(self[-n])

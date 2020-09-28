@@ -578,7 +578,7 @@ class PhotoCreator(object):
         self.cam = None
         self.analytics = None
 
-        _level = logging.DEBUG if debug else logging.INFO
+        _level = logging.DEBUG  # if debug else logging.INFO
         self._logger = mrb_logger(
             "octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", lvl=_level
         )
@@ -671,6 +671,7 @@ class PhotoCreator(object):
                 resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                 stopEvent=self.stopEvent,
             ) as self.cam:
+                self._logger.info("CAMERA : %s", self.cam)
                 try:
                     self.serve_pictures(
                         self.cam,
@@ -748,17 +749,10 @@ class PhotoCreator(object):
         :rtype: NoneType
         """
 
-        cam.start_preview()
         time.sleep(1.2)  # camera warmup + prevent quick switch to pic capture
 
         session_details = blank_session_details()
         self._front_ready.set()
-        try:
-            cam.start()  # starts capture to the cam.worker
-        except exc.CameraConnectionException as e:
-            self._logger.exception(" %s, %s", e.__class__.__name__, e)
-            cam.stop(1)
-            raise
         # --- Decide on the picture quality to give to the user and whether the pic is different ---
         prev = None  # previous image
         nb_consecutive_similar_pics = 0
@@ -771,6 +765,9 @@ class PhotoCreator(object):
             [4 * DEFAULT_MM_TO_PX, LOW_QUALITY],
         ]
         pic_qual_index = 0
+        self._logger.warning(
+            "Waiting in case camera is busy: cam._busy.locked %s", cam._busy.locked()
+        )
         # waste the first picture : doesn't matter how long we wait to warm up, the colors will be off.
         cam.wait()
         while self._plugin.lid_handler._lid_closed:
@@ -788,7 +785,10 @@ class PhotoCreator(object):
             self.last_markers = None
 
         # The lid didn't open during waiting time
-        cam.async_capture()
+        self._logger.warning(
+            "Start async capture: cam._busy.locked %s", cam._busy.locked()
+        )
+        th = cam.async_capture()
         saveNext = False  # Lens calibration : save the next picture instead of this one
         min_pix_amount = self._settings.get(["cam", "markerRecognitionMinPixel"])
         pic_counter = 0
@@ -807,7 +807,11 @@ class PhotoCreator(object):
                 pic_settings = get_corner_calibration(path_to_pic_settings)
                 cam_params = _getCamParams(path_to_lens_calib)
                 self.forceNewPic.set()
+            self._logger.debug(
+                "Waiting for async capture: cam._busy.locked %s", cam._busy.locked()
+            )
             cam.wait()  # waits until the next picture is ready
+            # self._logger.warning("result : %s", th.get())
             if self.stopping:
                 break
 
@@ -1011,7 +1015,6 @@ class PhotoCreator(object):
                 markers=self.last_markers, shutter_speed=self.last_shutter_speed
             )
 
-        cam.stop_preview()
         if session_details["num_pics"] > 0:
             session_details.update(
                 {
