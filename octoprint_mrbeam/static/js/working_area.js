@@ -1229,6 +1229,9 @@ $(function(){
 		self.svgManualUnitToggle = function(data, event) {
 			$('#'+data.id).toggleClass('show_percent');
 		};
+		self.svgManualProportionalToggle = function(data, event) {
+			$(event.target).toggleClass('scale_proportional');
+		};
 		self.svgManualMultiply = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				const colsRowsStr = event.target.value;

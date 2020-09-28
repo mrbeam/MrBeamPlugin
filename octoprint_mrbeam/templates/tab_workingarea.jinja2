@@ -648,7 +648,10 @@
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													
-													<div class="btn btn-mini" data-bind="click: function() {  }"><i class="icon-lock" title="{{ _('proportional') }}"></i></div>
+													<div class="btn btn-mini scale_prop_btn scale_proportional" data-bind="click: $root.svgManualProportionalToggle($data, event)">
+														<i class="icon-link" title="{{ _('proportional') }}"></i>
+														<i class="icon-unlink" title="{{ _('unproportional') }}"></i>
+													</div>
 													
 													<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
 													<input class="decent_input vertical unit_mm" type="text" value="? mm"

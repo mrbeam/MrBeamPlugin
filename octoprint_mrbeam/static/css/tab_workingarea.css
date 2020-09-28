@@ -114,6 +114,19 @@
     box-shadow: none;
 }
 
+/** scale proportional **/
+#working_area_files .entry .scale_prop_btn>i {pointer-events: none;}
+#working_area_files .entry .scale_prop_btn:not(.scale_proportional)>i.icon-link,
+#working_area_files .entry .scale_prop_btn.scale_proportional>i.icon-unlink { 
+	display:none 
+}
+#working_area_files .entry .scale_prop_btn.scale_proportional>i.icon-link,
+#working_area_files .entry .scale_prop_btn:not(.scale_proportional)>i.icon-unlink {
+	display: inline;
+}
+#working_area_files .entry .scale_prop_btn>i::before {
+    transform: rotate(-45deg);
+}
 
 #working_area_files .entry {
   /*height: 30px;*/
