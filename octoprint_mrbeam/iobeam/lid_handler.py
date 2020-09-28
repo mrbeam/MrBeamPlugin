@@ -27,7 +27,6 @@ from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img
 from octoprint_mrbeam.camera.definitions import TMP_RAW_FNAME_RE, STATE_SUCCESS
 from octoprint_mrbeam.camera.definitions import (
     QD_KEYS,
-    PICAMERA_AVAILABLE,
     LEGACY_STILL_RES,
     MAX_OBJ_HEIGHT,
     CAMERA_HEIGHT,
@@ -96,20 +95,16 @@ class LidHandler(object):
         self.board_calibration_number_pics_taken_in_session = 0
         self.saveRawImgThread = None
 
-        if PICAMERA_AVAILABLE:
-            self.imagePath = (
-                self._settings.getBaseFolder("uploads")
-                + "/"
-                + self._settings.get(["cam", "localFilePath"])
-            )
-            makedirs(self.imagePath, parent=True)
-            makedirs(self.debugFolder)
-            self._photo_creator = PhotoCreator(
-                self._plugin, self._plugin_manager, self.imagePath, debug=False
-            )
-        else:
-            self._photo_creator = None
-            self.imagePath = None
+        self.imagePath = (
+            self._settings.getBaseFolder("uploads")
+            + "/"
+            + self._settings.get(["cam", "localFilePath"])
+        )
+        makedirs(self.imagePath, parent=True)
+        makedirs(self.debugFolder)
+        self._photo_creator = PhotoCreator(
+            self._plugin, self._plugin_manager, self.imagePath, debug=False
+        )
         self.refresh_pic_settings = (
             Event()
         )  # TODO placeholder for when we delete PhotoCreator
@@ -647,13 +642,6 @@ class PhotoCreator(object):
         try:
             if self.is_initial_calibration:
                 self.save_debug_images = True
-
-            if not PICAMERA_AVAILABLE:
-                self._logger.warn(
-                    "Camera disabled. Not all required modules could be loaded at startup. "
-                )
-                self.stopEvent.set()
-                return
 
             self.last_markers, self.last_shutter_speed = self.load_camera_settings()
 
