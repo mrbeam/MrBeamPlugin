@@ -141,11 +141,13 @@ class BaseCamera(object):
         self.shutter_speed = int(self.shutter_speed * compensate)
 
 
-class DummyCamera(BaseCamera):
-    from octoprint_mrbeam.camera.worker import MrbPicWorker
-    from os.path import dirname, basename, join, split, realpath
+from octoprint_mrbeam.camera.worker import MrbPicWorker
 
+
+class DummyCamera(BaseCamera):
     def __init__(self, *args, **kwargs):
+        from os.path import dirname, basename, join, split, realpath
+
         BaseCamera.__init__(self, *args, **kwargs)
         path = dirname(realpath(__file__))
         CAM_DIR = join(path, "rsc", "camera")

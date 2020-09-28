@@ -16,10 +16,10 @@ CAM_DIR = join(path, "rsc", "camera")
 @pytest.mark.datafiles(
     join(CAM_DIR, "raw.jpg"),
 )
-def test_normal_use():
+def test_normal_use(datafiles):
     sett.set(
         ["mrbeam", "mock", "img_static"],
-        "/home/axel/mrbeam/plugin/tests/rsc/camera/raw.jpg",
+        str(datafiles / "raw.jpg"),
         force=True,
     )
     worker = MrbPicWorker()
