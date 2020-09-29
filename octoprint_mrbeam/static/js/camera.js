@@ -18,7 +18,7 @@ $(function () {
             SE: gettext("Bottom right"),
         };
 
-        self.needsCalibration = ko.observable(false);
+        self.needsCornerCalibration = ko.observable(false);
 
         self.rawUrl = "/downloads/files/local/cam/debug/raw.jpg"; // TODO get from settings
         self.undistortedUrl =
@@ -212,7 +212,7 @@ $(function () {
         };
 
         self._needCalibration = function (val) {
-            if ((val === undefined || val) && !self.needsCalibration()) {
+            if ((val === undefined || val) && !self.needsCornerCalibration()) {
                 new PNotify({
                     title: gettext("Corner Calibration needed"),
                     text: gettext(
@@ -223,8 +223,8 @@ $(function () {
                     hide: false,
                 });
             }
-            if (val !== undefined) self.needsCalibration(val);
-            else self.needsCalibration(true);
+            if (val !== undefined) self.needsCornerCalibration(val);
+            else self.needsCornerCalibration(true);
         };
 
         self.loadImage = function (url) {

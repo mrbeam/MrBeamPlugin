@@ -65,7 +65,8 @@ $(function () {
             return (
                 self.readyToLaser.lid_fully_open() &&
                 self.statusOnlyOperational() &&
-                self.fourMarkersFound()
+                self.fourMarkersFound() &&
+                !self.needsCornerCalibration()
             ); // This already includes the other two, but just to see it more clear
         });
 
