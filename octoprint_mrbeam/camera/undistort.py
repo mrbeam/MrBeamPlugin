@@ -210,6 +210,9 @@ def prepareImage(
     # load pic_settings json
     if pic_settings is None:
         return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
+    if need_corner_calibration(_pic_settings):
+        logger.warning(ERR_NEED_CALIB)
+        return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
     workspaceCorners = corners.add_deltas(
         markers, pic_settings, do_undistortion, cam_matrix, cam_dist, new_mtx=dest_mtx
@@ -499,8 +502,6 @@ def _getCamParams(path_to_params_file):
             )
     return valDict
 
-
-# def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

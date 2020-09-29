@@ -139,6 +139,16 @@ def get_corner_calibration(path):
         return None
 
 
+def need_corner_calibration(pic_settings):
+    # pic settings : path (str) or dict, for now just dict
+    if pic_settings is None:
+        return True
+    if get_deltas_and_refs(pic_settings) is None:
+        return True
+    else:
+        return False
+
+
 def get_deltas_and_refs(
     settings,
     undistorted=False,
