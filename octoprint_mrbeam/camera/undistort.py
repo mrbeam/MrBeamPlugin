@@ -210,7 +210,7 @@ def prepareImage(
     # load pic_settings json
     if pic_settings is None:
         return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
-    if need_corner_calibration(_pic_settings):
+    if corners.need_corner_calibration(pic_settings):
         logger.warning(ERR_NEED_CALIB)
         return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
