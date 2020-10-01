@@ -512,6 +512,20 @@ class LidHandler(object):
             self.boardDetectorDaemon.start()
 
         self.boardDetectorDaemon.saveCalibration()
+        # Remove the lens distorted corner calibration keys
+        pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
+        pic_settings = corners.get_corner_calibration(pic_settings_path)
+        camera.corners.write_corner_calibration(
+            pic_settings_path,
+            rm_undidtorted_keys(
+                pic_settings, factory=self._plugin.calibration_tool_mode
+            ),
+        )
+        if need_corner_calibration(pic_settings):
+            self._logger.warning(ERR_NEED_CALIB)
+            self._plugin_manager.send_plugin_message(
+                "mrbeam", dict(need_camera_calibration=True)
+            )
         return True
 
     def revert_factory_lens_calibration(self):

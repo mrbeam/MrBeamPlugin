@@ -73,10 +73,10 @@ $(function () {
             lens_calibration_done: {
                 title: gettext("Lens Calibration Over"),
                 text: gettext(
-                    "A new lens calibration file has been created and is now being used. Please cancel the Lens Calibration to go back to using the device normally."
+                    "A new lens calibration file has been created and is now being used."
                 ),
                 type: "success",
-                hide: true,
+                hide: false,
             },
         };
 

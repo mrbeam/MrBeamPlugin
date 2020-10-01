@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# from typing import Mapping
+from collections import Mapping
 import yaml
 
 from .definitions import (
@@ -89,8 +89,7 @@ def save_corner_calibration(
 
     # transform dict
     for new_ in [newCorners, newMarkers]:
-        # assert isinstance(new_, Mapping)
-        assert isinstance(new_, dict)
+        assert isinstance(new_, Mapping)
         assert all(qd in new_.keys() for qd in QD_KEYS)
     try:
         with open(path, "r") as f:
@@ -118,19 +117,28 @@ def save_corner_calibration(
     ] = True  # DEPRECATED but Necessary for legacy algo
     if hostname:
         pic_settings["hostname_KEY"] = hostname
+    write_corner_calibration(pic_settings, path)
 
-    _logger.debug("picSettings new to save: {}".format(pic_settings))
+
+def write_corner_calibration(pic_settings, path):
+    assert isinstance(pic_settings, Mapping)
+    _logger.debug("Saving new corner calibration: {}".format(pic_settings))
     with open(path, "wb") as f:
         yaml.safe_dump(pic_settings, f, indent="  ", allow_unicode=True)
     _logger.info("New corner calibration has been saved")
 
 
-def get_corner_calibration(path):
-    """Returns the corner calibration written to pic_settings"""
-    if not isfile(path) or os.stat(path).st_size == 0:
+def get_corner_calibration(pic_settings):
+    """
+    Returns the corner calibration written to pic_settings
+    If given a dict, assumes this is already the pic_setings.
+    """
+    if insinstance(pic_settings, Mapping):
+        return pic_settings
+    elif not isfile(pic_settings) or os.stat(pic_settings).st_size == 0:
         return None
     try:
-        with open(path) as yaml_file:
+        with open(pic_settings) as yaml_file:
             return yaml.safe_load(yaml_file)
     except:
         _logger.info(
@@ -255,7 +263,7 @@ def get_deltas_and_refs(
 
 
 def get_deltas(*args, **kwargs):
-    """Wrapper for get_daltas_and_refs that only returns the deltas."""
+    """Wrapper for get_deltas_and_refs that only returns the deltas."""
     res = get_deltas_and_refs(*args, **kwargs)
     if res is not None:
         deltas, _, _ = res
@@ -285,6 +293,21 @@ def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
             return None
         else:
             return {qd: markers[qd] + deltas[qd] for qd in QD_KEYS}
+
+
+def rm_undidtorted_keys(pic_settings, factory=False):
+    """
+    Remove the keys and values for the undistorted marker/arrow
+    positions saved during the corner calibration.
+    """
+    pic_settings = get_corner_calibration(pic_settings)
+    if factory:
+        keys = [FACT_UNDIST_CALIB_MARKERS_KEY, FACT_UNDIST_CORNERS_KEY]
+    else:
+        keys = [UNDIST_CALIB_MARKERS_KEY, UNDIST_CORNERS_KEY]
+    for k in keys:
+        if k in pic_settings.keys():
+            pic_settings.pop(k)
 
 
 def _isValidQdDict(qdDict):
