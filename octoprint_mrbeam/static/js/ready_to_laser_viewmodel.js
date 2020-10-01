@@ -4,6 +4,9 @@
 $(function () {
     function ReadyToLaserViewModel(params) {
         var self = this;
+
+        self.ESTIMATED_DURATION_PLACEHOLDER = " ?";
+
         self.loginState = params[0];
         self.state = params[1];
         self.laserCutterProfiles = params[2];
@@ -24,7 +27,10 @@ $(function () {
 
         self.is_pause_mode = ko.observable(false);
 
-        self.estimated_duration = ko.observable(null);
+        self.jobTimeEstimationString = ko.observable(
+            self.ESTIMATED_DURATION_PLACEHOLDER
+        );
+        self.jobTimeEstimationCalculated = ko.observable(false);
 
         self.DEBUG = false;
 
@@ -32,6 +38,10 @@ $(function () {
             // I think this should already be done in on Startup()
             // But I do not want to change it  shortly before a rlease.
             self.dialogElement = $("#ready_to_laser_dialog");
+
+            $("#laser_button").on("click", function () {
+                self.resetJobTimeEstimation();
+            });
 
             /**
              * OneButton
@@ -178,17 +188,22 @@ $(function () {
             self.gcodeFile = gcodeFile;
         };
 
+        self.resetJobTimeEstimation = function () {
+            self.jobTimeEstimationString(self.ESTIMATED_DURATION_PLACEHOLDER);
+            self.jobTimeEstimationCalculated(false);
+        };
+
         self.formatJobTimeEstimation = function (seconds) {
             seconds = Number(seconds);
             if (seconds < 0) {
-                self.estimated_duration("");
+                self.resetJobTimeEstimation();
             } else {
                 let hours = Math.floor(seconds / 3600);
                 let minutes = Math.floor((seconds % 3600) / 60);
                 let duration;
 
                 if (hours === 0) {
-                    if (minutes == 1) {
+                    if (minutes === 1) {
                         duration = "" + minutes + " " + gettext("minute");
                     } else {
                         duration = "" + minutes + " " + gettext("minutes");
@@ -205,7 +220,8 @@ $(function () {
                     duration = hours + ":" + minutes + " " + gettext("hours");
                 }
 
-                self.estimated_duration("  ~ " + duration);
+                self.jobTimeEstimationString("  ~ " + duration);
+                self.jobTimeEstimationCalculated(true);
             }
         };
 
