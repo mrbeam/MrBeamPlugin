@@ -17,6 +17,7 @@ _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
 
 sw_update_config = dict()
 
+# Commented constants are kept in case we update more packages from the virtualenv
 # GLOBAL_PY_BIN = "/usr/bin/python2.7"
 # VENV_PY_BIN = sys.executable
 GLOBAL_PIP_BIN = "/usr/local/bin/pip"
