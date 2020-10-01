@@ -15,6 +15,7 @@
                     {% if laserhead_serial %}
                         <div><strong>{{ _('Laser head') }}:</strong> {{ laserhead_serial }}</div>
                     {% endif %}
+                    {% if mac_addrs %}
                     <div><strong>{{ _('Network interfaces') }}:</strong>
 						<ul style="list-style-type: none;">
 							{% for ifc, mac in mac_addrs.iteritems() %}
@@ -22,6 +23,7 @@
 							{% endfor %}
 						</ul>
 					</div>
+                    {% endif %}
                 </ul>
             </div>
         </div>
