@@ -141,12 +141,22 @@ def get_corner_calibration(path):
 
 def need_corner_calibration(pic_settings):
     # pic settings : path (str) or dict, for now just dict
+    return all(
+        [
+            not calibration_available(pic_settings, undistorted)
+            for undistorted in (True, False)
+        ]
+    )
+
+
+def calibration_available(pic_settings, undistorted):
+    """
+    Is there a calibration value for the markers for
+    the raw or for undistorted picture?
+    """
     if pic_settings is None:
-        return True
-    if get_deltas_and_refs(pic_settings) is None:
-        return True
-    else:
         return False
+    return get_deltas_and_refs(pic_settings, undistorted) is not None
 
 
 def get_deltas_and_refs(
