@@ -104,13 +104,13 @@
         </li>
         <div style="margin-top:1em;" data-bind="visible: lensCalibrationActive()">
             <button class="btn btn-primary"
-                    data-bind="click: saveLensCalibrationData,
-                               visible: hasMinBoardsFound(),
-                           enable: !lensCalibrationBusy()">
+                    data-bind="click: saveLensCalibrationData, visible: hasMinBoardsFound(), enable: !lensCalibrationBusy()">
                 <!-- " && !lensCalibrationComplete()"> TODO lens calibration data remembers which pictures has beem used with it -->
-                {{ _('Create a new Calibration File') }}</button>
+                {{ _('Save Calibration') }}
+            </button>
             <button class="btn btn-default" data-bind="click: abortLensCalibration">
-                {{ _('Cancel') }}</button>
+                {{ _('Cancel') }}
+            </button>
         </div>
     </ol>
 </div>

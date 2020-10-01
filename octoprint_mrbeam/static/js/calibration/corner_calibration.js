@@ -297,6 +297,8 @@ $(function () {
                 self._saveMarkersError,
                 "POST"
             );
+
+            self.resetView();
         };
 
         self.resetView = function () {
