@@ -673,7 +673,6 @@ class PhotoCreator(object):
                 resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                 stopEvent=self.stopEvent,
             ) as self.cam:
-                self._logger.info("CAMERA : %s", self.cam)
                 try:
                     self.serve_pictures(
                         self.cam,
