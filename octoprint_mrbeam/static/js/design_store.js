@@ -1,7 +1,7 @@
 $(function () {
-    function DesignStore(params) {
+    function DesignStoreViewModel(params) {
         let self = this;
-        window.mrbeam.viewModels["designStore"] = self;
+        window.mrbeam.viewModels["designStoreViewModel"] = self;
 
         self.DESIGN_STORE_IFRAME_SRC =
             "https://design-store-269610.appspot.com"; // Don't write a "/" at the end!!
@@ -16,6 +16,21 @@ $(function () {
             if (window.mrbeam.isDev() || window.mrbeam.isBeta()) {
                 self.prepareDesignStoreTab();
             }
+        };
+
+        self.getEmail = function () {
+            return (
+                self.loginState.currentUser().settings.mrbeam
+                    .design_store_email || self.loginState.username()
+            );
+        };
+
+        self.getAuthToken = function () {
+            return (
+                self.loginState.currentUser().settings.mrbeam
+                    .design_store_auth_token ||
+                self.loginState.currentUser().settings.mrbeam.user_token
+            );
         };
 
         self.prepareDesignStoreTab = function () {
@@ -75,12 +90,9 @@ $(function () {
             $("#design_store_offline_placeholder").hide();
 
             let userData = {
-                email:
-                    self.settings.settings.plugins.mrbeam.dev.design_store_email() ||
-                    self.loginState.username(),
+                email: self.getEmail(),
                 serial: MRBEAM_SERIAL,
-                user_token: self.loginState.currentUser().settings.mrbeam
-                    .user_token,
+                user_token: self.getAuthToken(),
                 version: BEAMOS_VERSION,
                 language: MRBEAM_LANGUAGE,
             };
@@ -97,12 +109,14 @@ $(function () {
         };
 
         self.saveTokenInUserSettings = function (token) {
-            let oldToken = self.loginState.currentUser().settings.mrbeam
-                .user_token;
+            let oldToken = self.getAuthToken();
             if (token !== "" && oldToken !== token) {
                 let currentUserSettings = self.loginState.currentUser()
                     .settings;
-                currentUserSettings["mrbeam"]["user_token"] = token;
+                delete currentUserSettings["mrbeam"]["user_token"];
+                currentUserSettings["mrbeam"][
+                    "design_store_auth_token"
+                ] = token;
                 self.navigation.usersettings.updateSettings(
                     self.loginState.currentUser().name,
                     currentUserSettings
@@ -173,7 +187,7 @@ $(function () {
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
-        DesignStore,
+        DesignStoreViewModel,
         // e.g. loginStateViewModel, settingsViewModel, ...
         [
             "loginStateViewModel",

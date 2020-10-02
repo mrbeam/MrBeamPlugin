@@ -4,7 +4,6 @@ from collections import Mapping
 from threading import Event
 from multiprocessing import Pool
 from octoprint_mrbeam.camera.definitions import (
-    PICAMERA_AVAILABLE,
     QD_KEYS,
     RESOLUTIONS,
     DIST_KEY,
@@ -209,6 +208,9 @@ def prepareImage(
 
     # load pic_settings json
     if pic_settings is None:
+        return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
+    if corners.need_corner_calibration(pic_settings):
+        logger.warning(ERR_NEED_CALIB)
         return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
     workspaceCorners = corners.add_deltas(
@@ -499,8 +501,6 @@ def _getCamParams(path_to_params_file):
             )
     return valDict
 
-
-# def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

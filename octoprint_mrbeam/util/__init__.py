@@ -71,6 +71,7 @@ def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
         # 	logger = logging.getLogger(logname)
         # else:
         # 	logger = debug_logger(f)
+        @logExceptions
         @wraps(f)
         def run(*a, **kw):
             if callback is not None:
