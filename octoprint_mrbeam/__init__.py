@@ -191,7 +191,8 @@ class MrBeamPlugin(
         # do os health care
         os_health_care(self)
         # do migration if needed
-        migrate(self)
+        if not IS_X86:
+            migrate(self)
 
         self.set_serial_setting()
 
