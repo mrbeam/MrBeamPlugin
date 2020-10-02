@@ -183,7 +183,7 @@ class Migration(object):
                     "0.7.7",
                     equal_ok=False,
                 ):
-                    rm_camera_calibration_repo()
+                    self.rm_camera_calibration_repo()
 
                 # migrations end
 
