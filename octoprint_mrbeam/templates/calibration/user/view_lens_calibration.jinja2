@@ -9,34 +9,37 @@
     </div>
 
     <p>{{ _('The lens calibration removes the fish-eye effect of the camera. Use this if you are dissatisfied with the precision of the camera and a new corner calibration does not make it better.') }}</p>
-    {#    <p>{{ _('Keep in mind that it is unlikely that you will arrive to a better precision than 1mm accross the whole surface of the image.') }}</p>#}
-    {#    <p>{{ _('The precision of the camera system is dictated by how much lens distortion you will find. Also called \'Fish-eye effect\', this distortion is usually corrected during the assembly of your Mr Beam.') }}</p>#}
-    {#    <p>{{ _('You may want to do that calibration step again if you are dissatisfied with the precision of the camera and a new calibration of the corners does not make it better.#}
-    {#    Keep in mind that it is unlikely that you will arrive to a better precision than 1mm accross the whole surface of the image.') }}</p>#}
-    <p>{{ _('To test the quality of your current lens calibration please follow the instructions shown in our Knowledge Base article %(opening_tag)sTest your camera calibration%(closing_tag)s.',
-            opening_tag='<a href="" target="_blank">',
+    <p>{{ _('To evaluate if you need a new calibration, and to test the quality of your current lens calibration please follow the instructions shown in our Knowledge Base article %(opening_tag)sTest your camera calibration%(closing_tag)s.',
+            opening_tag='<a href="https://support.mr-beam.org/en/support/solutions/articles/43000598109-camera-lens-calibration#How-do-I-test-the-quality-of-my-lens-calibration" target="_blank">',
             closing_tag='</a>') }}</p>
     <small class="muted">
-        {{ _('If you do a new lens calibration and later want to go back to the default calibration, you can reset to factory settings here:') }}
-        <button class="btn btn-mini btn-default" data-bind="click: restoreFactory">{{ _('Restore .npz') }}</button>
+        {{ _('If you do a new lens calibration and later want to go back to the default calibration, you can reset the lens calibration to factory settings here:') }}
+        <button class="btn btn-mini btn-default" data-bind="click: restoreFactory">{{ _('Reset lens calibration') }}</button>
     </small>
 
     <h4>{{ _('Steps') }}</h4>
     <ol class="camera-calibration-steps">
-        <li>{{ _('Download and print %(opening_tag)sthis chessboard%(closing_tag)s. If you print it on a regular sheet of paper, then please make sure to keep it flat against another surface (e.g. a flat piece of wood or foam board).',
+        <li>{{ _('Download and print %(opening_tag)sthis chessboard%(closing_tag)s. If you print it on a regular sheet of paper, then please make sure to keep it flat against another surface, sticking it to a flat piece of wood or a thin foam board.',
             opening_tag='<a href="/plugin/mrbeam/static/docs/calibration_chessboard_pattern.pdf" target="_blank">',
             closing_tag='</a>') }}
         </li>
-        <li>{{ _('Place it inside your Mr Beam, horizontally.') }}</li>
+        <li>{{ _('Place it somewhere inside the working area of your Mr Beam, aligned horizontally.') }}</li>
         <li>
             <div id="lens_calibration_steps_and_heatmap">
                 <div>
-                    {{ _('Start the calibration by clicking on the button, and then follow these steps until the picture of the working area in the right is mostly green (9-20 times):') }}
+                    {{ _('Start the calibration by clicking on the button at the bottom of this page.') }}
                     <ul>
-                        <li>{{ _('Press the button on your Mr Beam to take a picture of the chessboard: the Status Lights will flash in blue.') }}</li>
-                        <li>{{ _('Wait for the blue flashing to stop and check if the new picture has a green check on it. If it shows a red cross or takes too long, delete it and take a new picture.') }}</li>
-                        <li>{{ _('Move the chessboard to a new position.') }}</li>
+                        <li>{{ _('Keep the lid open and press the button on your Mr Beam shortly to take a picture of the chessboard: the Status Lights will flash in blue.') }}</li>
+                        <li>{{ _('Wait for the blue flashing to stop.') }}</li>
+                        <li>{{ _('Move the chessboard to a new position and take another picture.') }}</li>
+                        <li>{{ _('Meanwhile, you can check if the previous pictures have a green check on them. If they show a red cross or takes too long, delete it and take a new picture. 3 minutes should be more than enough for the system to detect the chessboard.') }}</li>
+                        <li>{{ _('Proceed by taking 9 to 20 pictures, trying to cover up most of the working area. Successfully covered areas will appear green on the working area icon.') }}</li>
                     </ul>
+                    <br>
+                    <p>{{ _('While the software is processing a picture, you can already proceed with taking all the pictures you need - as long as you wait for the blue flash to stop between each shot.') }}</p>
+                    <p>{{ _('If you need a more detailed step-by-step instruction, have a look at our %(opening_tag)sKnowledge Base article%(closing_tag)s.',
+                        opening_tag='<a href="https://support.mr-beam.org/en/support/solutions/articles/43000598109-camera-lens-calibration/#How-do-I-calibrate-my-camera-lens" target="_blank">',
+                        closing_tag='</a>') }}</p>
                 </div>
                 <div>
                     <svg id="heatmap_container" version="1.1" enable-background="new 0 0 211 141"
@@ -102,13 +105,13 @@
         </li>
         <div style="margin-top:1em;" data-bind="visible: lensCalibrationActive()">
             <button class="btn btn-primary"
-                    data-bind="click: saveLensCalibrationData,
-                               visible: hasMinBoardsFound(),
-                           enable: !lensCalibrationBusy()">
+                    data-bind="click: saveLensCalibrationData, visible: hasMinBoardsFound(), enable: !lensCalibrationBusy()">
                 <!-- " && !lensCalibrationComplete()"> TODO lens calibration data remembers which pictures has beem used with it -->
-                {{ _('Create a new Calibration File') }}</button>
+                {{ _('Save Calibration') }}
+            </button>
             <button class="btn btn-default" data-bind="click: abortLensCalibration">
-                {{ _('Cancel') }}</button>
+                {{ _('Cancel') }}
+            </button>
         </div>
     </ol>
 </div>

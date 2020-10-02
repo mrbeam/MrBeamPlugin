@@ -15,7 +15,6 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Snap.plugin(function (Snap, Element, Paper, global) {
-
     /**
      * deletes all unnecessary elements and normalizes other stuff
      *
@@ -39,28 +38,32 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
         for (var property in elem.attr()) {
             if (elem.attr().hasOwnProperty(property)) {
-                if (property.includes("sodipodi:") ||
+                if (
+                    property.includes("sodipodi:") ||
                     property.includes("inkscape:") ||
                     property.includes("dc:") ||
                     property.includes("cc:") ||
-                    property.includes("rdf:")) {
-                        elem.attr(property, "");
+                    property.includes("rdf:")
+                ) {
+                    elem.attr(property, "");
                 }
             }
         }
 
-        if (elem.type === "path" ||
+        if (
+            elem.type === "path" ||
             elem.type === "circle" ||
             elem.type === "ellipse" ||
             elem.type === "rect" ||
             elem.type === "line" ||
             elem.type === "polyline" ||
             elem.type === "polygon" ||
-            elem.type === "path") {
-
+            elem.type === "path"
+        ) {
             for (var property in elem.attr()) {
                 if (elem.attr().hasOwnProperty(property)) {
-                    if (property === "style") { // entpackt den style attribute und entfernt default Werte
+                    if (property === "style") {
+                        // entpackt den style attribute und entfernt default Werte
                         elem.unwrap_style_attr();
                     }
                 }
@@ -68,81 +71,81 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
             if (!elem.attr().hasOwnProperty("stroke")) {
                 var stroke = elem.attr("stroke");
-                if (stroke !== 'none') {
+                if (stroke !== "none") {
                     elem.attr("stroke", stroke);
                 }
             }
-            if (elem.attr("stroke") === 'none') {
-                elem.attr("stroke", '');
+            if (elem.attr("stroke") === "none") {
+                elem.attr("stroke", "");
             }
         }
     };
 
     /**
-    * extracts all non default style attributes and deletes it afterwards.
-    *
-    * @param {none}
-    * @returns {undefined}
-    */
+     * extracts all non default style attributes and deletes it afterwards.
+     *
+     * @param {none}
+     * @returns {undefined}
+     */
     Element.prototype.unwrap_style_attr = function () {
         var elem = this;
 
         var defaults = {
-            'baseline-shift': 'baseline',
-            'clip-path': 'none',
-            'clip-rule': 'nonzero',
-            'color': '#000',
-            'color-interpolation-filters': 'linearRGB',
-            'color-interpolation': 'sRGB',
-            'direction': 'ltr',
-            'display': 'inline',
-            'enable-background': 'accumulate',
-            'fill': '#000',
-            'fill-opacity': '1',
-            'fill-rule': 'nonzero',
-            'filter': 'none',
-            'flood-color': '#000',
-            'flood-opacity': '1',
-            'font-size-adjust': 'none',
-            'font-size': 'medium',
-            'font-stretch': 'normal',
-            'font-style': 'normal',
-            'font-variant': 'normal',
-            'font-weight': 'normal',
-            'glyph-orientation-horizontal': '0deg',
-            'letter-spacing': 'normal',
-            'lighting-color': '#fff',
-            'marker': 'none',
-            'marker-start': 'none',
-            'marker-mid': 'none',
-            'marker-end': 'none',
-            'mask': 'none',
-            'opacity': '1',
-            'pointer-events': 'visiblePainted',
-            'stop-color': '#000',
-            'stop-opacity': '1',
-            'stroke': 'none',
-            'stroke-dasharray': 'none',
-            'stroke-dashoffset': '0',
-            'stroke-linecap': 'butt',
-            'stroke-linejoin': 'miter',
-            'stroke-miterlimit': '4',
-            'stroke-opacity': '1',
-            'stroke-width': '1',
-            'text-anchor': 'start',
-            'text-decoration': 'none',
-            'unicode-bidi': 'normal',
-            'visibility': 'visible',
-            'word-spacing': 'normal',
-            'writing-mode': 'lr-tb',
+            "baseline-shift": "baseline",
+            "clip-path": "none",
+            "clip-rule": "nonzero",
+            color: "#000",
+            "color-interpolation-filters": "linearRGB",
+            "color-interpolation": "sRGB",
+            direction: "ltr",
+            display: "inline",
+            "enable-background": "accumulate",
+            fill: "#000",
+            "fill-opacity": "1",
+            "fill-rule": "nonzero",
+            filter: "none",
+            "flood-color": "#000",
+            "flood-opacity": "1",
+            "font-size-adjust": "none",
+            "font-size": "medium",
+            "font-stretch": "normal",
+            "font-style": "normal",
+            "font-variant": "normal",
+            "font-weight": "normal",
+            "glyph-orientation-horizontal": "0deg",
+            "letter-spacing": "normal",
+            "lighting-color": "#fff",
+            marker: "none",
+            "marker-start": "none",
+            "marker-mid": "none",
+            "marker-end": "none",
+            mask: "none",
+            opacity: "1",
+            "pointer-events": "visiblePainted",
+            "stop-color": "#000",
+            "stop-opacity": "1",
+            stroke: "none",
+            "stroke-dasharray": "none",
+            "stroke-dashoffset": "0",
+            "stroke-linecap": "butt",
+            "stroke-linejoin": "miter",
+            "stroke-miterlimit": "4",
+            "stroke-opacity": "1",
+            "stroke-width": "1",
+            "text-anchor": "start",
+            "text-decoration": "none",
+            "unicode-bidi": "normal",
+            visibility: "visible",
+            "word-spacing": "normal",
+            "writing-mode": "lr-tb",
             // SVG 1.2 tiny properties
-            'audio-level': '1',
-            'solid-color': '#000',
-            'solid-opacity': '1',
-            'text-align': 'start',
-            'vector-effect': 'none',
-            'viewport-fill': 'none',
-            'viewport-fill-opacity': '1'
+            "audio-level": "1",
+            "solid-color": "#000",
+            "solid-opacity": "1",
+            "text-align": "start",
+            "vector-effect": "none",
+            "viewport-fill": "none",
+            "viewport-fill-opacity": "1",
         };
 
         var style = elem.attr("style");

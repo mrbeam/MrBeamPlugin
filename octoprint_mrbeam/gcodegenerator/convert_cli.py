@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 """
 Command line interface for convert.py
 
@@ -24,59 +24,130 @@ import sys
 import logging
 
 
-
-
 if __name__ == "__main__":
-	OptionParser = optparse.OptionParser(usage="usage: %prog [options] SVGfile")
-	OptionParser.add_option("-d", "--directory",					action="store", type="string",		 dest="directory", default=None,					help="Directory for gcode file")
-	OptionParser.add_option("-f", "--filename",					action="store", type="string",		 dest="file", default=None,						help="File name")			
-	OptionParser.add_option("",   "--dpi",						action="store", type="float",		 dest="svgDPI", default="90",		help="dpi of the SVG file. Use 90 for Inkscape and 72 for Illustrator")
-	OptionParser.add_option("",   "--biarc-max-split-depth",		action="store", type="int",		 dest="biarc_max_split_depth", default="4",			help="Defines maximum depth of splitting while approximating using biarcs.")				
-	OptionParser.add_option("",   "--engrave",		action="store_true", 		 dest="engrave", default=False,			help="Engrave Image/Design.")
-	OptionParser.add_option("",   "--no-header", type="string", help="omits Mr Beam start and end sequences", default="false", dest="noheaders")
-	
-	options, args = OptionParser.parse_args(sys.argv[1:])
-	option_dict = vars(options)
-	svg_file = args[-1]
-	
-	if(option_dict['file'] == None):
-		without_path = os.path.basename(svg_file)
-		option_dict['file'] = os.path.splitext(without_path)[0] + ".gcode"
-		print("using default filename", option_dict['file'])
-	if(option_dict['directory'] == None):
-		option_dict['directory'] = os.path.dirname(os.path.realpath(svg_file))
-		print("using default folder", option_dict['directory'])
+    OptionParser = optparse.OptionParser(usage="usage: %prog [options] SVGfile")
+    OptionParser.add_option(
+        "-d",
+        "--directory",
+        action="store",
+        type="string",
+        dest="directory",
+        default=None,
+        help="Directory for gcode file",
+    )
+    OptionParser.add_option(
+        "-f",
+        "--filename",
+        action="store",
+        type="string",
+        dest="file",
+        default=None,
+        help="File name",
+    )
+    OptionParser.add_option(
+        "",
+        "--dpi",
+        action="store",
+        type="float",
+        dest="svgDPI",
+        default="90",
+        help="dpi of the SVG file. Use 90 for Inkscape and 72 for Illustrator",
+    )
+    OptionParser.add_option(
+        "",
+        "--biarc-max-split-depth",
+        action="store",
+        type="int",
+        dest="biarc_max_split_depth",
+        default="4",
+        help="Defines maximum depth of splitting while approximating using biarcs.",
+    )
+    OptionParser.add_option(
+        "",
+        "--engrave",
+        action="store_true",
+        dest="engrave",
+        default=False,
+        help="Engrave Image/Design.",
+    )
+    OptionParser.add_option(
+        "",
+        "--no-header",
+        type="string",
+        help="omits Mr Beam start and end sequences",
+        default="false",
+        dest="noheaders",
+    )
 
-	debug_multicolor = [
-		{"passes": "1", "feedrate": "1000", "pierce_time": "0", "color": "#000000", "intensity": "10", "job": 1}, 
-		{"passes": "1", "feedrate": "800", "pierce_time": "0", "color": "#ff0000", "intensity": "20", "job": 2}, 
-		{"passes": "1", "feedrate": "400", "pierce_time": "0", "color": "#0000ff", "intensity": "30", "job": 3},
-		{"passes": "1", "feedrate": "400", "pierce_time": "0", "color": "black", "intensity": "30", "job": 4}
-	]
-	
-	params = dict()
-	params['directory'] = option_dict['directory']
-	params['file'] = option_dict['file']
-	params['noheaders'] = "false"
-	params['vector'] = debug_multicolor
-	params['engrave'] = option_dict['engrave']
-	params['raster'] = {
-		"intensity_white": 0,
-		"intensity_black": 500,
-		"speed_white": 1500,
-		"speed_black": 250,
-		"contrast": 1.0,
-		"sharpening": 1.0,
-		"dithering": False,
-		"beam_diameter": 0.2,
-		"pierce_time": 0,
-	}
+    options, args = OptionParser.parse_args(sys.argv[1:])
+    option_dict = vars(options)
+    svg_file = args[-1]
 
-	e = Converter(params, svg_file)
-	ch = logging.StreamHandler()
-	ch.setLevel(logging.DEBUG)
-	formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
-	ch.setFormatter(formatter)
-	e._log.addHandler(ch)
-	e.convert()		
-	
+    if option_dict["file"] == None:
+        without_path = os.path.basename(svg_file)
+        option_dict["file"] = os.path.splitext(without_path)[0] + ".gcode"
+        print("using default filename", option_dict["file"])
+    if option_dict["directory"] == None:
+        option_dict["directory"] = os.path.dirname(os.path.realpath(svg_file))
+        print("using default folder", option_dict["directory"])
+
+    debug_multicolor = [
+        {
+            "passes": "1",
+            "feedrate": "1000",
+            "pierce_time": "0",
+            "color": "#000000",
+            "intensity": "10",
+            "job": 1,
+        },
+        {
+            "passes": "1",
+            "feedrate": "800",
+            "pierce_time": "0",
+            "color": "#ff0000",
+            "intensity": "20",
+            "job": 2,
+        },
+        {
+            "passes": "1",
+            "feedrate": "400",
+            "pierce_time": "0",
+            "color": "#0000ff",
+            "intensity": "30",
+            "job": 3,
+        },
+        {
+            "passes": "1",
+            "feedrate": "400",
+            "pierce_time": "0",
+            "color": "black",
+            "intensity": "30",
+            "job": 4,
+        },
+    ]
+
+    params = dict()
+    params["directory"] = option_dict["directory"]
+    params["file"] = option_dict["file"]
+    params["noheaders"] = "false"
+    params["vector"] = debug_multicolor
+    params["engrave"] = option_dict["engrave"]
+    params["raster"] = {
+        "intensity_white": 0,
+        "intensity_black": 500,
+        "speed_white": 1500,
+        "speed_black": 250,
+        "contrast": 1.0,
+        "sharpening": 1.0,
+        "dithering": False,
+        "beam_diameter": 0.2,
+        "pierce_time": 0,
+    }
+
+    e = Converter(params, svg_file)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s")
+    ch.setFormatter(formatter)
+    e._log.addHandler(ch)
+    e.convert()
