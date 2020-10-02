@@ -517,6 +517,9 @@ class LidHandler(object):
             self._plugin_manager.send_plugin_message(
                 "mrbeam", dict(need_camera_calibration=True)
             )
+        if not self._plugin.calibration_tool_mode:
+            # Tool mode (watterott) : Continues taking pictures
+            self.boardDetectorDaemon.stopAsap()
         return True
 
     def revert_factory_lens_calibration(self):
@@ -525,7 +528,6 @@ class LidHandler(object):
         - Removes the user lens calibration file,
         - Removes the calibration pictures
         - Refreshes settings.
-
         """
         files = []
         for fname in os.listdir(self.debugFolder):

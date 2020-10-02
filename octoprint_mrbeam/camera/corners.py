@@ -133,7 +133,7 @@ def get_corner_calibration(pic_settings):
     Returns the corner calibration written to pic_settings
     If given a dict, assumes this is already the pic_setings.
     """
-    if insinstance(pic_settings, Mapping):
+    if isinstance(pic_settings, Mapping):
         return pic_settings
     elif not isfile(pic_settings) or os.stat(pic_settings).st_size == 0:
         return None
