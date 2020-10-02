@@ -24,8 +24,9 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img
 
 # from octoprint_mrbeam.camera
-from octoprint_mrbeam.camera.definitions import TMP_RAW_FNAME_RE, STATE_SUCCESS
 from octoprint_mrbeam.camera.definitions import (
+    TMP_RAW_FNAME_RE,
+    STATE_SUCCESS,
     CAMERA_HEIGHT,
     DIST_KEY,
     ERR_NEED_CALIB,
@@ -33,10 +34,8 @@ from octoprint_mrbeam.camera.definitions import (
     MAX_OBJ_HEIGHT,
     MTX_KEY,
     MIN_BOARDS_DETECTED,
-    PICAMERA_AVAILABLE,
     QD_KEYS,
 )
-from octoprint_mrbeam.camera.definitions import *
 from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint_mrbeam.camera import exc as exc
 
@@ -601,7 +600,7 @@ class PhotoCreator(object):
         self.cam = None
         self.analytics = None
 
-        _level = logging.DEBUG  # if debug else logging.INFO
+        _level = logging.DEBUG if debug else logging.INFO
         self._logger = mrb_logger(
             "octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", lvl=_level
         )
