@@ -12,10 +12,13 @@ class Laser(Printer):
     HOMING_POSITION = [-1.0, -1.0, 0]
 
     def __init__(self, fileManager, analysisQueue, printerProfileManager):
+        # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS -- start --
         # TODO OP v1.4 : Remove the followingline - see octoprint_mrbeam.__plugin_load__
+        # The necessary lines for this to keep working are already written as a hook.
         analysisQueue._queues.update(
             beam_analysis_queue_factory(callback=analysisQueue._analysis_finished)
         )
+        # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS -- end --
         Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
         self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.printer")
         self._stateMonitor = LaserStateMonitor(
