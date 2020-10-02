@@ -121,7 +121,9 @@ def save_corner_calibration(
 
 
 def write_corner_calibration(pic_settings, path):
-    assert isinstance(pic_settings, Mapping)
+    assert isinstance(pic_settings, Mapping), "pic_settings not mapping: {} {}".format(
+        type(pic_settings), pic_settings
+    )
     _logger.debug("Saving new corner calibration: {}".format(pic_settings))
     with open(path, "wb") as f:
         yaml.safe_dump(pic_settings, f, indent="  ", allow_unicode=True)
@@ -308,6 +310,7 @@ def rm_undidtorted_keys(pic_settings, factory=False):
     for k in keys:
         if k in pic_settings.keys():
             pic_settings.pop(k)
+    return pic_settings
 
 
 def _isValidQdDict(qdDict):
