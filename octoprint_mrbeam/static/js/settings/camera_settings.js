@@ -21,7 +21,7 @@ $(function () {
         self.readyToLaser = parameters[2]; // lid_fully_open & debug tab with mrb state
         self.settings = parameters[3];
         self.workingArea = parameters[4];
-
+        self.loginState = parameters[5];
         self.settingsActive = ko.observable(false);
         self.cameraSettingsActive = ko.observable(false);
 
@@ -65,7 +65,8 @@ $(function () {
             return (
                 self.readyToLaser.lid_fully_open() &&
                 self.statusOnlyOperational() &&
-                self.fourMarkersFound()
+                self.fourMarkersFound() &&
+                !self.needsCornerCalibration()
             ); // This already includes the other two, but just to see it more clear
         });
 
@@ -183,36 +184,37 @@ $(function () {
             $("#settings_plugin_mrbeam_camera_link").click(function () {
                 self.changeUserView("settings");
             });
-            if (!window.mrbeam.isWatterottMode()) {
-                self.checkCalibStatus();
-            }
-        };
-
-        self.checkCalibStatus = function () {
-            // Get the state of the chessboard detection thread
-            // Can only allow to start the lens calibration if
-            // it is dead
-            OctoPrint.simpleApiCommand(
-                "mrbeam",
-                "calibration_get_lens_calib_alive",
-                {}
-            )
-                .done(function (response) {
-                    self.lensDaemonAlive(response.alive);
-                })
-                .fail(function (response) {
-                    new PNotify({
-                        title: gettext(
-                            "Failed to update the Lens Calibration Status."
-                        ),
-                        text: gettext(
-                            "There is nothing to worry about, but here is some extra information :\n" +
-                                response.responseText
-                        ),
-                        type: "warning",
-                        hide: false,
-                    });
-                });
+            self.checkCalibStatus = ko.computed(function () {
+                // Get the state of the chessboard detection thread
+                // Can only allow to start the lens calibration if
+                // it is dead
+                if (
+                    !window.mrbeam.isWatterottMode() &&
+                    self.loginState.loggedIn()
+                ) {
+                    OctoPrint.simpleApiCommand(
+                        "mrbeam",
+                        "calibration_get_lens_calib_alive",
+                        {}
+                    )
+                        .done(function (response) {
+                            self.lensDaemonAlive(response.alive);
+                        })
+                        .fail(function (response) {
+                            new PNotify({
+                                title: gettext(
+                                    "Failed to update the Lens Calibration Status."
+                                ),
+                                text: gettext(
+                                    "There is nothing to worry about, but here is some extra information :\n" +
+                                        response.responseText
+                                ),
+                                type: "warning",
+                                hide: false,
+                            });
+                        });
+                }
+            });
         };
 
         self.onSettingsShown = function () {
@@ -300,6 +302,7 @@ $(function () {
             "readyToLaserViewModel",
             "settingsViewModel",
             "workingAreaViewModel",
+            "loginStateViewModel",
         ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...

@@ -356,7 +356,6 @@ class MrBeamPlugin(
                 calibration_tool_mode=False,
                 grbl_auto_update_enabled=True,
                 automatic_camera_image_upload=True,  # only in env=DEV
-                design_store_email=None,
             ),
             laser_heads=dict(filename="laser_heads.yaml"),
             review=dict(
@@ -432,7 +431,6 @@ class MrBeamPlugin(
                 software_tier=self._settings.get(["dev", "software_tier"]),
                 software_tiers_available=software_channels_available(self),
                 terminalMaxLines=self._settings.get(["dev", "terminalMaxLines"]),
-                design_store_email=self._settings.get(["dev", "design_store_email"]),
             ),
             gcode_nextgen=dict(
                 enabled=self._settings.get(["gcode_nextgen", "enabled"]),
@@ -540,14 +538,6 @@ class MrBeamPlugin(
             if "leds" in data and "fps" in data["leds"]:
                 self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
             # dev only
-            if (
-                self.is_dev_env()
-                and "dev" in data
-                and "design_store_email" in data["dev"]
-            ):
-                self._settings.set(
-                    ["dev", "design_store_email"], data["dev"]["design_store_email"]
-                )
             if "remember_markers_across_sessions" in data:
                 self._settings.set_boolean(
                     ["cam", "remember_markers_across_sessions"],
@@ -636,6 +626,7 @@ class MrBeamPlugin(
                 "js/lib/load-image.all.min.js",  # to load custom material images
                 "js/settings/custom_material.js",
                 "js/design_store.js",
+                "js/settings/dev_design_store.js",
                 "js/settings_menu_navigation.js",
                 "js/calibration/calibration.js",
                 "js/calibration/corner_calibration.js",
@@ -890,8 +881,8 @@ class MrBeamPlugin(
                         type="settings",
                         name="DEV Design Store",
                         template="settings/dev_design_store_settings.jinja2",
-                        suffix="_design_store",
-                        custom_bindings=False,
+                        suffix="_dev_design_store",
+                        custom_bindings=True,
                     )
                 ]
             )

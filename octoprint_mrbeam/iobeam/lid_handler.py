@@ -26,21 +26,32 @@ from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img
 # from octoprint_mrbeam.camera
 from octoprint_mrbeam.camera.definitions import TMP_RAW_FNAME_RE, STATE_SUCCESS
 from octoprint_mrbeam.camera.definitions import (
-    QD_KEYS,
-    LEGACY_STILL_RES,
-    MAX_OBJ_HEIGHT,
     CAMERA_HEIGHT,
     DIST_KEY,
+    ERR_NEED_CALIB,
+    LEGACY_STILL_RES,
+    MAX_OBJ_HEIGHT,
     MTX_KEY,
     MIN_BOARDS_DETECTED,
+    PICAMERA_AVAILABLE,
+    QD_KEYS,
 )
 from octoprint_mrbeam.camera.definitions import *
 from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint_mrbeam.camera import exc as exc
 
 from octoprint_mrbeam.camera.mrbcamera import mrbCamera
-from octoprint_mrbeam.camera.undistort import prepareImage, _getCamParams
-from octoprint_mrbeam.camera.lens import BoardDetectorDaemon, FACTORY
+from octoprint_mrbeam.camera.undistort import (
+    _getCamParams,
+    prepareImage,
+)
+from octoprint_mrbeam.camera.corners import (
+    need_corner_calibration,
+)
+from octoprint_mrbeam.camera.lens import (
+    BoardDetectorDaemon,
+    FACTORY,
+)
 from octoprint_mrbeam.util import dict_merge, dict_map, get_thread, makedirs
 from octoprint_mrbeam.util.log import json_serialisor, logme
 
@@ -168,6 +179,14 @@ class LidHandler(object):
                 "onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed
             )
             self._client_opened = True
+            pic_settings = get_corner_calibration(
+                self._settings.get(["cam", "correctionSettingsFile"])
+            )
+            if need_corner_calibration(pic_settings):
+                self._logger.warning(ERR_NEED_CALIB)
+                self._plugin_manager.send_plugin_message(
+                    "mrbeam", dict(need_camera_calibration=True)
+                )
             self._startStopCamera(event)
         # Please re-enable when the OctoPrint is more reliable at
         # detecting when a user actually disconnected.

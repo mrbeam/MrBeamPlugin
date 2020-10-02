@@ -18,7 +18,7 @@ $(function () {
             SE: gettext("Bottom right"),
         };
 
-        self.needsCalibration = false;
+        self.needsCornerCalibration = ko.observable(false);
 
         self.rawUrl = "/downloads/files/local/cam/debug/raw.jpg"; // TODO get from settings
         self.undistortedUrl =
@@ -174,6 +174,9 @@ $(function () {
 
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
+            if ("need_camera_calibration" in data) {
+                self._needCalibration(data["camera_calibration"]);
+            }
             if ("beam_cam_new_image" in data) {
                 const mf = data["beam_cam_new_image"]["markers_found"];
                 _markersFound = {};
@@ -187,22 +190,12 @@ $(function () {
                 self.markersFound(_markersFound);
 
                 if (data["beam_cam_new_image"]["error"] === undefined) {
-                    self.needsCalibration = false;
+                    self._needCalibration(false);
                 } else if (
                     data["beam_cam_new_image"]["error"] ===
-                        "Camera_calibration_is_needed" &&
-                    !self.needsCalibration
+                    "Camera_calibration_is_needed"
                 ) {
-                    self.needsCalibration = true;
-                    new PNotify({
-                        title: gettext("Calibration needed"),
-                        text: gettext(
-                            "Please calibrate the camera under Settings -> Camera Calibration"
-                        ),
-                        type: "warning",
-                        tag: "calibration_needed",
-                        hide: false,
-                    });
+                    self._needCalibration(true);
                 }
                 if ("workspace_corner_ratio" in data["beam_cam_new_image"]) {
                     // workspace_corner_ratio should be a float
@@ -216,6 +209,22 @@ $(function () {
                 }
                 self.loadImage(self.croppedUrl);
             }
+        };
+
+        self._needCalibration = function (val) {
+            if ((val === undefined || val) && !self.needsCornerCalibration()) {
+                new PNotify({
+                    title: gettext("Corner Calibration needed"),
+                    text: gettext(
+                        "Please calibrate the camera under Settings -> Camera -> Corner Calibration."
+                    ),
+                    type: "warning",
+                    tag: "calibration_needed",
+                    hide: false,
+                });
+            }
+            if (val !== undefined) self.needsCornerCalibration(val);
+            else self.needsCornerCalibration(true);
         };
 
         self.loadImage = function (url) {
