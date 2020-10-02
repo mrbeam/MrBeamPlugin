@@ -705,14 +705,15 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 default_profile,
             )
 
+    def rm_camera_calibration_repo(self):
+        """Delete the legacy camera calibration and detection repo."""
+        from octoprint.settings import settings
 
-def rm_camera_calibration_repo():
-    """Delete the legacy camera calibration and detection repo."""
-    from octoprint.settings import settings
-
-    sett = settings()  # .octoprint/config.yaml
-    sett.remove(
-        ["plugins", "softwareupdate", "check_prviders", "mb-camera-calibration"]
-    )
-    sett.remove(["plugins", "softwareupdate", "checks", "mb-camera-calibration"])
-    sett.save()
+        self._logger.info("Removing mb-camera-calibration from the config file...")
+        sett = settings()  # .octoprint/config.yaml
+        sett.remove(
+            ["plugins", "softwareupdate", "check_prviders", "mb-camera-calibration"]
+        )
+        sett.remove(["plugins", "softwareupdate", "checks", "mb-camera-calibration"])
+        sett.save()
+        self._logger.info("Done")
