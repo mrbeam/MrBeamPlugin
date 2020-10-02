@@ -129,12 +129,12 @@ class LidHandler(object):
         self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
         # TODO carefull if photocreator is None
-
+        rawLock = self._photo_creator.rawLock if self._photo_creator else None
         self.boardDetectorDaemon = BoardDetectorDaemon(
             self.get_calibration_file("user"),
             stateChangeCallback=self.updateFrontendCC,
             event_bus=self._event_bus,
-            rawImgLock=self._photo_creator.rawLock,
+            rawImgLock=rawLock,
             factory=self._plugin.calibration_tool_mode,
         )
 
