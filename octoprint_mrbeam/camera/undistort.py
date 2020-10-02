@@ -4,7 +4,6 @@ from collections import Mapping
 from threading import Event
 from multiprocessing import Pool
 from octoprint_mrbeam.camera.definitions import (
-    PICAMERA_AVAILABLE,
     QD_KEYS,
     RESOLUTIONS,
     DIST_KEY,

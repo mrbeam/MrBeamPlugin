@@ -40,8 +40,7 @@ from octoprint_mrbeam.camera.definitions import *
 from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint_mrbeam.camera import exc as exc
 
-if PICAMERA_AVAILABLE:
-    from octoprint_mrbeam.camera.mrbcamera import MrbCamera
+from octoprint_mrbeam.camera.mrbcamera import mrbCamera
 from octoprint_mrbeam.camera.undistort import (
     _getCamParams,
     prepareImage,
@@ -107,20 +106,16 @@ class LidHandler(object):
         self.board_calibration_number_pics_taken_in_session = 0
         self.saveRawImgThread = None
 
-        if PICAMERA_AVAILABLE:
-            self.imagePath = (
-                self._settings.getBaseFolder("uploads")
-                + "/"
-                + self._settings.get(["cam", "localFilePath"])
-            )
-            makedirs(self.imagePath, parent=True)
-            makedirs(self.debugFolder)
-            self._photo_creator = PhotoCreator(
-                self._plugin, self._plugin_manager, self.imagePath, debug=False
-            )
-        else:
-            self._photo_creator = None
-            self.imagePath = None
+        self.imagePath = (
+            self._settings.getBaseFolder("uploads")
+            + "/"
+            + self._settings.get(["cam", "localFilePath"])
+        )
+        makedirs(self.imagePath, parent=True)
+        makedirs(self.debugFolder)
+        self._photo_creator = PhotoCreator(
+            self._plugin, self._plugin_manager, self.imagePath, debug=False
+        )
         self.refresh_pic_settings = (
             Event()
         )  # TODO placeholder for when we delete PhotoCreator
@@ -391,10 +386,7 @@ class LidHandler(object):
         self.getRawImg()
         self.lensCalibrationStarted = True
         self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
-        self._logger.warning("EVENT LENS CALIBRATION STARTING")
-        self._logger.warning(
-            "Lens calibration Started : %s" % self.lensCalibrationStarted
-        )
+        self._logger.info("Lens calibration Started : %s" % self.lensCalibrationStarted)
 
     def getRawImg(self):
         # Sends the current state to the front end
@@ -423,7 +415,7 @@ class LidHandler(object):
                 self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
             imgName = self.boardDetectorDaemon.next_tmp_img_name()
             self._photo_creator.saveRaw = imgName
-            self._logger.warning("Saving new picture %s" % imgName)
+            self._logger.info("Saving new picture %s" % imgName)
             self.takeNewPic()
             imgPath = path.join(self.debugFolder, imgName)
             # Tell the boardDetector to listen for this file
@@ -595,7 +587,7 @@ class PhotoCreator(object):
         self.cam = None
         self.analytics = None
 
-        _level = logging.DEBUG if debug else logging.INFO
+        _level = logging.DEBUG  # if debug else logging.INFO
         self._logger = mrb_logger(
             "octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", lvl=_level
         )
@@ -670,18 +662,11 @@ class PhotoCreator(object):
             if self.is_initial_calibration:
                 self.save_debug_images = True
 
-            if not PICAMERA_AVAILABLE:
-                self._logger.warn(
-                    "Camera disabled. Not all required modules could be loaded at startup. "
-                )
-                self.stopEvent.set()
-                return
-
             self.last_markers, self.last_shutter_speed = self.load_camera_settings()
 
             self._logger.debug("Starting the camera now.")
-            camera_worker = MrbPicWorker(maxSize=2, debug=self.debug)
-            with MrbCamera(
+            camera_worker = MrbPicWorker(maxlen=2, debug=self.debug)
+            with mrbCamera(
                 camera_worker,
                 framerate=0.8,
                 shutter_speed=self.last_shutter_speed,
@@ -765,17 +750,10 @@ class PhotoCreator(object):
         :rtype: NoneType
         """
 
-        cam.start_preview()
         time.sleep(1.2)  # camera warmup + prevent quick switch to pic capture
 
         session_details = blank_session_details()
         self._front_ready.set()
-        try:
-            cam.start()  # starts capture to the cam.worker
-        except exc.CameraConnectionException as e:
-            self._logger.exception(" %s, %s", e.__class__.__name__, e)
-            cam.stop(1)
-            raise
         # --- Decide on the picture quality to give to the user and whether the pic is different ---
         prev = None  # previous image
         nb_consecutive_similar_pics = 0
@@ -804,8 +782,7 @@ class PhotoCreator(object):
             )
             self.last_markers = None
 
-        # The lid didn't open during waiting time
-        cam.async_capture()
+        th = cam.async_capture()
         saveNext = False  # Lens calibration : save the next picture instead of this one
         min_pix_amount = self._settings.get(["cam", "markerRecognitionMinPixel"])
         pic_counter = 0
@@ -824,7 +801,11 @@ class PhotoCreator(object):
                 pic_settings = get_corner_calibration(path_to_pic_settings)
                 cam_params = _getCamParams(path_to_lens_calib)
                 self.forceNewPic.set()
+            self._logger.debug(
+                "Waiting for async capture: cam._busy.locked %s", cam._busy.locked()
+            )
             cam.wait()  # waits until the next picture is ready
+            # self._logger.warning("result : %s", th.get())
             if self.stopping:
                 break
 
@@ -1028,7 +1009,6 @@ class PhotoCreator(object):
                 markers=self.last_markers, shutter_speed=self.last_shutter_speed
             )
 
-        cam.stop_preview()
         if session_details["num_pics"] > 0:
             session_details.update(
                 {
