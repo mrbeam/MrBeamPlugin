@@ -7,18 +7,6 @@ import numpy as np
 ### General camera
 ########################
 
-try:
-    import picamera
-
-    PICAMERA_AVAILABLE = True
-except ImportError as e:
-    PICAMERA_AVAILABLE = False
-    logging.getLogger("octoprint.plugins.mrbeam.util.camera").error(
-        "Could not import module 'mrbcamera'. Disabling camera integration. (%s: %s)",
-        e.__class__.__name__,
-        e,
-    )
-
 RESOLUTIONS = {
     "1000x780": (1000, 780),
     "1920x1080": (1920, 1080),

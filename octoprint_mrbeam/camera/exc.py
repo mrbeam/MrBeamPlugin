@@ -15,6 +15,10 @@ CAM_CONN = "err_cam_conn"
 CAM_CONNRECOVER = "cam_conn_recover"
 
 
+class MrbCameraError(CameraException):
+    pass
+
+
 def msg(status):
     return {
         CAM_CONN: "Camera connection error",

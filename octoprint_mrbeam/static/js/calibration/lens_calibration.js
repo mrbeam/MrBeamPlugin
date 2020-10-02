@@ -241,6 +241,7 @@ $(function () {
         self.saveLensCalibrationData = function () {
             // TODO Gray out button when calibration state is STATE_PROCESSING
             self.runLensCalibration();
+            self.resetView();
         };
 
         self.resetView = function () {

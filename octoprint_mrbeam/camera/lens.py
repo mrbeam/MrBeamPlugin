@@ -122,7 +122,7 @@ class BoardDetectorDaemon(Thread):
         state=None,
         factory=False,
     ):
-        self._logger = mrb_logger(__name__, lvl=logging.DEBUG)
+        self._logger = mrb_logger(__name__)
         # runCalibrationAsap : run the lens calibration when we have enough pictures ready
         self.event_bus = event_bus
         self.rawImgLock = rawImgLock

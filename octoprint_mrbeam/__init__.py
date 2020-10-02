@@ -3159,12 +3159,14 @@ def __plugin_load__():
         # ])
     )
 
+    from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
+
     global __plugin_hooks__
     __plugin_hooks__ = {
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
         "octoprint.printer.factory": __plugin_implementation__.laser_factory,
         "octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
-        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+        "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,  # Only used in OP v1.3.11 +
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.cli.commands": get_cli_commands,
     }

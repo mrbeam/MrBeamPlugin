@@ -123,7 +123,7 @@ class LedEventListener(CommandTrigger):
         self._watch_thread = None
         self._watch_active = False
         self._listening_state = None
-
+        self._analytics_handler = None
         self._subscriptions = {}
 
         self._connections_states = []
@@ -158,6 +158,10 @@ class LedEventListener(CommandTrigger):
             self._execute_command(command, commandType, debug)
 
     def _on_mrbeam_plugin_initialized(self, event, payload):
+        from octoprint_mrbeam import IS_X86
+
+        if IS_X86:
+            return
         self._analytics_handler = self._plugin.analytics_handler
 
         self._initSubscriptions()
