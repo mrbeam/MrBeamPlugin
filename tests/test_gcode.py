@@ -4,9 +4,11 @@
 Test the gcode creating functions
 """
 
+from collections import Mapping
 from itertools import cycle
 import logging
 import pytest
+from octoprint.util import dict_merge
 from octoprint_mrbeam.gcodegenerator import (
     img2gcode,
     img_separator,
@@ -19,10 +21,6 @@ path = dirname(realpath(__file__))
 GCODE_DIR = join(path, "rsc", "gcode")
 IN_FILES = pytest.mark.datafiles(
     GCODE_DIR,
-    # join(GCODE_DIR, "*.gco"),
-    # join(GCODE_DIR, "*.jpg"),
-    # join(GCODE_DIR, "*.png"),
-    # join(GCODE_DIR, "*.svg"),
 )
 
 W, H = 500, 390
@@ -51,6 +49,11 @@ def _test_raster_files(datafiles, paths, options, repeat=0, keep_out_file_name=F
         options = [
             DEFAULT_OPTIONS,
         ]
+    else:
+        # set default params if not given
+        for i, op in enumerate(options):
+            assert isinstance(op, Mapping)
+            options[i] = dict_merge(DEFAULT_OPTIONS, options[i])
     options = cycle(options)
     for _ in range(repeat + 1):
         for p in paths:
@@ -65,6 +68,7 @@ def _test_raster_files(datafiles, paths, options, repeat=0, keep_out_file_name=F
 
 
 @IN_FILES
+# @pytest.mark.skip("skipping")
 def test_all(datafiles):
     """
     Test images over and over for detecting cpu stress,
@@ -108,8 +112,6 @@ def test_gcode_stress_test(datafiles):
 def test_islands(datafiles):
     """
     Test the separation of islands.
-    Only pertinent with very large engravings with
-    multiple islands
     """
     paths = [
         str(datafiles / "islands1.png"),
@@ -141,10 +143,10 @@ def test_time_estimation(datafiles):
     Compare the real engraving / laser job time to the
     predicted duration
     """
+    # TODO test the time estimation of a pre-sliced gcode file
     paths = []
     options = []
     _test_raster_files(datafiles, paths, options)
-    # TODO test the time estimation of a pre-sliced gcode file
 
 
 @IN_FILES
@@ -154,6 +156,7 @@ def test_modes(datafiles):
     Test whether the different modes produce an output.
     Does not analyse the result file.
     """
+    # TODO
     paths = [
         str(datafiles / "simple.png"),
         str(datafiles / "gradient.png"),
@@ -163,16 +166,28 @@ def test_modes(datafiles):
 
 
 @IN_FILES
-@pytest.mark.skip("skipping")
+# @pytest.mark.skip("skipping")
 def test_work_area_clip(datafiles):
     """
     Test whether the ouptut gcode of clipping images
     gets properly cropped.
     """
-    # TODO How to input .mrb files?
-    paths = []
-    options = []
-    _test_raster_files(datafiles, paths, options)
+    # TODO
+    paths = [str(datafiles / "simple.png"), str(datafiles / "islands2.png")]
+    options = [
+        {"x": -0.25, "y": -0.25},
+        {"x": -1, "y": -1},
+        {"x": W - 50, "y": H - 50},
+        {"x": W - 1, "y": H - 1},
+    ]
+    for op in options:
+        _test_raster_files(
+            datafiles,
+            paths,
+            [
+                op,
+            ],
+        )
 
 
 ############
