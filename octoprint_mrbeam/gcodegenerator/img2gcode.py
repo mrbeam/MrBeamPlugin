@@ -88,7 +88,7 @@ class ImageProcessor:
             self.debugPreprocessing = _mrbeam_plugin_implementation._settings.get(
                 ["dev", "debug_gcode"]
             )
-        except NameError:
+        except (NameError, AttributeError):
             self.debug = True
             self.debugPreprocessing = True
             self.log.info(

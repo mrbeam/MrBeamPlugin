@@ -42,7 +42,7 @@ class ImageSeparator:
             self.debug = _mrbeam_plugin_implementation._settings.get(
                 ["dev", "debug_gcode"]
             )
-        except NameError:
+        except (NameError, AttributeError):
             self.debug = True
             self.log.info(
                 "Gcode debugging enabled (not running in Mr Beam Plugin environment"
@@ -340,9 +340,7 @@ class ImageSeparator:
             )
 
         else:
-            _, contours, hierarchy = cv2.findContours(
-                img, method, cv2.CHAIN_APPROX_SIMPLE
-            )
+            contours, hierarchy = cv2.findContours(img, method, cv2.CHAIN_APPROX_SIMPLE)
             if isCV31:
                 self.log.info(
                     "OpenCV "
