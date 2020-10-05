@@ -1157,7 +1157,7 @@ $(function(){
 		};
 
 		self.svgManualTranslate = function(data, event) {
-			if (event.keyCode === 13 || event.type === 'blur') {
+			if (event.keyCode === 13 || event.type === 'blur' || event.keyCode === 38 || event.keyCode === 40) {
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
 				var nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
@@ -1176,7 +1176,7 @@ $(function(){
 			}
 		};
 		self.svgManualRotate = function(data, event) {
-			if (event.keyCode === 13 || event.type === 'blur') {
+			if (event.keyCode === 13 || event.type === 'blur' || event.keyCode === 38 || event.keyCode === 40) {
 				self.abortFreeTransforms();
 				var svg = snap.select('#'+data.previewId);
 				var newRotate = parseFloat(event.target.value);
@@ -1203,7 +1203,7 @@ $(function(){
 //			}
 //		};
 		self.svgManualWidth = function(data, event) {
-			if (event.keyCode === 13 || event.type === 'blur') {
+			if (event.keyCode === 13 || event.type === 'blur' || event.keyCode === 38 || event.keyCode === 40) {
 				self.abortFreeTransforms();
 				const svg = snap.select(`#${data.previewId}`);
 				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
@@ -1215,9 +1215,10 @@ $(function(){
 				}
 				self.check_sizes_and_placements();
 			}
+			return false;
 		};
 		self.svgManualHeight = function(data, event) {
-			if (event.keyCode === 13 || event.type === 'blur') {
+			if (event.keyCode === 13 || event.type === 'blur' || event.keyCode === 38 || event.keyCode === 40) {
 				self.abortFreeTransforms();
 				const svg = snap.select('#'+data.previewId);
 				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
@@ -1229,6 +1230,44 @@ $(function(){
 				}self.check_sizes_and_placements();
 			}
 		};
+		self.arrowKeys = function(data, event, unit, delimiter=null){
+			if (event.keyCode === 38 || event.keyCode === 40) { // arrowUp, arrowDown
+				event.preventDefault();
+				// remember caret position
+				const selStart = event.target.selectionStart;
+				const selEnd = event.target.selectionEnd;
+				let val = event.keyCode === 38 ? 1 : -1;
+				if(event.altKey) {
+					val = val / 10.0;
+				}
+				if(event.shiftKey) {
+					val = val * 10.0;
+				}
+				if(delimiter === null){
+					const newVal = parseFloat(event.target.value) + val;
+					event.target.value = `${newVal.toFixed(1)} ${unit}`;
+				} else {
+					const v = event.target.value;
+					const idxDelimiter = v.search(new RegExp(delimiter));
+					if(selStart <= idxDelimiter){
+						const v1 = v.substring(0,idxDelimiter);
+						const newV1 = parseFloat(v1) + val;
+						event.target.value = `${newV1.toFixed(1)}${v.substring(idxDelimiter)}`;
+					} else {
+						const d = idxDelimiter + delimiter.length;
+						const v2 = v.substring(d);
+						const newV2 = parseFloat(v2) + val;
+						event.target.value = `${v.substring(0, d)}${newV2.toFixed(1)}`;
+					}
+				}
+				// restore caret position
+				event.target.selectionStart = selStart;
+				event.target.selectionEnd = selEnd;
+				return false; // swallow the default action
+			}
+			return true;
+		}
+
 		self.svgManualUnitToggle = function(data, event) {
 			$('#'+data.id).toggleClass('show_percent');
 		};
@@ -1562,43 +1601,31 @@ $(function(){
 
 		self.moveSelectedDesign = function(ifX,ifY){
 			var diff = 2;
-			var transformHandles = snap.select('#handlesGroup');
+			var globalScale = self.scaleMatrix().a;
+			var nx = diff * ifX;
+			var ny = diff * ifY;
+			var ntx = nx/globalScale;
+			var nty = ny/globalScale;
 
-			if(transformHandles){
-				var selectedId = transformHandles.data('parentId');
-				var svg = snap.select('#'+selectedId);
-				var globalScale = self.scaleMatrix().a;
-
-				// var bbox = svg.getBBox();
-				// var nx = bbox.x + diff * ifX;
-				// var ny = bbox.y + diff * ifY;
-
-				var nx = diff * ifX;
-				var ny = diff * ifY;
-
-				var ntx = nx/globalScale;
-				var nty = ny/globalScale;
-
-//				svg.ftStoreInitialTransformMatrix();
-				svg.data('tx', ntx);
-				svg.data('ty', nty);
-				snap.mbtransform.manualTransform(svg, {tx_rel: ntx, ty_rel: nty, diffType:'absolute'})
-			}
+			const selection = snap.mbtransform.getSelection();
+			snap.mbtransform.manualTransform(selection, {tx_rel: ntx, ty_rel: nty, diffType:'absolute'})
 		};
 
 		self.removeSelectedDesign = function(){
-			var transformHandles = snap.select('#handlesGroup');
-			if(transformHandles){
-				var selectedId = transformHandles.data('parentId');
+			const selection = snap.mbtransform.getSelection();
+			for (var s = 0; s < selection.length; s++) {
+				var design = selection[s];
+				const selectedId = design.attr("mb:id");
+
 				for (var i = 0; i < self.placedDesigns().length; i++) {
 					var file = self.placedDesigns()[i];
 					if(file.previewId === selectedId){
 						self.abortFreeTransforms();
 						self.removeSVG(file);
-						return;
 					}
 				}
 			}
+			return;
 		};
 
 		self.getUsefulDimensions = function(wpx, hpx){

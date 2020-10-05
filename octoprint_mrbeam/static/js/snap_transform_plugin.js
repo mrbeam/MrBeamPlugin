@@ -248,14 +248,9 @@
 			self.session.rotate.ocx = self.session.bb.cx;
 			self.session.rotate.ocy = self.session.bb.cy;
 			
-			// invert Translate Matrix
-			const _cx = self.session.translate._mInv.x(self.session.rotate.ocx, self.session.rotate.ocy);
-			const _cy = self.session.translate._mInv.y(self.session.rotate.ocx, self.session.rotate.ocy);
-			// invert Rotate Matrix
-			const rcx = self.session.rotate._mInv.x(_cx, _cy);
-			const rcy = self.session.rotate._mInv.y(_cx, _cy);
-			self.session.rotate.cx = rcx;
-			self.session.rotate.cy = rcy;
+			const rotateCenter = self._getSessionRotateCenter();
+			self.session.rotate.cx = rotateCenter[0];
+			self.session.rotate.cy = rotateCenter[1];
 			
 			// Matrix to unrotate the mouse movement dxMM,dyMM 
 			self.session.rotate._unrotateM = Snap.matrix().rotate(-Math.sign(self.session.originMatrix.a) *  Math.sign(self.session.originMatrix.d) * self.session.rotate._alpha); 
@@ -281,6 +276,7 @@
 			const cy = self.session.rotate.cy;
 
 			// calculate viewbox coordinates incl. zoom & pan (mm)
+			// TODO: take offset of click and rotate icon origin into account to avoid bogus rotation center.
 			const bx = self.session.rotate.bx = ax + rdx;
 			const by = self.session.rotate.by = ay + rdy;
 
@@ -386,8 +382,6 @@
 			self.session.scale.cy = scm.localMatrix.f;
 			
 			// additionally get scaling center in absolute coord space
-			self.session.scale.tcx = scm.totalMatrix.e;
-			self.session.scale.tcy = scm.totalMatrix.f;
 			self.session.scale.vcx = self.session.originInvert.x(scm.totalMatrix.e, scm.totalMatrix.f);
 			self.session.scale.vcy = self.session.originInvert.y(scm.totalMatrix.e, scm.totalMatrix.f);
 			
@@ -401,7 +395,6 @@
 					.rotate( Math.sign(self.session.originTransform.scalex) * -self.session.originTransform.rotate );
 			
 			self.paper.debug.point('c', self.session.scale.cx, self.session.scale.cy, '#e25303'); 
-			self.paper.debug.point('_C', self.session.scale.tcx, self.session.scale.tcy, '#00aaff'); 
 			self.paper.debug.point('A', self.session.scale.mx, self.session.scale.my, '#00aaff'); 
 			
 		}	
@@ -498,7 +491,9 @@
                 scaley = 1;
                 alpha = 0;
             }
-            if(params.angle !== undefined && !isNaN(params.angle)) alpha = params.angle - self.session.rotate._alpha;
+            if(params.angle !== undefined && !isNaN(params.angle)) {
+				alpha = params.angle - self.session.rotate._alpha;
+			}
 			
 			if(params.width !== undefined && !isNaN(params.width)){
 				scalex = params.width / bbox.width;
@@ -512,10 +507,6 @@
 					scalex = scaley;
 				}
 			}
-//			if(params.scale !== undefined && !isNaN(params.scale)){
-//				scalex = params.scale / self.session.scale._m.a;
-//				scaley = scalex;
-//			}
 			if(params.scalex !== undefined && !isNaN(params.scalex)){
 				scalex = params.scalex / self.session.scale._m.a;
 				if(params.proportional){
@@ -530,18 +521,23 @@
 			}
 			if(params.mirror !== undefined) mirror =  params.mirror;
 
-			// set values
+			// set values on transform groups
 			// Scale
-				const matScale = self.session.scale._m.clone().scale(scalex, scaley, bbox.cx, bbox.cy);
-				self.scaleGroup.transform(matScale);
+			const scx = self.session.originInvert.x(bbox.cx, bbox.cy);
+			const scy = self.session.originInvert.y(bbox.cx, bbox.cy);
+			const matScale = self.session.scale._m.clone().scale(scalex, scaley, scx, scy);
+			self.scaleGroup.transform(matScale);
 
-			// Rotate
-				const matRotate = self.session.rotate._m.clone().rotate(alpha, bbox.cx, bbox.cy);
-				self.rotateGroup.transform(matRotate);
+			// Rotate			
+			const rotateCenter = self._getSessionRotateCenter();
+			const matRotate = self.session.rotate._m.clone().rotate(alpha, rotateCenter[0], rotateCenter[1]);
+			self.rotateGroup.transform(matRotate);
 
 			// Translate
-				const matTranslate = self.session.translate._m.clone().translate(tx, ty);
-				self.translateGroup.transform(matTranslate);
+			const matTranslate = self.session.translate._m.clone().translate(tx, ty);
+			self.translateGroup.transform(matTranslate);
+
+			const m = self.translateHandle.transform().totalMatrix;
 
 //			self._visualizeTransform();
 
@@ -549,7 +545,7 @@
 //			self.session.lastUpdate = Date.now();
 
 			// apply transform to target elements via callback
-			self._apply_on_transform();
+			self._apply_on_transform(m);
 			
 			// end session
 			self._sessionEnd();
@@ -629,7 +625,8 @@
 				self.session.lastUpdate = Date.now();
 				
 				// apply transform to target elements via callback
-				self._apply_on_transform();
+				const m = self.translateHandle.transform().totalMatrix;
+				self._apply_on_transform(m);
 			}
 		}
 		
@@ -647,43 +644,21 @@
 			for (var i = 0; i < self.elements_to_transform.length; i++) {
 				var el = self.elements_to_transform[i];
 				el.mbtBeforeTransform();
-//				const callbacks = el.data(self.BEFORE_TRANSFORM_CALLBACKS);
-//				for (var c = 0; c < callbacks.length; c++) {
-//					var cb = callbacks[c];
-//					if(typeof cb === 'function'){
-//						cb(el, self.session);
-//					}
-//				}
 			}
 		}
-		self._apply_on_transform = function(){
-			const m = self.translateHandle.transform().totalMatrix;
+		self._apply_on_transform = function(m){
 			
 			for (var i = 0; i < self.elements_to_transform.length; i++) {
 				var el = self.elements_to_transform[i];
 				const newM = el.data(self.ORIGINAL_MATRIX).clone().multLeft(m);
 				el.transform(newM);
 				el.mbtOnTransform();
-//				const callbacks = el.data(self.ON_TRANSFORM_CALLBACKS);
-//				for (var c = 0; c < callbacks.length; c++) {
-//					var cb = callbacks[c];
-//					if(typeof cb === 'function'){
-//						cb(el, self.session);
-//					}
-//				}
 			}
 		}
 		self._apply_after_transform = function(){
 			for (var i = 0; i < self.elements_to_transform.length; i++) {
 				var el = self.elements_to_transform[i];
 				el.mbtAfterTransform();
-//				const callbacks = el.data(self.AFTER_TRANSFORM_CALLBACKS);
-//				for (var c = 0; c < callbacks.length; c++) {
-//					var cb = callbacks[c];
-//					if(typeof cb === 'function'){
-//						cb(el, self.session);
-//					}
-//				}
 			}
 		}
 		
@@ -815,6 +790,10 @@
 			self.elements_to_transform = Snap.set();
 		};
 		
+		self.getSelection = function(){
+			return self.elements_to_transform;
+		}
+		
 		self.toggle = function(elements_to_transform){
 			
 			if(self.transformHandleGroup.node.classList.contains('active')){
@@ -877,6 +856,18 @@
 				}
 			}
 		}
+		
+		self._getSessionRotateCenter = function(){
+			
+			// invert Translate Matrix
+			const _cx = self.session.translate._mInv.x(self.session.bb.cx, self.session.bb.cy);
+			const _cy = self.session.translate._mInv.y(self.session.bb.cx, self.session.bb.cy);
+			// invert Rotate Matrix
+			const rcx = self.session.rotate._mInv.x(_cx, _cy);
+			const rcy = self.session.rotate._mInv.y(_cx, _cy);
+			return [rcx, rcy];
+		}
+			
 		
 		self._transformBBox = function(bbox, matrix){
 			const x = matrix.x(bbox.x, bbox.y);

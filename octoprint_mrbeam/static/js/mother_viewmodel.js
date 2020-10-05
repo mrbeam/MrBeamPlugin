@@ -83,12 +83,14 @@ $(function () {
 				
 				self.addClassesForModifierKeys(event);
 
-				if (!self.settings.feature_keyboardControl()) return;
 				if(	event.target.nodeName === "INPUT"
 					|| event.target.nodeName === "TEXTAREA"
 					|| $('.modal.in').length > 0
-				) return;
+				) { 
+					return true;  // true does not "consume" the event.
+				}
 
+				if (!self.settings.feature_keyboardControl()) return true;
 				var button = undefined;
 				var wa_id = $('nav li.active a').attr('href');
 				switch (event.which) {
