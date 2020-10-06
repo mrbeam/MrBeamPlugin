@@ -31,6 +31,7 @@ STRESS_COUNT = 3
 
 # TODO frozen_dict
 DEFAULT_OPTIONS = {"w": 100, "h": 100, "x": 10, "y": 10, "file_id": "SomeDummyText"}
+DEFAULT_OUT_GCO = "out.gco"
 
 ############
 ## RASTER ##
@@ -46,7 +47,7 @@ def _test_raster_files(datafiles, paths, options, repeat=0, keep_out_file_name=F
     :param options: list of kwargs (Mapping) forwarded to ImageProcessor.img_to_gcode
     :param repeat: repeat an additional N times (runs Once if repeat==0)
     """
-    default_out = str(datafiles / "out.gco")
+    default_out = str(datafiles / DEFAULT_OUT_GCO)
     if not options:
         options = [
             DEFAULT_OPTIONS,
@@ -173,6 +174,15 @@ def test_work_area_clip(datafiles):
     paths = []
     options = []
     _test_raster_files(datafiles, paths, options)
+
+
+@IN_FILES
+def test_result(datafiles):
+    # Create the DEFAULT_OUT_GCO file
+    _test_raster_files(datafiles, [str(datafiles / "simple.png")], [])
+    from tests.draw_code import draw_gcode_file
+
+    draw_gcode_file(str(datafiles / DEFAULT_OUT_GCO))
 
 
 ############
