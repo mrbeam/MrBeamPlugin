@@ -69,7 +69,7 @@ def _test_raster_files(datafiles, paths, options, repeat=0, keep_out_file_name=F
 
 
 @IN_FILES
-# @pytest.mark.skip("skipping")
+@pytest.mark.skip("skipping")
 def test_all(datafiles):
     """
     Test images over and over for detecting cpu stress,
@@ -194,10 +194,16 @@ def test_work_area_clip(datafiles):
 @IN_FILES
 def test_result(datafiles):
     # Create the DEFAULT_OUT_GCO file
-    _test_raster_files(datafiles, [str(datafiles / "simple.png")], [])
-    from tests.draw_code import draw_gcode_file
+    _test_raster_files(
+        datafiles,
+        [str(datafiles / "simple.png")],
+        [
+            {"x": 100, "y": 100, "w": 100, "h": 100},
+        ],
+    )
+    from tests.draw_gcode import draw_gcode_file
 
-    draw_gcode_file(str(datafiles / DEFAULT_OUT_GCO))
+    draw_gcode_file(str(datafiles / DEFAULT_OUT_GCO), True, False)
 
 
 ############
