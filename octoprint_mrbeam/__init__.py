@@ -70,6 +70,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
+from octoprint_mrbeam.gcodegenerator.job_params import JobParams
 from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
@@ -1404,22 +1405,18 @@ class MrBeamPlugin(
         if not self.calibration_tool_mode:
             return ("", 403)  # FORBIDDEN # NO_CONTENT
         profile = self.laserCutterProfileManager.get_current_or_default()
-        max_intensity = 1300  # TODO get magic numbers from profile
-        min_intensity = 0
-        min_feedrate = 50
-        max_feedrate = 3000
         try:
-            i = int(int(intensity) / 100.0 * max_intensity)
+            i = int(int(intensity) / 100.0 * JobParams.Max.INTENSITY)
             f = int(feedrate)
         except ValueError:
             return make_response("Invalid parameters", 400)
 
         # validate input
         if (
-            i < min_intensity
-            or i > max_intensity
-            or f < min_feedrate
-            or f > max_feedrate
+            i < JobParams.Min.INTENSITY
+            or i > JobParams.Max.INTENSITY
+            or f < JobParams.Min.SPEED
+            or f > JobParams.Max.SPEED
         ):
             return make_response("Invalid parameters", 400)
         cm = CalibrationMarker(
@@ -2408,7 +2405,7 @@ class MrBeamPlugin(
                 self._logger.info("Conversion canceled")
                 raise octoprint.slicing.SlicingCancelled
 
-        # READ PARAMS FROM JSON
+        # READ JOB_PARAMS FROM JSON
         params = dict()
         with open(self._CONVERSION_PARAMS_PATH) as data_file:
             params = json.load(data_file)
