@@ -198,16 +198,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 bbox.y
         );
 
-        // get svg as dataUrl TODO: check snap's .toDataURL() function instead of a homebrew one.
-        var svgStr = elem.outerSVG();
-        // on iOS (Safari and Chrome) embedded images are linked with NS1:href which doesn't work later on...
-        svgStr = svgStr.replace(
-            /NS1:href=/gi,
-            'xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href='
-        );
-        var svgDataUri =
-            "data:image/svg+xml;base64," +
-            window.btoa(unescape(encodeURIComponent(svgStr))); //deprecated unescape needed!
+        // get svg as dataUrl
+        var svgDataUri = elem.toDataURL();
 
         // init render canvas and attach to page
         var renderCanvas = document.createElement("canvas");
@@ -289,6 +281,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 len +
                 ")";
             console.error(msg, e);
+            console.log(
+                "renderPNG ERR: original svgStr that failed to load: ",
+                svgStr
+            );
+            console.log(
+                "renderPNG ERR: svgDataUri that failed to load: ",
+                svgDataUri
+            );
             new PNotify({
                 title: gettext("Conversion failed"),
                 text: msg,

@@ -1139,12 +1139,24 @@ $(function () {
 
                 // copy namespaces into group
                 if (attr.name.indexOf("xmlns") === 0) {
+                    namespaces[attr.name] = attr.value;
                     // Illustrator uses namespaces that reference a entity defined as ENTITY outside of the xml of the svg.
                     // like this: xmlns:x="&ns_extend;"
                     // We replace it to xmlns:x="ENTITYREF_ns_extend"
-                    namespaces[attr.name] = attr.value
-                        .replace(/&/g, "ENTITYREF_")
-                        .replace(/;/g, "");
+                    if (attr.value.match(/^&.+;$/)) {
+                        if (attr.name == "xmlns") {
+                            namespaces[attr.name] =
+                                "http://www.w3.org/2000/svg";
+                        } else if (attr.name == "xmlns:xlink") {
+                            // not sure if this is important
+                            namespaces[attr.name] =
+                                "http://www.w3.org/1999/xlink";
+                        } else {
+                            namespaces[attr.name] = attr.value
+                                .replace(/&/g, "ENTITYREF_")
+                                .replace(/;/g, "");
+                        }
+                    }
                 }
             }
             return namespaces;
