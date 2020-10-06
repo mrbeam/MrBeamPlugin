@@ -2405,7 +2405,7 @@ class MrBeamPlugin(
                 self._logger.info("Conversion canceled")
                 raise octoprint.slicing.SlicingCancelled
 
-        # READ JOB_PARAMS FROM JSON
+        # READ PARAMS FROM JSON
         params = dict()
         with open(self._CONVERSION_PARAMS_PATH) as data_file:
             params = json.load(data_file)
