@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import logging
 import re
 
 
@@ -8,10 +9,12 @@ SPEED_NONE = 1500
 HOMED_X = 500
 HOMED_Y = 390
 
-FIND_X = r"X(\d+\.?\d+)"
-FIND_Y = r"Y(\d+\.?\d+)"
-FIND_SPEED = r"F(\d+\.?\d+)"
-FIND_INT = r"S(\d+\.?\d+)"
+
+FLOAT_NUMBER = r"[0-9]+\.?[0-9]*"
+FIND_X = r"X" + FLOAT_NUMBER
+FIND_Y = r"Y" + FLOAT_NUMBER
+FIND_SPEED = r"F" + FLOAT_NUMBER
+FIND_INT = r"S" + FLOAT_NUMBER
 
 
 def read(gcode, init_x=HOMED_X, init_y=HOMED_Y, init_intensity=-1):
@@ -25,8 +28,8 @@ def read(gcode, init_x=HOMED_X, init_y=HOMED_Y, init_intensity=-1):
     y = init_y
     _x, _y = x, y
     speed = 0
-    intensity = init_instensity
-    yield x, y, speed, intensity
+    intensity = init_intensity
+    # yield x, y, speed, intensity
     # regex compiled searches
     find_x = re.compile(FIND_X)
     find_y = re.compile(FIND_Y)
@@ -35,22 +38,35 @@ def read(gcode, init_x=HOMED_X, init_y=HOMED_Y, init_intensity=-1):
     for line in gcode:
         line_counter += 1
         first_char = line[0]
+        command = line[1:]
         if first_char == "G":
-            command = line[1:]
+            # logging.debug("processing line : %s", line.strip('\n '))
             # Extract x and y coordinates
-            for coord, pattern in [[x, find_x], [y, find_y]]:
-                coord = _find_val(pattern, command) or coord
+            found_x = _find_val(find_x, command)
+            if found_x is not None:
+                x = found_x
+            found_y = _find_val(find_y, command)
+            if found_y is not None:
+                y = found_y
             second_char = command[0]
             if second_char == "0":
                 # G0: Rapid Travel - maximum speed and turns off laser.
+                # logging.debug("Yield x % 5s y % 5s speed % 3s intensity % 3s", x, y, SPEED_NONE, -1)
                 yield x, y, SPEED_NONE, -1
             elif second_char == "1":
                 # G1: Laser travel - use laser intensity and speed.
-                intensity = _find_val(find_intensity, command, type_=int) or intensity
-                speed = _find_val(find_speed, command, type_=int) or speed
+                # intensity = _find_val(find_intensity, command) or intensity
+                found_int = _find_val(find_speed, command)
+                if found_int is not None:
+                    intensity = found_int
+                # speed = _find_val(find_speed, command) or speed
+                found_speed = _find_val(find_speed, command)
+                if found_speed is not None:
+                    speed = found_speed
+                # logging.debug("Yield x % 5s y % 5s speed % 3s intensity % 3s", x, y, speed, intensity)
                 yield x, y, speed, intensity
         elif first_char == "F":
-            speed = _find_val(find_speed, command, type_=int) or speed
+            speed = _find_val(find_speed, command) or speed
         elif first_char == "M":
             # TODO
             pass
@@ -58,7 +74,7 @@ def read(gcode, init_x=HOMED_X, init_y=HOMED_Y, init_intensity=-1):
 
 def read_file(path):
     """Same as ``read``, but takes a file path as input."""
-    with open(gcode_file, "r") as gfile:
+    with open(path, "r") as gfile:
         for result in read(gfile.readlines()):
             yield result
 
@@ -68,4 +84,6 @@ def _find_val(pattern, search_string, type_=float):
     if found is None:
         return None
     else:
-        return type_(slice(*command[found.span()]))
+        span = found.span()
+        slice_ = slice(span[0] + 1, span[1])
+        return type_(search_string[slice_])
