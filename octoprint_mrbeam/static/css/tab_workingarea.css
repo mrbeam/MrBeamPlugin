@@ -41,6 +41,7 @@
 #wa_filelist .file_list_entry {
 	border-bottom: 1px dotted lightgray;
 	margin-bottom: 1em;
+	user-select: none;
 }
 #wa_filelist .file_list_entry .title {
 	max-width: 80%;
@@ -118,6 +119,7 @@
 
 #wa_filelist .unit_toggler {
     cursor: pointer;
+	user-select: none;
 }
 #wa_filelist .file_list_entry .local_transformation span.unit_label {
 	font-size: 0.75rem;

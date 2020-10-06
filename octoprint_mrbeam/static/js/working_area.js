@@ -1133,8 +1133,7 @@ $(function(){
 		self.svgTransformUpdate = function(svg) {
             const transform = svg.transform().totalMatrix.split();
 			const rot = ((transform.rotate + 180 + 720) % 360) - 180; // ensures -180° to 180°
-			const scalex = transform.scalex;
-			const scaley = transform.scaley;
+			const initialMatrix = svg.data(snap.mbtransform.INITIAL_MATRIX);
 //			const shear = transform.shear; // not in use yet
 			
 			const globalScale = self.scaleMatrix().a;
@@ -1143,6 +1142,8 @@ $(function(){
 			const ty = self.workingAreaHeightMM() - bbox.y2 * globalScale;
 			const horizontal = bbox.width * globalScale;
 			const vertical = bbox.height * globalScale;
+			const scalex = transform.scalex;
+			const scaley = transform.scaley;
 			
 			const id = svg.attr('id');
 			const label_id = id.substr(0, id.indexOf('-'));
@@ -1150,7 +1151,6 @@ $(function(){
 			$('#'+label_id+' .horizontal').val(`${horizontal.toFixed(1)} mm`);
 			$('#'+label_id+' .vertical').val(`${vertical.toFixed(1)} mm`);
 			$('#'+label_id+' .rotation').val(`${rot.toFixed(1)} °`);
-//			$('#'+label_id+' .scale').val(`${(scalex*100).toFixed(1)} %, ${(scaley*100).toFixed(1)} %`);
 			$('#'+label_id+' .horizontal_percent').val(`${(scalex*100).toFixed(1)} %`);
 			$('#'+label_id+' .vertical_percent').val(`${(scaley*100).toFixed(1)} %`);
 			self.check_sizes_and_placements();
@@ -1158,15 +1158,15 @@ $(function(){
 
 		self.svgManualTranslate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur' || event.keyCode === 38 || event.keyCode === 40) {
-				var svg = snap.select('#'+data.previewId);
-				var globalScale = self.scaleMatrix().a;
-				var nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
+				const svg = snap.select('#'+data.previewId);
+				const nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
 				if (nt) {
-					var ntx = nt[0] / globalScale;
-					var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
-
+					const globalScale = self.scaleMatrix().a;
 					self.abortFreeTransforms();
-					snap.mbtransform.manualTransform(svg, {tx: ntx, ty: nty, diffType: 'absolute'});
+					let ntx = nt[0] / globalScale;
+					let nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
+					
+					snap.mbtransform.manualTransform(svg, {tx: ntx, ty: nty}); // absolute translation
 					self.check_sizes_and_placements();
 				} else {
 					// reset to previous value
@@ -1180,19 +1180,11 @@ $(function(){
 				self.abortFreeTransforms();
 				var svg = snap.select('#'+data.previewId);
 				var newRotate = parseFloat(event.target.value);
-				snap.mbtransform.manualTransform(svg, {angle: newRotate});
+				const oldRotation = svg.transform().localMatrix.split().rotate;
+				snap.mbtransform.manualTransform(svg, {angle: newRotate - oldRotation}); // relative angle
 				self.check_sizes_and_placements();
 			}
 		};
-//		self.svgManualScale = function(data, event) {
-//			if (event.keyCode === 13 || event.type === 'blur') {
-//				self.abortFreeTransforms();
-//				var svg = snap.select('#'+data.previewId);
-//				var newScale = parseFloat(event.target.value) / 100.0;
-//				snap.mbtransform.manualTransform(svg, {scale: newScale});
-//				self.check_sizes_and_placements();
-//			}
-//		};
 //		self.svgManualMirror = function(data, event) {
 //			if (event.type === 'click') {
 //				self.abortFreeTransforms();
@@ -1209,9 +1201,11 @@ $(function(){
 				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
 				let value = parseFloat(event.target.value);
 				if(event.target.classList.contains('unit_mm')){
-					snap.mbtransform.manualTransform(svg, {width: value, proportional: isProp });
+					snap.mbtransform.manualTransform(svg, {width: value, proportional: isProp }); // absolute width
 				} else if(event.target.classList.contains('unit_percent')){
-					snap.mbtransform.manualTransform(svg, {scalex: value/100.0, proportional: isProp });
+					const currentSx = svg.transform().localMatrix.a;
+					const relativeScaleX = (value/100.0) / currentSx;
+					snap.mbtransform.manualTransform(svg, {scalex: relativeScaleX, proportional: isProp }); // relative Scale
 				}
 				self.check_sizes_and_placements();
 			}
@@ -1224,9 +1218,11 @@ $(function(){
 				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
 				let value = parseFloat(event.target.value);
 				if(event.target.classList.contains('unit_mm')){
-					snap.mbtransform.manualTransform(svg, {height: value, proportional: isProp });
+					snap.mbtransform.manualTransform(svg, {height: value, proportional: isProp }); // absolute height
 				} else if(event.target.classList.contains('unit_percent')){
-					snap.mbtransform.manualTransform(svg, {scaley: value/100.0, proportional: isProp });
+					const currentSy = svg.transform().localMatrix.d;
+					const relativeScaleY = (value/100.0) / currentSy;
+					snap.mbtransform.manualTransform(svg, {scaley: relativeScaleY, proportional: isProp }); // relative scale
 				}self.check_sizes_and_placements();
 			}
 		};

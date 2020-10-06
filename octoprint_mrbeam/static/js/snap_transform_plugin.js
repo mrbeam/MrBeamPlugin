@@ -463,7 +463,9 @@
 		
 		/***** Manual transform *****/
 		self.manualTransform = function(elementset_or_selector, params){
+			console.log("manualTransform", params);
 		    self.elements_to_transform = self._getElementSet(elementset_or_selector);
+			self._remember_original_transform();
 			
 			// init session
 			self._sessionInit('manualTransform');
@@ -482,39 +484,39 @@
 			
             // if the transformation comes from the keyboard arrows, it looks a bit different
             if(params.tx_rel !== undefined && !isNaN(params.tx_rel)){
-                tx = params.tx_rel;
+                tx = self.toTwoDigitFloat(params.tx_rel);
                 scalex = 1;
                 alpha = 0;
             }
             if(params.ty_rel !== undefined && !isNaN(params.ty_rel)){
-                ty = params.ty_rel;
+                ty = self.toTwoDigitFloat(params.ty_rel);
                 scaley = 1;
                 alpha = 0;
             }
             if(params.angle !== undefined && !isNaN(params.angle)) {
-				alpha = params.angle - self.session.rotate._alpha;
+				alpha = self.toTwoDigitFloat(params.angle);// - self.session.rotate._alpha;
 			}
 			
 			if(params.width !== undefined && !isNaN(params.width)){
-				scalex = params.width / bbox.width;
+				scalex = params.width / bbox.width; // relative!
 				if(params.proportional){
 					scaley = scalex;
 				}
 			}
 			if(params.height !== undefined && !isNaN(params.height)){
-				scaley = params.height / bbox.height;
+				scaley = params.height / bbox.height; // relative!
 				if(params.proportional){
 					scalex = scaley;
 				}
 			}
 			if(params.scalex !== undefined && !isNaN(params.scalex)){
-				scalex = params.scalex / self.session.scale._m.a;
+				scalex = params.scalex; // relative!
 				if(params.proportional){
 					scaley = scalex;
 				}
 			}
 			if(params.scaley !== undefined && !isNaN(params.scaley)){
-				scaley = params.scaley / self.session.scale._m.d;
+				scaley = params.scaley; // relative!
 				if(params.proportional){
 					scalex = scaley;
 				}
@@ -525,24 +527,19 @@
 			// Scale
 			const scx = self.session.originInvert.x(bbox.cx, bbox.cy);
 			const scy = self.session.originInvert.y(bbox.cx, bbox.cy);
-			const matScale = self.session.scale._m.clone().scale(scalex, scaley, scx, scy);
+			const matScale = Snap.matrix().scale(scalex, scaley, scx, scy);
 			self.scaleGroup.transform(matScale);
 
 			// Rotate			
 			const rotateCenter = self._getSessionRotateCenter();
-			const matRotate = self.session.rotate._m.clone().rotate(alpha, rotateCenter[0], rotateCenter[1]);
+			const matRotate = Snap.matrix().rotate(alpha, rotateCenter[0], rotateCenter[1]);
 			self.rotateGroup.transform(matRotate);
 
 			// Translate
-			const matTranslate = self.session.translate._m.clone().translate(tx, ty);
+			const matTranslate = Snap.matrix().translate(tx, ty);
 			self.translateGroup.transform(matTranslate);
 
-			const m = self.translateHandle.transform().totalMatrix;
-
-//			self._visualizeTransform();
-
-//			self.updateCounter++;
-//			self.session.lastUpdate = Date.now();
+			const m = self.translateHandle.transform().totalMatrix; // a relative matrix applied to existing transformation of the element.
 
 			// apply transform to target elements via callback
 			self._apply_on_transform(m);
@@ -554,7 +551,7 @@
 
 
 		self._sessionInit = function(calledBy){
-			 self.paper.debug.enable(); 
+//			self.paper.debug.enable(); 
 			self.paper.debug.cleanup();
 			
 			// change mouse cursor
@@ -562,10 +559,10 @@
 			
 			// remember current scale factors, rotation and translation
 			const tmp = self.translateHandle.transform().totalMatrix.split();
-			
 			const tmpSM = self.scaleGroup.transform().localMatrix;
 			const tmpRM = self.rotateGroup.transform().localMatrix;
 			const tmpTM = self.translateGroup.transform().localMatrix;
+			
 			self.session.scale = {sx: 1, sy: 1, _m:tmpSM, _mInv:tmpSM.invert()};
 			self.session.rotate = {alpha: 0, cx: 0, cy: 0, _m:tmpRM, _mInv:tmpRM.invert(), _alpha:tmp.rotate};
 			self.session.translate = {dx: 0, dy:0, _m:tmpTM, _mInv:tmpTM.invert()};
@@ -682,6 +679,7 @@
 				if(el.data(self.INITIAL_MATRIX)) {
 					const m = el.data(self.INITIAL_MATRIX);
 					el.transform(m);
+					el.data(self.ORIGINAL_MATRIX, m);
 				} else {
 					console.warn("No initial matrix found. Setting transform=''.");
 					el.transform('');
@@ -698,6 +696,9 @@
 			if(self.transformHandleGroup.node.classList.contains('active')){
 				self.deactivate();
 			}
+			
+			// ensure that these classes are removed. Otherwise when activating the transform handles, some handles are hidden.
+			self.transformHandleGroup.node.classList.remove('translate', 'rotate', 'scale', 'scaleHandleNE', 'scaleHandleNW', 'scaleHandleSW', 'scaleHandleSE', 'scaleHandleNN', 'scaleHandleEE', 'scaleHandleSS', 'scaleHandleWW');
 			
 			let elements_to_transform = self._getElementSet(elementset_or_selector);			
 			if(elements_to_transform.length === 0) {
@@ -957,7 +958,9 @@
 			return { x: x, y: y, cx: cx, cy: cy, x2: x2, y2: y2, width: w, height: h };
 		}
 		
-		
+		self.toTwoDigitFloat = function(num){
+			return Math.round((num + Number.EPSILON) * 100) / 100;
+		}
 		
 		///////////// VISUALIZATIONS ////////////////////
 				
@@ -1100,7 +1103,7 @@
 		}
 		
 		self.point = function(label, x, y, color="#ff00ff", parent=null){
-			if(!self.isEnabled) return;
+			if(!self.isEnabled){ console.info("Snap.debug disabled. Call <paper>.enable() first."); return; }
 			
 			if(!label){
 				console.error("debug.point needs a label!");
@@ -1175,7 +1178,7 @@
 		};
 		
 		self.coords = function(label, color="#ff00ff", parent=null){
-			if(!self.isEnabled) return;
+			if(!self.isEnabled){ console.info("Snap.debug disabled. Call <paper>.enable() first."); return; }
 			
 			if(!label){
 				console.error("debug.coords needs a label!");
@@ -1208,7 +1211,7 @@
 		}
 		
 		self.position = function(label, el, color='#ff00ff'){
-			if(!self.isEnabled) return;
+			if(!self.isEnabled){ console.info("Snap.debug disabled. Call <paper>.enable() first."); return; }
 			
 			if(!label){
 				console.error("debug.position needs a label!");
