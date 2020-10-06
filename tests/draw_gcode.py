@@ -28,7 +28,7 @@ MAX_STRENGTH = float(INT_CUT) / SPEED_CUT
 
 PASSES_CUT = 3
 
-ANIMATION_SPEED = 1
+ANIMATION_SPEED = 9999
 
 
 def draw_gcode(gcode, graphical=False, sim_speed=False):
@@ -44,7 +44,6 @@ def draw_gcode(gcode, graphical=False, sim_speed=False):
 def draw_gcode_file(path, graphical=False, sim_speed=False):
     from octoprint_mrbeam.gcodegenerator.read import read_file as g_read
 
-    # previous values
     return _draw_commands(g_read(path), graphical=graphical, sim_speed=sim_speed)
 
 
@@ -59,13 +58,20 @@ def _draw_commands(commands, graphical=False, sim_speed=False, out="out.svg"):
     # _speed = INT_NONE
     # if not graphical:
     #     turtle
+    _strength = None
+    turtle.tracer(
+        ANIMATION_SPEED, ANIMATION_SPEED
+    )  # Tweak this in case of slow animations
     if not sim_speed or not graphical:
         turtle.speed(0)  # No animation speed
     turtle.pensize(LASER_WIDTH)
-    turtle.hideturtle()
     turtle.penup()
     if graphical:
         turtle.getscreen().setworldcoordinates(0, 0, 500, 390)
+    else:
+        turtle.trace(9999, 9999)
+    if turtle.isvisible():
+        turtle.hideturtle()
     for x, y, speed, intensity in commands:
         if x == _x and y == _y:
             continue
@@ -83,8 +89,11 @@ def _draw_commands(commands, graphical=False, sim_speed=False, out="out.svg"):
         elif intensity == INT_NONE:
             pass
         else:
-            strength = intensity / speed
+            strength = float(intensity) / speed
             color = tuple([turtle.colormode() * (1 - strength / MAX_STRENGTH)] * 3)
+            if _strength is None or _strength != strength:
+                # logging.debug("Changed Strength % 5.2f Color %s", strength, color)
+                _strength = strength
             turtle.pencolor(color)
             turtle.pendown()
         turtle.goto(x, y)

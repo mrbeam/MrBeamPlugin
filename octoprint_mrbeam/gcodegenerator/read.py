@@ -56,7 +56,7 @@ def read(gcode, init_x=HOMED_X, init_y=HOMED_Y, init_intensity=-1):
             elif second_char == "1":
                 # G1: Laser travel - use laser intensity and speed.
                 # intensity = _find_val(find_intensity, command) or intensity
-                found_int = _find_val(find_speed, command)
+                found_int = _find_val(find_intensity, command)
                 if found_int is not None:
                     intensity = found_int
                 # speed = _find_val(find_speed, command) or speed

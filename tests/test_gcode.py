@@ -167,7 +167,7 @@ def test_modes(datafiles):
 
 
 @IN_FILES
-# @pytest.mark.skip("skipping")
+@pytest.mark.skip("skipping")
 def test_work_area_clip(datafiles):
     """
     Test whether the ouptut gcode of clipping images
@@ -192,18 +192,50 @@ def test_work_area_clip(datafiles):
 
 
 @IN_FILES
-def test_result(datafiles):
+@pytest.mark.skip("skipping")
+def test_view_result(datafiles):
     # Create the DEFAULT_OUT_GCO file
     _test_raster_files(
         datafiles,
-        [str(datafiles / "simple.png")],
+        [str(datafiles / "islands2.png")],
         [
-            {"x": 100, "y": 100, "w": 100, "h": 100},
+            {"x": 100, "y": 100, "w": 30, "h": 30},
         ],
     )
     from tests.draw_gcode import draw_gcode_file
 
     draw_gcode_file(str(datafiles / DEFAULT_OUT_GCO), True, False)
+
+
+@IN_FILES
+def test_compare_results(datafiles):
+    """
+    Use the output of the gcode creator and
+    compare it to the source image file.
+    """
+    import sys
+
+    if sys.version_info < (3, 2, 0):
+        logging.warning("Cannot run this test in Python2")
+        exit("Cannot run this test in Python2")
+    from tests.draw_gcode import draw_gcode_file
+    import cairosvg
+
+    paths = ([str(datafiles / "gradient.png")],)
+    options = (
+        [
+            {"x": 100, "y": 100, "w": 30, "h": 30},
+        ],
+    )
+    for p in paths:
+        _test_raster_files(datafiles, [p], options)
+
+        draw_gcode_file(
+            str(datafiles / DEFAULT_OUT_GCO),
+            True,
+            False,
+            out=str(datafiles / "out.svg"),
+        )
 
 
 ############
