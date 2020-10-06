@@ -315,8 +315,8 @@
 
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
-															<div class="btn btn-mini" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
-															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+															<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
+															<div class="btn btn-mini toggleTransformBtn" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }, attr: {mrb_name: $data.name}"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
 														</div>
 														<div class="detail_information" >
@@ -408,8 +408,8 @@
                                         <div class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
                                         <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
                                         <div class="btn-group action-buttons pull-right">
-											<div class="btn btn-mini" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
-                                            <div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+											<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
+                                            <div class="btn btn-mini toggleTransformBtn" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
                                             <div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeIMG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
                                         </div>
                                         <div class="detail_information" >
@@ -589,16 +589,10 @@
                                         <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
                                         <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
                                         <div class="btn-group action-buttons pull-right">
-											<div class="btn btn-mini" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
-                                            <div class="btn btn-mini"
-                                                 data-bind="click: function() { $root.editQuickText($data); }"><i
-                                                    class="icon-edit" title="{{ _('Edit') }}"></i></div>
-                                            <div class="btn btn-mini"
-                                                 data-bind="click: function() { $root.toggleTransformHandles($data); }">
-                                                <i class="icon-move" title="{{ _('Transform') }}"></i></div>
-                                            <div class="btn btn-mini remove-design-btn"
-                                                 data-bind="click: function() { $root.removeSVG($data); }"><i
-                                                    class="icon-remove" title="{{ _('Remove') }}"></i></div>
+											<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
+                                            <div class="btn btn-mini" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
+                                            <div class="btn btn-mini toggleTransformBtn" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+                                            <div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
                                         </div>
                                         <div class="detail_information">
                                             <div class="local_transformation muted">
@@ -668,9 +662,9 @@
                                                         <!-- /ko -->
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
-															<div class="btn btn-mini" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
+															<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickShape($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
-															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+															<div class="btn btn-mini toggleTransformBtn" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
 														</div>
 														<div class="detail_information" >

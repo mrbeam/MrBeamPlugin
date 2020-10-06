@@ -1079,7 +1079,7 @@ $(function(){
 			});
 			
 			// adds onclick handler
-			fragment.transformable();
+			fragment.transformable(self._updateTransformationButtons); // onclickCallback
 			fragment.mbtRegisterOnTransformCallback(self.svgTransformUpdate);
 			fragment.mbtRegisterBeforeTransformCallback(function () {
 				fragment.clean_gc();
@@ -1101,6 +1101,18 @@ $(function(){
 				previewId = previewId.previewId;
 			}
 			snap.mbtransform.toggleElement('#'+previewId);
+			self._updateTransformationButtons();
+		};
+		
+		self._updateTransformationButtons = function(){
+			// TODO: call this on direct click on design
+			$('#wa_filelist .entry').removeClass('mbtSelected');
+			const items = snap.mbtransform.getSelection();
+			for (var i = 0; i < items.length; i++) {
+				const design = items[i];
+				const file = self._getFileObjectForSvg(design);
+				$('#'+file.id).addClass('mbtSelected');
+			}
 		};
 
 		/**
@@ -1117,6 +1129,7 @@ $(function(){
 			} else {
 				snap.mbtransform.deactivate();
 			}
+			self._updateTransformationButtons();
 		};
 
 		
@@ -1131,9 +1144,11 @@ $(function(){
 		};
 
 		self.svgTransformUpdate = function(svg) {
-            const transform = svg.transform().totalMatrix.split();
+			const iM = svg.data(snap.mbtransform.INITIAL_MATRIX);
+            const cM = svg.transform().localMatrix;
+			const isTransformed = (iM !== undefined) && (iM.a !== cM.a || iM.b !== cM.b || iM.c !== cM.c || iM.d !== cM.d || iM.e !== cM.e || iM.f !== cM.f);
+            const transform = cM.split();
 			const rot = ((transform.rotate + 180 + 720) % 360) - 180; // ensures -180° to 180°
-			const initialMatrix = svg.data(snap.mbtransform.INITIAL_MATRIX);
 //			const shear = transform.shear; // not in use yet
 			
 			const globalScale = self.scaleMatrix().a;
@@ -1147,6 +1162,7 @@ $(function(){
 			
 			const id = svg.attr('id');
 			const label_id = id.substr(0, id.indexOf('-'));
+			$('#'+label_id).toggleClass('isTransformed', isTransformed);
 			$('#'+label_id+' .translation').val(`${tx.toFixed(1)}, ${ty.toFixed(1)}`);
 			$('#'+label_id+' .horizontal').val(`${horizontal.toFixed(1)} mm`);
 			$('#'+label_id+' .vertical').val(`${vertical.toFixed(1)} mm`);
@@ -1611,17 +1627,26 @@ $(function(){
 			const selection = snap.mbtransform.getSelection();
 			for (var s = 0; s < selection.length; s++) {
 				var design = selection[s];
-				const selectedId = design.attr("mb:id");
-
-				for (var i = 0; i < self.placedDesigns().length; i++) {
-					var file = self.placedDesigns()[i];
-					if(file.previewId === selectedId){
-						self.abortFreeTransforms();
-						self.removeSVG(file);
-					}
+				const fileObj = self._getFileObjectForSvg(design);
+				if(fileObj !== null){
+					self.abortFreeTransforms();
+					self.removeSVG(fileObj);
 				}
 			}
 			return;
+		};
+		
+		self._getFileObjectForSvg = function(svg){
+			const previewId = svg.attr("mb:id");
+
+			for (var i = 0; i < self.placedDesigns().length; i++) {
+				var file = self.placedDesigns()[i];
+				if(file.previewId === previewId){
+					return file;
+				}
+			}
+			console.log("file object not in placedDesigns. previewId: "+ previewId);
+			return null;
 		};
 
 		self.getUsefulDimensions = function(wpx, hpx){
@@ -1867,7 +1892,7 @@ $(function(){
 
 		self.abortFreeTransforms = function(){
 			snap.mbtransform.deactivate();
-			//self.check_sizes_and_placements();
+			self._updateTransformationButtons();
 		};
 
 		self.getCompositionSVG = function(fillAreas, pxPerMM, engraveStroke, callback){

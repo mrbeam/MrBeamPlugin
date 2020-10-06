@@ -34,7 +34,7 @@
 		 *
 		 * @returns {undefined}
 		 */
-		Element.prototype.transformable = function () {
+		Element.prototype.transformable = function (onclickCallback) {
 
 			var elem = this;
 			if (!elem || !elem.paper) // don't handle unplaced elements. this causes double handling.
@@ -48,6 +48,9 @@
 					elem.paper.mbtransform.toggleElement(elem); 
 				} else {
 					elem.paper.mbtransform.activate(elem); 
+				}
+				if(onclickCallback && typeof onclickCallback === 'function'){
+					onclickCallback(event, i);
 				}
 			});
 			return elem;
@@ -463,7 +466,6 @@
 		
 		/***** Manual transform *****/
 		self.manualTransform = function(elementset_or_selector, params){
-			console.log("manualTransform", params);
 		    self.elements_to_transform = self._getElementSet(elementset_or_selector);
 			self._remember_original_transform();
 			
@@ -1089,6 +1091,7 @@
 			self.isEnabled = false;
 			self.positions = 0;
 			self.persist = false;
+			self.reminderSent = false;
 			
 			paper.debug = self;
 			self.initialized = true;
@@ -1101,9 +1104,16 @@
 		self.disable = function(){
 			self.isEnabled = false;
 		}
+		self._isNotEnabled = function(){
+			if(!self.isEnabled && !self.reminderSent){ 
+				console.info("Snap.debug disabled. Call <paper>.enable() first."); 
+				self.reminderSent = true;
+			}
+			return !self.isEnabled; 
+		}
 		
 		self.point = function(label, x, y, color="#ff00ff", parent=null){
-			if(!self.isEnabled){ console.info("Snap.debug disabled. Call <paper>.enable() first."); return; }
+			if(self._isNotEnabled()) return;
 			
 			if(!label){
 				console.error("debug.point needs a label!");
@@ -1139,8 +1149,7 @@
 		}
 		
 		self.line = function(label, x1, y1, x2, y2, color='#ff00ff', parent=null){
-			if (!self.isEnabled)
-				return;
+			if(self._isNotEnabled()) return;
 
 			if (!label) {
 				console.error("debug.line needs a label!");
@@ -1178,7 +1187,7 @@
 		};
 		
 		self.coords = function(label, color="#ff00ff", parent=null){
-			if(!self.isEnabled){ console.info("Snap.debug disabled. Call <paper>.enable() first."); return; }
+			if(self._isNotEnabled()) return;
 			
 			if(!label){
 				console.error("debug.coords needs a label!");
@@ -1211,7 +1220,7 @@
 		}
 		
 		self.position = function(label, el, color='#ff00ff'){
-			if(!self.isEnabled){ console.info("Snap.debug disabled. Call <paper>.enable() first."); return; }
+			if(self._isNotEnabled()) return;
 			
 			if(!label){
 				console.error("debug.position needs a label!");

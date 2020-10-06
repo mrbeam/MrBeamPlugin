@@ -84,13 +84,21 @@
 }
 #wa_filelist .file_list_entry .dropdown li i { color: #e25303 }
 
-.misfit_warning {
+#wa_filelist .misfit_warning {
 	display: none;
 }
-.misfit .misfit_warning {
+#wa_filelist .misfit .misfit_warning {
 	display: block;
 }
 
+#wa_filelist .entry.mbtSelected .toggleTransformBtn {
+	border: 1px solid #383e4245;
+    background: #ececec;
+}
+
+#wa_filelist .entry:not(.isTransformed) .transformResetBtn {
+	display: none;
+}
 
 /* disabled. uses 100% cpu in the browser */
 /*#crosshair {
