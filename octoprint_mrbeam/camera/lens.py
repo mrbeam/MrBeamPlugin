@@ -32,7 +32,6 @@ from octoprint_mrbeam.camera.definitions import (
     TMP_PATH,
     TMP_RAW_FNAME,
     TMP_RAW_FNAME_RE,
-    TMP_RAW_FNAME_RE_NPZ,
 )
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import makedirs, get_thread

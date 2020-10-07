@@ -31,10 +31,12 @@ from octoprint_mrbeam.camera.definitions import (
     DIST_KEY,
     ERR_NEED_CALIB,
     LEGACY_STILL_RES,
+    LENS_CALIBRATION,
     MAX_OBJ_HEIGHT,
     MTX_KEY,
     MIN_BOARDS_DETECTED,
     QD_KEYS,
+    TMP_RAW_FNAME_RE_NPZ,
 )
 from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint_mrbeam.camera import exc as exc
@@ -51,6 +53,7 @@ from octoprint_mrbeam.camera.corners import (
 from octoprint_mrbeam.camera.lens import (
     BoardDetectorDaemon,
     FACTORY,
+    USER,
 )
 from octoprint_mrbeam.util import dict_merge, dict_map, get_thread, makedirs
 from octoprint_mrbeam.util.log import json_serialisor, logme
@@ -532,13 +535,14 @@ class LidHandler(object):
         - Refreshes settings.
         """
         files = []
+        lens_calib = self._settings.get(["cam", "lensCalibration", USER])
+        if os.path.isfile(lens_calib):
+            os.remove(lens_calib)
         for fname in os.listdir(self.debugFolder):
             if re.match(TMP_RAW_FNAME_RE, fname) or re.match(
                 TMP_RAW_FNAME_RE_NPZ, fname
             ):
                 files.append(os.path.join(self.debugFolder, fname))
-            elif fname == self._settings.get(["cam", "lensCalibration", "user"]):
-                files.append(fname)
         for fname in files:
             try:
                 os.remove(fname)

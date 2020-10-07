@@ -277,7 +277,7 @@ $(function () {
                     new PNotify({
                         title: gettext("Reverted to factory settings."),
                         text: gettext(
-                            "Your previous calibration and pictures have been deleted."
+                            "Your previous calibration has been deleted."
                         ),
                         type: "info",
                         hide: false,
