@@ -795,8 +795,12 @@ class calibrationState(dict):
                 item["state"] == STATE_SUCCESS
                 and "date" in item
                 and "date" in self.lensCalibration
-                and datetime.datetime.strptime(item["date"], DATE_FORMAT)
-                < datetime.datetime.strptime(self.lensCalibration["date"], DATE_FORMAT)
+                and datetime.datetime.strptime(
+                    str(item["date"]), DATE_FORMAT
+                )  # str convert from np array
+                < datetime.datetime.strptime(
+                    str(self.lensCalibration["date"]), DATE_FORMAT
+                )
             )
             if not is_used:
                 self.remove(path)
