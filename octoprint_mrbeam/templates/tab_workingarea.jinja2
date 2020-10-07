@@ -293,7 +293,7 @@
 												<div class="scrollable" data-bind="foreach: placedDesigns">
 													<div class="entry" data-bind="attr: { id: $data.id}, template: { name: $root.templateFor($data), data: $data }"></div>
 												</div>
-
+<!-- GCODE -->
 												<script type="text/html" id="wa_template_machinecode">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
@@ -303,7 +303,7 @@
 														<div class="detail_information" ></div>
 													</div>
 												</script>
-
+<!-- SVG -->
 												<script type="text/html" id="wa_template_model_svg">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
 {#                                                        <div data-bind="text: ko.toJSON($data, function(k,v){return (k=='parent') ? undefined : v})"></div>#}
@@ -324,21 +324,30 @@
 																<i class="icon-move" title="{{ _('translation') }}"></i>
 																<input class="decent_input translation wide" type="text" value="0, 0" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
                                                 <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit: '°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
+                                                <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
+													<span class="mini_switch_label">ABC</span>
+													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
+												</div>												
                                                 <br/>
                                                	<div><!-- scale switch between mm and % --> 
 													<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
 													<input class="decent_input horizontal unit_mm" type="text" value="? mm"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													
 													<div class="btn btn-mini btn-link scale_prop_btn scale_proportional" data-bind="event: { mousedown: $root.svgManualProportionalToggle($data, event)}">
@@ -350,20 +359,23 @@
 													<input class="decent_input vertical unit_mm" type="text" value="? mm"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualHeight($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																				blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
 													<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualHeight($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																				blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-													<div class=" pull-right unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
-														<span class="unit_label">{{ _('mm') }}</span>
-														<span class="unit_label unit_label_switch"><div></div></span>
-														<span class="unit_label">{{ _('%%') }}</span>
+													<div class=" pull-right mini_switch unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
+														<span class="mini_switch_label">{{ _('mm') }}</span>
+														<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+														<span class="mini_switch_label">{{ _('%%') }}</span>
 													</div>
 												</div><!-- /scale switch between mm and % --> 
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {delimiter:'×', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
 
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
@@ -402,7 +414,7 @@
 														</div>
 													</div>
 												</script>
-
+<!-- IMAGE -->
                                 <script type="text/html" id="wa_template_model_img">
                                     <div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
                                         <div class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
@@ -417,21 +429,30 @@
                                                 <i class="icon-move" title="{{ _('translation') }}"></i>
                                                 <input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
                                                             keyup: function(d, event){ $root.svgManualTranslate($data, event); },
+															keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
                                                             blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
                                                 <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
+                                                <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
+													<span class="mini_switch_label">ABC</span>
+													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
+												</div>												
                                                 <br/>
 												<div><!-- scale switch between mm and % --> 
 													<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
 													<input class="decent_input horizontal unit_mm" type="text" value="? mm"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													
 													<div class="btn btn-mini btn-link scale_prop_btn scale_proportional" data-bind="event: { mousedown: $root.svgManualProportionalToggle($data, event)}">
@@ -443,20 +464,23 @@
 													<input class="decent_input vertical unit_mm" type="text" value="? mm"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualHeight($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																				blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
 													<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualHeight($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																				blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-													<div class=" pull-right unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
-														<span class="unit_label">{{ _('mm') }}</span>
-														<span class="unit_label unit_label_switch"><div></div></span>
-														<span class="unit_label">{{ _('%%') }}</span>
+													<div class=" pull-right mini_switch unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
+														<span class="mini_switch_label">{{ _('mm') }}</span>
+														<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+														<span class="mini_switch_label">{{ _('%%') }}</span>
 													</div>
 												</div><!-- /scale switch between mm and % --> 
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {delimiter:'×', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {
@@ -583,6 +607,7 @@
                                             </div>
                                         </div>
                                 </script>
+						<!-- QUICKTEXT -->
                                 <script type="text/html" id="wa_template_quicktext">
                                     <div class="file_list_entry"
                                          data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
@@ -600,21 +625,30 @@
                                                 <input class="decent_input translation wide" type="text" value="0,0"
                                                        data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
                                                 <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-                                                <br/>
+                                                <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
+													<span class="mini_switch_label">ABC</span>
+													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
+												</div>                                          
+												<br/>
 												<div><!-- scale switch between mm and % --> 
 													<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
 													<input class="decent_input horizontal unit_mm" type="text" value="? mm"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													
 													<div class="btn btn-mini btn-link scale_prop_btn scale_proportional" data-bind="event: { mousedown: $root.svgManualProportionalToggle($data, event)}">
@@ -626,20 +660,23 @@
 													<input class="decent_input vertical unit_mm" type="text" value="? mm"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualHeight($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																				blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
 													<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualHeight($data, event); },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																				blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-													<div class=" pull-right unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
-														<span class="unit_label">{{ _('mm') }}</span>
-														<span class="unit_label unit_label_switch"><div></div></span>
-														<span class="unit_label">{{ _('%%') }}</span>
+													<div class=" pull-right mini_switch unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
+														<span class="mini_switch_label">{{ _('mm') }}</span>
+														<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+														<span class="mini_switch_label">{{ _('%%') }}</span>
 													</div>
 												</div><!-- /scale switch between mm and % --> 
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {delimiter:'×', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {
@@ -654,6 +691,7 @@
 														</div>
 													</div>
 												</script>
+						<!-- QUICKSHAPE -->
 												<script type="text/html" id="wa_template_quickshape">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
                                                         <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
@@ -672,26 +710,31 @@
 																<i class="icon-move" title="{{ _('translation') }}"></i>
 																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
-																			keydown: function(d, event){ $root.arrowKeys($data, event, '', ', '); return true; },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
                                                 <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
-																			keydown: function(d, event){ $root.arrowKeys($data, event, '°'); return true; },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-                                                <br/>
+                                                <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
+													<span class="mini_switch_label">ABC</span>
+													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
+												</div>
+												<br/>
 												
 												<div><!-- scale switch between mm and % --> 
 													<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
 													<input class="decent_input horizontal unit_mm" type="text" value="? mm"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
-																				keydown: function(d, event){ $root.arrowKeys($data, event, 'mm'); return true; },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualWidth($data, event); },
-																				keydown: function(d, event){ $root.arrowKeys($data, event, '%'); return true; },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																				blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 													
 													<div class="btn btn-mini btn-link scale_prop_btn scale_proportional" data-bind="event: { mousedown: $root.svgManualProportionalToggle($data, event)}">
@@ -703,23 +746,25 @@
 													<input class="decent_input vertical unit_mm" type="text" value="? mm"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualHeight($data, event); },
-																				keydown: function(d, event){ $root.arrowKeys($data, event, 'mm'); return true; },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																				blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
 													<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
 														   data-bind="event: {
 																				keyup: function(d, event){ $root.svgManualHeight($data, event); },
-																				keydown: function(d, event){ $root.arrowKeys($data, event, '%'); return true; },
+																				keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																				blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-													<div class=" pull-right unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
-														<span class="unit_label">{{ _('mm') }}</span>
-														<span class="unit_label unit_label_switch"><div></div></span>
-														<span class="unit_label">{{ _('%%') }}</span>
+													<div class=" pull-right mini_switch unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
+														<span class="mini_switch_label">{{ _('mm') }}</span>
+														<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+														<span class="mini_switch_label">{{ _('%%') }}</span>
 													</div>
+													
 												</div><!-- /scale switch between mm and % --> 
 
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
+																			keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {delimiter:'×', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {

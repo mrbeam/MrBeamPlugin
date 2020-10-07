@@ -72,7 +72,7 @@
     margin-bottom: 0.2em;
 }
 #wa_filelist .detail_information input.wide {
-	width: calc(45% - 1em);
+	width: calc(37% - 1em);
 }
 
 #wa_filelist .file_list_entry .dropdown {
@@ -118,23 +118,29 @@
 #working_area_files .entry.show_percent input.unit_percent {
 	display:inline-block;	
 }
-#working_area_files .entry:not(.show_percent) div.unit_toggler>div:first-child, 
-#working_area_files .entry.show_percent div.unit_toggler>div:last-child {
-    background: #E4E4E4;
-    border-color: #E4E4E4;
-    box-shadow: none;
+#wa_filelist .entry.show_percent .unit_toggler .mini_switch_trigger>div {
+    right: 0.025em;
 }
 
-#wa_filelist .unit_toggler {
+/** mirrored or not **/
+#wa_filelist .entry.isMirrored .mirror_toggler .mini_switch_trigger>div {
+    right: 0.025em;
+}
+
+/*** mini switch (used for toggling mm/% units and mirroring designs) ***/
+#wa_filelist .mini_switch {
     cursor: pointer;
 	user-select: none;
 }
-#wa_filelist .file_list_entry .local_transformation span.unit_label {
+#wa_filelist .file_list_entry .local_transformation span.mini_switch_label {
 	font-size: 0.75rem;
 	color:#555;
 	margin:0;
+	display: inline-block;
+	width: 2.1em;
+	text-align: center;
 }
-#wa_filelist .file_list_entry .local_transformation span.unit_label.unit_label_switch {
+#wa_filelist .file_list_entry .local_transformation span.mini_switch_label.mini_switch_trigger {
     display: inline-block;
     border-radius: 1em;
     border: 1px solid #ccc;
@@ -146,7 +152,7 @@
     font-size: 10px;
 	top: 2px;
 }
-#wa_filelist .unit_label_switch>div {
+#wa_filelist .mini_switch_trigger>div {
     width: 1em;
     background-color: #e25303;
     border-radius: 50%;
@@ -156,9 +162,6 @@
     bottom: 0%;
 	right: 1em;
 	transition: right 0.3s ease-in-out;
-}
-#wa_filelist .entry.show_percent .unit_label_switch>div {
-    right: 0.025em;
 }
 	
 

@@ -1155,14 +1155,18 @@ $(function(){
 			const bbox = svg.getBBox();
 			const tx = bbox.x * globalScale;
 			const ty = self.workingAreaHeightMM() - bbox.y2 * globalScale;
-			const horizontal = bbox.width * globalScale;
-			const vertical = bbox.height * globalScale;
-			const scalex = transform.scalex;
-			const scaley = transform.scaley;
+			const scalex = Math.abs(transform.scalex);
+			const scaley = Math.abs(transform.scaley);
+			const isMirrored = transform.scalex * transform.scaley < 0;
+//			const horizontal = bbox.width * globalScale;
+//			const vertical = bbox.height * globalScale;
+			const horizontal = bbox.width * Math.sign(scalex) * globalScale;
+			const vertical = bbox.height * Math.sign(scaley) * globalScale;
 			
 			const id = svg.attr('id');
 			const label_id = id.substr(0, id.indexOf('-'));
 			$('#'+label_id).toggleClass('isTransformed', isTransformed);
+			$('#'+label_id).toggleClass('isMirrored', isMirrored);
 			$('#'+label_id+' .translation').val(`${tx.toFixed(1)}, ${ty.toFixed(1)}`);
 			$('#'+label_id+' .horizontal').val(`${horizontal.toFixed(1)} mm`);
 			$('#'+label_id+' .vertical').val(`${vertical.toFixed(1)} mm`);
@@ -1201,29 +1205,34 @@ $(function(){
 				self.check_sizes_and_placements();
 			}
 		};
-//		self.svgManualMirror = function(data, event) {
-//			if (event.type === 'click') {
-//				self.abortFreeTransforms();
-//				var svg = snap.select('#'+data.previewId);
-//				var mirror = !svg.data('mirror');
-//				snap.mbtransform.manualTransform(svg, {mirror: mirror});
-//				self.check_sizes_and_placements();
-//			}
-//		};
+		self.svgManualMirror = function(data, event) {
+			if (event.type === 'click') {
+				self.abortFreeTransforms();
+				const svg = snap.select('#'+data.previewId);
+				snap.mbtransform.manualTransform(svg, {scalex: -1, proportional: false }); // relative Scale
+				self.check_sizes_and_placements();
+			}
+		};
 		self.svgManualWidth = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur' || event.keyCode === 38 || event.keyCode === 40) {
 				self.abortFreeTransforms();
 				const svg = snap.select(`#${data.previewId}`);
 				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
-				let value = parseFloat(event.target.value);
-				if(event.target.classList.contains('unit_mm')){
-					snap.mbtransform.manualTransform(svg, {width: value, proportional: isProp }); // absolute width
-				} else if(event.target.classList.contains('unit_percent')){
-					const currentSx = svg.transform().localMatrix.a;
-					const relativeScaleX = (value/100.0) / currentSx;
-					snap.mbtransform.manualTransform(svg, {scalex: relativeScaleX, proportional: isProp }); // relative Scale
+				const isMirrored = $(`#${data.id}`).hasClass('isMirrored');
+				const value = parseFloat(event.target.value);
+				const currentSx = svg.transform().localMatrix.a;
+				const currentWidth = svg.getBBox().width;
+				if(value !== 0){
+					if(event.target.classList.contains('unit_mm')){
+						snap.mbtransform.manualTransform(svg, {width: value, proportional: isProp }); // absolute width
+					} else if(event.target.classList.contains('unit_percent')){
+						const newWidth = currentWidth / Math.abs(currentSx) * value/100.0;
+						snap.mbtransform.manualTransform(svg, {width: newWidth, proportional: isProp }); // absolute width
+					}
+					self.check_sizes_and_placements();
+				} else {
+					console.warn("Width can't be 0"); // TODO: reset transform?
 				}
-				self.check_sizes_and_placements();
 			}
 			return false;
 		};
@@ -1232,53 +1241,22 @@ $(function(){
 				self.abortFreeTransforms();
 				const svg = snap.select('#'+data.previewId);
 				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
-				let value = parseFloat(event.target.value);
-				if(event.target.classList.contains('unit_mm')){
-					snap.mbtransform.manualTransform(svg, {height: value, proportional: isProp }); // absolute height
-				} else if(event.target.classList.contains('unit_percent')){
-					const currentSy = svg.transform().localMatrix.d;
-					const relativeScaleY = (value/100.0) / currentSy;
-					snap.mbtransform.manualTransform(svg, {scaley: relativeScaleY, proportional: isProp }); // relative scale
-				}self.check_sizes_and_placements();
+				const value = parseFloat(event.target.value);
+				const currentSy = svg.transform().localMatrix.d;
+				const currentHeight = svg.getBBox().height;
+				if(value !== 0){
+					if(event.target.classList.contains('unit_mm')){
+						snap.mbtransform.manualTransform(svg, {height: value, proportional: isProp }); // absolute height
+					} else if(event.target.classList.contains('unit_percent')){
+						const newHeight = currentHeight / Math.abs(currentSy) * value/100.0;
+						snap.mbtransform.manualTransform(svg, {height: newHeight, proportional: isProp }); // relative scale
+					}
+					self.check_sizes_and_placements();
+				} else {
+					console.warn("Height can't be 0"); // TODO: reset transform?
+				}
 			}
 		};
-		self.arrowKeys = function(data, event, unit, delimiter=null){
-			if (event.keyCode === 38 || event.keyCode === 40) { // arrowUp, arrowDown
-				event.preventDefault();
-				// remember caret position
-				const selStart = event.target.selectionStart;
-				const selEnd = event.target.selectionEnd;
-				let val = event.keyCode === 38 ? 1 : -1;
-				if(event.altKey) {
-					val = val / 10.0;
-				}
-				if(event.shiftKey) {
-					val = val * 10.0;
-				}
-				if(delimiter === null){
-					const newVal = parseFloat(event.target.value) + val;
-					event.target.value = `${newVal.toFixed(1)} ${unit}`;
-				} else {
-					const v = event.target.value;
-					const idxDelimiter = v.search(new RegExp(delimiter));
-					if(selStart <= idxDelimiter){
-						const v1 = v.substring(0,idxDelimiter);
-						const newV1 = parseFloat(v1) + val;
-						event.target.value = `${newV1.toFixed(1)}${v.substring(idxDelimiter)}`;
-					} else {
-						const d = idxDelimiter + delimiter.length;
-						const v2 = v.substring(d);
-						const newV2 = parseFloat(v2) + val;
-						event.target.value = `${v.substring(0, d)}${newV2.toFixed(1)}`;
-					}
-				}
-				// restore caret position
-				event.target.selectionStart = selStart;
-				event.target.selectionEnd = selEnd;
-				return false; // swallow the default action
-			}
-			return true;
-		}
 
 		self.svgManualUnitToggle = function(data, event) {
 			$('#'+data.id).toggleClass('show_percent');
@@ -1288,7 +1266,7 @@ $(function(){
 			$(event.target).toggleClass('scale_proportional');
 		};
 		self.svgManualMultiply = function(data, event) {
-			if (event.keyCode === 13 || event.type === 'blur') {
+			if (event.keyCode === 13 || event.type === 'blur' || event.keyCode === 38 || event.keyCode === 40) {
 				const colsRowsStr = event.target.value;
 				const result = self._svgMultiplyUpdate(data, colsRowsStr);
 				event.target.value = result;
@@ -1301,9 +1279,9 @@ $(function(){
 			var cols = 1;
 			var rows = 1;
 			if(colsRowsStr !== undefined){
-				var gridsize = colsRowsStr.split(/\D+/);
-				cols = gridsize[0] || 1;
-				rows = gridsize[1] || 1;
+				var gridsize = colsRowsStr.split(/[^0-9.]+/);
+				cols = Math.round(parseFloat(gridsize[0])) || 1;
+				rows = Math.round(parseFloat(gridsize[1])) || 1;
 			}
 			svg.grid(cols, rows, dist);
 			var mb_meta = self._set_mb_attributes(svg);

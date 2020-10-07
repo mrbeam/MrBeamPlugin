@@ -227,6 +227,61 @@ class WorkingAreaHelper {
         }
         return res
     }
+	
+	/**
+	 * Bound via keydown to an input field, this function increases or decreases the value with up/down arrow keys (and shift/alt combinations)
+	 * @param {object} event
+	 * @param {object} options - unit: string to attach after increment / decrement ('', 'mm', '%', '°', ...)
+	 *                         - delimiter: for dual value input fields (e.g. "200.1, 33.2" => ', ' is the delimiter)
+	 *                         - digits: for formatting output with toFixed(digits)
+	 *                         - alt: increment / decrement factor when alt key is pressed
+	 *                         - shift: increment / decrement factor when shift key is pressed
+	 * @returns {Boolean} - false if up/down arrow was event.keyCode. Useful to control event bubbling / default prevention.
+	 */
+	static arrowKeys(event, options={}){
+		options.unit = options.unit || '';
+		options.delimiter = options.delimiter || null;
+		options.digits = (!isNaN(options.digits) && options.digits >= 0) ? options.digits : 1;
+		options.alt = options.alt || 0.1;
+		options.shift = options.shift || 10;
+		
+		if (event.keyCode === 38 || event.keyCode === 40) { // arrowUp, arrowDown
+			event.preventDefault();
+			// remember caret position
+			const selStart = event.target.selectionStart;
+			const selEnd = event.target.selectionEnd;
+			let val = event.keyCode === 38 ? 1 : -1;
+			if(event.altKey) {
+				val = val * options.alt;
+			}
+			if(event.shiftKey) {
+				val = val * options.shift;
+			}
+			if(options.delimiter === null){
+				const newVal = parseFloat(event.target.value) + val;
+				event.target.value = `${newVal.toFixed(options.digits)} ${options.unit}`;
+			} else {
+				const v = event.target.value;
+				const idxDelimiter = v.search(new RegExp(options.delimiter));
+				if(selStart <= idxDelimiter){
+					const v1 = v.substring(0,idxDelimiter);
+					const newV1 = parseFloat(v1) + val;
+					event.target.value = `${newV1.toFixed(options.digits)}${v.substring(idxDelimiter)}`;
+				} else {
+					const d = idxDelimiter + options.delimiter.length;
+					const v2 = v.substring(d);
+					const newV2 = parseFloat(v2) + val;
+					event.target.value = `${v.substring(0, d)}${newV2.toFixed(options.digits)}`;
+				}
+			}
+			// restore caret position
+			event.target.selectionStart = selStart;
+			event.target.selectionEnd = selEnd;
+			return false; // swallow the default action
+		}
+		return true;
+	}
+
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';

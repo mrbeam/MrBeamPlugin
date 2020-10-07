@@ -464,7 +464,10 @@
 			
 		}
 		
-		/***** Manual transform *****/
+		/**
+		 * *** Transformations without mouse. ***
+		 * params are _always_ relative values except width and height
+		 * **/
 		self.manualTransform = function(elementset_or_selector, params){
 		    self.elements_to_transform = self._getElementSet(elementset_or_selector);
 			self._remember_original_transform();
@@ -477,7 +480,6 @@
 			let scalex = 1;
 			let scaley = 1;
 			let alpha = 0;
-			let mirror = 1;
 
 			const bbox = self.elements_to_transform.getBBox();
 //			calc relative values
@@ -496,45 +498,43 @@
                 alpha = 0;
             }
             if(params.angle !== undefined && !isNaN(params.angle)) {
-				alpha = self.toTwoDigitFloat(params.angle);// - self.session.rotate._alpha;
+				alpha = self.toTwoDigitFloat(params.angle);
 			}
 			
 			if(params.width !== undefined && !isNaN(params.width)){
 				scalex = params.width / bbox.width; // relative!
 				if(params.proportional){
-					scaley = scalex;
+					scaley = Math.sign(scaley) * Math.abs(scalex);
 				}
 			}
 			if(params.height !== undefined && !isNaN(params.height)){
 				scaley = params.height / bbox.height; // relative!
 				if(params.proportional){
-					scalex = scaley;
+					scalex = Math.sign(scalex) * Math.abs(scaley);
 				}
 			}
 			if(params.scalex !== undefined && !isNaN(params.scalex)){
 				scalex = params.scalex; // relative!
 				if(params.proportional){
-					scaley = scalex;
+					scaley = Math.sign(scaley) * Math.abs(scalex);
 				}
 			}
 			if(params.scaley !== undefined && !isNaN(params.scaley)){
 				scaley = params.scaley; // relative!
 				if(params.proportional){
-					scalex = scaley;
+					scalex = Math.sign(scalex) * Math.abs(scaley);
 				}
 			}
-			if(params.mirror !== undefined) mirror =  params.mirror;
 
 			// set values on transform groups
 			// Scale
-			const scx = self.session.originInvert.x(bbox.cx, bbox.cy);
-			const scy = self.session.originInvert.y(bbox.cx, bbox.cy);
+			const scx = bbox.cx;
+			const scy = bbox.cy;
 			const matScale = Snap.matrix().scale(scalex, scaley, scx, scy);
 			self.scaleGroup.transform(matScale);
 
 			// Rotate			
-			const rotateCenter = self._getSessionRotateCenter();
-			const matRotate = Snap.matrix().rotate(alpha, rotateCenter[0], rotateCenter[1]);
+			const matRotate = Snap.matrix().rotate(alpha, scx, scy);
 			self.rotateGroup.transform(matRotate);
 
 			// Translate
