@@ -54,13 +54,18 @@ $(function () {
 
             if (console.everything) {
                 console.everything.forEach(function (logData) {
-                    if (logData.level == "error" || logData.level == "warn") {
+                    if (
+                        logData.level == "log" ||
+                        logData.level == "error" ||
+                        logData.level == "warn"
+                    ) {
                         self.send_console_event(logData);
                     }
                 });
 
                 console.callbacks.error = self.send_console_event;
                 console.callbacks.warn = self.send_console_event;
+                console.callbacks.log = self.send_console_event;
             }
         };
 

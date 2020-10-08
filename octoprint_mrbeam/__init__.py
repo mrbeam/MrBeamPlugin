@@ -11,6 +11,7 @@ import socket
 import threading
 import time
 import collections
+import logging
 from subprocess import check_output
 
 import octoprint.plugin
@@ -176,6 +177,16 @@ class MrBeamPlugin(
         self._plugin_version = __version__
         init_mrb_logger(self._printer)
         self._logger = mrb_logger("octoprint.plugins.mrbeam")
+
+        handler = logging.FileHandler(
+            os.path.join(self._settings.getBaseFolder("logs"), "fontend.log")
+        )
+        handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+        self._frontend_logger = logging.getLogger("FRONTEND")
+        self._frontend_logger.setLevel(logging.INFO)
+        self._frontend_logger.addHandler(handler)
+        self._frontend_logger.info("OctoPrint Booting up...")
+
         self._branch = self.getBranch()
         self._octopi_info = self.get_octopi_info()
         self._serial_num = self.getSerialNum()
@@ -2137,6 +2148,32 @@ class MrBeamPlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/analytics", methods=["POST"])
     def analytics_data(self):
+
+        try:
+            data = request.json
+            event = data.get("event")
+            payload = data.get("payload", dict())
+            if event == "console":
+                func = payload.get("function", None)
+                f_level = payload.get("level", None)
+                level = logging.INFO
+                if f_level == "warn":
+                    level = logging.WARNING
+                if f_level == "error":
+                    level = logging.ERROR
+                msg = payload.get("msg", "")
+                browser_time = payload.get("browser_time", None)
+                self._frontend_logger.log(
+                    level, "%s - %s - %s (%s)", browser_time, f_level, msg, func
+                )
+
+        except Exception as e:
+            self._logger.exception(
+                "Could not process frontend analytics data: {e} - Data = {data}".format(
+                    e=e, data=data
+                )
+            )
+
         try:
             data = request.json
             event = data.get("event")
