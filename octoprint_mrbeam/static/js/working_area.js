@@ -39,15 +39,9 @@ $(function () {
             return 1;
         }; // initial value, gets overwritten by settings in onAllBound()
         self.previewImgOpacity = ko.observable(1);
-
-        self.coord_pattern_marker_color = "#eeeeee";
         self.previewImgOpacity.subscribe(function (newVal) {
-            self.coord_pattern_marker_color =
-                newVal > 0.25 ? "#eeeeee" : "#999999";
-            $("#coord_pattern_marker").attr(
-                "stroke",
-                self.coord_pattern_marker_color
-            );
+            let col = newVal > 0.25 ? "#eeeeee" : "#999999";
+            $("#coord_pattern_marker").attr("stroke", col);
             if (
                 newVal !==
                 self.settings.settings.plugins.mrbeam.cam.previewOpacity()
@@ -1154,6 +1148,23 @@ $(function () {
                 // copy namespaces into group
                 if (attr.name.indexOf("xmlns") === 0) {
                     namespaces[attr.name] = attr.value;
+                    // Illustrator uses namespaces that reference a entity defined as ENTITY outside of the xml of the svg.
+                    // like this: xmlns:x="&ns_extend;"
+                    // We replace it to xmlns:x="ENTITYREF_ns_extend"
+                    if (attr.value.match(/^&.+;$/)) {
+                        if (attr.name == "xmlns") {
+                            namespaces[attr.name] =
+                                "http://www.w3.org/2000/svg";
+                        } else if (attr.name == "xmlns:xlink") {
+                            // not sure if this is important
+                            namespaces[attr.name] =
+                                "http://www.w3.org/1999/xlink";
+                        } else {
+                            namespaces[attr.name] = attr.value
+                                .replace(/&/g, "ENTITYREF_")
+                                .replace(/;/g, "");
+                        }
+                    }
                 }
             }
             return namespaces;
@@ -1219,7 +1230,7 @@ $(function () {
                     const previewId = self.generateUniqueId(id, file);
                     let fragment = split_result.parts[i];
                     fragment.clean_gc();
-                    fragment.attr({ id: previewId });
+                    fragment.attr({ id: previewId, "mb:id": previewId });
 
                     file.id = id; // list entry id
                     file.previewId = previewId;
@@ -1301,13 +1312,10 @@ $(function () {
             if (newSvg.attr("class").includes("userIMG")) {
                 let url = self._getIMGserveUrl(file);
                 self._create_img_filter(previewId);
-                newSvg
-                    .children()[0]
-                    .attr({
-                        filter:
-                            "url(#" + self._get_img_filter_id(previewId) + ")",
-                        "data-serveurl": url,
-                    });
+                newSvg.children()[0].attr({
+                    filter: "url(#" + self._get_img_filter_id(previewId) + ")",
+                    "data-serveurl": url,
+                });
             }
 
             // TODO use self._prepareAndInsertSVG()
@@ -1672,8 +1680,7 @@ $(function () {
             }
             svg.grid(cols, rows, dist);
             var mb_meta = self._set_mb_attributes(svg);
-            //			svg.ftStoreInitialTransformMatrix();
-            //			svg.mbtOnTransform();
+            svg.mbtOnTransform();
             self.check_sizes_and_placements();
             return cols + "×" + rows;
         };
@@ -2043,27 +2050,21 @@ $(function () {
                 return;
             }
             var filter = snap.select("#" + self._get_img_filter_id(previewId));
-            filter
-                .select("feFuncR")
-                .attr({
-                    amplitude: contrastValue,
-                    offset: brightnessValue,
-                    exponent: gammaValue,
-                });
-            filter
-                .select("feFuncG")
-                .attr({
-                    amplitude: contrastValue,
-                    offset: brightnessValue,
-                    exponent: gammaValue,
-                });
-            filter
-                .select("feFuncB")
-                .attr({
-                    amplitude: contrastValue,
-                    offset: brightnessValue,
-                    exponent: gammaValue,
-                });
+            filter.select("feFuncR").attr({
+                amplitude: contrastValue,
+                offset: brightnessValue,
+                exponent: gammaValue,
+            });
+            filter.select("feFuncG").attr({
+                amplitude: contrastValue,
+                offset: brightnessValue,
+                exponent: gammaValue,
+            });
+            filter.select("feFuncB").attr({
+                amplitude: contrastValue,
+                offset: brightnessValue,
+                exponent: gammaValue,
+            });
         };
 
         self.set_img_sharpen = function (previewId, value) {
@@ -2378,7 +2379,7 @@ $(function () {
 
                 var marker = snap.path("M9,10h2M10,9v2").attr({
                     id: "coord_pattern_marker",
-                    stroke: self.coord_pattern_marker_color,
+                    stroke: "#eeeeee",
                     fill: "none",
                     "stroke-width": "0.5",
                 });
@@ -2509,7 +2510,7 @@ $(function () {
                     .map((key) => `${key}="${namespaces[key]}"`)
                     .join(" ");
                 var svg = `
-<svg version="1.1" ${nsList} 
+<svg version="1.1" ${nsList}
   mb:beamOS_version="${BEAMOS_VERSION}"
   width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_options_str}">
 <defs/>
@@ -2757,8 +2758,13 @@ $(function () {
             });
 
             // opens preview pane on the left if hovered over one of the pink markers on the working area
-            $("#camera_markers circle").mouseenter(function () {
-                if (!$("#wa_view_settings_body").hasClass("in")) {
+            $("#camera_markers circle").mouseenter(function (e) {
+                if (
+                    !$("#wa_view_settings_body").hasClass("in") &&
+                    !self.camera.markersFound()[
+                        $(e.target).attr("id").replace("marker", "")
+                    ]
+                ) {
                     $("#wa_view_settings_body").collapse("toggle");
                 }
             });
@@ -3567,7 +3573,6 @@ $(function () {
 
             // TODO use self._prepareAndInsertSVG(...)
             // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
-
             // replaces all code below.
             var text = uc.text(x, y, placeholderText);
             text.attr(
