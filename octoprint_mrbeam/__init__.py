@@ -986,7 +986,7 @@ class MrBeamPlugin(
             self._logger.exception(
                 "Exception while executing wifi command '%s' in netconnectd: "
                 + "(This might be totally ok since this plugin throws an exception if we were rejected by the "
-                + "wifi for invalid password or o_file_managerther non-exceptional things.)",
+                + "wifi for invalid password or other non-exceptional things.)",
                 command,
             )
             return make_response(e.message, 500)
