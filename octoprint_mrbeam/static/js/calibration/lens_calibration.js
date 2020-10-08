@@ -182,7 +182,7 @@ $(function () {
                             "It shouldn't take long. Your device shows a green light when it is done."
                         ),
                         type: "info",
-                        hide: false,
+                        hide: true,
                     });
                 },
                 function () {
@@ -192,7 +192,7 @@ $(function () {
                             "Is the machine on? Have you taken any pictures before starting the calibration?"
                         ),
                         type: "warning",
-                        hide: true,
+                        hide: false,
                     });
                 },
                 "POST"
@@ -226,7 +226,7 @@ $(function () {
                             "Please verify your connection to the device. Did you try canceling multiple times?"
                         ),
                         type: "warning",
-                        hide: true,
+                        hide: false,
                     });
                 },
                 "POST"
