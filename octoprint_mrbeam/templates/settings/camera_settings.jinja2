@@ -125,9 +125,11 @@
                 </li>
                 </ul>">
                 <div class="btn-group" id="camera_settings_marker_detection" data-toggle="buttons-radio">
-                    <button type="button" value="reliable"
+                    <button type="button" value="reliable" name="radioDetectionGroup"
+                            data-bind="click: setMarkerDetectionMode"
                             class="btn btn-small btn-default active">{{ _('Reliable') }}</button>
-                    <button type="button" value="accurate"
+                    <button type="button" value="accurate" name="radioDetectionGroup"
+                            data-bind="click: setMarkerDetectionMode"
                             class="btn btn-small btn-default">{{ _('Accurate') }}</button>
                 </div>
             </div>
