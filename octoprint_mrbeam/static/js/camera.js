@@ -19,6 +19,7 @@ $(function () {
         };
 
         self.needsCornerCalibration = ko.observable(false);
+        self.needsRawCornerCalibration = ko.observable(false);
 
         self.rawUrl = "/downloads/files/local/cam/debug/raw.jpg"; // TODO get from settings
         self.undistortedUrl =
@@ -175,8 +176,14 @@ $(function () {
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
             if ("need_camera_calibration" in data) {
-                self._needCalibration(data["camera_calibration"]);
+                self._needCalibration(data["need_camera_calibration"]);
             }
+            if ("need_raw_camera_calibration" in data) {
+                self.needsRawCornerCalibration(
+                    data["need_raw_camera_calibration"]
+                );
+            }
+
             if ("beam_cam_new_image" in data) {
                 const mf = data["beam_cam_new_image"]["markers_found"];
                 _markersFound = {};

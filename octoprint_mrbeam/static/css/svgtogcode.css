@@ -937,7 +937,7 @@ svg#area_preview.overModalBG {
   margin: 10px -15px;
 }
 
-.calibration-container p {
+.calibration-container p:last-of-type {
   margin-bottom: 50px;
 }
 

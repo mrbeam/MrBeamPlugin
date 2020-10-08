@@ -181,8 +181,11 @@
                     <div class="rounded_container_title" style="text-transform: uppercase;">{{ _('Lens Calibration') }}</div>
                     <hr class="rounded_container_hr">
                     <p>{{ _('The lens calibration is made to remove the fish-eye effect from the picture. Only do this if you think that your camera precision is bad, specially in the center.') }}</p>
+                    <p data-bind="visible: camera.needsRawCornerCalibration">
+                        <i class="icon-warning-sign"></i>{{ _('You need to make a corner calibration first') }}
+                    </p>
                     <button class="btn btn-default"
-                            data-bind="click: changeUserView('lens'), enable: !lensDaemonAlive()">
+                            data-bind="click: changeUserView('lens'), enable: !lensDaemonAlive() && !camera.needsRawCornerCalibration()">
                         {{ _('Start') }}
                     </button>
                 </div>

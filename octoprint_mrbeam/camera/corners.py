@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import Mapping
+from copy import deepcopy
 import yaml
 
 from .definitions import (
@@ -159,6 +160,10 @@ def need_corner_calibration(pic_settings):
     )
 
 
+def need_raw_corner_calibration(pic_settings):
+    return not calibration_available(pic_settings, undistorted=False)
+
+
 def calibration_available(pic_settings, undistorted):
     """
     Is there a calibration value for the markers for
@@ -166,7 +171,8 @@ def calibration_available(pic_settings, undistorted):
     """
     if pic_settings is None:
         return False
-    return get_deltas_and_refs(pic_settings, undistorted) is not None
+    _, ref, _ = get_deltas_and_refs(pic_settings, undistorted)
+    return ref is not None
 
 
 def get_deltas_and_refs(
@@ -207,7 +213,6 @@ def get_deltas_and_refs(
 
     # Values taken from the calibration file. Used as a reference to warp the image correctly.
     # Legacy devices only have the values for the lensCorrected position.
-    # FIXME TODO - Delete the lensCorrected corner calibration every time a lens calibration is made
     # FIXME move current lensCorrected cornerCalibration to the cornerCalibrationFromFactory
     #       (can be safely deleted once the user did 1 corner calibration on a raw picture)
     # warp image
@@ -230,12 +235,8 @@ def get_deltas_and_refs(
                     and matrix is not None
                     and dist is not None
                 ):
-                    # TODO distort references
-                    # inPts = [ref[k]['raw'][qd] for qd in QD_KEYS]
-                    # res_iter = undist_points(inPts, matrix, dist, new_mtx=new_mtx)
-                    ref["result"] = undist_dict(
-                        ref[k]["raw"]
-                    )  # {QD_KEYS[i]: np.array(pos) for i, pos in enumerate(res_iter)}
+                    # Distort reference points
+                    ref["result"] = undist_dict(ref[k]["raw"])
                     break  # no need to go further in the priority list
                 elif ref[k]["undistorted"]:
                     ref["result"] = dict_map(np.array, ref[k]["undistorted"])
@@ -253,25 +254,21 @@ def get_deltas_and_refs(
                     # will ask to redo calibration.
                     ref["result"] = None
                     # break # no need to go further in the priority list
-        if ref["result"] is None:
-            # No corner calibration done,
-            # cannot apply warp perspective
-            return None
     refMarkers, refCorners = (
         calibrationReferences[k]["result"] for k in ["markers", "corners"]
     )
+    if any(r is None for r in (refMarkers, refCorners)):
+        # Not enough refenrences to continue,
+        # cannot apply warp perspective
+        return None, None, None
     delta = {qd: refCorners[qd] - refMarkers[qd] for qd in QD_KEYS}
     return delta, refMarkers, refCorners
 
 
 def get_deltas(*args, **kwargs):
     """Wrapper for get_deltas_and_refs that only returns the deltas."""
-    res = get_deltas_and_refs(*args, **kwargs)
-    if res is not None:
-        deltas, _, _ = res
-        return deltas
-    else:
-        return None
+    deltas, _, _ = get_deltas_and_refs(*args, **kwargs)
+    return deltas
 
 
 def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):

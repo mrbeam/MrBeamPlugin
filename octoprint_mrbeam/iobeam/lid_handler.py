@@ -47,9 +47,6 @@ from octoprint_mrbeam.camera.undistort import (
     prepareImage,
 )
 from octoprint_mrbeam.camera import corners
-from octoprint_mrbeam.camera.corners import (
-    need_corner_calibration,
-)
 from octoprint_mrbeam.camera.lens import (
     BoardDetectorDaemon,
     FACTORY,
@@ -185,11 +182,20 @@ class LidHandler(object):
             pic_settings = get_corner_calibration(
                 self._settings.get(["cam", "correctionSettingsFile"])
             )
-            if need_corner_calibration(pic_settings):
+
+            self._plugin_manager.send_plugin_message(
+                "mrbeam",
+                dict(
+                    need_camera_calibration=corners.need_corner_calibration(
+                        pic_settings
+                    ),
+                    need_raw_camera_calibration=corners.need_raw_corner_calibration(
+                        pic_settings
+                    ),
+                ),
+            )
+            if corners.need_corner_calibration(pic_settings):
                 self._logger.warning(ERR_NEED_CALIB)
-                self._plugin_manager.send_plugin_message(
-                    "mrbeam", dict(need_camera_calibration=True)
-                )
             self._startStopCamera(event)
         # Please re-enable when the OctoPrint is more reliable at
         # detecting when a user actually disconnected.
