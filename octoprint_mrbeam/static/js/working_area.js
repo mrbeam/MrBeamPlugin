@@ -1220,13 +1220,15 @@ $(function(){
 				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
 				const isMirrored = $(`#${data.id}`).hasClass('isMirrored');
 				const value = parseFloat(event.target.value);
-				const currentSx = svg.transform().localMatrix.a;
+				const lm = svg.transform().localMatrix;
+				const currentSx = Math.sqrt(lm.a * lm.a + lm.b * lm.b); // rotation independent scalex factor
 				const currentWidth = svg.getBBox().width;
 				if(value !== 0){
 					if(event.target.classList.contains('unit_mm')){
 						snap.mbtransform.manualTransform(svg, {width: value, proportional: isProp }); // absolute width
 					} else if(event.target.classList.contains('unit_percent')){
 						const newWidth = currentWidth / Math.abs(currentSx) * value/100.0;
+						if(Math.abs(newWidth) < 0.1) newWidth = Math.sign(newWidth) * 0.1; // avoid NaN for too small values
 						snap.mbtransform.manualTransform(svg, {width: newWidth, proportional: isProp }); // absolute width
 					}
 					self.check_sizes_and_placements();
@@ -1242,13 +1244,15 @@ $(function(){
 				const svg = snap.select('#'+data.previewId);
 				const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass('scale_proportional');
 				const value = parseFloat(event.target.value);
-				const currentSy = svg.transform().localMatrix.d;
+				const lm = svg.transform().localMatrix;
+				const currentSy = Math.sqrt(lm.c * lm.c + lm.d * lm.d); // rotation independent scaley factor
 				const currentHeight = svg.getBBox().height;
 				if(value !== 0){
 					if(event.target.classList.contains('unit_mm')){
 						snap.mbtransform.manualTransform(svg, {height: value, proportional: isProp }); // absolute height
 					} else if(event.target.classList.contains('unit_percent')){
 						const newHeight = currentHeight / Math.abs(currentSy) * value/100.0;
+						if(Math.abs(newHeight) < 0.1) newHeight = Math.sign(newHeight) * 0.1; // avoid NaN for too small values
 						snap.mbtransform.manualTransform(svg, {height: newHeight, proportional: isProp }); // relative scale
 					}
 					self.check_sizes_and_placements();
