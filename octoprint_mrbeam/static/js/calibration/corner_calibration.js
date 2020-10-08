@@ -94,10 +94,11 @@ $(function () {
         });
 
         self.calImgReady = ko.computed(function () {
-            if (Object.keys(self.camera.markersFound()).length !== 4)
+            if (Object.keys(self.camera.markersFound).length !== 4)
                 return false;
-            return Object.values(self.camera.markersFound()).reduce(
-                (x, y) => x && y
+            return Object.values(self.camera.markersFound).reduce(
+                (x, y) => x && y(),
+                true
             );
         });
 

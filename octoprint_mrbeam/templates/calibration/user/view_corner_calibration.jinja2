@@ -72,16 +72,16 @@
             <a class="accordion-toggle" data-bind="click:calibration.loadUndistortedPicture, visible: !cornerCalibrationActive()"><i
                     class="icon-repeat"></i> {{ _('refresh') }}</a>
             <div class="marker_selection_desc calibration_waiting_for_picture">
-                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound['NW'] }"><i
                         class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.NW"></span>
                 </div>
-                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound['SW'] }"><i
                         class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.SW"></span>
                 </div>
-                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound['SE'] }"><i
                         class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.SE"></span>
                 </div>
-                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound['NE'] }"><i
                         class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.NE"></span>
                 </div>
                 <div class="marker_found_indicator" data-bind="visible: !calImgReady()"><i

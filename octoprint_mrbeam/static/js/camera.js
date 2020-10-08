@@ -32,10 +32,12 @@ $(function () {
         self.countImagesLoaded = ko.observable(0);
         self.imagesInSession = ko.observable(0);
 
-        self.markersFound = ko.observable(
-            new Map(MARKERS.map((elm) => [elm, undefined]))
-        );
-
+        self.markersFound = {
+            NW: ko.observable(undefined),
+            SW: ko.observable(undefined),
+            SE: ko.observable(undefined),
+            NE: ko.observable(undefined),
+        };
         self.maxObjectHeight = 38; // in mm
         self.defaultMargin = self.maxObjectHeight / 582;
         self.objectZ = ko.observable(0); // in mm
@@ -131,13 +133,13 @@ $(function () {
             if (
                 MARKERS.reduce(
                     (prev, key) =>
-                        prev || self.markersFound()[key] === undefined,
+                        prev || self.markersFound[key]() === undefined,
                     false
                 )
             )
                 return undefined;
             return MARKERS.reduce(
-                (prev_val, key) => prev_val + self.markersFound()[key],
+                (prev_val, key) => prev_val + self.markersFound[key](),
                 0
             );
         });
@@ -156,8 +158,8 @@ $(function () {
             var ret = "";
             MARKERS.forEach(function (m) {
                 if (
-                    self.markersFound()[m] !== undefined &&
-                    !self.markersFound()[m]
+                    self.markersFound[m]() !== undefined &&
+                    !self.markersFound[m]()
                 )
                     ret = ret + " marker" + m;
             });
@@ -186,15 +188,9 @@ $(function () {
 
             if ("beam_cam_new_image" in data) {
                 const mf = data["beam_cam_new_image"]["markers_found"];
-                _markersFound = {};
                 MARKERS.forEach(function (m) {
-                    if (mf.includes(m)) {
-                        _markersFound[m] = true;
-                    } else {
-                        _markersFound[m] = false;
-                    }
+                    self.markersFound[m](mf.includes(m));
                 });
-                self.markersFound(_markersFound);
 
                 if (data["beam_cam_new_image"]["error"] === undefined) {
                     self._needCalibration(false);

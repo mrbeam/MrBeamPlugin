@@ -2610,9 +2610,9 @@ $(function () {
             $("#camera_markers circle").mouseenter(function (e) {
                 if (
                     !$("#wa_view_settings_body").hasClass("in") &&
-                    !self.camera.markersFound()[
+                    !self.camera.markersFound[
                         $(e.target).attr("id").replace("marker", "")
-                    ]
+                    ]()
                 ) {
                     $("#wa_view_settings_body").collapse("toggle");
                 }

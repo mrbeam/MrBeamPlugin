@@ -99,9 +99,9 @@ $(function () {
         self.markersMessage = ko.computed(function () {
             let notFound = [];
             for (const [marker, found] of Object.entries(
-                self.camera.markersFound()
+                self.camera.markersFound
             )) {
-                if (!found) {
+                if (!found()) {
                     notFound.push(self.camera.MARKER_DESCRIPTIONS[marker]);
                 }
             }
