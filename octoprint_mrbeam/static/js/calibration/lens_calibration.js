@@ -74,6 +74,12 @@ $(function () {
             }
         };
 
+        self.onSettingsHidden = function () {
+            if (self.lensCalibrationActive()) {
+                self.abortLensCalibration();
+            }
+        };
+
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
 

@@ -188,6 +188,12 @@ $(function () {
             }
         };
 
+        self.onSettingsHidden = function () {
+            if (self.cornerCalibrationActive()) {
+                self.abortCornerCalibration();
+            }
+        };
+
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
 
