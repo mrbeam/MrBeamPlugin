@@ -17,7 +17,7 @@ class JobParams:
         SPEED = 3000
         COMPRESSOR = 100
         PASSES = 10
-        PIERCE_TIME = 2000
+        PIERCE_TIME = 300
         LINE_DISTANCE = 1.0
         INTENSITY = 1300
 
