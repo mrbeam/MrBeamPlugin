@@ -33,10 +33,10 @@ $(function () {
         self.imagesInSession = ko.observable(0);
 
         self.markersFound = {
-            NW: ko.observable(undefined),
-            SW: ko.observable(undefined),
-            SE: ko.observable(undefined),
-            NE: ko.observable(undefined),
+            NW: ko.observable(),
+            SW: ko.observable(),
+            SE: ko.observable(),
+            NE: ko.observable(),
         };
         self.maxObjectHeight = 38; // in mm
         self.defaultMargin = self.maxObjectHeight / 582;
