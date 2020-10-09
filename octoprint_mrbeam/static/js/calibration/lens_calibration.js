@@ -216,12 +216,6 @@ $(function () {
                 "camera_stop_lens_calibration",
                 {},
                 function () {
-                    // todo user lens calibration is this necessary?
-                    // new PNotify({
-                    // 	title: gettext("Lens Calibration stopped"),
-                    // 	// text: "",
-                    // 	type: "info",
-                    // 	hide: true});
                     self.resetLensCalibration();
                 },
                 function () {
