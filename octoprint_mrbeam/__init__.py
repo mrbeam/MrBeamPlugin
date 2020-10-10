@@ -10,6 +10,7 @@ import pprint
 import socket
 import threading
 import time
+import datetime
 import collections
 import logging
 from subprocess import check_output
@@ -179,13 +180,14 @@ class MrBeamPlugin(
         self._logger = mrb_logger("octoprint.plugins.mrbeam")
 
         handler = logging.FileHandler(
-            os.path.join(self._settings.getBaseFolder("logs"), "fontend.log")
+            os.path.join(self._settings.getBaseFolder("logs"), "frontend.log")
         )
         handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
         self._frontend_logger = logging.getLogger("FRONTEND")
+        self._frontend_logger.propagate = False
         self._frontend_logger.setLevel(logging.INFO)
         self._frontend_logger.addHandler(handler)
-        self._frontend_logger.info("OctoPrint Booting up...")
+        self._frontend_logger.info("========== OctoPrint booting... ============")
 
         self._branch = self.getBranch()
         self._octopi_info = self.get_octopi_info()
@@ -278,6 +280,7 @@ class MrBeamPlugin(
             % self.laserCutterProfileManager.get_current_or_default()
         )
         self._logger.info(msg, terminal=True)
+        self._frontend_logger.info(msg)
 
     def _convert_profiles(self, profiles):
         result = dict()
@@ -2161,10 +2164,18 @@ class MrBeamPlugin(
                     level = logging.WARNING
                 if f_level == "error":
                     level = logging.ERROR
+                browser_time = ""
+                try:
+                    browser_ts = float(payload.get("ts", 0))
+                    browser_dt = datetime.datetime.fromtimestamp(browser_ts / 1000.0)
+                    browser_time = browser_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                except:
+                    pass
                 msg = payload.get("msg", "")
-                browser_time = payload.get("browser_time", None)
+                if func and func is not "null":
+                    msg = "{} ({})".format(msg, func)
                 self._frontend_logger.log(
-                    level, "%s - %s - %s (%s)", browser_time, f_level, msg, func
+                    level, "%s - %s - %s", browser_time, f_level, msg
                 )
 
         except Exception as e:

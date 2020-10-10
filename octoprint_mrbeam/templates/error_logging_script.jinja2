@@ -121,6 +121,11 @@
             console.defaultTrace.apply(console, arguments);
             if (console.callbacks.trace) {console.callbacks.trace(data);}
         }
+
+        console.log("=================================================================")
+        console.log("Frontend Booting - lang: '" + window.navigator.language +
+            "', local time: '" + new Date().toLocaleString("en-GB") +
+            "', browser: " + window.navigator.userAgent)
     }
 
     window.addEventListener('error', function(event) {
