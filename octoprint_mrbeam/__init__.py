@@ -178,16 +178,7 @@ class MrBeamPlugin(
         self._plugin_version = __version__
         init_mrb_logger(self._printer)
         self._logger = mrb_logger("octoprint.plugins.mrbeam")
-
-        handler = logging.FileHandler(
-            os.path.join(self._settings.getBaseFolder("logs"), "frontend.log")
-        )
-        handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
-        self._frontend_logger = logging.getLogger("FRONTEND")
-        self._frontend_logger.propagate = False
-        self._frontend_logger.setLevel(logging.INFO)
-        self._frontend_logger.addHandler(handler)
-        self._frontend_logger.info("========== OctoPrint booting... ============")
+        self._frontend_logger = self._init_frontend_logger()
 
         self._branch = self.getBranch()
         self._octopi_info = self.get_octopi_info()
@@ -251,6 +242,18 @@ class MrBeamPlugin(
         self.fire_event(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
 
         self._do_initial_log()
+
+    def _init_frontend_logger(self):
+        handler = logging.FileHandler(
+            os.path.join(self._settings.getBaseFolder("logs"), "frontend.log")
+        )
+        handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+        l = logging.getLogger("FRONTEND")
+        l.propagate = False
+        l.setLevel(logging.INFO)
+        l.addHandler(handler)
+        l.info("========== OctoPrint booting... ============")
+        return l
 
     def _do_initial_log(self):
         """
@@ -2149,42 +2152,48 @@ class MrBeamPlugin(
                 data["analyticsInitialConsent"]
             )
 
-    @octoprint.plugin.BlueprintPlugin.route("/analytics", methods=["POST"])
-    def analytics_data(self):
-
+    @octoprint.plugin.BlueprintPlugin.route("/console", methods=["POST"])
+    def console_log(self):
         try:
             data = request.json
             event = data.get("event")
             payload = data.get("payload", dict())
-            if event == "console":
-                func = payload.get("function", None)
-                f_level = payload.get("level", None)
-                level = logging.INFO
-                if f_level == "warn":
-                    level = logging.WARNING
-                if f_level == "error":
-                    level = logging.ERROR
-                browser_time = ""
-                try:
-                    browser_ts = float(payload.get("ts", 0))
-                    browser_dt = datetime.datetime.fromtimestamp(browser_ts / 1000.0)
-                    browser_time = browser_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-                except:
-                    pass
-                msg = payload.get("msg", "")
-                if func and func is not "null":
-                    msg = "{} ({})".format(msg, func)
-                self._frontend_logger.log(
-                    level, "%s - %s - %s", browser_time, f_level, msg
-                )
+            func = payload.get("function", None)
+            f_level = payload.get("level", None)
+
+            level = logging.INFO
+            if f_level == "warn":
+                level = logging.WARNING
+            if f_level == "error":
+                level = logging.ERROR
+
+            browser_time = ""
+            try:
+                browser_ts = float(payload.get("ts", 0))
+                browser_dt = datetime.datetime.fromtimestamp(browser_ts / 1000.0)
+                browser_time = browser_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            except:
+                pass
+            msg = payload.get("msg", "")
+            if func and func is not "null":
+                msg = "{} ({})".format(msg, func)
+            self._frontend_logger.log(level, "%s - %s - %s", browser_time, f_level, msg)
+
+            if level >= logging.WARNING:
+                self.analytics_handler.add_frontend_event("console", payload)
 
         except Exception as e:
             self._logger.exception(
-                "Could not process frontend analytics data: {e} - Data = {data}".format(
+                "Could not process frontend console_log: {e} - Data = {data}".format(
                     e=e, data=data
                 )
             )
+            return make_response("Unable to interpret request", 400)
 
+        return NO_CONTENT
+
+    @octoprint.plugin.BlueprintPlugin.route("/analytics", methods=["POST"])
+    def analytics_data(self):
         try:
             data = request.json
             event = data.get("event")

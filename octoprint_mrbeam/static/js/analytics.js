@@ -16,28 +16,30 @@ $(function () {
                 return {};
             }
 
-            payload["ts"] = payload["ts"] || new Date().getTime();
-            payload["browser_time"] = new Date().toLocaleString("en-GB"); //GB so that we don't get AM/PM
-            return self._send(event, payload);
+            return self._send(event, payload, "analytics");
         };
 
         self.send_console_event = function (logData) {
+            // copies logData to not pollute console.everything
+            logData = { ...logData };
             if (logData.level == "error" || logData.level == "warn") {
                 logData.error_sqeuence = self.error_sqeuence++;
             }
-            // copies logData to not pollute console.everything
-            logData = { ...logData };
-            self.send_fontend_event("console", logData);
+            return self._send("console", logData, "console");
         };
 
-        self._send = function (event, payload) {
+        self._send = function (event, payload, endpoint) {
+            payload = payload || {};
+            payload["ts"] = payload["ts"] || new Date().getTime();
+            payload["browser_time"] = new Date().toLocaleString("en-GB"); //GB so that we don't get AM/PM
+
             let data = {
                 event: event,
-                payload: payload || {},
+                payload: payload,
             };
 
-            $.ajax({
-                url: "plugin/mrbeam/analytics",
+            return $.ajax({
+                url: "plugin/mrbeam/" + endpoint,
                 type: "POST",
                 dataType: "json",
                 contentType: "application/json; charset=UTF-8",
@@ -83,6 +85,12 @@ $(function () {
                 window_load: (self.window_load_ts - INIT_TS_MS) / 1000,
                 curtain_open: (now - INIT_TS_MS) / 1000,
             };
+            console.log(
+                "Loading duration - window_load: " +
+                    payload["window_load"] +
+                    ", curtain_open: " +
+                    payload["curtain_open"]
+            );
             self.send_fontend_event("loading_dur", payload);
         };
 
