@@ -16,10 +16,13 @@ $(function () {
                     let materialImportedSettings = response["materials"];
                     self.laserSource = response["laser_source"];
                     console.log(
-                        "Loaded standard materials! LaserSource: ",
+                        "Loaded standard materials. Laser source: ",
                         self.laserSource
                     );
-                    console.log(response);
+                    console.debug(
+                        "Loaded standard materials. data: ",
+                        response
+                    );
 
                     for (let materialKey in self.materialSettingsDatabase) {
                         if (materialKey in materialImportedSettings) {

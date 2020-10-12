@@ -19,7 +19,7 @@
                     "msg": c.msg,
                     "ts": Date.now(),
                     "file": c ? c.file : null,
-                    "function": c? c.function: null,
+                    "function": c ? String(c.function).trim() : null,
                     "line": c ? c.line : null,
                     "col": c ? c.col : null,
                     "stacktrace": c ? c.stacktrace : null,
@@ -37,7 +37,7 @@
                 "msg": msg.join(' '),
                 "ts": Date.now(),
                 "file": c ? c.file : null,
-                "function": c? c.function: null,
+                "function": c ? String(c.function.trim()) : null,
                 "line": c ? c.line : null,
                 "col": c ? c.col : null,
                 "stacktrace": c ? c.stacktrace : null,
@@ -121,6 +121,12 @@
             console.defaultTrace.apply(console, arguments);
             if (console.callbacks.trace) {console.callbacks.trace(data);}
         }
+
+        console.log("=================================================================")
+        console.log("Frontend Booting - lang: '" + window.navigator.language +
+            "', local time: '" + new Date().toLocaleString("en-GB") +
+            "', url: '" + window.location.href +
+            "', browser: " + window.navigator.userAgent)
     }
 
     window.addEventListener('error', function(event) {

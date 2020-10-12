@@ -377,7 +377,11 @@ $(function () {
         };
 
         self.showBrowserWarning = function () {
-            console.log("Supported Browser: " + mrbeam.browser.is_supported);
+            console.log(
+                "Supported Browser: " + mrbeam.browser.is_supported,
+                " - ",
+                window.mrbeam.browser
+            );
             if (!mrbeam.browser.is_supported) {
                 new PNotify({
                     title: gettext("Browser not supported."),

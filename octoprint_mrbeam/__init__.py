@@ -10,7 +10,9 @@ import pprint
 import socket
 import threading
 import time
+import datetime
 import collections
+import logging
 from subprocess import check_output
 
 import octoprint.plugin
@@ -176,6 +178,8 @@ class MrBeamPlugin(
         self._plugin_version = __version__
         init_mrb_logger(self._printer)
         self._logger = mrb_logger("octoprint.plugins.mrbeam")
+        self._frontend_logger = self._init_frontend_logger()
+
         self._branch = self.getBranch()
         self._octopi_info = self.get_octopi_info()
         self._serial_num = self.getSerialNum()
@@ -239,6 +243,21 @@ class MrBeamPlugin(
 
         self._do_initial_log()
 
+    def _init_frontend_logger(self):
+        handler = logging.handlers.RotatingFileHandler(
+            os.path.join(self._settings.getBaseFolder("logs"), "frontend.log"),
+            maxBytes=2 * 1024 * 1024,
+            backupCount=2,
+            encoding="utf-8",
+        )
+        handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+        l = logging.getLogger("FRONTEND")
+        l.propagate = False
+        l.setLevel(logging.INFO)
+        l.addHandler(handler)
+        l.info("========== OctoPrint booting... ============")
+        return l
+
     def _do_initial_log(self):
         """
         Kicks an identifying log line
@@ -267,6 +286,7 @@ class MrBeamPlugin(
             % self.laserCutterProfileManager.get_current_or_default()
         )
         self._logger.info(msg, terminal=True)
+        self._frontend_logger.info(msg)
 
     def _convert_profiles(self, profiles):
         result = dict()
@@ -2129,6 +2149,46 @@ class MrBeamPlugin(
             self.analytics_handler.initial_analytics_procedure(
                 data["analyticsInitialConsent"]
             )
+
+    @octoprint.plugin.BlueprintPlugin.route("/console", methods=["POST"])
+    def console_log(self):
+        try:
+            data = request.json
+            event = data.get("event")
+            payload = data.get("payload", dict())
+            func = payload.get("function", None)
+            f_level = payload.get("level", None)
+
+            level = logging.INFO
+            if f_level == "warn":
+                level = logging.WARNING
+            if f_level == "error":
+                level = logging.ERROR
+
+            browser_time = ""
+            try:
+                browser_ts = float(payload.get("ts", 0))
+                browser_dt = datetime.datetime.fromtimestamp(browser_ts / 1000.0)
+                browser_time = browser_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            except:
+                pass
+            msg = payload.get("msg", "")
+            if func and func is not "null":
+                msg = "{} ({})".format(msg, func)
+            self._frontend_logger.log(level, "%s - %s - %s", browser_time, f_level, msg)
+
+            if level >= logging.WARNING:
+                self.analytics_handler.add_frontend_event("console", payload)
+
+        except Exception as e:
+            self._logger.exception(
+                "Could not process frontend console_log: {e} - Data = {data}".format(
+                    e=e, data=data
+                )
+            )
+            return make_response("Unable to interpret request", 400)
+
+        return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/analytics", methods=["POST"])
     def analytics_data(self):
