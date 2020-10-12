@@ -1,4 +1,4 @@
-<div id="settings_camera_calibration" class="scrollable"
+<div id="settings_camera" class="scrollable"
      style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 100px);">
     <div id="camera_settings_view" class="scrollable">
         <h3>{{ _("Camera") }}</h3>
@@ -8,7 +8,7 @@
                 data-bind="css: cameraStatusOk() == true ? 'requirement-met' : 'requirement-not-met'">
                 {{ _("Status") }}
             </h4>
-            <div data-bind="visible: !availablePic()['raw']">
+            <div data-bind="visible: !camera.availablePic()['raw']">
                 <p>{{ _("The camera is not able to take new pictures. Please check the following:") }}</p>
             </div>
 
@@ -33,7 +33,7 @@
                 </li>
             </ul>
 
-            <table class="camera-status-images" data-bind="visible: availablePic()['raw']">
+            <table class="camera-status-images" data-bind="visible: camera.availablePic()['raw']">
                 <tr>
                     <td>
                         <svg class="camera-picture" data-bind=" attr: { viewBox: workingArea.zoomViewBox(), } "
@@ -51,7 +51,7 @@
                                 </image>
                             </g>
                         </svg>
-                        <a data-bind="attr: { href: availablePicUrl()['cropped'] }">
+                        <a data-bind="attr: { href: camera.availablePicUrl()['cropped'] }">
                             <i class="fa fa-download" aria-hidden="true"></i>
                         </a>
                     </td>
@@ -87,7 +87,7 @@
                 closing_tag='</a>') }}
 
                 </div>
-                <small data-bind="visible: availablePic()['raw']">
+                <small data-bind="visible: camera.availablePic()['raw']">
                     <i class="fa fa-download"
                        aria-hidden="true"></i>: {{ _("You can use the download button on the images to save your camera picture and provide it to the support team, if necessary.") }}
                 </small>
@@ -125,9 +125,11 @@
                 </li>
                 </ul>">
                 <div class="btn-group" id="camera_settings_marker_detection" data-toggle="buttons-radio">
-                    <button type="button" value="reliable"
+                    <button type="button" value="reliable" name="radioDetectionGroup"
+                            data-bind="click: setMarkerDetectionMode"
                             class="btn btn-small btn-default active">{{ _('Reliable') }}</button>
-                    <button type="button" value="accurate"
+                    <button type="button" value="accurate" name="radioDetectionGroup"
+                            data-bind="click: setMarkerDetectionMode"
                             class="btn btn-small btn-default">{{ _('Accurate') }}</button>
                 </div>
             </div>
@@ -173,14 +175,21 @@
                     <hr class="rounded_container_hr">
                     <p>{{ _('The corner calibration uses the pink markers to calibrate the camera. Use this in case one of the markers has been changed or if there is a large deviation between the screen position and the laser result.') }}</p>
                     <button class="btn btn-default"
-                            data-bind="click: changeUserView('corner')">{{ _('Start') }}</button>
+                            data-bind="click: changeUserView('corner')">
+                        {{ _('Start') }}
+                    </button>
                 </div>
                 <div class="rounded_container calibration-container experimental_feature_dev" style="display: block">
                     <div class="rounded_container_title" style="text-transform: uppercase;">{{ _('Lens Calibration') }}</div>
                     <hr class="rounded_container_hr">
                     <p>{{ _('The lens calibration is made to remove the fish-eye effect from the picture. Only do this if you think that your camera precision is bad, specially in the center.') }}</p>
+                    <p data-bind="visible: camera.needsRawCornerCalibration">
+                        <i class="icon-warning-sign"></i>{{ _('You need to make a corner calibration first') }}
+                    </p>
                     <button class="btn btn-default"
-                            data-bind="click: startLensCalibration">{{ _('Start') }}</button>
+                            data-bind="click: changeUserView('lens'), enable: !lensDaemonAlive() && !camera.needsRawCornerCalibration()">
+                        {{ _('Start') }}
+                    </button>
                 </div>
             </div>
         </div>

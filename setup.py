@@ -1,7 +1,7 @@
 # coding=utf-8
 
 
-execfile('octoprint_mrbeam/__version.py')
+execfile("octoprint_mrbeam/__version.py")
 
 ########################################################################################################################
 ### Do not forget to adjust the following variables to your own plugin.
@@ -36,7 +36,7 @@ plugin_url = "https://github.com/mrbeam/MrBeamPlugin"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ['webcolors', 'pillow', 'lxml', 'numpy==1.11.2', 'picamera']
+plugin_requires = ["webcolors", "pillow", "lxml", "numpy==1.11.2", "picamera"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
@@ -61,45 +61,53 @@ plugin_ignored_packages = []
 #     plugin_requires = ["someDependency==dev"]
 #     additional_setup_parameters = {"dependency_links": ["https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
 additional_setup_parameters = {
-	'package_data': {
-		'octoprint_mrbeam': ['profiles/*.yaml',
-		                     'files/grbl/*.hex',
-		                     'files/migrate/*',
-		                     'files/migrate_logrotate/*',
-		                     'files/material_settings/*',
-		                     'files/camera/*']},
-	'setup_requires': ['numpy==1.11.2']} # , 'picamera; platform_machine=="armv7l"']} # TODO upgrade to pip 18.0
+    "package_data": {
+        "octoprint_mrbeam": [
+            "profiles/*.yaml",
+            "files/grbl/*.hex",
+            "files/migrate/*",
+            "files/migrate_logrotate/*",
+            "files/material_settings/*",
+            "files/camera/*",
+        ]
+    },
+    "setup_requires": ["numpy==1.11.2"],
+}  # , 'picamera; platform_machine=="armv7l"']} # TODO upgrade to pip 18.0
 
 ########################################################################################################################
 
 from setuptools import setup
 
 try:
-	import octoprint_setuptools
+    import octoprint_setuptools
 except:
-	print("Could not import OctoPrint's setuptools, are you sure you are running that under "
-	      "the same python installation that OctoPrint is installed under?")
-	import sys
-	sys.exit(-1)
+    print(
+        "Could not import OctoPrint's setuptools, are you sure you are running that under "
+        "the same python installation that OctoPrint is installed under?"
+    )
+    import sys
+
+    sys.exit(-1)
 
 setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
-	identifier=plugin_identifier,
-	package=plugin_package,
-	name=plugin_name,
-	version=plugin_version,
-	description=plugin_description,
-	author=plugin_author,
-	mail=plugin_author_email,
-	url=plugin_url,
-	license=plugin_license,
-	requires=plugin_requires,
-	additional_packages=plugin_additional_packages,
-	ignored_packages=plugin_ignored_packages,
-	additional_data=plugin_additional_data
+    identifier=plugin_identifier,
+    package=plugin_package,
+    name=plugin_name,
+    version=plugin_version,
+    description=plugin_description,
+    author=plugin_author,
+    mail=plugin_author_email,
+    url=plugin_url,
+    license=plugin_license,
+    requires=plugin_requires,
+    additional_packages=plugin_additional_packages,
+    ignored_packages=plugin_ignored_packages,
+    additional_data=plugin_additional_data,
 )
 
 if len(additional_setup_parameters):
-	from octoprint.util import dict_merge
-	setup_parameters = dict_merge(setup_parameters, additional_setup_parameters)
+    from octoprint.util import dict_merge
+
+    setup_parameters = dict_merge(setup_parameters, additional_setup_parameters)
 
 setup(**setup_parameters)
