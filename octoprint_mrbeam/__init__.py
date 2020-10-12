@@ -244,8 +244,11 @@ class MrBeamPlugin(
         self._do_initial_log()
 
     def _init_frontend_logger(self):
-        handler = logging.FileHandler(
-            os.path.join(self._settings.getBaseFolder("logs"), "frontend.log")
+        handler = logging.handlers.RotatingFileHandler(
+            os.path.join(self._settings.getBaseFolder("logs"), "frontend.log"),
+            maxBytes=2 * 1024 * 1024,
+            backupCount=2,
+            encoding="utf-8",
         )
         handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
         l = logging.getLogger("FRONTEND")
