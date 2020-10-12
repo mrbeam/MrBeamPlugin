@@ -537,15 +537,10 @@ class MrBeamPlugin(
                 )
             if "leds" in data and "fps" in data["leds"]:
                 self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
-            # dev only
-            if "remember_markers_across_sessions" in data:
-                self._settings.set_boolean(
-                    ["cam", "remember_markers_across_sessions"],
-                    data["remember_markers_across_sessions"],
-                )
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
+        octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     def on_shutdown(self):
         self._shutting_down = True

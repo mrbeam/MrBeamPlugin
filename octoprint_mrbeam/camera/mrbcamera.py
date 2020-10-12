@@ -58,7 +58,7 @@ class MrbCamera(CameraClass, BaseCamera):
         # TODO set sensor mode and framerate etc...
         # This is a bit hacky but it makes sure that we don't try using PiCamera in case it's not imported
         # might need to change if inheriting from multiple classes
-        self._logger = mrb_logger("octoprint.plugins.mrbeam.util.camera.mrbcamera")
+        # self._logger = mrb_logger("octoprint.plugins.mrbeam.util.camera.mrbcamera", lvl=logging.INFO)
         BaseCamera.__init__(self, worker, shutter_speed=shutter_speed)
         # PiCamera constructor does not take a worker or shutter_speed
         # https://picamera.readthedocs.io/en/release-1.13/api_camera.html#picamera.PiCamera

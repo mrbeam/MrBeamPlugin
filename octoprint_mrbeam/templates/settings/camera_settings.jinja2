@@ -125,9 +125,11 @@
                 </li>
                 </ul>">
                 <div class="btn-group" id="camera_settings_marker_detection" data-toggle="buttons-radio">
-                    <button type="button" value="reliable"
+                    <button type="button" value="reliable" name="radioDetectionGroup"
+                            data-bind="click: setMarkerDetectionMode"
                             class="btn btn-small btn-default active">{{ _('Reliable') }}</button>
-                    <button type="button" value="accurate"
+                    <button type="button" value="accurate" name="radioDetectionGroup"
+                            data-bind="click: setMarkerDetectionMode"
                             class="btn btn-small btn-default">{{ _('Accurate') }}</button>
                 </div>
             </div>
@@ -181,8 +183,11 @@
                     <div class="rounded_container_title" style="text-transform: uppercase;">{{ _('Lens Calibration') }}</div>
                     <hr class="rounded_container_hr">
                     <p>{{ _('The lens calibration is made to remove the fish-eye effect from the picture. Only do this if you think that your camera precision is bad, specially in the center.') }}</p>
+                    <p data-bind="visible: camera.needsRawCornerCalibration">
+                        <i class="icon-warning-sign"></i>{{ _('You need to make a corner calibration first') }}
+                    </p>
                     <button class="btn btn-default"
-                            data-bind="click: changeUserView('lens'), enable: !lensDaemonAlive()">
+                            data-bind="click: changeUserView('lens'), enable: !lensDaemonAlive() && !camera.needsRawCornerCalibration()">
                         {{ _('Start') }}
                     </button>
                 </div>

@@ -33,7 +33,7 @@ from os.path import dirname, basename, isfile, exists
 import cv2
 import numpy as np
 
-logger = mrb_logger(__name__)
+logger = mrb_logger(__name__, lvl=logging.INFO)
 
 
 class MbPicPrepError(Exception):

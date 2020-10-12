@@ -19,6 +19,7 @@ $(function () {
         };
 
         self.needsCornerCalibration = ko.observable(false);
+        self.needsRawCornerCalibration = ko.observable(false);
 
         self.rawUrl = "/downloads/files/local/cam/debug/raw.jpg"; // TODO get from settings
         self.undistortedUrl =
@@ -31,10 +32,12 @@ $(function () {
         self.countImagesLoaded = ko.observable(0);
         self.imagesInSession = ko.observable(0);
 
-        self.markersFound = ko.observable(
-            new Map(MARKERS.map((elm) => [elm, undefined]))
-        );
-
+        self.markersFound = {
+            NW: ko.observable(),
+            SW: ko.observable(),
+            SE: ko.observable(),
+            NE: ko.observable(),
+        };
         self.maxObjectHeight = 38; // in mm
         self.defaultMargin = self.maxObjectHeight / 582;
         self.objectZ = ko.observable(0); // in mm
@@ -130,13 +133,13 @@ $(function () {
             if (
                 MARKERS.reduce(
                     (prev, key) =>
-                        prev || self.markersFound()[key] === undefined,
+                        prev || self.markersFound[key]() === undefined,
                     false
                 )
             )
                 return undefined;
             return MARKERS.reduce(
-                (prev_val, key) => prev_val + self.markersFound()[key],
+                (prev_val, key) => prev_val + self.markersFound[key](),
                 0
             );
         });
@@ -155,8 +158,8 @@ $(function () {
             var ret = "";
             MARKERS.forEach(function (m) {
                 if (
-                    self.markersFound()[m] !== undefined &&
-                    !self.markersFound()[m]
+                    self.markersFound[m]() !== undefined &&
+                    !self.markersFound[m]()
                 )
                     ret = ret + " marker" + m;
             });
@@ -175,19 +178,19 @@ $(function () {
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
             if ("need_camera_calibration" in data) {
-                self._needCalibration(data["camera_calibration"]);
+                self._needCalibration(data["need_camera_calibration"]);
             }
+            if ("need_raw_camera_calibration" in data) {
+                self.needsRawCornerCalibration(
+                    data["need_raw_camera_calibration"]
+                );
+            }
+
             if ("beam_cam_new_image" in data) {
                 const mf = data["beam_cam_new_image"]["markers_found"];
-                _markersFound = {};
                 MARKERS.forEach(function (m) {
-                    if (mf.includes(m)) {
-                        _markersFound[m] = true;
-                    } else {
-                        _markersFound[m] = false;
-                    }
+                    self.markersFound[m](mf.includes(m));
                 });
-                self.markersFound(_markersFound);
 
                 if (data["beam_cam_new_image"]["error"] === undefined) {
                     self._needCalibration(false);

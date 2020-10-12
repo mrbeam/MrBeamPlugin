@@ -74,6 +74,12 @@ $(function () {
             }
         };
 
+        self.onSettingsHidden = function () {
+            if (self.lensCalibrationActive()) {
+                self.abortLensCalibration();
+            }
+        };
+
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
 
@@ -182,7 +188,7 @@ $(function () {
                             "It shouldn't take long. Your device shows a green light when it is done."
                         ),
                         type: "info",
-                        hide: false,
+                        hide: true,
                     });
                 },
                 function () {
@@ -192,7 +198,7 @@ $(function () {
                             "Is the machine on? Have you taken any pictures before starting the calibration?"
                         ),
                         type: "warning",
-                        hide: true,
+                        hide: false,
                     });
                 },
                 "POST"
@@ -210,12 +216,6 @@ $(function () {
                 "camera_stop_lens_calibration",
                 {},
                 function () {
-                    // todo user lens calibration is this necessary?
-                    // new PNotify({
-                    // 	title: gettext("Lens Calibration stopped"),
-                    // 	// text: "",
-                    // 	type: "info",
-                    // 	hide: true});
                     self.resetLensCalibration();
                 },
                 function () {
@@ -226,11 +226,20 @@ $(function () {
                             "Please verify your connection to the device. Did you try canceling multiple times?"
                         ),
                         type: "warning",
-                        hide: true,
+                        hide: false,
                     });
                 },
                 "POST"
             );
+        };
+
+        self.onEventLensCalibExit = function () {
+            // Is called by OctoPrint when this event is fired
+            new PNotify({
+                title: gettext("Lens Calibration stopped."),
+                type: "info",
+                hide: true,
+            });
         };
 
         self.resetLensCalibration = function () {
@@ -277,7 +286,7 @@ $(function () {
                     new PNotify({
                         title: gettext("Reverted to factory settings."),
                         text: gettext(
-                            "Your previous calibration and pictures have been deleted."
+                            "Your previous calibration has been deleted."
                         ),
                         type: "info",
                         hide: false,
