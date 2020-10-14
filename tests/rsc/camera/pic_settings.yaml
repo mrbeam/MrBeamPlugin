@@ -1,0 +1,80 @@
+blur_factor_threshold: 20
+calibMarkers:
+  NE:
+    - 1918
+    - 318
+  NW:
+    - 125
+    - 246
+  SE:
+    - 1916
+    - 1428
+  SW:
+    - 194
+    - 1478
+calibration_updated: true
+cornersFromImage:
+  NE:
+    - 1878
+    - 193
+  NW:
+    - 198
+    - 178
+  SE:
+    - 1880
+    - 1490
+  SW:
+    - 241
+    - 1534
+hostname_KEY: MrBeam-7DBC
+marker2cornerVecs:
+  NE:
+    - -40
+    - -125
+  NW:
+    - 31
+    - -135
+  SE:
+    - -37
+    - 61
+  SW:
+    - 45
+    - 56
+markerSettings:
+  hueMax:
+    NE: 180
+    NW: 180
+    SE: 180
+    SW: 180
+  hueMin:
+    NE: 130
+    NW: 130
+    SE: 130
+    SW: 130
+  hue_lb_min: 100
+  pixels_expected: 800
+  radMax: 23
+  radMin: 3
+  ratioH: 4
+  ratioW: 4
+  saturationMax:
+    NE: 255
+    NW: 255
+    SE: 255
+    SW: 255
+  saturationMin:
+    NE: 0
+    NW: 0
+    SE: 0
+    SW: 0
+  valueMax:
+    NE: 255
+    NW: 255
+    SE: 255
+    SW: 255
+  valueMin:
+    NE: 0
+    NW: 0
+    SE: 0
+    SW: 0
+version: 0.1.15

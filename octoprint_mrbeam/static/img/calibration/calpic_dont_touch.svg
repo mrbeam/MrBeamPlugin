@@ -9,15 +9,15 @@
 </radialGradient>
 <rect x="0" fill="url(#SVGID_1_)" width="211" height="141"/>
 <g>
-	<polygon fill="#FFFFFF" stroke="#010202" stroke-linejoin="round" stroke-miterlimit="10" points="36.823,19.743 33.936,16.843 
-		32.455,18.325 35.287,21.251 35.303,118.833 32.342,121.834 33.873,123.537 36.854,120.743 175.547,120.743 178.528,123.539 
+	<polygon fill="#FFFFFF" stroke="#010202" stroke-linejoin="round" stroke-miterlimit="10" points="36.823,19.743 33.936,16.843
+		32.455,18.325 35.287,21.251 35.303,118.833 32.342,121.834 33.873,123.537 36.854,120.743 175.547,120.743 178.528,123.539
 		180.06,121.824 177.1,118.832 177.119,21.259 179.955,18.345 178.483,16.842 175.614,19.743 	"/>
 	<line fill="none" stroke="#010202" stroke-width="0.5" stroke-miterlimit="10" x1="36.823" y1="19.743" x2="35.287" y2="21.251"/>
-	
+
 		<line fill="none" stroke="#010202" stroke-width="0.5" stroke-miterlimit="10" x1="35.303" y1="118.833" x2="36.854" y2="120.743"/>
-	
+
 		<line fill="none" stroke="#010202" stroke-width="0.5" stroke-miterlimit="10" x1="175.614" y1="19.743" x2="177.119" y2="21.259"/>
-	
+
 		<line fill="none" stroke="#010202" stroke-width="0.5" stroke-miterlimit="10" x1="177.1" y1="118.832" x2="175.547" y2="120.743"/>
 </g>
 <line fill="none" stroke="#010202" stroke-width="0.75" stroke-miterlimit="10" x1="48.5" y1="19.69" x2="48.5" y2="120.69"/>
@@ -27,13 +27,13 @@
 <circle fill="none" stroke="#010202" stroke-width="0.75" stroke-miterlimit="10" cx="171.149" cy="115.362" r="2.462"/>
 <g>
 	<rect x="56.468" y="31.19" fill="none" stroke="#000000" stroke-width="0.75" stroke-miterlimit="10" width="96" height="78"/>
-	
+
 		<line fill="none" stroke="#000000" stroke-width="0.75" stroke-linecap="round" stroke-miterlimit="10" x1="56.468" y1="31.19" x2="53.55" y2="28.272"/>
-	
+
 		<line fill="none" stroke="#000000" stroke-width="0.75" stroke-linecap="round" stroke-miterlimit="10" x1="155.387" y1="112.109" x2="152.468" y2="109.19"/>
-	
+
 		<line fill="none" stroke="#000000" stroke-width="0.75" stroke-linecap="round" stroke-miterlimit="10" x1="152.468" y1="31.19" x2="155.387" y2="28.272"/>
-	
+
 		<line fill="none" stroke="#000000" stroke-width="0.75" stroke-linecap="round" stroke-miterlimit="10" x1="53.55" y1="112.109" x2="56.468" y2="109.19"/>
 </g>
 <g>
