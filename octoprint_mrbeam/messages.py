@@ -1,5 +1,7 @@
 import os
 import yaml
+# import httplib
+# import requests
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
@@ -15,6 +17,7 @@ def messages(plugin):
 
 class Messages(object):
 	FILE_CUSTOM_MESSAGES = "messages.yaml"
+	# FILE_REMOTE_MESSAGES = "https://messages.beamos.mr-beam.org/messages.json"
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.messages")
@@ -31,6 +34,14 @@ class Messages(object):
 		"""
 		self._load()
 		return self.messages
+
+	# def get_remote_messages(self):
+		# """
+		# Get list of currently saved custom messages
+		# :return:
+		# """
+		# self._load_remote()
+		# return self.messages
 
 	def put_custom_message(self, key, message):
 		"""
@@ -71,6 +82,33 @@ class Messages(object):
 				self.messages = dict()
 				self.custom_messages_loaded = False
 		return self.messages
+
+	# def _load_remote(self, force=False):
+	# 	if not self.custom_messages_loaded or force:
+	# 		try:
+	# 			if self.exists('messages.beamos.mr-beam.org', '/messages.json'):
+	# 			if requests.get(self.FILE_REMOTE_MESSAGES).status_code == 200:
+	# 				response = requests.get(self.FILE_REMOTE_MESSAGES)
+	# 				self.messages = response.json()
+	# 				self._logger.debug("Loaded %s custom messages from file %s", len(self.messages),
+	# 								   self.FILE_REMOTE_MESSAGES)
+	# 			else:
+	# 				self.messages = dict()
+	# 				self._logger.debug("No custom messages yet. File %s does not exist.", self.FILE_REMOTE_MESSAGES)
+	# 			self.custom_messages_loaded = True
+	# 		except Exception as e:
+	# 			self._logger.exception(
+	# 				"Exception while loading custom messages from file {}".format(self.FILE_REMOTE_MESSAGES))
+	# 			self.messages = dict()
+	# 			self.custom_messages_loaded = False
+	# 	return self.messages
+
+	# def exists(self, site, path):
+	# 	conn = httplib.HTTPConnection(site)
+	# 	conn.request('HEAD', path)
+	# 	response = conn.getresponse()
+	# 	conn.close()
+	# 	return response.status == 200
 
 	def _save(self, force=False):
 		if not self.custom_messages_loaded and not force:

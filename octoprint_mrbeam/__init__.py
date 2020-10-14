@@ -924,6 +924,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					messages(self).put_custom_message(key, m)
 
 			res['messages'] = messages(self).get_custom_messages()
+			# res['messages'] = messages(self).get_remote_messages()
 
 		except:
 			self._logger.exception("Exception while handling messages(): ")
