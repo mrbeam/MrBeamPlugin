@@ -591,7 +591,6 @@ $(function () {
                     self.gcodefiles.removeFile(data);
                 }
             }
-            items.remove();
             $("#bulkActions").slideUp();
         };
 
@@ -700,6 +699,16 @@ $(function () {
             } else {
                 elem.addClass("show_design");
             }
+        };
+
+        self.gcodefiles.hideAndRemoveFile = function (data, event) {
+            $(event.target).closest(".entry").hide(); // We just hide it to pretend it's deleted already
+            self.gcodefiles.removeFile(data, event);
+        };
+
+        self.gcodefiles.hideAndRemoveFolder = function (data, event) {
+            $(event.target).closest(".entry").hide(); // We just hide it to pretend it's deleted already
+            self.gcodefiles.removeFolder(data, event);
         };
 
         // settings.js viewmodel extensions
