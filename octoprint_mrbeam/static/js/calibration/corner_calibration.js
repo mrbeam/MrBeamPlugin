@@ -275,6 +275,7 @@ $(function () {
         };
 
         self.abortCornerCalibration = function () {
+            self.analytics.send_fontend_event("corner_calibration_abort", {});
             self.stopCornerCalibration();
             self.resetView();
         };

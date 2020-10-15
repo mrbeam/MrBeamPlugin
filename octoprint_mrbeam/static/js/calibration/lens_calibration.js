@@ -207,6 +207,7 @@ $(function () {
 
         self.abortLensCalibration = function () {
             // TODO - Axel - Allow to kill the board detection.
+            self.analytics.send_fontend_event("lens_calibration_abort", {});
             self.stopLensCalibration();
             self.resetView();
         };
@@ -249,6 +250,7 @@ $(function () {
 
         self.saveLensCalibrationData = function () {
             // TODO Gray out button when calibration state is STATE_PROCESSING
+            self.analytics.send_fontend_event("lens_calibration_finish", {});
             self.runLensCalibration();
             self.resetView();
         };
