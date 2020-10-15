@@ -526,7 +526,6 @@ class LidHandler(object):
                 "lens_calib_state": self.boardDetectorDaemon.state.analytics_friendly(),
             }
         )
-        self._analytics_handler.upload()
         self.boardDetectorDaemon.saveCalibration()
         # Remove the lens distorted corner calibration keys
         pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
