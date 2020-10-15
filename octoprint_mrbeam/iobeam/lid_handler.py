@@ -469,6 +469,13 @@ class LidHandler(object):
                     os.remove(my_path)
 
     def stopLensCalibration(self):
+        self._analytics_handler.add_camera_session_details(
+            {
+                "message": "Stopping lens calibration",
+                "id": "cam_lens_calib_stop",
+                "lens_calib_state": self.boardDetectorDaemon.state.analytics_friendly(),
+            }
+        )
         self.boardDetectorDaemon.stopAsap()
         if self.boardDetectorDaemon.is_alive():
             self.boardDetectorDaemon.join()
@@ -512,6 +519,14 @@ class LidHandler(object):
             self._logger.info("Board detector not alive, starting now")
             self.boardDetectorDaemon.start()
 
+        self._analytics_handler.add_camera_session_details(
+            {
+                "message": "Saving lens calibration",
+                "id": "cam_lens_calib_save",
+                "lens_calib_state": self.boardDetectorDaemon.state.analytics_friendly(),
+            }
+        )
+        self._analytics_handler.upload()
         self.boardDetectorDaemon.saveCalibration()
         # Remove the lens distorted corner calibration keys
         pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
