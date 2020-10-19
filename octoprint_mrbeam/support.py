@@ -87,6 +87,6 @@ def set_support_user(plugin, support_mode):
     else:
         try:
             # raises UnknownUser exception if user not existing
-            plugin._user_manager.removeUser(USER_NAME)
+            plugin._user_manager.remove_user(USER_NAME)
         except:
             pass
