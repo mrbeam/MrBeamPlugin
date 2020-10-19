@@ -729,9 +729,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def change_usernames_tolower(self):
         self._logger.info("change_usernames_tolower() ")
-        if not self.plugin._user_manager.hasBeenCustomized():
+        if not self.plugin._user_manager.has_been_customized():
             self._logger.info(
-                "change_usernames_tolower() _user_manager not hasBeenCustomized(): skip"
+                "change_usernames_tolower() _user_manager not has_been_customized(): skip"
             )
             return
 
