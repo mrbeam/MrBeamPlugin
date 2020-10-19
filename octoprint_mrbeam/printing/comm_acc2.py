@@ -18,7 +18,7 @@ import re
 import Queue
 import random
 
-from flask.ext.babel import gettext
+from flask_babel import gettext
 
 import octoprint.plugin
 
@@ -97,12 +97,12 @@ class MachineCom(object):
     STATE_LOCKED = 12
     STATE_HOMING = 13
     STATE_FLASHING = 14
-	# TODO IRATXE do these need to go in a specific order / do the numbers matter?
-	STATE_CANCELLING = 15
-	STATE_STARTING = 16
-	STATE_PAUSING = 17
-	STATE_RESUMING = 18
-	STATE_FINISHING = 19
+    # TODO IRATXE do these need to go in a specific order / do the numbers matter?
+    STATE_CANCELLING = 15
+    STATE_STARTING = 16
+    STATE_PAUSING = 17
+    STATE_RESUMING = 18
+    STATE_FINISHING = 19
 
     GRBL_STATE_QUEUE = "Queue"
     GRBL_STATE_IDLE = "Idle"
@@ -913,7 +913,7 @@ class MachineCom(object):
             return None
         except TypeError as e:
             # While closing or reopening sometimes we get this exception:
-            # 	File "build/bdist.linux-armv7l/egg/serial/serialposix.py", line 468, in read
+            #     File "build/bdist.linux-armv7l/egg/serial/serialposix.py", line 468, in read
             #     buf = os.read(self.fd, size-len(read))
             self._logger.exception(
                 "TypeError in _readline. Did this happen while closing or re-opening serial?: {e}".format(
@@ -1104,10 +1104,10 @@ class MachineCom(object):
 
         # # update working pos from acknowledged gcode
         # if item and item['cmd'].startswith('G'):
-        # 	self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
-        # 	# since we just got a postion update we can reset the wait time for the next status poll
-        # 	# ideally we never poll statuses during engravings
-        # 	self._reset_status_polling_waittime()
+        #     self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
+        #     # since we just got a postion update we can reset the wait time for the next status poll
+        #     # ideally we never poll statuses during engravings
+        #     self._reset_status_polling_waittime()
 
     def _handle_error_message(self, line):
         """
@@ -2034,32 +2034,32 @@ class MachineCom(object):
             )
 
     # def _handle_command_handler_result(self, command, command_type, gcode, handler_result):
-    # 	original_tuple = (command, command_type, gcode)
+    #     original_tuple = (command, command_type, gcode)
     #
-    # 	if handler_result is None:
-    # 		# handler didn't return anything, we'll just continue
-    # 		return original_tuple
+    #     if handler_result is None:
+    #         # handler didn't return anything, we'll just continue
+    #         return original_tuple
     #
-    # 	if isinstance(handler_result, basestring):
-    # 		# handler did return just a string, we'll turn that into a 1-tuple now
-    # 		handler_result = (handler_result,)
-    # 	elif not isinstance(handler_result, (tuple, list)):
-    # 		# handler didn't return an expected result format, we'll just ignore it and continue
-    # 		return original_tuple
+    #     if isinstance(handler_result, basestring):
+    #         # handler did return just a string, we'll turn that into a 1-tuple now
+    #         handler_result = (handler_result,)
+    #     elif not isinstance(handler_result, (tuple, list)):
+    #         # handler didn't return an expected result format, we'll just ignore it and continue
+    #         return original_tuple
     #
-    # 	hook_result_length = len(handler_result)
-    # 	if hook_result_length == 1:
-    # 		# handler returned just the command
-    # 		command, = handler_result
-    # 	elif hook_result_length == 2:
-    # 		# handler returned command and command_type
-    # 		command, command_type = handler_result
-    # 	else:
-    # 		# handler returned a tuple of an unexpected length
-    # 		return original_tuple
+    #     hook_result_length = len(handler_result)
+    #     if hook_result_length == 1:
+    #         # handler returned just the command
+    #         command, = handler_result
+    #     elif hook_result_length == 2:
+    #         # handler returned command and command_type
+    #         command, command_type = handler_result
+    #     else:
+    #         # handler returned a tuple of an unexpected length
+    #         return original_tuple
     #
-    # 	gcode = self._gcode_command_for_cmd(command)
-    # 	return command, command_type, gcode
+    #     gcode = self._gcode_command_for_cmd(command)
+    #     return command, command_type, gcode
 
     def _replace_feedrate(self, cmd):
         obj = self._regex_feedrate.search(cmd)
@@ -2101,7 +2101,7 @@ class MachineCom(object):
                 self._current_intensity = self._gcode_intensity_limit
 
             # self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor} and '
-            # 				  'intensity limit {limit})'.format(old=parsed_intensity, new=self._current_intensity,
+            #                   'intensity limit {limit})'.format(old=parsed_intensity, new=self._current_intensity,
             # 													factor=self._power_correction_factor,
             # 													limit=self._gcode_intensity_limit))
 
@@ -2669,29 +2669,35 @@ class MachineCom(object):
     def isPrinting(self):
         return self._state == self.STATE_PRINTING
 
-	def isCancelling(self):
-		return self._state == self.STATE_CANCELLING
+    def isCancelling(self):
+        return self._state == self.STATE_CANCELLING
 
-	def isPausing(self):
-		return self._state == self.STATE_PAUSING
+    def isPausing(self):
+        return self._state == self.STATE_PAUSING
 
-	def isResuming(self):
-		return self._state == self.STATE_RESUMING
+    def isResuming(self):
+        return self._state == self.STATE_RESUMING
 
-	def isStarting(self):
-		return self._state == self.STATE_STARTING
+    def isStarting(self):
+        return self._state == self.STATE_STARTING
 
-	def isFinishing(self):
-		return self._state == self.STATE_FINISHING
+    def isFinishing(self):
+        return self._state == self.STATE_FINISHING
 
-	def isSdPrinting(self):
-		return self.isSdFileSelected() and self.isPrinting()
+    def isSdPrinting(self):
+        return self.isSdFileSelected() and self.isPrinting()
 
-	def isSdFileSelected(self):
-		return self._currentFile is not None and isinstance(self._currentFile, PrintingSdFileInformation)
+    def isSdFileSelected(self):
+        return self._currentFile is not None and isinstance(
+            self._currentFile, PrintingSdFileInformation
+        )
 
-	def isStreaming(self):
-		return self._currentFile is not None and isinstance(self._currentFile, StreamingGcodeFileInformation) and not self._currentFile.done
+    def isStreaming(self):
+        return (
+            self._currentFile is not None
+            and isinstance(self._currentFile, StreamingGcodeFileInformation)
+            and not self._currentFile.done
+        )
 
     def isPaused(self):
         return self._state == self.STATE_PAUSED

@@ -13,7 +13,7 @@ from octoprint.events import Events as OctoPrintEvents
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # singleton
