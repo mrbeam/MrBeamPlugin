@@ -3120,7 +3120,18 @@ def __plugin_load__():
                 ),
                 disabled=dict(
                     wizard=["plugin_softwareupdate"],
-                    settings=["serial", "webcam", "terminalfilters"],
+                    settings=[
+                        "serial",
+                        "webcam",
+                        "terminalfilters",
+                        "plugin_action_command_prompt",
+                        "plugin_tracking",
+                        "plugin_appkeys",
+                        "plugin_backup",
+                        "plugin_errortracking",
+                        "plugin_pi_support",
+                        "plugin_pluginmanager",
+                    ],
                 ),
             )
         ),
