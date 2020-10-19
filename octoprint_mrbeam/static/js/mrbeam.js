@@ -173,7 +173,7 @@ $(function () {
     // Force input of the "Add User" E-mail address in Settings > Access Control to lowercase.
     $("#settings-usersDialogAddUserName").attr(
         "data-bind",
-        "value: $root.users.editorUsername, valueUpdate: 'afterkeydown'"
+        "value: $root.access.users.editor.name, valueUpdate: 'afterkeydown'"
     );
     // Check if the entered e-mail address is valid and show error if not.
     $(
@@ -194,7 +194,7 @@ $(function () {
 
         self.settings = parameters[0];
         self.wizardacl = parameters[1];
-        self.users = parameters[2];
+        self.access = parameters[2];
         self.loginState = parameters[3];
         self.system = parameters[4];
 
@@ -217,15 +217,16 @@ $(function () {
             return target;
         };
 
-        self.users.currentUser.subscribe(function (currentUser) {
+        self.access.users.currentUser.subscribe(function (currentUser) {
+            // todo iratxe
             if (currentUser === undefined) {
                 // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
                 // For "Add User" set the Admin checked by default
-                self.users.editorAdmin(true);
+                // self.access.currentUser.admin(true)
             }
         });
 
-        self.users.editorUsername.subscribe(function (username) {
+        self.access.users.editor.name.subscribe(function (username) {
             if (username) {
                 self.userTyped(true);
             } else {
@@ -235,7 +236,7 @@ $(function () {
 
         self.validUsername = ko.pureComputed(function () {
             return self.wizardacl.regexValidateEmail.test(
-                self.users.editorUsername()
+                self.access.users.editor.name()
             );
         });
 
@@ -545,7 +546,7 @@ $(function () {
         [
             "settingsViewModel",
             "wizardAclViewModel",
-            "usersViewModel",
+            "accessViewModel",
             "loginStateViewModel",
             "systemViewModel",
         ],
