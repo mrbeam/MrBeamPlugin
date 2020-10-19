@@ -18,7 +18,7 @@ from subprocess import check_output
 import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
-from flask.ext.babel import gettext
+from flask_babel import gettext
 import octoprint.filemanager as op_filemanager
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping, FileManager
 from octoprint.server import NO_CONTENT
@@ -1085,7 +1085,7 @@ class MrBeamPlugin(
 
     # simpleApiCommand: lasersafety_confirmation; simpleApiCommand: lasersafety_confirmation;
     def lasersafety_wizard_api(self, data):
-        from flask.ext.login import current_user
+        from flask_login import current_user
 
         # get JSON from request data, or send user back home
         data = request.values

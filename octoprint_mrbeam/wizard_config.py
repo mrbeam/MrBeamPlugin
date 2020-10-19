@@ -1,4 +1,4 @@
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
