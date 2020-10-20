@@ -126,6 +126,7 @@ class DustManager(object):
         self._iobeam.subscribe(
             IoBeamValueEvents.FAN_AUTO_RESPONSE, self._on_command_response
         )
+        self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self._onEvent)
         self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self._onEvent)
         self._event_bus.subscribe(IoBeamEvents.CONNECT, self._onEvent)
         self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._onEvent)
@@ -218,6 +219,9 @@ class DustManager(object):
             if self._just_initialized:
                 self._stop_dust_extraction()
                 self._just_initialized = False
+        elif event == IoBeamEvents.LID_OPENED:
+            if self.is_final_extraction_mode:
+                self._continue_final_extraction = False
 
     def _start_test_fan_rpm(self):
         self._logger.debug(

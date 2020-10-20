@@ -1956,6 +1956,7 @@ class MrBeamPlugin(
             camera_run_lens_calibration=[],
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
+            cancel_final_extraction=[],
         )
 
     def on_api_command(self, command, data):
@@ -2066,6 +2067,9 @@ class MrBeamPlugin(
             return (
                 self.generateCalibrationMarkersSvg()
             )  # TODO move this func to other file
+        elif command == "cancel_final_extraction":
+            self.dust_manager._continue_final_extraction = False
+
         return NO_CONTENT
 
     def analytics_init(self, data):
