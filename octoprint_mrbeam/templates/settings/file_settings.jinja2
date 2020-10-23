@@ -27,7 +27,7 @@
     <form class="form-horizontal">
         <div class="control-group">
             <div>
-                <p>{{ _('Every time you run a laser job, a GCode file is automatically created. We recommend to enable the auto-deletion of GCode files so that your Mr Beam doesn\'t get too loaded and it can work faster. With this enabled, only the last 10 GCode files will be stored.') }} </p>
+                <p>{{ _('Every time you run a laser job, a GCode file is automatically created. We recommend to enable the auto-deletion of GCode files so that your Mr Beam doesn\'t get too loaded and it can work faster. With this enabled, only the last 25 GCode files will be stored.') }} </p>
                 <p>{{ _('You can alternativelly delete the GCode files manually in the Design Library.') }} </p>
                 <label class="checkbox">
                     <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.gcodeAutoDeletion">
