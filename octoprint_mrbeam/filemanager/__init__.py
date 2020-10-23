@@ -18,6 +18,9 @@ def mrbFileManager(plugin):
 
 
 class MrbFileManager(FileManager):
+    MAX_HISTORY_FILES = 25  # TODO fetch from settings
+    MAX_GCODE_FILES = 25  # TODO fetch from settings
+
     class File:
         def __init__(self, file_name, content):
             self.filename = file_name
@@ -30,6 +33,9 @@ class MrbFileManager(FileManager):
 
     def __init__(self, plugin):
         self._plugin = plugin
+        self._logger = plugin._logger
+        self._settings = plugin._settings
+
         storage_managers = dict()
         storage_managers[FileDestinations.LOCAL] = LocalFileStorage(
             self._plugin._settings.getBaseFolder("uploads")
@@ -57,7 +63,58 @@ class MrbFileManager(FileManager):
             allow_overwrite=True,
         )
 
-    def _sanitize_content(self, file_name, content):
+    def delete_old_files(self):
+        self.delete_old_history_files()
+
+        if self._settings.get(["gcodeAutoDeletion"]):
+            self.delete_old_gcode_files()
+
+    def delete_old_history_files(self):
+        mrb_filter_func = lambda entry, entry_data: self._is_history_file(entry)
+        resp = self.list_files(path="", filter=mrb_filter_func, recursive=True)
+        files = resp[FileDestinations.LOCAL]
+
+        self._delete_files_by_age(files, self.MAX_HISTORY_FILES)
+
+    def delete_old_gcode_files(self):
+        mrb_filter_func = lambda entry, entry_data: self._is_gcode_file(entry)
+        resp = self.list_files(path="", filter=mrb_filter_func, recursive=True)
+        files = resp[FileDestinations.LOCAL]
+
+        self._delete_files_by_age(files, self.MAX_GCODE_FILES)
+
+    def _delete_files_by_age(self, files, num_files_to_keep=0):
+        if len(files) > num_files_to_keep:
+            removals = []
+            for key in files:
+                f = files[key]
+                tpl = (
+                    self.last_modified(FileDestinations.LOCAL, path=f["path"]),
+                    f["path"],
+                )
+                removals.append(tpl)
+
+            sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
+
+            # TODO each deletion causes a filemanager push update -> slow.
+            for i in range(0, len(sorted_by_age) - self.MAX_HISTORY_FILES):
+                f = sorted_by_age[i]
+                self.remove_file(FileDestinations.LOCAL, f[1])
+
+    @staticmethod
+    def _is_history_file(entry):
+        _, extension = os.path.splitext(entry)
+        extension = extension[1:].lower()
+        return extension == "mrb"
+
+    @staticmethod
+    def _is_gcode_file(entry):
+        _, extension = os.path.splitext(entry)
+        extension = extension[1:].lower()
+        return extension == "gco"
+
+    @staticmethod
+    def _sanitize_content(file_name, content):
         _, extension = os.path.splitext(file_name)
         if extension == "svg":
             # TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
