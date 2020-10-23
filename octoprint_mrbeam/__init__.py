@@ -387,6 +387,7 @@ class MrBeamPlugin(
             ),
             focusReminder=True,
             analyticsEnabled=None,
+            gcodeAutoDeletion=True,
             analytics=dict(
                 cam_analytics=False,
                 folder="analytics",  # laser job analytics base folder (.octoprint/...)
@@ -480,6 +481,7 @@ class MrBeamPlugin(
                 ask=self._settings.get(["review", "ask"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
+            gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
             laserHeadSerial=self.laserhead_handler.get_current_used_lh_data()["serial"],
             usage=dict(
                 totalUsage=self.usage_handler.get_total_usage(),
@@ -552,6 +554,10 @@ class MrBeamPlugin(
                 )
             if "focusReminder" in data:
                 self._settings.set_boolean(["focusReminder"], data["focusReminder"])
+            if "gcodeAutoDeletion" in data:
+                self._settings.set_boolean(
+                    ["gcodeAutoDeletion"], data["gcodeAutoDeletion"]
+                )
             if "dev" in data and "software_tier" in data["dev"]:
                 switch_software_channel(self, data["dev"]["software_tier"])
             if "leds" in data and "brightness" in data["leds"]:
@@ -820,8 +826,8 @@ class MrBeamPlugin(
         result = [
             dict(
                 type="settings",
-                name=gettext("File Import Settings"),
-                template="settings/svgtogcode_settings.jinja2",
+                name=gettext("Files"),
+                template="settings/file_settings.jinja2",
                 suffix="_conversion",
                 custom_bindings=False,
             ),
