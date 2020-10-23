@@ -3069,68 +3069,6 @@ div.hopscotch-bubble h3 {
 
 /*App font family*/
 
-/*Laser button */
-
-#laser_button {
-  background-color: #e25303;
-  background-image: none;
-}
-
-/*Laser button */
-
-/*Sliders*/
-input#quick_shape_rect_radius,
-input#quick_shape_star_sharpness,
-input#quick_shape_heart_lr {
-  margin-top: 14px;
-}
-
-input#img-preprocess-contrast,
-input#img-preprocess-brightness,
-input#img-preprocess-sharpen,
-input#img-preprocess-gamma {
-  margin: 13px 5px;
-  width: 80% !important;
-  float: right;
-}
-
-@media only screen and (max-width: 1248px) {
-  input#img-preprocess-contrast,
-  input#img-preprocess-brightness,
-  input#img-preprocess-sharpen,
-  input#img-preprocess-gamma {
-    width: 70% !important;
-  }
-}
-
-@media only screen and (max-width: 900px) {
-  input#img-preprocess-contrast,
-  input#img-preprocess-brightness,
-  input#img-preprocess-sharpen,
-  input#img-preprocess-gamma {
-    width: 60% !important;
-  }
-}
-
-.img-preprocess-cont {
-  margin-bottom: 8px;
-}
-
-.working_area_image_preprocessing_sliders {
-  margin-top: 4px;
-}
-
-#preview-brightness {
-  margin-left: 5px;
-  vertical-align: middle;
-}
-
-#wa_filelist .img-preprocess-cont i {
-  vertical-align: bottom;
-}
-
-/*Sliders*/
-
 /*Setting buttons*/
 
 #settings_plugin_softwareupdate button.btn.btn-primary.btn-block.sticky-footer {
