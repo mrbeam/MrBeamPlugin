@@ -503,9 +503,6 @@ class MrBeamPlugin(
 
     def on_settings_save(self, data):
         try:
-            self._logger.info("###################### ON SETTINGS SAVE")
-            self._logger.info(data)
-
             # self._logger.info("ANDYTEST on_settings_save() %s", data)
             if "cam" in data and "previewOpacity" in data["cam"]:
                 self._settings.set_float(
