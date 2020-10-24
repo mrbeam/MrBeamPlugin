@@ -22,6 +22,8 @@ from flask_babel import gettext
 
 import octoprint.plugin
 
+from octoprint.printer.standard import StateMonitor
+import octoprint.util.comm as octocomm
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events as OctoPrintEvents
 from octoprint.filemanager.destinations import FileDestinations
@@ -38,6 +40,7 @@ from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+import logging
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -145,7 +148,9 @@ class MachineCom(object):
     def __init__(
         self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None
     ):
-        self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
+        self._logger = mrb_logger(
+            "octoprint.plugins.mrbeam.printing.comm_acc2", lvl=logging.DEBUG
+        )
 
         if port is None:
             port = settings().get(["serial", "port"])
@@ -158,7 +163,7 @@ class MachineCom(object):
             else:
                 baudrate = settingsBaudrate
         if callbackObject is None:
-            callbackObject = MachineComPrintCallback()
+            callbackObject = octocomm.MachineComPrintCallback()
 
         self._port = port
         self._baudrate = baudrate
@@ -2667,7 +2672,7 @@ class MachineCom(object):
             self.STATE_OPERATIONAL,
             self.STATE_PRINTING,
             self.STATE_PAUSED,
-            self.STATE_LOCKED
+            self.STATE_LOCKED,
         ]
 
     def isPrinting(self):
@@ -2725,6 +2730,8 @@ class MachineCom(object):
         )
 
     def isClosedOrError(self):
+        if self._state != self.STATE_LOCKED:
+            self._logger.warning("is closed err - state %s", self._state)
         return (
             self._state == self.STATE_ERROR
             or self._state == self.STATE_CLOSED_WITH_ERROR
@@ -2805,52 +2812,7 @@ class MachineCom(object):
             self._logger.exception("Exception in _set_air_pressure() ")
 
 
-### MachineCom callback ################################################################################################
-class MachineComPrintCallback(object):
-    def on_comm_log(self, message):
-        pass
-
-    def on_comm_temperature_update(self, temp, bedTemp):
-        pass
-
-    def on_comm_state_change(self, state):
-        pass
-
-    def on_comm_message(self, message):
-        pass
-
-    def on_comm_progress(self):
-        pass
-
-    def on_comm_print_job_done(self):
-        pass
-
-    def on_comm_z_change(self, newZ):
-        pass
-
-    def on_comm_file_selected(self, filename, filesize, sd):
-        pass
-
-    def on_comm_sd_state_change(self, sdReady):
-        pass
-
-    def on_comm_sd_files(self, files):
-        pass
-
-    def on_comm_file_transfer_started(self, filename, filesize):
-        pass
-
-    def on_comm_file_transfer_done(self, filename):
-        pass
-
-    def on_comm_force_disconnect(self):
-        pass
-
-    def on_comm_pos_update(self, MPos, WPos):
-        pass
-
-
-class PrintingFileInformation(object):
+class PrintingFileInformation(octocomm.PrintingFileInformation):
     """
     Encapsulates information regarding the current file being printed: file name, current position, total size and
     time the print started.
@@ -2858,30 +2820,15 @@ class PrintingFileInformation(object):
     value between 0 and 1.
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, user=None):
+        octoprint.PrintingFileInformation(self, filename, user=user)
         self._logger = mrb_logger(
             "octoprint.plugins.mrbeam.comm_acc2." + self.__class__.__name__
         )
-        self._filename = filename
-        self._pos = 0
-        self._size = None
         self._comment_size = None
-        self._start_time = None
-
-    def getStartTime(self):
-        return self._start_time
-
-    def getFilename(self):
-        return self._filename
-
-    def getFilesize(self):
-        return self._size
 
     def getFilepos(self):
         return self._pos - self._comment_size
-
-    def getFileLocation(self):
-        return FileDestinations.LOCAL
 
     def getProgress(self):
         """
@@ -2894,73 +2841,36 @@ class PrintingFileInformation(object):
             self._size - self._comment_size
         )
 
-    def reset(self):
-        """
-        Resets the current file position to 0.
-        """
-        self._pos = 0
 
-    def start(self):
-        """
-        Marks the print job as started and remembers the start time.
-        """
-        self._start_time = time.time()
-
-    def close(self):
-        """
-        Closes the print job.
-        """
-        pass
-
-
-class PrintingGcodeFileInformation(PrintingFileInformation):
+class PrintingGcodeFileInformation(
+    octocomm.PrintingGcodeFileInformation, PrintingFileInformation
+):
     """
     Encapsulates information regarding an ongoing direct print. Takes care of the needed file handle and ensures
     that the file is closed in case of an error.
     """
 
-    def __init__(self, filename, offsets_callback=None, current_tool_callback=None):
-        PrintingFileInformation.__init__(self, filename)
-
-        self._handle = None
+    def __init__(
+        self, filename, offsets_callback=None, current_tool_callback=None, user=None
+    ):
+        octocomm.printingGcodeFileInformation(
+            self, filename, offsets_callback, current_tool_callback, user
+        )
+        PrintingFileInformation.__init__(self, filename, user=user)
 
         # Custom tracking values
         # TODO explain why / what they are for
         self._first_line = None
-
-        self._offsets_callback = offsets_callback
-        self._current_tool_callback = current_tool_callback
-
-        if not os.path.exists(self._filename) or not os.path.isfile(self._filename):
-            raise IOError("File %s does not exist" % self._filename)
-
-        self._size = os.stat(self._filename).st_size
-        self._pos = 0
         self._comment_size = 0
-        self._lines_read = 0
         self.lines_total = self._calc_total_lines()
-        self._read_lines_bak = 0 # QUESTION - Axel - What is this for?
+        self._read_lines_bak = 0  # QUESTION - Axel - What is this for?
 
     def start(self):
         """
         Opens the file for reading and determines the file size.
         """
-        PrintingFileInformation.start(self)
-        self._handle = open(self._filename, "r")
-        self._lines_read = 0
-        self._lines_read_bak = 0
-
-    def close(self):
-        """
-        Closes the file if it's still open.
-        """
-        PrintingFileInformation.close(self)
-        if self._handle is not None:
-            try:
-                self._handle.close()
-            except:
-                pass
-        self._handle = None
+        self._read_lines_bak = 0
+        octocomm.printingGcodeFileInformation.start(self)
 
     def resetToBeginning(self):
         """
@@ -2977,39 +2887,55 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
     def getNext(self):
         """
         Retrieves the next line for printing.
+        Few changes on function overwritten function.
         """
-        if self._handle is None:
-            raise ValueError("File %s is not open for reading" % self._filename)
+        with self._handle_mutex:
+            if self._handle is None:
+                self._logger.warning(
+                    "File {} is not open for reading".format(self._filename)
+                )
+                return None, None, None
 
-        try:
-            processed = None
-            while processed is None:
-                if self._handle is None:
-                    # file got closed just now
-                    self._logger.debug(
-                        "getNext() self._handle is None -> returning None"
-                    )
-                    return None
-                line = self._handle.readline()
-                if not line:
-                    self._logger.debug(
-                        "getNext() read line is None -> closing self._handle"
-                    )
-                    self.close()
-                else:
-                    self._lines_read += 1
-                    self._lines_read_bak += 1
-                    # self._logger.debug("getNext() increased self._lines_read to %s", self._lines_read)
-                processed = process_gcode_line(line)
-                if processed is None:
-                    self._comment_size += len(line)
-            self._pos = self._handle.tell()
+            try:
+                offsets = (
+                    self._offsets_callback()
+                    if self._offsets_callback is not None
+                    else None
+                )
+                current_tool = (
+                    self._current_tool_callback()
+                    if self._current_tool_callback is not None
+                    else None
+                )
 
-            return processed
-        except Exception as e:
-            self.close()
-            self._logger.exception("Exception while processing line")
-            raise e
+                processed = None
+                while processed is None:
+                    if self._handle is None:
+                        # file got closed just now
+                        self._pos = self._size
+                        self._done = True
+                        self._report_stats()
+                        return None, None, None
+
+                    # we need to manually keep track of our pos here since
+                    # codecs' readline will make our handle's tell not
+                    # return the actual number of bytes read, but also the
+                    # already buffered bytes (for detecting the newlines)
+                    line = self._handle.readline()
+                    self._pos += len(line.encode("utf-8"))
+
+                    if not line:
+                        self.close()
+                    processed = self._process(line, offsets, current_tool)
+                    if processed is None:
+                        self._comment_size += len(line)
+                self._read_lines += 1
+                self._read_lines_bak += 1
+                return processed, self._pos, self._read_lines
+            except Exception as e:
+                self.close()
+                self._logger.exception("Exception while processing line")
+                raise e
 
     def getLinesTotal(self):
         # DEPRECATED - prefer using self.lines_total
@@ -3043,23 +2969,12 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 
 
 class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
+    # FIXME gcode is a string, not a file or stringIO (cannot be opened or interpreted as bytes)
     def __init__(self, gcode):
         PrintingFileInformation.__init__(self, "in_memory_gcode")
         self._gcode = gcode.split("\n")
         self._size = len(gcode)
-        self._first_line = None
-        self._offsets_callback = None
-        self._current_tool_callback = None
-        self._pos = 0
-        self._comment_size = 0
-        self._lines_total = len(self._gcode)
-        self._lines_read = 0
-        self._lines_read_bak = 0
-
-    def start(self):
-        PrintingFileInformation.start(self)
-        self._lines_read = 0
-        self._lines_read_bak = 0
+        self.lines_total = len(self._gcode)
 
     def close(self):
         PrintingFileInformation.close(self)
@@ -3149,25 +3064,8 @@ def convert_pause_triggers(configured_triggers):
 
 
 def process_gcode_line(line):
-    line = strip_comment(line).strip()
-    line = line.replace(" ", "")
-    if not len(line):
-        return None
-    return line
-
-
-def strip_comment(line):
-    if not ";" in line:
-        # shortcut
-        return line
-    escaped = False
-    result = []
-    for c in line:
-        if c == ";" and not escaped:
-            break
-        result += c
-        escaped = (c == "\\") and not escaped
-    return "".join(result)
+    line = octocomm.process_gcode_line(line)
+    return line if line is None else line.replace(" ", "")
 
 
 def get_new_timeout(t):
