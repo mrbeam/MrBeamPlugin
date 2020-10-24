@@ -185,7 +185,7 @@ class MachineCom(object):
         self._cmd = None
         self._recovery_lock = False
         self._recovery_ignore_further_alarm_responses = False
-        self._lines_recoverd_total = 0
+        self._lines_recovered_total = 0
         self._pauseWaitStartTime = None
         self._pauseWaitTimeLost = 0.0
         self._commandQueue = Queue.Queue()
@@ -1390,7 +1390,7 @@ class MachineCom(object):
                     self._logger.info(
                         "Re-queue: %s  RECOVERY", recover_cmd, terminal_as_comm=True
                     )
-                    self._lines_recoverd_total += 1
+                    self._lines_recovered_total += 1
                     self.sendCommand(recover_cmd, processed=True)
                 else:
                     # the we did'nt get a command let's wait a bit. there might be a new one shortly
@@ -2660,11 +2660,15 @@ class MachineCom(object):
         return self._port, self._baudrate
 
     def isOperational(self):
-        return (
-            self._state == self.STATE_OPERATIONAL
-            or self._state == self.STATE_PRINTING
-            or self._state == self.STATE_PAUSED
-        )
+        # overwrite operational state to accept commands in locked state
+        if self._state != self.STATE_LOCKED:
+            self._logger.warning("is operational - state %s", self._state)
+        return self._state in [
+            self.STATE_OPERATIONAL,
+            self.STATE_PRINTING,
+            self.STATE_PAUSED,
+            self.STATE_LOCKED
+        ]
 
     def isPrinting(self):
         return self._state == self.STATE_PRINTING
@@ -2755,9 +2759,9 @@ class MachineCom(object):
             "time": self.getPrintTime(),
             "mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
             "file_lines_total": self._currentFile.getLinesTotal(),
-            "file_lines_read": self._currentFile.getLinesRead(),
+            "file_read_lines": self._currentFile.getLinesRead(),
             "file_lines_remaining": self._currentFile.getLinesRemaining(),
-            "lines_recovered": self._lines_recoverd_total,
+            "lines_recovered": self._lines_recovered_total,
         }
 
         return file_state
@@ -2856,7 +2860,7 @@ class PrintingFileInformation(object):
 
     def __init__(self, filename):
         self._logger = mrb_logger(
-            "octoprint.plugins.mrbeam.comm_acc2.PrintingFileInformation"
+            "octoprint.plugins.mrbeam.comm_acc2." + self.__class__.__name__
         )
         self._filename = filename
         self._pos = 0
@@ -2920,6 +2924,8 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 
         self._handle = None
 
+        # Custom tracking values
+        # TODO explain why / what they are for
         self._first_line = None
 
         self._offsets_callback = offsets_callback
@@ -2931,9 +2937,9 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
         self._size = os.stat(self._filename).st_size
         self._pos = 0
         self._comment_size = 0
-        self._lines_total = self._calc_total_lines()
         self._lines_read = 0
-        self._lines_read_bak = 0
+        self.lines_total = self._calc_total_lines()
+        self._read_lines_bak = 0 # QUESTION - Axel - What is this for?
 
     def start(self):
         """
@@ -2961,12 +2967,12 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
         resets the file handle so you can read from the beginning again.
         """
         self._logger.debug(
-            "resetToBeginning() self._lines_read %s, self._lines_read_bak: %s",
-            self._lines_read,
-            self._lines_read_bak,
+            "resetToBeginning() self._read_lines %s, self._read_lines_bak: %s",
+            self._read_lines,
+            self._read_lines_bak,
         )
         self._handle = open(self._filename, "r")
-        self._lines_read = 0
+        self._read_lines = 0
 
     def getNext(self):
         """
@@ -3006,15 +3012,18 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
             raise e
 
     def getLinesTotal(self):
-        return self._lines_total
+        # DEPRECATED - prefer using self.lines_total
+        return self.lines_total
 
     def getLinesRead(self):
-        return self._lines_read or self._lines_read_bak
+        return self._read_lines or self._read_lines_bak
 
     def getLinesRemaining(self):
         return self.getLinesTotal() - self.getLinesRead()
 
     def _calc_total_lines(self):
+        # FIXME: This also counts the empty lines,
+        # which aren't counted towards self._read_lines
         res = -1
         try:
             tmp, code = exec_cmd_output(
@@ -3024,12 +3033,12 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
                 res = int(tmp)
             else:
                 self._logger.error(
-                    "Can't convert _lines_total to int: command returned exit code %s, output: %s",
+                    "Can't convert lines_total to int: command returned exit code %s, output: %s",
                     code,
                     tmp,
                 )
         except ValueError:
-            self._logger.error("Can't convert _lines_total to int: value is %s", tmp)
+            self._logger.error("Can't convert lines_total to int: value is %s", tmp)
         return res
 
 
@@ -3058,11 +3067,11 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
 
     def resetToBeginning(self):
         self._logger.debug(
-            "resetToBeginning() self._lines_read %s, self._lines_read_bak: %s",
-            self._lines_read,
-            self._lines_read_bak,
+            "resetToBeginning() self._read_lines %s, self._read_lines_bak: %s",
+            self._read_lines,
+            self._read_lines_bak,
         )
-        self._lines_read = 0
+        self._read_lines = 0
         self._pos = 0
         self._comment_size = 0
 
@@ -3085,9 +3094,9 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
 
                 line = None
                 try:
-                    line = self._gcode[self._lines_read]
-                    self._lines_read += 1
-                    self._lines_read_bak += 1
+                    line = self._gcode[self._read_lines]
+                    self._read_lines += 1
+                    self._read_lines_bak += 1
                     self._pos += len(line)
                 except IndexError:
                     self._logger.debug(

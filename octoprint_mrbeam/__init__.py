@@ -2565,9 +2565,9 @@ class MrBeamPlugin(
             lines_recovered = None
             if self._printer and self._printer._comm is not None:
                 print_time = self._printer._comm.getPrintTime()
-                lines_recovered = self._printer._comm._lines_recoverd_total
+                lines_recovered = self._printer._comm._lines_recovered_total
                 if self._printer._comm._currentFile:
-                    lines_total = self._printer._comm._currentFile.getLinesTotal()
+                    lines_total = self._printer._comm._currentFile.linesTotal
                     lines_read = self._printer._comm._currentFile.getLinesRead()
                     lines_remaining = (
                         self._printer._comm._currentFile.getLinesRemaining()
