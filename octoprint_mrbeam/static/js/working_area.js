@@ -1572,7 +1572,7 @@ $(function () {
             ) {
                 self.abortFreeTransforms();
                 const svg = snap.select(`#${data.previewId}`);
-                const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass(
+                const isProp = $(`#${data.id} .file_list_entry`).hasClass(
                     "scale_proportional"
                 );
                 const isMirrored = $(`#${data.id}`).hasClass("isMirrored");
@@ -1615,7 +1615,7 @@ $(function () {
             ) {
                 self.abortFreeTransforms();
                 const svg = snap.select("#" + data.previewId);
-                const isProp = $(`#${data.id} div.scale_prop_btn`).hasClass(
+                const isProp = $(`#${data.id} .file_list_entry`).hasClass(
                     "scale_proportional"
                 );
                 const value = parseFloat(event.target.value);
@@ -1653,7 +1653,8 @@ $(function () {
         };
         self.svgManualProportionalToggle = function (data, event) {
             event.preventDefault();
-            $(event.target).toggleClass("scale_proportional");
+            $(`#${data.id} .file_list_entry`).toggleClass("scale_proportional");
+            //            $(event.target).toggleClass("scale_proportional");
         };
         self.svgManualMultiply = function (data, event) {
             if (
