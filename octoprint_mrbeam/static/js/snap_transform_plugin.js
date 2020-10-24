@@ -1151,6 +1151,18 @@
                     .translate(bbox_to_wrap.x2, bbox_to_wrap.cy)
                     .add(unscaleMat)
             );
+            self._highlightSelectedItems();
+        };
+
+        self._highlightSelectedItems = function () {
+            snap.selectAll(".isSelectedBBox").remove();
+            for (var i = 0; i < self.elements_to_transform.length; i++) {
+                const bb = self.elements_to_transform[i].getBBox();
+                const dAttr = `M${bb.x},${bb.y2}m0,-15v15h15M${bb.x2},${bb.y2}m-15,0h15v-15M${bb.x2},${bb.y}m0,15v-15h-15M${bb.x},${bb.y}m15,0h-15v15`;
+                self.transformHandleGroup.path(dAttr).attr({
+                    class: "isSelectedBBox",
+                });
+            }
         };
 
         self._getBBoxFromElementsWithMinSize = function (elements) {

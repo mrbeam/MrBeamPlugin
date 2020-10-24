@@ -673,6 +673,18 @@ body.ctrlKey #translateHandle {
   stroke: none;
 }
 
+#mbtransformHandleGroup .isSelectedBBox {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+#mbtransformHandleGroup.active.translate .isSelectedBBox,
+#mbtransformHandleGroup.active.rotate .isSelectedBBox,
+#mbtransformHandleGroup.active.scale .isSelectedBBox {
+  display: none;
+}
+
 /* eye candy for gcode generation */
 #userContent path,
 #userContent circle,
