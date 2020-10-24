@@ -2110,7 +2110,6 @@ $(function () {
             snap.mbtransform.manualTransform(selection, {
                 tx_rel: ntx,
                 ty_rel: nty,
-                diffType: "absolute",
             });
         };
 

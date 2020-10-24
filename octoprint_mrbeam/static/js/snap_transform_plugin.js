@@ -553,6 +553,7 @@
             let scalex = 1;
             let scaley = 1;
             let alpha = 0;
+            let keyboardMovement = false;
 
             const bbox = self.elements_to_transform.getBBox();
             //			calc relative values
@@ -566,11 +567,13 @@
                 tx = self.toTwoDigitFloat(params.tx_rel);
                 scalex = 1;
                 alpha = 0;
+                keyboardMovement = true;
             }
             if (params.ty_rel !== undefined && !isNaN(params.ty_rel)) {
                 ty = self.toTwoDigitFloat(params.ty_rel);
                 scaley = 1;
                 alpha = 0;
+                keyboardMovement = true;
             }
             if (params.angle !== undefined && !isNaN(params.angle)) {
                 alpha = self.toTwoDigitFloat(params.angle);
@@ -620,6 +623,13 @@
 
             // apply transform to target elements via callback
             self._apply_on_transform(m);
+
+            // avoid misalignment of translate handle and elements when using arrow keys to move designs
+            if (keyboardMovement) {
+                const bb = self.elements_to_transform.getBBox();
+                self._alignHandlesToBB(bb);
+                self.translateGroup.transform("");
+            }
 
             // end session
             self._sessionEnd();
@@ -744,7 +754,6 @@
             self.paper.debug.cleanup();
             self._visualizeTransformCleanup();
             self._apply_after_transform();
-
             // change mouse cursor
             document.body.classList.toggle("mbtransform", false);
         };

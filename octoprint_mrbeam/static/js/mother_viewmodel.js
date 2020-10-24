@@ -101,35 +101,56 @@ $(function () {
                     return true; // true does not "consume" the event.
                 }
 
-                if (!self.settings.feature_keyboardControl()) return true;
+                //                if (!self.settings.feature_keyboardControl()) return true;
                 var button = undefined;
                 var wa_id = $("nav li.active a").attr("href");
+                let movementFactor = 1;
+                if (event.shiftKey) movementFactor *= 10;
+                if (event.altKey) movementFactor /= 10;
                 switch (event.which) {
                     case 37: // left arrow key:
                         // button = $("#control-xdec");
                         if (wa_id === "#workingarea") {
-                            self.workingArea.moveSelectedDesign(-1, 0);
+                            self.workingArea.moveSelectedDesign(
+                                -1 * movementFactor,
+                                0
+                            );
+                            if (event.altKey) {
+                                // Alt + LeftArrow usually triggers Browser's back button; This prevents it.
+                                event.cancelBubble = true;
+                                event.returnValue = false;
+                                event.preventDefault();
+                            }
                             return;
                         }
                         break;
                     case 38: // up arrow key
                         // button = $("#control-yinc");
                         if (wa_id === "#workingarea") {
-                            self.workingArea.moveSelectedDesign(0, -1);
+                            self.workingArea.moveSelectedDesign(
+                                0,
+                                -1 * movementFactor
+                            );
                             return;
                         }
                         break;
                     case 39: // right arrow key
                         // button = $("#control-xinc");
                         if (wa_id === "#workingarea") {
-                            self.workingArea.moveSelectedDesign(1, 0);
+                            self.workingArea.moveSelectedDesign(
+                                1 * movementFactor,
+                                0
+                            );
                             return;
                         }
                         break;
                     case 40: // down arrow key
                         // button = $("#control-ydec");
                         if (wa_id === "#workingarea") {
-                            self.workingArea.moveSelectedDesign(0, 1);
+                            self.workingArea.moveSelectedDesign(
+                                0,
+                                1 * movementFactor
+                            );
                             return;
                         }
                         break;

@@ -345,6 +345,9 @@ g#camera_markers.markerSW.gray circle#markerSW {
 }
 
 /* focus / hover both inputs as a hint for proportional scaling enabled */
+#working_area_files .file_list_entry .link_width_and_height {
+  display: inline;
+}
 #working_area_files
   .file_list_entry.scale_proportional
   .link_width_and_height:hover
@@ -567,7 +570,7 @@ body.mbtransform {
 
 #translateHandle {
   fill: #00000033;
-  stroke: #00aaff;
+  stroke: #e25303;
   stroke-width: 2;
   stroke-dasharray: 5 5;
   cursor: pointer;
@@ -585,7 +588,7 @@ body.ctrlKey #translateHandle {
 .scaleHandle,
 #rotHandle {
   fill: #ffffff99;
-  stroke: #00aaff;
+  stroke: #e25303;
   stroke-width: 2;
   cursor: pointer;
 }

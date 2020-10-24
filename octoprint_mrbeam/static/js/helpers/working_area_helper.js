@@ -256,6 +256,16 @@ class WorkingAreaHelper {
             !isNaN(options.digits) && options.digits >= 0 ? options.digits : 1;
         options.alt = options.alt || 0.1;
         options.shift = options.shift || 10;
+        if (
+            event.keyCode === 37 &&
+            event.altKey &&
+            event.target.nodeName === "INPUT"
+        ) {
+            event.cancelBubble = true;
+            event.returnValue = false;
+            event.preventDefault();
+            console.info("Catched Alt-LeftArrow and prevented 'browser back'.");
+        }
 
         if (event.keyCode === 38 || event.keyCode === 40) {
             // arrowUp, arrowDown
