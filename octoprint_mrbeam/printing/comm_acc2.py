@@ -39,6 +39,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
+from octoprint_mrbeam.util.log import logExceptions
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 import logging
 
@@ -2242,7 +2243,8 @@ class MachineCom(object):
     def _gcode_S_sending(self, cmd, cmd_type=None):
         return self._replace_intensity(cmd)
 
-    def sendCommand(self, cmd, cmd_type=None, processed=False):
+    @logExceptions
+    def sendCommand(self, cmd, cmd_type=None, processed=False, **kwargs):
         if cmd is not None and cmd.strip().startswith("/"):
             self._handle_user_command(cmd)
         elif self._handle_rt_command(cmd):
@@ -2673,7 +2675,7 @@ class MachineCom(object):
             self.STATE_OPERATIONAL,
             self.STATE_PRINTING,
             self.STATE_PAUSED,
-            # self.STATE_LOCKED,
+            self.STATE_LOCKED,
         ]
 
     def isPrinting(self):
