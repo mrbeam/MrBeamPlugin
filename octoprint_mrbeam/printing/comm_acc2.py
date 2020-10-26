@@ -2669,8 +2669,8 @@ class MachineCom(object):
 
     def isOperational(self):
         # overwrite operational state to accept commands in locked state
-        if self._state != self.STATE_LOCKED:
-            self._logger.warning("is operational - state %s", self._state)
+        # if self._state != self.STATE_LOCKED:
+        #     self._logger.warning("is operational - state %s", self._state)
         return self._state in [
             self.STATE_OPERATIONAL,
             self.STATE_PRINTING,
@@ -2733,8 +2733,8 @@ class MachineCom(object):
         )
 
     def isClosedOrError(self):
-        if self._state != self.STATE_LOCKED:
-            self._logger.warning("is closed err - state %s", self._state)
+        # if self._state != self.STATE_LOCKED:
+        #     self._logger.warning("is closed err - state %s", self._state)
         return (
             self._state == self.STATE_ERROR
             or self._state == self.STATE_CLOSED_WITH_ERROR

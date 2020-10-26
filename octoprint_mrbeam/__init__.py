@@ -2634,16 +2634,6 @@ class MrBeamPlugin(
                 result[name] = config["branch"]
         return result
 
-    # inject a Laser object instead the original Printer from standard.py
-    def laser_factory(self, components, *args, **kwargs):
-        from octoprint_mrbeam.printing.printer import Laser
-
-        return Laser(
-            components["file_manager"],
-            components["analysis_queue"],
-            laserCutterProfileManager(),
-        )
-
     def laser_filemanager(self, *args, **kwargs):
         def _image_mime_detector(path):
             p = path.lower()
@@ -3151,11 +3141,12 @@ def __plugin_load__():
     )
 
     from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
+    from octoprint_mrbeam.printing.printer import laser_factory
 
     global __plugin_hooks__
     __plugin_hooks__ = {
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
-        "octoprint.printer.factory": __plugin_implementation__.laser_factory,
+        "octoprint.printer.factory": laser_factory,
         "octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
         "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,

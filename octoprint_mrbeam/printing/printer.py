@@ -1,11 +1,12 @@
 import logging
 import time
+from octoprint.util import dict_merge
 from octoprint.printer.standard import Printer, StateMonitor
 from octoprint.events import eventManager, Events
+from octoprint_mrbeam.util import logExceptions
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.printing import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.util import dict_merge
 
 
 class Laser(Printer):
@@ -55,7 +56,8 @@ class Laser(Printer):
         self._comm.setColors(currentFileName, value)
 
     # extend commands: home, position, increase_passes, decrease_passes
-    def home(self, axes):
+    @logExceptions
+    def home(self, axes, **kwargs):
         printer_profile = self._printerProfileManager.get_current_or_default()
         params = dict(
             x=printer_profile["volume"]["width"]
@@ -71,7 +73,8 @@ class Laser(Printer):
     def is_homed(self):
         return self._stateMonitor._machinePosition == self.HOMING_POSITION
 
-    def cancel_print(self):
+    @logExceptions
+    def cancel_print(self, **kwargs):
         """
         Cancel the current printjob and do homing.
         """
@@ -80,7 +83,8 @@ class Laser(Printer):
         self.home(axes="wtf")
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
-    def fail_print(self, error_msg=None):
+    @logExceptions
+    def fail_print(self, error_msg=None, **kwargs):
         """
         Cancel the current printjob (as it failed) and do homing.
         """
@@ -122,7 +126,8 @@ class Laser(Printer):
             return
         self._comm.decreasePasses()
 
-    def pause_print(self, force=False, trigger=None):
+    @logExceptions
+    def pause_print(self, force=False, trigger=None, **kwargs):
         """
         Pause the current printjob.
         """
@@ -134,7 +139,8 @@ class Laser(Printer):
 
         self._comm.setPause(True, send_cmd=True, trigger=trigger)
 
-    def cooling_start(self):
+    @logExceptions
+    def cooling_start(self, **kwargs):
         """
         Pasue the laser for cooling
         """
@@ -262,3 +268,17 @@ class LaserStateMonitor(StateMonitor):
         if mrb_state:
             data["mrb_state"] = mrb_state
         return data
+
+
+def laser_factory(components, *args, **kwargs):
+    """
+    Factory function for the Printer type used for the OctoPrint hook
+    See ``octoprint.printer.factory``
+    """
+    from .profile import laserCutterProfileManager
+
+    return Laser(
+        components["file_manager"],
+        components["analysis_queue"],
+        laserCutterProfileManager(),
+    )
