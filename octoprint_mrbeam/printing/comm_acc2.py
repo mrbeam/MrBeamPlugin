@@ -78,34 +78,36 @@ class MachineCom(object):
     GRBL_DEFAULT_VERSION = GRBL_VERSION_2019_MRB_CHECKSUM
     ##########################################################
 
-    GRBL_SETTINGS_READ_WINDOW = 10.0
+    GRBL_SETTINGS_READ_WINDOW = 20.0
     GRBL_SETTINGS_CHECK_FREQUENCY = 0.5
 
     GRBL_RX_BUFFER_SIZE = 127
     GRBL_WORKING_RX_BUFFER_SIZE = GRBL_RX_BUFFER_SIZE - 5
     GRBL_LINE_BUFFER_SIZE = 80
 
-    STATE_NONE = 0
-    STATE_OPEN_SERIAL = 1
-    STATE_DETECT_SERIAL = 2
-    STATE_DETECT_BAUDRATE = 3
-    STATE_CONNECTING = 4
-    STATE_OPERATIONAL = 5
-    STATE_PRINTING = 6
-    STATE_PAUSED = 7
-    STATE_CLOSED = 8
-    STATE_ERROR = 9
-    STATE_CLOSED_WITH_ERROR = 10
-    STATE_TRANSFERING_FILE = 11
-    STATE_LOCKED = 12
-    STATE_HOMING = 13
-    STATE_FLASHING = 14
-    # TODO IRATXE do these need to go in a specific order / do the numbers matter?
-    STATE_CANCELLING = 15
-    STATE_STARTING = 16
-    STATE_PAUSING = 17
-    STATE_RESUMING = 18
-    STATE_FINISHING = 19
+    ### OctoPrint comm reserved states 0 - 16 ###
+    __MachineCom = octocomm.MachineCom
+    STATE_NONE = __MachineCom.STATE_NONE
+    STATE_OPEN_SERIAL = __MachineCom.STATE_OPEN_SERIAL
+    STATE_DETECT_SERIAL = __MachineCom.STATE_DETECT_SERIAL
+    STATE_DETECT_BAUDRATE = __MachineCom.STATE_DETECT_BAUDRATE
+    STATE_CONNECTING = __MachineCom.STATE_CONNECTING
+    STATE_OPERATIONAL = __MachineCom.STATE_OPERATIONAL
+    STATE_STARTING = __MachineCom.STATE_STARTING
+    STATE_PRINTING = __MachineCom.STATE_PRINTING
+    STATE_PAUSED = __MachineCom.STATE_PAUSED
+    STATE_PAUSING = __MachineCom.STATE_PAUSING
+    STATE_RESUMING = __MachineCom.STATE_RESUMING
+    STATE_FINISHING = __MachineCom.STATE_FINISHING
+    STATE_CLOSED = __MachineCom.STATE_CLOSED
+    STATE_ERROR = __MachineCom.STATE_ERROR
+    STATE_CLOSED_WITH_ERROR = __MachineCom.STATE_CLOSED_WITH_ERROR
+    STATE_TRANSFERING_FILE = __MachineCom.STATE_TRANSFERING_FILE
+    STATE_CANCELLING = __MachineCom.STATE_CANCELLING
+    ### Mr Beam comm reserved states 100 - ... ###
+    STATE_LOCKED = 100
+    STATE_HOMING = 101
+    STATE_FLASHING = 102
 
     GRBL_STATE_QUEUE = "Queue"
     GRBL_STATE_IDLE = "Idle"
@@ -786,14 +788,13 @@ class MachineCom(object):
         :return:
         """
         cmd = cmd.strip()
-        if cmd == self.COMMAND_STATUS:
-            self._sendCommand(self.COMMAND_STATUS)
-        elif cmd == self.COMMAND_HOLD:
-            self._sendCommand(self.COMMAND_HOLD)
-        elif cmd == self.COMMAND_RESUME:
-            self._sendCommand(self.COMMAND_RESUME)
-        elif cmd == self.COMMAND_RESET:
-            self._sendCommand(self.COMMAND_RESET)
+        if cmd in (
+            self.COMMAND_STATUS,
+            self.COMMAND_HOLD,
+            self.COMMAND_RESUME,
+            self.COMMAND_RESET,
+        ):
+            self._sendCommand(cmd)
         else:
             return False
         return True
@@ -1460,7 +1461,6 @@ class MachineCom(object):
         self, retries=0, timeout=0.0, force_thread=False
     ):
         settings_count = self._laserCutterProfile["grbl"]["settings_count"]
-        settings_expected = self._laserCutterProfile["grbl"]["settings"]
         self._logger.debug(
             "GRBL Settings waiting... timeout: %s, settings count: %s",
             timeout,
@@ -1480,6 +1480,7 @@ class MachineCom(object):
             myThread.name = "CommAcc2_GrblSettings"
             myThread.start()
         else:
+            settings_expected = self._laserCutterProfile["grbl"]["settings"]
             my_grbl_settings = self._grbl_settings.copy()  # to avoid race conditions
 
             log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
@@ -2672,7 +2673,7 @@ class MachineCom(object):
             self.STATE_OPERATIONAL,
             self.STATE_PRINTING,
             self.STATE_PAUSED,
-            self.STATE_LOCKED,
+            # self.STATE_LOCKED,
         ]
 
     def isPrinting(self):
@@ -2821,7 +2822,7 @@ class PrintingFileInformation(octocomm.PrintingFileInformation):
     """
 
     def __init__(self, filename, user=None):
-        octoprint.PrintingFileInformation(self, filename, user=user)
+        octocomm.PrintingFileInformation(self, filename, user=user)
         self._logger = mrb_logger(
             "octoprint.plugins.mrbeam.comm_acc2." + self.__class__.__name__
         )
