@@ -129,7 +129,7 @@
 																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																	 <li class="divider"></li>
 																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
@@ -161,7 +161,7 @@
 																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																	 <li class="divider"></li>
 																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
@@ -193,7 +193,7 @@
 																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																	 <li class="divider"></li>
 																	<li class="uploaded">{{ _('Created at') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
@@ -220,7 +220,7 @@
 																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																	 <li class="divider"></li>
 																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
@@ -252,7 +252,7 @@
 																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																	 <li class="divider"></li>
 																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
@@ -283,7 +283,7 @@
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFolder($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFolder($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																</ul>
 															</div>
