@@ -660,7 +660,7 @@ body.ctrlKey #translateHandle {
 
 .transformGuideline {
   fill: none;
-  stroke: #5555ff;
+  stroke: #e25303;
   stroke-width: 1;
 }
 
@@ -669,7 +669,7 @@ body.ctrlKey #translateHandle {
 #scaleVis text {
   font-family: DIN Pro, Roboto, Courier monospace;
   font-size: 9px;
-  fill: #5555ff;
+  fill: #e25303;
   stroke: none;
 }
 
