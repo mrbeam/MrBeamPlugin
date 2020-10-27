@@ -293,8 +293,8 @@
                                         </div>
 
 										<div class="collapse in" id="wa_filelist">
-											<div class="accordion-inner">
-												<div class="scrollable" data-bind="foreach: placedDesigns">
+											<div class="accordion-inner" style="padding-right:4px;">
+												<div class="scrollable" data-bind="foreach: placedDesigns" style="padding-right:4px;">
 													<div class="entry" data-bind="attr: { id: $data.id}, template: { name: $root.templateFor($data), data: $data }"></div>
 												</div>
 <!-- GCODE -->
@@ -766,11 +766,11 @@
 																					keydown: function(d, event){ WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
 													</div>
-													<div class=" pull-right mini_switch unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
-														<span class="mini_switch_label">{{ _('mm') }}</span>
-														<span class="mini_switch_label mini_switch_trigger"><div></div></span>
-														<span class="mini_switch_label">{{ _('%%') }}</span>
-													</div>
+														<div class=" pull-right mini_switch unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
+															<span class="mini_switch_label">{{ _('mm') }}</span>
+															<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+															<span class="mini_switch_label">{{ _('%%') }}</span>
+														</div>
 
 												</div><!-- /scale switch between mm and % -->
 
