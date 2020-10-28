@@ -391,7 +391,9 @@ class ImageProcessor:
         self.profiler.stop("separation_lpf").finalize()
         return parts
 
-    def generate_gcode(self, imgArray, xMM, yMM, wMM, hMM, file_id):
+    def generate_gcode(
+        self, imgArray, xMM, yMM, wMM, hMM, file_id, extra_overshoot=False
+    ):
         """
         takes an array of objects containing the separated image and converts them to gcode.
         :param imgArray: array of imagedata containing dicts
