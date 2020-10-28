@@ -477,8 +477,9 @@ class ImageProcessor:
 
                 if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
 
-                    if not first_row:
+                    if not first_row and extra_overshoot:
                         # This is messy and to be overwritten with streamlined logic
+                        # octogon_overshoot
                         # /!\ direction_positive reverted at the end of loop
                         if not direction_positive:
                             _minmax = max
@@ -495,26 +496,49 @@ class ImageProcessor:
                             self.gc_ctx.x,
                             img_pos_mm[0]
                             + self.beam * line_info[side]
-                            + k * (_ov + _bk),
+                            + k * (2 * _ov + _bk),
                         )
                         start = np.array([extrema_x, self.gc_ctx.y])
                         end = np.array([extrema_x, y])
-                        _line1 = np.array([k, 1.0])
-                        _line2 = np.array([k, -1.0])
+                        dy = end[1] - start[1]
+                        _vsp = _ov  # extra vertical_spacing in the overshoot
+                        _line1 = np.array([k, 0.0])
+                        _line2 = np.array([0.0, 1.0])
+                        _line3 = np.array([k, 1.0])
+                        _line4 = np.array([k, -1.0])
+                        # Extend the start and end point differently depending on
+                        # the line so there is no overlap between the overshoots
+                        shift = _ov * (row % (_vsp / dy)) / 2 * _line1
+                        start = start + shift
+                        end = end + shift
+                        # base size of the octogon (dictates length of sides)
+                        _size = 2 * _ov
                         overshoot_gco = "".join(
                             map(
-                                lambda v: self._get_gcode_g0(x=v[0], y=v[1]) + "\n",
+                                lambda v: self._get_gcode_g0(
+                                    x=v[0], y=v[1], comment="octogon"
+                                )
+                                + "\n",
                                 np.cumsum(
                                     [
-                                        start + _ov * _line2 / 2,
-                                        (_ov + _bk) * _line1 / 2,
-                                        -(_ov + _bk) * _line2 / 2,
+                                        start + (_size + _vsp / 2) * _line4,
+                                        _size * _line1 / 2,
+                                        (_size + dy / 2) * _line3,
+                                        _vsp * _line2,
+                                        -(_size - dy / 2) * _line4,
+                                        -_size * _line1 / 2,
                                     ],
                                     axis=0,
-                                ).tolist()
-                                + [end],
+                                )
+                                # the folowwing line gi
+                                # .tolist()
+                                # + [end],
                             )
                         )
+                        # self.log.info(" Overshoot direction %s, side %s", k, side)
+                        # self.log.info("  start x %s, y %s" % tuple(start))
+                        # self.log.info("  end   x %s, y %s" % tuple(end))
+                        # self.log.info("  gcode \n%s" % overshoot_gco)
                         self._append_gcode(overshoot_gco)
 
                     # prepare line start
