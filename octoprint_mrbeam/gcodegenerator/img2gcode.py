@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import optparse
 import logging
 import math
+import numpy as np
 from PIL import Image
 from PIL import ImageEnhance
 import base64
@@ -468,12 +469,53 @@ class ImageProcessor:
             self._append_gcode("M3S0\nG4P0")  # initialize laser
             # iterate line by line
             pix = img.load()
+            first_row = True
             for row in range(height_px - 1, -1, -1):
 
                 line_info = self.get_pixelinfo_of_line(pix, size, row)
                 y = img_pos_mm[1] - (self.beam * line_info["row"])
 
                 if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
+
+                    if not first_row:
+                        # This is messy and to be overwritten with streamlined logic
+                        # /!\ direction_positive reverted at the end of loop
+                        if not direction_positive:
+                            _minmax = max
+                            side = "right"
+                            k = 1
+                        else:
+                            _minmax = min
+                            side = "left"
+                            k = -1
+
+                        _ov = self.overshoot_distance
+                        _bk = self.backlash_compensation_x
+                        extrema_x = _minmax(
+                            self.gc_ctx.x,
+                            img_pos_mm[0]
+                            + self.beam * line_info[side]
+                            + k * (_ov + _bk),
+                        )
+                        start = np.array([extrema_x, self.gc_ctx.y])
+                        end = np.array([extrema_x, y])
+                        _line1 = np.array([k, 1.0])
+                        _line2 = np.array([k, -1.0])
+                        overshoot_gco = "".join(
+                            map(
+                                lambda v: self._get_gcode_g0(x=v[0], y=v[1]) + "\n",
+                                np.cumsum(
+                                    [
+                                        start + _ov * _line2 / 2,
+                                        (_ov + _bk) * _line1 / 2,
+                                        -(_ov + _bk) * _line2 / 2,
+                                    ],
+                                    axis=0,
+                                ).tolist()
+                                + [end],
+                            )
+                        )
+                        self._append_gcode(overshoot_gco)
 
                     # prepare line start
                     self.write_gcode_for_line_start(
@@ -497,6 +539,7 @@ class ImageProcessor:
 
                     # flip direction after each line to go back and forth
                     direction_positive = not direction_positive
+                    first_row = False
                 else:
                     if line_info["left"] != None:
                         # skip line vertical out of working area
