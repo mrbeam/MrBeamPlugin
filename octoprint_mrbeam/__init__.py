@@ -12,6 +12,7 @@ import threading
 import time
 import datetime
 import collections
+from collections import Iterable, Mapping, Sized
 import logging
 from subprocess import check_output
 
@@ -79,6 +80,7 @@ from octoprint.filemanager.destinations import FileDestinations
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
 from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
 from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
+from octoprint_mrbeam.util import logExceptions
 from octoprint_mrbeam.util.device_info import deviceInfo
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
@@ -433,6 +435,32 @@ class MrBeamPlugin(
         )
 
     def on_settings_load(self):
+        """
+        Loads the settings for the plugin, called by the Settings API view in order to retrieve all settings from
+        all plugins. Override this if you want to inject additional settings properties that are not stored within
+        OctoPrint's configuration.
+
+        .. note::
+
+           The default implementation will return your plugin's settings as is, so just in the structure and in the types
+           that are currently stored in OctoPrint's configuration.
+
+           If you need more granular control here, e.g. over the used data types, you'll need to override this method
+           and iterate yourself over all your settings, using the proper retriever methods on the settings manager
+           to retrieve the data in the correct format.
+
+           The default implementation will also replace any paths that have been restricted by your plugin through
+           :func:`~octoprint.plugin.SettingsPlugin.get_settings_restricted_paths` with either the provided
+           default value (if one was provided), an empty dictionary (as fallback for restricted dictionaries), an
+           empty list (as fallback for restricted lists) or ``None`` values where necessary.
+           Make sure to do your own restriction if you decide to fully overload this method.
+
+        :return: the current settings of the plugin, as a dictionary
+        """
+        # FIXME REFACTOR : Use the SettingsPlugin on_settings_load and update it with extra values if needed.
+        # _settings = octoprint.plugin.SettingsPlugin.on_settings_load(self)
+        # more_settings = {}
+        # return octoprint.util.dict_merge(_settings, more_settings)
         return dict(
             svgDPI=self._settings.get(["svgDPI"]),
             dxfScale=self._settings.get(["dxfScale"]),
@@ -499,70 +527,118 @@ class MrBeamPlugin(
             isFirstRun=self.isFirstRun(),
         )
 
+    @logExceptions
     def on_settings_save(self, data):
-        try:
-            # self._logger.info("ANDYTEST on_settings_save() %s", data)
-            if "cam" in data and "previewOpacity" in data["cam"]:
-                self._settings.set_float(
-                    ["cam", "previewOpacity"], data["cam"]["previewOpacity"]
-                )
-            if "cam" in data and "markerRecognitionMinPixel" in data["cam"]:
-                self._settings.set_int(
-                    ["cam", "markerRecognitionMinPixel"],
-                    data["cam"]["markerRecognitionMinPixel"],
-                )
-            if "svgDPI" in data:
-                self._settings.set_int(["svgDPI"], data["svgDPI"])
-            if "dxfScale" in data:
-                self._settings.set_float(["dxfScale"], data["dxfScale"])
-            if "terminal" in data:
-                self._settings.set_boolean(["terminal"], data["terminal"])
-            if "terminal_show_checksums" in data:
-                self._settings.set_boolean(
-                    ["terminal_show_checksums"], data["terminal_show_checksums"]
-                )
-                self._printer._comm.set_terminal_show_checksums(
-                    data["terminal_show_checksums"]
-                )
-            if (
-                "gcode_nextgen" in data
-                and isinstance(data["gcode_nextgen"], collections.Iterable)
-                and "clip_working_area" in data["gcode_nextgen"]
-            ):
-                self._settings.set_boolean(
-                    ["gcode_nextgen", "clip_working_area"],
-                    data["gcode_nextgen"]["clip_working_area"],
-                )
-            if "machine" in data and isinstance(data["machine"], collections.Iterable):
-                if "backlash_compensation_x" in data["machine"]:
-                    min_mal = -1.0
-                    max_val = 1.0
-                    val = 0.0
-                    try:
-                        val = float(data["machine"]["backlash_compensation_x"])
-                    except:
-                        pass
-                    val = max(min(max_val, val), min_mal)
-                    self._settings.set_float(
-                        ["machine", "backlash_compensation_x"], val
+        """
+        Saves the settings for the plugin, called by the Settings API view in order to persist all settings
+        from all plugins. Override this if you need to directly react to settings changes or want to extract
+        additional settings properties that are not stored within OctoPrint's configuration.
+
+        .. note::
+
+           The default implementation will persist your plugin's settings as is, so just in the structure and in the
+           types that were received by the Settings API view. Values identical to the default settings values
+           will *not* be persisted.
+
+           If you need more granular control here, e.g. over the used data types, you'll need to override this method
+           and iterate yourself over all your settings, retrieving them (if set) from the supplied received ``data``
+           and using the proper setter methods on the settings manager to persist the data in the correct format.
+
+        Arguments:
+            data (dict): The settings dictionary to be saved for the plugin
+
+        Returns:
+            None
+        """
+        # The complexity of dict_sanitize explodes if data is a big dict.
+        # TODO make an in_place version of dict_sanitize
+        data = octoprint.util.dict_sanitize(data, self._settings)
+
+        def _set_and_rm(path, _data, set_func, fullpath=None):
+            """
+            If _data has given path, then set settings
+            with that value and remove it from the data.
+            """
+            if not isinstance(path, (Iterable, Sized)) or len(path) <= 0:
+                return
+            elif isinstance(_data, Mapping) and path[0] in _data.keys():
+                if fullpath is None:
+                    fullpath = path
+                value = _data[path[0]]
+                if len(path) > 1:
+                    _set_and_rm(path[1:], value, set_func, fullpath)
+                else:
+                    set_func(fullpath, value)
+                    del _data[path[0]]
+
+        # ~ Do some action before saving to settings
+        if "terminal_show_checksums" in data:
+            self._printer._comm.set_terminal_show_checksums(
+                data["terminal_show_checksums"]
+            )
+            del data["terminal_show_checksums"]
+        if "machine" in data and isinstance(data["machine"], Mapping):
+            if "backlash_compensation_x" in data["machine"]:
+                _val = data["machine"]["backlash_compensation_x"]
+                min_mal = -1.0
+                max_val = 1.0
+                val = 0.0
+                try:
+                    val = float(_val)
+                except:
+                    self._logger.warning(
+                        "Failed to convert %s to a float for backlash", _val
                     )
-            if "analyticsEnabled" in data:
-                self.analytics_handler.analytics_user_permission_change(
-                    analytics_enabled=data["analyticsEnabled"]
-                )
-            if "focusReminder" in data:
-                self._settings.set_boolean(["focusReminder"], data["focusReminder"])
-            if "dev" in data and "software_tier" in data["dev"]:
-                switch_software_channel(self, data["dev"]["software_tier"])
-            if "leds" in data and "brightness" in data["leds"]:
-                self._settings.set_int(
-                    ["leds", "brightness"], data["leds"]["brightness"]
-                )
-            if "leds" in data and "fps" in data["leds"]:
-                self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
-        except Exception as e:
-            self._logger.exception("Exception in on_settings_save() ")
-            raise e
+                    del data["machine"]["backlash_compensation_x"]
+                else:
+                    val = max(min(max_val, val), min_mal)
+                    _set_and_rm(
+                        ["machine", "backlash_compensation_x"],
+                        data,
+                        self._settings.set_float,
+                    )
+                    # Or you could modify data accordingly and add path to float_params
+                    # data["machine"]["backlash_compensation_x"] = val
+        if "analyticsEnabled" in data:
+            self.analytics_handler.analytics_user_permission_change(
+                analytics_enabled=data["analyticsEnabled"]
+            )
+            # previous function saves the value into the settings
+            del data["analyticsEnabled"]
+        if "dev" in data and "software_tier" in data["dev"]:
+            switch_software_channel(self, data["dev"]["software_tier"])
+            # switch_software_channel already saves into the settings
+            del data["dev"]["software_tier"]
+
+        # ~ Sanitize data type
+        float_params = (
+            ["cam", "previewOpacity"],
+            ["dxfScale"],
+            # ["machine", "backlash_compensation_x"], # data val not sanitized
+        )
+        int_params = (
+            ["cam", "markerRecognitionMinPixel"],
+            ["svgDPI"],
+            ["leds", "fps"],
+            ["leds", "brightness"],
+        )
+        bool_params = (
+            ["terminal"],
+            ["terminal_show_checksums"],
+            ["gcode_nextgen", "clip_working_area"],
+            ["analyticsEnabled"],
+            ["focusReminder"],
+            ["analyticsEnabled"],
+        )
+
+        for path in float_params:
+            _set_and_rm(path, data, self._settings.set_float)
+        for path in int_params:
+            _set_and_rm(path, data, self._settings.set_int)
+        for path in bool_params:
+            _set_and_rm(path, data, self._settings.set_boolean)
+
+        # ~ Save the remaining data that we didn't type-sanitize and delete
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     def on_shutdown(self):
