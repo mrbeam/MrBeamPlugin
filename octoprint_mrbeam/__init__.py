@@ -1661,7 +1661,7 @@ class MrBeamPlugin(
         If the uploaded file size exeeds this limit,
         you'll see only a ERR_CONNECTION_RESET in Chrome.
         """
-        return [("POST", r"/convert", 100 * 1024 * 1024)]
+        return [("POST", r"/convert", 100 * 1024 * 1024), ("POST", r"/save_store_bought_svg", 100 * 1024 * 1024)]
 
     @octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
     @restricted_access
