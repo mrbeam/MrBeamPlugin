@@ -789,7 +789,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             ["gcode_nextgen", "clip_working_area"],
             ["analyticsEnabled"],
             ["focusReminder"],
-            ["analyticsEnabled"],
+            ["analytics", "job_analytics"],
             ["cam", "remember_markers_across_sessions"],
         )
 
