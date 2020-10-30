@@ -2090,12 +2090,14 @@ class MrBeamPlugin(
             payload = data.get("payload", dict())
             func = payload.get("function", None)
             f_level = payload.get("level", None)
+            stack = None
 
             level = logging.INFO
             if f_level == "warn":
                 level = logging.WARNING
             if f_level == "error":
                 level = logging.ERROR
+                stack = payload.get("stacktrace", None)
 
             browser_time = ""
             try:
@@ -2107,7 +2109,14 @@ class MrBeamPlugin(
             msg = payload.get("msg", "")
             if func and func is not "null":
                 msg = "{} ({})".format(msg, func)
-            self._frontend_logger.log(level, "%s - %s - %s", browser_time, f_level, msg)
+            self._frontend_logger.log(
+                level,
+                "%s - %s - %s %s",
+                browser_time,
+                f_level,
+                msg,
+                "\n  " + ("\n   ".join(stack)) if stack else "",
+            )
 
             if level >= logging.WARNING:
                 self.analytics_handler.add_frontend_event("console", payload)
