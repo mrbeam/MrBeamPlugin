@@ -500,6 +500,9 @@ class MrBeamPlugin(
         )
 
     def on_settings_save(self, data):
+        """
+        See octoprint.plugins.types.SettingsPlugin.get_settings_preprocessors to sanitize input data.
+        """
         try:
             # self._logger.info("ANDYTEST on_settings_save() %s", data)
             if "cam" in data and "previewOpacity" in data["cam"]:
@@ -563,7 +566,12 @@ class MrBeamPlugin(
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
-        octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+        if "cam" in data and "remember_markers_across_sessions" in data["cam"]:
+            # This is going to work "just barely" because there could be
+            # mixed data input that was already treated.
+            # However this specific branching doesn't occur with other
+            # saved settings simpultaneously.
+            octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     def on_shutdown(self):
         self._shutting_down = True
