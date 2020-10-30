@@ -35,6 +35,7 @@ $(function () {
             self.changeFolder = self.files.changeFolder;
             self.enableRemove = self.files.enableRemove;
             self.removeFolder = self.files.removeFolder;
+            self.hideAndRemoveFolder = self.files.hideAndRemoveFolder;
         };
     }
 

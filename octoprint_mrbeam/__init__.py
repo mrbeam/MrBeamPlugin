@@ -48,6 +48,7 @@ from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.analytics.review_handler import reviewHandler
 from octoprint_mrbeam.led_events import LedEventListener
+from octoprint_mrbeam.filemanager import mrbFileManager
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
@@ -237,6 +238,7 @@ class MrBeamPlugin(
         self.compressor_handler = compressor_handler(self)
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
+        self.mrb_file_manager = mrbFileManager(self)
 
         self._logger.info("MrBeamPlugin initialized!")
         self.mrbeam_plugin_initialized = True
@@ -498,6 +500,9 @@ class MrBeamPlugin(
         )
 
     def on_settings_save(self, data):
+        """
+        See octoprint.plugins.types.SettingsPlugin.get_settings_preprocessors to sanitize input data.
+        """
         try:
             # self._logger.info("ANDYTEST on_settings_save() %s", data)
             if "cam" in data and "previewOpacity" in data["cam"]:
@@ -561,7 +566,12 @@ class MrBeamPlugin(
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
-        octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+        if "cam" in data and "remember_markers_across_sessions" in data["cam"]:
+            # This is going to work "just barely" because there could be
+            # mixed data input that was already treated.
+            # However this specific branching doesn't occur with other
+            # saved settings simpultaneously.
+            octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     def on_shutdown(self):
         self._shutting_down = True
@@ -1196,24 +1206,10 @@ class MrBeamPlugin(
 
             destFile = "precision_calibration.gco"
 
-            class Wrapper(object):
-                def __init__(self, filename, content):
-                    self.filename = filename
-                    self.content = content
-
-                def save(self, absolute_dest_path):
-                    with open(absolute_dest_path, "w") as d:
-                        d.write(self.content)
-                        d.close()
-
-            fileObj = Wrapper(destFile, gcoString)
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                destFile,
-                fileObj,
-                links=None,
-                allow_overwrite=True,
+            self.mrb_file_manager.add_file_to_design_library(
+                file_name=destFile, content=gcoString
             )
+
             res = dict(calibration_pattern=destFile, target=FileDestinations.LOCAL)
             return jsonify(res)
 
@@ -1659,31 +1655,13 @@ class MrBeamPlugin(
 
         filename = "CalibrationMarkers.svg"
 
-        class Wrapper(object):
-            def __init__(self, filename, content):
-                self.filename = filename
-                self.content = content
+        self.mrb_file_manager.add_file_to_design_library(
+            file_name=filename, content=svg
+        )
 
-            def save(self, absolute_dest_path):
-                with open(absolute_dest_path, "w") as d:
-                    d.write(self.content)
-                    d.close()
-
-        fileObj = Wrapper(filename, svg)
-        try:
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                filename,
-                fileObj,
-                links=None,
-                allow_overwrite=True,
-            )
-        except Exception as e:
-            return make_response("Failed to write file. Disk full?", 400)
-        else:
-            return jsonify(
-                dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL)
-            )
+        return jsonify(
+            dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL)
+        )
 
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
         """
@@ -1691,7 +1669,7 @@ class MrBeamPlugin(
         If the uploaded file size exeeds this limit,
         you'll see only a ERR_CONNECTION_RESET in Chrome.
         """
-        return [("POST", r"/convert", 100 * 1024 * 1024)]
+        return [("POST", r"/convert", 100 * 1024 * 1024), ("POST", r"/save_store_bought_svg", 100 * 1024 * 1024)]
 
     @octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
     @restricted_access
@@ -1703,36 +1681,14 @@ class MrBeamPlugin(
             return response
 
         if command == "save_svg":
-            # TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
-            svg = "".join(
-                i for i in data["svg_string"] if ord(i) < 128
-            )  # strip non-ascii chars like €
+            file_name = data["file_name"] + ".svg"
+            self.mrb_file_manager.add_file_to_design_library(
+                file_name=file_name,
+                content=data["svg_string"],
+                sanitize_name=True,
+            )
 
             del data["svg_string"]
-            sanitized_name = self._file_manager.sanitize_name(
-                destination=FileDestinations.LOCAL, name=data["file_name"]
-            )
-            file_name = sanitized_name + ".svg"
-
-            class Wrapper(object):
-                def __init__(self, file_name, content):
-                    self.filename = file_name
-                    self.content = content
-
-                def save(self, absolute_dest_path):
-                    with open(absolute_dest_path, "w") as d:
-                        d.write(self.content)
-                        d.close()
-
-            # write local/temp.svg to convert it
-            fileObj = Wrapper(file_name, svg)
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                file_name,
-                fileObj,
-                links=None,
-                allow_overwrite=True,
-            )
 
             location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
             result = {
@@ -1775,44 +1731,21 @@ class MrBeamPlugin(
         del data["gcodeFilesToAppend"]
 
         if command == "convert":
-            # TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
-            svg = "".join(
-                i for i in data["svg"] if ord(i) < 128
-            )  # strip non-ascii chars like €
-            # strip &nbsp; in attributes? see bug #383
-            del data["svg"]
             filename = "local/temp.svg"  # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
-
-            class Wrapper(object):
-                def __init__(self, filename, content):
-                    self.filename = filename
-                    self.content = content
-
-                def save(self, absolute_dest_path):
-                    with open(absolute_dest_path, "w") as d:
-                        d.write(self.content)
-                        d.close()
+            content = data["svg"]
 
             # write local/temp.svg to convert it
-            fileObj = Wrapper(filename, svg)
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                filename,
-                fileObj,
-                links=None,
-                allow_overwrite=True,
+            self.mrb_file_manager.add_file_to_design_library(
+                file_name=filename, content=content
             )
+
+            del data["svg"]
 
             # safe history
             ts = time.gmtime()
-            historyFilename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
-            historyObj = Wrapper(historyFilename, svg)
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                historyFilename,
-                historyObj,
-                links=None,
-                allow_overwrite=True,
+            history_filename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
+            self.mrb_file_manager.add_file_to_design_library(
+                file_name=history_filename, content=content
             )
 
             # keep only x recent files in job history.
@@ -1822,7 +1755,7 @@ class MrBeamPlugin(
                 return extension == "mrb"
 
             mrb_filter_func = lambda entry, entry_data: is_history_file(entry)
-            resp = self._file_manager.list_files(
+            resp = self.mrb_file_manager.list_files(
                 path="", filter=mrb_filter_func, recursive=True
             )
             files = resp[FileDestinations.LOCAL]
@@ -1834,7 +1767,7 @@ class MrBeamPlugin(
                 for key in files:
                     f = files[key]
                     tpl = (
-                        self._file_manager.last_modified(
+                        self.mrb_file_manager.last_modified(
                             FileDestinations.LOCAL, path=f["path"]
                         ),
                         f["path"],
@@ -1846,7 +1779,7 @@ class MrBeamPlugin(
                 # TODO each deletion causes a filemanager push update -> slow.
                 for i in range(0, len(sorted_by_age) - max_history_files):
                     f = sorted_by_age[i]
-                    self._file_manager.remove_file(FileDestinations.LOCAL, f[1])
+                    self.mrb_file_manager.remove_file(FileDestinations.LOCAL, f[1])
 
             slicer = "svgtogcode"
             slicer_instance = self._slicing_manager.get_slicer(slicer)
@@ -1879,7 +1812,7 @@ class MrBeamPlugin(
             # append number if file exists
             name, ext = os.path.splitext(gcode_name)
             i = 1
-            while self._file_manager.file_exists(FileDestinations.LOCAL, gcode_name):
+            while self.mrb_file_manager.file_exists(FileDestinations.LOCAL, gcode_name):
                 gcode_name = name + "." + str(i) + ext
                 i += 1
 
@@ -1920,12 +1853,14 @@ class MrBeamPlugin(
                 append_these_files,
             ):
                 # append additional gcodes
-                output_path = self._file_manager.path_on_disk(
+                output_path = self.mrb_file_manager.path_on_disk(
                     FileDestinations.LOCAL, gcode_name
                 )
                 with open(output_path, "ab") as wfd:
                     for f in append_these_files:
-                        path = self._file_manager.path_on_disk(f["origin"], f["name"])
+                        path = self.mrb_file_manager.path_on_disk(
+                            f["origin"], f["name"]
+                        )
                         wfd.write("\n; " + f["name"] + "\n")
 
                         with open(path, "rb") as fd:
@@ -1936,13 +1871,13 @@ class MrBeamPlugin(
 
                 if select_after_slicing or print_after_slicing:
                     sd = False
-                    filenameToSelect = self._file_manager.path_on_disk(
+                    filenameToSelect = self.mrb_file_manager.path_on_disk(
                         FileDestinations.LOCAL, gcode_name
                     )
                     printer.select_file(filenameToSelect, sd, True)
 
             try:
-                self._file_manager.slice(
+                self.mrb_file_manager.slice(
                     slicer,
                     FileDestinations.LOCAL,
                     filename,
@@ -2155,12 +2090,14 @@ class MrBeamPlugin(
             payload = data.get("payload", dict())
             func = payload.get("function", None)
             f_level = payload.get("level", None)
+            stack = None
 
             level = logging.INFO
             if f_level == "warn":
                 level = logging.WARNING
             if f_level == "error":
                 level = logging.ERROR
+                stack = payload.get("stacktrace", None)
 
             browser_time = ""
             try:
@@ -2172,7 +2109,14 @@ class MrBeamPlugin(
             msg = payload.get("msg", "")
             if func and func is not "null":
                 msg = "{} ({})".format(msg, func)
-            self._frontend_logger.log(level, "%s - %s - %s", browser_time, f_level, msg)
+            self._frontend_logger.log(
+                level,
+                "%s - %s - %s %s",
+                browser_time,
+                f_level,
+                msg,
+                "\n  " + ("\n   ".join(stack)) if stack else "",
+            )
 
             if level >= logging.WARNING:
                 self.analytics_handler.add_frontend_event("console", payload)
