@@ -82,7 +82,13 @@ class ImageProcessor:
         self.debug = True  # general debug
         self.debugPreprocessing = False  # write each step image to /tmp
         # backlash compensation will be applied only on lines in negative axis direction
-        self.backlash_compensation_x = backlash_x
+        self.backlash_compensation_x = 0.0
+        try:
+            self.backlash_compensation_x = float(backlash_x)
+        except ValueError:
+            self.log.warn(
+                "Can't convert backlash_x into float. value is: '%s'", backlash_x
+            )
 
         try:
             self.debug = _mrbeam_plugin_implementation._settings.get(

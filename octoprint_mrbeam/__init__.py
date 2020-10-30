@@ -500,6 +500,9 @@ class MrBeamPlugin(
         )
 
     def on_settings_save(self, data):
+        """
+        See octoprint.plugins.types.SettingsPlugin.get_settings_preprocessors to sanitize input data.
+        """
         try:
             # self._logger.info("ANDYTEST on_settings_save() %s", data)
             if "cam" in data and "previewOpacity" in data["cam"]:
@@ -563,7 +566,12 @@ class MrBeamPlugin(
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
-        octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+        if "cam" in data and "remember_markers_across_sessions" in data["cam"]:
+            # This is going to work "just barely" because there could be
+            # mixed data input that was already treated.
+            # However this specific branching doesn't occur with other
+            # saved settings simpultaneously.
+            octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     def on_shutdown(self):
         self._shutting_down = True
@@ -1661,7 +1669,7 @@ class MrBeamPlugin(
         If the uploaded file size exeeds this limit,
         you'll see only a ERR_CONNECTION_RESET in Chrome.
         """
-        return [("POST", r"/convert", 100 * 1024 * 1024)]
+        return [("POST", r"/convert", 100 * 1024 * 1024), ("POST", r"/save_store_bought_svg", 100 * 1024 * 1024)]
 
     @octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
     @restricted_access
@@ -2082,12 +2090,14 @@ class MrBeamPlugin(
             payload = data.get("payload", dict())
             func = payload.get("function", None)
             f_level = payload.get("level", None)
+            stack = None
 
             level = logging.INFO
             if f_level == "warn":
                 level = logging.WARNING
             if f_level == "error":
                 level = logging.ERROR
+                stack = payload.get("stacktrace", None)
 
             browser_time = ""
             try:
@@ -2099,7 +2109,14 @@ class MrBeamPlugin(
             msg = payload.get("msg", "")
             if func and func is not "null":
                 msg = "{} ({})".format(msg, func)
-            self._frontend_logger.log(level, "%s - %s - %s", browser_time, f_level, msg)
+            self._frontend_logger.log(
+                level,
+                "%s - %s - %s %s",
+                browser_time,
+                f_level,
+                msg,
+                "\n  " + ("\n   ".join(stack)) if stack else "",
+            )
 
             if level >= logging.WARNING:
                 self.analytics_handler.add_frontend_event("console", payload)
