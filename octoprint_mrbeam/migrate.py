@@ -765,7 +765,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                         "Failed to convert %s to a float for backlash", _val
                     )
                 else:
-                    val = max(min(max_val, val), min_mal)
+                    data["machine"]["backlash_compensation_x"] = max(
+                        min(max_val, val), min_mal
+                    )
                     _set(
                         ["machine", "backlash_compensation_x"],
                         data,
