@@ -15,15 +15,23 @@ import glob
 import time
 import serial
 import re
-import Queue
+
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 import random
 
+from itertools import chain
 from flask_babel import gettext
 
 import octoprint.plugin
 
 from octoprint.printer.standard import StateMonitor
 import octoprint.util.comm as octocomm
+
+# from octoprint.util.comm import MachineCom as __MachineCom
+
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events as OctoPrintEvents
 from octoprint.filemanager.destinations import FileDestinations
@@ -44,7 +52,8 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 import logging
 
 ### MachineCom #########################################################################################################
-class MachineCom(object):
+class MachineCom(octocomm.MachineCom):
+    # Has to be imported from inside the class definition
 
     DEBUG_PRODUCE_CHECKSUM_ERRORS = False
     DEBUG_PRODUCE_CHECKSUM_ERRORS_RND = 2000
@@ -87,28 +96,34 @@ class MachineCom(object):
     GRBL_LINE_BUFFER_SIZE = 80
 
     ### OctoPrint comm reserved states 0 - 16 ###
-    __MachineCom = octocomm.MachineCom
-    STATE_NONE = __MachineCom.STATE_NONE
-    STATE_OPEN_SERIAL = __MachineCom.STATE_OPEN_SERIAL
-    STATE_DETECT_SERIAL = __MachineCom.STATE_DETECT_SERIAL
-    STATE_DETECT_BAUDRATE = __MachineCom.STATE_DETECT_BAUDRATE
-    STATE_CONNECTING = __MachineCom.STATE_CONNECTING
-    STATE_OPERATIONAL = __MachineCom.STATE_OPERATIONAL
-    STATE_STARTING = __MachineCom.STATE_STARTING
-    STATE_PRINTING = __MachineCom.STATE_PRINTING
-    STATE_PAUSED = __MachineCom.STATE_PAUSED
-    STATE_PAUSING = __MachineCom.STATE_PAUSING
-    STATE_RESUMING = __MachineCom.STATE_RESUMING
-    STATE_FINISHING = __MachineCom.STATE_FINISHING
-    STATE_CLOSED = __MachineCom.STATE_CLOSED
-    STATE_ERROR = __MachineCom.STATE_ERROR
-    STATE_CLOSED_WITH_ERROR = __MachineCom.STATE_CLOSED_WITH_ERROR
-    STATE_TRANSFERING_FILE = __MachineCom.STATE_TRANSFERING_FILE
-    STATE_CANCELLING = __MachineCom.STATE_CANCELLING
+    # STATE_NONE = octocomm.MachineCom.STATE_NONE
+    # STATE_OPEN_SERIAL = octocomm.MachineCom.STATE_OPEN_SERIAL
+    # STATE_DETECT_SERIAL = octocomm.MachineCom.STATE_DETECT_SERIAL
+    # STATE_DETECT_BAUDRATE = octocomm.MachineCom.STATE_DETECT_BAUDRATE
+    # STATE_CONNECTING = octocomm.MachineCom.STATE_CONNECTING
+    # STATE_OPERATIONAL = octocomm.MachineCom.STATE_OPERATIONAL
+    # STATE_STARTING = octocomm.MachineCom.STATE_STARTING
+    # STATE_PRINTING = octocomm.MachineCom.STATE_PRINTING
+    # STATE_PAUSED = octocomm.MachineCom.STATE_PAUSED
+    # STATE_PAUSING = octocomm.MachineCom.STATE_PAUSING
+    # STATE_RESUMING = octocomm.MachineCom.STATE_RESUMING
+    # STATE_FINISHING = octocomm.MachineCom.STATE_FINISHING
+    # STATE_CLOSED = octocomm.MachineCom.STATE_CLOSED
+    # STATE_ERROR = octocomm.MachineCom.STATE_ERROR
+    # STATE_CLOSED_WITH_ERROR = octocomm.MachineCom.STATE_CLOSED_WITH_ERROR
+    # STATE_TRANSFERING_FILE = octocomm.MachineCom.STATE_TRANSFERING_FILE
+    # STATE_CANCELLING = octocomm.MachineCom.STATE_CANCELLING
     ### Mr Beam comm reserved states 100 - ... ###
     STATE_LOCKED = 100
     STATE_HOMING = 101
     STATE_FLASHING = 102
+
+    # be sure to add anything here that signifies an operational state
+    OPERATIONAL_STATES = tuple(
+        chain(octocomm.MachineCom.OPERATIONAL_STATES, (STATE_LOCKED,))
+    )
+    # be sure to add anything here that signifies a printing state
+    PRINTING_STATES = octocomm.MachineCom.PRINTING_STATES
 
     GRBL_STATE_QUEUE = "Queue"
     GRBL_STATE_IDLE = "Idle"
@@ -179,7 +194,6 @@ class MachineCom(object):
         self._grbl_settings = dict()
         self._errorValue = "Unknown Error"
         self._serial = None
-        self._currentFile = None
         self._status_polling_timer = None
         self._status_polling_next_ts = 0
         self._status_polling_interval = self.STATUS_POLL_FREQUENCY_DEFAULT
@@ -196,7 +210,7 @@ class MachineCom(object):
         self._lines_recovered_total = 0
         self._pauseWaitStartTime = None
         self._pauseWaitTimeLost = 0.0
-        self._commandQueue = Queue.Queue()
+        self._command_queue = queue.Queue()
         self._send_event = CountedEvent(max=50)
         self._finished_currentFile = False
         self._pause_delay_time = 0
@@ -273,12 +287,30 @@ class MachineCom(object):
 
         self.watch_dog = AccWatchDog(self)
 
-        # threads
+        # print job
+        self._currentFile = None
+        self._job_on_hold = CountedEvent()
+
+        # multithreading locks
+        self._jobLock = threading.RLock()
+        self._sendingLock = threading.RLock()
+
+        # monitoring thread
         self.monitoring_thread = None
+        self._monitoring_active = False
+        # sending thread
         self.sending_thread = None
+        self._send_queue_active = False
         self.recovery_thread = None
         self._start_monitoring_thread()
         self._start_status_polling_timer()
+
+        # variables used by OctoPrint MachineCom (prevent undefined vars)
+        self._temperature_timer = None
+        self._sd_status_timer = None
+
+    # __del__ = octocomm.MachineCom.__del__
+    # _active = octocomm.MachineCom._active
 
     def _start_monitoring_thread(self):
         self._monitoring_active = True
@@ -289,7 +321,7 @@ class MachineCom(object):
         self.monitoring_thread.start()
 
     def _start_sending_thread(self):
-        self._sending_active = True
+        self._send_queue_active = True
         self.sending_thread = threading.Thread(
             target=self._send_loop, name="comm._sending_thread"
         )
@@ -422,13 +454,13 @@ class MachineCom(object):
             self._logger.exception("Exception in _monitor_loop() thread: ")
 
     def _send_loop(self):
-        while self._sending_active:
+        while self._send_queue_active:
             try:
                 self._process_rt_commands()
-                # if self.isPrinting() and self._commandQueue.empty():
+                # if self.isPrinting() and self._command_queue.empty():
                 if (
                     self.isPrinting()
-                    and self._commandQueue.empty()
+                    and self._command_queue.empty()
                     and not self._recovery_lock
                 ):
                     cmd = self._getNext()  # get next cmd form file
@@ -478,7 +510,7 @@ class MachineCom(object):
         Takes command from:
          - parameter passed to this function, (!! treated as real time command)
          - self._cmd or
-         - self._commandQueue.get()
+         - self._command_queue.get()
         and writes it onto serial.
         If command is passed as parameter it's treated as a real time command,
         which means there are no checks if it will exceed grbl buffer current capacity.
@@ -492,10 +524,10 @@ class MachineCom(object):
         - cmd: a command string (sam as if cmd is a plain string)
         """
         if cmd is None:
-            if self._cmd is None and self._commandQueue.empty():
+            if self._cmd is None and self._command_queue.empty():
                 return
             elif self._cmd is None:
-                tmp = self._commandQueue.get()
+                tmp = self._command_queue.get()
                 if isinstance(tmp, basestring):
                     self._cmd = {"cmd": tmp}
                 elif isinstance(tmp, dict):
@@ -1183,8 +1215,8 @@ class MachineCom(object):
                     dict(error=self.getErrorString(), analytics=False),
                 )
 
-        with self._commandQueue.mutex:
-            self._commandQueue.queue.clear()
+        with self._command_queue.mutex:
+            self._command_queue.queue.clear()
         self._acc_line_buffer.reset()
         self._send_event.clear(completely=True)
         self._fire_print_failed()
@@ -1208,8 +1240,8 @@ class MachineCom(object):
                 self._pauseWaitStartTime = None
                 self._pauseWaitTimeLost = 0.0
                 self._send_event.clear(completely=True)
-                with self._commandQueue.mutex:
-                    self._commandQueue.queue.clear()
+                with self._command_queue.mutex:
+                    self._command_queue.queue.clear()
                 self._log(errorMsg)
                 self._logger.error(
                     errorMsg, serial=True, analytics=True, terminal_dump=True
@@ -1771,7 +1803,7 @@ class MachineCom(object):
         self._logger.info("{} grbl: '%s'", log_verb.capitalize(), grbl_path)
 
         if is_connected:
-            self.close(isError=False, next_state=self.STATE_FLASHING)
+            self.close(is_error=False, next_state=self.STATE_FLASHING)
             time.sleep(1)
 
         # FYI: Fuses can't be changed from over srial
@@ -2109,8 +2141,8 @@ class MachineCom(object):
 
             # self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor} and '
             #                   'intensity limit {limit})'.format(old=parsed_intensity, new=self._current_intensity,
-            # 													factor=self._power_correction_factor,
-            # 													limit=self._gcode_intensity_limit))
+            #                                                     factor=self._power_correction_factor,
+            #                                                     limit=self._gcode_intensity_limit))
 
             return cmd.replace(intensity_cmd, "S%d" % self._current_intensity)
         return cmd
@@ -2273,7 +2305,7 @@ class MachineCom(object):
                     )
                     return
 
-            self._commandQueue.put(cmd_obj)
+            self._command_queue.put(cmd_obj)
             self._send_event.set()
             self.watch_dog.notify_command(cmd_obj)
 
@@ -2416,8 +2448,12 @@ class MachineCom(object):
                 self._log("   /disconnect")
                 self._log("   /reset")
                 self._log("   /correct_settings")
-                self._log("   /power_correction <x>		--> Enable: x = 1; Disable: x = 0")
-                self._log("   /show_checksums <x>		--> Enable: x = 1; Disable: x = 0")
+                self._log(
+                    "   /power_correction <x>        --> Enable: x = 1; Disable: x = 0"
+                )
+                self._log(
+                    "   /show_checksums <x>        --> Enable: x = 1; Disable: x = 0"
+                )
                 self._log(
                     "   /verify_grbl [? | <file>] // ?: list of available files; If omitted default grbl version will be verified ."
                 )
@@ -2516,28 +2552,30 @@ class MachineCom(object):
             return
 
         # first pause (feed hold) before doing the soft reset in order to retain machine pos.
-        self._sendCommand(self.COMMAND_HOLD)
-        time.sleep(0.5)
+        with self._jobLock:
+            self._changeState(self.STATE_CANCELLING)
+            self._sendCommand(self.COMMAND_HOLD)
+            time.sleep(0.5)
 
-        with self._commandQueue.mutex:
-            self._commandQueue.queue.clear()
-        self._cmd = None
+            with self._command_queue.mutex:
+                self._command_queue.queue.clear()
+            self._cmd = None
 
-        self.watch_dog.stop()
-        self._sendCommand(self.COMMAND_RESET)
-        self._acc_line_buffer.reset()
-        self._send_event.clear(completely=True)
-        self._changeState(self.STATE_LOCKED)
+            self.watch_dog.stop()
+            self._sendCommand(self.COMMAND_RESET)
+            self._acc_line_buffer.reset()
+            self._send_event.clear(completely=True)
+            self._changeState(self.STATE_LOCKED)
 
-        payload = self._get_printing_file_state()
+            payload = self._get_printing_file_state()
 
-        if failed:
-            if not payload.get("error_msg", None):
-                payload["error_msg"] = error_msg
+            if failed:
+                if not payload.get("error_msg", None):
+                    payload["error_msg"] = error_msg
 
-            eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
-        else:
-            eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
+                eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
+            else:
+                eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
     def setPause(
         self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False
@@ -2599,121 +2637,81 @@ class MachineCom(object):
     def sendGcodeScript(self, scriptName, replacements=None):
         pass
 
-    def getStateId(self, state=None):
-        if state is None:
-            state = self._state
-
-        possible_states = filter(
-            lambda x: x.startswith("STATE_"), self.__class__.__dict__.keys()
-        )
-        for possible_state in possible_states:
-            if getattr(self, possible_state) == state:
-                return possible_state[len("STATE_") :]
-
-        return "UNKNOWN"
+    # def getStateId(self, *args, **kwargs):
+    #     return octocomm.MachineCom.getStateId(self, *args, **kwargs)
 
     def getStateString(self, state=None):
-        if state is None:
-            state = self._state
-        if state == self.STATE_NONE:
-            return "Offline"
-        if state == self.STATE_OPEN_SERIAL:
-            return "Opening serial port"
-        if state == self.STATE_DETECT_SERIAL:
-            return "Detecting serial port"
-        if state == self.STATE_DETECT_BAUDRATE:
-            return "Detecting baudrate"
-        if state == self.STATE_CONNECTING:
-            return "Connecting"
-        if state == self.STATE_OPERATIONAL:
-            return "Operational"
         if state == self.STATE_PRINTING:
             # return "Printing"
             return "Lasering"
-        if state == self.STATE_PAUSED:
-            return "Paused"
-        if state == self.STATE_CLOSED:
-            return "Closed"
-        if state == self.STATE_ERROR:
-            return "Error: %s" % (self.getErrorString())
-        if state == self.STATE_CLOSED_WITH_ERROR:
-            return "Error: %s" % (self.getErrorString())
-        if state == self.STATE_TRANSFERING_FILE:
-            return "Transfering file to SD"
-        if self._state == self.STATE_LOCKED:
+        elif self._state == self.STATE_LOCKED:
             return "Locked"
-        if self._state == self.STATE_HOMING:
+        elif self._state == self.STATE_HOMING:
             return "Homing"
-        if self._state == self.STATE_FLASHING:
+        elif self._state == self.STATE_FLASHING:
             return "Flashing"
-        return "Unknown State (%d)" % (self._state)
+        else:
+            return octocomm.MachineCom.getStateString(self, state)
 
-    def getPrintProgress(self):
-        if self._currentFile is None:
-            return None
-        return self._currentFile.getProgress()
+    # def getPrintProgress(self, *args, **kwargs):
+    #     return octocomm.MachineCom.getPrintProgress(self, *args, **kwargs)
 
-    def getPrintFilepos(self):
-        if self._currentFile is None:
-            return None
-        return self._currentFile.getFilepos()
+    # def getPrintFilepos(self, *args, **kwargs):
+    #     return octocomm.MachineCom.getPrintFilepos(self, *args, **kwargs)
 
-    def getCleanedPrintTime(self):
-        printTime = self.getPrintTime()
-        if printTime is None:
-            return None
-        return printTime
+    # def getCleanedPrintTime(self, *args, **kwargs):
+    #     return octocomm.MachineCom.getCleanedPrintTime(self, *args, **kwargs)
 
-    def getConnection(self):
-        return self._port, self._baudrate
+    # def getConnection(self):
+    #     return self._port, self._baudrate
 
-    def isOperational(self):
-        # overwrite operational state to accept commands in locked state
-        # if self._state != self.STATE_LOCKED:
-        #     self._logger.warning("is operational - state %s", self._state)
-        return self._state in [
-            self.STATE_OPERATIONAL,
-            self.STATE_PRINTING,
-            self.STATE_PAUSED,
-            self.STATE_LOCKED,
-        ]
+    # def getErrorString(self, *args, **kwargs):
+    #     return octocomm.MachineCom.getErrorString(self, *args, **kwargs)
 
-    def isPrinting(self):
-        return self._state == self.STATE_PRINTING
+    # # State defined functions
+    # def isOperational(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isOperational(self, *args, **kwargs)
 
-    def isCancelling(self):
-        return self._state == self.STATE_CANCELLING
+    # def isPrinting(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isPrinting(self, *args, **kwargs)
 
-    def isPausing(self):
-        return self._state == self.STATE_PAUSING
+    # def isCancelling(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isCancelling(self, *args, **kwargs)
 
-    def isResuming(self):
-        return self._state == self.STATE_RESUMING
+    # def isPausing(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isPausing(self, *args, **kwargs)
 
-    def isStarting(self):
-        return self._state == self.STATE_STARTING
+    # def isResuming(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isResuming(self, *args, **kwargs)
 
-    def isFinishing(self):
-        return self._state == self.STATE_FINISHING
+    # def isStarting(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isStarting(self, *args, **kwargs)
 
-    def isSdPrinting(self):
-        return self.isSdFileSelected() and self.isPrinting()
+    # def isFinishing(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isFinishing(self, *args, **kwargs)
 
-    def isSdFileSelected(self):
-        return self._currentFile is not None and isinstance(
-            self._currentFile, PrintingSdFileInformation
-        )
+    # def isSdPrinting(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isSdPrinting(self, *args, **kwargs)
 
-    def isStreaming(self):
-        return (
-            self._currentFile is not None
-            and isinstance(self._currentFile, StreamingGcodeFileInformation)
-            and not self._currentFile.done
-        )
+    # def isSdFileSelected(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isSdFileSelected(self, *args, **kwargs)
 
-    def isPaused(self):
-        return self._state == self.STATE_PAUSED
+    # def isStreaming(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isStreaming(self, *args, **kwargs)
 
+    # def isPaused(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isPaused(self, *args, **kwargs)
+
+    # def isBusy(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isBusy(self, *args, **kwargs)
+
+    # def isError(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isError(self, *args, **kwargs)
+
+    # def isClosedOrError(self, *args, **kwargs):
+    #     return octocomm.MachineCom.isClosedOrError(self, *args, **kwargs)
+
+    # "overloaded" functions from __MachineCom
     def isLocked(self):
         return self._state == self.STATE_LOCKED
 
@@ -2723,40 +2721,14 @@ class MachineCom(object):
     def isFlashing(self):
         return self._state == self.STATE_FLASHING
 
-    def isBusy(self):
-        return self.isPrinting() or self.isPaused()
-
-    def isError(self):
-        return (
-            self._state == self.STATE_ERROR
-            or self._state == self.STATE_CLOSED_WITH_ERROR
-        )
-
-    def isClosedOrError(self):
-        # if self._state != self.STATE_LOCKED:
-        #     self._logger.warning("is closed err - state %s", self._state)
-        return (
-            self._state == self.STATE_ERROR
-            or self._state == self.STATE_CLOSED_WITH_ERROR
-            or self._state == self.STATE_CLOSED
-        )
-
     def isSdReady(self):
         return False
 
     def isStreaming(self):
         return False
 
-    def getErrorString(self):
-        return self._errorValue
-
-    def getPrintTime(self):
-        if self._currentFile is None or self._currentFile.getStartTime() is None:
-            return None
-        else:
-            return (
-                time.time() - self._currentFile.getStartTime() - self._pauseWaitTimeLost
-            )
+    # def getPrintTime(self, *args, **kwargs):
+    #     return octocomm.MachineCom.getPrintTime(self, *args, **kwargs)
 
     def getGrblVersion(self):
         return self._grbl_version
@@ -2776,21 +2748,18 @@ class MachineCom(object):
 
         return file_state
 
-    def close(self, isError=False, next_state=None):
+    def close(self, is_error=False, next_state=None, *args, **kwargs):
         self._monitoring_active = False
-        self._sending_active = False
+        self._send_queue_active = False
         self._status_polling_interval = 0
 
         printing = self.isPrinting() or self.isPaused()
-        if self._serial is not None:
-            if isError:
-                self._changeState(self.STATE_CLOSED_WITH_ERROR)
-            elif next_state:
-                self._changeState(next_state)
-            else:
-                self._changeState(self.STATE_CLOSED)
-            self._serial.close()
-        self._serial = None
+
+        __MachineCom.close(self, is_error, *args, **kwargs)
+        if is_error:
+            self._changeState(self.STATE_CLOSED_WITH_ERROR)
+        elif not self.isClosedOrError() and next_state:
+            self._changeState(next_state)
 
         if printing:
             payload = None

@@ -53,6 +53,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
+from octoprint_mrbeam.util import logExceptions
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
@@ -1705,6 +1706,7 @@ class MrBeamPlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
     @restricted_access
+    @logExceptions
     def gcodeConvertCommand(self):
         # In order to reactivate the cancel button in the processing screen,
         # we need should run the code in here in a separate thread and return the http call as soon as possible
@@ -1839,6 +1841,7 @@ class MrBeamPlugin(
             self._printer.set_colors(currentFilename, data["vector"])
 
             # callback definition
+            @logExceptions
             def slicing_done(
                 gcode_name,
                 select_after_slicing,

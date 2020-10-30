@@ -7,8 +7,12 @@ from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util import logExceptions
 from flask_babel import gettext
-from octoprint_mrbeam.printing.comm_acc2 import PrintingGcodeFromMemoryInformation
+from octoprint_mrbeam.printing.comm_acc2 import (
+    PrintingGcodeFromMemoryInformation,
+    MachineCom,
+)
 
 # singleton
 _instance = None
@@ -32,8 +36,9 @@ def oneButtonHandler(plugin):
 # it basically also handles the ReadyToLaser state
 class OneButtonHandler(object):
 
-    PRINTER_STATE_PRINTING = "PRINTING"
-    PRINTER_STATE_PAUSED = "PAUSED"
+    PRINTER_STATE_PRINTING = MachineCom.STATE_PRINTING
+    PRINTER_STATE_PAUSED = MachineCom.STATE_PAUSED
+    PRINTING_STATES = MachineCom.PRINTING_STATES
 
     CLIENT_RTL_STATE_START = "start"
     CLIENT_RTL_STATE_START_PAUSE = "start_pause"
@@ -140,6 +145,7 @@ class OneButtonHandler(object):
 
         msg += ", _printer.get_state_id():{}".format(self._printer.get_state_id())
         msg += ", _printer.is_operational():{}".format(self._printer.is_operational())
+        msg += ", _printer.isLocked():{}".format(self._printer.isLocked())
         msg += ", _iobeam.is_interlock_closed():{}".format(self.is_interlock_closed())
 
         self._logger.debug("onEvent() %s", msg)
@@ -156,7 +162,7 @@ class OneButtonHandler(object):
             if (
                 self.print_started > 0
                 and time.time() - self.print_started > 1
-                and self._printer.get_state_id() == self.PRINTER_STATE_PRINTING
+                and self._printer.get_state_id() in self.PRINTING_STATES
             ):  # TODO replace with self._printer.is_printing() ?
                 self._logger.debug("onEvent() ONEBUTTON_PRESSED: self.pause_laser()")
                 self.pause_laser(
@@ -222,6 +228,7 @@ class OneButtonHandler(object):
             # start laser
             elif (
                 self._printer.is_operational()
+                and not self._printer.isLocked()
                 and self.ready_to_laser_ts > 0
                 and self.is_interlock_closed()
                 and self.is_fan_connected()
@@ -439,6 +446,7 @@ class OneButtonHandler(object):
         else:
             self.unset_ready_to_laser(lasering=False)
 
+    @logExceptions
     def _start_laser(self):
         self._logger.debug(
             "_start_laser() ...shall we laser file %s ?", self.ready_to_laser_file
