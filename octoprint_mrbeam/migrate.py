@@ -1,3 +1,4 @@
+from collections import Iterable, Sized, Mapping
 import os
 import platform
 import re
@@ -730,7 +731,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         from octoprint.settings import settings
 
         self._logger.info("Sanitizing the config file...")
-        data = settings()["plugins"]["mrbeam"]
+        data = settings().get(["plugins", "mrbeam"])
 
         def _set(path, _data, set_func, fullpath=None):
             """
@@ -798,5 +799,5 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             _set(path, data, settings().setInt)
         for path in bool_params:
             _set(path, data, settings().setBoolean)
-        settings.save()
+        settings().save()
         self._logger.info("Done.")
