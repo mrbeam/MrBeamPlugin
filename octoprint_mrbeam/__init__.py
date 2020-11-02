@@ -2068,7 +2068,7 @@ class MrBeamPlugin(
                 self.generateCalibrationMarkersSvg()
             )  # TODO move this func to other file
         elif command == "cancel_final_extraction":
-            self.dust_manager._continue_final_extraction = False
+            self.dust_manager.set_user_abort_final_extraction()
 
         return NO_CONTENT
 

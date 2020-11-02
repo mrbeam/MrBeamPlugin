@@ -61,6 +61,7 @@ class DustManager(object):
         self._shutting_down = False
         self._final_extraction_thread = None
         self._continue_final_extraction = False
+        self._user_abort_final_extraction = False
         self._validation_timer = None
         self._validation_timer_interval = self.DEFAULT_VALIDATION_TIMER_INTERVAL
         self._timer_boost_ts = 0
@@ -72,7 +73,7 @@ class DustManager(object):
         self._job_dust_values = []
 
         self.extraction_limit = 0.3
-        self.final_extraction_auto_mode_duration = 120  # ANDYTEST
+        self.final_extraction_auto_mode_durations = 120
         # values from profile are not good.
         # self.extraction_limit = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
         # self.auto_mode_time = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
@@ -111,6 +112,9 @@ class DustManager(object):
 
     def is_fan_connected(self):
         return self._connected
+
+    def set_user_abort_final_extraction(self):
+        self._user_abort_final_extraction = True
 
     def shutdown(self):
         self._shutting_down = True
@@ -221,7 +225,7 @@ class DustManager(object):
                 self._just_initialized = False
         elif event == IoBeamEvents.LID_OPENED:
             if self.is_final_extraction_mode:
-                self._continue_final_extraction = False
+                self.set_user_abort_final_extraction()
 
     def _start_test_fan_rpm(self):
         self._logger.debug(
@@ -306,6 +310,7 @@ class DustManager(object):
                     c.append(t.getName())
                     t.cancel()
             self._continue_final_extraction = False
+            self._user_abort_final_extraction = False
             self._fan_timers = []
             if c:
                 self._logger.debug(
@@ -333,6 +338,7 @@ class DustManager(object):
                 )
                 dust_start_ts = self._data_ts
                 self._continue_final_extraction = True
+                self._user_abort_final_extraction = False
                 if self.__continue_dust_extraction(
                     self.extraction_limit, dust_start_ts
                 ):
@@ -344,6 +350,7 @@ class DustManager(object):
                     )
                     while (
                         self._continue_final_extraction
+                        and not self._user_abort_final_extraction
                         and self.__continue_dust_extraction(
                             self.extraction_limit, dust_start_ts
                         )
@@ -351,7 +358,7 @@ class DustManager(object):
                         time.sleep(1)
                     self.is_final_extraction_mode = False
                     self._logger.debug(
-                        "Final extraction: DUSTING_MODE_START end. duration: %s",
+                        "Final extraction: DUSTING_MODE_START end. duration was: %s",
                         time.time() - dust_start_ts,
                     )
                 if self._continue_final_extraction:
@@ -363,6 +370,7 @@ class DustManager(object):
 
                 self._final_extraction_thread = None
                 self.is_final_extraction_mode = False
+                self._user_abort_final_extraction = False
             else:
                 self._logger.warning(
                     "No dust value received so far. Skipping trial dust extraction!"
