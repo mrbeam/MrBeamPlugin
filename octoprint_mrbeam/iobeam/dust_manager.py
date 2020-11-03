@@ -73,7 +73,8 @@ class DustManager(object):
         self._job_dust_values = []
 
         self.extraction_limit = 0.3
-        self.final_extraction_auto_mode_durations = 120
+        self.extraction_limit = 0.01
+        self.final_extraction_auto_mode_duration = 120
         # values from profile are not good.
         # self.extraction_limit = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
         # self.auto_mode_time = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
