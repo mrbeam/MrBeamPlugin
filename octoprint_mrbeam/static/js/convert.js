@@ -14,6 +14,7 @@ $(function () {
             default: {
                 intensityWhite: 0,
                 intensityBlack: 50,
+                extraOvershoot: false,
                 feedrateWhite: 1500,
                 feedrateBlack: 250,
                 contrast: 1.0,
@@ -891,6 +892,9 @@ $(function () {
             self.JOB_PARAMS.default.feedrateBlack
         );
         self.imgDithering = ko.observable(self.JOB_PARAMS.default.dithering);
+        self.extraOvershoot = ko.observable(
+            self.JOB_PARAMS.default.extraOvershoot
+        );
         self.beamDiameter = ko.observable(self.JOB_PARAMS.default.beamDiameter);
         self.engravingPiercetime = ko.observable(
             self.JOB_PARAMS.default.pierceTime
@@ -1189,6 +1193,7 @@ $(function () {
                 ).attr("value"),
                 line_distance: $("#svgtogcode_img_line_dist").val(),
                 eng_compressor: eng_compressor,
+                extra_overshoot: self.extraOvershoot(),
             };
             return data;
         };

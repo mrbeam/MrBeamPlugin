@@ -68,6 +68,7 @@ class ImageProcessor:
         engraving_mode=None,
         pierce_time=JobParams.Default.PIERCE_TIME,
         overshoot_distance=1,
+        extra_overshoot=False,
         eng_compressor=JobParams.Default.ENG_COMPRESSOR,
         material=None,
     ):
@@ -140,6 +141,7 @@ class ImageProcessor:
         self.sharpeningFactor = float(sharpening) if sharpening else 0.0
         self.dithering = dithering == True or dithering == "True"
         self.overshoot_distance = overshoot_distance
+        self.extra_overshoot = extra_overshoot
         # engraving mode switches
         self.engraving_mode = engraving_mode or self.ENGRAVING_MODE_DEFAULT
         self.separation = self.engraving_mode == self.ENGRAVING_MODE_FAST
@@ -397,9 +399,7 @@ class ImageProcessor:
         self.profiler.stop("separation_lpf").finalize()
         return parts
 
-    def generate_gcode(
-        self, imgArray, xMM, yMM, wMM, hMM, file_id, extra_overshoot=False
-    ):
+    def generate_gcode(self, imgArray, xMM, yMM, wMM, hMM, file_id):
         """
         takes an array of objects containing the separated image and converts them to gcode.
         :param imgArray: array of imagedata containing dicts
@@ -485,7 +485,7 @@ class ImageProcessor:
 
                 if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
 
-                    if not first_row and extra_overshoot:
+                    if not first_row and self.extra_overshoot:
                         # This is messy and to be overwritten with streamlined logic
                         # octogon_overshoot
                         # /!\ direction_positive reverted at the end of loop

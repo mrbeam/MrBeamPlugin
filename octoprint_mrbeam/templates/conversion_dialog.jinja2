@@ -342,10 +342,22 @@
                                     <label class="control-label">{{ _('Dithering') }}</label>
                                     <div class="controls">
                                         <label class="checkbox">
-                                            <input type="checkbox" data-bind="checked: imgDithering, event: {change: flag_customized_material}">{{ _('Dithering') }}
+                                            <input type="checkbox" data-bind="checked: imgDithering, event: {change: flag_customized_material}"/>{{ _('Dithering') }}
                                         </label>
                                     </div>
                                 </div>
+                                <div class="checkbox-control-and-label" data-toggle="tooltip" data-placement="right"
+                                     title="<b>{{ _('Use this setting if you find extra engraving lines on the left and right of the engraving.') }}</b><br>
+                                        {{ _('It means your material is extremely sensitive to the laser light. This options prolongs the laser time slightly.') }}">
+
+                                    <label class="control-label">{{ _('Extra overshoot') }}
+                                    </label>
+                                    <div class="controls">
+                                        <input type="checkbox" data-bind="checked: extraOvershoot, event: {change: flag_customized_material}"/>
+                                    </div>
+
+                                </div>
+
 							</div>
 						</form>
 						<div class="not_possible_on_this_material" data-bind="visible: !has_engraving_proposal()">
