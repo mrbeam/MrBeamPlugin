@@ -420,7 +420,7 @@ g#camera_markers.markerSW.gray circle#markerSW {
 }
 
 .working_area_image_preprocessing_sliders {
-  margin-left: 18px;
+  margin-left: 10px;
 }
 
 .working_area_image_preprocessing_link
@@ -533,8 +533,31 @@ input#img-preprocess-gamma {
   }
 }
 
+.range_value_tooltip:before {
+  content: attr(data-value);
+  position: absolute;
+  top: 0;
+  transform: translateY(21%);
+  z-index: 99999;
+  font-size: 12px;
+  width: 3em;
+  padding: 0px;
+  border-radius: 10px;
+  background: #383e42;
+  color: #fff;
+  text-align: center;
+  display: none;
+  right: -3em;
+}
+
+.range_value_tooltip:hover:before {
+  display: block;
+}
+
 .img-preprocess-cont {
   margin-bottom: 8px;
+  width: 100%;
+  position: relative;
 }
 
 .working_area_image_preprocessing_sliders {

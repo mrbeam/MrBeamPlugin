@@ -1691,6 +1691,8 @@ $(function () {
                 event.type === "blur" ||
                 event.type === "keyUp"
             ) {
+                event.target.dataset.value = event.target.value; // updates tooltips
+
                 self.abortFreeTransforms();
                 var newContrast = $("#" + data.id + " .contrast").val(); // 0..2, 1 means no adjustment
                 var newBrightness = $("#" + data.id + " .brightness").val(); // -1..1, 0 means no adjustment
@@ -1714,6 +1716,7 @@ $(function () {
                 event.type === "blur" ||
                 event.type === "keyUp"
             ) {
+                event.target.dataset.value = event.target.value; // updates tooltips
                 self.abortFreeTransforms();
                 var newVal = $("#" + data.id + " .sharpen").val(); // 0..10, 0 means no adjustment
                 var sharpenVal = parseFloat(newVal);
