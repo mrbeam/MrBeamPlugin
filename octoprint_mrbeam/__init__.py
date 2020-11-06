@@ -2514,13 +2514,8 @@ class MrBeamPlugin(
     ##~~ Event Handler Plugin API
 
     def on_event(self, event, payload):
-        if (
-            payload is None
-            or not isinstance(payload, collections.Iterable)
-            or not "log" in payload
-            or payload["log"]
-        ):
-            self._logger.info("on_event() %s: %s", event, payload)
+        if event is not MrBeamEvents.ANALYTICS_DATA:
+            self._logger.info("on_event %s: %s", event, payload)
 
         if event == MrBeamEvents.BOOT_GRACE_PERIOD_END:
             if self.calibration_tool_mode:
