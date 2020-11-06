@@ -96,24 +96,24 @@ class MachineCom(octocomm.MachineCom):
     GRBL_LINE_BUFFER_SIZE = 80
 
     ### OctoPrint comm reserved states 0 - 16 ###
-    # Explicited here so that getStateId works (uses self.__class__.__dict__.keys())
-    STATE_NONE = octocomm.MachineCom.STATE_NONE
-    STATE_OPEN_SERIAL = octocomm.MachineCom.STATE_OPEN_SERIAL
-    STATE_DETECT_SERIAL = octocomm.MachineCom.STATE_DETECT_SERIAL
-    STATE_DETECT_BAUDRATE = octocomm.MachineCom.STATE_DETECT_BAUDRATE
-    STATE_CONNECTING = octocomm.MachineCom.STATE_CONNECTING
-    STATE_OPERATIONAL = octocomm.MachineCom.STATE_OPERATIONAL
-    STATE_STARTING = octocomm.MachineCom.STATE_STARTING
-    STATE_PRINTING = octocomm.MachineCom.STATE_PRINTING
-    STATE_PAUSED = octocomm.MachineCom.STATE_PAUSED
-    STATE_PAUSING = octocomm.MachineCom.STATE_PAUSING
-    STATE_RESUMING = octocomm.MachineCom.STATE_RESUMING
-    STATE_FINISHING = octocomm.MachineCom.STATE_FINISHING
-    STATE_CLOSED = octocomm.MachineCom.STATE_CLOSED
-    STATE_ERROR = octocomm.MachineCom.STATE_ERROR
-    STATE_CLOSED_WITH_ERROR = octocomm.MachineCom.STATE_CLOSED_WITH_ERROR
-    STATE_TRANSFERING_FILE = octocomm.MachineCom.STATE_TRANSFERING_FILE
-    STATE_CANCELLING = octocomm.MachineCom.STATE_CANCELLING
+    # # Explicited here so that getStateId works (uses self.__class__.__dict__.keys())
+    # STATE_NONE = octocomm.MachineCom.STATE_NONE
+    # STATE_OPEN_SERIAL = octocomm.MachineCom.STATE_OPEN_SERIAL
+    # STATE_DETECT_SERIAL = octocomm.MachineCom.STATE_DETECT_SERIAL
+    # STATE_DETECT_BAUDRATE = octocomm.MachineCom.STATE_DETECT_BAUDRATE
+    # STATE_CONNECTING = octocomm.MachineCom.STATE_CONNECTING
+    # STATE_OPERATIONAL = octocomm.MachineCom.STATE_OPERATIONAL
+    # STATE_STARTING = octocomm.MachineCom.STATE_STARTING
+    # STATE_PRINTING = octocomm.MachineCom.STATE_PRINTING
+    # STATE_PAUSED = octocomm.MachineCom.STATE_PAUSED
+    # STATE_PAUSING = octocomm.MachineCom.STATE_PAUSING
+    # STATE_RESUMING = octocomm.MachineCom.STATE_RESUMING
+    # STATE_FINISHING = octocomm.MachineCom.STATE_FINISHING
+    # STATE_CLOSED = octocomm.MachineCom.STATE_CLOSED
+    # STATE_ERROR = octocomm.MachineCom.STATE_ERROR
+    # STATE_CLOSED_WITH_ERROR = octocomm.MachineCom.STATE_CLOSED_WITH_ERROR
+    # STATE_TRANSFERING_FILE = octocomm.MachineCom.STATE_TRANSFERING_FILE
+    # STATE_CANCELLING = octocomm.MachineCom.STATE_CANCELLING
     ### Mr Beam comm reserved states 100 - ... ###
     STATE_LOCKED = 100
     STATE_HOMING = 101
@@ -2638,20 +2638,33 @@ class MachineCom(octocomm.MachineCom):
     def sendGcodeScript(self, scriptName, replacements=None):
         pass
 
-    def getStateId(self, *args, **kwargs):
-        ret = octocomm.MachineCom.getStateId(self, *args, **kwargs)
-        self._logger.warning("RETURNED STATE ID %s" % ret)
-        return ret
+    def getStateId(self, state=None, *args, **kwargs):
+        if state is None:
+            state = self._state
+
+        possible_states = list(
+            filter(lambda x: x.startswith("STATE_"), dir(self.__class__))
+        )
+        for possible_state in possible_states:
+            if getattr(self, possible_state) == state:
+                return possible_state[len("STATE_") :]
+
+        self._logger.warning("RETURNED STATE ID %s" % "UNKNOWN")
+        return "UNKNOWN"
+        # ret = octocomm.MachineCom.getStateId(self, *args, **kwargs)
+        # return ret
 
     def getStateString(self, state=None):
+        if state is None:
+            state = self._state
         if state == self.STATE_PRINTING:
             # return "Printing"
             return "Lasering"
-        elif self._state == self.STATE_LOCKED:
+        elif state == self.STATE_LOCKED:
             return "Locked"
-        elif self._state == self.STATE_HOMING:
+        elif state == self.STATE_HOMING:
             return "Homing"
-        elif self._state == self.STATE_FLASHING:
+        elif state == self.STATE_FLASHING:
             return "Flashing"
         else:
             return octocomm.MachineCom.getStateString(self, state)
