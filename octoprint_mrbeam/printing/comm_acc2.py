@@ -167,34 +167,25 @@ class MachineCom(octocomm.MachineCom):
     def __init__(
         self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None
     ):
-        self._logger = mrb_logger(
-            "octoprint.plugins.mrbeam.printing.comm_acc2", lvl=logging.DEBUG
-        )
-
         if port is None:
             port = settings().get(["serial", "port"])
         elif isinstance(port, list):
             port = port[0]
-        if baudrate is None:
-            settingsBaudrate = settings().getInt(["serial", "baudrate"])
-            if settingsBaudrate is None:
-                baudrate = 0
-            else:
-                baudrate = settingsBaudrate
-        if callbackObject is None:
-            callbackObject = octocomm.MachineComPrintCallback()
+        octocomm.MachineCom.__init__(self, port, baudrate, callbackObject, None)
 
-        self._port = port
-        self._baudrate = baudrate
-        self._callback = callbackObject
+        # Delete keys we don't want to be used
+        del self._printerProfileManager
+
+        # Set more attributes
+        self._logger = mrb_logger(
+            "octoprint.plugins.mrbeam.printing.comm_acc2", lvl=logging.DEBUG
+        )
+
         self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
-
-        self._state = self.STATE_NONE
         self._grbl_state = None
         self._grbl_version = None
         self._grbl_settings = dict()
         self._errorValue = "Unknown Error"
-        self._serial = None
         self._status_polling_timer = None
         self._status_polling_next_ts = 0
         self._status_polling_interval = self.STATUS_POLL_FREQUENCY_DEFAULT
@@ -209,9 +200,6 @@ class MachineCom(octocomm.MachineCom):
         self._recovery_lock = False
         self._recovery_ignore_further_alarm_responses = False
         self._lines_recovered_total = 0
-        self._pauseWaitStartTime = None
-        self._pauseWaitTimeLost = 0.0
-        self._command_queue = queue.Queue()
         self._send_event = CountedEvent(max=50)
         self._finished_currentFile = False
         self._pause_delay_time = 0
@@ -254,12 +242,6 @@ class MachineCom(octocomm.MachineCom):
             "soft_reset": False,
         }
 
-        # hooks
-        self._pluginManager = octoprint.plugin.plugin_manager()
-        self._serial_factory_hooks = self._pluginManager.get_hooks(
-            "octoprint.comm.transport.serial.factory"
-        )
-
         # laser power correction
         self._power_correction_settings = (
             _mrbeam_plugin_implementation.laserhead_handler.get_correction_settings()
@@ -288,14 +270,6 @@ class MachineCom(octocomm.MachineCom):
 
         self.watch_dog = AccWatchDog(self)
 
-        # print job
-        self._currentFile = None
-        self._job_on_hold = CountedEvent()
-
-        # multithreading locks
-        self._jobLock = threading.RLock()
-        self._sendingLock = threading.RLock()
-
         # monitoring thread
         self.monitoring_thread = None
         self._monitoring_active = False
@@ -305,13 +279,6 @@ class MachineCom(octocomm.MachineCom):
         self.recovery_thread = None
         self._start_monitoring_thread()
         self._start_status_polling_timer()
-
-        # variables used by OctoPrint MachineCom (prevent undefined vars)
-        self._temperature_timer = None
-        self._sd_status_timer = None
-
-    # __del__ = octocomm.MachineCom.__del__
-    # _active = octocomm.MachineCom._active
 
     def _start_monitoring_thread(self):
         self._monitoring_active = True
@@ -464,7 +431,7 @@ class MachineCom(octocomm.MachineCom):
                     and self._command_queue.empty()
                     and not self._recovery_lock
                 ):
-                    cmd = self._getNext()  # get next cmd form file
+                    cmd, pos, lineno = self._getNext()  # get next cmd from file
                     if cmd is not None:
                         self.sendCommand(cmd)
                         self._callback.on_comm_progress()
@@ -481,7 +448,7 @@ class MachineCom(octocomm.MachineCom):
                                     trigger="after_set_print_finished"
                                 )
                         self._currentFile.resetToBeginning()
-                        cmd = self._getNext()  # get next cmd form file
+                        cmd, pos, lineno = self._getNext()  # get next cmd from file
                         if cmd is not None:
                             self.sendCommand(cmd)
                             self._callback.on_comm_progress()
@@ -984,14 +951,14 @@ class MachineCom(octocomm.MachineCom):
 
     def _getNext(self):
         if self._finished_currentFile is False:
-            line = self._currentFile.getNext()
+            line, pos, lineno = self._currentFile.getNext()
             if line is None:
                 self._finished_passes += 1
                 if self._finished_passes >= self._passes:
                     self._finished_currentFile = True
-            return line
+            return line, pos, lineno
         else:
-            return None
+            return None, None, None
 
     def _set_print_finished(self):
         self._logger.debug("_set_print_finished() called")
@@ -2278,7 +2245,9 @@ class MachineCom(octocomm.MachineCom):
 
     @logExceptions
     def sendCommand(self, cmd, cmd_type=None, processed=False, **kwargs):
-        if cmd is not None and cmd.strip().startswith("/"):
+        if cmd is None:
+            return
+        if isinstance(cmd, str) and cmd.strip().startswith("/"):
             self._handle_user_command(cmd)
         elif self._handle_rt_command(cmd):
             pass
@@ -2468,11 +2437,11 @@ class MachineCom(octocomm.MachineCom):
                 terminal_as_comm=True,
             )
 
-    def selectFile(self, filename, sd):
+    def selectFile(self, filename, sd=None, user=None, tags=None):
         if self.isBusy():
             return
 
-        self._currentFile = PrintingGcodeFileInformation(filename)
+        self._currentFile = PrintingGcodeFileInformation(filename, user=user)
         eventManager().fire(
             OctoPrintEvents.FILE_SELECTED,
             {
@@ -2482,7 +2451,7 @@ class MachineCom(octocomm.MachineCom):
             },
         )
         self._callback.on_comm_file_selected(
-            filename, self._currentFile.getFilesize(), False
+            filename, self._currentFile.getFilesize(), False, user=user
         )
 
     def selectGCode(self, gcode):
@@ -2635,7 +2604,7 @@ class MachineCom(octocomm.MachineCom):
         self._passes = value
         self._logger.info("set Passes to %d" % self._passes, terminal_as_comm=True)
 
-    def sendGcodeScript(self, scriptName, replacements=None):
+    def sendGcodeScript(self, *args, **kwargs):
         pass
 
     def getStateId(self, state=None, *args, **kwargs):
@@ -2655,6 +2624,7 @@ class MachineCom(octocomm.MachineCom):
         # return ret
 
     def getStateString(self, state=None):
+        # overloaded from OctoPrint to handle inherited STATEs as well.
         if state is None:
             state = self._state
         if state == self.STATE_PRINTING:
@@ -2809,14 +2779,17 @@ class PrintingFileInformation(octocomm.PrintingFileInformation):
     """
 
     def __init__(self, filename, user=None):
-        octocomm.PrintingFileInformation(self, filename, user=user)
+        octocomm.PrintingFileInformation.__init__(self, filename, user=user)
         self._logger = mrb_logger(
             "octoprint.plugins.mrbeam.comm_acc2." + self.__class__.__name__
         )
         self._comment_size = None
 
     def getFilepos(self):
-        return self._pos - self._comment_size
+        if self._pos is None:
+            return None
+        else:
+            return self._pos - self._comment_size
 
     def getProgress(self):
         """
@@ -2841,7 +2814,7 @@ class PrintingGcodeFileInformation(
     def __init__(
         self, filename, offsets_callback=None, current_tool_callback=None, user=None
     ):
-        octocomm.printingGcodeFileInformation(
+        octocomm.PrintingGcodeFileInformation.__init__(
             self, filename, offsets_callback, current_tool_callback, user
         )
         PrintingFileInformation.__init__(self, filename, user=user)
@@ -2858,7 +2831,7 @@ class PrintingGcodeFileInformation(
         Opens the file for reading and determines the file size.
         """
         self._read_lines_bak = 0
-        octocomm.printingGcodeFileInformation.start(self)
+        octocomm.PrintingGcodeFileInformation.start(self)
 
     def resetToBeginning(self):
         """
@@ -2958,6 +2931,7 @@ class PrintingGcodeFileInformation(
 
 class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
     # FIXME gcode is a string, not a file or stringIO (cannot be opened or interpreted as bytes)
+
     def __init__(self, gcode):
         PrintingFileInformation.__init__(self, "in_memory_gcode")
         self._gcode = gcode.split("\n")
@@ -2982,6 +2956,7 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
         """
         Retrieves the next line for printing.
         """
+        # FIXME : Supposed to return tuple of size 3
         if self._gcode is None:
             raise ValueError("Line buffer is not filled")
 

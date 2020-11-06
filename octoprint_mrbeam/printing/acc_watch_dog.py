@@ -135,7 +135,7 @@ class AccWatchDog(object):
         res.append(
             "Commands: len: {}, file_lines_total: {}, file_lines_read: {}, file_lines_remaining: {}, _lines_recovered_total: {}".format(
                 self._cmd_counter,
-                self._currentFile.getLinesTotal(),
+                self._currentFile.lines_total,
                 self._currentFile.getLinesRead(),
                 self._currentFile.getLinesRemaining(),
                 self._comm_acc2._lines_recovered_total,
