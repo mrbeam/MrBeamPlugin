@@ -145,7 +145,7 @@ class OneButtonHandler(object):
 
         msg += ", _printer.get_state_id():{}".format(self._printer.get_state_id())
         msg += ", _printer.is_operational():{}".format(self._printer.is_operational())
-        msg += ", _printer.isLocked():{}".format(self._printer.isLocked())
+        msg += ", _printer.is_locked():{}".format(self._printer.is_locked())
         msg += ", _iobeam.is_interlock_closed():{}".format(self.is_interlock_closed())
 
         self._logger.debug("onEvent() %s", msg)
@@ -228,7 +228,7 @@ class OneButtonHandler(object):
             # start laser
             elif (
                 self._printer.is_operational()
-                and not self._printer.isLocked()
+                and not self._printer.is_locked()
                 and self.ready_to_laser_ts > 0
                 and self.is_interlock_closed()
                 and self.is_fan_connected()

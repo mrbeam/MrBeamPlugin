@@ -165,6 +165,7 @@ class Laser(Printer):
         _dict = flags.__class__
         flags = dict_merge(
             {
+                "ready": flags["ready"] and not self.is_locked(),
                 "locked": self.is_locked(),
                 "flashing": self.is_flashing(),
             },
