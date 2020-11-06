@@ -1,4 +1,4 @@
-/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper, mrbeam */
+/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper, mrbeam, QuickShapeHelper */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
 MRBEAM_WORKINGAREA_PAN_MM = [0, 0]; // global available in this viewmodel and in snap plugins at the same time.
@@ -122,6 +122,8 @@ $(function () {
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
         self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
+        self.lastQuickTextCircle = 0;
+        self.lastQuickTextClockwise = true;
 
         self.zoom = ko.observable(1.0);
         //		self.zoomPercX = ko.observable(0);
@@ -2904,6 +2906,7 @@ $(function () {
             var userContent = svg.clone();
             tmpSvg.append(userContent);
 
+            // TODO introduce a "function clone_preserving_id(selector, target){...}" to replace the two blocks below
             // copy defs for filters
             var originalFilters = snap.selectAll("defs>filter");
             var target = userContent.select("defs");
@@ -2913,6 +2916,19 @@ $(function () {
                 var destFilter = clone.appendTo(target);
                 // restore id to keep references working
                 destFilter.attr({ id: original_id });
+            }
+
+            // copy defs for quicktext paths
+            var originalTextPaths = snap.selectAll(
+                "defs>.quicktext_curve_path"
+            );
+            var target = userContent.select("defs");
+            for (var i = 0; i < originalTextPaths.length; i++) {
+                var original_id = originalTextPaths[i].attr("id");
+                var clone = originalTextPaths[i].clone();
+                var destTextPath = clone.appendTo(target);
+                // restore id to keep references working
+                destTextPath.attr({ id: original_id });
             }
 
             self._embedAllImages(tmpSvg, function () {
@@ -3396,6 +3412,39 @@ $(function () {
         });
 
         /**
+         * callback/subscription for the circle slider
+         */
+        $("#quick_text_dialog_circle").on("input change", function (e) {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.circle = parseFloat(
+                    e.currentTarget.value
+                );
+                self.lastQuickTextCircle = self.currentQuickTextFile.circle;
+                self._qt_currentQuickTextUpdate();
+            }
+        });
+        /**
+         * callback/subscription for the circle direction toggler
+         */
+        $("#quick_text_dialog_clockwise").on("click", function (event) {
+            event.target
+                .closest(".mini_switch")
+                .classList.toggle("counterclockwise");
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.clockwise = !event.target
+                    .closest(".mini_switch")
+                    .classList.contains("counterclockwise");
+                $("#qt_round_text_section").toggleClass(
+                    "clockwise",
+                    self.currentQuickTextFile.clockwise
+                );
+                self.lastQuickTextClockwise =
+                    self.currentQuickTextFile.clockwise;
+                self._qt_currentQuickTextUpdate();
+            }
+        });
+
+        /**
          * callback for the next font button
          */
         self.currentQuickTextFontNext = function () {
@@ -3452,12 +3501,12 @@ $(function () {
                 var text = g.select("text");
                 var ity = self.currentQuickTextFile.intensity;
                 text.attr({
-                    text: displayText,
                     "font-family":
                         self.fontMap[self.currentQuickTextFile.fontIndex],
                     fill: "rgb(" + ity + "," + ity + "," + ity + ")",
                     // stroke: 'rgb('+ity+','+ity+','+ity+')',
                 });
+                text.textPath.node.textContent = displayText;
                 var bb = text.getBBox();
                 g.select("rect").attr({
                     x: bb.x,
@@ -3488,6 +3537,23 @@ $(function () {
                     self.fontMap[self.currentQuickTextFile.fontIndex]
                 );
 
+                // curve path
+                const counterclockwise = $(
+                    "#quick_text_dialog_clockwise"
+                ).hasClass("counterclockwise");
+                const textPathAttr = text.textPath.attr();
+                const path = snap.select(textPathAttr.href);
+                const textLength = self._qt_currentQuicktextGetTextLength(
+                    displayText,
+                    self.fontMap[self.currentQuickTextFile.fontIndex]
+                );
+                const d = self._qt_currentQuicktextGetCirclePath(
+                    self.currentQuickTextFile.circle,
+                    textLength,
+                    counterclockwise
+                );
+                path.attr({ d: d });
+
                 // update fileslist
                 $("#" + self.currentQuickTextFile.id + " .title").text(
                     displayText
@@ -3510,6 +3576,56 @@ $(function () {
                     font_index: self.currentQuickTextFile.fontIndex,
                 };
             }
+        };
+
+        /**
+         * generates <path_data> for the path to align the QT on.
+         *
+         * @param {float} circlePercent percentage of text bending (0: straight line, 100: text aligned on full circle).
+         * @param {float} textLength length of the text to bend in mm (more precise: working area coord units).
+         * @param {boolean} counterclockwise direction of the circle path (clockwise: text on the outside, countercw: text on the inside)
+         */
+        self._qt_currentQuicktextGetCirclePath = function (
+            circlePercent,
+            textLength,
+            counterclockwise
+        ) {
+            const d = QuickShapeHelper.getTextPath(
+                0,
+                0,
+                circlePercent,
+                textLength,
+                counterclockwise
+            );
+            return d;
+        };
+
+        /**
+         * generates <path_data> for the path to align the QT on.
+         *
+         * @param {string} text for which the length is estimated.
+         * @param {string} fontname of the font in use.
+         */
+        self._qt_currentQuicktextGetTextLength = function (text, fontname) {
+            // Lengths estimated by this String "1234567890qwertzuiopü+asdfghjklöä#<yxcvbnm,.-"
+            // total length was measured and divided through those 45 characters to get avg. char width.
+            // Estimation is the text length multiplied with the avg char width.
+            // Estimation is ok. Too short is not critical, too long would not allow to close a full circle
+            const font_width_mapping = {
+                "Allerta Stencil": 499 / 45.0,
+                "Amatic SC": 283 / 45.0,
+                Comfortaa: 492 / 45.0,
+                "Fredericka the Great": 421 / 45.0,
+                Kavivanar: 425 / 45.0,
+                Lobster: 388 / 45.0,
+                Merriweather: 504 / 45.0,
+                "Mr Bedfort": 375 / 45.0,
+                Quattrocento: 445 / 45.0,
+                Roboto: 442 / 45.0,
+            };
+            const textLength = Math.max(text.length, 5);
+            const avgCharWidth = font_width_mapping[fontname] || 12; // Fallback
+            return textLength * avgCharWidth;
         };
 
         /**
@@ -3564,6 +3680,8 @@ $(function () {
                 typePath: ["quicktext"],
                 fontIndex: self.lastQuickTextFontIndex,
                 intensity: self.lastQuickTextIntensity,
+                circle: self.lastQuickTextCircle,
+                clockwise: self.lastQuickTextClockwise,
             };
 
             file.id = self.getEntryId("qt");
@@ -3577,13 +3695,29 @@ $(function () {
             // TODO use self._prepareAndInsertSVG(...)
             // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
             // replaces all code below.
-            var text = uc.text(x, y, placeholderText);
-            text.attr(
-                "style",
-                "white-space: pre; font-size: " +
+
+            // path for curved text
+            const path = snap
+                .path()
+                .attr({
+                    id: file.previewId + "_baselinepath",
+                    d: `M0,0m${
+                        -self.workingAreaWidthMM() / 2
+                    },0h${self.workingAreaWidthMM()}`,
+                    class: "quicktext_curve_path",
+                    style: "stroke:#00aaff; stroke-width:2; fill:none",
+                })
+                .toDefs();
+
+            var text = uc.text(0, 0, placeholderText);
+            text.attr({
+                style:
+                    "white-space: pre; font-size: " +
                     size +
-                    "px; font-family: Ubuntu; text-anchor: middle"
-            );
+                    "px; font-family: Ubuntu; text-anchor: middle",
+                textpath: path,
+            });
+            text.textPath.attr({ startOffset: "50%" });
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({
@@ -3598,6 +3732,7 @@ $(function () {
                 id: file.previewId,
                 "mb:id": self._normalize_mb_id(file.previewId),
                 class: "userText",
+                transform: `translate(${x},${y})`,
                 "mb:origin": origin, // TODO ??? wtf?
             });
 
