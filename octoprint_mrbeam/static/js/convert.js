@@ -1565,18 +1565,7 @@ $(function () {
                         );
                     })
                     .fail(function (jqXHR, textStatus, errorThrown) {
-                        if (jqXHR.status == 401) {
-                            self.loginState.logout();
-                            new PNotify({
-                                title: gettext("Session expired"),
-                                text: gettext(
-                                    "Please login again to continue."
-                                ),
-                                type: "warn",
-                                tag: "conversion_error",
-                                hide: false,
-                            });
-                        } else {
+                        if (jqXHR.status != 401) {
                             self.settings.requestData();
                             console.error(
                                 "Unable to save focus reminder state: ",
@@ -1751,18 +1740,7 @@ $(function () {
                                         textStatus,
                                         errorThrown
                                     );
-                                    if (jqXHR.status == 401) {
-                                        self.loginState.logout();
-                                        new PNotify({
-                                            title: gettext("Session expired"),
-                                            text: gettext(
-                                                "Please login again to start this laser job."
-                                            ),
-                                            type: "warn",
-                                            tag: "conversion_error",
-                                            hide: false,
-                                        });
-                                    } else {
+                                    if (jqXHR.status != 401) {
                                         if (length > 10000000) {
                                             console.error(
                                                 "JSON size " +
