@@ -661,7 +661,7 @@ class Converter:
     def parse(self, file=None):
         try:
             stream = open(self.svg_file, "r")
-            p = etree.XMLParser(huge_tree=True)
+            p = etree.XMLParser(huge_tree=True, recover=True)
             self.document = etree.parse(stream, parser=p)
             stream.close()
             self._log.info("parsed %s" % self.svg_file)
