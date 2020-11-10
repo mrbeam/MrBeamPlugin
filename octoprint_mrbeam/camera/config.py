@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 from collections import Mapping
 import numpy as np
-from octoprint_mrbeam.util import dict_map
+from octoprint_mrbeam.util import dict_map, dict_get
 import yaml
 
 from .definitions import (
@@ -54,7 +54,7 @@ def get_corner_calibration(settings):
 
 def is_corner_calibration(conf_map, config_type="factory", origin_picture="raw"):
     _conf = {
-        edge_type: conf_map[edge_type][config_type][origin_picture]
+        edge_type: dict_get(conf_map, [edge_type, config_type, origin_picture], None)
         for edge_type in ("corners", "markers")
     }
     return is_corner_calibration_map(_conf)
