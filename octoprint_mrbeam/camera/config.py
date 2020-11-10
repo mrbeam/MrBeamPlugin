@@ -26,7 +26,7 @@ Can take different names for the different calibrations made (factory vs user ca
 def is_lens_calibration_file(path):
     try:
         _conf = np.load(path)
-    except Exception:
+    except (IOError, ValueError):
         return False
     else:
         return all(k in _conf.keys() for k in ("mtx", "dist"))

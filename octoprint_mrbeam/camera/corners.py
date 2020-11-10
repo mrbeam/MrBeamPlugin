@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from collections import Mapping
-from copy import deepcopy
 import yaml
 
 from .definitions import (
@@ -168,8 +167,6 @@ def get_deltas_and_refs(
     :param path_to_last_markers_json: needed for overwriting file if updated
     :return: pic_settings as dict
     """
-    from octoprint_mrbeam.camera.lens import undist_points
-
     if type(settings) is str:
         pic_settings = get_corner_calibration(settings)
         if pic_settings is None:
