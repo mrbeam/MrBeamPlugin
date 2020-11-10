@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import pytest
 from os.path import dirname, basename, join, split, realpath
 import random
+import pytest
 
 from octoprint.settings import settings
 
