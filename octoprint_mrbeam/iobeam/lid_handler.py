@@ -571,6 +571,12 @@ class LidHandler(object):
                 # raising error because I made sure all the files existed before-hand
                 self.refresh_settings()
                 raise
+        self._analytics_handler.add_camera_session_details(
+            {
+                "message": "Reverting lens calibration",
+                "id": "cam_lens_calib_revert",
+            }
+        )
         self.refresh_settings()
 
     def updateFrontendCC(self, data):
