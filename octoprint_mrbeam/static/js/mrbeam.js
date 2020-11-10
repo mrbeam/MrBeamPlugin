@@ -233,6 +233,7 @@ $(function () {
 
         self._online_check_last_state = null;
         self._online_check_interval = null;
+        self._ajaxErrorRegistered = false;
 
         self.userTyped = ko.observable(false);
         self.invalidEmailHelp = gettext("Invalid e-mail address");
@@ -362,6 +363,21 @@ $(function () {
             }
         };
 
+        self.onUserLoggedIn = function () {
+            if (!self._ajaxErrorRegistered) {
+                $(document).ajaxError(function (
+                    event,
+                    jqXHR,
+                    settings,
+                    thrownError
+                ) {
+                    if (jqXHR.status == 401) {
+                        self._handle_session_expired();
+                    }
+                });
+            }
+        };
+
         self.onUserLoggedOut = function () {
             self.presetLoginUser();
         };
@@ -412,6 +428,30 @@ $(function () {
             } else {
                 $("body").addClass("offline");
                 $("body").removeClass("online");
+            }
+        };
+
+        self._handle_session_expired = function () {
+            if (self.loginState && self.loginState.loggedIn()) {
+                console.error(
+                    "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Showing 'Session expired' to the user."
+                );
+                new PNotify({
+                    title: gettext("Session expired"),
+                    text: gettext("Please login again to continue."),
+                    type: "warn",
+                    // tag: "conversion_error",
+                    hide: false,
+                });
+                if (settings.url != "/api/logout") {
+                    // we would get into an endless loop then...
+                    console.error("Triggering self.loginState.logout()");
+                    self.loginState.logout();
+                }
+            } else {
+                console.log(
+                    "Server responded UNAUTHORIZED and loginStateViewModel is loggedOut. Consistent."
+                );
             }
         };
 
