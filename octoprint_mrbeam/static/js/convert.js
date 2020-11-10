@@ -892,9 +892,26 @@ $(function () {
             self.JOB_PARAMS.default.feedrateBlack
         );
         self.imgDithering = ko.observable(self.JOB_PARAMS.default.dithering);
-        self.extraOvershoot = ko.observable(
-            self.JOB_PARAMS.default.extraOvershoot
-        );
+        self._extraOvershoot = {
+            // TODO make auto a ko.computed
+            auto: ko.computed(function () {
+                // hardcoded threshold for now
+                // hardcoded value based on the default ratio
+                // from vegan leather, which is 0.043
+                return (
+                    self.imgIntensityBlack() / self.imgFeedrateBlack() < 0.05
+                );
+            }),
+            forced: ko.observable(false),
+            user: ko.observable(self.JOB_PARAMS.default.extraOvershoot),
+        };
+        self.extraOvershoot = ko.computed(function () {
+            if (self._extraOvershoot.forced()) {
+                return self._extraOvershoot.user();
+            } else {
+                return self._extraOvershoot.auto();
+            }
+        });
         self.beamDiameter = ko.observable(self.JOB_PARAMS.default.beamDiameter);
         self.engravingPiercetime = ko.observable(
             self.JOB_PARAMS.default.pierceTime
@@ -2199,6 +2216,14 @@ $(function () {
                 window.mrbeam.viewModels.vectorConversionViewModel,
                 newJob
             );
+        };
+
+        self.forceOvershoot = function (_self, event) {
+            if (event.type == "click") {
+                // The user specificaly clicked on the checkbox
+                self._extraOvershoot.user(event.currentTarget.checked);
+                self._extraOvershoot.forced(true);
+            }
         };
     }
 
