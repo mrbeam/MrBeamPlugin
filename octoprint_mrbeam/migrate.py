@@ -1,3 +1,4 @@
+from collections import Iterable, Sized, Mapping
 import os
 import platform
 import re
@@ -185,6 +186,12 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.rm_camera_calibration_repo()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    "0.7.9.2",
+                    equal_ok=False,
+                ):
+                    self.fix_settings()
 
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
@@ -725,8 +732,87 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("Removing mb-camera-calibration from the config file...")
         sett = settings()  # .octoprint/config.yaml
         sett.remove(
-            ["plugins", "softwareupdate", "check_prviders", "mb-camera-calibration"]
+            ["plugins", "softwareupdate", "check_providers", "mb-camera-calibration"]
         )
         sett.remove(["plugins", "softwareupdate", "checks", "mb-camera-calibration"])
         sett.save()
         self._logger.info("Done")
+
+    def fix_settings(self):
+        """Sanitize the data from the settings"""
+
+        from octoprint.settings import settings
+
+        self._logger.info("Sanitizing the config file...")
+        data = settings().get(["plugins", "mrbeam"])
+
+        def _set(path, _data, set_func, fullpath=None):
+            """
+            If _data has given path, then set settings
+            with that value.
+            """
+            if not isinstance(path, (Iterable, Sized)) or len(path) <= 0:
+                return
+            elif isinstance(_data, Mapping) and path[0] in _data.keys():
+                if fullpath is None:
+                    # for settings() you need to provide
+                    # path to the plugin data as well
+                    fullpath = ["plugins", "mrbeam"] + path
+                value = _data[path[0]]
+                if len(path) > 1:
+                    _set(path[1:], value, set_func, fullpath)
+                else:
+                    set_func(fullpath, value)
+
+        # ~ Do some action before saving to settings
+        if "machine" in data and isinstance(data["machine"], Mapping):
+            if "backlash_compensation_x" in data["machine"]:
+                _val = data["machine"]["backlash_compensation_x"]
+                min_mal = -1.0
+                max_val = 1.0
+                val = 0.0
+                try:
+                    val = float(_val)
+                except:
+                    self._logger.warning(
+                        "Failed to convert %s to a float for backlash", _val
+                    )
+                else:
+                    data["machine"]["backlash_compensation_x"] = max(
+                        min(max_val, val), min_mal
+                    )
+                    _set(
+                        ["machine", "backlash_compensation_x"],
+                        data,
+                        settings().setFloat,
+                    )
+
+        # ~ Sanitize data type
+        float_params = (
+            ["cam", "previewOpacity"],
+            ["dxfScale"],
+        )
+        int_params = (
+            ["cam", "markerRecognitionMinPixel"],
+            ["svgDPI"],
+            ["leds", "fps"],
+            ["leds", "brightness"],
+        )
+        bool_params = (
+            ["terminal"],
+            ["terminal_show_checksums"],
+            ["gcode_nextgen", "clip_working_area"],
+            ["analyticsEnabled"],
+            ["focusReminder"],
+            ["analytics", "job_analytics"],
+            ["cam", "remember_markers_across_sessions"],
+        )
+
+        for path in float_params:
+            _set(path, data, settings().setFloat)
+        for path in int_params:
+            _set(path, data, settings().setInt)
+        for path in bool_params:
+            _set(path, data, settings().setBoolean)
+        settings().save()
+        self._logger.info("Done.")

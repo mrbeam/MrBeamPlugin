@@ -502,6 +502,9 @@ class MrBeamPlugin(
         )
 
     def on_settings_save(self, data):
+        """
+        See octoprint.plugins.types.SettingsPlugin.get_settings_preprocessors to sanitize input data.
+        """
         try:
             # self._logger.info("ANDYTEST on_settings_save() %s", data)
             if "cam" in data and "previewOpacity" in data["cam"]:
@@ -574,7 +577,12 @@ class MrBeamPlugin(
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
-        octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+        if "cam" in data and "remember_markers_across_sessions" in data["cam"]:
+            # This is going to work "just barely" because there could be
+            # mixed data input that was already treated.
+            # However this specific branching doesn't occur with other
+            # saved settings simpultaneously.
+            octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     def on_shutdown(self):
         self._shutting_down = True
@@ -1672,7 +1680,10 @@ class MrBeamPlugin(
         If the uploaded file size exeeds this limit,
         you'll see only a ERR_CONNECTION_RESET in Chrome.
         """
-        return [("POST", r"/convert", 100 * 1024 * 1024)]
+        return [
+            ("POST", r"/convert", 100 * 1024 * 1024),
+            ("POST", r"/save_store_bought_svg", 100 * 1024 * 1024),
+        ]
 
     @octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
     @restricted_access
@@ -1937,6 +1948,7 @@ class MrBeamPlugin(
             camera_run_lens_calibration=[],
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
+            cancel_final_extraction=[],
         )
 
     def on_api_command(self, command, data):
@@ -2047,6 +2059,9 @@ class MrBeamPlugin(
             return (
                 self.generateCalibrationMarkersSvg()
             )  # TODO move this func to other file
+        elif command == "cancel_final_extraction":
+            self.dust_manager.set_user_abort_final_extraction()
+
         return NO_CONTENT
 
     def analytics_init(self, data):
@@ -2063,12 +2078,14 @@ class MrBeamPlugin(
             payload = data.get("payload", dict())
             func = payload.get("function", None)
             f_level = payload.get("level", None)
+            stack = None
 
             level = logging.INFO
             if f_level == "warn":
                 level = logging.WARNING
             if f_level == "error":
                 level = logging.ERROR
+                stack = payload.get("stacktrace", None)
 
             browser_time = ""
             try:
@@ -2080,7 +2097,14 @@ class MrBeamPlugin(
             msg = payload.get("msg", "")
             if func and func is not "null":
                 msg = "{} ({})".format(msg, func)
-            self._frontend_logger.log(level, "%s - %s - %s", browser_time, f_level, msg)
+            self._frontend_logger.log(
+                level,
+                "%s - %s - %s %s",
+                browser_time,
+                f_level,
+                msg,
+                "\n  " + ("\n   ".join(stack)) if stack else "",
+            )
 
             if level >= logging.WARNING:
                 self.analytics_handler.add_frontend_event("console", payload)
@@ -2280,6 +2304,7 @@ class MrBeamPlugin(
             self._hostname,
             check_calibration_tool_mode(self),
         )
+        self.lid_handler.refresh_settings()
         return NO_CONTENT
 
     ##~~ SlicerPlugin API
@@ -2475,13 +2500,8 @@ class MrBeamPlugin(
     ##~~ Event Handler Plugin API
 
     def on_event(self, event, payload):
-        if (
-            payload is None
-            or not isinstance(payload, collections.Iterable)
-            or not "log" in payload
-            or payload["log"]
-        ):
-            self._logger.info("on_event() %s: %s", event, payload)
+        if event is not MrBeamEvents.ANALYTICS_DATA:
+            self._logger.info("on_event %s: %s", event, payload)
 
         if event == MrBeamEvents.BOOT_GRACE_PERIOD_END:
             if self.calibration_tool_mode:

@@ -89,16 +89,10 @@ RAW_CORNERS_KEY = "raw_cornersFromImage"
 FACT_UNDIST_CORNERS_KEY = "factory_undist_cornersFromImage"
 FACT_RAW_CORNERS_KEY = "factory_raw_cornersFromImage"
 
-# Calibration File : DEPRECATED keys
-M2C_VECTOR_KEY = "marker2cornerVecs"  # DEPRECATED Key
-CALIBRATION_UPDATED_KEY = "calibration_updated"
-BLUR_FACTOR_THRESHOLD_KEY = "blur_factor_threshold"
-
 # Empty settings config
 PIC_SETTINGS = {
     UNDIST_CALIB_MARKERS_KEY: None,
     UNDIST_CORNERS_KEY: None,
-    CALIBRATION_UPDATED_KEY: False,
 }
 CALIB_REFS = dict(
     markers=dict(

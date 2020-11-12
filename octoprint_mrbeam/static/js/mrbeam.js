@@ -88,7 +88,8 @@ mrbeam.isOctoPrintVersionMin = function (expectedOctPrintVersion) {
  * @returns {boolean}
  */
 mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
-    var VPAT = /^\d+(\.\d+){0,2}$/;
+    var version_depth = 5;
+    var VPAT = /^\d+(\.\d+){0,4}$/;
 
     if (
         !actualVersion ||
@@ -100,10 +101,10 @@ mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
     if (actualVersion == expectedVersion) return true;
     if (VPAT.test(actualVersion) && VPAT.test(expectedVersion)) {
         var lparts = actualVersion.split(".");
-        while (lparts.length < 3) lparts.push("0");
+        while (lparts.length < version_depth) lparts.push("0");
         var rparts = expectedVersion.split(".");
-        while (rparts.length < 3) rparts.push("0");
-        for (var i = 0; i < 3; i++) {
+        while (rparts.length < version_depth) rparts.push("0");
+        for (var i = 0; i < version_depth; i++) {
             var l = parseInt(lparts[i], 10);
             var r = parseInt(rparts[i], 10);
             if (l === r) continue;
@@ -169,6 +170,35 @@ mrbeam.isWatterottMode = function () {
 };
 
 $(function () {
+    // catch and log jQuery ajax errors
+    $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
+        let msg =
+            jqXHR.status +
+            " (" +
+            jqXHR.statusText +
+            "): " +
+            settings.type +
+            " " +
+            settings.url;
+        if (settings.data) {
+            msg +=
+                ', body: "' +
+                (settings.data.length > 200
+                    ? settings.data.substr(0, 200) + "&hellip;"
+                    : settings.data);
+        }
+        console.everything.push({
+            level: "error",
+            msg: msg,
+            ts: event.timeStamp,
+            file: null,
+            function: "ajaxError",
+            line: null,
+            col: null,
+            stacktrace: null,
+        });
+    });
+
     // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
     // Force input of the "Add User" E-mail address in Settings > Access Control to lowercase.
     $("#settings-usersDialogAddUserName").attr(
@@ -203,6 +233,7 @@ $(function () {
 
         self._online_check_last_state = null;
         self._online_check_interval = null;
+        self._ajaxErrorRegistered = false;
 
         self.userTyped = ko.observable(false);
         self.invalidEmailHelp = gettext("Invalid e-mail address");
@@ -237,6 +268,28 @@ $(function () {
             return self.wizardacl.regexValidateEmail.test(
                 self.users.editorUsername()
             );
+        });
+
+        $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
+            if (jqXHR.status == 401) {
+                if (self.loginState.loggedIn()) {
+                    new PNotify({
+                        title: gettext("Session expired"),
+                        text: gettext("Please login again to continue."),
+                        type: "warn",
+                        // tag: "conversion_error",
+                        hide: false,
+                    });
+                    if (settings.url != "/api/logout") {
+                        // we would get into an endless loop then...
+                        self.loginState.logout();
+                    }
+                } else {
+                    console.log(
+                        "Server responded UNAUTHORIZED and loginStateViewModel is loggedOut. Consistent."
+                    );
+                }
+            }
         });
 
         self.onStartup = function () {
@@ -310,6 +363,21 @@ $(function () {
             }
         };
 
+        self.onUserLoggedIn = function () {
+            if (!self._ajaxErrorRegistered) {
+                $(document).ajaxError(function (
+                    event,
+                    jqXHR,
+                    settings,
+                    thrownError
+                ) {
+                    if (jqXHR.status == 401) {
+                        self._handle_session_expired();
+                    }
+                });
+            }
+        };
+
         self.onUserLoggedOut = function () {
             self.presetLoginUser();
         };
@@ -360,6 +428,30 @@ $(function () {
             } else {
                 $("body").addClass("offline");
                 $("body").removeClass("online");
+            }
+        };
+
+        self._handle_session_expired = function () {
+            if (self.loginState && self.loginState.loggedIn()) {
+                console.error(
+                    "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Showing 'Session expired' to the user."
+                );
+                new PNotify({
+                    title: gettext("Session expired"),
+                    text: gettext("Please login again to continue."),
+                    type: "warn",
+                    // tag: "conversion_error",
+                    hide: false,
+                });
+                if (settings.url != "/api/logout") {
+                    // we would get into an endless loop then...
+                    console.error("Triggering self.loginState.logout()");
+                    self.loginState.logout();
+                }
+            } else {
+                console.log(
+                    "Server responded UNAUTHORIZED and loginStateViewModel is loggedOut. Consistent."
+                );
             }
         };
 

@@ -116,7 +116,7 @@ class MrbFileManager(FileManager):
     @staticmethod
     def _sanitize_content(file_name, content):
         _, extension = os.path.splitext(file_name)
-        if extension == "svg":
+        if extension == ".svg":
             # TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
             content = "".join(i for i in content if ord(i) < 128)
         return content

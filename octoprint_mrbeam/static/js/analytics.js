@@ -1,4 +1,38 @@
 $(function () {
+    // catch and log jQuery ajax errors
+    $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
+        let msg =
+            jqXHR.status +
+            " (" +
+            jqXHR.statusText +
+            "): " +
+            settings.type +
+            " " +
+            settings.url;
+        if (settings.data) {
+            msg +=
+                ', body: "' +
+                (settings.data.length > 200
+                    ? settings.data.substr(0, 200) + "&hellip;"
+                    : settings.data);
+        }
+
+        let data = {
+            level: "error",
+            msg: msg,
+            ts: event.timeStamp,
+            file: null,
+            function: "ajaxError",
+            line: null,
+            col: null,
+            stacktrace: null,
+        };
+        console.everything.push(data);
+        if (console.callbacks.error) {
+            console.callbacks.error(data);
+        }
+    });
+
     function AnalyticsViewModel(params) {
         let self = this;
         window.mrbeam.viewModels["analyticsViewModel"] = self;
