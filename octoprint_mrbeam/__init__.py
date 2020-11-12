@@ -2323,6 +2323,7 @@ class MrBeamPlugin(
             self._hostname,
             check_calibration_tool_mode(self),
         )
+        self.lid_handler.refresh_settings()
         return NO_CONTENT
 
     ##~~ SlicerPlugin API
