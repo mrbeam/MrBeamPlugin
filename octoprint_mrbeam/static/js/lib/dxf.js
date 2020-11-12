@@ -135,132 +135,127 @@
                         return Constructor;
                     }
 
-                    var Helper =
-                        /*#__PURE__*/
-                        (function () {
-                            function Helper(contents) {
-                                _classCallCheck(this, Helper);
+                    var Helper = /*#__PURE__*/ (function () {
+                        function Helper(contents) {
+                            _classCallCheck(this, Helper);
 
-                                if (!(typeof contents === "string")) {
-                                    throw Error(
-                                        "Helper constructor expects a DXF string"
-                                    );
-                                }
-
-                                this._contents = contents;
-                                this._parsed = null;
-                                this._denormalised = null;
+                            if (!(typeof contents === "string")) {
+                                throw Error(
+                                    "Helper constructor expects a DXF string"
+                                );
                             }
 
-                            _createClass(Helper, [
-                                {
-                                    key: "parse",
-                                    value: function parse() {
-                                        this._parsed = (0,
-                                        _parseString["default"])(
-                                            this._contents
-                                        );
+                            this._contents = contents;
+                            this._parsed = null;
+                            this._denormalised = null;
+                        }
 
-                                        _logger["default"].info(
-                                            "parsed:",
-                                            this.parsed
-                                        );
+                        _createClass(Helper, [
+                            {
+                                key: "parse",
+                                value: function parse() {
+                                    this._parsed = (0, _parseString["default"])(
+                                        this._contents
+                                    );
 
-                                        return this._parsed;
-                                    },
-                                },
-                                {
-                                    key: "denormalise",
-                                    value: function denormalise() {
-                                        this._denormalised = (0,
-                                        _denormalise2["default"])(this.parsed);
+                                    _logger["default"].info(
+                                        "parsed:",
+                                        this.parsed
+                                    );
 
-                                        _logger["default"].info(
-                                            "denormalised:",
-                                            this._denormalised
-                                        );
+                                    return this._parsed;
+                                },
+                            },
+                            {
+                                key: "denormalise",
+                                value: function denormalise() {
+                                    this._denormalised = (0,
+                                    _denormalise2["default"])(this.parsed);
 
-                                        return this._denormalised;
-                                    },
-                                },
-                                {
-                                    key: "group",
-                                    value: function group() {
-                                        this._groups = (0,
-                                        _groupEntitiesByLayer["default"])(
-                                            this.denormalised
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "toSVG",
-                                    value: function toSVG() {
-                                        return (0, _toSVG2["default"])(
-                                            this.parsed
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "toSVGPaths",
-                                    value: function toSVGPaths() {
-                                        return (0, _toSVGPaths2["default"])(
-                                            this.parsed
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "toPolylines",
-                                    value: function toPolylines() {
-                                        return (0, _toPolylines2["default"])(
-                                            this.parsed
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "parsed",
-                                    get: function get() {
-                                        if (this._parsed === null) {
-                                            this.parse();
-                                        }
+                                    _logger["default"].info(
+                                        "denormalised:",
+                                        this._denormalised
+                                    );
 
-                                        return this._parsed;
-                                    },
+                                    return this._denormalised;
                                 },
-                                {
-                                    key: "denormalised",
-                                    get: function get() {
-                                        if (!this._denormalised) {
-                                            this.denormalise();
-                                        }
-
-                                        return this._denormalised;
-                                    },
+                            },
+                            {
+                                key: "group",
+                                value: function group() {
+                                    this._groups = (0,
+                                    _groupEntitiesByLayer["default"])(
+                                        this.denormalised
+                                    );
                                 },
-                                {
-                                    key: "groups",
-                                    get: function get() {
-                                        if (!this._groups) {
-                                            this.group();
-                                        }
-
-                                        return this._groups;
-                                    },
+                            },
+                            {
+                                key: "toSVG",
+                                value: function toSVG() {
+                                    return (0, _toSVG2["default"])(this.parsed);
                                 },
-                            ]);
+                            },
+                            {
+                                key: "toSVGPaths",
+                                value: function toSVGPaths() {
+                                    return (0, _toSVGPaths2["default"])(
+                                        this.parsed
+                                    );
+                                },
+                            },
+                            {
+                                key: "toPolylines",
+                                value: function toPolylines() {
+                                    return (0, _toPolylines2["default"])(
+                                        this.parsed
+                                    );
+                                },
+                            },
+                            {
+                                key: "parsed",
+                                get: function get() {
+                                    if (this._parsed === null) {
+                                        this.parse();
+                                    }
 
-                            return Helper;
-                        })();
+                                    return this._parsed;
+                                },
+                            },
+                            {
+                                key: "denormalised",
+                                get: function get() {
+                                    if (!this._denormalised) {
+                                        this.denormalise();
+                                    }
+
+                                    return this._denormalised;
+                                },
+                            },
+                            {
+                                key: "groups",
+                                get: function get() {
+                                    if (!this._groups) {
+                                        this.group();
+                                    }
+
+                                    return this._groups;
+                                },
+                            },
+                        ]);
+
+                        return Helper;
+                    })();
 
                     exports["default"] = Helper;
                 },
                 {
                     "./denormalise": 4,
                     "./groupEntitiesByLayer": 7,
-                    "./parseString": 26,
-                    "./toPolylines": 27,
-                    "./toSVG": 28,
-                    "./toSVGPaths": 29,
-                    "./util/logger": 35,
+                    "./parseString": 27,
+                    "./toPolylines": 28,
+                    "./toSVG": 29,
+                    "./toSVGPaths": 30,
+                    "./util/logger": 36,
                 },
             ],
             2: [
@@ -361,6 +356,28 @@
                         return obj && obj.__esModule ? obj : { default: obj };
                     }
 
+                    function _typeof(obj) {
+                        "@babel/helpers - typeof";
+                        if (
+                            typeof Symbol === "function" &&
+                            typeof Symbol.iterator === "symbol"
+                        ) {
+                            _typeof = function _typeof(obj) {
+                                return typeof obj;
+                            };
+                        } else {
+                            _typeof = function _typeof(obj) {
+                                return obj &&
+                                    typeof Symbol === "function" &&
+                                    obj.constructor === Symbol &&
+                                    obj !== Symbol.prototype
+                                    ? "symbol"
+                                    : typeof obj;
+                            };
+                        }
+                        return _typeof(obj);
+                    }
+
                     var _default = function _default(parseResult) {
                         var blocksByName = parseResult.blocks.reduce(function (
                             acc,
@@ -378,91 +395,199 @@
                             var current = [];
                             entities.forEach(function (e) {
                                 if (e.type === "INSERT") {
-                                    var insert = e;
-                                    var block = blocksByName[insert.block];
+                                    var _ret = (function () {
+                                        var _insert$rowCount,
+                                            _insert$columnCount,
+                                            _insert$rowSpacing,
+                                            _insert$columnSpacing,
+                                            _insert$rotation;
 
-                                    if (!block) {
-                                        _logger["default"].error(
-                                            "no block found for insert. block:",
-                                            insert.block
-                                        );
+                                        var insert = e;
+                                        var block = blocksByName[insert.block];
 
-                                        return;
-                                    }
-
-                                    var t = {
-                                        x: insert.x,
-                                        y: insert.y,
-                                        scaleX: insert.scaleX,
-                                        scaleY: insert.scaleY,
-                                        scaleZ: insert.scaleZ,
-                                        extrusionX: insert.extrusionX,
-                                        extrusionY: insert.extrusionY,
-                                        extrusionZ: insert.extrusionZ,
-                                        rotation: insert.rotation, // Add the insert transform and recursively add entities
-                                    };
-                                    var transforms2 = transforms.slice(0);
-                                    transforms2.push(t); // Use the insert layer
-
-                                    var blockEntities = block.entities.map(
-                                        function (be) {
-                                            var be2 = (0, _lodash.cloneDeep)(
-                                                be
+                                        if (!block) {
+                                            _logger["default"].error(
+                                                "no block found for insert. block:",
+                                                insert.block
                                             );
-                                            be2.layer = insert.layer; // https://github.com/bjnortier/dxf/issues/52
-                                            // See Issue 52. If we don't modify the
-                                            // entity coordinates here it creates an issue with the
-                                            // transformation matrices (which are only applied AFTER
-                                            // block insertion modifications has been applied).
 
-                                            switch (be2.type) {
-                                                case "LINE": {
-                                                    be2.start.x -= block.x;
-                                                    be2.start.y -= block.y;
-                                                    be2.end.x -= block.x;
-                                                    be2.end.y -= block.y;
-                                                    break;
-                                                }
-
-                                                case "LWPOLYLINE":
-                                                case "POLYLINE": {
-                                                    be2.vertices.forEach(
-                                                        function (v) {
-                                                            v.x -= block.x;
-                                                            v.y -= block.y;
-                                                        }
-                                                    );
-                                                    break;
-                                                }
-
-                                                case "CIRCLE":
-                                                case "ELLIPSE":
-                                                case "ARC": {
-                                                    be2.x -= block.x;
-                                                    be2.y -= block.y;
-                                                    break;
-                                                }
-
-                                                case "SPLINE": {
-                                                    be2.controlPoints.forEach(
-                                                        function (cp) {
-                                                            cp.x -= block.x;
-                                                            cp.y -= block.y;
-                                                        }
-                                                    );
-                                                    break;
-                                                }
-                                            }
-
-                                            return be2;
+                                            return {
+                                                v: void 0,
+                                            };
                                         }
-                                    );
-                                    current = current.concat(
-                                        gatherEntities(
-                                            blockEntities,
-                                            transforms2
-                                        )
-                                    );
+
+                                        var rowCount =
+                                            (_insert$rowCount =
+                                                insert.rowCount) !== null &&
+                                            _insert$rowCount !== void 0
+                                                ? _insert$rowCount
+                                                : 1;
+                                        var columnCount =
+                                            (_insert$columnCount =
+                                                insert.columnCount) !== null &&
+                                            _insert$columnCount !== void 0
+                                                ? _insert$columnCount
+                                                : 1;
+                                        var rowSpacing =
+                                            (_insert$rowSpacing =
+                                                insert.rowSpacing) !== null &&
+                                            _insert$rowSpacing !== void 0
+                                                ? _insert$rowSpacing
+                                                : 0;
+                                        var columnSpacing =
+                                            (_insert$columnSpacing =
+                                                insert.columnSpacing) !==
+                                                null &&
+                                            _insert$columnSpacing !== void 0
+                                                ? _insert$columnSpacing
+                                                : 0;
+                                        var rotation =
+                                            (_insert$rotation =
+                                                insert.rotation) !== null &&
+                                            _insert$rotation !== void 0
+                                                ? _insert$rotation
+                                                : 0; // It appears that the rectangular array is affected by rotation, but NOT by scale.
+
+                                        var rowVec, colVec;
+
+                                        if (rowCount > 1 || columnCount > 1) {
+                                            var cos = Math.cos(
+                                                (rotation * Math.PI) / 180
+                                            );
+                                            var sin = Math.sin(
+                                                (rotation * Math.PI) / 180
+                                            );
+                                            rowVec = {
+                                                x: -sin * rowSpacing,
+                                                y: cos * rowSpacing,
+                                            };
+                                            colVec = {
+                                                x: cos * columnSpacing,
+                                                y: sin * columnSpacing,
+                                            };
+                                        } else {
+                                            rowVec = {
+                                                x: 0,
+                                                y: 0,
+                                            };
+                                            colVec = {
+                                                x: 0,
+                                                y: 0,
+                                            };
+                                        } // For rectangular arrays, add the block entities for each location in the array
+
+                                        for (var r = 0; r < rowCount; r++) {
+                                            for (
+                                                var c = 0;
+                                                c < columnCount;
+                                                c++
+                                            ) {
+                                                // Adjust insert transform by row and column for rectangular arrays
+                                                var t = {
+                                                    x:
+                                                        insert.x +
+                                                        rowVec.x * r +
+                                                        colVec.x * c,
+                                                    y:
+                                                        insert.y +
+                                                        rowVec.y * r +
+                                                        colVec.y * c,
+                                                    scaleX: insert.scaleX,
+                                                    scaleY: insert.scaleY,
+                                                    scaleZ: insert.scaleZ,
+                                                    extrusionX:
+                                                        insert.extrusionX,
+                                                    extrusionY:
+                                                        insert.extrusionY,
+                                                    extrusionZ:
+                                                        insert.extrusionZ,
+                                                    rotation: insert.rotation,
+                                                }; // Add the insert transform and recursively add entities
+
+                                                var transforms2 = transforms.slice(
+                                                    0
+                                                );
+                                                transforms2.push(t); // Use the insert layer
+
+                                                var blockEntities = block.entities.map(
+                                                    function (be) {
+                                                        var be2 = (0,
+                                                        _lodash.cloneDeep)(be);
+                                                        be2.layer =
+                                                            insert.layer; // https://github.com/bjnortier/dxf/issues/52
+                                                        // See Issue 52. If we don't modify the
+                                                        // entity coordinates here it creates an issue with the
+                                                        // transformation matrices (which are only applied AFTER
+                                                        // block insertion modifications has been applied).
+
+                                                        switch (be2.type) {
+                                                            case "LINE": {
+                                                                be2.start.x -=
+                                                                    block.x;
+                                                                be2.start.y -=
+                                                                    block.y;
+                                                                be2.end.x -=
+                                                                    block.x;
+                                                                be2.end.y -=
+                                                                    block.y;
+                                                                break;
+                                                            }
+
+                                                            case "LWPOLYLINE":
+                                                            case "POLYLINE": {
+                                                                be2.vertices.forEach(
+                                                                    function (
+                                                                        v
+                                                                    ) {
+                                                                        v.x -=
+                                                                            block.x;
+                                                                        v.y -=
+                                                                            block.y;
+                                                                    }
+                                                                );
+                                                                break;
+                                                            }
+
+                                                            case "CIRCLE":
+                                                            case "ELLIPSE":
+                                                            case "ARC": {
+                                                                be2.x -=
+                                                                    block.x;
+                                                                be2.y -=
+                                                                    block.y;
+                                                                break;
+                                                            }
+
+                                                            case "SPLINE": {
+                                                                be2.controlPoints.forEach(
+                                                                    function (
+                                                                        cp
+                                                                    ) {
+                                                                        cp.x -=
+                                                                            block.x;
+                                                                        cp.y -=
+                                                                            block.y;
+                                                                    }
+                                                                );
+                                                                break;
+                                                            }
+                                                        }
+
+                                                        return be2;
+                                                    }
+                                                );
+                                                current = current.concat(
+                                                    gatherEntities(
+                                                        blockEntities,
+                                                        transforms2
+                                                    )
+                                                );
+                                            }
+                                        }
+                                    })();
+
+                                    if (_typeof(_ret) === "object")
+                                        return _ret.v;
                                 } else {
                                     // Top-level entity. Clone and add the transforms
                                     // The transforms are reversed so they occur in
@@ -483,7 +608,7 @@
 
                     exports["default"] = _default;
                 },
-                { "./util/logger": 35, lodash: 40 },
+                { "./util/logger": 36, lodash: 41 },
             ],
             5: [
                 function (require, module, exports) {
@@ -629,9 +754,12 @@
                                 var u =
                                     (_k / interpolationsPerSplineSegment) *
                                         (uMax - uMin) +
-                                    uMin;
+                                    uMin; // Clamp t to 0, 1 to handle numerical precision issues
+
                                 var t =
                                     (u - domain[0]) / (domain[1] - domain[0]);
+                                t = Math.max(t, 0);
+                                t = Math.min(t, 1);
                                 var p = (0, _bSpline["default"])(
                                     t,
                                     degree,
@@ -805,9 +933,9 @@
                     exports["default"] = _default;
                 },
                 {
-                    "./util/bSpline": 31,
-                    "./util/createArcForLWPolyline": 33,
-                    "./util/logger": 35,
+                    "./util/bSpline": 32,
+                    "./util/createArcForLWPolyline": 34,
+                    "./util/logger": 36,
                 },
             ],
             6: [
@@ -863,7 +991,7 @@
 
                     exports["default"] = _default;
                 },
-                { "./util/colors": 32, "./util/logger": 35 },
+                { "./util/colors": 33, "./util/logger": 36 },
             ],
             7: [
                 function (require, module, exports) {
@@ -1031,6 +1159,10 @@
                         require("./entity/insert")
                     );
 
+                    var _threeDFace = _interopRequireDefault(
+                        require("./entity/threeDFace")
+                    );
+
                     function _interopRequireDefault(obj) {
                         return obj && obj.__esModule ? obj : { default: obj };
                     }
@@ -1048,6 +1180,7 @@
                         _solid["default"],
                         _mtext["default"],
                         _insert["default"],
+                        _threeDFace["default"],
                     ].reduce(function (acc, mod) {
                         acc[mod.TYPE] = mod;
                         return acc;
@@ -1111,7 +1244,7 @@
                     exports["default"] = _default;
                 },
                 {
-                    "../util/logger": 35,
+                    "../util/logger": 36,
                     "./entity/arc": 10,
                     "./entity/circle": 11,
                     "./entity/ellipse": 13,
@@ -1123,7 +1256,8 @@
                     "./entity/polyline": 19,
                     "./entity/solid": 20,
                     "./entity/spline": 21,
-                    "./entity/vertex": 22,
+                    "./entity/threeDFace": 22,
+                    "./entity/vertex": 23,
                 },
             ],
             10: [
@@ -2177,6 +2311,107 @@
                     exports[
                         "default"
                     ] = exports.process = exports.TYPE = void 0;
+
+                    var _common = _interopRequireDefault(require("./common"));
+
+                    function _interopRequireDefault(obj) {
+                        return obj && obj.__esModule ? obj : { default: obj };
+                    }
+
+                    var TYPE = "3DFACE";
+                    exports.TYPE = TYPE;
+
+                    var process = function process(tuples) {
+                        return tuples.reduce(
+                            function (entity, tuple) {
+                                var type = tuple[0];
+                                var value = tuple[1];
+
+                                switch (type) {
+                                    case 10:
+                                        entity.vertices[0].x = value;
+                                        break;
+
+                                    case 20:
+                                        entity.vertices[0].y = value;
+                                        break;
+
+                                    case 30:
+                                        entity.vertices[0].z = value;
+                                        break;
+
+                                    case 11:
+                                        entity.vertices[1].x = value;
+                                        break;
+
+                                    case 21:
+                                        entity.vertices[1].y = value;
+                                        break;
+
+                                    case 31:
+                                        entity.vertices[1].z = value;
+                                        break;
+
+                                    case 12:
+                                        entity.vertices[2].x = value;
+                                        break;
+
+                                    case 22:
+                                        entity.vertices[2].y = value;
+                                        break;
+
+                                    case 32:
+                                        entity.vertices[2].z = value;
+                                        break;
+
+                                    case 13:
+                                        entity.vertices[3].x = value;
+                                        break;
+
+                                    case 23:
+                                        entity.vertices[3].y = value;
+                                        break;
+
+                                    case 33:
+                                        entity.vertices[3].z = value;
+                                        break;
+
+                                    default:
+                                        Object.assign(
+                                            entity,
+                                            (0, _common["default"])(type, value)
+                                        );
+                                        break;
+                                }
+
+                                return entity;
+                            },
+                            {
+                                type: TYPE,
+                                vertices: [{}, {}, {}, {}],
+                            }
+                        );
+                    };
+
+                    exports.process = process;
+                    var _default = {
+                        TYPE: TYPE,
+                        process: process,
+                    };
+                    exports["default"] = _default;
+                },
+                { "./common": 12 },
+            ],
+            23: [
+                function (require, module, exports) {
+                    "use strict";
+
+                    Object.defineProperty(exports, "__esModule", {
+                        value: true,
+                    });
+                    exports[
+                        "default"
+                    ] = exports.process = exports.TYPE = void 0;
                     var TYPE = "VERTEX";
                     exports.TYPE = TYPE;
 
@@ -2219,7 +2454,7 @@
                 },
                 {},
             ],
-            23: [
+            24: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -2236,48 +2471,59 @@
                             var value = tuple[1];
 
                             switch (value) {
+                                case "$MEASUREMENT": {
+                                    state = "measurement";
+                                    break;
+                                }
+
+                                case "$INSUNITS": {
+                                    state = "insUnits";
+                                    break;
+                                }
+
                                 case "$EXTMIN":
                                     header.extMin = {};
                                     state = "extMin";
-                                    return;
+                                    break;
 
                                 case "$EXTMAX":
                                     header.extMax = {};
                                     state = "extMax";
-                                    return;
+                                    break;
 
                                 default:
-                                    if (state === "extMin") {
-                                        switch (type) {
-                                            case 10:
-                                                header.extMin.x = value;
-                                                break;
+                                    switch (state) {
+                                        case "extMin":
+                                        case "extMax": {
+                                            switch (type) {
+                                                case 10:
+                                                    header[state].x = value;
+                                                    break;
 
-                                            case 20:
-                                                header.extMin.y = value;
-                                                break;
+                                                case 20:
+                                                    header[state].y = value;
+                                                    break;
 
-                                            case 30:
-                                                header.extMin.z = value;
-                                                state = undefined;
-                                                break;
+                                                case 30:
+                                                    header[state].z = value;
+                                                    state = undefined;
+                                                    break;
+                                            }
+
+                                            break;
                                         }
-                                    }
 
-                                    if (state === "extMax") {
-                                        switch (type) {
-                                            case 10:
-                                                header.extMax.x = value;
-                                                break;
+                                        case "measurement":
+                                        case "insUnits": {
+                                            switch (type) {
+                                                case 70: {
+                                                    header[state] = value;
+                                                    state = undefined;
+                                                    break;
+                                                }
+                                            }
 
-                                            case 20:
-                                                header.extMax.y = value;
-                                                break;
-
-                                            case 30:
-                                                header.extMax.z = value;
-                                                state = undefined;
-                                                break;
+                                            break;
                                         }
                                     }
                             }
@@ -2289,7 +2535,7 @@
                 },
                 {},
             ],
-            24: [
+            25: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -2488,9 +2734,9 @@
 
                     exports["default"] = _default;
                 },
-                { "../util/logger": 35 },
+                { "../util/logger": 36 },
             ],
-            25: [
+            26: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -2591,14 +2837,14 @@
                     "./config": 3,
                     "./denormalise": 4,
                     "./groupEntitiesByLayer": 7,
-                    "./parseString": 26,
-                    "./toPolylines": 27,
-                    "./toSVG": 28,
-                    "./toSVGPaths": 29,
-                    "./util/colors": 32,
+                    "./parseString": 27,
+                    "./toPolylines": 28,
+                    "./toSVG": 29,
+                    "./toSVGPaths": 30,
+                    "./util/colors": 33,
                 },
             ],
-            26: [
+            27: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -2623,8 +2869,98 @@
                         require("./handlers/entities")
                     );
 
+                    var _logger = _interopRequireDefault(
+                        require("./util/logger")
+                    );
+
                     function _interopRequireDefault(obj) {
                         return obj && obj.__esModule ? obj : { default: obj };
+                    }
+
+                    function _createForOfIteratorHelper(o, allowArrayLike) {
+                        var it;
+                        if (
+                            typeof Symbol === "undefined" ||
+                            o[Symbol.iterator] == null
+                        ) {
+                            if (
+                                Array.isArray(o) ||
+                                (it = _unsupportedIterableToArray(o)) ||
+                                (allowArrayLike &&
+                                    o &&
+                                    typeof o.length === "number")
+                            ) {
+                                if (it) o = it;
+                                var i = 0;
+                                var F = function F() {};
+                                return {
+                                    s: F,
+                                    n: function n() {
+                                        if (i >= o.length)
+                                            return { done: true };
+                                        return { done: false, value: o[i++] };
+                                    },
+                                    e: function e(_e) {
+                                        throw _e;
+                                    },
+                                    f: F,
+                                };
+                            }
+                            throw new TypeError(
+                                "Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."
+                            );
+                        }
+                        var normalCompletion = true,
+                            didErr = false,
+                            err;
+                        return {
+                            s: function s() {
+                                it = o[Symbol.iterator]();
+                            },
+                            n: function n() {
+                                var step = it.next();
+                                normalCompletion = step.done;
+                                return step;
+                            },
+                            e: function e(_e2) {
+                                didErr = true;
+                                err = _e2;
+                            },
+                            f: function f() {
+                                try {
+                                    if (
+                                        !normalCompletion &&
+                                        it["return"] != null
+                                    )
+                                        it["return"]();
+                                } finally {
+                                    if (didErr) throw err;
+                                }
+                            },
+                        };
+                    }
+
+                    function _unsupportedIterableToArray(o, minLen) {
+                        if (!o) return;
+                        if (typeof o === "string")
+                            return _arrayLikeToArray(o, minLen);
+                        var n = Object.prototype.toString.call(o).slice(8, -1);
+                        if (n === "Object" && o.constructor)
+                            n = o.constructor.name;
+                        if (n === "Map" || n === "Set") return Array.from(o);
+                        if (
+                            n === "Arguments" ||
+                            /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)
+                        )
+                            return _arrayLikeToArray(o, minLen);
+                    }
+
+                    function _arrayLikeToArray(arr, len) {
+                        if (len == null || len > arr.length) len = arr.length;
+                        for (var i = 0, arr2 = new Array(len); i < len; i++) {
+                            arr2[i] = arr[i];
+                        }
+                        return arr2;
                     }
 
                     // Parse the value into the native representation
@@ -2646,17 +2982,17 @@
                         var state = "type";
                         var type;
                         var typesAndValues = [];
-                        var _iteratorNormalCompletion = true;
-                        var _didIteratorError = false;
-                        var _iteratorError = undefined;
+
+                        var _iterator = _createForOfIteratorHelper(
+                                contentLines
+                            ),
+                            _step;
 
                         try {
                             for (
-                                var _iterator = contentLines[Symbol.iterator](),
-                                    _step;
-                                !(_iteratorNormalCompletion = (_step = _iterator.next())
-                                    .done);
-                                _iteratorNormalCompletion = true
+                                _iterator.s();
+                                !(_step = _iterator.n()).done;
+
                             ) {
                                 var line = _step.value;
 
@@ -2672,21 +3008,9 @@
                                 }
                             }
                         } catch (err) {
-                            _didIteratorError = true;
-                            _iteratorError = err;
+                            _iterator.e(err);
                         } finally {
-                            try {
-                                if (
-                                    !_iteratorNormalCompletion &&
-                                    _iterator["return"] != null
-                                ) {
-                                    _iterator["return"]();
-                                }
-                            } finally {
-                                if (_didIteratorError) {
-                                    throw _iteratorError;
-                                }
-                            }
+                            _iterator.f();
                         }
 
                         return typesAndValues;
@@ -2742,6 +3066,9 @@
                                 break;
 
                             default:
+                                _logger["default"].warn(
+                                    "Unsupported section: ".concat(sectionType)
+                                );
                         }
 
                         return acc;
@@ -2769,11 +3096,12 @@
                 {
                     "./handlers/blocks": 8,
                     "./handlers/entities": 9,
-                    "./handlers/header": 23,
-                    "./handlers/tables": 24,
+                    "./handlers/header": 24,
+                    "./handlers/tables": 25,
+                    "./util/logger": 36,
                 },
             ],
-            27: [
+            28: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -2867,14 +3195,36 @@
                     "./applyTransforms": 2,
                     "./denormalise": 4,
                     "./entityToPolyline": 5,
-                    "./util/colors": 32,
-                    "./util/logger": 35,
-                    vecks: 51,
+                    "./util/colors": 33,
+                    "./util/logger": 36,
+                    vecks: 52,
                 },
             ],
-            28: [
+            29: [
                 function (require, module, exports) {
                     "use strict";
+
+                    function _typeof(obj) {
+                        "@babel/helpers - typeof";
+                        if (
+                            typeof Symbol === "function" &&
+                            typeof Symbol.iterator === "symbol"
+                        ) {
+                            _typeof = function _typeof(obj) {
+                                return typeof obj;
+                            };
+                        } else {
+                            _typeof = function _typeof(obj) {
+                                return obj &&
+                                    typeof Symbol === "function" &&
+                                    obj.constructor === Symbol &&
+                                    obj !== Symbol.prototype
+                                    ? "symbol"
+                                    : typeof obj;
+                            };
+                        }
+                        return _typeof(obj);
+                    }
 
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
@@ -2917,42 +3267,53 @@
                         require("./util/transformBoundingBoxAndElement")
                     );
 
+                    function _getRequireWildcardCache() {
+                        if (typeof WeakMap !== "function") return null;
+                        var cache = new WeakMap();
+                        _getRequireWildcardCache = function _getRequireWildcardCache() {
+                            return cache;
+                        };
+                        return cache;
+                    }
+
                     function _interopRequireWildcard(obj) {
                         if (obj && obj.__esModule) {
                             return obj;
-                        } else {
-                            var newObj = {};
-                            if (obj != null) {
-                                for (var key in obj) {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            obj,
-                                            key
-                                        )
-                                    ) {
-                                        var desc =
-                                            Object.defineProperty &&
-                                            Object.getOwnPropertyDescriptor
-                                                ? Object.getOwnPropertyDescriptor(
-                                                      obj,
-                                                      key
-                                                  )
-                                                : {};
-                                        if (desc.get || desc.set) {
-                                            Object.defineProperty(
-                                                newObj,
-                                                key,
-                                                desc
-                                            );
-                                        } else {
-                                            newObj[key] = obj[key];
-                                        }
-                                    }
+                        }
+                        if (
+                            obj === null ||
+                            (_typeof(obj) !== "object" &&
+                                typeof obj !== "function")
+                        ) {
+                            return { default: obj };
+                        }
+                        var cache = _getRequireWildcardCache();
+                        if (cache && cache.has(obj)) {
+                            return cache.get(obj);
+                        }
+                        var newObj = {};
+                        var hasPropertyDescriptor =
+                            Object.defineProperty &&
+                            Object.getOwnPropertyDescriptor;
+                        for (var key in obj) {
+                            if (
+                                Object.prototype.hasOwnProperty.call(obj, key)
+                            ) {
+                                var desc = hasPropertyDescriptor
+                                    ? Object.getOwnPropertyDescriptor(obj, key)
+                                    : null;
+                                if (desc && (desc.get || desc.set)) {
+                                    Object.defineProperty(newObj, key, desc);
+                                } else {
+                                    newObj[key] = obj[key];
                                 }
                             }
-                            newObj["default"] = obj;
-                            return newObj;
                         }
+                        newObj["default"] = obj;
+                        if (cache) {
+                            cache.set(obj, newObj);
+                        }
+                        return newObj;
                     }
 
                     function _interopRequireDefault(obj) {
@@ -2963,17 +3324,46 @@
                         return (
                             _arrayWithHoles(arr) ||
                             _iterableToArrayLimit(arr, i) ||
+                            _unsupportedIterableToArray(arr, i) ||
                             _nonIterableRest()
                         );
                     }
 
                     function _nonIterableRest() {
                         throw new TypeError(
-                            "Invalid attempt to destructure non-iterable instance"
+                            "Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."
                         );
                     }
 
+                    function _unsupportedIterableToArray(o, minLen) {
+                        if (!o) return;
+                        if (typeof o === "string")
+                            return _arrayLikeToArray(o, minLen);
+                        var n = Object.prototype.toString.call(o).slice(8, -1);
+                        if (n === "Object" && o.constructor)
+                            n = o.constructor.name;
+                        if (n === "Map" || n === "Set") return Array.from(o);
+                        if (
+                            n === "Arguments" ||
+                            /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)
+                        )
+                            return _arrayLikeToArray(o, minLen);
+                    }
+
+                    function _arrayLikeToArray(arr, len) {
+                        if (len == null || len > arr.length) len = arr.length;
+                        for (var i = 0, arr2 = new Array(len); i < len; i++) {
+                            arr2[i] = arr[i];
+                        }
+                        return arr2;
+                    }
+
                     function _iterableToArrayLimit(arr, i) {
+                        if (
+                            typeof Symbol === "undefined" ||
+                            !(Symbol.iterator in Object(arr))
+                        )
+                            return;
                         var _arr = [];
                         var _n = true;
                         var _d = false;
@@ -3558,16 +3948,16 @@
                     "./denormalise": 4,
                     "./entityToPolyline": 5,
                     "./getRGBForEntity": 6,
-                    "./util/logger": 35,
-                    "./util/rgbToColorAttribute": 36,
-                    "./util/rotate": 37,
-                    "./util/toPiecewiseBezier": 38,
-                    "./util/transformBoundingBoxAndElement": 39,
-                    "pretty-data": 41,
-                    vecks: 51,
+                    "./util/logger": 36,
+                    "./util/rgbToColorAttribute": 37,
+                    "./util/rotate": 38,
+                    "./util/toPiecewiseBezier": 39,
+                    "./util/transformBoundingBoxAndElement": 40,
+                    "pretty-data": 42,
+                    vecks: 52,
                 },
             ],
-            29: [
+            30: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -3819,14 +4209,14 @@
                     "./denormalise": 4,
                     "./entityToPolyline": 5,
                     "./getRGBForEntity": 6,
-                    "./transformVertices": 30,
-                    "./util/logger": 35,
-                    "./util/rgbToColorAttribute": 36,
-                    "pretty-data": 41,
-                    vecks: 51,
+                    "./transformVertices": 31,
+                    "./util/logger": 36,
+                    "./util/rgbToColorAttribute": 37,
+                    "pretty-data": 42,
+                    vecks: 52,
                 },
             ],
-            30: [
+            31: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -3839,17 +4229,46 @@
                         return (
                             _arrayWithHoles(arr) ||
                             _iterableToArrayLimit(arr, i) ||
+                            _unsupportedIterableToArray(arr, i) ||
                             _nonIterableRest()
                         );
                     }
 
                     function _nonIterableRest() {
                         throw new TypeError(
-                            "Invalid attempt to destructure non-iterable instance"
+                            "Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."
                         );
                     }
 
+                    function _unsupportedIterableToArray(o, minLen) {
+                        if (!o) return;
+                        if (typeof o === "string")
+                            return _arrayLikeToArray(o, minLen);
+                        var n = Object.prototype.toString.call(o).slice(8, -1);
+                        if (n === "Object" && o.constructor)
+                            n = o.constructor.name;
+                        if (n === "Map" || n === "Set") return Array.from(o);
+                        if (
+                            n === "Arguments" ||
+                            /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)
+                        )
+                            return _arrayLikeToArray(o, minLen);
+                    }
+
+                    function _arrayLikeToArray(arr, len) {
+                        if (len == null || len > arr.length) len = arr.length;
+                        for (var i = 0, arr2 = new Array(len); i < len; i++) {
+                            arr2[i] = arr[i];
+                        }
+                        return arr2;
+                    }
+
                     function _iterableToArrayLimit(arr, i) {
+                        if (
+                            typeof Symbol === "undefined" ||
+                            !(Symbol.iterator in Object(arr))
+                        )
+                            return;
                         var _arr = [];
                         var _n = true;
                         var _d = false;
@@ -3940,7 +4359,7 @@
                 },
                 {},
             ],
-            31: [
+            32: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -4064,9 +4483,9 @@
 
                     exports["default"] = _default;
                 },
-                { round10: 42 },
+                { round10: 43 },
             ],
-            32: [
+            33: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -4336,7 +4755,7 @@
                 },
                 {},
             ],
-            33: [
+            34: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -4455,9 +4874,9 @@
 
                     exports["default"] = _default;
                 },
-                { vecks: 51 },
+                { vecks: 52 },
             ],
-            34: [
+            35: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -4552,7 +4971,7 @@
                 },
                 {},
             ],
-            35: [
+            36: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -4592,7 +5011,7 @@
                 },
                 { "../config": 3 },
             ],
-            36: [
+            37: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -4624,7 +5043,7 @@
                 },
                 {},
             ],
-            37: [
+            38: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -4650,7 +5069,7 @@
                 },
                 {},
             ],
-            38: [
+            39: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -4770,9 +5189,9 @@
 
                     exports["default"] = _default;
                 },
-                { "./insertKnot": 34 },
+                { "./insertKnot": 35 },
             ],
-            39: [
+            40: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -4787,17 +5206,46 @@
                         return (
                             _arrayWithHoles(arr) ||
                             _iterableToArrayLimit(arr, i) ||
+                            _unsupportedIterableToArray(arr, i) ||
                             _nonIterableRest()
                         );
                     }
 
                     function _nonIterableRest() {
                         throw new TypeError(
-                            "Invalid attempt to destructure non-iterable instance"
+                            "Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."
                         );
                     }
 
+                    function _unsupportedIterableToArray(o, minLen) {
+                        if (!o) return;
+                        if (typeof o === "string")
+                            return _arrayLikeToArray(o, minLen);
+                        var n = Object.prototype.toString.call(o).slice(8, -1);
+                        if (n === "Object" && o.constructor)
+                            n = o.constructor.name;
+                        if (n === "Map" || n === "Set") return Array.from(o);
+                        if (
+                            n === "Arguments" ||
+                            /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)
+                        )
+                            return _arrayLikeToArray(o, minLen);
+                    }
+
+                    function _arrayLikeToArray(arr, len) {
+                        if (len == null || len > arr.length) len = arr.length;
+                        for (var i = 0, arr2 = new Array(len); i < len; i++) {
+                            arr2[i] = arr[i];
+                        }
+                        return arr2;
+                    }
+
                     function _iterableToArrayLimit(arr, i) {
+                        if (
+                            typeof Symbol === "undefined" ||
+                            !(Symbol.iterator in Object(arr))
+                        )
+                            return;
                         var _arr = [];
                         var _n = true;
                         var _d = false;
@@ -4946,9 +5394,9 @@
 
                     exports["default"] = _default;
                 },
-                { vecks: 51 },
+                { vecks: 52 },
             ],
-            40: [
+            41: [
                 function (require, module, exports) {
                     (function (global) {
                         /**
@@ -4964,7 +5412,7 @@
                             var undefined;
 
                             /** Used as the semantic version number. */
-                            var VERSION = "4.17.14";
+                            var VERSION = "4.17.19";
 
                             /** Used as the size to enable large array optimizations. */
                             var LARGE_ARRAY_SIZE = 200;
@@ -9792,11 +10240,31 @@
                                     iteratees,
                                     orders
                                 ) {
+                                    if (iteratees.length) {
+                                        iteratees = arrayMap(
+                                            iteratees,
+                                            function (iteratee) {
+                                                if (isArray(iteratee)) {
+                                                    return function (value) {
+                                                        return baseGet(
+                                                            value,
+                                                            iteratee.length ===
+                                                                1
+                                                                ? iteratee[0]
+                                                                : iteratee
+                                                        );
+                                                    };
+                                                }
+                                                return iteratee;
+                                            }
+                                        );
+                                    } else {
+                                        iteratees = [identity];
+                                    }
+
                                     var index = -1;
                                     iteratees = arrayMap(
-                                        iteratees.length
-                                            ? iteratees
-                                            : [identity],
+                                        iteratees,
                                         baseUnary(getIteratee())
                                     );
 
@@ -10134,6 +10602,14 @@
                                         var key = toKey(path[index]),
                                             newValue = value;
 
+                                        if (
+                                            key === "__proto__" ||
+                                            key === "constructor" ||
+                                            key === "prototype"
+                                        ) {
+                                            return object;
+                                        }
+
                                         if (index != lastIndex) {
                                             var objValue = nested[key];
                                             newValue = customizer
@@ -10338,11 +10814,14 @@
                                     iteratee,
                                     retHighest
                                 ) {
-                                    value = iteratee(value);
-
                                     var low = 0,
-                                        high = array == null ? 0 : array.length,
-                                        valIsNaN = value !== value,
+                                        high = array == null ? 0 : array.length;
+                                    if (high === 0) {
+                                        return 0;
+                                    }
+
+                                    value = iteratee(value);
+                                    var valIsNaN = value !== value,
                                         valIsNull = value === null,
                                         valIsSymbol = isSymbol(value),
                                         valIsUndefined = value === undefined;
@@ -12542,10 +13021,14 @@
                                     ) {
                                         return false;
                                     }
-                                    // Assume cyclic values are equal.
-                                    var stacked = stack.get(array);
-                                    if (stacked && stack.get(other)) {
-                                        return stacked == other;
+                                    // Check that cyclic values are equal.
+                                    var arrStacked = stack.get(array);
+                                    var othStacked = stack.get(other);
+                                    if (arrStacked && othStacked) {
+                                        return (
+                                            arrStacked == other &&
+                                            othStacked == array
+                                        );
                                     }
                                     var index = -1,
                                         result = true,
@@ -12804,10 +13287,14 @@
                                             return false;
                                         }
                                     }
-                                    // Assume cyclic values are equal.
-                                    var stacked = stack.get(object);
-                                    if (stacked && stack.get(other)) {
-                                        return stacked == other;
+                                    // Check that cyclic values are equal.
+                                    var objStacked = stack.get(object);
+                                    var othStacked = stack.get(other);
+                                    if (objStacked && othStacked) {
+                                        return (
+                                            objStacked == other &&
+                                            othStacked == object
+                                        );
                                     }
                                     var result = true;
                                     stack.set(object, other);
@@ -16872,6 +17359,10 @@
                                  * // The `_.property` iteratee shorthand.
                                  * _.filter(users, 'active');
                                  * // => objects for ['barney']
+                                 *
+                                 * // Combining several predicates using `_.overEvery` or `_.overSome`.
+                                 * _.filter(users, _.overSome([{ 'age': 36 }, ['age', 40]]));
+                                 * // => objects for ['fred', 'barney']
                                  */
                                 function filter(collection, predicate) {
                                     var func = isArray(collection)
@@ -17769,15 +18260,15 @@
                                  * var users = [
                                  *   { 'user': 'fred',   'age': 48 },
                                  *   { 'user': 'barney', 'age': 36 },
-                                 *   { 'user': 'fred',   'age': 40 },
+                                 *   { 'user': 'fred',   'age': 30 },
                                  *   { 'user': 'barney', 'age': 34 }
                                  * ];
                                  *
                                  * _.sortBy(users, [function(o) { return o.user; }]);
-                                 * // => objects for [['barney', 36], ['barney', 34], ['fred', 48], ['fred', 40]]
+                                 * // => objects for [['barney', 36], ['barney', 34], ['fred', 48], ['fred', 30]]
                                  *
                                  * _.sortBy(users, ['user', 'age']);
-                                 * // => objects for [['barney', 34], ['barney', 36], ['fred', 40], ['fred', 48]]
+                                 * // => objects for [['barney', 34], ['barney', 36], ['fred', 30], ['fred', 48]]
                                  */
                                 var sortBy = baseRest(function (
                                     collection,
@@ -23472,8 +23963,8 @@
 
                                     // Use a sourceURL for easier debugging.
                                     // The sourceURL gets injected into the source that's eval-ed, so be careful
-                                    // with lookup (in case of e.g. prototype pollution), and strip newlines if any.
-                                    // A newline wouldn't be a valid sourceURL anyway, and it'd enable code injection.
+                                    // to normalize all kinds of whitespace, so e.g. newlines (and unicode versions of it) can't sneak in
+                                    // and escape the comment, thus injecting code that gets evaled.
                                     var sourceURL =
                                         "//# sourceURL=" +
                                         (hasOwnProperty.call(
@@ -23481,7 +23972,7 @@
                                             "sourceURL"
                                         )
                                             ? (options.sourceURL + "").replace(
-                                                  /[\r\n]/g,
+                                                  /\s/g,
                                                   " "
                                               )
                                             : "lodash.templateSources[" +
@@ -23540,8 +24031,6 @@
 
                                     // If `variable` is not specified wrap a with-statement around the generated
                                     // code to add the data object to the top of the scope chain.
-                                    // Like with sourceURL, we take care to not check the option's prototype,
-                                    // as this configuration is a code injection vector.
                                     var variable =
                                         hasOwnProperty.call(
                                             options,
@@ -24374,6 +24863,9 @@
                                  * values against any array or object value, respectively. See `_.isEqual`
                                  * for a list of supported value comparisons.
                                  *
+                                 * **Note:** Multiple values can be checked by combining several matchers
+                                 * using `_.overSome`
+                                 *
                                  * @static
                                  * @memberOf _
                                  * @since 3.0.0
@@ -24389,6 +24881,10 @@
                                  *
                                  * _.filter(objects, _.matches({ 'a': 4, 'c': 6 }));
                                  * // => [{ 'a': 4, 'b': 5, 'c': 6 }]
+                                 *
+                                 * // Checking for several possible values
+                                 * _.filter(users, _.overSome([_.matches({ 'a': 1 }), _.matches({ 'a': 4 })]));
+                                 * // => [{ 'a': 1, 'b': 2, 'c': 3 }, { 'a': 4, 'b': 5, 'c': 6 }]
                                  */
                                 function matches(source) {
                                     return baseMatches(
@@ -24404,6 +24900,9 @@
                                  * **Note:** Partial comparisons will match empty array and empty object
                                  * `srcValue` values against any array or object value, respectively. See
                                  * `_.isEqual` for a list of supported value comparisons.
+                                 *
+                                 * **Note:** Multiple values can be checked by combining several matchers
+                                 * using `_.overSome`
                                  *
                                  * @static
                                  * @memberOf _
@@ -24421,6 +24920,10 @@
                                  *
                                  * _.find(objects, _.matchesProperty('a', 4));
                                  * // => { 'a': 4, 'b': 5, 'c': 6 }
+                                 *
+                                 * // Checking for several possible values
+                                 * _.filter(users, _.overSome([_.matchesProperty('a', 1), _.matchesProperty('a', 4)]));
+                                 * // => [{ 'a': 1, 'b': 2, 'c': 3 }, { 'a': 4, 'b': 5, 'c': 6 }]
                                  */
                                 function matchesProperty(path, srcValue) {
                                     return baseMatchesProperty(
@@ -24684,6 +25187,10 @@
                                  * Creates a function that checks if **all** of the `predicates` return
                                  * truthy when invoked with the arguments it receives.
                                  *
+                                 * Following shorthands are possible for providing predicates.
+                                 * Pass an `Object` and it will be used as an parameter for `_.matches` to create the predicate.
+                                 * Pass an `Array` of parameters for `_.matchesProperty` and the predicate will be created using them.
+                                 *
                                  * @static
                                  * @memberOf _
                                  * @since 4.0.0
@@ -24710,6 +25217,10 @@
                                  * Creates a function that checks if **any** of the `predicates` return
                                  * truthy when invoked with the arguments it receives.
                                  *
+                                 * Following shorthands are possible for providing predicates.
+                                 * Pass an `Object` and it will be used as an parameter for `_.matches` to create the predicate.
+                                 * Pass an `Array` of parameters for `_.matchesProperty` and the predicate will be created using them.
+                                 *
                                  * @static
                                  * @memberOf _
                                  * @since 4.0.0
@@ -24729,6 +25240,9 @@
                                  *
                                  * func(NaN);
                                  * // => false
+                                 *
+                                 * var matchesFunc = _.overSome([{ 'a': 1 }, { 'a': 2 }])
+                                 * var matchesPropertyFunc = _.overSome([['a', 1], ['a', 2]])
                                  */
                                 var overSome = createOver(arraySome);
 
@@ -26224,7 +26738,7 @@
                 },
                 {},
             ],
-            41: [
+            42: [
                 function (require, module, exports) {
                     /**
                      * pretty-data - nodejs plugin to pretty-print or minify data in XML, JSON and CSS formats.
@@ -26624,7 +27138,7 @@
                 },
                 {},
             ],
-            42: [
+            43: [
                 function (require, module, exports) {
                     /**
                      * Decimal adjustment of a number.
@@ -26699,7 +27213,7 @@
                 },
                 {},
             ],
-            43: [
+            44: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -26715,6 +27229,7 @@
                     }
 
                     function _typeof(obj) {
+                        "@babel/helpers - typeof";
                         if (
                             typeof Symbol === "function" &&
                             typeof Symbol.iterator === "symbol"
@@ -26774,118 +27289,113 @@
                         return Constructor;
                     }
 
-                    var Box2 =
-                        /*#__PURE__*/
-                        (function () {
-                            function Box2(min, max) {
-                                _classCallCheck(this, Box2);
+                    var Box2 = /*#__PURE__*/ (function () {
+                        function Box2(min, max) {
+                            _classCallCheck(this, Box2);
 
-                                if (
-                                    _typeof(min) === "object" &&
-                                    _typeof(max) === "object" &&
-                                    min.x !== undefined &&
-                                    min.y !== undefined &&
-                                    max.x !== undefined &&
-                                    max.y !== undefined
-                                ) {
-                                    this.min = new _V["default"](min);
-                                    this.max = new _V["default"](max);
-                                    this.valid = true;
-                                } else if (
-                                    min === undefined &&
-                                    max === undefined
-                                ) {
+                            if (
+                                _typeof(min) === "object" &&
+                                _typeof(max) === "object" &&
+                                min.x !== undefined &&
+                                min.y !== undefined &&
+                                max.x !== undefined &&
+                                max.y !== undefined
+                            ) {
+                                this.min = new _V["default"](min);
+                                this.max = new _V["default"](max);
+                                this.valid = true;
+                            } else if (min === undefined && max === undefined) {
+                                this.min = new _V["default"](
+                                    Infinity,
+                                    Infinity
+                                );
+                                this.max = new _V["default"](
+                                    -Infinity,
+                                    -Infinity
+                                );
+                                this.valid = false;
+                            } else {
+                                throw Error(
+                                    "Illegal construction - must use { x, y } objects"
+                                );
+                            }
+                        }
+
+                        _createClass(Box2, [
+                            {
+                                key: "equals",
+                                value: function equals(other) {
+                                    if (!this.valid) {
+                                        throw Error("Box2 is invalid");
+                                    }
+
+                                    return (
+                                        this.min.equals(other.min) &&
+                                        this.max.equals(other.max)
+                                    );
+                                },
+                            },
+                            {
+                                key: "expandByPoint",
+                                value: function expandByPoint(p) {
                                     this.min = new _V["default"](
-                                        Infinity,
-                                        Infinity
+                                        Math.min(this.min.x, p.x),
+                                        Math.min(this.min.y, p.y)
                                     );
                                     this.max = new _V["default"](
-                                        -Infinity,
-                                        -Infinity
+                                        Math.max(this.max.x, p.x),
+                                        Math.max(this.max.y, p.y)
                                     );
-                                    this.valid = false;
-                                } else {
-                                    throw Error(
-                                        "Illegal construction - must use { x, y } objects"
+                                    this.valid = true;
+                                    return this;
+                                },
+                            },
+                            {
+                                key: "expandByPoints",
+                                value: function expandByPoints(points) {
+                                    var _this = this;
+
+                                    points.forEach(function (point) {
+                                        _this.expandByPoint(point);
+                                    }, this);
+                                    return this;
+                                },
+                            },
+                            {
+                                key: "isPointInside",
+                                value: function isPointInside(p) {
+                                    return (
+                                        p.x >= this.min.x &&
+                                        p.y >= this.min.y &&
+                                        p.x <= this.max.x &&
+                                        p.y <= this.max.y
                                     );
-                                }
-                            }
-
-                            _createClass(Box2, [
-                                {
-                                    key: "equals",
-                                    value: function equals(other) {
-                                        if (!this.valid) {
-                                            throw Error("Box2 is invalid");
-                                        }
-
-                                        return (
-                                            this.min.equals(other.min) &&
-                                            this.max.equals(other.max)
-                                        );
-                                    },
                                 },
-                                {
-                                    key: "expandByPoint",
-                                    value: function expandByPoint(p) {
-                                        this.min = new _V["default"](
-                                            Math.min(this.min.x, p.x),
-                                            Math.min(this.min.y, p.y)
-                                        );
-                                        this.max = new _V["default"](
-                                            Math.max(this.max.x, p.x),
-                                            Math.max(this.max.y, p.y)
-                                        );
-                                        this.valid = true;
-                                        return this;
-                                    },
-                                },
-                                {
-                                    key: "expandByPoints",
-                                    value: function expandByPoints(points) {
-                                        var _this = this;
+                            },
+                            {
+                                key: "width",
+                                get: function get() {
+                                    if (!this.valid) {
+                                        throw Error("Box2 is invalid");
+                                    }
 
-                                        points.forEach(function (point) {
-                                            _this.expandByPoint(point);
-                                        }, this);
-                                        return this;
-                                    },
+                                    return this.max.x - this.min.x;
                                 },
-                                {
-                                    key: "isPointInside",
-                                    value: function isPointInside(p) {
-                                        return (
-                                            p.x >= this.min.x &&
-                                            p.y >= this.min.y &&
-                                            p.x <= this.max.x &&
-                                            p.y <= this.max.y
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "width",
-                                    get: function get() {
-                                        if (!this.valid) {
-                                            throw Error("Box2 is invalid");
-                                        }
+                            },
+                            {
+                                key: "height",
+                                get: function get() {
+                                    if (!this.valid) {
+                                        throw Error("Box2 is invalid");
+                                    }
 
-                                        return this.max.x - this.min.x;
-                                    },
+                                    return this.max.y - this.min.y;
                                 },
-                                {
-                                    key: "height",
-                                    get: function get() {
-                                        if (!this.valid) {
-                                            throw Error("Box2 is invalid");
-                                        }
+                            },
+                        ]);
 
-                                        return this.max.y - this.min.y;
-                                    },
-                                },
-                            ]);
-
-                            return Box2;
-                        })();
+                        return Box2;
+                    })();
 
                     Box2.fromPoints = function (points) {
                         return new Box2().expandByPoints(points);
@@ -26894,9 +27404,9 @@
                     var _default = Box2;
                     exports["default"] = _default;
                 },
-                { "./V2": 49 },
+                { "./V2": 50 },
             ],
-            44: [
+            45: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -26912,6 +27422,7 @@
                     }
 
                     function _typeof(obj) {
+                        "@babel/helpers - typeof";
                         if (
                             typeof Symbol === "function" &&
                             typeof Symbol.iterator === "symbol"
@@ -26971,136 +27482,131 @@
                         return Constructor;
                     }
 
-                    var Box3 =
-                        /*#__PURE__*/
-                        (function () {
-                            function Box3(min, max) {
-                                _classCallCheck(this, Box3);
+                    var Box3 = /*#__PURE__*/ (function () {
+                        function Box3(min, max) {
+                            _classCallCheck(this, Box3);
 
-                                if (
-                                    _typeof(min) === "object" &&
-                                    _typeof(max) === "object" &&
-                                    min.x !== undefined &&
-                                    min.y !== undefined &&
-                                    min.z !== undefined &&
-                                    max.x !== undefined &&
-                                    max.y !== undefined &&
-                                    max.z !== undefined
-                                ) {
-                                    this.min = new _V["default"](min);
-                                    this.max = new _V["default"](max);
-                                    this.valid = true;
-                                } else if (
-                                    min === undefined &&
-                                    max === undefined
-                                ) {
+                            if (
+                                _typeof(min) === "object" &&
+                                _typeof(max) === "object" &&
+                                min.x !== undefined &&
+                                min.y !== undefined &&
+                                min.z !== undefined &&
+                                max.x !== undefined &&
+                                max.y !== undefined &&
+                                max.z !== undefined
+                            ) {
+                                this.min = new _V["default"](min);
+                                this.max = new _V["default"](max);
+                                this.valid = true;
+                            } else if (min === undefined && max === undefined) {
+                                this.min = new _V["default"](
+                                    Infinity,
+                                    Infinity,
+                                    Infinity
+                                );
+                                this.max = new _V["default"](
+                                    -Infinity,
+                                    -Infinity,
+                                    -Infinity
+                                );
+                                this.valid = false;
+                            } else {
+                                throw Error(
+                                    "Illegal construction - must use { x, y, z } objects"
+                                );
+                            }
+                        }
+
+                        _createClass(Box3, [
+                            {
+                                key: "equals",
+                                value: function equals(other) {
+                                    if (!this.valid) {
+                                        throw Error("Box3 is invalid");
+                                    }
+
+                                    return (
+                                        this.min.equals(other.min) &&
+                                        this.max.equals(other.max)
+                                    );
+                                },
+                            },
+                            {
+                                key: "expandByPoint",
+                                value: function expandByPoint(p) {
                                     this.min = new _V["default"](
-                                        Infinity,
-                                        Infinity,
-                                        Infinity
+                                        Math.min(this.min.x, p.x),
+                                        Math.min(this.min.y, p.y),
+                                        Math.min(this.min.z, p.z)
                                     );
                                     this.max = new _V["default"](
-                                        -Infinity,
-                                        -Infinity,
-                                        -Infinity
+                                        Math.max(this.max.x, p.x),
+                                        Math.max(this.max.y, p.y),
+                                        Math.max(this.max.z, p.z)
                                     );
-                                    this.valid = false;
-                                } else {
-                                    throw Error(
-                                        "Illegal construction - must use { x, y, z } objects"
+                                    this.valid = true;
+                                    return this;
+                                },
+                            },
+                            {
+                                key: "expandByPoints",
+                                value: function expandByPoints(points) {
+                                    var _this = this;
+
+                                    points.forEach(function (point) {
+                                        _this.expandByPoint(point);
+                                    }, this);
+                                    return this;
+                                },
+                            },
+                            {
+                                key: "isPointInside",
+                                value: function isPointInside(p) {
+                                    return (
+                                        p.x >= this.min.x &&
+                                        p.y >= this.min.y &&
+                                        p.z >= this.min.z &&
+                                        p.x <= this.max.x &&
+                                        p.y <= this.max.y &&
+                                        p.z <= this.max.z
                                     );
-                                }
-                            }
-
-                            _createClass(Box3, [
-                                {
-                                    key: "equals",
-                                    value: function equals(other) {
-                                        if (!this.valid) {
-                                            throw Error("Box3 is invalid");
-                                        }
-
-                                        return (
-                                            this.min.equals(other.min) &&
-                                            this.max.equals(other.max)
-                                        );
-                                    },
                                 },
-                                {
-                                    key: "expandByPoint",
-                                    value: function expandByPoint(p) {
-                                        this.min = new _V["default"](
-                                            Math.min(this.min.x, p.x),
-                                            Math.min(this.min.y, p.y),
-                                            Math.min(this.min.z, p.z)
-                                        );
-                                        this.max = new _V["default"](
-                                            Math.max(this.max.x, p.x),
-                                            Math.max(this.max.y, p.y),
-                                            Math.max(this.max.z, p.z)
-                                        );
-                                        this.valid = true;
-                                        return this;
-                                    },
-                                },
-                                {
-                                    key: "expandByPoints",
-                                    value: function expandByPoints(points) {
-                                        var _this = this;
+                            },
+                            {
+                                key: "width",
+                                get: function get() {
+                                    if (!this.valid) {
+                                        throw Error("Box3 is invalid");
+                                    }
 
-                                        points.forEach(function (point) {
-                                            _this.expandByPoint(point);
-                                        }, this);
-                                        return this;
-                                    },
+                                    return this.max.x - this.min.x;
                                 },
-                                {
-                                    key: "isPointInside",
-                                    value: function isPointInside(p) {
-                                        return (
-                                            p.x >= this.min.x &&
-                                            p.y >= this.min.y &&
-                                            p.z >= this.min.z &&
-                                            p.x <= this.max.x &&
-                                            p.y <= this.max.y &&
-                                            p.z <= this.max.z
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "width",
-                                    get: function get() {
-                                        if (!this.valid) {
-                                            throw Error("Box3 is invalid");
-                                        }
+                            },
+                            {
+                                key: "depth",
+                                get: function get() {
+                                    if (!this.valid) {
+                                        throw Error("Box3 is invalid");
+                                    }
 
-                                        return this.max.x - this.min.x;
-                                    },
+                                    return this.max.y - this.min.y;
                                 },
-                                {
-                                    key: "depth",
-                                    get: function get() {
-                                        if (!this.valid) {
-                                            throw Error("Box3 is invalid");
-                                        }
+                            },
+                            {
+                                key: "height",
+                                get: function get() {
+                                    if (!this.valid) {
+                                        throw Error("Box3 is invalid");
+                                    }
 
-                                        return this.max.y - this.min.y;
-                                    },
+                                    return this.max.z - this.min.z;
                                 },
-                                {
-                                    key: "height",
-                                    get: function get() {
-                                        if (!this.valid) {
-                                            throw Error("Box3 is invalid");
-                                        }
+                            },
+                        ]);
 
-                                        return this.max.z - this.min.z;
-                                    },
-                                },
-                            ]);
-
-                            return Box3;
-                        })();
+                        return Box3;
+                    })();
 
                     Box3.fromPoints = function (points) {
                         return new Box3().expandByPoints(points);
@@ -27109,9 +27615,9 @@
                     var _default = Box3;
                     exports["default"] = _default;
                 },
-                { "./V3": 50 },
+                { "./V3": 51 },
             ],
-            45: [
+            46: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -27127,6 +27633,7 @@
                     }
 
                     function _typeof(obj) {
+                        "@babel/helpers - typeof";
                         if (
                             typeof Symbol === "function" &&
                             typeof Symbol.iterator === "symbol"
@@ -27250,96 +27757,91 @@
                         );
                     };
 
-                    var Line2 =
-                        /*#__PURE__*/
-                        (function () {
-                            function Line2(a, b) {
-                                _classCallCheck(this, Line2);
+                    var Line2 = /*#__PURE__*/ (function () {
+                        function Line2(a, b) {
+                            _classCallCheck(this, Line2);
 
-                                if (
-                                    _typeof(a) !== "object" ||
-                                    a.x === undefined ||
-                                    a.y === undefined
-                                ) {
-                                    throw Error(
-                                        "expected first argument to have x and y properties"
-                                    );
-                                }
-
-                                if (
-                                    _typeof(b) !== "object" ||
-                                    b.x === undefined ||
-                                    b.y === undefined
-                                ) {
-                                    throw Error(
-                                        "expected second argument to have x and y properties"
-                                    );
-                                }
-
-                                this.a = new _V["default"](a);
-                                this.b = new _V["default"](b);
+                            if (
+                                _typeof(a) !== "object" ||
+                                a.x === undefined ||
+                                a.y === undefined
+                            ) {
+                                throw Error(
+                                    "expected first argument to have x and y properties"
+                                );
                             }
 
-                            _createClass(Line2, [
-                                {
-                                    key: "length",
-                                    value: function length() {
-                                        return this.a.sub(this.b).length();
-                                    },
-                                },
-                                {
-                                    key: "intersects",
-                                    value: function intersects(other) {
-                                        if (!(other instanceof Line2)) {
-                                            throw new Error(
-                                                "expected argument to be an instance of vecks.Line2"
-                                            );
-                                        }
+                            if (
+                                _typeof(b) !== "object" ||
+                                b.x === undefined ||
+                                b.y === undefined
+                            ) {
+                                throw Error(
+                                    "expected second argument to have x and y properties"
+                                );
+                            }
 
-                                        return isIntersect(this, other);
-                                    },
+                            this.a = new _V["default"](a);
+                            this.b = new _V["default"](b);
+                        }
+
+                        _createClass(Line2, [
+                            {
+                                key: "length",
+                                value: function length() {
+                                    return this.a.sub(this.b).length();
                                 },
-                                {
-                                    key: "getIntersection",
-                                    value: function getIntersection(other) {
-                                        if (this.intersects(other)) {
-                                            return _getIntersection(
-                                                this,
-                                                other
-                                            );
-                                        } else {
-                                            return null;
-                                        }
-                                    },
-                                },
-                                {
-                                    key: "containsPoint",
-                                    value: function containsPoint(point) {
-                                        var eps =
-                                            arguments.length > 1 &&
-                                            arguments[1] !== undefined
-                                                ? arguments[1]
-                                                : 1e-12;
-                                        return (
-                                            Math.abs(
-                                                dist(this.a, this.b) -
-                                                    dist(point, this.a) -
-                                                    dist(point, this.b)
-                                            ) < eps
+                            },
+                            {
+                                key: "intersects",
+                                value: function intersects(other) {
+                                    if (!(other instanceof Line2)) {
+                                        throw new Error(
+                                            "expected argument to be an instance of vecks.Line2"
                                         );
-                                    },
-                                },
-                            ]);
+                                    }
 
-                            return Line2;
-                        })();
+                                    return isIntersect(this, other);
+                                },
+                            },
+                            {
+                                key: "getIntersection",
+                                value: function getIntersection(other) {
+                                    if (this.intersects(other)) {
+                                        return _getIntersection(this, other);
+                                    } else {
+                                        return null;
+                                    }
+                                },
+                            },
+                            {
+                                key: "containsPoint",
+                                value: function containsPoint(point) {
+                                    var eps =
+                                        arguments.length > 1 &&
+                                        arguments[1] !== undefined
+                                            ? arguments[1]
+                                            : 1e-12;
+                                    return (
+                                        Math.abs(
+                                            dist(this.a, this.b) -
+                                                dist(point, this.a) -
+                                                dist(point, this.b)
+                                        ) < eps
+                                    );
+                                },
+                            },
+                        ]);
+
+                        return Line2;
+                    })();
 
                     var _default = Line2;
                     exports["default"] = _default;
                 },
-                { "./V2": 49 },
+                { "./V2": 50 },
             ],
-            46: [
+            47: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -27355,6 +27857,7 @@
                     }
 
                     function _typeof(obj) {
+                        "@babel/helpers - typeof";
                         if (
                             typeof Symbol === "function" &&
                             typeof Symbol.iterator === "symbol"
@@ -27422,73 +27925,71 @@
                         );
                     };
 
-                    var Line3 =
-                        /*#__PURE__*/
-                        (function () {
-                            function Line3(a, b) {
-                                _classCallCheck(this, Line3);
+                    var Line3 = /*#__PURE__*/ (function () {
+                        function Line3(a, b) {
+                            _classCallCheck(this, Line3);
 
-                                if (
-                                    _typeof(a) !== "object" ||
-                                    a.x === undefined ||
-                                    a.y === undefined ||
-                                    a.z === undefined
-                                ) {
-                                    throw Error(
-                                        "expected first argument to have x, y and z properties"
-                                    );
-                                }
-
-                                if (
-                                    _typeof(b) !== "object" ||
-                                    b.x === undefined ||
-                                    b.y === undefined ||
-                                    b.y === undefined
-                                ) {
-                                    throw Error(
-                                        "expected second argument to have x, y and z properties"
-                                    );
-                                }
-
-                                this.a = new _V["default"](a);
-                                this.b = new _V["default"](b);
+                            if (
+                                _typeof(a) !== "object" ||
+                                a.x === undefined ||
+                                a.y === undefined ||
+                                a.z === undefined
+                            ) {
+                                throw Error(
+                                    "expected first argument to have x, y and z properties"
+                                );
                             }
 
-                            _createClass(Line3, [
-                                {
-                                    key: "length",
-                                    value: function length() {
-                                        return this.a.sub(this.b).length();
-                                    },
-                                },
-                                {
-                                    key: "containsPoint",
-                                    value: function containsPoint(point) {
-                                        var eps =
-                                            arguments.length > 1 &&
-                                            arguments[1] !== undefined
-                                                ? arguments[1]
-                                                : 1e-12;
-                                        return (
-                                            Math.abs(
-                                                dist(this.a, this.b) -
-                                                    dist(point, this.a) -
-                                                    dist(point, this.b)
-                                            ) < eps
-                                        );
-                                    },
-                                },
-                            ]);
+                            if (
+                                _typeof(b) !== "object" ||
+                                b.x === undefined ||
+                                b.y === undefined ||
+                                b.y === undefined
+                            ) {
+                                throw Error(
+                                    "expected second argument to have x, y and z properties"
+                                );
+                            }
 
-                            return Line3;
-                        })();
+                            this.a = new _V["default"](a);
+                            this.b = new _V["default"](b);
+                        }
+
+                        _createClass(Line3, [
+                            {
+                                key: "length",
+                                value: function length() {
+                                    return this.a.sub(this.b).length();
+                                },
+                            },
+                            {
+                                key: "containsPoint",
+                                value: function containsPoint(point) {
+                                    var eps =
+                                        arguments.length > 1 &&
+                                        arguments[1] !== undefined
+                                            ? arguments[1]
+                                            : 1e-12;
+                                    return (
+                                        Math.abs(
+                                            dist(this.a, this.b) -
+                                                dist(point, this.a) -
+                                                dist(point, this.b)
+                                        ) < eps
+                                    );
+                                },
+                            },
+                        ]);
+
+                        return Line3;
+                    })();
 
                     var _default = Line3;
                     exports["default"] = _default;
                 },
-                { "./V3": 50 },
+                { "./V3": 51 },
             ],
-            47: [
+            48: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -27536,70 +28037,68 @@
                         return Constructor;
                     }
 
-                    var Plane3 =
-                        /*#__PURE__*/
-                        (function () {
-                            function Plane3(a, b, c, d) {
-                                _classCallCheck(this, Plane3);
+                    var Plane3 = /*#__PURE__*/ (function () {
+                        function Plane3(a, b, c, d) {
+                            _classCallCheck(this, Plane3);
 
-                                this.a = a;
-                                this.b = b;
-                                this.c = c;
-                                this.d = d;
-                            } // Distance to a point
-                            // http://mathworld.wolfram.com/Point-PlaneDistance.html eq 10
+                            this.a = a;
+                            this.b = b;
+                            this.c = c;
+                            this.d = d;
+                        } // Distance to a point
+                        // http://mathworld.wolfram.com/Point-PlaneDistance.html eq 10
 
-                            _createClass(Plane3, [
-                                {
-                                    key: "distanceToPoint",
-                                    value: function distanceToPoint(p0) {
-                                        var dd =
-                                            (this.a * p0.x +
-                                                this.b * p0.y +
-                                                this.c * p0.z +
-                                                this.d) /
-                                            Math.sqrt(
-                                                this.a * this.a +
-                                                    this.b * this.b +
-                                                    this.c * this.c
-                                            );
-                                        return dd;
-                                    },
-                                },
-                                {
-                                    key: "equals",
-                                    value: function equals(other) {
-                                        return (
-                                            this.a === other.a &&
-                                            this.b === other.b &&
-                                            this.c === other.c &&
-                                            this.d === other.d
+                        _createClass(Plane3, [
+                            {
+                                key: "distanceToPoint",
+                                value: function distanceToPoint(p0) {
+                                    var dd =
+                                        (this.a * p0.x +
+                                            this.b * p0.y +
+                                            this.c * p0.z +
+                                            this.d) /
+                                        Math.sqrt(
+                                            this.a * this.a +
+                                                this.b * this.b +
+                                                this.c * this.c
                                         );
-                                    },
+                                    return dd;
                                 },
-                                {
-                                    key: "coPlanar",
-                                    value: function coPlanar(other) {
-                                        var coPlanarAndSameNormal =
-                                            this.a === other.a &&
-                                            this.b === other.b &&
-                                            this.c === other.c &&
-                                            this.d === other.d;
-                                        var coPlanarAndReversedNormal =
-                                            this.a === -other.a &&
-                                            this.b === -other.b &&
-                                            this.c === -other.c &&
-                                            this.d === -other.d;
-                                        return (
-                                            coPlanarAndSameNormal ||
-                                            coPlanarAndReversedNormal
-                                        );
-                                    },
+                            },
+                            {
+                                key: "equals",
+                                value: function equals(other) {
+                                    return (
+                                        this.a === other.a &&
+                                        this.b === other.b &&
+                                        this.c === other.c &&
+                                        this.d === other.d
+                                    );
                                 },
-                            ]);
+                            },
+                            {
+                                key: "coPlanar",
+                                value: function coPlanar(other) {
+                                    var coPlanarAndSameNormal =
+                                        this.a === other.a &&
+                                        this.b === other.b &&
+                                        this.c === other.c &&
+                                        this.d === other.d;
+                                    var coPlanarAndReversedNormal =
+                                        this.a === -other.a &&
+                                        this.b === -other.b &&
+                                        this.c === -other.c &&
+                                        this.d === -other.d;
+                                    return (
+                                        coPlanarAndSameNormal ||
+                                        coPlanarAndReversedNormal
+                                    );
+                                },
+                            },
+                        ]);
 
-                            return Plane3;
-                        })(); // From point and normal
+                        return Plane3;
+                    })(); // From point and normal
 
                     Plane3.fromPointAndNormal = function (p, n) {
                         var a = n.x;
@@ -27655,7 +28154,7 @@
                 },
                 {},
             ],
-            48: [
+            49: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -27711,55 +28210,50 @@
 
                     // Quaternion implementation heavily adapted from the Quaternion implementation in THREE.js
                     // https://github.com/mrdoob/three.js/blob/master/src/math/Quaternion.js
-                    var Quaternion =
-                        /*#__PURE__*/
-                        (function () {
-                            function Quaternion(x, y, z, w) {
-                                _classCallCheck(this, Quaternion);
+                    var Quaternion = /*#__PURE__*/ (function () {
+                        function Quaternion(x, y, z, w) {
+                            _classCallCheck(this, Quaternion);
 
-                                this.x = x;
-                                this.y = y;
-                                this.z = z;
-                                this.w = w;
-                            }
+                            this.x = x;
+                            this.y = y;
+                            this.z = z;
+                            this.w = w;
+                        }
 
-                            _createClass(Quaternion, [
-                                {
-                                    key: "applyToVec3",
-                                    value: function applyToVec3(v3) {
-                                        var x = v3.x;
-                                        var y = v3.y;
-                                        var z = v3.z;
-                                        var qx = this.x;
-                                        var qy = this.y;
-                                        var qz = this.z;
-                                        var qw = this.w; // calculate quat * vector
+                        _createClass(Quaternion, [
+                            {
+                                key: "applyToVec3",
+                                value: function applyToVec3(v3) {
+                                    var x = v3.x;
+                                    var y = v3.y;
+                                    var z = v3.z;
+                                    var qx = this.x;
+                                    var qy = this.y;
+                                    var qz = this.z;
+                                    var qw = this.w; // calculate quat * vector
 
-                                        var ix = qw * x + qy * z - qz * y;
-                                        var iy = qw * y + qz * x - qx * z;
-                                        var iz = qw * z + qx * y - qy * x;
-                                        var iw = -qx * x - qy * y - qz * z; // calculate result * inverse quat
+                                    var ix = qw * x + qy * z - qz * y;
+                                    var iy = qw * y + qz * x - qx * z;
+                                    var iz = qw * z + qx * y - qy * x;
+                                    var iw = -qx * x - qy * y - qz * z; // calculate result * inverse quat
 
-                                        return new _V["default"](
-                                            ix * qw +
-                                                iw * -qx +
-                                                iy * -qz -
-                                                iz * -qy,
-                                            iy * qw +
-                                                iw * -qy +
-                                                iz * -qx -
-                                                ix * -qz,
-                                            iz * qw +
-                                                iw * -qz +
-                                                ix * -qy -
-                                                iy * -qx
-                                        );
-                                    },
+                                    return new _V["default"](
+                                        ix * qw +
+                                            iw * -qx +
+                                            iy * -qz -
+                                            iz * -qy,
+                                        iy * qw +
+                                            iw * -qy +
+                                            iz * -qx -
+                                            ix * -qz,
+                                        iz * qw + iw * -qz + ix * -qy - iy * -qx
+                                    );
                                 },
-                            ]);
+                            },
+                        ]);
 
-                            return Quaternion;
-                        })();
+                        return Quaternion;
+                    })();
 
                     Quaternion.fromAxisAngle = function (axis, angle) {
                         // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
@@ -27777,159 +28271,7 @@
                     var _default = Quaternion;
                     exports["default"] = _default;
                 },
-                { "./V3": 50 },
-            ],
-            49: [
-                function (require, module, exports) {
-                    "use strict";
-
-                    Object.defineProperty(exports, "__esModule", {
-                        value: true,
-                    });
-                    exports["default"] = void 0;
-
-                    function _typeof(obj) {
-                        if (
-                            typeof Symbol === "function" &&
-                            typeof Symbol.iterator === "symbol"
-                        ) {
-                            _typeof = function _typeof(obj) {
-                                return typeof obj;
-                            };
-                        } else {
-                            _typeof = function _typeof(obj) {
-                                return obj &&
-                                    typeof Symbol === "function" &&
-                                    obj.constructor === Symbol &&
-                                    obj !== Symbol.prototype
-                                    ? "symbol"
-                                    : typeof obj;
-                            };
-                        }
-                        return _typeof(obj);
-                    }
-
-                    function _classCallCheck(instance, Constructor) {
-                        if (!(instance instanceof Constructor)) {
-                            throw new TypeError(
-                                "Cannot call a class as a function"
-                            );
-                        }
-                    }
-
-                    function _defineProperties(target, props) {
-                        for (var i = 0; i < props.length; i++) {
-                            var descriptor = props[i];
-                            descriptor.enumerable =
-                                descriptor.enumerable || false;
-                            descriptor.configurable = true;
-                            if ("value" in descriptor)
-                                descriptor.writable = true;
-                            Object.defineProperty(
-                                target,
-                                descriptor.key,
-                                descriptor
-                            );
-                        }
-                    }
-
-                    function _createClass(
-                        Constructor,
-                        protoProps,
-                        staticProps
-                    ) {
-                        if (protoProps)
-                            _defineProperties(
-                                Constructor.prototype,
-                                protoProps
-                            );
-                        if (staticProps)
-                            _defineProperties(Constructor, staticProps);
-                        return Constructor;
-                    }
-
-                    var V2 =
-                        /*#__PURE__*/
-                        (function () {
-                            function V2(x, y) {
-                                _classCallCheck(this, V2);
-
-                                if (_typeof(x) === "object") {
-                                    this.x = x.x;
-                                    this.y = x.y;
-                                } else {
-                                    this.x = x;
-                                    this.y = y;
-                                }
-                            }
-
-                            _createClass(V2, [
-                                {
-                                    key: "equals",
-                                    value: function equals(other) {
-                                        return (
-                                            this.x === other.x &&
-                                            this.y === other.y
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "length",
-                                    value: function length() {
-                                        return Math.sqrt(this.dot(this));
-                                    },
-                                },
-                                {
-                                    key: "neg",
-                                    value: function neg() {
-                                        return new V2(-this.x, -this.y);
-                                    },
-                                },
-                                {
-                                    key: "add",
-                                    value: function add(b) {
-                                        return new V2(
-                                            this.x + b.x,
-                                            this.y + b.y
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "sub",
-                                    value: function sub(b) {
-                                        return new V2(
-                                            this.x - b.x,
-                                            this.y - b.y
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "multiply",
-                                    value: function multiply(w) {
-                                        return new V2(this.x * w, this.y * w);
-                                    },
-                                },
-                                {
-                                    key: "norm",
-                                    value: function norm() {
-                                        return this.multiply(1 / this.length());
-                                    },
-                                },
-                                {
-                                    key: "dot",
-                                    value: function dot(b) {
-                                        return this.x * b.x + this.y * b.y;
-                                    },
-                                },
-                            ]);
-
-                            return V2;
-                        })();
-
-                    var _default = V2;
-                    exports["default"] = _default;
-                },
-                {},
+                { "./V3": 51 },
             ],
             50: [
                 function (require, module, exports) {
@@ -27941,6 +28283,7 @@
                     exports["default"] = void 0;
 
                     function _typeof(obj) {
+                        "@babel/helpers - typeof";
                         if (
                             typeof Symbol === "function" &&
                             typeof Symbol.iterator === "symbol"
@@ -28000,125 +28343,263 @@
                         return Constructor;
                     }
 
-                    var V3 =
-                        /*#__PURE__*/
-                        (function () {
-                            function V3(x, y, z) {
-                                _classCallCheck(this, V3);
+                    var V2 = /*#__PURE__*/ (function () {
+                        function V2(x, y) {
+                            _classCallCheck(this, V2);
 
-                                if (_typeof(x) === "object") {
-                                    this.x = x.x;
-                                    this.y = x.y;
-                                    this.z = x.z;
-                                } else if (x === undefined) {
-                                    this.x = 0;
-                                    this.y = 0;
-                                    this.z = 0;
-                                } else {
-                                    this.x = x;
-                                    this.y = y;
-                                    this.z = z;
-                                }
+                            if (_typeof(x) === "object") {
+                                this.x = x.x;
+                                this.y = x.y;
+                            } else {
+                                this.x = x;
+                                this.y = y;
                             }
+                        }
 
-                            _createClass(V3, [
-                                {
-                                    key: "equals",
-                                    value: function equals(other, eps) {
-                                        if (eps === undefined) {
-                                            eps = 0;
-                                        }
+                        _createClass(V2, [
+                            {
+                                key: "equals",
+                                value: function equals(other) {
+                                    return (
+                                        this.x === other.x && this.y === other.y
+                                    );
+                                },
+                            },
+                            {
+                                key: "length",
+                                value: function length() {
+                                    return Math.sqrt(this.dot(this));
+                                },
+                            },
+                            {
+                                key: "neg",
+                                value: function neg() {
+                                    return new V2(-this.x, -this.y);
+                                },
+                            },
+                            {
+                                key: "add",
+                                value: function add(b) {
+                                    return new V2(this.x + b.x, this.y + b.y);
+                                },
+                            },
+                            {
+                                key: "sub",
+                                value: function sub(b) {
+                                    return new V2(this.x - b.x, this.y - b.y);
+                                },
+                            },
+                            {
+                                key: "multiply",
+                                value: function multiply(w) {
+                                    return new V2(this.x * w, this.y * w);
+                                },
+                            },
+                            {
+                                key: "norm",
+                                value: function norm() {
+                                    return this.multiply(1 / this.length());
+                                },
+                            },
+                            {
+                                key: "dot",
+                                value: function dot(b) {
+                                    return this.x * b.x + this.y * b.y;
+                                },
+                            },
+                        ]);
 
-                                        return (
-                                            Math.abs(this.x - other.x) <= eps &&
-                                            Math.abs(this.y - other.y) <= eps &&
-                                            Math.abs(this.z - other.z) <= eps
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "length",
-                                    value: function length() {
-                                        return Math.sqrt(this.dot(this));
-                                    },
-                                },
-                                {
-                                    key: "neg",
-                                    value: function neg() {
-                                        return new V3(
-                                            -this.x,
-                                            -this.y,
-                                            -this.z
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "add",
-                                    value: function add(b) {
-                                        return new V3(
-                                            this.x + b.x,
-                                            this.y + b.y,
-                                            this.z + b.z
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "sub",
-                                    value: function sub(b) {
-                                        return new V3(
-                                            this.x - b.x,
-                                            this.y - b.y,
-                                            this.z - b.z
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "multiply",
-                                    value: function multiply(w) {
-                                        return new V3(
-                                            this.x * w,
-                                            this.y * w,
-                                            this.z * w
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "norm",
-                                    value: function norm() {
-                                        return this.multiply(1 / this.length());
-                                    },
-                                },
-                                {
-                                    key: "dot",
-                                    value: function dot(b) {
-                                        return (
-                                            this.x * b.x +
-                                            this.y * b.y +
-                                            this.z * b.z
-                                        );
-                                    },
-                                },
-                                {
-                                    key: "cross",
-                                    value: function cross(b) {
-                                        return new V3(
-                                            this.y * b.z - this.z * b.y,
-                                            this.z * b.x - this.x * b.z,
-                                            this.x * b.y - this.y * b.x
-                                        );
-                                    },
-                                },
-                            ]);
+                        return V2;
+                    })();
 
-                            return V3;
-                        })();
+                    var _default = V2;
+                    exports["default"] = _default;
+                },
+                {},
+            ],
+            51: [
+                function (require, module, exports) {
+                    "use strict";
+
+                    Object.defineProperty(exports, "__esModule", {
+                        value: true,
+                    });
+                    exports["default"] = void 0;
+
+                    function _typeof(obj) {
+                        "@babel/helpers - typeof";
+                        if (
+                            typeof Symbol === "function" &&
+                            typeof Symbol.iterator === "symbol"
+                        ) {
+                            _typeof = function _typeof(obj) {
+                                return typeof obj;
+                            };
+                        } else {
+                            _typeof = function _typeof(obj) {
+                                return obj &&
+                                    typeof Symbol === "function" &&
+                                    obj.constructor === Symbol &&
+                                    obj !== Symbol.prototype
+                                    ? "symbol"
+                                    : typeof obj;
+                            };
+                        }
+                        return _typeof(obj);
+                    }
+
+                    function _classCallCheck(instance, Constructor) {
+                        if (!(instance instanceof Constructor)) {
+                            throw new TypeError(
+                                "Cannot call a class as a function"
+                            );
+                        }
+                    }
+
+                    function _defineProperties(target, props) {
+                        for (var i = 0; i < props.length; i++) {
+                            var descriptor = props[i];
+                            descriptor.enumerable =
+                                descriptor.enumerable || false;
+                            descriptor.configurable = true;
+                            if ("value" in descriptor)
+                                descriptor.writable = true;
+                            Object.defineProperty(
+                                target,
+                                descriptor.key,
+                                descriptor
+                            );
+                        }
+                    }
+
+                    function _createClass(
+                        Constructor,
+                        protoProps,
+                        staticProps
+                    ) {
+                        if (protoProps)
+                            _defineProperties(
+                                Constructor.prototype,
+                                protoProps
+                            );
+                        if (staticProps)
+                            _defineProperties(Constructor, staticProps);
+                        return Constructor;
+                    }
+
+                    var V3 = /*#__PURE__*/ (function () {
+                        function V3(x, y, z) {
+                            _classCallCheck(this, V3);
+
+                            if (_typeof(x) === "object") {
+                                this.x = x.x;
+                                this.y = x.y;
+                                this.z = x.z;
+                            } else if (x === undefined) {
+                                this.x = 0;
+                                this.y = 0;
+                                this.z = 0;
+                            } else {
+                                this.x = x;
+                                this.y = y;
+                                this.z = z;
+                            }
+                        }
+
+                        _createClass(V3, [
+                            {
+                                key: "equals",
+                                value: function equals(other, eps) {
+                                    if (eps === undefined) {
+                                        eps = 0;
+                                    }
+
+                                    return (
+                                        Math.abs(this.x - other.x) <= eps &&
+                                        Math.abs(this.y - other.y) <= eps &&
+                                        Math.abs(this.z - other.z) <= eps
+                                    );
+                                },
+                            },
+                            {
+                                key: "length",
+                                value: function length() {
+                                    return Math.sqrt(this.dot(this));
+                                },
+                            },
+                            {
+                                key: "neg",
+                                value: function neg() {
+                                    return new V3(-this.x, -this.y, -this.z);
+                                },
+                            },
+                            {
+                                key: "add",
+                                value: function add(b) {
+                                    return new V3(
+                                        this.x + b.x,
+                                        this.y + b.y,
+                                        this.z + b.z
+                                    );
+                                },
+                            },
+                            {
+                                key: "sub",
+                                value: function sub(b) {
+                                    return new V3(
+                                        this.x - b.x,
+                                        this.y - b.y,
+                                        this.z - b.z
+                                    );
+                                },
+                            },
+                            {
+                                key: "multiply",
+                                value: function multiply(w) {
+                                    return new V3(
+                                        this.x * w,
+                                        this.y * w,
+                                        this.z * w
+                                    );
+                                },
+                            },
+                            {
+                                key: "norm",
+                                value: function norm() {
+                                    return this.multiply(1 / this.length());
+                                },
+                            },
+                            {
+                                key: "dot",
+                                value: function dot(b) {
+                                    return (
+                                        this.x * b.x +
+                                        this.y * b.y +
+                                        this.z * b.z
+                                    );
+                                },
+                            },
+                            {
+                                key: "cross",
+                                value: function cross(b) {
+                                    return new V3(
+                                        this.y * b.z - this.z * b.y,
+                                        this.z * b.x - this.x * b.z,
+                                        this.x * b.y - this.y * b.x
+                                    );
+                                },
+                            },
+                        ]);
+
+                        return V3;
+                    })();
 
                     var _default = V3;
                     exports["default"] = _default;
                 },
                 {},
             ],
-            51: [
+            52: [
                 function (require, module, exports) {
                     "use strict";
 
@@ -28197,18 +28678,18 @@
                     }
                 },
                 {
-                    "./Box2": 43,
-                    "./Box3": 44,
-                    "./Line2": 45,
-                    "./Line3": 46,
-                    "./Plane3": 47,
-                    "./Quaternion": 48,
-                    "./V2": 49,
-                    "./V3": 50,
+                    "./Box2": 44,
+                    "./Box3": 45,
+                    "./Line2": 46,
+                    "./Line3": 47,
+                    "./Plane3": 48,
+                    "./Quaternion": 49,
+                    "./V2": 50,
+                    "./V3": 51,
                 },
             ],
         },
         {},
-        [25]
-    )(25);
+        [26]
+    )(26);
 });
