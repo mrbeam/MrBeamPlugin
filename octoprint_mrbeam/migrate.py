@@ -32,7 +32,7 @@ class Migration(object):
     VERSION_INITD_NETCONNECTD = "0.5.5"
     VERSION_DELETE_UPLOADED_STL_FILES = "0.6.1"
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
-    VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.9.2"
+    VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.10.2"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
