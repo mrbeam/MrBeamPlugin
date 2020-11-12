@@ -13,6 +13,7 @@ $(function () {
         window.mrbeam.viewModels["calibrationViewModel"] = self;
         self.cameraSettings = parameters[0];
         self.camera = parameters[1];
+        self.loginState = parameters[2];
 
         self.calibrationScreenShown = ko.observable(false);
         self.waitingForRefresh = ko.observable(true);
@@ -52,10 +53,17 @@ $(function () {
                     success: successCallback,
                     error: errorCallback,
                 });
-            } else {
+            } else if (self.loginState.loggedIn()) {
                 OctoPrint.simpleApiCommand("mrbeam", command, data)
                     .done(successCallback)
                     .fail(errorCallback);
+            } else {
+                console.warn(
+                    "User not logged in, cannot send command '",
+                    command,
+                    "' with data",
+                    data
+                );
             }
         };
 
@@ -134,7 +142,7 @@ $(function () {
         CalibrationViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["cameraSettingsViewModel", "cameraViewModel"],
+        ["cameraSettingsViewModel", "cameraViewModel", "loginStateViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [],
