@@ -28,7 +28,7 @@ def restricted_unless_calibration_tool_mode(func):
 
     @functools.wraps(func)
     def decorated_view(cls_obj, *args, **kwargs):
-        return restricted_access_if(cls_obj.calibration_tool_mode)(func)(
+        return restricted_access_if(not cls_obj.calibration_tool_mode)(func)(
             cls_obj, *args, **kwargs
         )
 
