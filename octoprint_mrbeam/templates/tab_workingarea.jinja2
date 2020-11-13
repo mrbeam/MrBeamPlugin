@@ -56,10 +56,10 @@
                                                             <span>{{ _('Laser') }}</span>
                                                         </button>
                                                         <button class="btn span6" id="job_pause"
-                                                                data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}">
-                                                            <i data-bind="css: {'icon-pause': !state.isPaused(), 'icon-play': state.isPaused()}"></i>
+                                                                data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}">
+                                                            <i class="icon-pause"></i>
                                                             <span data-bind="visible: !state.isPaused()">{{ _('Pause') }}</span>
-                                                            <span data-bind="visible: state.isPaused()">{{ _('Resume') }}</span>
+                                                            <span data-bind="visible: state.isPaused()">{{ _('Paused') }}</span>
                                                         </button>
                                                     </div>
 												</div>
