@@ -117,6 +117,33 @@ mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
 };
 
 /**
+ * Push a new PNotify notification.
+ * If pn_obj contains attribute 'id',
+ * this method makes sure that only one notification with the same id is shown at a time.
+ * @param pn_obj PNotify configuration
+ */
+mrbeam.updatePNotify = function (pn_obj) {
+    pn_obj.id = pn_obj.id || "id_" + Date.now();
+    // find notification in screen
+    let existing_notification = null;
+    for (let n = 0; n < PNotify.notices.length; n++) {
+        if (
+            PNotify.notices[n].state != "closed" &&
+            PNotify.notices[n].options &&
+            PNotify.notices[n].options.id == pn_obj.id
+        ) {
+            existing_notification = PNotify.notices[n];
+            break;
+        }
+    }
+    if (existing_notification) {
+        existing_notification.update(pn_obj);
+    } else {
+        new PNotify(pn_obj);
+    }
+};
+
+/**
  * Opens an offline version of the KB (pdf) in a new tab/window respecting user's language
  * @param document - document name without path: '43000431865_custom_materials.pdf'
  *                   The document itself needs to be located in static/docs/offline_kb/{locale}/{doc}
@@ -270,28 +297,6 @@ $(function () {
             );
         });
 
-        $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
-            if (jqXHR.status == 401) {
-                if (self.loginState.loggedIn()) {
-                    new PNotify({
-                        title: gettext("Session expired"),
-                        text: gettext("Please login again to continue."),
-                        type: "warn",
-                        // tag: "conversion_error",
-                        hide: false,
-                    });
-                    if (settings.url != "/api/logout") {
-                        // we would get into an endless loop then...
-                        self.loginState.logout();
-                    }
-                } else {
-                    console.log(
-                        "Server responded UNAUTHORIZED and loginStateViewModel is loggedOut. Consistent."
-                    );
-                }
-            }
-        });
-
         self.onStartup = function () {
             self.start_online_check_interval();
 
@@ -364,6 +369,8 @@ $(function () {
         };
 
         self.onUserLoggedIn = function () {
+            self.removeOpSafeModeOptionFromSystemMenu();
+
             if (!self._ajaxErrorRegistered) {
                 $(document).ajaxError(function (
                     event,
@@ -436,18 +443,22 @@ $(function () {
                 console.error(
                     "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Showing 'Session expired' to the user."
                 );
-                new PNotify({
+                let pn_obj = {
+                    id: "session_expired",
                     title: gettext("Session expired"),
                     text: gettext("Please login again to continue."),
                     type: "warn",
                     // tag: "conversion_error",
                     hide: false,
-                });
+                };
+                mrbeam.updatePNotify(pn_obj);
                 if (settings.url != "/api/logout") {
                     // we would get into an endless loop then...
                     console.error("Triggering self.loginState.logout()");
                     self.loginState.logout();
                 }
+                // Reconnect socket connection
+                OctoPrint.socket.reconnect();
             } else {
                 console.log(
                     "Server responded UNAUTHORIZED and loginStateViewModel is loggedOut. Consistent."
