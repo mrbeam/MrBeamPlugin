@@ -1762,9 +1762,6 @@ class MrBeamPlugin(
                 file_name=history_filename, content=content
             )
 
-            # keep only x recent files in job history and gcode.
-            self.mrb_file_manager.delete_old_files()
-
             slicer = "svgtogcode"
             slicer_instance = self._slicing_manager.get_slicer(slicer)
             if slicer_instance.get_slicer_properties()["same_device"] and (
@@ -1859,6 +1856,9 @@ class MrBeamPlugin(
                         FileDestinations.LOCAL, gcode_name
                     )
                     printer.select_file(filenameToSelect, sd, True)
+
+                # keep only x recent files in job history and gcode.
+                self.mrb_file_manager.delete_old_files()
 
             try:
                 self.mrb_file_manager.slice(
