@@ -650,6 +650,7 @@ class MrBeamPlugin(
                 "js/loadingoverlay_viewmodel.js",
                 "js/wizard_general.js",
                 "js/wizard_analytics.js",
+                "js/wizard_gcode_deletion.js",
                 "js/software_channel_selector.js",
                 "js/lib/hopscotch.js",
                 "js/tour_viewmodel.js",
@@ -1924,6 +1925,7 @@ class MrBeamPlugin(
             cli_event=["event"],
             custom_materials=[],
             analytics_init=[],  # user's analytics choice from welcome wizard
+            gcode_deletion_init=[],  # user's gcode deletion choice from welcome wizard
             analytics_upload=[],  # triggers an upload of analytics files
             take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
             focus_reminder=[],
@@ -1980,6 +1982,8 @@ class MrBeamPlugin(
             return self.cli_event(data)
         elif command == "analytics_init":
             return self.analytics_init(data)
+        elif command == "gcode_deletion_init":
+            return self.gcode_deletion_init(data)
         elif command == "analytics_upload":
             AnalyticsFileUploader.upload_now(self)
             return NO_CONTENT
@@ -2069,6 +2073,16 @@ class MrBeamPlugin(
             self.analytics_handler.initial_analytics_procedure(
                 data["analyticsInitialConsent"]
             )
+
+    def gcode_deletion_init(self, data):
+        if "gcodeAutoDeletionConsent" in data:
+            self._settings.set_boolean(
+                ["gcodeAutoDeletion"], data["gcodeAutoDeletionConsent"]
+            )
+            self._settings.save()  # This is necessary because without it the value is not saved
+            # Everytime the gcode auto deletion is enabled, it will be triggered
+            if data["gcodeAutoDeletionConsent"]:
+                self.mrb_file_manager.delete_old_gcode_files()
 
     @octoprint.plugin.BlueprintPlugin.route("/console", methods=["POST"])
     def console_log(self):
