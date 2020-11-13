@@ -387,6 +387,7 @@ class MrBeamPlugin(
             ),
             focusReminder=True,
             analyticsEnabled=None,
+            gcodeAutoDeletion=True,
             analytics=dict(
                 cam_analytics=False,
                 folder="analytics",  # laser job analytics base folder (.octoprint/...)
@@ -480,6 +481,7 @@ class MrBeamPlugin(
                 ask=self._settings.get(["review", "ask"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
+            gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
             laserHeadSerial=self.laserhead_handler.get_current_used_lh_data()["serial"],
             usage=dict(
                 totalUsage=self.usage_handler.get_total_usage(),
@@ -555,6 +557,15 @@ class MrBeamPlugin(
                 )
             if "focusReminder" in data:
                 self._settings.set_boolean(["focusReminder"], data["focusReminder"])
+            if "gcodeAutoDeletion" in data:
+                self._settings.set_boolean(
+                    ["gcodeAutoDeletion"], data["gcodeAutoDeletion"]
+                )
+
+                # Everytime the gcode auto deletion is enabled, it will be triggered
+                if data["gcodeAutoDeletion"]:
+                    self.mrb_file_manager.delete_old_gcode_files()
+
             if "dev" in data and "software_tier" in data["dev"]:
                 switch_software_channel(self, data["dev"]["software_tier"])
             if "leds" in data and "brightness" in data["leds"]:
@@ -828,8 +839,8 @@ class MrBeamPlugin(
         result = [
             dict(
                 type="settings",
-                name=gettext("File Import Settings"),
-                template="settings/svgtogcode_settings.jinja2",
+                name=gettext("Files"),
+                template="settings/file_settings.jinja2",
                 suffix="_conversion",
                 custom_bindings=False,
             ),
@@ -1751,38 +1762,8 @@ class MrBeamPlugin(
                 file_name=history_filename, content=content
             )
 
-            # keep only x recent files in job history.
-            def is_history_file(entry):
-                _, extension = os.path.splitext(entry)
-                extension = extension[1:].lower()
-                return extension == "mrb"
-
-            mrb_filter_func = lambda entry, entry_data: is_history_file(entry)
-            resp = self.mrb_file_manager.list_files(
-                path="", filter=mrb_filter_func, recursive=True
-            )
-            files = resp[FileDestinations.LOCAL]
-
-            max_history_files = 25  # TODO fetch from settings
-            if len(files) > max_history_files:
-
-                removals = []
-                for key in files:
-                    f = files[key]
-                    tpl = (
-                        self.mrb_file_manager.last_modified(
-                            FileDestinations.LOCAL, path=f["path"]
-                        ),
-                        f["path"],
-                    )
-                    removals.append(tpl)
-
-                sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
-
-                # TODO each deletion causes a filemanager push update -> slow.
-                for i in range(0, len(sorted_by_age) - max_history_files):
-                    f = sorted_by_age[i]
-                    self.mrb_file_manager.remove_file(FileDestinations.LOCAL, f[1])
+            # keep only x recent files in job history and gcode.
+            self.mrb_file_manager.delete_old_files()
 
             slicer = "svgtogcode"
             slicer_instance = self._slicing_manager.get_slicer(slicer)
