@@ -14,7 +14,6 @@ $(function () {
             default: {
                 intensityWhite: 0,
                 intensityBlack: 50,
-                extraOvershoot: false,
                 feedrateWhite: 1500,
                 feedrateBlack: 250,
                 contrast: 1.0,
