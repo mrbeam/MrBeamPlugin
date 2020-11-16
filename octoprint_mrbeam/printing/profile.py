@@ -183,7 +183,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
         :param make_default:
         :return:
         """
-        ret = PrinterProfileManager.save(
+        profile = PrinterProfileManager.save(
             self, profile, allow_overwrite, make_default=False
         )
         # TODO : I don't really understand what this is for - investigate
@@ -207,6 +207,9 @@ class LaserCutterProfileManager(PrinterProfileManager):
         #         allow_overwrite=allow_overwrite,
         #     )
 
+        # ``PrinterProfileManager.save`` forces profile to use the key ``id``
+        # to reference the profile identifier
+        identifier = profile["id"]
         if make_default:
             self.set_default(identifier)
 
@@ -216,7 +219,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return self.get(identifier)
 
     def is_default_unmodified(self):
-        # Overloaded because of settings path and barely used
+        # Overloaded because of settings path and barely used by OP
         return True
 
     def get_default(self):
@@ -240,7 +243,6 @@ class LaserCutterProfileManager(PrinterProfileManager):
 
     def _load_all(self):
         """Extend the file based ``PrinterProfileManager._load_all`` with the few hardcoded ones we have."""
-        # TODO
         file_based_profiles = PrinterProfileManager._load_all(self)
         fallback_profiles = dict(zip(LASER_PROFILES, LASER_PROFILE_IDENTIFIERS))
         return dict_merge(fallback_profiles, file_based_profiles)
