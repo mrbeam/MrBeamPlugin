@@ -2,8 +2,8 @@
 
 profile = dict(
     id="MrBeam2C",
+    model="C",
     legacy=dict(
         job_done_home_position_x=250,
     ),
-    model="C",
 )

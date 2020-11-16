@@ -11,6 +11,7 @@ import copy
 import re
 import collections
 
+from octoprint.printer.profile import PrinterProfileManager
 from octoprint.util import dict_merge, dict_clean, dict_contains_keys
 from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -67,91 +68,134 @@ class InvalidProfileError(Exception):
     pass
 
 
-class LaserCutterProfileManager(object):
+LASER_PROFILE_DEFAULT = profiles.default.profile
+LASER_PROFILE_2C = profiles.mrb2c.profile
+LASER_PROFILE_2U = profiles.mrb2u.profile
+LASER_PROFILE_DUMMY = profiles.dummy.profile
+
+LASER_PROFILES = (
+    LASER_PROFILE_DEFAULT,
+    LASER_PROFILE_2C,
+    LASER_PROFILE_2U,
+    LASER_PROFILE_DUMMY,
+)
+
+LASER_PROFILE_IDENTIFIERS = (
+    "_default",
+    "MrBeam2C",
+    "MrBeam2U",
+    "Dummy Laser",
+)
+
+
+class LaserCutterProfileManager(PrinterProfileManager):
 
     SETTINGS_PATH_PROFILE_DEFAULT_ID = ["lasercutterProfiles", "default"]
     SETTINGS_PATH_PROFILE_DEFAULT_PROFILE = ["lasercutterProfiles", "defaultProfile"]
     # SETTINGS_PATH_PROFILE_CURRENT_ID = ['lasercutterProfiles', 'current']
 
-    default = profiles.default.profile
+    default = LASER_PROFILE_DEFAULT
 
     def __init__(self):
-        self._current = None
-        self.settings = settings()
-        self._folder = (
-            self.settings.getBaseFolder("printerProfiles") + "/lasercutterprofiles"
+        _laser_cutter_profile_folder = (
+            settings().getBaseFolder("printerProfiles") + "/lasercutterprofiles"
         )
-        if not os.path.exists(self._folder):
-            os.makedirs(self._folder)
-        self._logger = mrb_logger("octoprint.plugins.mrbeam.profile")
+        if not os.path.exists(_laser_cutter_profile_folder):
+            os.makedirs(_laser_cutter_profile_folder)
+        PrinterProfileManager.__init__(self)
+        self._folder = _laser_cutter_profile_folder
+        self._logger = mrb_logger(__name__)
 
-    def select(self, identifier):
-        """
-        Selects a profile non-persistently
-        :param identifier:
-        :return:
-        """
-        if identifier is None or not self.exists(identifier):
-            self._current = self.get_default()
-            return False
-        else:
-            self._current = self.get(identifier)
-            return True
+    def _migrate_old_default_profile(self):
+        # TODO
+        pass
 
-    def deselect(self):
-        self._current = None
+    def _verify_default_available(self):
+        # Overloaded from OP because of printerProfiles path (default_id)
+        default_id = settings().get(SETTINGS_PATH_PROFILE_DEFAULT_ID)
+        if default_id is None:
+            default_id = "_default"
 
-    def get_all(self):
-        return self._load_all()
+        if not self.exists(default_id):
+            if not self.exists("_default"):
+                if default_id == "_default":
+                    self._logger.error(
+                        "Profile _default does not exist, creating _default again and setting it as default"
+                    )
+                else:
+                    self._logger.error(
+                        "Selected default profile {} and _default do not exist, creating _default again and setting it as default".format(
+                            default_id
+                        )
+                    )
+                self.save(
+                    self.__class__.default, allow_overwrite=True, make_default=True
+                )
+            else:
+                self._logger.error(
+                    "Selected default profile {} does not exists, resetting to _default".format(
+                        default_id
+                    )
+                )
+                settings().set(SETTINGS_PATH_PROFILE_DEFAULT_ID, "_default")
+                settings().save()
+            default_id = "_default"
+
+        profile = self.get(default_id)
+        if profile is None:
+            self._logger.error(
+                "Selected default profile {} is invalid, resetting to default values".format(
+                    default_id
+                )
+            )
+            profile = copy.deepcopy(self.__class__.default)
+            profile["id"] = default_id
+            self.save(self.__class__.default, allow_overwrite=True, make_default=True)
 
     def get(self, identifier):
         try:
             if identifier == "_default":
                 return self._load_default()
-            elif self.exists(identifier):
-                return self._load_from_path(self._get_profile_path(identifier))
+            elif identifier in LASER_PROFILE_IDENTIFIERS:
+                file_based_result = PrinterProfileManager.get(self, identifier)
+                hard_coded = {}  # FIXME
+                return dict_merge(hard_coded, file_based_result)
             else:
-                return None
+                return PrinterProfileManager.get(self, identifier)
         except InvalidProfileError:
             return None
 
     def remove(self, identifier):
-        if identifier == "_default":
+        # Overloaded from OP because of printerProfiles path (default_id)
+        if self._current is not None and self._current["id"] == identifier:
+            return False
+        elif settings().get(SETTINGS_PATH_PROFILE_DEFAULT_ID) == identifier:
             return False
         return self._remove_from_path(self._get_profile_path(identifier))
 
     def save(self, profile, allow_overwrite=False, make_default=False):
         """
         Saves given profile to file.
+        /!\ make_default uses the octoprint printerProfile path.
         :param profile:
         :param allow_overwrite:
         :param make_default:
         :return:
         """
-        if "id" in profile and profile["id"] != "":
-            identifier = profile["id"]
-        elif "name" in profile:
-            identifier = profile["name"]
-        else:
-            raise InvalidProfileError("profile must contain either id or name")
-
-        identifier = self._sanitize(identifier)
-        profile["id"] = identifier
-        profile = dict_clean(profile, self.__class__.default)
-
+        ret = PrinterProfileManager.save(self, profile, allow_overwrite, make_default)
         if identifier == "_default":
             default_profile = dict_merge(self._load_default(), profile)
             if not self._ensure_valid_profile(default_profile):
                 raise InvalidProfileError()
 
-            self.settings.set(
+            settings().set(
                 self.SETTINGS_PATH_PROFILE_DEFAULT_PROFILE,
                 default_profile,
                 defaults=dict(
-                    lasercutterprofiles=dict(defaultProfile=self.__class__.default)
+                    lasercutterprofiles=dict(defaultProfile=LASER_PROFILE_DEFAULT)
                 ),
             )
-            self.settings.save()
+            settings().save()
         else:
             self._save_to_path(
                 self._get_profile_path(identifier),
@@ -159,8 +203,8 @@ class LaserCutterProfileManager(object):
                 allow_overwrite=allow_overwrite,
             )
 
-            if make_default:
-                self.set_default(identifier)
+        if make_default:
+            self.set_default(identifier)
 
         # Not sure if we want to sync to OP's PrinterprofileManager
         # _mrbeam_plugin_implementation._printer_profile_manager.save(profile, allow_overwrite, make_default)
@@ -168,143 +212,39 @@ class LaserCutterProfileManager(object):
         return self.get(identifier)
 
     def get_default(self):
-        default = self.settings.get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID)
+        # Overloaded because of settings path
+        default = settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID)
         if default is not None and self.exists(default):
             profile = self.get(default)
             if profile is not None:
                 return profile
 
-        return self._load_default()
+        return copy.deepcopy(self.__class__.default)
 
     def set_default(self, identifier):
-        all_identifiers = self._load_all_identifiers().keys()
+        # Overloaded because of settings path
+        all_identifiers = self._load_file_name_identifiers().keys()
         if identifier is not None and not identifier in all_identifiers:
             return
 
-        self.settings.set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier, force=True)
-        self.settings.save()
-
-    def get_current_or_default(self):
-        if self._current is not None:
-            return self._current
-        else:
-            return self.get_default()
-
-    def get_current(self):
-        return self._current
-
-    def exists(self, identifier):
-        if identifier is None:
-            return False
-        else:
-            path = self._get_profile_path(identifier)
-            return os.path.exists(path) and os.path.isfile(path)
+        settings().set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier, force=True)
+        settings().save()
 
     def _load_all(self):
-        all_identifiers = self._load_all_identifiers()
-        results = dict()
-        for identifier, path in all_identifiers.items():
-            try:
-                profile = self._load_from_path(path)
-            except InvalidProfileError:
-                continue
-
-            if profile is not None:
-                results[identifier] = profile
-        return results
-
-    def _load_all_identifiers(self):
-        results = dict()
-        for entry in os.listdir(self._folder):
-            if (
-                entry.startswith(".")
-                or not entry.endswith(".profile")
-                or entry == "_default.profile"
-            ):
-                continue
-
-            path = os.path.join(self._folder, entry)
-            if not os.path.isfile(path):
-                continue
-
-            identifier = entry[: -len(".profile")]
-            results[identifier] = path
-        return results
-
-    def _load_from_path(self, path):
-        if not os.path.exists(path) or not os.path.isfile(path):
-            return None
-
-        import yaml
-
-        with open(path) as f:
-            profile = yaml.safe_load(f)
-        profile = self._ensure_valid_profile(profile)
-        if not profile:
-            self._logger.warn("Invalid profile: %s" % path)
-            raise InvalidProfileError()
-        profile = self._underlay_profile_with_default(profile)
-        return profile
-
-    def _save_to_path(self, path, profile, allow_overwrite=False):
-        validated_profile = self._ensure_valid_profile(profile)
-        if not validated_profile:
-            raise InvalidProfileError()
-
-        if os.path.exists(path) and not allow_overwrite:
-            raise SaveError(
-                "Profile %s already exists and not allowed to overwrite" % profile["id"]
-            )
-
-        import yaml
-
-        with open(path, "wb") as f:
-            try:
-                yaml.safe_dump(
-                    profile,
-                    f,
-                    default_flow_style=False,
-                    indent="  ",
-                    allow_unicode=True,
-                )
-            except Exception as e:
-                raise SaveError(
-                    "Cannot save profile %s: %s" % (profile["id"], e.message)
-                )
-
-    def _remove_from_path(self, path):
-        try:
-            os.remove(path)
-            return True
-        except:
-            return False
+        # TODO
+        file_based_profiles = super._load_all(self)
+        fallback_profiles = {
+            "MrBeam2U": profile1,
+        }
+        return dict_merge(fallback_profiles, file_based_profiles)
 
     def _load_default(self, defaultModel=None):
-        default = copy.deepcopy(self.__class__.default)
+        default = copy.deepcopy(LASER_PROFILE_DEFAULT)
         profile = self._ensure_valid_profile(default)
         if not profile:
             self._logger.warn("Invalid default profile after applying overrides")
             raise InvalidProfileError()
         return profile
-
-    def _get_profile_path(self, identifier):
-        return os.path.join(self._folder, "%s.profile" % identifier)
-
-    def _sanitize(self, name):
-        if name is None:
-            return None
-
-        if "/" in name or "\\" in name:
-            raise ValueError("name must not contain / or \\")
-
-        import string
-
-        valid_chars = "-_.() {ascii}{digits}".format(
-            ascii=string.ascii_letters, digits=string.digits
-        )
-        sanitized_name = "".join(c for c in name if c in valid_chars)
-        sanitized_name = sanitized_name.replace(" ", "_")
-        return sanitized_name
 
     def _ensure_valid_profile(self, profile):
         # # ensure all keys are present
