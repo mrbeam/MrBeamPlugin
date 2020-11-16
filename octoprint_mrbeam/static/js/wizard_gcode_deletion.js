@@ -5,7 +5,7 @@ $(function () {
 
         self.wizard = parameters[0];
 
-        self.gcodeAutoDeletion = ko.observable(null);
+        self.gcodeAutoDeletion = ko.observable(false);
         self.containsGcodeDeletionTab = false;
 
         self.onAfterBinding = function () {
@@ -33,7 +33,10 @@ $(function () {
                     );
                 })
                 .fail(function () {
-                    console.error("Unable to save gcode deletion state: ", data);
+                    console.error(
+                        "Unable to save gcode deletion state: ",
+                        data
+                    );
                     new PNotify({
                         title: gettext("Error while saving settings!"),
                         text: _.sprintf(
