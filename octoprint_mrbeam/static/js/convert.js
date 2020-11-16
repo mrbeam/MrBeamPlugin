@@ -893,7 +893,7 @@ $(function () {
         );
         self.imgDithering = ko.observable(self.JOB_PARAMS.default.dithering);
         self._extraOvershoot = {
-            // TODO make auto a ko.computed
+            selected: ko.observable(false),
             auto: ko.computed(function () {
                 // hardcoded threshold for now
                 // hardcoded value based on the default ratio
@@ -902,14 +902,15 @@ $(function () {
                     self.imgIntensityBlack() / self.imgFeedrateBlack() < 0.05
                 );
             }),
-            forced: ko.observable(false),
-            user: ko.observable(self.JOB_PARAMS.default.extraOvershoot),
         };
+        self._extraOvershoot.isAuto = ko.computed(function () {
+            return self._extraOvershoot.selected() == "auto";
+        });
         self.extraOvershoot = ko.computed(function () {
-            if (self._extraOvershoot.forced()) {
-                return self._extraOvershoot.user();
-            } else {
+            if (self._extraOvershoot.isAuto()) {
                 return self._extraOvershoot.auto();
+            } else {
+                return self._extraOvershoot.selected() == "careful";
             }
         });
         self.beamDiameter = ko.observable(self.JOB_PARAMS.default.beamDiameter);
@@ -2216,14 +2217,6 @@ $(function () {
                 window.mrbeam.viewModels.vectorConversionViewModel,
                 newJob
             );
-        };
-
-        self.forceOvershoot = function (_self, event) {
-            if (event.type == "click") {
-                // The user specificaly clicked on the checkbox
-                self._extraOvershoot.user(event.currentTarget.checked);
-                self._extraOvershoot.forced(true);
-            }
         };
     }
 

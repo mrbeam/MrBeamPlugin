@@ -346,16 +346,41 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="checkbox-control-and-label" data-toggle="tooltip" data-placement="right"
-                                     title="<b>{{ _('Use this setting if you find extra engraving lines on the left and right of the engraving.') }}</b><br>
-                                        {{ _('It means your material is extremely sensitive to the laser light. This options prolongs the laser time slightly.') }}">
-
-                                    <label class="control-label">{{ _('Extra overshoot') }}
-                                    </label>
+                                <div class="switch-control-and-label" data-toggle="tooltip" data-placement="right"
+                                    title="
+                                        {{ _('All engravings are processed line by line from bottom to top.') }}
+                                        {{ _('When engraving from one line to an other, the caret will come to a standstill for a short moment with minimal power.') }}
+                                        {{ _('This can cause burnmarks on the left and right side of the engraving for particularly sensitive materials such as synthetic leather or foam.') }}
+                                        <ul>
+                                            <li><b>{{ _('Auto (default):') }}</b>
+                                                    {{ _('If the material is deemed sensitive, extra time will be spent to make sure there is no undesired burn marks on the edges of the engraving.') }}
+                                                    {{ _('Otherwise, it will engrave as fast as possible.') }}
+                                            </li>
+                                            <li><b>{{ _('Careful:') }}</b>
+                                                    {{ _('Extra time will be spent when going from line to line to make sure there is no undesired burn marks on the edges of the engraving.') }}
+                                            </li>
+                                            <li><b>{{ _('Fast:') }}</b>
+                                                    {{ _('Do the least amount of movement from line to line, making it as fast as possible.') }}
+                                                    {{ _('This can cause burnmarks on the left and right side of the engraving for sensitive material.') }}
+                                            </li>
+                                        </ul>">
+                                    <label class="control-label">{{ _('Extra overshoot') }}</label>
                                     <div class="controls">
-                                        <input type="checkbox" data-bind="checked: extraOvershoot, event: {change: flag_customized_material, click: forceOvershoot}"/>
+                                        <div class="btn-group" data-toggle="buttons-radio">
+                                            <label class="btn btn-default active">
+                                                <input type="radio" name="overshoot_type" value="auto" autocomplete="off" data-bind="checked: _extraOvershoot.selected"></input>
+                                                {{ _('Auto') }}
+                                            </label>
+                                            <label class="btn btn-default">
+                                                <input type="radio" name="overshoot_type" value="careful" autocomplete="off" data-bind="checked: _extraOvershoot.selected"></input>
+                                                {{ _('Careful') }}
+                                            </label>
+                                            <label class="btn btn-default">
+                                                <input type="radio" name="overshoot_type" value="fast" autocomplete="off" data-bind="checked: _extraOvershoot.selected"></input>
+                                                {{ _('Fast') }}
+                                            </label>
+                                        </div>
                                     </div>
-
                                 </div>
 
 							</div>
