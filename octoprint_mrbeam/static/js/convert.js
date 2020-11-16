@@ -14,6 +14,7 @@ $(function () {
             default: {
                 intensityWhite: 0,
                 intensityBlack: 50,
+                extraOvershoot: "auto",
                 feedrateWhite: 1500,
                 feedrateBlack: 250,
                 contrast: 1.0,
@@ -892,7 +893,7 @@ $(function () {
         );
         self.imgDithering = ko.observable(self.JOB_PARAMS.default.dithering);
         self._extraOvershoot = {
-            selected: ko.observable(false),
+            selected: ko.observable(self.JOB_PARAMS.default.extraOvershoot),
             auto: ko.computed(function () {
                 // hardcoded threshold for now
                 // hardcoded value based on the default ratio
