@@ -358,7 +358,6 @@ class MrBeamPlugin(
         )
 
         return dict(
-            current_profile_id="_mrbeam_junior",  # yea, this needs to be like this # 2018: not so sure anymore...
             svgDPI=90,
             dxfScale=1,
             beta_label="",
@@ -1623,15 +1622,11 @@ class MrBeamPlugin(
                 if "volume" in new_profile:
                     if "width" in new_profile["volume"]:
                         width = float(new_profile["volume"]["width"])
-                        if identifier == "_mrbeam_senior":
-                            width *= 2
                         width += float(new_profile["volume"]["origin_offset_x"])
                         self._printer.commands("$130=" + str(width))
                         time.sleep(0.1)  ### TODO find better solution then sleep
                     if "depth" in new_profile["volume"]:
                         depth = float(new_profile["volume"]["depth"])
-                        if identifier == "_mrbeam_senior":
-                            depth *= 2
                         depth += float(new_profile["volume"]["origin_offset_y"])
                         self._printer.commands("$131=" + str(depth))
 

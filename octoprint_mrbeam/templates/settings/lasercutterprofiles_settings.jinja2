@@ -17,7 +17,7 @@
         <td class="settings_printerProfiles_profiles_model" data-bind="text: model, click: function() { $root.makeDefault($data); }" style="cursor:pointer"></td>
         <td class="settings_printerProfiles_profiles_action">
 <!--            <a href="#" class="icon-star" title="Select profile" data-bind="click: function() { $root.makeDefault($data); }"></a>&nbsp;|&nbsp;-->
-			<a href="#" class="icon-pencil" title="Edit Profile" data-bind="css: {disabled:$root.isReadOnly($data)}, click: function() { if(!$root.isReadOnly($data)) $root.showEditProfileDialog($data); }"></a>&nbsp;|&nbsp;<a href="#" class="icon-trash" title="Delete Profile" data-bind="css: {disabled:$root.isReadOnly($data)}, click: function() { if(!$root.isReadOnly($data)) $root.removeProfile($data); }"></a>
+			<a href="#" class="icon-pencil" title="Edit Profile" data-bind="click: function() { if(!$root.isReadOnly($data)) $root.showEditProfileDialog($data); }"></a>&nbsp;|&nbsp;<a href="#" class="icon-trash" title="Delete Profile" data-bind="css: {disabled:$root.isReadOnly($data)}, click: function() { if(!$root.isReadOnly($data)) $root.removeProfile($data); }"></a>
         </td>
     </tr>
     </tbody>

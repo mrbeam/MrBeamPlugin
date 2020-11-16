@@ -236,10 +236,6 @@ $(function () {
             }
         };
 
-        self.isReadOnly = function (data) {
-            return data.id === "_mrbeam_senior" || data.id === "_mrbeam_junior";
-        };
-
         self._editorData = function () {
             var profile = {
                 id: self.editorIdentifier(),
