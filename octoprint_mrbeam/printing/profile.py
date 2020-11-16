@@ -71,35 +71,6 @@ class LaserCutterProfileManager(object):
     SETTINGS_PATH_PROFILE_DEFAULT_PROFILE = ["lasercutterProfiles", "defaultProfile"]
     # SETTINGS_PATH_PROFILE_CURRENT_ID = ['lasercutterProfiles', 'current']
 
-    # old default dictionary for Mr Beam I
-    # default = dict(
-    # 	id = "_mrbeam_junior",
-    # 	name = "Mr Beam",
-    # 	model = "Junior",
-    # 	volume=dict(
-    # 		width = 217,
-    # 		depth = 298,
-    # 		height = 0,
-    # 		origin_offset_x = 1.1,
-    # 		origin_offset_y = 1.1,
-    # 	),
-    # 	zAxis = False,
-    # 	focus = False,
-    # 	glasses = True,
-    # 	axes=dict(
-    # 		x = dict(speed=5000, inverted=False),
-    # 		y = dict(speed=5000, inverted=False),
-    # 		z = dict(speed=1000, inverted=False)
-    # 	),
-    # 	start_method = None,
-    # 	grbl = dict(
-    # 		resetOnConnect = False,
-    # 	),
-    # )
-
-    # we tried to switch to more up-to-date default profiles...
-    # but then more than just one profile had the same name as the default one
-    #    and that confused the whole system.... :-(
     default = dict(
         id="my_default",
         name="Dummy Laser",
@@ -324,8 +295,6 @@ class LaserCutterProfileManager(object):
     def exists(self, identifier):
         if identifier is None:
             return False
-        elif identifier == "_mrbeam_junior" or identifier == "_mrbeam_senior":
-            return True
         else:
             path = self._get_profile_path(identifier)
             return os.path.exists(path) and os.path.isfile(path)
@@ -339,15 +308,8 @@ class LaserCutterProfileManager(object):
             except InvalidProfileError:
                 continue
 
-            if profile is None:
-                continue
-
-            results[identifier] = dict_merge(
-                self._load_default("_mrbeam_junior"), profile
-            )
-
-        results["_mrbeam_junior"] = self._load_default("_mrbeam_junior")
-        results["_mrbeam_senior"] = self._load_default("_mrbeam_senior")
+            if profile is not None:
+                results[identifier] = profile
         return results
 
     def _load_all_identifiers(self):
@@ -418,12 +380,6 @@ class LaserCutterProfileManager(object):
 
     def _load_default(self, defaultModel=None):
         default = copy.deepcopy(self.__class__.default)
-        if defaultModel is not None and defaultModel == "_mrbeam_senior":
-            default["volume"]["width"] *= 2
-            default["volume"]["depth"] *= 2
-            default["model"] = "Senior"
-            default["id"] = "_mrbeam_senior"
-
         profile = self._ensure_valid_profile(default)
         if not profile:
             self._logger.warn("Invalid default profile after applying overrides")
