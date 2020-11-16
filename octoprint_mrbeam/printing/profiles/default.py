@@ -4,7 +4,7 @@ __all__ = ["profile"]
 
 profile = dict(
     id="my_default",
-    name="Dummy Laser",
+    name="MrBeam2",
     model="X",
     axes=dict(
         x=dict(inverted=False, speed=5000, overshoot=1, homing_direction_positive=True),
