@@ -2401,10 +2401,6 @@ class MrBeamPlugin(
             % (model_path, machinecode_path, profile_path, self._CONVERSION_PARAMS_PATH)
         )
 
-        # TODO remove profile dependency completely
-        # profile = Profile(self._load_profile(profile_path))
-        # params = profile.convert_to_engine2()
-
         def is_job_cancelled():
             if self._cancel_job:
                 self._cancel_job = False
@@ -2510,10 +2506,6 @@ class MrBeamPlugin(
 
         with open(path, "wb") as f:
             yaml.safe_dump(profile, f, indent="  ", allow_unicode=True)
-
-    def _convert_to_engine(self, profile_path):
-        profile = Profile(self._load_profile(profile_path))
-        return profile.convert_to_engine()
 
     ##~~ Event Handler Plugin API
 
