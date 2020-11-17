@@ -253,7 +253,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
         settings().set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier, force=True)
         settings().save()
 
-    @logme(output=True)
+    # @logme(output=True)
     def get_current_or_default(self):
         return PrinterProfileManager.get_current_or_default(self)
 
