@@ -14,6 +14,7 @@ $(function () {
             default: {
                 intensityWhite: 0,
                 intensityBlack: 50,
+                extraOvershoot: "auto",
                 feedrateWhite: 1500,
                 feedrateBlack: 250,
                 contrast: 1.0,
@@ -891,6 +892,27 @@ $(function () {
             self.JOB_PARAMS.default.feedrateBlack
         );
         self.imgDithering = ko.observable(self.JOB_PARAMS.default.dithering);
+        self._extraOvershoot = {
+            selected: ko.observable(self.JOB_PARAMS.default.extraOvershoot),
+            auto: ko.computed(function () {
+                // hardcoded threshold for now
+                // hardcoded value based on the default ratio
+                // from vegan leather, which is 0.043
+                return (
+                    self.imgIntensityBlack() / self.imgFeedrateBlack() < 0.05
+                );
+            }),
+        };
+        self._extraOvershoot.isAuto = ko.computed(function () {
+            return self._extraOvershoot.selected() == "auto";
+        });
+        self.extraOvershoot = ko.computed(function () {
+            if (self._extraOvershoot.isAuto()) {
+                return self._extraOvershoot.auto();
+            } else {
+                return self._extraOvershoot.selected() == "careful";
+            }
+        });
         self.beamDiameter = ko.observable(self.JOB_PARAMS.default.beamDiameter);
         self.engravingPiercetime = ko.observable(
             self.JOB_PARAMS.default.pierceTime
@@ -1189,6 +1211,7 @@ $(function () {
                 ).attr("value"),
                 line_distance: $("#svgtogcode_img_line_dist").val(),
                 eng_compressor: eng_compressor,
+                extra_overshoot: self.extraOvershoot(),
             };
             return data;
         };

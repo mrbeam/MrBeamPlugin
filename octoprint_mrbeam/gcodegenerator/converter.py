@@ -338,6 +338,7 @@ class Converter:
                             dithering=rasterParams["dithering"],
                             pierce_time=rasterParams["pierce_time"],
                             engraving_mode=rasterParams["engraving_mode"],
+                            extra_overshoot=rasterParams["extra_overshoot"],
                             eng_compressor=rasterParams["eng_compressor"],
                             material=self.options["material"],
                         )
