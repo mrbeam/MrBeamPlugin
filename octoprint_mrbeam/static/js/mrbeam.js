@@ -441,24 +441,45 @@ $(function () {
         self._handle_session_expired = function () {
             if (self.loginState && self.loginState.loggedIn()) {
                 console.error(
-                    "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Showing 'Session expired' to the user."
+                    "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Trying passive login..."
                 );
                 let pn_obj = {
                     id: "session_expired",
                     title: gettext("Session expired"),
-                    text: gettext("Please login again to continue."),
+                    text: gettext("Trying to do a re-login..."),
                     type: "warn",
-                    // tag: "conversion_error",
-                    hide: false,
+                    hide: true,
                 };
                 mrbeam.updatePNotify(pn_obj);
-                if (settings.url != "/api/logout") {
-                    // we would get into an endless loop then...
-                    console.error("Triggering self.loginState.logout()");
-                    self.loginState.logout();
-                }
-                // Reconnect socket connection
-                OctoPrint.socket.reconnect();
+
+                // try passive login
+                self.loginState.requestData().always(function () {
+                    if (self.loginState.loggedIn()) {
+                        console.log("Passive login: done.");
+                        let pn_obj = {
+                            id: "session_expired",
+                            title: gettext("Session expired"),
+                            text: gettext(
+                                "Re-login successful.<br/>Please repeat the last action."
+                            ),
+                            type: "warn",
+                            hide: true,
+                        };
+                        mrbeam.updatePNotify(pn_obj);
+                    } else {
+                        console.log("Passive login: failed.");
+                        let pn_obj = {
+                            id: "session_expired",
+                            title: gettext("Session expired"),
+                            text: gettext("Please login again."),
+                            type: "warn",
+                            hide: true,
+                        };
+                        mrbeam.updatePNotify(pn_obj);
+                    }
+                    // Reconnect socket connection
+                    OctoPrint.socket.reconnect();
+                });
             } else {
                 console.log(
                     "Server responded UNAUTHORIZED and loginStateViewModel is loggedOut. Consistent."
