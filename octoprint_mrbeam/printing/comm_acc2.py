@@ -309,10 +309,10 @@ class MachineCom(object):
             )
         return (
             self._laserCutterProfile["volume"]["width"]
-            + self._laserCutterProfile["volume"]["working_area_shift_x"],  # x
+            + self._laserCutterProfile["volume"]["working_area_shift_x"],
             self._laserCutterProfile["volume"]["depth"]
             + self._laserCutterProfile["volume"]["working_area_shift_y"],
-        )  # y
+        )
 
     def _monitor_loop(self):
         try:

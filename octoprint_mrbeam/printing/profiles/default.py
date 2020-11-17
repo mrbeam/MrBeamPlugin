@@ -37,7 +37,7 @@ profile = dict(
         #   So $130 (x max travel) will be 515.1, reaching
         #       from -7.0: 0 - 7.0(working_area_shift_x)
         #       till 508.1: 500(width) + 7.0(working_area_shift_x) + 1.1(origin_offset_x)
-        depth=390.0,  # Wrong terminology, should switch with height
+        depth=390.0,
         height=0.0,
         origin_offset_x=1.1,
         origin_offset_y=1.1,

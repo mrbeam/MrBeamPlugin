@@ -58,7 +58,6 @@ from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
     InvalidProfileError,
     CouldNotOverwriteError,
-    Profile,
 )
 from octoprint_mrbeam.software_update_information import (
     get_update_information,

@@ -86,6 +86,12 @@ LASER_PROFILE_IDENTIFIERS = (
     "MrBeam2U",
     "Dummy Laser",
 )
+LASER_PROFILE_MAP = dict(
+    zip(
+        LASER_PROFILE_IDENTIFIERS,
+        LASER_PROFILES,
+    )
+)
 
 
 class LaserCutterProfileManager(PrinterProfileManager):
@@ -112,12 +118,15 @@ class LaserCutterProfileManager(PrinterProfileManager):
 
     def _verify_default_available(self):
         # Overloaded from OP because of printerProfiles path ``default_id``
-        default_id = settings().get(SETTINGS_PATH_PROFILE_DEFAULT_ID)
+        default_id = settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID)
         if default_id is None:
             default_id = "_default"
 
         if not self.exists(default_id):
-            if not self.exists("_default"):
+            if default_id in LASER_PROFILE_IDENTIFIERS:
+                # Will select hard coded profiles
+                pass
+            elif not self.exists("_default"):
                 if default_id == "_default":
                     self._logger.error(
                         "Profile _default does not exist, creating _default again and setting it as default"
@@ -137,7 +146,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
                         default_id
                     )
                 )
-                settings().set(SETTINGS_PATH_PROFILE_DEFAULT_ID, "_default")
+                settings().set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, "_default")
                 settings().save()
             default_id = "_default"
 
@@ -159,7 +168,10 @@ class LaserCutterProfileManager(PrinterProfileManager):
                 return self._load_default()
             elif identifier in LASER_PROFILE_IDENTIFIERS:
                 file_based_result = PrinterProfileManager.get(self, identifier)
-                hard_coded = {}  # FIXME
+                # Update derivated profiles using the default profile.
+                hard_coded = dict_merge(
+                    self._load_default(), LASER_PROFILE_MAP[identifier]
+                )
                 return dict_merge(hard_coded, file_based_result)
             else:
                 return PrinterProfileManager.get(self, identifier)
@@ -170,7 +182,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
         # Overloaded from OP because of printerProfiles path (default_id)
         if self._current is not None and self._current["id"] == identifier:
             return False
-        elif settings().get(SETTINGS_PATH_PROFILE_DEFAULT_ID) == identifier:
+        elif settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID) == identifier:
             return False
         return self._remove_from_path(self._get_profile_path(identifier))
 
@@ -234,20 +246,24 @@ class LaserCutterProfileManager(PrinterProfileManager):
 
     def set_default(self, identifier):
         # Overloaded because of settings path
-        all_identifiers = self._load_file_name_identifiers().keys()
+        all_identifiers = self._load_all_identifiers().keys()
         if identifier is not None and not identifier in all_identifiers:
             return
 
         settings().set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier, force=True)
         settings().save()
 
+    @logme(output=True)
+    def get_current_or_default(self):
+        return PrinterProfileManager.get_current_or_default(self)
+
     def _load_all(self):
         """Extend the file based ``PrinterProfileManager._load_all`` with the few hardcoded ones we have."""
         file_based_profiles = PrinterProfileManager._load_all(self)
-        fallback_profiles = dict(zip(LASER_PROFILES, LASER_PROFILE_IDENTIFIERS))
-        return dict_merge(fallback_profiles, file_based_profiles)
+        return dict_merge(LASER_PROFILE_MAP, file_based_profiles)
 
     def _load_default(self, defaultModel=None):
+        # Overloaded because of settings path
         default = copy.deepcopy(LASER_PROFILE_DEFAULT)
         profile = self._ensure_valid_profile(default)
         if not profile:
@@ -256,9 +272,13 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return profile
 
     def _ensure_valid_profile(self, profile):
+        # Ensuring that all keys are present is the default behaviour of the OP ``PrinterProfileManager``
+        # This ``LaserCutterProfileManager`` can use partially declared profiles, as they are
+        # completed using the default profile.
+        #
         # # ensure all keys are present
-        if not dict_contains_keys(self.default, profile):
-            return False
+        # if not dict_contains_keys(self.default, profile):
+        #     return False
 
         # conversion helper
         def convert_value(profile, path, converter):
