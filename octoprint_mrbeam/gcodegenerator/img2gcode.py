@@ -537,10 +537,7 @@ class ImageProcessor:
                                         -_size * _line1 / 2,
                                     ],
                                     axis=0,
-                                )
-                                # the folowwing line gi
-                                # .tolist()
-                                # + [end],
+                                ),
                             )
                         )
                         # self.log.info(" Overshoot direction %s, side %s", k, side)
