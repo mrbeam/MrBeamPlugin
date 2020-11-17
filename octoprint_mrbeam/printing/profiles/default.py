@@ -92,9 +92,4 @@ profile = dict(
         },
     ),
     zAxis=False,
-    legacy=dict(
-        # 2C series only
-        # https: // github.com / mrbeam / MrBeamPlugin / issues / 211
-        job_done_home_position_x=None
-    ),
 )

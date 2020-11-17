@@ -36,6 +36,7 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
+from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -301,7 +302,10 @@ class MachineCom(object):
         Returns the home position which usually where the head is after homing. (Except in C series)
         :return: Tuple of (x, y) position
         """
-        if self._laserCutterProfile["legacy"]["job_done_home_position_x"] is not None:
+        if (
+            dict_get(self._laserCutterProfile, ["legacy", "job_done_home_position_x"])
+            is not None
+        ):
             return (
                 self._laserCutterProfile["legacy"]["job_done_home_position_x"],
                 self._laserCutterProfile["volume"]["depth"]
