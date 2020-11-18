@@ -456,7 +456,6 @@ $(function () {
                     // try passive login
                     self.loginState.requestData().always(function () {
                         if (self.loginState.loggedIn()) {
-                            console.log("Passive login: done.");
                             let pn_obj = {
                                 id: "session_expired",
                                 title: gettext("Session expired"),
@@ -468,7 +467,6 @@ $(function () {
                             };
                             mrbeam.updatePNotify(pn_obj);
                         } else {
-                            console.log("Passive login: failed.");
                             let pn_obj = {
                                 id: "session_expired",
                                 title: gettext("Session expired"),
