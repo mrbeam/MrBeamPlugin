@@ -379,7 +379,7 @@ $(function () {
                     thrownError
                 ) {
                     if (jqXHR.status == 401) {
-                        self._handle_session_expired();
+                        self._handle_session_expired(settings.url);
                     }
                 });
             }
@@ -440,7 +440,10 @@ $(function () {
 
         self._handle_session_expired = function (triggerUrl) {
             if (self.loginState && self.loginState.loggedIn()) {
-                if (triggerUrl != "/api/logout") {
+                if (
+                    !triggerUrl.includes("api/logout") &&
+                    !triggerUrl.includes("plugin/mrbeam/console")
+                ) {
                     console.error(
                         "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Trying passive login..."
                     );
