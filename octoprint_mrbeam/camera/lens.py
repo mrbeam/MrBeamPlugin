@@ -493,7 +493,8 @@ def handleBoardPicture(image, count, board_size, q_out=None):
     logging.info("Finding board")
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     success, found_pattern = findBoard(gray, board_size)
-    _pattern = found_pattern.reshape(-1, 2)
+    if success and found_pattern is not None:
+        _pattern = found_pattern.reshape(-1, 2)
 
     center = None
     bbox = None
