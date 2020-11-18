@@ -1,16 +1,15 @@
-import sys
-from itertools import chain
-import time
+from collections import Iterable, Mapping
+from copy import copy, deepcopy
+from functools import wraps
+from itertools import chain, repeat, cycle
+import json
 import logging
 import numpy as np
-import json
-from itertools import chain, repeat, cycle
-from functools import wraps
-from copy import copy, deepcopy
+import sys
+import time
 import threading
-from .log import logExceptions, logtime
 
-# from typing import Mapping
+from .log import logExceptions, logtime
 
 
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
@@ -55,6 +54,29 @@ def dict_map(func, my_dict):
     for k, v, parent in nested_items(__my_dict):
         parent[k] = func(v)
     return __my_dict
+
+
+def dict_get(mapping, path, default=None):
+    """
+    Use a path to get an item from a deep map.
+    ``path`` has to be Iterable.
+    """
+    assert isinstance(mapping, Mapping)
+    assert isinstance(path, Iterable)
+    _mapping = mapping
+    result = None
+    for k in path:
+        if k in _mapping.keys():
+            result = _mapping[k]
+            if isinstance(_mapping[k], Mapping):
+                _mapping = _mapping[k]
+            else:
+                # Otherwise k could be repeated
+                _mapping = {}
+        # path not found in deep map
+        else:
+            return default
+    return result
 
 
 def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):

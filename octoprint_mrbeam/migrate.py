@@ -32,6 +32,7 @@ class Migration(object):
     VERSION_INITD_NETCONNECTD = "0.5.5"
     VERSION_DELETE_UPLOADED_STL_FILES = "0.6.1"
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
+    VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.10.2"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
@@ -191,6 +192,13 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.fix_settings()
+
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    self.VERSION_DISABLE_GCODE_AUTO_DELETION,
+                    equal_ok=False,
+                ):
+                    self.disable_gcode_auto_deletion()
 
                 # migrations end
 
@@ -598,6 +606,11 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             __package_path__, self.MIGRATE_FILES_FOLDER, "wifi_power_management"
         )
         exec_cmd("sudo {script}".format(script=script))
+
+    def disable_gcode_auto_deletion(self):
+        # For all the old Mr Beams, we preset the value to False. Then we will ask the users if they want to change it.
+        if not self.plugin.isFirstRun():
+            self.plugin._settings.set_boolean(["gcodeAutoDeletion"], False)
 
     ##########################################################
     #####             lasercutterProfiles                #####

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from collections import Mapping
-from copy import deepcopy
 import yaml
 
 from .definitions import (
@@ -113,9 +112,6 @@ def save_corner_calibration(
 
     pic_settings[__CORNERS_KEY] = newCorners
     pic_settings[__MARKERS_KEY] = newMarkers
-    pic_settings[
-        "calibration_updated"
-    ] = True  # DEPRECATED but Necessary for legacy algo
     if hostname:
         pic_settings["hostname_KEY"] = hostname
     write_corner_calibration(pic_settings, path)
@@ -150,31 +146,6 @@ def get_corner_calibration(pic_settings):
         return None
 
 
-def need_corner_calibration(pic_settings):
-    # pic settings : path (str) or dict, for now just dict
-    return all(
-        [
-            not calibration_available(pic_settings, undistorted)
-            for undistorted in (True, False)
-        ]
-    )
-
-
-def need_raw_corner_calibration(pic_settings):
-    return not calibration_available(pic_settings, undistorted=False)
-
-
-def calibration_available(pic_settings, undistorted):
-    """
-    Is there a calibration value for the markers for
-    the raw or for undistorted picture?
-    """
-    if pic_settings is None:
-        return False
-    _, ref, _ = get_deltas_and_refs(pic_settings, undistorted)
-    return ref is not None
-
-
 def get_deltas_and_refs(
     settings,
     undistorted=False,
@@ -196,27 +167,15 @@ def get_deltas_and_refs(
     :param path_to_last_markers_json: needed for overwriting file if updated
     :return: pic_settings as dict
     """
-    from octoprint_mrbeam.camera.lens import undist_points
-
     if type(settings) is str:
         pic_settings = get_corner_calibration(settings)
         if pic_settings is None:
             return None
     else:
         pic_settings = settings
-    for k in [UNDIST_CALIB_MARKERS_KEY, UNDIST_CORNERS_KEY]:
-        if not (k in pic_settings and _isValidQdDict(pic_settings[k])):
-            pic_settings[k] = None
-        elif k in pic_settings.keys() and pic_settings[k] is not None:
-            for qd in QD_KEYS:
-                pic_settings[k][qd] = np.array(pic_settings[k][qd])
 
     # Values taken from the calibration file. Used as a reference to warp the image correctly.
     # Legacy devices only have the values for the lensCorrected position.
-    # FIXME move current lensCorrected cornerCalibration to the cornerCalibrationFromFactory
-    #       (can be safely deleted once the user did 1 corner calibration on a raw picture)
-    # warp image
-    # TODO
     calibrationReferences = dict_map(
         lambda key: pic_settings.get(key, None), CALIB_REFS
     )
@@ -236,7 +195,7 @@ def get_deltas_and_refs(
                     and dist is not None
                 ):
                     # Distort reference points
-                    ref["result"] = undist_dict(ref[k]["raw"])
+                    ref["result"] = lens.undist_dict(ref[k]["raw"])
                     break  # no need to go further in the priority list
                 elif ref[k]["undistorted"]:
                     ref["result"] = dict_map(np.array, ref[k]["undistorted"])
@@ -292,30 +251,3 @@ def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
             return None
         else:
             return {qd: markers[qd] + deltas[qd] for qd in QD_KEYS}
-
-
-def rm_undidtorted_keys(pic_settings, factory=False):
-    """
-    Remove the keys and values for the undistorted marker/arrow
-    positions saved during the corner calibration.
-    """
-    pic_settings = get_corner_calibration(pic_settings)
-    if factory:
-        keys = [FACT_UNDIST_CALIB_MARKERS_KEY, FACT_UNDIST_CORNERS_KEY]
-    else:
-        keys = [UNDIST_CALIB_MARKERS_KEY, UNDIST_CORNERS_KEY]
-    for k in keys:
-        if k in pic_settings.keys():
-            pic_settings.pop(k)
-    return pic_settings
-
-
-def _isValidQdDict(qdDict):
-    """
-    :param: qd-Dict to test for valid Keys
-    :returns True or False
-    """
-    return type(qdDict) is dict and all(
-        qd in qdDict and len(qdDict[qd]) == 2 and all(not x is None for x in qdDict[qd])
-        for qd in QD_KEYS
-    )

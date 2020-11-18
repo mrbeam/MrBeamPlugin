@@ -56,10 +56,10 @@
                                                             <span>{{ _('Laser') }}</span>
                                                         </button>
                                                         <button class="btn span6" id="job_pause"
-                                                                data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}">
-                                                            <i data-bind="css: {'icon-pause': !state.isPaused(), 'icon-play': state.isPaused()}"></i>
+                                                                data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}">
+                                                            <i class="icon-pause"></i>
                                                             <span data-bind="visible: !state.isPaused()">{{ _('Pause') }}</span>
-                                                            <span data-bind="visible: state.isPaused()">{{ _('Resume') }}</span>
+                                                            <span data-bind="visible: state.isPaused()">{{ _('Paused') }}</span>
                                                         </button>
                                                     </div>
 												</div>
@@ -89,18 +89,18 @@
                                                                 <a href="https://support.mr-beam.org/support/solutions/articles/43000577720-message-preview-not-accurate-and-pink-circles-flashing-on-working-area" target="_blank" style="font-size: 11px">
                                                                     <i class="icon-external-link"></i> {{ _('More info') }}
                                                                 </a><br/>
-                                                                <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal"><i class="fa fa-heartbeat"></i> {{ _('Send image to Mr&nbsp;Beam') }}</a>
+                                                                <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal"><i class="fa fa-heartbeat"></i> {{ _('Help Mr&nbsp;Beam to improve the camera') }}</a>
                                                             </p>
                                                         </div>
 
                                                         <div id="analytics_send_image_modal" class="modal hide fade" >
                                                             <div class="modal-header">
                                                                 <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-                                                                <h3><i class="fa fa-heartbeat"></i> {{ _('Send image to Mr&nbsp;Beam') }}</h3>
+                                                                <h3><i class="fa fa-heartbeat"></i> {{ _('Help Mr&nbsp;Beam to improve the camera') }}</h3>
                                                             </div>
                                                             <div class="modal-body">
                                                                 <div>
-                                                                    <p> {{ _("Send the current image to Mr Beam Lasers for review.") }}</p>
+                                                                    <h5> {{ _("Send the current image to Mr Beam Lasers for review.") }}</h5>
                                                                     <p> {{ _("This helps us to improve the camera system to work better in even more difficult conditions.") }}</p>
                                                                 </div>
 

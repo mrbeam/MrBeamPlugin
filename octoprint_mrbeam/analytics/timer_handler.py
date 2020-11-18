@@ -43,16 +43,16 @@ class TimerHandler:
             self._timers.append(
                 Timer(self.INTERNET_CONNECTION_TIMER, self._internet_connection)
             )
-            if not (
-                self._plugin._settings.get(["dev", "support_mode"])
-                or self._plugin.calibration_tool_mode
-            ):
-                self._timers.append(
-                    Timer(
-                        self.SW_AND_CHECKSUMS_TIMER,
-                        self._software_versions_and_checksums,
-                    )
-                )
+            # if not (
+            #     self._plugin._settings.get(["dev", "support_mode"])
+            #     or self._plugin.calibration_tool_mode
+            # ):
+            #     self._timers.append(
+            #         Timer(
+            #             self.SW_AND_CHECKSUMS_TIMER,
+            #             self._software_versions_and_checksums,
+            #         )
+            #     )
             self._timers.append(
                 Timer(self.FILE_CROP_TIMER, self._crop_analytics_file_if_too_big)
             )
