@@ -40,7 +40,7 @@ class BaseCamera(object):
         """
         self._busy = Lock()  # When the camera is taking a picture
         # Thread that takes the picture asynchronously
-        self._logger = mrb_logger(__name__)
+        self._logger = mrb_logger(__name__, lvl=logging.INFO)
         self._async_capture_thread = None
         self.worker = worker
         self._shutter_speed = shutter_speed

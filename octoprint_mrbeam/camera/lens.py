@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from collections import Mapping
 import datetime
 from multiprocessing import Event, Process, Queue, Value
 from threading import Thread
@@ -32,7 +33,6 @@ from octoprint_mrbeam.camera.definitions import (
     TMP_PATH,
     TMP_RAW_FNAME,
     TMP_RAW_FNAME_RE,
-    TMP_RAW_FNAME_RE_NPZ,
 )
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import makedirs, get_thread
@@ -129,7 +129,7 @@ class BoardDetectorDaemon(Thread):
 
         # State of the detection & calibration
         if state is None:
-            self.state = calibrationState(
+            self.state = CalibrationState(
                 changeCallback=stateChangeCallback,
                 npzPath=output_calib,
                 rawImgLock=rawImgLock,
@@ -589,7 +589,7 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
         return ret, mtx, dist, rvecs, tvecs
 
 
-class calibrationState(dict):
+class CalibrationState(dict):
     def __init__(
         self,
         imageSize=LEGACY_STILL_RES,
@@ -795,8 +795,12 @@ class calibrationState(dict):
                 item["state"] == STATE_SUCCESS
                 and "date" in item
                 and "date" in self.lensCalibration
-                and datetime.datetime.strptime(item["date"], DATE_FORMAT)
-                < datetime.datetime.strptime(self.lensCalibration["date"], DATE_FORMAT)
+                and datetime.datetime.strptime(
+                    str(item["date"]), DATE_FORMAT
+                )  # str convert from np array
+                < datetime.datetime.strptime(
+                    str(self.lensCalibration["date"]), DATE_FORMAT
+                )
             )
             if not is_used:
                 self.remove(path)
@@ -808,7 +812,7 @@ class calibrationState(dict):
                 self.remove(path)
         self.onChange()
 
-    def clean(self):
+    def clean(self, maxlen=None, flatten=False):
         "Allows to be pickled"
 
         def _isClean(elm):
@@ -831,13 +835,18 @@ class calibrationState(dict):
                 np.uint32,
             ]:
                 return int(elm)
-            if isinstance(elm, np.ndarray):
-                return elm.tolist()
+            if isinstance(elm, np.ndarray) and (
+                maxlen is None or len(elm.flat) < maxlen
+            ):
+                if flatten:
+                    return list(elm.flat)
+                else:
+                    return elm.tolist()
             else:
                 return None
 
         def _clean(d):
-            if isinstance(d, dict):
+            if isinstance(d, Mapping):
                 ret = {}
                 for k, v in d.items():
                     res = _clean(v)
@@ -858,6 +867,10 @@ class calibrationState(dict):
                     return make_clean(d)
 
         return _clean(self)
+
+    def analytics_friendly(self):
+
+        return self.clean(maxlen=6, flatten=True)
 
 
 if __name__ == "__main__":

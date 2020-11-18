@@ -9,7 +9,7 @@ $(function () {
         self.settings = params[1];
         self.state = params[2];
         self.files = params[3];
-        self.gcodefiles = params[4];
+        self.gcodefiles = params[4]; // TODO: isn't gcodeFilesViewModel just another name for filesViewModel?
         self.connection = params[5];
         self.control = params[6];
         self.terminal = params[7];
@@ -583,6 +583,7 @@ $(function () {
             );
             for (var i = 0; i < items.length; i++) {
                 var elem = items[i];
+                $(elem).closest(".entry").hide(); // We just hide it to pretend it's deleted already
                 let data = ko.dataFor(elem);
                 if (data.type === "folder") {
                     self.gcodefiles.removeFolder(data);
@@ -590,7 +591,6 @@ $(function () {
                     self.gcodefiles.removeFile(data);
                 }
             }
-            items.remove();
             $("#bulkActions").slideUp();
         };
 
@@ -699,6 +699,16 @@ $(function () {
             } else {
                 elem.addClass("show_design");
             }
+        };
+
+        self.gcodefiles.hideAndRemoveFile = function (data, event) {
+            $(event.target).closest(".entry").hide(); // We just hide it to pretend it's deleted already
+            self.gcodefiles.removeFile(data, event);
+        };
+
+        self.gcodefiles.hideAndRemoveFolder = function (data, event) {
+            $(event.target).closest(".entry").hide(); // We just hide it to pretend it's deleted already
+            self.gcodefiles.removeFolder(data, event);
         };
 
         // settings.js viewmodel extensions

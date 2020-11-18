@@ -73,10 +73,10 @@ $(function () {
             lens_calibration_done: {
                 title: gettext("Lens Calibration Over"),
                 text: gettext(
-                    "A new lens calibration file has been created and is now being used. Please cancel the Lens Calibration to go back to using the device normally."
+                    "A new lens calibration file has been created and is now being used."
                 ),
                 type: "success",
-                hide: true,
+                hide: false,
             },
         };
 
@@ -91,25 +91,7 @@ $(function () {
 
                 for (let i = 0; i < nu_notifications.length; i++) {
                     let pn_obj = self._getPnObj(nu_notifications[i]);
-
-                    // find notification in screen
-                    let existing_notification = null;
-                    for (let n = 0; n < PNotify.notices.length; n++) {
-                        if (
-                            PNotify.notices[n].state != "closed" &&
-                            PNotify.notices[n].options &&
-                            PNotify.notices[n].options.id ==
-                                nu_notifications[i].notification_id
-                        ) {
-                            existing_notification = PNotify.notices[n];
-                            break;
-                        }
-                    }
-                    if (existing_notification) {
-                        existing_notification.update(pn_obj);
-                    } else {
-                        new PNotify(pn_obj);
-                    }
+                    mrbeam.updatePNotify(pn_obj);
                 }
             }
         };

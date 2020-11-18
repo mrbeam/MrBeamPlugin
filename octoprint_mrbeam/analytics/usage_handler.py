@@ -169,23 +169,7 @@ class UsageHandler(object):
 
             # If it wasn't ntp synced at the beginning of the job, but it is now, we subtract the time shift
             if self.start_ntp_synced != self._plugin._time_ntp_synced:
-                job_duration_before = job_duration
-                job_duration -= self._plugin._time_ntp_shift
-
-                ntp_details = dict(
-                    time_shift=self._plugin._time_ntp_shift,
-                    job_duration_before=job_duration_before,
-                    job_duration_after=job_duration,
-                )
-                self._analytics_handler.add_job_ntp_sync_details(ntp_details)
-
-                self._logger.info(
-                    "NTP shift fix - Job duration before: {}, after: {} --> shift: {}".format(
-                        ntp_details.get("time_shift"),
-                        ntp_details.get("job_duration_before"),
-                        ntp_details.get("job_duration_after"),
-                    )
-                )
+                job_duration = self._calculate_ntp_fix_compensation(job_duration)
 
             dust_factor = self._calculate_dust_factor()
             self._usage_data["total"]["job_time"] = self.start_time_total + job_duration
@@ -206,7 +190,37 @@ class UsageHandler(object):
                 self._usage_data["compressor"]["job_time"] = (
                     self.start_time_compressor + job_duration
                 )
+            self._logger.debug(
+                "job_duration actual: {:.1f}s, weighted: {:.1f}s, factor: {:.2f}".format(
+                    job_duration, job_duration * dust_factor, dust_factor
+                )
+            )
             self._write_usage_data()
+
+    def _calculate_ntp_fix_compensation(self, job_duration):
+        job_duration_before = job_duration
+        job_duration -= self._plugin._time_ntp_shift
+
+        ntp_details = dict(
+            time_shift=self._plugin._time_ntp_shift,
+            job_duration_before=job_duration_before,
+            job_duration_after=job_duration,
+        )
+
+        if job_duration < 0:
+            job_duration = 0
+
+        self._analytics_handler.add_job_ntp_sync_details(ntp_details)
+
+        self._logger.info(
+            "NTP shift fix - Job duration before: {}, after: {} --> shift: {}".format(
+                ntp_details.get("time_shift"),
+                ntp_details.get("job_duration_before"),
+                ntp_details.get("job_duration_after"),
+            )
+        )
+
+        return job_duration
 
     def reset_prefilter_usage(self):
         self._usage_data["prefilter"]["job_time"] = 0

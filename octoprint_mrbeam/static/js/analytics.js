@@ -1,4 +1,38 @@
 $(function () {
+    // catch and log jQuery ajax errors
+    $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
+        let msg =
+            jqXHR.status +
+            " (" +
+            jqXHR.statusText +
+            "): " +
+            settings.type +
+            " " +
+            settings.url;
+        if (settings.data) {
+            msg +=
+                ', body: "' +
+                (settings.data.length > 200
+                    ? settings.data.substr(0, 200) + "&hellip;"
+                    : settings.data);
+        }
+
+        let data = {
+            level: "error",
+            msg: msg,
+            ts: event.timeStamp,
+            file: null,
+            function: "ajaxError",
+            line: null,
+            col: null,
+            stacktrace: null,
+        };
+        console.everything.push(data);
+        if (console.callbacks.error) {
+            console.callbacks.error(data);
+        }
+    });
+
     function AnalyticsViewModel(params) {
         let self = this;
         window.mrbeam.viewModels["analyticsViewModel"] = self;
@@ -16,28 +50,30 @@ $(function () {
                 return {};
             }
 
-            payload["ts"] = payload["ts"] || new Date().getTime();
-            payload["browser_time"] = new Date().toLocaleString("en-GB"); //GB so that we don't get AM/PM
-            return self._send(event, payload);
+            return self._send(event, payload, "analytics");
         };
 
         self.send_console_event = function (logData) {
+            // copies logData to not pollute console.everything
+            logData = { ...logData };
             if (logData.level == "error" || logData.level == "warn") {
                 logData.error_sqeuence = self.error_sqeuence++;
             }
-            // copies logData to not pollute console.everything
-            logData = { ...logData };
-            self.send_fontend_event("console", logData);
+            return self._send("console", logData, "console");
         };
 
-        self._send = function (event, payload) {
+        self._send = function (event, payload, endpoint) {
+            payload = payload || {};
+            payload["ts"] = payload["ts"] || new Date().getTime();
+            payload["browser_time"] = new Date().toLocaleString("en-GB"); //GB so that we don't get AM/PM
+
             let data = {
                 event: event,
-                payload: payload || {},
+                payload: payload,
             };
 
-            $.ajax({
-                url: "plugin/mrbeam/analytics",
+            return $.ajax({
+                url: "plugin/mrbeam/" + endpoint,
                 type: "POST",
                 dataType: "json",
                 contentType: "application/json; charset=UTF-8",
@@ -54,13 +90,18 @@ $(function () {
 
             if (console.everything) {
                 console.everything.forEach(function (logData) {
-                    if (logData.level == "error" || logData.level == "warn") {
+                    if (
+                        logData.level == "log" ||
+                        logData.level == "error" ||
+                        logData.level == "warn"
+                    ) {
                         self.send_console_event(logData);
                     }
                 });
 
                 console.callbacks.error = self.send_console_event;
                 console.callbacks.warn = self.send_console_event;
+                console.callbacks.log = self.send_console_event;
             }
         };
 
@@ -78,6 +119,12 @@ $(function () {
                 window_load: (self.window_load_ts - INIT_TS_MS) / 1000,
                 curtain_open: (now - INIT_TS_MS) / 1000,
             };
+            console.log(
+                "Loading duration - window_load: " +
+                    payload["window_load"] +
+                    ", curtain_open: " +
+                    payload["curtain_open"]
+            );
             self.send_fontend_event("loading_dur", payload);
         };
 

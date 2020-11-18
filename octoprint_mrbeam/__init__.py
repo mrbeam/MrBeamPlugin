@@ -10,7 +10,9 @@ import pprint
 import socket
 import threading
 import time
+import datetime
 import collections
+import logging
 from subprocess import check_output
 
 import octoprint.plugin
@@ -46,6 +48,7 @@ from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.analytics.review_handler import reviewHandler
 from octoprint_mrbeam.led_events import LedEventListener
+from octoprint_mrbeam.filemanager import mrbFileManager
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
@@ -70,12 +73,14 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
+from octoprint_mrbeam.gcodegenerator.job_params import JobParams
 from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
 from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
 from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
 from octoprint_mrbeam.util.device_info import deviceInfo
+from octoprint_mrbeam.util.flask import restricted_unless_calibration_tool_mode
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam import camera
@@ -176,6 +181,8 @@ class MrBeamPlugin(
         self._plugin_version = __version__
         init_mrb_logger(self._printer)
         self._logger = mrb_logger("octoprint.plugins.mrbeam")
+        self._frontend_logger = self._init_frontend_logger()
+
         self._branch = self.getBranch()
         self._octopi_info = self.get_octopi_info()
         self._serial_num = self.getSerialNum()
@@ -232,12 +239,28 @@ class MrBeamPlugin(
         self.compressor_handler = compressor_handler(self)
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
+        self.mrb_file_manager = mrbFileManager(self)
 
         self._logger.info("MrBeamPlugin initialized!")
         self.mrbeam_plugin_initialized = True
         self.fire_event(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
 
         self._do_initial_log()
+
+    def _init_frontend_logger(self):
+        handler = logging.handlers.RotatingFileHandler(
+            os.path.join(self._settings.getBaseFolder("logs"), "frontend.log"),
+            maxBytes=2 * 1024 * 1024,
+            backupCount=2,
+            encoding="utf-8",
+        )
+        handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+        l = logging.getLogger("FRONTEND")
+        l.propagate = False
+        l.setLevel(logging.INFO)
+        l.addHandler(handler)
+        l.info("========== OctoPrint booting... ============")
+        return l
 
     def _do_initial_log(self):
         """
@@ -267,6 +290,7 @@ class MrBeamPlugin(
             % self.laserCutterProfileManager.get_current_or_default()
         )
         self._logger.info(msg, terminal=True)
+        self._frontend_logger.info(msg)
 
     def _convert_profiles(self, profiles):
         result = dict()
@@ -364,6 +388,7 @@ class MrBeamPlugin(
             ),
             focusReminder=True,
             analyticsEnabled=None,
+            gcodeAutoDeletion=True,
             analytics=dict(
                 cam_analytics=False,
                 folder="analytics",  # laser job analytics base folder (.octoprint/...)
@@ -457,6 +482,7 @@ class MrBeamPlugin(
                 ask=self._settings.get(["review", "ask"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
+            gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
             laserHeadSerial=self.laserhead_handler.get_current_used_lh_data()["serial"],
             usage=dict(
                 totalUsage=self.usage_handler.get_total_usage(),
@@ -477,6 +503,9 @@ class MrBeamPlugin(
         )
 
     def on_settings_save(self, data):
+        """
+        See octoprint.plugins.types.SettingsPlugin.get_settings_preprocessors to sanitize input data.
+        """
         try:
             # self._logger.info("ANDYTEST on_settings_save() %s", data)
             if "cam" in data and "previewOpacity" in data["cam"]:
@@ -529,6 +558,8 @@ class MrBeamPlugin(
                 )
             if "focusReminder" in data:
                 self._settings.set_boolean(["focusReminder"], data["focusReminder"])
+            if "gcodeAutoDeletion" in data:
+                self.set_gcode_deletion(data["gcodeAutoDeletion"])
             if "dev" in data and "software_tier" in data["dev"]:
                 switch_software_channel(self, data["dev"]["software_tier"])
             if "leds" in data and "brightness" in data["leds"]:
@@ -537,15 +568,15 @@ class MrBeamPlugin(
                 )
             if "leds" in data and "fps" in data["leds"]:
                 self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
-            # dev only
-            if "remember_markers_across_sessions" in data:
-                self._settings.set_boolean(
-                    ["cam", "remember_markers_across_sessions"],
-                    data["remember_markers_across_sessions"],
-                )
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
+        if "cam" in data and "remember_markers_across_sessions" in data["cam"]:
+            # This is going to work "just barely" because there could be
+            # mixed data input that was already treated.
+            # However this specific branching doesn't occur with other
+            # saved settings simpultaneously.
+            octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     def on_shutdown(self):
         self._shutting_down = True
@@ -613,6 +644,7 @@ class MrBeamPlugin(
                 "js/loadingoverlay_viewmodel.js",
                 "js/wizard_general.js",
                 "js/wizard_analytics.js",
+                "js/wizard_gcode_deletion.js",
                 "js/software_channel_selector.js",
                 "js/lib/hopscotch.js",
                 "js/tour_viewmodel.js",
@@ -802,8 +834,8 @@ class MrBeamPlugin(
         result = [
             dict(
                 type="settings",
-                name=gettext("File Import Settings"),
-                template="settings/svgtogcode_settings.jinja2",
+                name=gettext("Files"),
+                template="settings/file_settings.jinja2",
                 suffix="_conversion",
                 custom_bindings=False,
             ),
@@ -1180,24 +1212,10 @@ class MrBeamPlugin(
 
             destFile = "precision_calibration.gco"
 
-            class Wrapper(object):
-                def __init__(self, filename, content):
-                    self.filename = filename
-                    self.content = content
-
-                def save(self, absolute_dest_path):
-                    with open(absolute_dest_path, "w") as d:
-                        d.write(self.content)
-                        d.close()
-
-            fileObj = Wrapper(destFile, gcoString)
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                destFile,
-                fileObj,
-                links=None,
-                allow_overwrite=True,
+            self.mrb_file_manager.add_file_to_design_library(
+                file_name=destFile, content=gcoString
             )
+
             res = dict(calibration_pattern=destFile, target=FileDestinations.LOCAL)
             return jsonify(res)
 
@@ -1245,9 +1263,8 @@ class MrBeamPlugin(
         return False
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
+    @restricted_unless_calibration_tool_mode
     def calibration_wrapper(self):
-        if not self.calibration_tool_mode:
-            return ("", 403)  # FORBIDDEN # NO_CONTENT
         from flask import make_response, render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
 
@@ -1303,6 +1320,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/take_undistorted_picture", methods=["GET"]
     )
+    @restricted_unless_calibration_tool_mode
     # @firstrun_only_access
     def takeUndistortedPictureForInitialCalibration(self):
         self._logger.info("INITIAL_CALIBRATION TAKE PICTURE")
@@ -1312,6 +1330,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/on_camera_picture_transfer", methods=["GET"]
     )
+    @restricted_unless_calibration_tool_mode
     def onCameraPictureTransfer(self):
         self.lid_handler.on_front_end_pic_received()
         return NO_CONTENT
@@ -1319,21 +1338,25 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/calibration_save_raw_pic", methods=["GET"]
     )
+    @restricted_unless_calibration_tool_mode
     def onCalibrationSaveRawPic(self):
         self.lid_handler.saveRawImg()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration_get_raw_pic", methods=["GET"])
+    @restricted_unless_calibration_tool_mode
     def onCalibrationGetRawPic(self):
         self.lid_handler.getRawImg()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration_lens_start", methods=["GET"])
+    @restricted_unless_calibration_tool_mode
     def onLensCalibrationStart(self):
         self.lid_handler.onLensCalibrationStart()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration_del_pic", methods=["POST"])
+    @restricted_unless_calibration_tool_mode
     def onCalibrationDelRawPic(self):
         self._logger.debug("Command given : /calibration_del_pic")
         try:
@@ -1352,6 +1375,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/camera_run_lens_calibration", methods=["POST"]
     )
+    @restricted_unless_calibration_tool_mode
     def onCalibrationRunLensDistort(self):
         self._logger.debug("Command given : camera_run_lens_calibration")
         self.lid_handler.saveLensCalibration()
@@ -1360,6 +1384,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/camera_stop_lens_calibration", methods=["POST"]
     )
+    @restricted_unless_calibration_tool_mode
     def onCalibrationStopLensDistort(self):
         self._logger.debug("Command given : camera_stop_lens_calibration")
         self.lid_handler.stopLensCalibration()
@@ -1368,6 +1393,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/send_corner_calibration", methods=["POST"]
     )
+    @restricted_unless_calibration_tool_mode
     # @firstrun_only_access #@maintenance_stick_only_access
     def sendInitialCalibrationMarkers(self):
         if not "application/json" in request.headers["Content-Type"]:
@@ -1391,6 +1417,7 @@ class MrBeamPlugin(
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/print_label", methods=["POST"])
+    @restricted_unless_calibration_tool_mode
     def printLabel(self):
         res = labelPrinter(self, use_dummy_values=IS_X86).print_label(request)
         return make_response(jsonify(res), 200 if res["success"] else 502)
@@ -1399,27 +1426,22 @@ class MrBeamPlugin(
         "/engrave_calibration_markers/<string:intensity>/<string:feedrate>",
         methods=["GET"],
     )
+    @restricted_unless_calibration_tool_mode
     # @firstrun_only_access #@maintenance_stick_only_access
     def engraveCalibrationMarkers(self, intensity, feedrate):
-        if not self.calibration_tool_mode:
-            return ("", 403)  # FORBIDDEN # NO_CONTENT
         profile = self.laserCutterProfileManager.get_current_or_default()
-        max_intensity = 1300  # TODO get magic numbers from profile
-        min_intensity = 0
-        min_feedrate = 50
-        max_feedrate = 3000
         try:
-            i = int(int(intensity) / 100.0 * max_intensity)
+            i = int(int(intensity) / 100.0 * JobParams.Max.INTENSITY)
             f = int(feedrate)
         except ValueError:
             return make_response("Invalid parameters", 400)
 
         # validate input
         if (
-            i < min_intensity
-            or i > max_intensity
-            or f < min_feedrate
-            or f > max_feedrate
+            i < JobParams.Min.INTENSITY
+            or i > JobParams.Max.INTENSITY
+            or f < JobParams.Min.SPEED
+            or f > JobParams.Max.SPEED
         ):
             return make_response("Invalid parameters", 400)
         cm = CalibrationMarker(
@@ -1647,31 +1669,13 @@ class MrBeamPlugin(
 
         filename = "CalibrationMarkers.svg"
 
-        class Wrapper(object):
-            def __init__(self, filename, content):
-                self.filename = filename
-                self.content = content
+        self.mrb_file_manager.add_file_to_design_library(
+            file_name=filename, content=svg
+        )
 
-            def save(self, absolute_dest_path):
-                with open(absolute_dest_path, "w") as d:
-                    d.write(self.content)
-                    d.close()
-
-        fileObj = Wrapper(filename, svg)
-        try:
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                filename,
-                fileObj,
-                links=None,
-                allow_overwrite=True,
-            )
-        except Exception as e:
-            return make_response("Failed to write file. Disk full?", 400)
-        else:
-            return jsonify(
-                dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL)
-            )
+        return jsonify(
+            dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL)
+        )
 
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
         """
@@ -1679,7 +1683,10 @@ class MrBeamPlugin(
         If the uploaded file size exeeds this limit,
         you'll see only a ERR_CONNECTION_RESET in Chrome.
         """
-        return [("POST", r"/convert", 100 * 1024 * 1024)]
+        return [
+            ("POST", r"/convert", 100 * 1024 * 1024),
+            ("POST", r"/save_store_bought_svg", 100 * 1024 * 1024),
+        ]
 
     @octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
     @restricted_access
@@ -1691,36 +1698,14 @@ class MrBeamPlugin(
             return response
 
         if command == "save_svg":
-            # TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
-            svg = "".join(
-                i for i in data["svg_string"] if ord(i) < 128
-            )  # strip non-ascii chars like €
+            file_name = data["file_name"] + ".svg"
+            self.mrb_file_manager.add_file_to_design_library(
+                file_name=file_name,
+                content=data["svg_string"],
+                sanitize_name=True,
+            )
 
             del data["svg_string"]
-            sanitized_name = self._file_manager.sanitize_name(
-                destination=FileDestinations.LOCAL, name=data["file_name"]
-            )
-            file_name = sanitized_name + ".svg"
-
-            class Wrapper(object):
-                def __init__(self, file_name, content):
-                    self.filename = file_name
-                    self.content = content
-
-                def save(self, absolute_dest_path):
-                    with open(absolute_dest_path, "w") as d:
-                        d.write(self.content)
-                        d.close()
-
-            # write local/temp.svg to convert it
-            fileObj = Wrapper(file_name, svg)
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                file_name,
-                fileObj,
-                links=None,
-                allow_overwrite=True,
-            )
 
             location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
             result = {
@@ -1763,78 +1748,22 @@ class MrBeamPlugin(
         del data["gcodeFilesToAppend"]
 
         if command == "convert":
-            # TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
-            svg = "".join(
-                i for i in data["svg"] if ord(i) < 128
-            )  # strip non-ascii chars like €
-            # strip &nbsp; in attributes? see bug #383
-            del data["svg"]
             filename = "local/temp.svg"  # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
-
-            class Wrapper(object):
-                def __init__(self, filename, content):
-                    self.filename = filename
-                    self.content = content
-
-                def save(self, absolute_dest_path):
-                    with open(absolute_dest_path, "w") as d:
-                        d.write(self.content)
-                        d.close()
+            content = data["svg"]
 
             # write local/temp.svg to convert it
-            fileObj = Wrapper(filename, svg)
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                filename,
-                fileObj,
-                links=None,
-                allow_overwrite=True,
+            self.mrb_file_manager.add_file_to_design_library(
+                file_name=filename, content=content
             )
+
+            del data["svg"]
 
             # safe history
             ts = time.gmtime()
-            historyFilename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
-            historyObj = Wrapper(historyFilename, svg)
-            self._file_manager.add_file(
-                FileDestinations.LOCAL,
-                historyFilename,
-                historyObj,
-                links=None,
-                allow_overwrite=True,
+            history_filename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
+            self.mrb_file_manager.add_file_to_design_library(
+                file_name=history_filename, content=content
             )
-
-            # keep only x recent files in job history.
-            def is_history_file(entry):
-                _, extension = os.path.splitext(entry)
-                extension = extension[1:].lower()
-                return extension == "mrb"
-
-            mrb_filter_func = lambda entry, entry_data: is_history_file(entry)
-            resp = self._file_manager.list_files(
-                path="", filter=mrb_filter_func, recursive=True
-            )
-            files = resp[FileDestinations.LOCAL]
-
-            max_history_files = 25  # TODO fetch from settings
-            if len(files) > max_history_files:
-
-                removals = []
-                for key in files:
-                    f = files[key]
-                    tpl = (
-                        self._file_manager.last_modified(
-                            FileDestinations.LOCAL, path=f["path"]
-                        ),
-                        f["path"],
-                    )
-                    removals.append(tpl)
-
-                sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
-
-                # TODO each deletion causes a filemanager push update -> slow.
-                for i in range(0, len(sorted_by_age) - max_history_files):
-                    f = sorted_by_age[i]
-                    self._file_manager.remove_file(FileDestinations.LOCAL, f[1])
 
             slicer = "svgtogcode"
             slicer_instance = self._slicing_manager.get_slicer(slicer)
@@ -1867,7 +1796,7 @@ class MrBeamPlugin(
             # append number if file exists
             name, ext = os.path.splitext(gcode_name)
             i = 1
-            while self._file_manager.file_exists(FileDestinations.LOCAL, gcode_name):
+            while self.mrb_file_manager.file_exists(FileDestinations.LOCAL, gcode_name):
                 gcode_name = name + "." + str(i) + ext
                 i += 1
 
@@ -1908,12 +1837,14 @@ class MrBeamPlugin(
                 append_these_files,
             ):
                 # append additional gcodes
-                output_path = self._file_manager.path_on_disk(
+                output_path = self.mrb_file_manager.path_on_disk(
                     FileDestinations.LOCAL, gcode_name
                 )
                 with open(output_path, "ab") as wfd:
                     for f in append_these_files:
-                        path = self._file_manager.path_on_disk(f["origin"], f["name"])
+                        path = self.mrb_file_manager.path_on_disk(
+                            f["origin"], f["name"]
+                        )
                         wfd.write("\n; " + f["name"] + "\n")
 
                         with open(path, "rb") as fd:
@@ -1924,13 +1855,16 @@ class MrBeamPlugin(
 
                 if select_after_slicing or print_after_slicing:
                     sd = False
-                    filenameToSelect = self._file_manager.path_on_disk(
+                    filenameToSelect = self.mrb_file_manager.path_on_disk(
                         FileDestinations.LOCAL, gcode_name
                     )
                     printer.select_file(filenameToSelect, sd, True)
 
+                # keep only x recent files in job history and gcode.
+                self.mrb_file_manager.delete_old_files()
+
             try:
-                self._file_manager.slice(
+                self.mrb_file_manager.slice(
                     slicer,
                     FileDestinations.LOCAL,
                     filename,
@@ -1993,6 +1927,7 @@ class MrBeamPlugin(
             cli_event=["event"],
             custom_materials=[],
             analytics_init=[],  # user's analytics choice from welcome wizard
+            gcode_deletion_init=[],  # user's gcode deletion choice from welcome wizard
             analytics_upload=[],  # triggers an upload of analytics files
             take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
             focus_reminder=[],
@@ -2017,6 +1952,7 @@ class MrBeamPlugin(
             camera_run_lens_calibration=[],
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
+            cancel_final_extraction=[],
         )
 
     def on_api_command(self, command, data):
@@ -2048,6 +1984,8 @@ class MrBeamPlugin(
             return self.cli_event(data)
         elif command == "analytics_init":
             return self.analytics_init(data)
+        elif command == "gcode_deletion_init":
+            return self.gcode_deletion_init(data)
         elif command == "analytics_upload":
             AnalyticsFileUploader.upload_now(self)
             return NO_CONTENT
@@ -2127,6 +2065,9 @@ class MrBeamPlugin(
             return (
                 self.generateCalibrationMarkersSvg()
             )  # TODO move this func to other file
+        elif command == "cancel_final_extraction":
+            self.dust_manager.set_user_abort_final_extraction()
+
         return NO_CONTENT
 
     def analytics_init(self, data):
@@ -2134,6 +2075,66 @@ class MrBeamPlugin(
             self.analytics_handler.initial_analytics_procedure(
                 data["analyticsInitialConsent"]
             )
+
+    def gcode_deletion_init(self, data):
+        if "gcodeAutoDeletionConsent" in data:
+            self.set_gcode_deletion(data["gcodeAutoDeletionConsent"])
+
+    def set_gcode_deletion(self, enable_deletion):
+        self._settings.set_boolean(["gcodeAutoDeletion"], enable_deletion)
+        self._settings.save()  # This is necessary because without it the value is not saved
+        # Everytime the gcode auto deletion is enabled, it will be triggered
+        if enable_deletion:
+            self.mrb_file_manager.delete_old_gcode_files()
+
+    @octoprint.plugin.BlueprintPlugin.route("/console", methods=["POST"])
+    def console_log(self):
+        try:
+            data = request.json
+            event = data.get("event")
+            payload = data.get("payload", dict())
+            func = payload.get("function", None)
+            f_level = payload.get("level", None)
+            stack = None
+
+            level = logging.INFO
+            if f_level == "warn":
+                level = logging.WARNING
+            if f_level == "error":
+                level = logging.ERROR
+                stack = payload.get("stacktrace", None)
+
+            browser_time = ""
+            try:
+                browser_ts = float(payload.get("ts", 0))
+                browser_dt = datetime.datetime.fromtimestamp(browser_ts / 1000.0)
+                browser_time = browser_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            except:
+                pass
+            msg = payload.get("msg", "")
+            if func and func is not "null":
+                msg = "{} ({})".format(msg, func)
+            self._frontend_logger.log(
+                level,
+                "%s - %s - %s %s",
+                browser_time,
+                f_level,
+                msg,
+                "\n  " + ("\n   ".join(stack)) if stack else "",
+            )
+
+            if level >= logging.WARNING:
+                self.analytics_handler.add_frontend_event("console", payload)
+
+        except Exception as e:
+            self._logger.exception(
+                "Could not process frontend console_log: {e} - Data = {data}".format(
+                    e=e, data=data
+                )
+            )
+            return make_response("Unable to interpret request", 400)
+
+        return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/analytics", methods=["POST"])
     def analytics_data(self):
@@ -2320,6 +2321,7 @@ class MrBeamPlugin(
             self._hostname,
             check_calibration_tool_mode(self),
         )
+        self.lid_handler.refresh_settings()
         return NO_CONTENT
 
     ##~~ SlicerPlugin API
@@ -2515,13 +2517,8 @@ class MrBeamPlugin(
     ##~~ Event Handler Plugin API
 
     def on_event(self, event, payload):
-        if (
-            payload is None
-            or not isinstance(payload, collections.Iterable)
-            or not "log" in payload
-            or payload["log"]
-        ):
-            self._logger.info("on_event() %s: %s", event, payload)
+        if event is not MrBeamEvents.ANALYTICS_DATA:
+            self._logger.info("on_event %s: %s", event, payload)
 
         if event == MrBeamEvents.BOOT_GRACE_PERIOD_END:
             if self.calibration_tool_mode:

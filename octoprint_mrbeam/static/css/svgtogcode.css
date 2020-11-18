@@ -74,7 +74,11 @@ a,
   border-radius: 10px;
 }
 
-.img_intensity_input {
+.img_intensity_input,
+.passes_input,
+.pierce_time_input,
+.line_distance_input,
+.speed_input {
   width: 3.5em;
   -webkit-border-radius: 10px;
   border-radius: 10px;
@@ -937,7 +941,7 @@ svg#area_preview.overModalBG {
   margin: 10px -15px;
 }
 
-.calibration-container p {
+.calibration-container p:last-of-type {
   margin-bottom: 50px;
 }
 

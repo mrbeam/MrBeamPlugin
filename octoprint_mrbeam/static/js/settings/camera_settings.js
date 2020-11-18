@@ -19,7 +19,7 @@ $(function () {
         self.camera = parameters[0];
         self.state = parameters[1]; // isOperational
         self.readyToLaser = parameters[2]; // lid_fully_open & debug tab with mrb state
-        self.settings = parameters[3];
+        self.settingsViewModel = parameters[3];
         self.workingArea = parameters[4];
         self.loginState = parameters[5];
         self.settingsActive = ko.observable(false);
@@ -66,7 +66,7 @@ $(function () {
                 self.readyToLaser.lid_fully_open() &&
                 self.statusOnlyOperational() &&
                 self.fourMarkersFound() &&
-                !self.needsCornerCalibration()
+                !self.camera.needsCornerCalibration()
             ); // This already includes the other two, but just to see it more clear
         });
 
@@ -99,9 +99,9 @@ $(function () {
         self.markersMessage = ko.computed(function () {
             let notFound = [];
             for (const [marker, found] of Object.entries(
-                self.camera.markersFound()
+                self.camera.markersFound
             )) {
-                if (!found) {
+                if (!found()) {
                     notFound.push(self.camera.MARKER_DESCRIPTIONS[marker]);
                 }
             }
@@ -120,56 +120,83 @@ $(function () {
             }
         });
 
-        self.setMarkerDetectionMode = function () {
+        self.markerDetectionMode = function () {
+            // retrieve the detection mode from the back end
+            remember = self.settings.plugins.mrbeam.cam.remember_markers_across_sessions();
+            if (remember === undefined) return "reliable";
+            else return remember ? "reliable" : "accurate";
+        };
+
+        self.setMarkerDetectionMode = function (val, event) {
             // Default is "Reliable". If the user changed it, set "Accurate".
-            if (
-                !self.settings.settings.plugins.mrbeam.cam.remember_markers_across_sessions()
-            ) {
-                $('#camera_settings_marker_detection button[value="accurate"]')
-                    .addClass("active")
-                    .siblings()
-                    .removeClass("active");
+            if (event !== undefined)
+                self.setMarkerDetectionMode(event.target.value);
+            else if (val === undefined) {
+                self.setMarkerDetectionModeBtn(self.markerDetectionMode());
+            } else {
+                // self.settings.plugins.mrbeam.cam.remember_markers_across_sessions(true);
+                let _data = {
+                    cam: {
+                        remember_markers_across_sessions: val === "reliable",
+                    },
+                };
+                $("#camera_settings_marker_detection button").prop(
+                    "disabled",
+                    true
+                );
+                OctoPrint.settings
+                    .savePluginSettings("mrbeam", _data)
+                    .done(
+                        // "remember_markers_across_sessions",
+                        function (data, status, xhr) {
+                            console.log(
+                                "simpleApiCall response for saving remember_markers_across_sessions: ",
+                                data,
+                                status,
+                                xhr
+                            );
+                            self.setMarkerDetectionModeBtn(val === "reliable");
+                        }
+                    )
+                    .fail(function () {
+                        console.error(
+                            "Unable to save remember_markers_across_sessions: ",
+                            data,
+                            status,
+                            xhr
+                        );
+                        new PNotify({
+                            title: gettext(
+                                "Error while selecting the marker detection mode"
+                            ),
+                            text: _.sprintf(
+                                gettext(
+                                    "Unable to select the marker detection mode at the moment."
+                                )
+                            ),
+                            type: "error",
+                            hide: true,
+                        });
+                        self.setMarkerDetectionModeBtn(val !== "reliable");
+                    });
             }
         };
 
-        $("#camera_settings_marker_detection button").click(function () {
-            let remember_markers_across_sessions =
-                $(this).attr("value") === "reliable";
-
-            let data = {
-                remember_markers_across_sessions: remember_markers_across_sessions,
-            };
-            self.simpleApiCommand(
-                "remember_markers_across_sessions",
-                data,
-                function (response) {
-                    console.log(
-                        "simpleApiCall response for saving remember_markers_across_sessions: ",
-                        response
-                    );
-                },
-                function () {
-                    console.error(
-                        "Unable to save remember_markers_across_sessions: ",
-                        data
-                    );
-                    new PNotify({
-                        title: gettext(
-                            "Error while selecting the marker detection mode"
-                        ),
-                        text: _.sprintf(
-                            gettext(
-                                "Unable to select the marker detection mode at the moment."
-                            )
-                        ),
-                        type: "error",
-                        hide: true,
-                    });
-                }
-            );
-        });
+        self.setMarkerDetectionModeBtn = function (mode) {
+            // Sets the buttons to the correct mode and enables them
+            // mode : "accurate" or "reliable" or true (reliable) or false(accurate)
+            if (typeof mode === "boolean")
+                mode = mode ? "reliable" : "accurate";
+            $('#camera_settings_marker_detection button[value="' + mode + '"]')
+                .addClass("active")
+                .prop("disabled", false)
+                .siblings()
+                .removeClass("active")
+                .prop("disabled", false);
+        };
 
         self.onAllBound = function () {
+            self.setMarkerDetectionMode();
             new MutationObserver(
                 self._testCameraSettingsActive
             ).observe(
@@ -179,8 +206,6 @@ $(function () {
         };
 
         self.onStartupComplete = function () {
-            self.setMarkerDetectionMode();
-
             $("#settings_plugin_mrbeam_camera_link").click(function () {
                 self.changeUserView("settings");
             });
@@ -215,6 +240,10 @@ $(function () {
                         });
                 }
             });
+        };
+
+        self.onBeforeBinding = function () {
+            self.settings = self.settingsViewModel.settings;
         };
 
         self.onSettingsShown = function () {

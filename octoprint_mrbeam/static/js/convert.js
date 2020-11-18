@@ -10,6 +10,37 @@ $(function () {
         self.BRIGHTNESS_VALUE_GREEN = 0.587;
         self.BRIGHTNESS_VALUE_BLUE = 0.114;
 
+        self.JOB_PARAMS = {
+            default: {
+                intensityWhite: 0,
+                intensityBlack: 50,
+                feedrateWhite: 1500,
+                feedrateBlack: 250,
+                contrast: 1.0,
+                sharpening: 1.0,
+                dithering: false,
+                beamDiameter: 0.15,
+                pierceTime: 0,
+                engCompressor: 0, // This is the value of the slider, different from the backend value
+                cutCompressor: 3,
+                passes: 1,
+            },
+            max: {
+                speed: 3000,
+                compressor: 3,
+                passes: 10,
+                pierceTime: 2000,
+                lineDistance: 1.0,
+            },
+            min: {
+                speed: 50,
+                compressor: 0,
+                passes: 1,
+                pierceTime: 0,
+                lineDistance: 0.1,
+            },
+        };
+
         self.loginState = params[0];
         self.settings = params[1];
         self.state = params[2];
@@ -33,12 +64,10 @@ $(function () {
         self.showHints = ko.observable(false);
         self.showExpertSettings = ko.observable(false);
         self.gcodeFilename = ko.observable();
-        // self.pierceTime = ko.observable(0);
+        // self.pierceTime = ko.observable(self.JOB_PARAMS.default.pierceTime);
 
         // vector settings
         self.show_vector_parameters = ko.observable(true);
-        self.maxSpeed = ko.observable(3000);
-        self.minSpeed = ko.observable(20);
 
         self.vectorJobs = ko.observableArray([]);
         self.show_line_color_mappings = ko.observable(false);
@@ -61,17 +90,17 @@ $(function () {
             thicknessMM: -1,
             cut_i: "",
             cut_f: "",
-            cut_p: 1,
-            cut_pierce: 0,
-            cut_compressor: 3,
+            cut_p: self.JOB_PARAMS.min.passes,
+            cut_pierce: self.JOB_PARAMS.min.pierceTime,
+            cut_compressor: 3, // @Andy why is this set to max?
             progressive: false,
         };
         self.no_engraving = {
             eng_i: ["", ""],
             eng_f: ["", ""],
-            eng_pierce: 0,
-            eng_compressor: 3,
-            dithering: false,
+            eng_pierce: self.JOB_PARAMS.default.pierceTime,
+            eng_compressor: 3, // @Andy why is this set to max?
+            dithering: self.JOB_PARAMS.default.dithering,
         };
 
         self.material_colors = ko.observableArray([]);
@@ -799,8 +828,12 @@ $(function () {
             self.imgFeedrateWhite(p.eng_f[0]);
             self.imgFeedrateBlack(p.eng_f[1]);
             self.imgDithering(p.dithering);
-            self.engravingPiercetime(p.eng_pierce || 0);
-            self.engravingCompressor(p.eng_compressor || 0); // Here we pass the value of the range (0), not the real one (10%)
+            self.engravingPiercetime(
+                p.eng_pierce || self.JOB_PARAMS.default.pierceTime
+            );
+            self.engravingCompressor(
+                p.eng_compressor || self.JOB_PARAMS.default.engCompressor
+            ); // Here we pass the value of the range (0), not the real one (10%)
         };
 
         self._find_closest_color_to = function (hex, available_colors) {
@@ -845,17 +878,26 @@ $(function () {
                 self.filled_shapes_placed()
             );
         });
-        self.imgIntensityWhite = ko.observable(0);
-        self.imgIntensityBlack = ko.observable(50);
-        self.imgFeedrateWhite = ko.observable(1500);
-        self.imgFeedrateBlack = ko.observable(250);
-        self.imgDithering = ko.observable(false);
-        self.beamDiameter = ko.observable(0.15);
-        self.engravingPiercetime = ko.observable(0);
-        self.engravingCompressor = ko.observable(0);
-
-        self.sharpeningMax = 25;
-        self.contrastMax = 2;
+        self.imgIntensityWhite = ko.observable(
+            self.JOB_PARAMS.default.intensityWhite
+        );
+        self.imgIntensityBlack = ko.observable(
+            self.JOB_PARAMS.default.intensityBlack
+        );
+        self.imgFeedrateWhite = ko.observable(
+            self.JOB_PARAMS.default.feedrateWhite
+        );
+        self.imgFeedrateBlack = ko.observable(
+            self.JOB_PARAMS.default.feedrateBlack
+        );
+        self.imgDithering = ko.observable(self.JOB_PARAMS.default.dithering);
+        self.beamDiameter = ko.observable(self.JOB_PARAMS.default.beamDiameter);
+        self.engravingPiercetime = ko.observable(
+            self.JOB_PARAMS.default.pierceTime
+        );
+        self.engravingCompressor = ko.observable(
+            self.JOB_PARAMS.default.engCompressor
+        );
 
         self.get_dialog_state = function () {
             if (self.selected_material() === null) {
@@ -1105,12 +1147,16 @@ $(function () {
                 return false;
             if (
                 feedrate === "" ||
-                feedrate > self.maxSpeed() ||
-                feedrate < self.minSpeed()
+                feedrate > self.JOB_PARAMS.max.speed ||
+                feedrate < self.JOB_PARAMS.min.speed
             )
                 return false;
             if (passes === "" || passes <= 0) return false;
-            if (pierce_time === "" || pierce_time < 0) return false;
+            if (
+                pierce_time === "" ||
+                pierce_time < self.JOB_PARAMS.min.pierceTime
+            )
+                return false;
             return true;
         };
 
@@ -1519,18 +1565,7 @@ $(function () {
                         );
                     })
                     .fail(function (jqXHR, textStatus, errorThrown) {
-                        if (jqXHR.status == 401) {
-                            self.loginState.logout();
-                            new PNotify({
-                                title: gettext("Session expired"),
-                                text: gettext(
-                                    "Please login again to continue."
-                                ),
-                                type: "warn",
-                                tag: "conversion_error",
-                                hide: false,
-                            });
-                        } else {
+                        if (jqXHR.status != 401) {
                             self.settings.requestData();
                             console.error(
                                 "Unable to save focus reminder state: ",
@@ -1705,18 +1740,7 @@ $(function () {
                                         textStatus,
                                         errorThrown
                                     );
-                                    if (jqXHR.status == 401) {
-                                        self.loginState.logout();
-                                        new PNotify({
-                                            title: gettext("Session expired"),
-                                            text: gettext(
-                                                "Please login again to start this laser job."
-                                            ),
-                                            type: "warn",
-                                            tag: "conversion_error",
-                                            hide: false,
-                                        });
-                                    } else {
+                                    if (jqXHR.status != 401) {
                                         if (length > 10000000) {
                                             console.error(
                                                 "JSON size " +
@@ -1857,6 +1881,7 @@ $(function () {
             self.showFocusReminder(
                 self.settings.settings.plugins.mrbeam.focusReminder()
             );
+            self.setInputLimits();
             self.limitUserInput();
         };
 
@@ -2041,6 +2066,39 @@ $(function () {
             self.show_line_color_mappings(show_line_mappings);
         };
 
+        self.setInputLimits = function () {
+            $(".percentage_input").attr({
+                max: 100,
+                min: 0,
+            });
+
+            $(".speed_input").attr({
+                max: self.JOB_PARAMS.max.speed,
+                min: self.JOB_PARAMS.min.speed,
+            });
+
+            $(".compressor_input").attr({
+                max: self.JOB_PARAMS.max.compressor,
+                min: self.JOB_PARAMS.min.compressor,
+            });
+
+            $(".passes_input").attr({
+                max: self.JOB_PARAMS.max.passes,
+                min: self.JOB_PARAMS.min.passes,
+                value: self.JOB_PARAMS.default.passes,
+            });
+
+            $(".pierce_time_input").attr({
+                max: self.JOB_PARAMS.max.pierceTime,
+                min: self.JOB_PARAMS.min.pierceTime,
+            });
+
+            $(".line_distance_input").attr({
+                max: self.JOB_PARAMS.max.lineDistance,
+                min: self.JOB_PARAMS.min.lineDistance,
+            });
+        };
+
         self.limitUserInput = function () {
             $(".percentage_input").on("blur", function () {
                 let val = $(this).val();
@@ -2055,10 +2113,43 @@ $(function () {
             $(".speed_input").on("blur", function () {
                 let val = $(this).val();
 
-                if (val > 3000) {
-                    $(this).val(3000);
-                } else if (val < 50 || val === "") {
-                    $(this).val(50);
+                if (val > self.JOB_PARAMS.max.speed) {
+                    $(this).val(self.JOB_PARAMS.max.speed);
+                } else if (val < self.JOB_PARAMS.min.speed || val === "") {
+                    $(this).val(self.JOB_PARAMS.min.speed);
+                }
+            });
+
+            $(".passes_input").on("blur", function () {
+                let val = $(this).val();
+
+                if (val > self.JOB_PARAMS.max.passes) {
+                    $(this).val(self.JOB_PARAMS.max.passes);
+                } else if (val < self.JOB_PARAMS.min.passes || val === "") {
+                    $(this).val(self.JOB_PARAMS.min.passes);
+                }
+            });
+
+            $(".pierce_time_input").on("blur", function () {
+                let val = $(this).val();
+
+                if (val > self.JOB_PARAMS.max.pierceTime) {
+                    $(this).val(self.JOB_PARAMS.max.pierceTime);
+                } else if (val < self.JOB_PARAMS.min.pierceTime || val === "") {
+                    $(this).val(self.JOB_PARAMS.min.pierceTime);
+                }
+            });
+
+            $(".line_distance_input").on("blur", function () {
+                let val = $(this).val();
+
+                if (val > self.JOB_PARAMS.max.lineDistance) {
+                    $(this).val(self.JOB_PARAMS.max.lineDistance);
+                } else if (
+                    val < self.JOB_PARAMS.min.lineDistance ||
+                    val === ""
+                ) {
+                    $(this).val(self.JOB_PARAMS.min.lineDistance);
                 }
             });
         };

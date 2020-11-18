@@ -106,21 +106,53 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
 
             canvas.getContext("2d").drawImage(this, 0, 0);
+
+            // count ratio of white pixel
+            var id = canvas
+                .getContext("2d")
+                .getImageData(0, 0, canvas.width, canvas.height).data;
+            var countWhite = 0;
+            var countNoneWhite = 0;
+            for (var p = 0; p < id.length; p += 4) {
+                id[p] == 255 &&
+                id[p + 1] == 255 &&
+                id[p + 2] == 255 &&
+                id[p + 3] == 255
+                    ? countWhite++
+                    : countNoneWhite++;
+            }
+            var ratio = countWhite / (countNoneWhite + countWhite);
+            console.log(
+                "embedImage() white pixel ratio: " +
+                    parseFloat(ratio * 100).toFixed(2) +
+                    "%, total white pixel: " +
+                    countWhite +
+                    ", image:" +
+                    this.src
+            );
+
             var dataUrl = canvas.toDataURL("image/png");
             elem.attr("href", dataUrl);
             canvas.remove();
             if (typeof callback === "function") {
-                callback(elem.attr("id"));
                 console.log(
-                    "embedded img (" +
+                    "embedImage() " +
                         canvas.width +
                         "*" +
                         canvas.height +
                         " px, dataurl: " +
                         getDataUriSize(dataUrl) +
-                        " )"
+                        ", image: " +
+                        this.src
                 );
+                callback(elem.attr("id"));
             }
+        };
+        image.onerror = function () {
+            console.error(
+                "Slicing Error - embedImage: error while loading image: " +
+                    this.src
+            );
         };
 
         image.src = url;
@@ -198,16 +230,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 bbox.y
         );
 
-        // get svg as dataUrl TODO: check snap's .toDataURL() function instead of a homebrew one.
-        var svgStr = elem.outerSVG();
-        // on iOS (Safari and Chrome) embedded images are linked with NS1:href which doesn't work later on...
-        svgStr = svgStr.replace(
-            /NS1:href=/gi,
-            'xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href='
-        );
-        var svgDataUri =
-            "data:image/svg+xml;base64," +
-            window.btoa(unescape(encodeURIComponent(svgStr))); //deprecated unescape needed!
+        // get svg as dataUrl
+        var svgDataUri = elem.toDataURL();
 
         // init render canvas and attach to page
         var renderCanvas = document.createElement("canvas");
@@ -289,6 +313,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 len +
                 ")";
             console.error(msg, e);
+            console.log(
+                "renderPNG ERR: original svgStr that failed to load: ",
+                svgStr
+            );
+            console.log(
+                "renderPNG ERR: svgDataUri that failed to load: ",
+                svgDataUri
+            );
             new PNotify({
                 title: gettext("Conversion failed"),
                 text: msg,

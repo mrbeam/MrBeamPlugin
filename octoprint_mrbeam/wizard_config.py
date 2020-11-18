@@ -9,7 +9,7 @@ class WizardConfig:
         self.WIZARD_VERSION_STABLE = (
             19  # v0.7.0: camera, custom materials backup, SVG split, ...
         )
-        self.WIZARD_VERSION_BETA = 20  # v0.7.4: design store
+        self.WIZARD_VERSION_BETA = 21  # v0.7.11: GCode deletion, DXFlib update, ...
 
         self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
 
@@ -197,7 +197,7 @@ class WizardConfig:
         beta_news_wizard_tabs = dict(
             wizard_beta_news_0=dict(
                 type="wizard",
-                name=gettext("Design Store"),
+                name=gettext("GCode auto-deletion"),
                 required=True,
                 mandatory=False,
                 suffix="_beta_news_0",
