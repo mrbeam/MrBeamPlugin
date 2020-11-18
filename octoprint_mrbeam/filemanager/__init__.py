@@ -97,7 +97,7 @@ class MrbFileManager(FileManager):
             sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
 
             # TODO each deletion causes a filemanager push update -> slow.
-            for f in sorted_by_age[: -self.MAX_HISTORY_FILES]:
+            for f in sorted_by_age[:-num_files_to_keep]:
                 self.remove_file(FileDestinations.LOCAL, f[1])
 
     @staticmethod
