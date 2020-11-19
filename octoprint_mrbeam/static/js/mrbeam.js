@@ -617,9 +617,19 @@ $(function () {
                                 !$(this)[0].hasChildNodes() &&
                                 modalElement.length === 1
                             ) {
-                                $("body").removeClass("modal-open");
-                                backDrop.remove();
-                                $(this)[0].remove();
+                                setTimeout(() => {
+                                    if (
+                                        !$(this)[0].hasChildNodes() &&
+                                        modalElement.length === 1
+                                    ) {
+                                        $("body").removeClass("modal-open");
+                                        backDrop.remove();
+                                        $(this)[0].remove();
+                                        console.warn(
+                                            "mutationCallback: removed incomplete modal after 500ms"
+                                        );
+                                    }
+                                }, 500);
                             } else if (
                                 !$(this)[0].hasChildNodes() &&
                                 modalElement.length > 1 &&
