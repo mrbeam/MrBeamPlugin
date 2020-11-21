@@ -197,35 +197,6 @@ mrbeam.isWatterottMode = function () {
 };
 
 $(function () {
-    // catch and log jQuery ajax errors
-    $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
-        let msg =
-            jqXHR.status +
-            " (" +
-            jqXHR.statusText +
-            "): " +
-            settings.type +
-            " " +
-            settings.url;
-        if (settings.data) {
-            msg +=
-                ', body: "' +
-                (settings.data.length > 200
-                    ? settings.data.substr(0, 200) + "&hellip;"
-                    : settings.data);
-        }
-        console.everything.push({
-            level: "error",
-            msg: msg,
-            ts: event.timeStamp,
-            file: null,
-            function: "ajaxError",
-            line: null,
-            col: null,
-            stacktrace: null,
-        });
-    });
-
     // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
     // Force input of the "Add User" E-mail address in Settings > Access Control to lowercase.
     $("#settings-usersDialogAddUserName").attr(
