@@ -3,7 +3,7 @@
 __all__ = ["profile"]
 
 profile = dict(
-    id="my_default",
+    id="_default",
     name="MrBeam2",
     model="X",
     axes=dict(

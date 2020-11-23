@@ -325,3 +325,17 @@ class LaserCutterProfileManager(PrinterProfileManager):
                 return False
 
         return profile
+
+    # ~ Extra functionality
+
+    def converted_profiles(self):
+        ret = {}
+
+        default = self.get_default()["id"]
+        current = self.get_current_or_default()["id"]
+        for identifier, profile in self.get_all().items():
+            ret[identifier] = copy.deepcopy(profile)
+            ret[identifier]["default"] = profile["id"] == default
+            ret[identifier]["current"] = profile["id"] == current
+
+        return ret

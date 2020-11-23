@@ -3,7 +3,7 @@
 __all__ = ["profile"]
 
 profile = dict(
-    id="my_default",
+    id="MrBeam2Dummy",
     name="Dummy Laser",
     model="X",
     start_method="onebutton",  # change ?

@@ -291,24 +291,6 @@ class MrBeamPlugin(
         self._logger.info(msg, terminal=True)
         self._frontend_logger.info(msg)
 
-    def _convert_profiles(self, profiles):
-        result = dict()
-        for identifier, profile in profiles.items():
-            result[identifier] = self._convert_profile(profile)
-        return result
-
-    def _convert_profile(self, profile):
-        default = self.laserCutterProfileManager.get_default()["id"]
-        current = self.laserCutterProfileManager.get_current_or_default()["id"]
-
-        converted = copy.deepcopy(profile)
-        converted["resource"] = url_for(
-            ".laserCutterProfilesGet", identifier=profile["id"], _external=True
-        )
-        converted["default"] = profile["id"] == default
-        converted["current"] = profile["id"] == current
-        return converted
-
     def get_additional_environment(self):
         """
         Mixin: octoprint.plugin.EnvironmentDetectionPlugin
@@ -1516,8 +1498,12 @@ class MrBeamPlugin(
     # Laser cutter profiles
     @octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
     def laserCutterProfilesList(self):
-        all_profiles = self.laserCutterProfileManager.get_all()
-        return jsonify(dict(profiles=self._convert_profiles(all_profiles)))
+        all_profiles = self.laserCutterProfileManager.converted_profiles()
+        for profile_id, profile in all_profiles.items():
+            all_profiles[profile_id]["resource"] = url_for(
+                ".laserCutterProfilesGet", identifier=profile["id"], _external=True
+            )
+        return jsonify(dict(profiles=all_profiles))
 
     @octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["POST"])
     @restricted_access
@@ -1666,7 +1652,7 @@ class MrBeamPlugin(
 
         # 'name': 'Dummy Laser',
         # 'volume': {'width': 500.0, 'depth': 390.0, 'height': 0.0, 'origin_offset_x': 1.1, 'origin_offset_y': 1.1},
-        # 'model': 'X', 'id': 'my_default', 'glasses': False}
+        # 'model': 'X', 'id': '_default', 'glasses': False}
 
         filename = "CalibrationMarkers.svg"
 
