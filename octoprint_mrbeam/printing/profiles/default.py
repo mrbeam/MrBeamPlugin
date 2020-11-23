@@ -42,7 +42,7 @@ profile = dict(
         origin_offset_x=1.1,
         origin_offset_y=1.1,
         width=500.0,
-        working_area_shift_x=0.0,
+        working_area_shift_x=7.0,
         working_area_shift_y=0.0,
     ),
     grbl=dict(
