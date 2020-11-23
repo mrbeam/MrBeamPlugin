@@ -11,6 +11,7 @@ import copy
 from flask import url_for
 import re
 import collections
+from itertools import chain
 
 from . import profiles
 
@@ -77,8 +78,7 @@ LASER_PROFILE_2C = profiles.mrb2c.profile
 LASER_PROFILE_2U = profiles.mrb2u.profile
 LASER_PROFILE_DUMMY = profiles.dummy.profile
 
-LASER_PROFILES = (
-    LASER_PROFILE_DEFAULT,
+LASER_PROFILES_DERIVED = (
     LASER_PROFILE_2C,
     profiles.mrb2d.profile,
     profiles.mrb2e.profile,
@@ -88,6 +88,13 @@ LASER_PROFILES = (
     profiles.mrb2v.profile,
     LASER_PROFILE_DUMMY,
 )
+
+# fmt: off
+LASER_PROFILES = tuple(chain(
+    (LASER_PROFILE_DEFAULT,),
+    (dict_merge(LASER_PROFILE_DEFAULT, profile) for profile in LASER_PROFILES_DERIVED)
+))
+# fmt: on
 
 # /!\ "id" should always be written into a new laser profile
 LASER_PROFILE_IDENTIFIERS = tuple(pr["id"] for pr in LASER_PROFILES)
@@ -177,7 +184,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
         FIXME - In upstream : create a hook that allows to change ``PrinterProfileManager``
         """
         _current_id = dict_get(self._current, ["id",])
-        self._logger.warning("ID %s, CURR %s", identifier, _current_id)
+        # self._logger.warning("ID %s, CURR %s", identifier, _current_id)
         if (identifier in [None, "_default"]) and self.exists(_current_id):
             self._logger.warning("Not selecting the _default profile because of OP default behaviour. See ``octoprint_mrbeam.printing.profile.select()``.")
             return True
@@ -188,17 +195,16 @@ class LaserCutterProfileManager(PrinterProfileManager):
     def get(self, identifier):
         """Extend the file based ``PrinterProfileManager.get`` with the few hardcoded ones we have."""
         try:
+            default = self._load_default()
             if identifier == "_default":
-                return self._load_default()
+                return default
             elif identifier in LASER_PROFILE_IDENTIFIERS:
                 file_based_result = PrinterProfileManager.get(self, identifier) or {}
                 # Update derivated profiles using the default profile.
-                hard_coded = dict_merge(
-                    self._load_default(), LASER_PROFILE_MAP[identifier]
-                )
+                hard_coded = dict_merge(default, LASER_PROFILE_MAP[identifier])
                 return dict_merge(hard_coded, file_based_result)
             else:
-                return PrinterProfileManager.get(self, identifier)
+                return dict_merge(default, PrinterProfileManager.get(self, identifier))
         except InvalidProfileError:
             return None
 
