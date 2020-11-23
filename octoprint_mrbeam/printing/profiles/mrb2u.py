@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 profile = dict(
     id="MrBeam2U",
     model="U",

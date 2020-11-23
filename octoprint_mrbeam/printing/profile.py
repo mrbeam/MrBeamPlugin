@@ -8,6 +8,7 @@ __copyright__ = "Copyright (C) 2014 The OctoPrint Project - Released under terms
 
 import os
 import copy
+from flask import url_for
 import re
 import collections
 
@@ -337,6 +338,9 @@ class LaserCutterProfileManager(PrinterProfileManager):
             ret[identifier] = copy.deepcopy(profile)
             ret[identifier]["default"] = profile["id"] == default
             ret[identifier]["current"] = profile["id"] == current
+            ret[identifier]["resource"] = url_for(
+                ".printerProfilesGet", identifier=profile["id"], _external=True
+            )
 
         return ret
 
