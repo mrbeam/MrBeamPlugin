@@ -340,9 +340,6 @@ class LaserCutterProfileManager(PrinterProfileManager):
             ret[identifier] = copy.deepcopy(profile)
             ret[identifier]["default"] = profile["id"] == default
             ret[identifier]["current"] = profile["id"] == current
-            ret[identifier]["resource"] = url_for(
-                ".printerProfilesGet", identifier=profile["id"], _external=True
-            )
 
         return ret
 

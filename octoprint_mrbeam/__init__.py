@@ -1501,6 +1501,10 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
     def laserCutterProfilesList(self):
         all_profiles = self.laserCutterProfileManager.converted_profiles()
+        for profile_id, profile in all_profiles.items():
+            all_profiles[profile_id]["resource"] = url_for(
+                ".laserCutterProfilesGet", identifier=profile["id"], _external=True
+            )
         return jsonify(dict(profiles=all_profiles))
 
     @octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["POST"])
