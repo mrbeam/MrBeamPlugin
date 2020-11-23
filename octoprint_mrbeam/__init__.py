@@ -34,6 +34,7 @@ from octoprint.events import Events as OctoPrintEvents
 IS_X86 = platform.machine() == "x86_64"
 
 from octoprint_mrbeam.__version import __version__
+from octoprint_mrbeam import camera
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
@@ -58,6 +59,7 @@ from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
     InvalidProfileError,
     CouldNotOverwriteError,
+    Profile,
 )
 from octoprint_mrbeam.software_update_information import (
     get_update_information,
@@ -68,21 +70,21 @@ from octoprint_mrbeam.software_update_information import (
     SW_UPDATE_TIER_DEV,
 )
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
-from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from octoprint_mrbeam.gcodegenerator.job_params import JobParams
 from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
-from octoprint_mrbeam.util.material_csv_parser import parse_csv
-from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
 from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
+from octoprint_mrbeam.camera.label_printer import labelPrinter
+from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
+from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.util.device_info import deviceInfo
 from octoprint_mrbeam.util.flask import restricted_unless_calibration_tool_mode
-from octoprint_mrbeam.camera.label_printer import labelPrinter
+from octoprint_mrbeam.util.log import logExceptions
+from octoprint_mrbeam.util.material_csv_parser import parse_csv
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
-from octoprint_mrbeam import camera
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -2492,6 +2494,7 @@ class MrBeamPlugin(
         with open(path, "wb") as f:
             yaml.safe_dump(profile, f, indent="  ", allow_unicode=True)
 
+    @logExceptions
     def _convert_to_engine(self, profile_path):
         profile = Profile(self._load_profile(profile_path))
         return profile.convert_to_engine()
