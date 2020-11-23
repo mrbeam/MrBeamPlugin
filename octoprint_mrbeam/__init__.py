@@ -2492,6 +2492,10 @@ class MrBeamPlugin(
         with open(path, "wb") as f:
             yaml.safe_dump(profile, f, indent="  ", allow_unicode=True)
 
+    def _convert_to_engine(self, profile_path):
+        profile = Profile(self._load_profile(profile_path))
+        return profile.convert_to_engine()
+
     ##~~ Event Handler Plugin API
 
     def on_event(self, event, payload):
