@@ -61,6 +61,8 @@ def dict_get(mapping, path, default=None):
     Use a path to get an item from a deep map.
     ``path`` has to be Iterable.
     """
+    if mapping is None or path is None:
+        return None
     assert isinstance(mapping, Mapping)
     assert isinstance(path, Iterable)
     _mapping = mapping

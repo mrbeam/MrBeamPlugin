@@ -12,12 +12,15 @@ from flask import url_for
 import re
 import collections
 
+from . import profiles
+
 from octoprint.printer.profile import PrinterProfileManager
 from octoprint.util import dict_merge, dict_clean, dict_contains_keys
 from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util import dict_get
+from octoprint_mrbeam.util.log import logme
 
-from . import profiles
 
 # singleton
 _instance = None
@@ -87,7 +90,7 @@ LASER_PROFILES = (
 )
 
 # /!\ "id" should always be written into a new laser profile
-LASER_PROFILE_IDENTIFIERS = (pr["id"] for pr in LASER_PROFILES)
+LASER_PROFILE_IDENTIFIERS = tuple(pr["id"] for pr in LASER_PROFILES)
 
 LASER_PROFILE_MAP = dict(
     zip(
@@ -114,6 +117,9 @@ class LaserCutterProfileManager(PrinterProfileManager):
         PrinterProfileManager.__init__(self)
         self._folder = _laser_cutter_profile_folder
         self._logger = mrb_logger(__name__)
+        # HACK - select the default profile.
+        # See self.select() - waiting for upstream fix
+        self.select(settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID))
 
     def _migrate_old_default_profile(self):
         # TODO
@@ -126,10 +132,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
             default_id = "_default"
 
         if not self.exists(default_id):
-            if default_id in LASER_PROFILE_IDENTIFIERS:
-                # Will select hard coded profiles
-                pass
-            elif not self.exists("_default"):
+            if not self.exists("_default"):
                 if default_id == "_default":
                     self._logger.error(
                         "Profile _default does not exist, creating _default again and setting it as default"
@@ -164,13 +167,31 @@ class LaserCutterProfileManager(PrinterProfileManager):
             profile["id"] = default_id
             self.save(self.__class__.default, allow_overwrite=True, make_default=True)
 
+    # @logme(True)
+    # fmt: off
+    def select(self, identifier):
+        """
+        Overloaded because OctoPrint uses a global ``PrinterProfileManager``,
+        which on line 612 of ``OctoPrint/src/octoprint/server/__init__.py``
+        selects the ``_default`` printer profile name
+        FIXME - In upstream : create a hook that allows to change ``PrinterProfileManager``
+        """
+        _current_id = dict_get(self._current, ["id",])
+        self._logger.warning("ID %s, CURR %s", identifier, _current_id)
+        if (identifier in [None, "_default"]) and self.exists(_current_id):
+            self._logger.warning("Not selecting the _default profile because of OP default behaviour. See ``octoprint_mrbeam.printing.profile.select()``.")
+            return True
+        else:
+            return PrinterProfileManager.select(self, identifier)
+    # fmt: on
+
     def get(self, identifier):
         """Extend the file based ``PrinterProfileManager.get`` with the few hardcoded ones we have."""
         try:
             if identifier == "_default":
                 return self._load_default()
             elif identifier in LASER_PROFILE_IDENTIFIERS:
-                file_based_result = PrinterProfileManager.get(self, identifier)
+                file_based_result = PrinterProfileManager.get(self, identifier) or {}
                 # Update derivated profiles using the default profile.
                 hard_coded = dict_merge(
                     self._load_default(), LASER_PROFILE_MAP[identifier]
@@ -248,9 +269,12 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return copy.deepcopy(self.__class__.default)
 
     def set_default(self, identifier):
-        # Overloaded because of settings path
-        all_identifiers = self._load_all_identifiers().keys()
-        if identifier is not None and not identifier in all_identifiers:
+        # Overloaded because of settings path and extended identifiers
+        file_based_identifiers = self._load_all_identifiers().keys()
+        if identifier is not None and not (
+            identifier in file_based_identifiers
+            or identifier in LASER_PROFILE_IDENTIFIERS
+        ):
             return
 
         settings().set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier, force=True)
@@ -260,6 +284,13 @@ class LaserCutterProfileManager(PrinterProfileManager):
     def get_current_or_default(self):
         return PrinterProfileManager.get_current_or_default(self)
 
+    def exists(self, identifier):
+        if identifier in LASER_PROFILE_IDENTIFIERS:
+            return True
+        else:
+            return PrinterProfileManager.exists(self, identifier)
+
+    # @logme(output=True)
     def _load_all(self):
         """Extend the file based ``PrinterProfileManager._load_all`` with the few hardcoded ones we have."""
         file_based_profiles = PrinterProfileManager._load_all(self)
@@ -331,6 +362,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
 
     # ~ Extra functionality
 
+    # @logme(output=True)
     def converted_profiles(self):
         ret = {}
 

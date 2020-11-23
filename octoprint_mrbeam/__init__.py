@@ -34,7 +34,6 @@ from octoprint.events import Events as OctoPrintEvents
 IS_X86 = platform.machine() == "x86_64"
 
 from octoprint_mrbeam.__version import __version__
-from octoprint_mrbeam import camera
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
@@ -85,6 +84,8 @@ from octoprint_mrbeam.util.flask import restricted_unless_calibration_tool_mode
 from octoprint_mrbeam.util.log import logExceptions
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
+
+from octoprint_mrbeam import camera
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
