@@ -77,16 +77,18 @@ LASER_PROFILE_DUMMY = profiles.dummy.profile
 LASER_PROFILES = (
     LASER_PROFILE_DEFAULT,
     LASER_PROFILE_2C,
+    profiles.mrb2d.profile,
+    profiles.mrb2e.profile,
+    profiles.mrb2f.profile,
+    profiles.mrb2g.profile,
     LASER_PROFILE_2U,
+    profiles.mrb2v.profile,
     LASER_PROFILE_DUMMY,
 )
 
-LASER_PROFILE_IDENTIFIERS = (
-    "_default",
-    "MrBeam2C",
-    "MrBeam2U",
-    "Dummy Laser",
-)
+# /!\ "id" should always be written into a new laser profile
+LASER_PROFILE_IDENTIFIERS = (pr["id"] for pr in LASER_PROFILES)
+
 LASER_PROFILE_MAP = dict(
     zip(
         LASER_PROFILE_IDENTIFIERS,
