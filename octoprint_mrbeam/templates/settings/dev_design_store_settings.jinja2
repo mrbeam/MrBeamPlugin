@@ -1,16 +1,21 @@
-<div id="settings_mrbeam_design_store">
+<div id="settings_plugin_mrbeam_dev_design_store">
 
     {# Strings here are inntentionally NOT marked for translation since this is an internal page only.   #}
     <h3>DEV Design Store</h3>
 
-    <form class="form-horizontal" data-bind="event: { keydown: function(data, event){ if (event.key == 'Enter'){this.saveall(null,null, true); return false} else {return true}; } }">
+    <form class="form-horizontal" data-bind="event: { keydown: function(data, event){ if (event.key == 'Enter'){handleChange(); return false} else {return true}; } }">
         <div class="control-group">
-            <label class="control-label" for="settings-mrbeam-design-store-email">User account</label>
+            <label class="control-label" for="settings-mrbeam-design-store-email">Design Store email</label>
             <div class="controls">
-                <input id="settings-mrbeam-design-store-email" type="text" class="input-block-level" data-bind="value: settings.plugins.mrbeam.dev.design_store_email">
+                <input id="settings-mrbeam-design-store-email" type="text" class="input-block-level" data-bind="value: devDsEmail">
                 <br />
                 <div>Email address to access the design store.</div>
-                <div><strong>Reload browser window after changing.</strong></div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="settings-mrbeam-design-store-email">Authentication token</label>
+            <div class="controls">
+                <p id="settings-mrbeam-design-store-auth-token" data-bind="text: authToken" style="padding-top: 5px;"></p>
             </div>
         </div>
     </form>

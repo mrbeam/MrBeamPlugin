@@ -1,0 +1,22 @@
+hostname_KEY: MrBeam-AXEL
+raw_calibMarkers:
+  NE: [1907, 159]
+  NW: [84, 199]
+  SE: [1885, 1284]
+  SW: [158, 1320]
+raw_cornersFromImage:
+  NE: [1847, 38]
+  NW: [127, 69]
+  SE: [1822, 1346]
+  SW: [203, 1381]
+
+factory_raw_calibMarkers:
+  NE: [1907, 159]
+  NW: [84, 199]
+  SE: [1885, 1284]
+  SW: [158, 1320]
+factory_raw_cornersFromImage:
+  NE: [1847, 38]
+  NW: [127, 69]
+  SE: [1822, 1346]
+  SW: [203, 1381]

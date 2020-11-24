@@ -74,7 +74,11 @@ a,
   border-radius: 10px;
 }
 
-.img_intensity_input {
+.img_intensity_input,
+.passes_input,
+.pierce_time_input,
+.line_distance_input,
+.speed_input {
   width: 3.5em;
   -webkit-border-radius: 10px;
   border-radius: 10px;
@@ -566,6 +570,14 @@ g#camera_markers.markerSW circle#markerSW {
   animation: blinker 2s linear infinite;
 }
 
+g#camera_markers.markerNE.gray circle#markerNE,
+g#camera_markers.markerSE.gray circle#markerSE,
+g#camera_markers.markerNW.gray circle#markerNW,
+g#camera_markers.markerSW.gray circle#markerSW {
+  opacity: 0.6;
+  animation: none;
+}
+
 @keyframes blinker {
   50% {
     opacity: 0;
@@ -938,7 +950,7 @@ svg#area_preview.overModalBG {
   margin: 10px -15px;
 }
 
-.calibration-container p {
+.calibration-container p:last-of-type {
   margin-bottom: 50px;
 }
 
@@ -991,6 +1003,7 @@ svg#area_preview.overModalBG {
 
 .marker_selection_desc {
   margin-top: 0em;
+  margin-bottom: 1em;
   display: inline-block;
 }
 
@@ -1182,10 +1195,24 @@ svg#area_preview.overModalBG {
   position: absolute;
 }
 
+#lens_calibration_steps_and_heatmap {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+}
+
+#lens_calibration_steps_and_heatmap div {
+  margin: 0 4% 0 0;
+  position: relative;
+}
+
+/* #heatmap_container { */
+/*   width: fit-content; */
+/*   max-height: 25rem; */
+/*   display: inline-block; */
+/* } */
 #heatmap_container {
-  width: fit-content;
-  max-height: 25rem;
-  display: inline-block;
+  max-width: 100%;
+  height: auto;
 }
 
 #segment_group rect {

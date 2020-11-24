@@ -46,24 +46,22 @@ def check_calibration_tool_mode(plugin):
     :param plugin: MrBeam Plugin instance
     :returns True if support_mode is enabled, False otherwise
     """
+    mode_enabled = False
     try:
-        if (
+        if plugin._settings.get(["dev", "calibration_tool_mode"]) or (
             os.path.isfile(CALIBRATION_STICK_FILE_PATH)
             and time.time() - os.path.getmtime(CALIBRATION_STICK_FILE_PATH)
             < SUPPORT_STICK_FILE_MAX_AGE
         ):
             plugin._logger.setLevel(logging.DEBUG)
-            if plugin._settings.get(["dev", "calibration_tool_mode"]):
-                pass
-            else:
-                _logger.info("CALIBRATION TOOL MODE ENABLED")
-            return True
+            _logger.info("CALIBRATION TOOL MODE ENABLED")
+            mode_enabled = True
         else:
-            return False
+            mode_enabled = False
     except Exception as e:
         _logger.exception("Error while checking calibration tool mode")
 
-    return False
+    return mode_enabled
 
 
 def set_support_user(plugin, support_mode):

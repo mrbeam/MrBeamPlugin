@@ -1,166 +1,147 @@
-import sys
-from itertools import chain
-import time
+from collections import Iterable, Mapping
+from copy import copy, deepcopy
+from functools import wraps
+from itertools import chain, repeat, cycle
+import json
 import logging
 import numpy as np
-import json
-from itertools import chain, repeat, cycle
-from functools import wraps
-from copy import copy
+import sys
+import time
 import threading
 
-def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
-	"""Recursive dictionnary update.
-	Can associate an operation for superposing leaves."""
-	if isinstance(d1, dict) and isinstance(d2, dict):
-		out = copy(d1)
-		for k in set(chain(d1.keys(), d2.keys())):
-			if k in d2.keys() and k in d1.keys():
-				out[k] = dict_merge(d1[k], d2[k], leaf_operation)
-			elif k in d2.keys():
-				out[k] = d2[k]
-		return out
-	elif leaf_operation is not None:
-		ret = leaf_operation(d1, d2)
-		if ret is None: return d1
-		else: return ret
-	else:
-		return d2
+from .log import logExceptions, logtime
 
-def logtime(logger=None):
-	def _logtime(f):
-		@wraps(f)
-		def timed_f(*args, **kw):
-			start = time.clock()
-			ret = f(*args, **kw)
-			debug_logger(f).debug("Elapsed time : %f seconds", time.clock() - start)
-			return ret
-		return timed_f
-	return _logtime
 
-def logExceptions(f):
-	@wraps(f)
-	def wrap(*args, **kw):
-		try:
-			return f(*args, **kw)
-		except Exception as e:
-			debug_logger(f).exception("%s, %s" % (e.__class__.__name__, e))
-			raise
-	return wrap
+def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
+    """Recursive dictionnary update.
+    Can associate an operation for superposing leaves."""
+    if isinstance(d1, dict) and isinstance(d2, dict):
+        out = copy(d1)
+        for k in set(chain(d1.keys(), d2.keys())):
+            if k in d2.keys() and k in d1.keys():
+                out[k] = dict_merge(d1[k], d2[k], leaf_operation)
+            elif k in d2.keys():
+                out[k] = d2[k]
+        return out
+    elif leaf_operation is not None:
+        ret = leaf_operation(d1, d2)
+        if ret is None:
+            return d1
+        else:
+            return ret
+    else:
+        return d2
 
-def json_serialisor(elm):
-	"""Attempts to return a serialisable element if the given one is not."""
-	if elm is None or type(elm) in [bool, int, float, str, list, tuple, dict]:
-		# These types are already supported
-		return elm
-	elif isinstance(elm, np.ndarray):
-		# convert the array elements into serialisable stuff, and change the array to nested lists
-		shape = elm.shape
-		if max(shape) < 10 :
-			_e = elm.reshape((np.prod(shape),))
-			_e = np.asarray(map(json_serialisor, _e))
-			return _e.reshape(shape).tolist()
-		else :
-			return "numpy array with shape %s and type %s " % (elm.shape, elm.dtype)
-	else:
-		try:
-			json.dumps(elm)
-			return elm
-		except TypeError:
-			if "__str__" in dir(elm) or 'tostring' in dir(elm):
-				return str(elm)
-			elif "__repr__" in dir(elm):
-				return repr(elm)
-			else:
-				return "Not JSON serialisable type : {}".format(type(elm))
 
-def log_output(logger, ret):
-	logger.debug("output:\n%s" % json.dumps(ret, indent=2, default=json_serialisor))
+def nested_items(my_dict):
+    """Returns an Iterator of the keys, values and relative parent in a nested dict.
+    Allows you to use the relative parent to modify the values in place.
+    Example: See `dict_map`
+    """
+    # assert isinstance(my_dict, Mapping)
+    assert isinstance(my_dict, dict)
+    for k, v in my_dict.items():
+        if isinstance(v, dict):
+            for elm in nested_items(v):
+                yield elm
+        else:
+            yield k, v, my_dict
 
-def log_input(logger, *a, **kw):
-	argStr = json.dumps(a, indent=2, default=json_serialisor)
-	kwStr = json.dumps(kw, indent=2, default=json_serialisor)
-	logger.debug("\narg: %s\nkwargs: %s" % (argStr, kwStr))
 
-def logme(input=False, output=False):
-	def decorator(f):
-		logger = debug_logger(f)
-		@wraps(f)
-		def wrapped(*a, **kw):
-			if input: log_input(logger, *a, **kw)
-			ret = f(*a, **kw)
-			if output: log_output(logger, ret)
-			return ret
-		return wrapped
-	return decorator
+def dict_map(func, my_dict):
+    """Immutable map function for dictionnaries."""
+    __my_dict = deepcopy(my_dict)
+    for k, v, parent in nested_items(__my_dict):
+        parent[k] = func(v)
+    return __my_dict
 
-def debug_logger(function=None):
-	# TODO: AXEL should we use mrb_logger here?
-	if function is None:
-		logger = logging.getLogger("debug logger")
-	elif sys.version_info >= (3, 3):
-		# Python version >= 3.3
-		logger = logging.getLogger(function.__qualname__)
-	else:
-		if function.__module__ is None:
-			logger = logging.getLogger(function.__name__)
-		else:
-			logger = logging.getLogger(function.__module__ + '.' + function.__name__)
-	logger.setLevel(logging.DEBUG)
-	return logger
 
-def get_thread(callback=None, logname=None, daemon=False):
-	"""
-	returns a function that threads an other function and running a callback if provided.
-	Returns the started thread object.
-	see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
-	See https://stackoverflow.com/questions/14234547/threads-with-decorators
-	"""
-	def wrapper(f):
-		# if logname:
-		# 	logger = logging.getLogger(logname)
-		# else:
-		# 	logger = debug_logger(f)
-		@wraps(f)
-		def run(*a, **kw):
-			if callback is not None:
-				@logExceptions
-				@wraps(f)
-				def do_callback():
-					# try:
-					callback(f(*a, **kw))
-					# except Exception as e:
-					# 	logger.exception("E")
+def dict_get(mapping, path, default=None):
+    """
+    Use a path to get an item from a deep map.
+    ``path`` has to be Iterable.
+    """
+    assert isinstance(mapping, Mapping)
+    assert isinstance(path, Iterable)
+    _mapping = mapping
+    result = None
+    for k in path:
+        if k in _mapping.keys():
+            result = _mapping[k]
+            if isinstance(_mapping[k], Mapping):
+                _mapping = _mapping[k]
+            else:
+                # Otherwise k could be repeated
+                _mapping = {}
+        # path not found in deep map
+        else:
+            return default
+    return result
 
-				t = threading.Thread(target=do_callback, args=a, kwargs=kw)
-			else:
-				t = threading.Thread(target=f, args=a, kwargs=kw)
-			if daemon:
-				t.daemon = True
-			t.start()
-			return t
-		return run
-	return wrapper
+
+def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
+    """
+    returns a function that threads an other function and running a callback if provided.
+    Returns the started thread object.
+    It also logs any Exceptions that happen in that function.
+    see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
+    See https://stackoverflow.com/questions/14234547/threads-with-decorators
+    """
+
+    def wrapper(f):
+        # if logname:
+        # 	logger = logging.getLogger(logname)
+        # else:
+        # 	logger = debug_logger(f)
+        @logExceptions
+        @wraps(f)
+        def run(*a, **kw):
+            if callback is not None:
+
+                @logExceptions
+                @wraps(f)
+                def do_callback():
+                    # try:
+                    callback(f(*a, **kw))
+                    # except Exception as e:
+                    # 	logger.exception("E")
+
+                t = threading.Thread(
+                    target=do_callback, args=a, kwargs=kw, *th_a, **th_kw
+                )
+            else:
+                logged_f = logExceptions(f)
+                t = threading.Thread(target=logged_f, args=a, kwargs=kw)
+            if daemon:
+                t.daemon = True
+            t.start()
+            return t
+
+        return run
+
+    return wrapper
+
 
 def makedirs(path, parent=False, *a, **kw):
-	"""
-	Same as os.makedirs but doesn't throw exception if dir exists
-	@param parentif: bool create the parent directory for the path given and not the full path
-	                 (avoids having to use os.path.dirname)
-	Python >= 3.5 see mkdir(parents=True, exist_ok=True)
-	See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
-	"""
-	from os.path import dirname, isdir
-	from os import makedirs
-	import errno
-	if parent:
-		_p = dirname(path)
-	else:
-		_p = path
-	try:
-		makedirs(_p, *a, **kw)
-	except OSError as exc:
-		if exc.errno == errno.EEXIST and isdir(_p):
-			pass
-		else:
-			raise
+    """
+    Same as os.makedirs but doesn't throw exception if dir exists
+    @param parentif: bool create the parent directory for the path given and not the full path
+                     (avoids having to use os.path.dirname)
+    Python >= 3.5 see mkdir(parents=True, exist_ok=True)
+    See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
+    """
+    from os.path import dirname, isdir
+    from os import makedirs
+    import errno
+
+    if parent:
+        _p = dirname(path)
+    else:
+        _p = path
+    try:
+        makedirs(_p, *a, **kw)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and isdir(_p):
+            pass
+        else:
+            raise

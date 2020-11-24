@@ -37,10 +37,15 @@
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">F</span>:
-                                                    {# Translators: set feedrate for G1,G2,G3 #}
                                                     <span class="desc">{{ _('set feedrate for') }} G1,G2,G3</span>
                                                     <div class="params">{{ _('parameters: value') }}</div>
                                                     <div class="example">{{ _('example:') }} F300</div>
+                                                </li>
+                                                <li>
+                                                    <span class="gcommand">S</span>:
+                                                    <span class="desc">{{ _('set laser intensity for') }} G1,G2,G3</span>
+                                                    <div class="params">{{ _('parameters: value 0-1300') }}</div>
+                                                    <div class="example">{{ _('example:') }} S1300</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G1</span>:
@@ -62,8 +67,8 @@
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G4</span>:
-                                                    <span class="desc">{{ _('dwell') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} P</div>
+                                                    <span class="desc">{{ _('dwell, pasue') }}</span>
+                                                    <div class="params">{{ _('parameters: value in seconds') }} P</div>
                                                     <div class="example">{{ _('example:') }} G4 P0.5</div>
                                                 </li>
                                                 <li>
@@ -78,17 +83,23 @@
                                                     <div class="params">{{ _('parameters:') }} -</div>
                                                     <div class="example">{{ _('example:') }} M5</div>
                                                 </li>
+{#                                                <li>#}
+{#                                                    <span class="gcommand">M8</span>:#}
+{#                                                    <span class="desc">{{ _('fan on') }}</span>#}
+{#                                                    <div class="params">{{ _('parameters:') }} -</div>#}
+{#                                                    <div class="example">{{ _('example:') }} M8</div>#}
+{#                                                </li>#}
+{#                                                <li>#}
+{#                                                    <span class="gcommand">M9</span>:#}
+{#                                                    <span class="desc">{{ _('fan off') }}</span>#}
+{#                                                    <div class="params">{{ _('parameters:') }} -</div>#}
+{#                                                    <div class="example">{{ _('example:') }} M9</div>#}
+{#                                                </li>#}
                                                 <li>
-                                                    <span class="gcommand">M8</span>:
-                                                    <span class="desc">{{ _('fan on') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} M8</div>
-                                                </li>
-                                                <li>
-                                                    <span class="gcommand">M9</span>:
-                                                    <span class="desc">{{ _('fan off') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} M9</div>
+                                                    <span class="gcommand">M100</span>:
+                                                    <span class="desc">{{ _('compressor state (dreamcut only)') }}</span>
+                                                    <div class="params">{{ _('parameters:') }} P</div>
+                                                    <div class="example">{{ _('example:') }} M100P100</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">M2</span>:
