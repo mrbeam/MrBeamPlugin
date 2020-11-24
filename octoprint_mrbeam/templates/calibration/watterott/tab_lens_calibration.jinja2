@@ -36,18 +36,15 @@
               <!-- <text id='lensCalibrationCoverageText' x="350" y="2360" style="font-size: 150px;"></text> -->
             </svg>
 
-
             <button id="lens_calibration_take_pic" class="btn btn-primary" data-bind="click: saveRawPic, enable: !cameraBusy()">
                 <i class="icon icon-camera icon-2x"></i>
             </button>
-
-
 
             <button id="lens_calibration_toggle_qa_btn" class="btn pull-right"
                     data-bind="click: lensCalibrationToggleQA,
                                css: {'btn-success': lensCalibrationNpzFileTs, 'btn-default': !lensCalibrationNpzFileTs()},
                                visible: rawPicSelection().length >= 9,
-                               enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">
+                               enable: lensCalibrationNpzFileTs()">
                 <span style="font-size:1.5rem;">{{ _('Check result') }}</span>
                 <i class="icon icon-2x icon-fixed-width icon-arrow-right" data-bind="visible: lensCalibrationNpzFileTs"></i>
             </button>

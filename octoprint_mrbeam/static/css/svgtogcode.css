@@ -865,7 +865,7 @@ svg#area_preview.overModalBG {
 }
 
 #initial_camera_calibration #tab_lens_calibration.tab-pane {
-  width: 80vw;
+  position: center;
 }
 
 .camera-settings-section {
@@ -1164,7 +1164,7 @@ svg#area_preview.overModalBG {
 }
 
 #lensCalibrationPictureTaking {
-  width: calc(min(80vw, 100%));
+  width: auto;
 }
 
 #lens_calibration_take_pic {
@@ -1205,14 +1205,17 @@ svg#area_preview.overModalBG {
   position: relative;
 }
 
-/* #heatmap_container { */
-/*   width: fit-content; */
-/*   max-height: 25rem; */
-/*   display: inline-block; */
-/* } */
 #heatmap_container {
+  /* User calibration case */
   max-width: 100%;
   height: auto;
+}
+
+#initial_camera_calibration #heatmap_container {
+  /* Factory calibration case */
+  width: calc(95% - 10rem - 110px);
+  max-width: 25rem;
+  display: inline-block;
 }
 
 #segment_group rect {

@@ -418,6 +418,7 @@ $(function () {
 
         // WATTEROTT ONLY
         self.lensCalibrationToggleQA = function () {
+            self.stopLensCalibration();
             $("#lensCalibrationPhases").toggleClass("qa_active");
         };
     }
