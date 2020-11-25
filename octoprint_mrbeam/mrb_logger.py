@@ -10,6 +10,12 @@ from inspect import getframeinfo, stack
 
 _printer = None
 
+MRBEAM_PLUGIN_SEARCH_STR = "/octoprint_mrbeam"
+REMOVE_FROM_STACKTRACE = [
+    "/octoprint_mrbeam/mrb_logger.py",
+    "/octoprint_mrbeam/util/log.py",
+]
+
 
 def init_mrb_logger(printer):
     global _printer
@@ -158,12 +164,23 @@ class MrbLogger(object):
         if analytics_handler is not None:
             try:
                 msg = msg % args if args and msg else msg
-                caller = None
-                caller_myself = getframeinfo(stack()[0][0])
+                caller = getframeinfo(stack()[0][0])
+                caller_myself = caller
                 i = 1
-                while caller is None or caller.filename == caller_myself.filename:
-                    caller = getframeinfo(stack()[i][0])
-                    i += 1
+                while (
+                    any(caller.filename.endswith(x) for x in REMOVE_FROM_STACKTRACE)
+                    or MRBEAM_PLUGIN_SEARCH_STR not in caller.filename
+                ):
+                    try:
+                        caller = getframeinfo(stack()[i][0])
+                        self.logger.info(
+                            "ANDYTEST i: %s, filename: %s",
+                            i,
+                            caller.filename if caller else "noCallerObj",
+                        )
+                        i += 1
+                    except:
+                        break
 
                 exception_str = None
                 stacktrace = None

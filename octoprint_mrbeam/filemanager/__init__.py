@@ -56,7 +56,7 @@ class MrbFileManager(FileManager):
             initial_storage_managers=storage_managers,
         )
 
-    @logExceptions
+    # @logExceptions
     def add_file_to_design_library(self, file_name, content, sanitize_name=False):
         if sanitize_name:
             file_name = self._sanitize_file_name(file_name)
@@ -71,7 +71,7 @@ class MrbFileManager(FileManager):
             allow_overwrite=True,
         )
 
-    @logExceptions
+    # @logExceptions
     def delete_old_files(self):
         self.delete_old_history_files()
         if self._settings.get(["gcodeAutoDeletion"]):
