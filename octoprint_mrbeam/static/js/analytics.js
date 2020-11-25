@@ -1,4 +1,51 @@
 $(function () {
+    $(window).click(function (e) {
+        let clickableElem = null;
+        let currentElem = e.target;
+        let steps = 0;
+        while (!clickableElem) {
+            if (
+                currentElem.tagName == "A" ||
+                currentElem.tagName == "INPUT" ||
+                currentElem.tagName == "BUTTON" ||
+                currentElem.getAttribute("href") ||
+                currentElem.getAttribute("data-toggle") ||
+                currentElem.getAttribute("data-dismiss") ||
+                currentElem.getAttribute("dropdown-toggle") ||
+                (jQuery._data(currentElem, "events") &&
+                    ("click" in jQuery._data(currentElem, "events") ||
+                        "mousedown" in jQuery._data(currentElem, "events") ||
+                        "mouseup" in jQuery._data(currentElem, "events")))
+            ) {
+                clickableElem = currentElem;
+            } else {
+                steps++;
+                currentElem = currentElem.parentElement;
+            }
+        }
+
+        if (clickableElem.tagName == "BODY") {
+            clickableElem = e.target;
+        }
+
+        let id = clickableElem.id ? "#" + clickableElem.id : null;
+        if (!id) {
+            id = clickableElem.tagName;
+            if (id != "BODY") {
+                if (clickableElem.getAttribute("href")) {
+                    id += "[href=" + clickableElem.getAttribute("href") + "]";
+                }
+                if (clickableElem.getAttribute("src")) {
+                    id += "[src=" + clickableElem.getAttribute("src") + "]";
+                }
+                for (let i = 0; i < clickableElem.classList.length; i++) {
+                    id += "." + clickableElem.classList[i];
+                }
+            }
+        }
+        console.log("Click: (" + steps + ") " + id, clickableElem);
+    });
+
     // catch and log jQuery ajax errors
     $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
         if (
