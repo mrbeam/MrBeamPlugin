@@ -4,6 +4,8 @@ import os
 from octoprint.filemanager import FileManager
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint.filemanager.storage import LocalFileStorage
+
+from octoprint_mrbeam.util.log import logExceptions
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
@@ -54,34 +56,26 @@ class MrbFileManager(FileManager):
             initial_storage_managers=storage_managers,
         )
 
+    @logExceptions
     def add_file_to_design_library(self, file_name, content, sanitize_name=False):
-        try:
-            if sanitize_name:
-                file_name = self._sanitize_file_name(file_name)
-            content = self._sanitize_content(file_name, content)
+        if sanitize_name:
+            file_name = self._sanitize_file_name(file_name)
+        content = self._sanitize_content(file_name, content)
 
-            file_obj = self.File(file_name, content)
-            self.add_file(
-                FileDestinations.LOCAL,
-                file_name,
-                file_obj,
-                links=None,
-                allow_overwrite=True,
-            )
-        except Exception as e:
-            self._logger_mrb.exception(
-                "Exception in MrbFileManager.add_file_to_design_library() ", test=True
-            )
-            raise e
+        file_obj = self.File(file_name, content)
+        self.add_file(
+            FileDestinations.LOCAL,
+            file_name,
+            file_obj,
+            links=None,
+            allow_overwrite=True,
+        )
 
+    @logExceptions
     def delete_old_files(self):
-        try:
-            self.delete_old_history_files()
-            if self._settings.get(["gcodeAutoDeletion"]):
-                self.delete_old_gcode_files()
-        except Exception as e:
-            self._logger_mrb.exception("Exception in delete_old_files()")
-            raise e
+        self.delete_old_history_files()
+        if self._settings.get(["gcodeAutoDeletion"]):
+            self.delete_old_gcode_files()
 
     def delete_old_history_files(self):
         mrb_filter_func = lambda entry, entry_data: self._is_history_file(entry)
@@ -133,8 +127,8 @@ class MrbFileManager(FileManager):
         if (
             extension
             in MrbFileManager.FILE_EXTENSIONS_SVG
-            + MrbFileManager.FILE_EXTENSIONS_GCODE
-            + MrbFileManager.FILE_EXTENSIONS_HISTORY
+            # + MrbFileManager.FILE_EXTENSIONS_GCODE
+            # + MrbFileManager.FILE_EXTENSIONS_HISTORY
         ):
             # TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
             content = "".join(i for i in content if ord(i) < 128)
