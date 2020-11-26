@@ -27,10 +27,10 @@ from octoprint_mrbeam.util.log import logme
 _instance = None
 
 
-def laserCutterProfileManager():
+def laserCutterProfileManager(*a, **kw):
     global _instance
     if _instance is None:
-        _instance = LaserCutterProfileManager()
+        _instance = LaserCutterProfileManager(*a, **kw)
     return _instance
 
 
@@ -115,7 +115,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
 
     default = LASER_PROFILE_DEFAULT
 
-    def __init__(self):
+    def __init__(self, profile_id=None):
         _laser_cutter_profile_folder = (
             settings().getBaseFolder("printerProfiles") + "/lasercutterprofiles"
         )
@@ -126,7 +126,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
         self._logger = mrb_logger(__name__)
         # HACK - select the default profile.
         # See self.select() - waiting for upstream fix
-        self.select(settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID))
+        self.select(profile_id or settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID))
 
     def _migrate_old_default_profile(self):
         # TODO

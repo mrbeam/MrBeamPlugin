@@ -165,8 +165,14 @@ class MrBeamPlugin(
         self._mac_addrs = dict()
         self._model_id = None
         self._grbl_version = None
-        self._device_series = self._device_info.get("device_series")  # '2C'
+        self._device_series = self._device_info.get_series()
         self.called_hosts = []
+
+        # Create the ``laserCutterProfileManager`` early to inject into the ``Laser``
+        # See ``laser_factory``
+        self.laserCutterProfileManager = laserCutterProfileManager(
+            profile_id="MrBeam" + self._device_series
+        )
 
         self._boot_grace_period_counter = 0
 
@@ -206,8 +212,6 @@ class MrBeamPlugin(
         self.set_serial_setting()
 
         self._fixEmptyUserManager()
-
-        self.laserCutterProfileManager = laserCutterProfileManager()
 
         try:
             pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
@@ -2638,7 +2642,7 @@ class MrBeamPlugin(
         return Laser(
             components["file_manager"],
             components["analysis_queue"],
-            laserCutterProfileManager(),
+            self.laserCutterProfileManager,
         )
 
     def laser_filemanager(self, *args, **kwargs):
