@@ -2673,7 +2673,7 @@ input.search-query,
 * === BUTTON GROUPS ===
 */
 
-#svgtogcode_img_engraving_mode {
+.controls .btn-group {
   margin-top: 3%;
 }
 

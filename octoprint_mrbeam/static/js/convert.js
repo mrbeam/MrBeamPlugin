@@ -913,6 +913,10 @@ $(function () {
                 return self._extraOvershoot.selected() == "careful";
             }
         });
+        self._engravingMode = ko.observable("precise"); // selected by user
+        self.engravingMode = ko.computed(function () {
+            return self.extraOvershoot() ? "basic" : self._engravingMode();
+        });
         self.beamDiameter = ko.observable(self.JOB_PARAMS.default.beamDiameter);
         self.engravingPiercetime = ko.observable(
             self.JOB_PARAMS.default.pierceTime
@@ -1206,9 +1210,7 @@ $(function () {
                 dithering: self.imgDithering(),
                 beam_diameter: parseFloat(self.beamDiameter()),
                 pierce_time: parseInt(self.engravingPiercetime()),
-                engraving_mode: $(
-                    "#svgtogcode_img_engraving_mode > .btn.active"
-                ).attr("value"),
+                engraving_mode: self.engravingMode(),
                 line_distance: $("#svgtogcode_img_line_dist").val(),
                 eng_compressor: eng_compressor,
                 extra_overshoot: self.extraOvershoot(),
@@ -1293,17 +1295,13 @@ $(function () {
         };
 
         self.enableConvertButton = ko.computed(function () {
-            if (
+            return (
                 self.slicing_in_progress() ||
                 self.workingArea.placedDesigns().length === 0 ||
                 self.selected_material() == null ||
                 self.selected_material_color() == null ||
                 self.selected_material_thickness() == null
-            ) {
-                return false;
-            } else {
-                return true;
-            }
+            );
         });
 
         self._allJobsSkipped = function () {

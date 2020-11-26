@@ -325,15 +325,23 @@
                                         {{ _('* Some designs, as photos or long texts, <b>always</b> use basic mode.') }}">
                                     <label class="control-label">{{ _('Engraving time optimization mode') }}</label>
                                     <div class="controls">
+                                        <div class="btn-group" data-toggle="buttons-radio">
+                                            <label class="btn btn-default active" data-bind="css: { disabled: extraOvershoot }">
+                                                <input type="radio" name="engraving_mode" value="precise" autocomplete="off" data-bind="checked: engravingMode, disable: extraOvershoot"></input>
+                                                {{ _('Auto') }}
+                                            </label>
+                                            <label class="btn btn-default" data-bind="css: { disabled: extraOvershoot }">
+                                                <input type="radio" name="engraving_mode" value="fast" autocomplete="off" data-bind="checked: engravingMode, disable: extraOvershoot"></input>
+                                                {{ _('Fast') }}
+                                            </label>
+                                            <label class="btn btn-default" data-bind="css: { disabled: extraOvershoot }">
+                                                <input type="radio" name="engraving_mode" value="basic" autocomplete="off" data-bind="checked: engravingMode, disable: extraOvershoot"></input>
+                                                {{ _('Basic') }}
+                                            </label>
+                                        </div>
+                                    </div>
 
-                                  <div class="btn-group" id="svgtogcode_img_engraving_mode" data-toggle="buttons-radio">
-                                    <button type="button" value="precise" id="parameter_assignment_engraving_mode_precise_btn" class="btn btn-default active">{{ _('Recommended') }}</button>
-                                    <button type="button" value="fast" id="parameter_assignment_engraving_mode_fast_btn" class="btn btn-default">{{ _('Fast') }}</button>
-                                    <button type="button" value="basic" id="parameter_assignment_engraving_mode_basic_btn" class="btn btn-default">{{ _('Basic') }}</button>
-                                  </div>
                                 </div>
-
-                              </div>
 
 								<h5>{{ _('Image Preprocessing') }}</h5>
                                 <div class="checkbox-control-and-label" data-toggle="tooltip" data-placement="right"
