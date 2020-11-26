@@ -327,15 +327,15 @@
                                     <div class="controls">
                                         <div class="btn-group" data-toggle="buttons-radio">
                                             <label class="btn btn-default active" data-bind="css: { disabled: extraOvershoot }">
-                                                <input type="radio" name="engraving_mode" value="precise" autocomplete="off" data-bind="checked: engravingMode, disable: extraOvershoot"></input>
+                                                <input type="radio" name="engraving_mode" value="precise" autocomplete="off" data-bind="checked: _engravingMode, disable: extraOvershoot"></input>
                                                 {{ _('Auto') }}
                                             </label>
                                             <label class="btn btn-default" data-bind="css: { disabled: extraOvershoot }">
-                                                <input type="radio" name="engraving_mode" value="fast" autocomplete="off" data-bind="checked: engravingMode, disable: extraOvershoot"></input>
+                                                <input type="radio" name="engraving_mode" value="fast" autocomplete="off" data-bind="checked: _engravingMode, disable: extraOvershoot"></input>
                                                 {{ _('Fast') }}
                                             </label>
                                             <label class="btn btn-default" data-bind="css: { disabled: extraOvershoot }">
-                                                <input type="radio" name="engraving_mode" value="basic" autocomplete="off" data-bind="checked: engravingMode, disable: extraOvershoot"></input>
+                                                <input type="radio" name="engraving_mode" value="basic" autocomplete="off" data-bind="checked: _engravingMode, disable: extraOvershoot"></input>
                                                 {{ _('Basic') }}
                                             </label>
                                         </div>
