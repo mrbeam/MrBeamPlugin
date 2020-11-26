@@ -52,7 +52,11 @@ class MrbFileManager(FileManager):
     def add_file_to_design_library(self, file_name, content, sanitize_name=False):
         if sanitize_name:
             file_name = self._sanitize_file_name(file_name)
+        self._logger.info(
+            "ANDYTEST %s: content len before: %s", file_name, len(content)
+        )
         content = self._sanitize_content(file_name, content)
+        self._logger.info("ANDYTEST %s: content len after: %s", file_name, len(content))
 
         file_obj = self.File(file_name, content)
         self.add_file(
@@ -97,8 +101,7 @@ class MrbFileManager(FileManager):
             sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
 
             # TODO each deletion causes a filemanager push update -> slow.
-            for i in range(0, len(sorted_by_age) - self.MAX_HISTORY_FILES):
-                f = sorted_by_age[i]
+            for f in sorted_by_age[:-num_files_to_keep]:
                 self.remove_file(FileDestinations.LOCAL, f[1])
 
     @staticmethod
@@ -116,7 +119,7 @@ class MrbFileManager(FileManager):
     @staticmethod
     def _sanitize_content(file_name, content):
         _, extension = os.path.splitext(file_name)
-        if extension == ".svg":
+        if extension in (".svg", ".mrb", ".g", ".gco", ".gc", ".gcode", ".nc"):
             # TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
             content = "".join(i for i in content if ord(i) < 128)
         return content

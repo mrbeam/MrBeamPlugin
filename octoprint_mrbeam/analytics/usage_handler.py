@@ -18,7 +18,7 @@ def usageHandler(plugin):
 
 
 class UsageHandler(object):
-    MAX_DUST_FACTOR = 1.0
+    MAX_DUST_FACTOR = 2.0
     MIN_DUST_FACTOR = 0.5
     MAX_DUST_VALUE = 0.5
     MIN_DUST_VALUE = 0.2

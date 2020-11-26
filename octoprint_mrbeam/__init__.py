@@ -542,14 +542,7 @@ class MrBeamPlugin(
             if "focusReminder" in data:
                 self._settings.set_boolean(["focusReminder"], data["focusReminder"])
             if "gcodeAutoDeletion" in data:
-                self._settings.set_boolean(
-                    ["gcodeAutoDeletion"], data["gcodeAutoDeletion"]
-                )
-
-                # Everytime the gcode auto deletion is enabled, it will be triggered
-                if data["gcodeAutoDeletion"]:
-                    self.mrb_file_manager.delete_old_gcode_files()
-
+                self.set_gcode_deletion(data["gcodeAutoDeletion"])
             if "dev" in data and "software_tier" in data["dev"]:
                 switch_software_channel(self, data["dev"]["software_tier"])
             if "leds" in data and "brightness" in data["leds"]:
@@ -2068,13 +2061,14 @@ class MrBeamPlugin(
 
     def gcode_deletion_init(self, data):
         if "gcodeAutoDeletionConsent" in data:
-            self._settings.set_boolean(
-                ["gcodeAutoDeletion"], data["gcodeAutoDeletionConsent"]
-            )
-            self._settings.save()  # This is necessary because without it the value is not saved
-            # Everytime the gcode auto deletion is enabled, it will be triggered
-            if data["gcodeAutoDeletionConsent"]:
-                self.mrb_file_manager.delete_old_gcode_files()
+            self.set_gcode_deletion(data["gcodeAutoDeletionConsent"])
+
+    def set_gcode_deletion(self, enable_deletion):
+        self._settings.set_boolean(["gcodeAutoDeletion"], enable_deletion)
+        self._settings.save()  # This is necessary because without it the value is not saved
+        # Everytime the gcode auto deletion is enabled, it will be triggered
+        if enable_deletion:
+            self.mrb_file_manager.delete_old_gcode_files()
 
     @octoprint.plugin.BlueprintPlugin.route("/console", methods=["POST"])
     def console_log(self):
