@@ -32,9 +32,8 @@ class MrbFileManager(FileManager):
             self.content = content
 
         def save(self, absolute_dest_path):
-            with open(absolute_dest_path, "w") as d:
-                d.write(self.content)
-                d.close()
+            with open(absolute_dest_path, "wb") as d:
+                d.write(self.content.encode("UTF-8"))
 
     def __init__(self, plugin):
         self._plugin = plugin
