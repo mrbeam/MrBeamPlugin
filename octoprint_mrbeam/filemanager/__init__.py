@@ -4,6 +4,7 @@ import os
 from octoprint.filemanager import FileManager
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint.filemanager.storage import LocalFileStorage
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 # singleton
@@ -21,6 +22,10 @@ class MrbFileManager(FileManager):
     MAX_HISTORY_FILES = 25  # TODO fetch from settings
     MAX_GCODE_FILES = 25  # TODO fetch from settings
 
+    FILE_EXTENSIONS_SVG = ["svg"]
+    FILE_EXTENSIONS_HISTORY = ["mrb"]
+    FILE_EXTENSIONS_GCODE = ["g", "gc", "gco", "gcode", "nc"]
+
     class File:
         def __init__(self, file_name, content):
             self.filename = file_name
@@ -33,7 +38,7 @@ class MrbFileManager(FileManager):
 
     def __init__(self, plugin):
         self._plugin = plugin
-        self._logger = plugin._logger
+        self._logger_mrb = mrb_logger("octoprint.plugins.mrbeam.filemanager")
         self._settings = plugin._settings
 
         storage_managers = dict()
@@ -50,28 +55,33 @@ class MrbFileManager(FileManager):
         )
 
     def add_file_to_design_library(self, file_name, content, sanitize_name=False):
-        if sanitize_name:
-            file_name = self._sanitize_file_name(file_name)
-        self._logger.info(
-            "ANDYTEST %s: content len before: %s", file_name, len(content)
-        )
-        content = self._sanitize_content(file_name, content)
-        self._logger.info("ANDYTEST %s: content len after: %s", file_name, len(content))
+        try:
+            if sanitize_name:
+                file_name = self._sanitize_file_name(file_name)
+            content = self._sanitize_content(file_name, content)
 
-        file_obj = self.File(file_name, content)
-        self.add_file(
-            FileDestinations.LOCAL,
-            file_name,
-            file_obj,
-            links=None,
-            allow_overwrite=True,
-        )
+            file_obj = self.File(file_name, content)
+            self.add_file(
+                FileDestinations.LOCAL,
+                file_name,
+                file_obj,
+                links=None,
+                allow_overwrite=True,
+            )
+        except Exception as e:
+            self._logger_mrb.exception(
+                "Exception in MrbFileManager.add_file_to_design_library() ", test=True
+            )
+            raise e
 
     def delete_old_files(self):
-        self.delete_old_history_files()
-
-        if self._settings.get(["gcodeAutoDeletion"]):
-            self.delete_old_gcode_files()
+        try:
+            self.delete_old_history_files()
+            if self._settings.get(["gcodeAutoDeletion"]):
+                self.delete_old_gcode_files()
+        except Exception as e:
+            self._logger_mrb.exception("Exception in delete_old_files()")
+            raise e
 
     def delete_old_history_files(self):
         mrb_filter_func = lambda entry, entry_data: self._is_history_file(entry)
@@ -108,18 +118,24 @@ class MrbFileManager(FileManager):
     def _is_history_file(entry):
         _, extension = os.path.splitext(entry)
         extension = extension[1:].lower()
-        return extension == "mrb"
+        return extension in MrbFileManager.FILE_EXTENSIONS_HISTORY
 
     @staticmethod
     def _is_gcode_file(entry):
         _, extension = os.path.splitext(entry)
         extension = extension[1:].lower()
-        return extension == "gco"
+        return extension in MrbFileManager.FILE_EXTENSIONS_GCODE
 
     @staticmethod
     def _sanitize_content(file_name, content):
         _, extension = os.path.splitext(file_name)
-        if extension in (".svg", ".mrb", ".g", ".gco", ".gc", ".gcode", ".nc"):
+        extension = extension[1:].lower()
+        if (
+            extension
+            in MrbFileManager.FILE_EXTENSIONS_SVG
+            + MrbFileManager.FILE_EXTENSIONS_GCODE
+            + MrbFileManager.FILE_EXTENSIONS_HISTORY
+        ):
             # TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
             content = "".join(i for i in content if ord(i) < 128)
         return content
