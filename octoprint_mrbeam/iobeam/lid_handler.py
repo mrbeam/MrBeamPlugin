@@ -787,13 +787,17 @@ class PhotoCreator(object):
         except Exception as e:
             if e.__class__.__name__.startswith("PiCamera"):
                 self._logger.exception(
-                    "PiCamera_Error_while_preparing_camera_%s_%s",
+                    "PiCamera_Error_while_preparing_camera_%s_%s, locals : %s",
                     e.__class__.__name__,
                     e,
+                    locals(),
                 )
             else:
                 self._logger.exception(
-                    "Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e
+                    "Exception_while_preparing_camera_%s_%s, locals : %s",
+                    e.__class__.__name__,
+                    e,
+                    locals(),
                 )
         self.stopEvent.set()
 
