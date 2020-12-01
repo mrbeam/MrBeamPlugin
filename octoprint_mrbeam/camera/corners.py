@@ -15,7 +15,7 @@ from .definitions import (
 import logging
 from os.path import isfile
 import os
-from octoprint_mrbeam.util import dict_map
+from octoprint_mrbeam.util import dict_map, makedirs
 import numpy as np
 from numpy.linalg import norm
 import cv2
@@ -122,7 +122,7 @@ def write_corner_calibration(pic_settings, path):
         type(pic_settings), pic_settings
     )
     _logger.debug("Saving new corner calibration: {}".format(pic_settings))
-    os.makedirs(path.dirname(path), exist_ok=True)
+    makedirs(path, parent=True, exist_ok=True)
     with open(path, "wb") as f:
         yaml.safe_dump(pic_settings, f, indent="  ", allow_unicode=True)
     _logger.info("New corner calibration has been saved")

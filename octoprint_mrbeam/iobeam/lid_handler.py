@@ -1293,10 +1293,10 @@ class PhotoCreator(object):
         )
 
     def _createFolder_if_not_existing(self, filename):
-        path = os.path.dirname(filename)
-        if not os.path.exists(path):
-            os.makedirs(path)
-            self._logger.debug("Created folder '%s' for camera images.", path)
+        folder = os.path.dirname(filename)
+        if not os.path.exists(folder):
+            makedirs(folder)
+            self._logger.debug("Created folder '%s' for camera images.", folder)
 
     def load_camera_settings(self, path="/home/pi/.octoprint/cam/last_session.yaml"):
         """
@@ -1366,15 +1366,15 @@ class PhotoCreator(object):
                 "version": octoprint_mrbeam.__version__,
             },
         )
+        makedirs(path, parent=True, exist_ok=True)
         try:
-            os.makedirs(path.dirname(path), exist_ok=True)
             with open(path, "w") as f:
                 f.write(yaml.dump(settings))
         except (OSError, IOError) as e:
             self._logger.error(e)
         except TypeError as e:
             self._logger.warning(
-                "Data that I tried writing to %s :\n%s" % (path, settings)
+                "Data that I tried writing to %s :\n%s\n%s" % (path, settings, e)
             )
 
 
