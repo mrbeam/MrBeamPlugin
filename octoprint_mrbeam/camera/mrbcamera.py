@@ -103,6 +103,10 @@ class MrbCamera(CameraClass, BaseCamera):
             self._busy.acquire()
         try:
             CameraClass.capture(self, output, format=format, *args, **kwargs)
+        except AttributeError as e:
+            self._logger.warning(
+                "Caught Picamera internal error - self._camera is None"
+            )
         finally:
             if PICAMERA_AVAILABLE:
                 self._busy.release()
