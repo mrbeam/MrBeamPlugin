@@ -122,6 +122,7 @@ def write_corner_calibration(pic_settings, path):
         type(pic_settings), pic_settings
     )
     _logger.debug("Saving new corner calibration: {}".format(pic_settings))
+    os.makedirs(path.dirname(path), exist_ok=True)
     with open(path, "wb") as f:
         yaml.safe_dump(pic_settings, f, indent="  ", allow_unicode=True)
     _logger.info("New corner calibration has been saved")

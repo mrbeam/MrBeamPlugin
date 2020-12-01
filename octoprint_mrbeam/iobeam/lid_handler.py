@@ -1367,6 +1367,7 @@ class PhotoCreator(object):
             },
         )
         try:
+            os.makedirs(path.dirname(path), exist_ok=True)
             with open(path, "w") as f:
                 f.write(yaml.dump(settings))
         except (OSError, IOError) as e:
