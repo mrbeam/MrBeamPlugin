@@ -77,16 +77,16 @@ MAX_MARKER_PIX = 1500
 
 # Calibration file :
 # Position of the pink circles, as found during calibration
-UNDIST_CALIB_MARKERS_KEY = "calibMarkers"
+UNDIST_CALIB_MARKERS_KEY = "user_undist_calibMarkers"
 RAW_CALIB_MARKERS_KEY = "raw_calibMarkers"
-FACT_UNDIST_CALIB_MARKERS_KEY = "factory_undist_calibMarkers"
+FACT_UNDIST_CALIB_MARKERS_KEY = "calibMarkers"  # legacy
 FACT_RAW_CALIB_MARKERS_KEY = "factory_raw_calibMarkers"
 
 # Calibration file :
 # Position of the corners (arrow tips), as found during the calibration
-UNDIST_CORNERS_KEY = "cornersFromImage"
+UNDIST_CORNERS_KEY = "user_undist_cornersFromImage"
 RAW_CORNERS_KEY = "raw_cornersFromImage"
-FACT_UNDIST_CORNERS_KEY = "factory_undist_cornersFromImage"
+FACT_UNDIST_CORNERS_KEY = "cornersFromImage"  # legacy
 FACT_RAW_CORNERS_KEY = "factory_raw_cornersFromImage"
 
 # Empty settings config

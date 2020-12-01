@@ -214,7 +214,7 @@
 														</div>
 														<div>
 															<a id="control-xdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',-1) }"><i class="icon-circle-arrow-left"></i></a>
-															<a id="control-xyhome" data-bind="enable: (state.isOperational() || state.isLocked()) && !state.isPrinting() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></a>
+															<a id="control-xyhome" data-bind="enable: (state.isOperational() || state.isLocked()) && !state.isPrinting() && loginState.isUser(), click: function() { workingArea.performHomingCycle('position_buttons') }"><i class="icon-home"></i></a>
 															<a id="control-xinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',1) }"><i class="icon-circle-arrow-right"></i></a>
 														</div>
 														<div>
