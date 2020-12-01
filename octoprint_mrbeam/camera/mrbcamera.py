@@ -85,7 +85,8 @@ class MrbCamera(CameraClass, BaseCamera):
         if PICAMERA_AVAILABLE:
             PiCamera.__enter__(self)
         # Cannot set shutter speed before opening the camera (picamera)
-        self.shutter_speed = self._shutter_speed
+        if self._shutter_speed:
+            self.shutter_speed = self._shutter_speed
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):

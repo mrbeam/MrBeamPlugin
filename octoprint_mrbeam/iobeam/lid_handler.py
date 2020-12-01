@@ -787,13 +787,17 @@ class PhotoCreator(object):
         except Exception as e:
             if e.__class__.__name__.startswith("PiCamera"):
                 self._logger.exception(
-                    "PiCamera_Error_while_preparing_camera_%s_%s",
+                    "PiCamera_Error_while_preparing_camera_%s_%s, locals : %s",
                     e.__class__.__name__,
                     e,
+                    locals(),
                 )
             else:
                 self._logger.exception(
-                    "Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e
+                    "Exception_while_preparing_camera_%s_%s, locals : %s",
+                    e.__class__.__name__,
+                    e,
+                    locals(),
                 )
         self.stopEvent.set()
 
@@ -1293,10 +1297,10 @@ class PhotoCreator(object):
         )
 
     def _createFolder_if_not_existing(self, filename):
-        path = os.path.dirname(filename)
-        if not os.path.exists(path):
-            os.makedirs(path)
-            self._logger.debug("Created folder '%s' for camera images.", path)
+        folder = os.path.dirname(filename)
+        if not os.path.exists(folder):
+            makedirs(folder)
+            self._logger.debug("Created folder '%s' for camera images.", folder)
 
     def load_camera_settings(self, path="/home/pi/.octoprint/cam/last_session.yaml"):
         """
@@ -1366,6 +1370,7 @@ class PhotoCreator(object):
                 "version": octoprint_mrbeam.__version__,
             },
         )
+        makedirs(path, parent=True, exist_ok=True)
         try:
             with open(path, "w") as f:
                 f.write(yaml.dump(settings))
@@ -1373,7 +1378,7 @@ class PhotoCreator(object):
             self._logger.error(e)
         except TypeError as e:
             self._logger.warning(
-                "Data that I tried writing to %s :\n%s" % (path, settings)
+                "Data that I tried writing to %s :\n%s\n%s" % (path, settings, e)
             )
 
 
