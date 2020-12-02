@@ -1,4 +1,45 @@
 $(function () {
+    // catch and log jQuery ajax errors
+    $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
+        if (
+            !settings.url.includes("plugin/mrbeam/console") &&
+            !settings.url.includes("find.mr-beam.org")
+        ) {
+            let msg =
+                jqXHR.status +
+                " (" +
+                jqXHR.statusText +
+                "): " +
+                settings.type +
+                " " +
+                settings.url;
+            if (settings.data) {
+                msg +=
+                    ', body: "' +
+                    (settings.data.length > 200
+                        ? settings.data.substr(0, 200) + "&hellip;"
+                        : settings.data);
+            }
+
+            let data = {
+                level: "error",
+                msg: msg,
+                ts: event.timeStamp,
+                file: null,
+                function: "ajaxError",
+                line: null,
+                col: null,
+                stacktrace: null,
+                http_code: jqXHR.status,
+                http_endpoint: settings.url,
+            };
+            console.everything.push(data);
+            if (console.callbacks.error) {
+                console.callbacks.error(data);
+            }
+        }
+    });
+
     function AnalyticsViewModel(params) {
         let self = this;
         window.mrbeam.viewModels["analyticsViewModel"] = self;

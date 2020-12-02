@@ -19,18 +19,27 @@ $(function () {
         };
 
         self.getEmail = function () {
-            return (
-                self.loginState.currentUser().settings.mrbeam
-                    .design_store_email || self.loginState.username()
-            );
+            if (
+                self.loginState.currentUser() &&
+                self.loginState.currentUser().settings.mrbeam.design_store_email
+            ) {
+                return self.loginState.currentUser().settings.mrbeam
+                    .design_store_email;
+            } else {
+                return self.loginState.username();
+            }
         };
 
         self.getAuthToken = function () {
-            return (
-                self.loginState.currentUser().settings.mrbeam
-                    .design_store_auth_token ||
-                self.loginState.currentUser().settings.mrbeam.user_token
-            );
+            if (self.loginState.currentUser()) {
+                return (
+                    self.loginState.currentUser().settings.mrbeam
+                        .design_store_auth_token ||
+                    self.loginState.currentUser().settings.mrbeam.user_token
+                );
+            } else {
+                return undefined;
+            }
         };
 
         self.prepareDesignStoreTab = function () {

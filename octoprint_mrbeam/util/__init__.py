@@ -1,16 +1,15 @@
-import sys
-from itertools import chain
-import time
+from collections import Iterable, Mapping
+from copy import copy, deepcopy
+from functools import wraps
+from itertools import chain, repeat, cycle
+import json
 import logging
 import numpy as np
-import json
-from itertools import chain, repeat, cycle
-from functools import wraps
-from copy import copy, deepcopy
+import sys
+import time
 import threading
-from .log import logExceptions, logtime
 
-# from typing import Mapping
+from .log import logExceptions, logtime
 
 
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
@@ -57,6 +56,29 @@ def dict_map(func, my_dict):
     return __my_dict
 
 
+def dict_get(mapping, path, default=None):
+    """
+    Use a path to get an item from a deep map.
+    ``path`` has to be Iterable.
+    """
+    assert isinstance(mapping, Mapping)
+    assert isinstance(path, Iterable)
+    _mapping = mapping
+    result = None
+    for k in path:
+        if k in _mapping.keys():
+            result = _mapping[k]
+            if isinstance(_mapping[k], Mapping):
+                _mapping = _mapping[k]
+            else:
+                # Otherwise k could be repeated
+                _mapping = {}
+        # path not found in deep map
+        else:
+            return default
+    return result
+
+
 def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
     """
     returns a function that threads an other function and running a callback if provided.
@@ -100,7 +122,7 @@ def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
     return wrapper
 
 
-def makedirs(path, parent=False, *a, **kw):
+def makedirs(path, parent=False, exist_ok=True, *a, **kw):
     """
     Same as os.makedirs but doesn't throw exception if dir exists
     @param parentif: bool create the parent directory for the path given and not the full path
@@ -116,10 +138,13 @@ def makedirs(path, parent=False, *a, **kw):
         _p = dirname(path)
     else:
         _p = path
-    try:
-        makedirs(_p, *a, **kw)
-    except OSError as exc:
-        if exc.errno == errno.EEXIST and isdir(_p):
-            pass
-        else:
-            raise
+    if sys.version_info >= (3, 2, 0):
+        makedirs(_p, exist_ok=exist_ok, *a, **kw)
+    else:
+        try:
+            makedirs(_p, *a, **kw)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and isdir(_p) and exist_ok:
+                pass
+            else:
+                raise

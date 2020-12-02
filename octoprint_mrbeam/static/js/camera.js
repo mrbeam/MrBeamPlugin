@@ -1,12 +1,13 @@
 const MARKERS = ["NW", "NE", "SE", "SW"];
 
 $(function () {
-    function CameraViewModel(params) {
+    function CameraViewModel(parameters) {
         var self = this;
         window.mrbeam.viewModels["cameraViewModel"] = self;
 
-        self.settings = params[0];
-        self.state = params[1];
+        self.settings = parameters[0];
+        self.state = parameters[1];
+        self.loginState = parameters[2];
 
         self.TAB_NAME_WORKING_AREA = "#workingarea";
         self.FALLBACK_IMAGE_URL =
@@ -251,11 +252,15 @@ $(function () {
                         type: "GET",
                         url: "/plugin/mrbeam/on_camera_picture_transfer",
                     });
-                } else {
+                } else if (self.loginState.loggedIn()) {
                     OctoPrint.simpleApiCommand(
                         "mrbeam",
                         "on_camera_picture_transfer",
                         {}
+                    );
+                } else {
+                    console.warn(
+                        "User not logged in, cannot confirm picture download."
                     );
                 }
                 self.imagesInSession(self.imagesInSession() + 1);
@@ -290,18 +295,24 @@ $(function () {
         };
 
         self.send_camera_image_to_analytics = function () {
-            OctoPrint.simpleApiCommand(
-                "mrbeam",
-                "send_camera_image_to_analytics",
-                {}
-            );
+            if (self.loginState.loggedIn()) {
+                OctoPrint.simpleApiCommand(
+                    "mrbeam",
+                    "send_camera_image_to_analytics",
+                    {}
+                );
+            } else {
+                console.warn(
+                    "User not logged in, cannot send image to analytics."
+                );
+            }
         };
     }
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([
         CameraViewModel,
-        ["settingsViewModel", "printerStateViewModel"],
+        ["settingsViewModel", "printerStateViewModel", "loginStateViewModel"],
         [], // nothing to bind.
     ]);
 });

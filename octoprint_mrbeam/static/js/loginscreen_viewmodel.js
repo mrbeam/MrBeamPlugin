@@ -4,6 +4,7 @@
 $(function () {
     function LoginScreenViewModel(parameters) {
         var self = this;
+        window.mrbeam.viewModels["loginScreenViewModel"] = self;
 
         self.loginState = parameters[0];
         self.access = parameters[1];

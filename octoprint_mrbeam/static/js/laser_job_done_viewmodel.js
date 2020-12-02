@@ -135,6 +135,16 @@ $(function () {
                 self.jobDoneDialog
             );
         };
+
+        self.cancelFinalExtraction = function () {
+            OctoPrint.simpleApiCommand("mrbeam", "cancel_final_extraction", {})
+                .done(function (response) {
+                    console.log("Final dust extraction cancelled");
+                })
+                .fail(function () {
+                    console.error("Unable to cancel final dust extraction");
+                });
+        };
     }
 
     // view model class, parameters for constructor, container to bind to

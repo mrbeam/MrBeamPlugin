@@ -18,7 +18,7 @@ def usageHandler(plugin):
 
 
 class UsageHandler(object):
-    MAX_DUST_FACTOR = 1.0
+    MAX_DUST_FACTOR = 2.0
     MIN_DUST_FACTOR = 0.5
     MAX_DUST_VALUE = 0.5
     MIN_DUST_VALUE = 0.2
@@ -190,6 +190,11 @@ class UsageHandler(object):
                 self._usage_data["compressor"]["job_time"] = (
                     self.start_time_compressor + job_duration
                 )
+            self._logger.debug(
+                "job_duration actual: {:.1f}s, weighted: {:.1f}s, factor: {:.2f}".format(
+                    job_duration, job_duration * dust_factor, dust_factor
+                )
+            )
             self._write_usage_data()
 
     def _calculate_ntp_fix_compensation(self, job_duration):

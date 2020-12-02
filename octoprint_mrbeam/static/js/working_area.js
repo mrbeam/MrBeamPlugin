@@ -358,6 +358,45 @@ $(function () {
             }
         };
 
+        /**
+         * All this logging is for debugging.
+         * In version 0.7.11 (beta) some users complained that they were not able to home
+         * @param source
+         */
+        self.performHomingCycle = function (source) {
+            let stateString = self.state ? self.state.stateString() : null;
+            OctoPrint.printer
+                .home(["x", "y"])
+                .done(function () {
+                    console.log(
+                        "Homing call OK (source: " +
+                            source +
+                            ", stateString: " +
+                            stateString +
+                            ")"
+                    );
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    setTimeout(function () {
+                        let stateStringNew = self.state
+                            ? self.state.stateString()
+                            : null;
+                        console.error(
+                            "Homing call ERROR (source: " +
+                                source +
+                                ", stateString: " +
+                                stateString +
+                                ", stateStringNew: " +
+                                stateStringNew +
+                                "): " +
+                                jqXHR.status +
+                                " " +
+                                errorThrown
+                        );
+                    }, 500);
+                });
+        };
+
         self.crosshairX = function () {
             var pos = self.state.currentPos();
             if (pos !== undefined) {

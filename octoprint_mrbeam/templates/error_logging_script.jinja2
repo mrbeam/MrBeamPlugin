@@ -50,7 +50,6 @@
         console._getCaller = function(passedStack) {
             try {
                 let stack = passedStack ? passedStack.split("\n") : (new Error()).stack.split("\n");
-                let rawStack = Array.from(stack)
                 let msg = stack.shift().trim()
                 let callerInfo = null
                 let stacktrace = []
@@ -72,7 +71,6 @@
                         col: callerInfo[4] || null,
                         msg: msg,
                         stacktrace: stacktrace,
-                        {#rawStack: rawStack#}
                     };
                 }
                 return null;
@@ -132,11 +130,29 @@
     window.addEventListener('error', function(event) {
         let m = console._ERR_FILENAME.exec(event.filename)
         let filename = m ? m[1] : null
+
+        let stack = []
+        if (event.error && event.error.stack) {
+            let rawstack = event.error.stack.split("\n");
+            rawstack.shift() // first is the message
+            let first = true
+            for(let frame of rawstack) {
+                if (!frame.trim().startsWith('at console')) {
+                    if (first) {
+                        callerInfo = console._STACK_FRAME_RE.exec(frame);
+                    }
+                    stack.push(frame.trim())
+                    first = false
+                }
+            }
+        }
+
         let data = {
             "level":"error",
             "msg": event.message,
             "file": filename,
             "function": "window.onerror",
+            "stacktrace": stack,
             "line": event.lineno,
             "col": event.colno,
             "ts": Date.now()
@@ -145,5 +161,7 @@
         if (console.callbacks.error) {console.callbacks.error(data);}
         return false;
     })
+
+    {# ajaxError are handled in mrbeam.js #}
 
 </script>

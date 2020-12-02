@@ -327,7 +327,6 @@ $(function () {
 
         self._saveMarkersSuccess = function (response) {
             self.cornerCalibrationActive(false);
-            self.calibration.cornerCalibrationComplete(true);
             self.analytics.send_fontend_event("corner_calibration_finish", {});
             new PNotify({
                 title: gettext("Camera Calibrated."),

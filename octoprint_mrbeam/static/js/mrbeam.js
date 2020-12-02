@@ -88,7 +88,8 @@ mrbeam.isOctoPrintVersionMin = function (expectedOctPrintVersion) {
  * @returns {boolean}
  */
 mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
-    var VPAT = /^\d+(\.\d+){0,2}$/;
+    var version_depth = 5;
+    var VPAT = /^\d+(\.\d+){0,4}$/;
 
     if (
         !actualVersion ||
@@ -100,10 +101,10 @@ mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
     if (actualVersion == expectedVersion) return true;
     if (VPAT.test(actualVersion) && VPAT.test(expectedVersion)) {
         var lparts = actualVersion.split(".");
-        while (lparts.length < 3) lparts.push("0");
+        while (lparts.length < version_depth) lparts.push("0");
         var rparts = expectedVersion.split(".");
-        while (rparts.length < 3) rparts.push("0");
-        for (var i = 0; i < 3; i++) {
+        while (rparts.length < version_depth) rparts.push("0");
+        for (var i = 0; i < version_depth; i++) {
             var l = parseInt(lparts[i], 10);
             var r = parseInt(rparts[i], 10);
             if (l === r) continue;
@@ -112,6 +113,33 @@ mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
         return true;
     } else {
         return actualVersion >= expectedVersion;
+    }
+};
+
+/**
+ * Push a new PNotify notification.
+ * If pn_obj contains attribute 'id',
+ * this method makes sure that only one notification with the same id is shown at a time.
+ * @param pn_obj PNotify configuration
+ */
+mrbeam.updatePNotify = function (pn_obj) {
+    pn_obj.id = pn_obj.id || "id_" + Date.now();
+    // find notification in screen
+    let existing_notification = null;
+    for (let n = 0; n < PNotify.notices.length; n++) {
+        if (
+            PNotify.notices[n].state != "closed" &&
+            PNotify.notices[n].options &&
+            PNotify.notices[n].options.id == pn_obj.id
+        ) {
+            existing_notification = PNotify.notices[n];
+            break;
+        }
+    }
+    if (existing_notification) {
+        existing_notification.update(pn_obj);
+    } else {
+        new PNotify(pn_obj);
     }
 };
 
@@ -203,6 +231,7 @@ $(function () {
 
         self._online_check_last_state = null;
         self._online_check_interval = null;
+        self._ajaxErrorRegistered = false;
 
         self.userTyped = ko.observable(false);
         self.invalidEmailHelp = gettext("Invalid e-mail address");
@@ -311,6 +340,23 @@ $(function () {
             }
         };
 
+        self.onUserLoggedIn = function () {
+            self.removeOpSafeModeOptionFromSystemMenu();
+
+            if (!self._ajaxErrorRegistered) {
+                $(document).ajaxError(function (
+                    event,
+                    jqXHR,
+                    settings,
+                    thrownError
+                ) {
+                    if (jqXHR.status == 401) {
+                        self._handle_session_expired(settings.url);
+                    }
+                });
+            }
+        };
+
         self.onUserLoggedOut = function () {
             self.presetLoginUser();
         };
@@ -361,6 +407,58 @@ $(function () {
             } else {
                 $("body").addClass("offline");
                 $("body").removeClass("online");
+            }
+        };
+
+        self._handle_session_expired = function (triggerUrl) {
+            if (self.loginState && self.loginState.loggedIn()) {
+                if (
+                    !triggerUrl.includes("api/logout") &&
+                    !triggerUrl.includes("plugin/mrbeam/console")
+                ) {
+                    console.error(
+                        "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Trying passive login..."
+                    );
+                    let pn_obj = {
+                        id: "session_expired",
+                        title: gettext("Session expired"),
+                        text: gettext("Trying to do a re-login..."),
+                        type: "warn",
+                        hide: true,
+                    };
+                    mrbeam.updatePNotify(pn_obj);
+
+                    // try passive login
+                    self.loginState.requestData().always(function () {
+                        if (self.loginState.loggedIn()) {
+                            let pn_obj = {
+                                id: "session_expired",
+                                title: gettext("Session expired"),
+                                text: gettext(
+                                    "Re-login successful.<br/>Please repeat the last action."
+                                ),
+                                type: "warn",
+                                hide: true,
+                            };
+                            mrbeam.updatePNotify(pn_obj);
+                        } else {
+                            let pn_obj = {
+                                id: "session_expired",
+                                title: gettext("Session expired"),
+                                text: gettext("Please login again."),
+                                type: "warn",
+                                hide: true,
+                            };
+                            mrbeam.updatePNotify(pn_obj);
+                        }
+                        // Reconnect socket connection
+                        OctoPrint.socket.reconnect();
+                    });
+                }
+            } else {
+                console.log(
+                    "Server responded UNAUTHORIZED and loginStateViewModel is loggedOut. Consistent."
+                );
             }
         };
 
@@ -491,9 +589,19 @@ $(function () {
                                 !$(this)[0].hasChildNodes() &&
                                 modalElement.length === 1
                             ) {
-                                $("body").removeClass("modal-open");
-                                backDrop.remove();
-                                $(this)[0].remove();
+                                setTimeout(() => {
+                                    if (
+                                        !$(this)[0].hasChildNodes() &&
+                                        modalElement.length === 1
+                                    ) {
+                                        $("body").removeClass("modal-open");
+                                        backDrop.remove();
+                                        $(this)[0].remove();
+                                        console.warn(
+                                            "mutationCallback: removed incomplete modal after 500ms"
+                                        );
+                                    }
+                                }, 500);
                             } else if (
                                 !$(this)[0].hasChildNodes() &&
                                 modalElement.length > 1 &&
