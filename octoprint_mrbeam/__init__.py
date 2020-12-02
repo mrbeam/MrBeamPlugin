@@ -1841,7 +1841,6 @@ class MrBeamPlugin(
             self._printer.set_colors(currentFilename, data["vector"])
 
             # callback definition
-            @logExceptions
             def slicing_done(
                 gcode_name,
                 select_after_slicing,
