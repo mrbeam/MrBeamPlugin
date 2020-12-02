@@ -369,7 +369,9 @@ $(function () {
         self.crosshairY = function () {
             var h =
                 self.workingAreaDim !== undefined
-                    ? self.workingAreaDim()[1]
+                    ? self.workingAreaDim()
+                        ? self.workingAreaDim()[1]
+                        : 0
                     : 0;
             var pos = self.state.currentPos();
             return pos !== undefined ? pos.y : -100; //  - 15) : -100; // subtract height/2;
