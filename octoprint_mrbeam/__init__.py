@@ -1731,7 +1731,7 @@ class MrBeamPlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
     @restricted_access
-    @logExceptions
+    # @logExceptions
     def gcodeConvertCommand(self):
         # In order to reactivate the cancel button in the processing screen,
         # we need should run the code in here in a separate thread and return the http call as soon as possible
@@ -1836,6 +1836,7 @@ class MrBeamPlugin(
                 self._printer.set_colors(currentFilename, data["vector"])
 
                 # callback definition
+                # @logExceptions
                 def slicing_done(
                     gcode_name,
                     select_after_slicing,
