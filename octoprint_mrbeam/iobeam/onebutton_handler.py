@@ -327,7 +327,7 @@ class OneButtonHandler(object):
                 )
                 try:
                     # OctoPrint 1.3.4 doesn't provide the file name anymore
-                    path = payload["path"] if "path" in payload else None
+                    path = payload.get("file")
                     self.set_ready_to_laser(path)
                 except Exception as e:
                     self._logger.exception(
