@@ -3,7 +3,7 @@ import time
 from octoprint.util import dict_merge
 from octoprint.printer.standard import Printer, StateMonitor
 from octoprint.events import eventManager, Events
-from octoprint_mrbeam.util import logExceptions
+from octoprint_mrbeam.util.log import logExceptions, logme
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.printing import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -163,15 +163,16 @@ class Laser(Printer):
         # Extra gymnastics in case state flags are a frozen dict
         flags = Printer._getStateFlags(self)
         _dict = flags.__class__
-        flags = dict_merge(
-            {
-                "ready": flags["ready"] and not self.is_locked(),
-                "locked": self.is_locked(),
-                "flashing": self.is_flashing(),
-            },
-            flags,
+        return _dict(
+            dict_merge(
+                dict(flags),
+                {
+                    "ready": flags["ready"] and not self.is_locked(),
+                    "locked": self.is_locked(),
+                    "flashing": self.is_flashing(),
+                },
+            )
         )
-        return _dict(flags)
 
     # position update callbacks
     def on_comm_pos_update(self, MPos, WPos):
