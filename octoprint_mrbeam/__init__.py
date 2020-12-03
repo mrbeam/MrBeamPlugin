@@ -19,8 +19,6 @@ import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
 from flask_babel import gettext
-import octoprint.filemanager as op_filemanager
-from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping, FileManager
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import (
     restricted_access,
@@ -1679,17 +1677,6 @@ class MrBeamPlugin(
             dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL)
         )
 
-    def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-        """
-        Defines the maximum size that is accepted for upload.
-        If the uploaded file size exeeds this limit,
-        you'll see only a ERR_CONNECTION_RESET in Chrome.
-        """
-        return [
-            ("POST", r"/convert", 100 * 1024 * 1024),
-            ("POST", r"/save_store_bought_svg", 100 * 1024 * 1024),
-        ]
-
     @octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
     @restricted_access
     def save_store_bought_svg(self):
@@ -2667,46 +2654,6 @@ class MrBeamPlugin(
                 result[name] = config["branch"]
         return result
 
-    def laser_filemanager(self, *args, **kwargs):
-        def _image_mime_detector(path):
-            p = path.lower()
-            if p.endswith(".jpg") or p.endswith(".jpeg") or p.endswith(".jpe"):
-                return "image/jpeg"
-            elif p.endswith(".png"):
-                return "image/png"
-            elif p.endswith(".gif"):
-                return "image/gif"
-            elif p.endswith(".bmp"):
-                return "image/bmp"
-            elif p.endswith(".pcx"):
-                return "image/x-pcx"
-            elif p.endswith(".webp"):
-                return "image/webp"
-
-        return dict(
-            # extensions for image / 3d model files
-            model=dict(
-                # TODO enable once 3d support is ready
-                # stl=ContentTypeMapping(["stl"], "application/sla"),
-                image=ContentTypeDetector(
-                    ["jpg", "jpeg", "jpe", "png", "gif", "bmp", "pcx", "webp"],
-                    _image_mime_detector,
-                ),
-                svg=ContentTypeMapping(["svg"], "image/svg+xml"),
-                dxf=ContentTypeMapping(["dxf"], "application/dxf"),
-            ),
-            # .mrb files are svgs, representing the whole working area of a job
-            recentjob=dict(
-                svg=ContentTypeMapping(["mrb"], "image/svg+xml"),
-            ),
-            # extensions for printable machine code
-            machinecode=dict(
-                gcode=ContentTypeMapping(
-                    ["nc"], "text/plain"
-                )  # already defined by OP: "gcode", "gco", "g"
-            ),
-        )
-
     def get_mrb_state(self):
         """
         Returns the data set 'mrb_state' which we add to the periodic status messages
@@ -3175,13 +3122,15 @@ def __plugin_load__():
 
     from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
     from octoprint_mrbeam.printing.printer import laser_factory
+    from octoprint_mrbeam import hooks
 
     global __plugin_hooks__
     __plugin_hooks__ = {
+        "octoprint.cli.commands": get_cli_commands,
+        "octoprint.filemanager.extension_tree": hooks.filemanager_extensions,
+        "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,
+        "octoprint.plugin.loginui.theming": hooks.loginui_theming,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
         "octoprint.printer.factory": laser_factory,
-        "octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
-        "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,
-        "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
-        "octoprint.cli.commands": get_cli_commands,
+        "octoprint.server.http.bodysize": hooks.http_bodysize,
     }
