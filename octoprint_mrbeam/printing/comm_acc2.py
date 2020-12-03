@@ -176,9 +176,7 @@ class MachineCom(octocomm.MachineCom):
         del self._printerProfileManager
 
         # Set more attributes
-        self._logger = mrb_logger(
-            "octoprint.plugins.mrbeam.printing.comm_acc2", lvl=logging.DEBUG
-        )
+        self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
 
         self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
         self._grbl_state = None
