@@ -712,8 +712,21 @@ class MrBeamPlugin(
         # template, using the render_kwargs as provided by OctoPrint
         from flask import make_response, render_template, g
 
-        firstRun = render_kwargs["firstRun"]
         language = g.locale.language if g.locale else "en"
+        enable_accesscontrol = self._user_manager.enabled
+
+        if self.support_mode:
+            firstRun = False
+            accesscontrol_active = False
+            wizard = False
+        else:
+            firstRun = render_kwargs["firstRun"]
+            accesscontrol_active = (
+                enable_accesscontrol and self._user_manager.has_been_customized()
+            )
+            wizard = bool(
+                dict_get(render_kwargs, ["templates", "wizard", "order"], False)
+            )
 
         if (
             request.headers.get("User-Agent")
@@ -721,29 +734,19 @@ class MrBeamPlugin(
         ):
             self._track_ui_render_calls(request, language)
 
-        enable_accesscontrol = self._user_manager.enabled
-        accesscontrol_active = (
-            enable_accesscontrol and self._user_manager.has_been_customized()
-        )
-
         selectedProfile = self.laserCutterProfileManager.get_current_or_default()
         enable_focus = selectedProfile["focus"]
         safety_glasses = selectedProfile["glasses"]
         # render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
-        wizard = render_kwargs["templates"] is not None and bool(
-            render_kwargs["templates"]["wizard"]["order"]
-        )
-
-        if render_kwargs["templates"]["wizard"]["entries"]:
-            if "firstrunstart" in render_kwargs["templates"]["wizard"]["entries"]:
-                render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1][
+        _entries = dict_get(render_kwargs, ["templates", "wizard", "entries"])
+        if _entries:
+            if "firstrunstart" in _entries:
+                _entries["firstrunstart"][1][
                     "template"
                 ] = "wizard/firstrun_start.jinja2"
-            if "firstrunend" in render_kwargs["templates"]["wizard"]["entries"]:
-                render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1][
-                    "template"
-                ] = "wizard/firstrun_end.jinja2"
+            if "firstrunend" in _entries:
+                _entries["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
 
         display_version_string = "{} on {}".format(
             self._plugin_version, self.getHostname()
@@ -752,11 +755,6 @@ class MrBeamPlugin(
             display_version_string = "{} ({} branch) on {}".format(
                 self._plugin_version, self._branch, self.getHostname()
             )
-
-        if self.support_mode:
-            firstRun = False
-            accesscontrol_active = False
-            wizard = False
 
         render_kwargs.update(
             dict(
@@ -3025,7 +3023,6 @@ def __plugin_load__():
     global __plugin_implementation__
     __plugin_implementation__ = MrBeamPlugin()
     __builtin__._mrbeam_plugin_implementation = __plugin_implementation__
-    # MRBEAM_PLUGIN_IMPLEMENTATION = __plugin_implementation__
 
     global __plugin_settings_overlay__
     __plugin_settings_overlay__ = dict(

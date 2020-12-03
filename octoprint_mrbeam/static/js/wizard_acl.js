@@ -71,31 +71,6 @@ $(function () {
             });
         };
 
-        // self.keepAccessControl = function() {
-        //     if (!self.validData()) return;
-        //
-        //     var data = {
-        //         "ac": true,
-        //         "user": self.username(),
-        //         "pass1": self.password(),
-        //         "pass2": self.confirmedPassword()
-        //     };
-        //     self._sendData(data);
-        // };
-        //
-        // self.disableAccessControl = function() {
-        //     var message = gettext("If you disable Access Control <strong>and</strong> your OctoPrint installation is accessible from the internet, your printer <strong>will be accessible by everyone - that also includes the bad guys!</strong>");
-        //     showConfirmationDialog({
-        //         message: message,
-        //         onproceed: function (e) {
-        //             var data = {
-        //                 "ac": false
-        //             };
-        //             self._sendData(data);
-        //         }
-        //     });
-        // };
-
         self._sendData = function (data, callback) {
             OctoPrint.postJson("plugin/mrbeam/acl", data)
                 .done(function () {
@@ -137,17 +112,17 @@ $(function () {
 
         self.onBeforeWizardTabChange = function (next, current) {
             // If the user goes from Access Control to the previous page, we don't check the input data
-            if (current && current === self.wizard.ACL_TAB) {
-                let letContinue = true;
-                if (self.wizard.isGoingToPreviousTab(current, next)) {
-                    // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
-                    $("#" + current).attr("class", "wizard-nav-list-past");
-                } else {
-                    letContinue = self._handleAclTabExit();
-                    if (letContinue) {
-                        // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
-                        $("#" + current).attr("class", "wizard-nav-list-past");
-                    }
+            if (current === self.wizard.ACL_TAB) {
+                let letContinue =
+                    self.wizard.isGoingToPreviousTab(current, next) ||
+                    self._handleAclTabExit();
+                if (letContinue) {
+                    // We need to do this here because it's mandatory step,
+                    // so it's possible that we don't actually change tab
+                    $("#" + self.wizard.ACL_TAB).attr(
+                        "class",
+                        "wizard-nav-list-past"
+                    );
                 }
                 return letContinue;
             }
