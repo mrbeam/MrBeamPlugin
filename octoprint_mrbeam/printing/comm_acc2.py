@@ -30,8 +30,6 @@ import octoprint.plugin
 from octoprint.printer.standard import StateMonitor
 import octoprint.util.comm as octocomm
 
-# from octoprint.util.comm import MachineCom as __MachineCom
-
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events as OctoPrintEvents
 from octoprint.filemanager.destinations import FileDestinations
@@ -46,6 +44,7 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
+from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.util.log import logExceptions
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -96,7 +95,7 @@ class MachineCom(octocomm.MachineCom):
     GRBL_LINE_BUFFER_SIZE = 80
 
     ### OctoPrint comm reserved states 0 - 16 ###
-    # # Explicited here so that getStateId works (uses self.__class__.__dict__.keys())
+    ## Serves as reference (already included from inheritance)
     # STATE_NONE = octocomm.MachineCom.STATE_NONE
     # STATE_OPEN_SERIAL = octocomm.MachineCom.STATE_OPEN_SERIAL
     # STATE_DETECT_SERIAL = octocomm.MachineCom.STATE_DETECT_SERIAL
@@ -315,18 +314,17 @@ class MachineCom(octocomm.MachineCom):
         Returns the home position which usually where the head is after homing. (Except in C series)
         :return: Tuple of (x, y) position
         """
-        if self._laserCutterProfile["legacy"]["job_done_home_position_x"] is not None:
-            return (
-                self._laserCutterProfile["legacy"]["job_done_home_position_x"],
-                self._laserCutterProfile["volume"]["depth"]
-                + self._laserCutterProfile["volume"]["working_area_shift_y"],
-            )
-        return (
-            self._laserCutterProfile["volume"]["width"]
-            + self._laserCutterProfile["volume"]["working_area_shift_x"],  # x
-            self._laserCutterProfile["volume"]["depth"]
-            + self._laserCutterProfile["volume"]["working_area_shift_y"],
-        )  # y
+
+        volume = self._laserCutterProfile["volume"]
+        legacy_x = dict_get(
+            self._laserCutterProfile, ["legacy", "job_done_home_position_x"]
+        )
+        if legacy_x is not None:
+            x = legacy_x
+        else:
+            x = volume["width"] + volume["working_area_shift_x"]
+        y = volume["depth"] + volume["working_area_shift_y"]
+        return x, y
 
     def _monitor_loop(self):
         try:
@@ -2040,34 +2038,6 @@ class MachineCom(octocomm.MachineCom):
                 time.time() - ts,
             )
 
-    # def _handle_command_handler_result(self, command, command_type, gcode, handler_result):
-    #     original_tuple = (command, command_type, gcode)
-    #
-    #     if handler_result is None:
-    #         # handler didn't return anything, we'll just continue
-    #         return original_tuple
-    #
-    #     if isinstance(handler_result, basestring):
-    #         # handler did return just a string, we'll turn that into a 1-tuple now
-    #         handler_result = (handler_result,)
-    #     elif not isinstance(handler_result, (tuple, list)):
-    #         # handler didn't return an expected result format, we'll just ignore it and continue
-    #         return original_tuple
-    #
-    #     hook_result_length = len(handler_result)
-    #     if hook_result_length == 1:
-    #         # handler returned just the command
-    #         command, = handler_result
-    #     elif hook_result_length == 2:
-    #         # handler returned command and command_type
-    #         command, command_type = handler_result
-    #     else:
-    #         # handler returned a tuple of an unexpected length
-    #         return original_tuple
-    #
-    #     gcode = self._gcode_command_for_cmd(command)
-    #     return command, command_type, gcode
-
     def _replace_feedrate(self, cmd):
         obj = self._regex_feedrate.search(cmd)
         if obj is not None:
@@ -2639,65 +2609,7 @@ class MachineCom(octocomm.MachineCom):
         else:
             return octocomm.MachineCom.getStateString(self, state)
 
-    # def getPrintProgress(self, *args, **kwargs):
-    #     return octocomm.MachineCom.getPrintProgress(self, *args, **kwargs)
-
-    # def getPrintFilepos(self, *args, **kwargs):
-    #     return octocomm.MachineCom.getPrintFilepos(self, *args, **kwargs)
-
-    # def getCleanedPrintTime(self, *args, **kwargs):
-    #     return octocomm.MachineCom.getCleanedPrintTime(self, *args, **kwargs)
-
-    # def getConnection(self):
-    #     return self._port, self._baudrate
-
-    # def getErrorString(self, *args, **kwargs):
-    #     return octocomm.MachineCom.getErrorString(self, *args, **kwargs)
-
-    # # State defined functions
-    # def isOperational(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isOperational(self, *args, **kwargs)
-
-    # def isPrinting(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isPrinting(self, *args, **kwargs)
-
-    # def isCancelling(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isCancelling(self, *args, **kwargs)
-
-    # def isPausing(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isPausing(self, *args, **kwargs)
-
-    # def isResuming(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isResuming(self, *args, **kwargs)
-
-    # def isStarting(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isStarting(self, *args, **kwargs)
-
-    # def isFinishing(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isFinishing(self, *args, **kwargs)
-
-    # def isSdPrinting(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isSdPrinting(self, *args, **kwargs)
-
-    # def isSdFileSelected(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isSdFileSelected(self, *args, **kwargs)
-
-    # def isStreaming(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isStreaming(self, *args, **kwargs)
-
-    # def isPaused(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isPaused(self, *args, **kwargs)
-
-    # def isBusy(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isBusy(self, *args, **kwargs)
-
-    # def isError(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isError(self, *args, **kwargs)
-
-    # def isClosedOrError(self, *args, **kwargs):
-    #     return octocomm.MachineCom.isClosedOrError(self, *args, **kwargs)
-
-    # "overloaded" functions from __MachineCom
+    # "overloaded" functions from octocomm.MachineCom
     def isLocked(self):
         return self._state == self.STATE_LOCKED
 
@@ -2712,9 +2624,6 @@ class MachineCom(octocomm.MachineCom):
 
     def isStreaming(self):
         return False
-
-    # def getPrintTime(self, *args, **kwargs):
-    #     return octocomm.MachineCom.getPrintTime(self, *args, **kwargs)
 
     def getGrblVersion(self):
         return self._grbl_version
@@ -2735,19 +2644,34 @@ class MachineCom(octocomm.MachineCom):
         return file_state
 
     def close(self, is_error=False, next_state=None, *args, **kwargs):
+        """
+        Closes the connection to the machine.
+
+        If ``is_error`` is False, will attempt to send the ``beforePrinterDisconnected``
+        gcode script. If ``is_error`` is False and ``wait`` is True, will wait
+        until all messages in the send queue (including the ``beforePrinterDisconnected``
+        gcode script) have been sent to the printer.
+
+        Arguments:
+        is_error (bool): Whether the closing takes place due to an error (True)
+            or not (False, default)
+        next_state (int): switch to this state if connection was open and no error occured
+        wait (bool): Whether to wait for all messages in the send
+            queue to be processed before closing (True, default) or not (False)
+        """
         self._monitoring_active = False
         self._send_queue_active = False
         self._status_polling_interval = 0
 
-        printing = self.isPrinting() or self.isPaused()
+        was_printing = self.isPrinting() or self.isPaused()
 
-        __MachineCom.close(self, is_error, *args, **kwargs)
+        octocomm.MachineCom.close(self, is_error, *args, **kwargs)
         if is_error:
             self._changeState(self.STATE_CLOSED_WITH_ERROR)
         elif not self.isClosedOrError() and next_state:
             self._changeState(next_state)
 
-        if printing:
+        if was_printing:
             payload = None
             if self._currentFile is not None:
                 payload = self._get_printing_file_state()
@@ -2757,7 +2681,7 @@ class MachineCom(octocomm.MachineCom):
     def _set_compressor(self, value):
         try:
             _mrbeam_plugin_implementation.compressor_handler.set_compressor(value)
-        except:
+        except Exception:
             self._logger.exception("Exception in _set_air_pressure() ")
 
     def _set_compressor_pause(self, paused):
@@ -2766,7 +2690,7 @@ class MachineCom(octocomm.MachineCom):
                 _mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
             else:
                 _mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
-        except:
+        except Exception:
             self._logger.exception("Exception in _set_air_pressure() ")
 
 
