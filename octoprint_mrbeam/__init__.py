@@ -173,6 +173,8 @@ class MrBeamPlugin(
         self._time_ntp_check_last_ts = 0.0
         self._time_ntp_shift = 0.0
 
+        self._gcode_deletion_thread = None
+
         # MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
         MrBeamEvents.register_with_octoprint()
 
@@ -2097,7 +2099,24 @@ class MrBeamPlugin(
         self._settings.save()  # This is necessary because without it the value is not saved
         # Everytime the gcode auto deletion is enabled, it will be triggered
         if enable_deletion:
-            self.mrb_file_manager.delete_old_gcode_files()
+            if (
+                self._gcode_deletion_thread is None
+                or not self._gcode_deletion_thread.is_alive()
+            ):
+                self._logger.info(
+                    "set_gcode_deletion: Starting threaded bulk deletion of gcode files."
+                )
+                self._gcode_deletion_thread = threading.Thread(
+                    target=self.mrb_file_manager.delete_old_gcode_files,
+                    name="gcode_deletion_thread",
+                )
+                self._gcode_deletion_thread.daemon = True
+                self._gcode_deletion_thread.start()
+            else:
+                self._logger.warn(
+                    "set_gcode_deletion: NOT Starting threaded bulk deletion of gcode files: Other thread already running."
+                )
+            # self.mrb_file_manager.delete_old_gcode_files()
 
     @octoprint.plugin.BlueprintPlugin.route("/console", methods=["POST"])
     def console_log(self):
