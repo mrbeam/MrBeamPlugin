@@ -339,7 +339,7 @@ $(function () {
             }
         };
 
-        self.onUserLoggedIn = function () {
+        self.onUserLoggedIn = function (currentUser) {
             self.removeOpSafeModeOptionFromSystemMenu();
 
             if (!self._ajaxErrorRegistered) {
@@ -354,6 +354,10 @@ $(function () {
                     }
                 });
             }
+
+            OctoPrint.simpleApiCommand("mrbeam", "on_user_loggedin", {
+                username: currentUser.name,
+            });
         };
 
         self.onUserLoggedOut = function () {

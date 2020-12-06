@@ -68,7 +68,11 @@ from octoprint_mrbeam.software_update_information import (
     SW_UPDATE_TIER_BETA,
     SW_UPDATE_TIER_DEV,
 )
-from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
+from octoprint_mrbeam.support import (
+    check_support_mode,
+    check_calibration_tool_mode,
+    on_user_loggedin,
+)
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
@@ -1965,6 +1969,7 @@ class MrBeamPlugin(
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
+            on_user_loggedin=["username"],
         )
 
     def on_api_command(self, command, data):
@@ -2079,6 +2084,13 @@ class MrBeamPlugin(
             )  # TODO move this func to other file
         elif command == "cancel_final_extraction":
             self.dust_manager.set_user_abort_final_extraction()
+        elif command == "on_user_loggedin":
+            username = data.get("username", None)
+            self._logger.info(
+                "on_user_loggedin sent by frontend - username: %s", username
+            )
+            # checks if support mode file neesd to be deleted
+            on_user_loggedin(self, username)
 
         return NO_CONTENT
 

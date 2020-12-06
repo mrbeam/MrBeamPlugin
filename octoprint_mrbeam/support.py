@@ -24,8 +24,8 @@ def check_support_mode(plugin):
     try:
         if plugin._settings.get(["dev", "support_mode"]) or (
             os.path.isfile(SUPPORT_STICK_FILE_PATH)
-            and time.time() - os.path.getmtime(SUPPORT_STICK_FILE_PATH)
-            < SUPPORT_STICK_FILE_MAX_AGE
+            # and time.time() - os.path.getmtime(SUPPORT_STICK_FILE_PATH)
+            # < SUPPORT_STICK_FILE_MAX_AGE
         ):
             _logger.info("SUPPORT MODE ENABLED")
             support_mode_enabled = True
@@ -49,8 +49,8 @@ def check_calibration_tool_mode(plugin):
     try:
         if plugin._settings.get(["dev", "calibration_tool_mode"]) or (
             os.path.isfile(CALIBRATION_STICK_FILE_PATH)
-            and time.time() - os.path.getmtime(CALIBRATION_STICK_FILE_PATH)
-            < SUPPORT_STICK_FILE_MAX_AGE
+            # and time.time() - os.path.getmtime(CALIBRATION_STICK_FILE_PATH)
+            # < SUPPORT_STICK_FILE_MAX_AGE
         ):
             _logger.info("CALIBRATION TOOL MODE ENABLED")
             mode_enabled = True
@@ -60,6 +60,33 @@ def check_calibration_tool_mode(plugin):
         _logger.exception("Error while checking calibration tool mode")
 
     return mode_enabled
+
+
+def on_user_loggedin(plugin, username):
+    """
+    Deletes SUPPORT_STICK_FILE_PATH and CALIBRATION_STICK_FILE_PATH if username is not a mr beam email
+    :param plugin: MrBeam Plugin instance
+    :param username: name of the loggedin user
+    """
+    if "@mr-beam.org" not in username:
+        if os.path.isfile(SUPPORT_STICK_FILE_PATH):
+            _logger.warn("Removing support mode file - reason: on_user_loggedin")
+            try:
+                os.remove(SUPPORT_STICK_FILE_PATH)
+            except Exception as e:
+                _logger.warn(
+                    "Exception while removing support mode file on_user_loggedin"
+                )
+        if os.path.isfile(CALIBRATION_STICK_FILE_PATH):
+            _logger.warn(
+                "Removing calibration tool mode file - reason: on_user_loggedin"
+            )
+            try:
+                os.remove(CALIBRATION_STICK_FILE_PATH)
+            except Exception as e:
+                _logger.warn(
+                    "Exception while removing calibration tool mode file on_user_loggedin"
+                )
 
 
 def set_support_user(plugin, support_mode):
