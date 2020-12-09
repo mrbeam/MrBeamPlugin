@@ -5,7 +5,6 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 SUPPORT_STICK_FILE_PATH = "/home/pi/usb_mount/support"
 CALIBRATION_STICK_FILE_PATH = "/home/pi/usb_mount/calibration_tool"
-SUPPORT_STICK_FILE_MAX_AGE = 60 * 60 * 24
 
 
 USER_NAME = "support@mr-beam.org"
@@ -29,7 +28,7 @@ def check_support_mode(plugin):
     try:
         if plugin._settings.get(["dev", "support_mode"]) or (
             os.path.isfile(SUPPORT_STICK_FILE_PATH)
-            and len(os.listdir(USB_MOUNT_DIR)) > 0  # if i a usb stick is plugged in
+            and len(os.listdir(USB_MOUNT_DIR)) > 0  # test if an usb stick is plugged in
         ):
             support_mode_enabled = True
         else:
@@ -55,7 +54,7 @@ def check_calibration_tool_mode(plugin):
     try:
         if plugin._settings.get(["dev", "calibration_tool_mode"]) or (
             os.path.isfile(CALIBRATION_STICK_FILE_PATH)
-            and len(os.listdir(USB_MOUNT_DIR)) > 0  # if i a usb stick is plugged in
+            and len(os.listdir(USB_MOUNT_DIR)) > 0  # test if an usb stick is plugged in
         ):
             mode_enabled = True
         else:
