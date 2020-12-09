@@ -3,9 +3,9 @@ import os
 
 from octoprint.filemanager import FileManager
 from octoprint.filemanager.destinations import FileDestinations
-from octoprint.filemanager.storage import LocalFileStorage, StorageError
 from octoprint.events import eventManager, Events
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.filemanager.file_storage import MrBeamFileStorage
 
 
 # singleton
@@ -107,37 +107,22 @@ class MrbFileManager(FileManager):
                     f["path"],
                 )
                 removals.append(tpl)
-
             sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
 
             files_to_delete = []
-
-            # TODO each deletion causes a filemanager push update -> slow.
             for f in sorted_by_age[:-num_files_to_keep]:
-                # self.remove_file(FileDestinations.LOCAL, f[1])
-                # def remove_file(self, destination, path):
-                destination = FileDestinations.LOCAL
                 path = f[1]
-                self._logger_mrb.info("ANDYTEST _delete_files_by_age() path: %s", path)
-                queue_entry = self._analysis_queue_entry(destination, path)
+                queue_entry = self._analysis_queue_entry(FileDestinations.LOCAL, path)
                 self._analysis_queue.dequeue(queue_entry)
-                # self._storage(destination).remove_file(path)
-                self._logger_mrb.info(
-                    "ANDYTEST _delete_files_by_age() append path: %s", path
-                )
                 files_to_delete.append(path)
 
-                # _, name = self._storage(destination).split_path(path)
+                # we do not send this event and hope it's fine
                 # eventManager().fire(Events.FILE_REMOVED, dict(storage=destination,
                 #                                               path=path,
                 #                                               name=name,
                 #                                               type=get_file_type(name)))
 
-            self._logger_mrb.info(
-                "ANDYTEST _delete_files_by_age() deleting files: %s",
-                len(files_to_delete),
-            )
-            self._storage(destination).remove_multiple_files(files_to_delete)
+            self._storage(FileDestinations.LOCAL).remove_multiple_files(files_to_delete)
             eventManager().fire(Events.UPDATED_FILES, dict(type="printables"))
 
     @staticmethod
@@ -172,84 +157,3 @@ class MrbFileManager(FileManager):
         )
 
         return file_name
-
-
-class MrBeamFileStorage(LocalFileStorage):
-    def __init__(self, basefolder, create=False):
-        self._logger_mrb = mrb_logger(
-            "octoprint.plugins.mrbeam.filemanager.mrbFileStorage"
-        )
-
-        LocalFileStorage.__init__(self, basefolder, create)
-
-    def remove_multiple_files(self, files):
-        self._logger_mrb.info("ANDYTEST remove_multiple_files: hello world")
-
-        metadata_to_remove = {}
-
-        for path in files:
-            path, name = self.sanitize(path)
-            self._logger_mrb.info(
-                "ANDYTEST remove_multiple_files: path: %s, name: %s", path, name
-            )
-
-            file_path = os.path.join(path, name)
-            if not os.path.exists(file_path):
-                return
-            if not os.path.isfile(file_path):
-                raise StorageError(
-                    "{name} in {path} is not a file".format(**locals()),
-                    code=StorageError.INVALID_FILE,
-                )
-
-            try:
-                os.remove(file_path)
-            except Exception as e:
-                raise StorageError(
-                    "Could not delete {name} in {path}".format(**locals()), cause=e
-                )
-            # metadata_to_remove.append((path, name))
-            if path not in metadata_to_remove:
-                metadata_to_remove[path] = []
-            metadata_to_remove[path].append(name)
-
-        # self._remove_metadata_entry(path, name)
-
-    def _remove_metadata_multiple_entry(self, entries):
-
-        for path in entries.keys():
-            self._logger_mrb.info(
-                "ANDYTEST _remove_metadata_multiple_entry: path: %s", path
-            )
-
-            with self._get_metadata_lock(path):
-                metadata = self._get_metadata(path)
-
-                for name in entries[path]:
-                    self._logger_mrb.info(
-                        "ANDYTEST _remove_metadata_multiple_entry: name: %s", name
-                    )
-
-                    if not name in metadata:
-                        continue
-
-                    if "hash" in metadata[name]:
-                        hash = metadata[name]["hash"]
-                        for m in metadata.values():
-                            if not "links" in m:
-                                continue
-                            links_hash = (
-                                lambda link: "hash" in link
-                                and link["hash"] == hash
-                                and "rel" in link
-                                and (
-                                    link["rel"] == "model"
-                                    or link["rel"] == "machinecode"
-                                )
-                            )
-                            m["links"] = [
-                                link for link in m["links"] if not links_hash(link)
-                            ]
-
-                    del metadata[name]
-                self._save_metadata(path, metadata)
