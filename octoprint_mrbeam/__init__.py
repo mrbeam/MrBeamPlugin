@@ -2116,7 +2116,6 @@ class MrBeamPlugin(
                 self._logger.warn(
                     "set_gcode_deletion: NOT Starting threaded bulk deletion of gcode files: Other thread already running."
                 )
-            # self.mrb_file_manager.delete_old_gcode_files()
 
     @octoprint.plugin.BlueprintPlugin.route("/console", methods=["POST"])
     def console_log(self):
