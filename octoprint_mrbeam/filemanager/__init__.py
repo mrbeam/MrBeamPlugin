@@ -110,8 +110,7 @@ class MrbFileManager(FileManager):
             sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
 
             files_to_delete = []
-            for f in sorted_by_age[:-num_files_to_keep]:
-                path = f[1]
+            for _, path in sorted_by_age[:-num_files_to_keep]:
                 queue_entry = self._analysis_queue_entry(FileDestinations.LOCAL, path)
                 self._analysis_queue.dequeue(queue_entry)
                 files_to_delete.append(path)

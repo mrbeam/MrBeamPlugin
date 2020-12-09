@@ -9,11 +9,10 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class MrBeamFileStorage(LocalFileStorage):
     def __init__(self, basefolder, create=False):
+        LocalFileStorage.__init__(self, basefolder, create)
         self._logger_mrb = mrb_logger(
             "octoprint.plugins.mrbeam.filemanager.mrbFileStorage"
         )
-
-        LocalFileStorage.__init__(self, basefolder, create)
 
     def remove_multiple_files(self, files):
         metadata_to_remove = {}

@@ -83,6 +83,7 @@ from octoprint_mrbeam.util.device_info import deviceInfo
 from octoprint_mrbeam.util.flask import restricted_unless_calibration_tool_mode
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
+from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
@@ -2106,12 +2107,9 @@ class MrBeamPlugin(
                 self._logger.info(
                     "set_gcode_deletion: Starting threaded bulk deletion of gcode files."
                 )
-                self._gcode_deletion_thread = threading.Thread(
-                    target=self.mrb_file_manager.delete_old_gcode_files,
-                    name="gcode_deletion_thread",
-                )
-                self._gcode_deletion_thread.daemon = True
-                self._gcode_deletion_thread.start()
+                self._gcode_deletion_thread = get_thread(daemon=True)(
+                    self.mrb_file_manager.delete_old_gcode_files
+                )()
             else:
                 self._logger.warn(
                     "set_gcode_deletion: NOT Starting threaded bulk deletion of gcode files: Other thread already running."
