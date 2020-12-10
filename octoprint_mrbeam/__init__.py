@@ -2758,8 +2758,10 @@ class MrBeamPlugin(
             return None, None
 
     def _fixEmptyUserManager(self):
-        if len(self._user_manager._users) <= 0 and (
-            self._user_manager._customized or not self.isFirstRun()
+        if (
+            hasattr(self, "_user_manager")
+            and len(self._user_manager._users) <= 0
+            and (self._user_manager._customized or not self.isFirstRun())
         ):
             self._logger.debug("_fixEmptyUserManager")
             self._user_manager._customized = False
