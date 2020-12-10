@@ -347,7 +347,7 @@ class LidHandler(object):
     def tell_client_calibration_status(self):
         try:
             with open(self._settings.get(["cam", "correctionSettingsFile"])) as f:
-                pic_settings = yaml.load(f)
+                pic_settings = yaml.safe_load(f)
         except IOError:
             need_corner_calibration = True
             need_raw_camera_calibration = True
@@ -1350,7 +1350,7 @@ class PhotoCreator(object):
         settings = {}
         try:
             with open(path) as f:
-                settings = yaml.load(f)
+                settings = yaml.safe_load(f)
         except (OSError, IOError):
             self._logger.warning(
                 "file %s does not exist or could not be read. Overwriting..." % path
