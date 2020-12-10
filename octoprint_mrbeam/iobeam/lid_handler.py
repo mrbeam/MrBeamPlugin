@@ -662,7 +662,7 @@ class PhotoCreator(object):
         )
 
         self.last_markers, self.last_shutter_speed = self.load_camera_settings()
-        self._createFolder_if_not_existing(self.final_image_path)
+        makedirs(self.final_image_path, parent=True)
 
     @property
     def active(self):
@@ -1296,12 +1296,6 @@ class PhotoCreator(object):
             "mrbeam", dict(beam_cam_new_image=meta_data)
         )
 
-    def _createFolder_if_not_existing(self, filename):
-        folder = os.path.dirname(filename)
-        if not os.path.exists(folder):
-            makedirs(folder)
-            self._logger.debug("Created folder '%s' for camera images.", folder)
-
     def load_camera_settings(self, path="/home/pi/.octoprint/cam/last_session.yaml"):
         """
         Loads the settings saved from the last session.
@@ -1318,7 +1312,7 @@ class PhotoCreator(object):
         try:
             ret = []
             with open(_path) as f:
-                settings = yaml.load(f) or {}
+                settings = yaml.safe_load(f) or {}
                 if _path == backup:
                     # No shutter speed info
                     settings = {k: v[-1] for k, v in settings.items()}
@@ -1327,7 +1321,7 @@ class PhotoCreator(object):
                     for k in ["calibMarkers", "shutter_speed"]:
                         ret.append(settings.get(k, None))
             return ret
-        except (IOError, OSError) as e:
+        except (IOError, OSError):
             self._logger.warning("New or Legacy marker memory not found.")
             return [None] * 2
 
@@ -1357,7 +1351,7 @@ class PhotoCreator(object):
         try:
             with open(path) as f:
                 settings = yaml.load(f)
-        except (OSError, IOError) as e:
+        except (OSError, IOError):
             self._logger.warning(
                 "file %s does not exist or could not be read. Overwriting..." % path
             )

@@ -4,10 +4,9 @@ See https://docs.octoprint.org/en/master/plugins/hooks.html
 See https://docs.octoprint.org/en/ < version > /plugins/hooks.html
 """
 from __future__ import absolute_import
-from .util.log import logExceptions, logme
+from .util.log import logExceptions
 
 
-@logExceptions
 def http_bodysize(current_max_body_sizes, *args, **kwargs):
     """
     Defines the maximum size that is accepted for upload.
@@ -21,13 +20,11 @@ def http_bodysize(current_max_body_sizes, *args, **kwargs):
 
 
 @logExceptions
-@logme(False, True)
 def loginui_theming():
     """
     See [here](https://docs.octoprint.org/en/1.4.2/bundledplugins/loginui.html#loginui_theming_hook).
     """
     from flask import url_for
-    import logging
 
     return [url_for("plugin.mrbeam.static", filename="css/loginui.css")]
 
