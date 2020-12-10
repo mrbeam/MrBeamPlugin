@@ -83,6 +83,7 @@ from octoprint_mrbeam.util.device_info import deviceInfo
 from octoprint_mrbeam.util.flask import restricted_unless_calibration_tool_mode
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
+from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
@@ -172,6 +173,8 @@ class MrBeamPlugin(
         self._time_ntp_check_count = 0
         self._time_ntp_check_last_ts = 0.0
         self._time_ntp_shift = 0.0
+
+        self._gcode_deletion_thread = None
 
         # MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
         MrBeamEvents.register_with_octoprint()
@@ -2097,7 +2100,20 @@ class MrBeamPlugin(
         self._settings.save()  # This is necessary because without it the value is not saved
         # Everytime the gcode auto deletion is enabled, it will be triggered
         if enable_deletion:
-            self.mrb_file_manager.delete_old_gcode_files()
+            if (
+                self._gcode_deletion_thread is None
+                or not self._gcode_deletion_thread.is_alive()
+            ):
+                self._logger.info(
+                    "set_gcode_deletion: Starting threaded bulk deletion of gcode files."
+                )
+                self._gcode_deletion_thread = get_thread(daemon=True)(
+                    self.mrb_file_manager.delete_old_gcode_files
+                )()
+            else:
+                self._logger.warn(
+                    "set_gcode_deletion: NOT Starting threaded bulk deletion of gcode files: Other thread already running."
+                )
 
     @octoprint.plugin.BlueprintPlugin.route("/console", methods=["POST"])
     def console_log(self):
@@ -2758,8 +2774,10 @@ class MrBeamPlugin(
             return None, None
 
     def _fixEmptyUserManager(self):
-        if len(self._user_manager._users) <= 0 and (
-            self._user_manager._customized or not self.isFirstRun()
+        if (
+            hasattr(self, "_user_manager")
+            and len(self._user_manager._users) <= 0
+            and (self._user_manager._customized or not self.isFirstRun())
         ):
             self._logger.debug("_fixEmptyUserManager")
             self._user_manager._customized = False
