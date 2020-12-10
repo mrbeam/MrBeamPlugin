@@ -15,6 +15,9 @@ class MrBeamFileStorage(LocalFileStorage):
         )
 
     def remove_multiple_files(self, files):
+        """
+        Mostly a copy of OctoPrints (1.3.6) LocalFileStorage.remove_file
+        """
         metadata_to_remove = {}
         f_count = 0
         ts_start = time.time()
@@ -59,6 +62,9 @@ class MrBeamFileStorage(LocalFileStorage):
         )
 
     def _remove_metadata_multiple_entry(self, entries):
+        """
+        Mostly a copy of OctoPrints (1.3.6) LocalFileStorage._remove_metadata_entry
+        """
         for path in entries.keys():
             with self._get_metadata_lock(path):
                 metadata = self._get_metadata(path)
