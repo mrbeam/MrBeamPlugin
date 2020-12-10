@@ -80,7 +80,10 @@ from octoprint_mrbeam.util.material_csv_parser import parse_csv
 from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
 from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
 from octoprint_mrbeam.util.device_info import deviceInfo
-from octoprint_mrbeam.util.flask import restricted_unless_calibration_tool_mode
+from octoprint_mrbeam.util.flask import (
+    restricted_unless_calibration_tool_mode,
+    calibration_tool_mode_only,
+)
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam.util import get_thread
@@ -1266,7 +1269,7 @@ class MrBeamPlugin(
         return False
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def calibration_wrapper(self):
         from flask import make_response, render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
