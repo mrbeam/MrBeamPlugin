@@ -1,50 +1,21 @@
+import logging
 import time
+from octoprint.util import dict_merge
 from octoprint.printer.standard import Printer, StateMonitor
 from octoprint.events import eventManager, Events
+from octoprint_mrbeam.util.log import logExceptions, logme
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.printing import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
-from octoprint_mrbeam.util import dict_merge
 
 
 class Laser(Printer):
     HOMING_POSITION = [-1.0, -1.0, 0]
 
     def __init__(self, fileManager, analysisQueue, printerProfileManager):
-        # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS -- start --
-        # TODO OP v1.4 : Remove the followingline - see octoprint_mrbeam.__plugin_load__
-        # The necessary lines for this to keep working are already written as a hook.
-        analysisQueue._queues.update(
-            beam_analysis_queue_factory(callback=analysisQueue._analysis_finished)
-        )
-        # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS -- end --
         Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
-        self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.printer")
-        self._stateMonitor = LaserStateMonitor(
-            interval=0.5,
-            on_update=self._sendCurrentDataCallbacks,
-            on_add_temperature=self._sendAddTemperatureCallbacks,
-            on_add_log=self._sendAddLogCallbacks,
-            on_add_message=self._sendAddMessageCallbacks,
-            on_get_progress=self._updateProgressDataCallback,
-        )
-        self._stateMonitor.reset(
-            state={"text": self.get_state_string(), "flags": self._getStateFlags()},
-            job_data={
-                "file": {"name": None, "size": None, "origin": None, "date": None},
-                "estimatedPrintTime": None,
-                "lastPrintTime": None,
-                "filament": {"length": None, "volume": None},
-            },
-            progress={
-                "completion": None,
-                "filepos": None,
-                "printTime": None,
-                "printTimeLeft": None,
-            },
-            current_z=None,
-        )
+        self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.printer.Laser")
+        self._stateMonitor = LaserStateMonitor.fromStateMonitor(self._stateMonitor)
 
     # overwrite connect to use comm_acc2
     def connect(self, port=None, baudrate=None, profile=None):
@@ -53,22 +24,30 @@ class Laser(Printer):
         will be attempted.
         """
         self._init_terminal()
-
+        #### OP code ####
+        # TODO Add an abstraction Layer to the OP Printer and comm modules to eleviate on redundancy
+        # @see all of the factories for the hooks
         if self._comm is not None:
-            self._comm.close()
+            self.disconnect()
 
-        eventManager().fire(Events.CONNECTING, payload=dict(profile=profile))
+        eventManager().fire(Events.CONNECTING)
         self._printerProfileManager.select(profile)
+
+        from octoprint.logging.handlers import SerialLogHandler
+
+        SerialLogHandler.on_open_connection()
+        if not logging.getLogger("SERIAL").isEnabledFor(logging.DEBUG):
+            # if serial.log is not enabled, log a line to explain that to reduce "serial.log is empty" in tickets...
+            logging.getLogger("SERIAL").info(
+                "serial.log is currently not enabled, you can enable it via Settings > Serial Connection > Log communication to serial.log"
+            )
+
         self._comm = comm.MachineCom(
             port,
             baudrate,
             callbackObject=self,
             printerProfileManager=self._printerProfileManager,
         )
-
-    # overwrite operational state to accept commands in locked state
-    def is_operational(self):
-        return Printer.is_operational(self) or self.is_locked()
 
     # send color settings to commAcc to inject settings into Gcode
     def set_colors(self, currentFileName, value):
@@ -77,7 +56,8 @@ class Laser(Printer):
         self._comm.setColors(currentFileName, value)
 
     # extend commands: home, position, increase_passes, decrease_passes
-    def home(self, axes):
+    @logExceptions
+    def home(self, axes, **kwargs):
         printer_profile = self._printerProfileManager.get_current_or_default()
         params = dict(
             x=printer_profile["volume"]["width"]
@@ -93,7 +73,8 @@ class Laser(Printer):
     def is_homed(self):
         return self._stateMonitor._machinePosition == self.HOMING_POSITION
 
-    def cancel_print(self):
+    @logExceptions
+    def cancel_print(self, **kwargs):
         """
         Cancel the current printjob and do homing.
         """
@@ -102,7 +83,8 @@ class Laser(Printer):
         self.home(axes="wtf")
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
-    def fail_print(self, error_msg=None):
+    @logExceptions
+    def fail_print(self, error_msg=None, **kwargs):
         """
         Cancel the current printjob (as it failed) and do homing.
         """
@@ -144,7 +126,8 @@ class Laser(Printer):
             return
         self._comm.decreasePasses()
 
-    def pause_print(self, force=False, trigger=None):
+    @logExceptions
+    def pause_print(self, force=False, trigger=None, **kwargs):
         """
         Pause the current printjob.
         """
@@ -156,7 +139,8 @@ class Laser(Printer):
 
         self._comm.setPause(True, send_cmd=True, trigger=trigger)
 
-    def cooling_start(self):
+    @logExceptions
+    def cooling_start(self, **kwargs):
         """
         Pasue the laser for cooling
         """
@@ -179,14 +163,16 @@ class Laser(Printer):
         # Extra gymnastics in case state flags are a frozen dict
         flags = Printer._getStateFlags(self)
         _dict = flags.__class__
-        flags = dict_merge(
-            {
-                "locked": self.is_locked(),
-                "flashing": self.is_flashing(),
-            },
-            flags,
+        return _dict(
+            dict_merge(
+                dict(flags),
+                {
+                    "ready": flags["ready"] and not self.is_locked(),
+                    "locked": self.is_locked(),
+                    "flashing": self.is_flashing(),
+                },
+            )
         )
-        return _dict(flags)
 
     # position update callbacks
     def on_comm_pos_update(self, MPos, WPos):
@@ -203,6 +189,9 @@ class Laser(Printer):
         self._stateMonitor.trigger_progress_update()
 
     def _add_position_data(self, MPos, WPos):
+        """
+        TODO This isn't clear, what is it for??
+        """
         if MPos is not None:
             self._stateMonitor.setMachinePosition(MPos)
         if WPos is not None:
@@ -238,10 +227,28 @@ class Laser(Printer):
 
 
 class LaserStateMonitor(StateMonitor):
+    """
+    TODO - What is the purpose of this class ??
+    machinePosition: ?
+    workPosition: ?
+    """
+
     def __init__(self, *args, **kwargs):
-        StateMonitor.__init__(self, *args, **kwargs)
+        self.state_monitor = StateMonitor.__init__(self, *args, **kwargs)
         self._machinePosition = None
         self._workPosition = None
+
+    @classmethod
+    def fromStateMonitor(cls, state_monitor):
+        """Casts the StateMonitor to LaserStateMonitor
+        Beware, here be dragons - https://stackoverflow.com/a/49795902/11136955
+        """
+        assert isinstance(state_monitor, StateMonitor)
+        state_monitor._machinePosition = None
+        state_monitor._workPosition = None
+        state_monitor.__class__ = cls
+        assert isinstance(state_monitor, LaserStateMonitor)
+        return state_monitor
 
     def setWorkPosition(self, workPosition):
         self._workPosition = workPosition
@@ -263,3 +270,17 @@ class LaserStateMonitor(StateMonitor):
         if mrb_state:
             data["mrb_state"] = mrb_state
         return data
+
+
+def laser_factory(components, *args, **kwargs):
+    """
+    Factory function for the Printer type used for the OctoPrint hook
+    See ``octoprint.printer.factory``
+    """
+    from .profile import laserCutterProfileManager
+
+    return Laser(
+        components["file_manager"],
+        components["analysis_queue"],
+        laserCutterProfileManager(),
+    )

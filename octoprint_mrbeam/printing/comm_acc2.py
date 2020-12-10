@@ -15,12 +15,20 @@ import glob
 import time
 import serial
 import re
-import Queue
+
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 import random
 
-from flask.ext.babel import gettext
+from itertools import chain
+from flask_babel import gettext
 
 import octoprint.plugin
+
+from octoprint.printer.standard import StateMonitor
+import octoprint.util.comm as octocomm
 
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events as OctoPrintEvents
@@ -36,11 +44,15 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
+from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
+from octoprint_mrbeam.util.log import logExceptions
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+import logging
 
 ### MachineCom #########################################################################################################
-class MachineCom(object):
+class MachineCom(octocomm.MachineCom):
+    # Has to be imported from inside the class definition
 
     DEBUG_PRODUCE_CHECKSUM_ERRORS = False
     DEBUG_PRODUCE_CHECKSUM_ERRORS_RND = 2000
@@ -75,28 +87,43 @@ class MachineCom(object):
     GRBL_DEFAULT_VERSION = GRBL_VERSION_2019_MRB_CHECKSUM
     ##########################################################
 
-    GRBL_SETTINGS_READ_WINDOW = 10.0
+    GRBL_SETTINGS_READ_WINDOW = 20.0
     GRBL_SETTINGS_CHECK_FREQUENCY = 0.5
 
     GRBL_RX_BUFFER_SIZE = 127
     GRBL_WORKING_RX_BUFFER_SIZE = GRBL_RX_BUFFER_SIZE - 5
     GRBL_LINE_BUFFER_SIZE = 80
 
-    STATE_NONE = 0
-    STATE_OPEN_SERIAL = 1
-    STATE_DETECT_SERIAL = 2
-    STATE_DETECT_BAUDRATE = 3
-    STATE_CONNECTING = 4
-    STATE_OPERATIONAL = 5
-    STATE_PRINTING = 6
-    STATE_PAUSED = 7
-    STATE_CLOSED = 8
-    STATE_ERROR = 9
-    STATE_CLOSED_WITH_ERROR = 10
-    STATE_TRANSFERING_FILE = 11
-    STATE_LOCKED = 12
-    STATE_HOMING = 13
-    STATE_FLASHING = 14
+    ### OctoPrint comm reserved states 0 - 16 ###
+    ## Serves as reference (already included from inheritance)
+    # STATE_NONE = octocomm.MachineCom.STATE_NONE
+    # STATE_OPEN_SERIAL = octocomm.MachineCom.STATE_OPEN_SERIAL
+    # STATE_DETECT_SERIAL = octocomm.MachineCom.STATE_DETECT_SERIAL
+    # STATE_DETECT_BAUDRATE = octocomm.MachineCom.STATE_DETECT_BAUDRATE
+    # STATE_CONNECTING = octocomm.MachineCom.STATE_CONNECTING
+    # STATE_OPERATIONAL = octocomm.MachineCom.STATE_OPERATIONAL
+    # STATE_STARTING = octocomm.MachineCom.STATE_STARTING
+    # STATE_PRINTING = octocomm.MachineCom.STATE_PRINTING
+    # STATE_PAUSED = octocomm.MachineCom.STATE_PAUSED
+    # STATE_PAUSING = octocomm.MachineCom.STATE_PAUSING
+    # STATE_RESUMING = octocomm.MachineCom.STATE_RESUMING
+    # STATE_FINISHING = octocomm.MachineCom.STATE_FINISHING
+    # STATE_CLOSED = octocomm.MachineCom.STATE_CLOSED
+    # STATE_ERROR = octocomm.MachineCom.STATE_ERROR
+    # STATE_CLOSED_WITH_ERROR = octocomm.MachineCom.STATE_CLOSED_WITH_ERROR
+    # STATE_TRANSFERING_FILE = octocomm.MachineCom.STATE_TRANSFERING_FILE
+    # STATE_CANCELLING = octocomm.MachineCom.STATE_CANCELLING
+    ### Mr Beam comm reserved states 100 - ... ###
+    STATE_LOCKED = 100
+    STATE_HOMING = 101
+    STATE_FLASHING = 102
+
+    # be sure to add anything here that signifies an operational state
+    OPERATIONAL_STATES = tuple(
+        chain(octocomm.MachineCom.OPERATIONAL_STATES, (STATE_LOCKED,))
+    )
+    # be sure to add anything here that signifies a printing state
+    PRINTING_STATES = octocomm.MachineCom.PRINTING_STATES
 
     GRBL_STATE_QUEUE = "Queue"
     GRBL_STATE_IDLE = "Idle"
@@ -139,33 +166,23 @@ class MachineCom(object):
     def __init__(
         self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None
     ):
-        self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
-
         if port is None:
             port = settings().get(["serial", "port"])
         elif isinstance(port, list):
             port = port[0]
-        if baudrate is None:
-            settingsBaudrate = settings().getInt(["serial", "baudrate"])
-            if settingsBaudrate is None:
-                baudrate = 0
-            else:
-                baudrate = settingsBaudrate
-        if callbackObject is None:
-            callbackObject = MachineComPrintCallback()
+        octocomm.MachineCom.__init__(self, port, baudrate, callbackObject, None)
 
-        self._port = port
-        self._baudrate = baudrate
-        self._callback = callbackObject
+        # Delete keys we don't want to be used
+        del self._printerProfileManager
+
+        # Set more attributes
+        self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
+
         self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
-
-        self._state = self.STATE_NONE
         self._grbl_state = None
         self._grbl_version = None
         self._grbl_settings = dict()
         self._errorValue = "Unknown Error"
-        self._serial = None
-        self._currentFile = None
         self._status_polling_timer = None
         self._status_polling_next_ts = 0
         self._status_polling_interval = self.STATUS_POLL_FREQUENCY_DEFAULT
@@ -179,10 +196,7 @@ class MachineCom(object):
         self._cmd = None
         self._recovery_lock = False
         self._recovery_ignore_further_alarm_responses = False
-        self._lines_recoverd_total = 0
-        self._pauseWaitStartTime = None
-        self._pauseWaitTimeLost = 0.0
-        self._commandQueue = Queue.Queue()
+        self._lines_recovered_total = 0
         self._send_event = CountedEvent(max=50)
         self._finished_currentFile = False
         self._pause_delay_time = 0
@@ -225,12 +239,6 @@ class MachineCom(object):
             "soft_reset": False,
         }
 
-        # hooks
-        self._pluginManager = octoprint.plugin.plugin_manager()
-        self._serial_factory_hooks = self._pluginManager.get_hooks(
-            "octoprint.comm.transport.serial.factory"
-        )
-
         # laser power correction
         self._power_correction_settings = (
             _mrbeam_plugin_implementation.laserhead_handler.get_correction_settings()
@@ -259,9 +267,12 @@ class MachineCom(object):
 
         self.watch_dog = AccWatchDog(self)
 
-        # threads
+        # monitoring thread
         self.monitoring_thread = None
+        self._monitoring_active = False
+        # sending thread
         self.sending_thread = None
+        self._send_queue_active = False
         self.recovery_thread = None
         self._start_monitoring_thread()
         self._start_status_polling_timer()
@@ -275,7 +286,7 @@ class MachineCom(object):
         self.monitoring_thread.start()
 
     def _start_sending_thread(self):
-        self._sending_active = True
+        self._send_queue_active = True
         self.sending_thread = threading.Thread(
             target=self._send_loop, name="comm._sending_thread"
         )
@@ -301,18 +312,17 @@ class MachineCom(object):
         Returns the home position which usually where the head is after homing. (Except in C series)
         :return: Tuple of (x, y) position
         """
-        if self._laserCutterProfile["legacy"]["job_done_home_position_x"] is not None:
-            return (
-                self._laserCutterProfile["legacy"]["job_done_home_position_x"],
-                self._laserCutterProfile["volume"]["depth"]
-                + self._laserCutterProfile["volume"]["working_area_shift_y"],
-            )
-        return (
-            self._laserCutterProfile["volume"]["width"]
-            + self._laserCutterProfile["volume"]["working_area_shift_x"],  # x
-            self._laserCutterProfile["volume"]["depth"]
-            + self._laserCutterProfile["volume"]["working_area_shift_y"],
-        )  # y
+
+        volume = self._laserCutterProfile["volume"]
+        legacy_x = dict_get(
+            self._laserCutterProfile, ["legacy", "job_done_home_position_x"]
+        )
+        if legacy_x is not None:
+            x = legacy_x
+        else:
+            x = volume["width"] + volume["working_area_shift_x"]
+        y = volume["depth"] + volume["working_area_shift_y"]
+        return x, y
 
     def _monitor_loop(self):
         try:
@@ -408,16 +418,16 @@ class MachineCom(object):
             self._logger.exception("Exception in _monitor_loop() thread: ")
 
     def _send_loop(self):
-        while self._sending_active:
+        while self._send_queue_active:
             try:
                 self._process_rt_commands()
-                # if self.isPrinting() and self._commandQueue.empty():
+                # if self.isPrinting() and self._command_queue.empty():
                 if (
                     self.isPrinting()
-                    and self._commandQueue.empty()
+                    and self._command_queue.empty()
                     and not self._recovery_lock
                 ):
-                    cmd = self._getNext()  # get next cmd form file
+                    cmd, pos, lineno = self._getNext()  # get next cmd from file
                     if cmd is not None:
                         self.sendCommand(cmd)
                         self._callback.on_comm_progress()
@@ -434,7 +444,7 @@ class MachineCom(object):
                                     trigger="after_set_print_finished"
                                 )
                         self._currentFile.resetToBeginning()
-                        cmd = self._getNext()  # get next cmd form file
+                        cmd, pos, lineno = self._getNext()  # get next cmd from file
                         if cmd is not None:
                             self.sendCommand(cmd)
                             self._callback.on_comm_progress()
@@ -464,7 +474,7 @@ class MachineCom(object):
         Takes command from:
          - parameter passed to this function, (!! treated as real time command)
          - self._cmd or
-         - self._commandQueue.get()
+         - self._command_queue.get()
         and writes it onto serial.
         If command is passed as parameter it's treated as a real time command,
         which means there are no checks if it will exceed grbl buffer current capacity.
@@ -478,10 +488,10 @@ class MachineCom(object):
         - cmd: a command string (sam as if cmd is a plain string)
         """
         if cmd is None:
-            if self._cmd is None and self._commandQueue.empty():
+            if self._cmd is None and self._command_queue.empty():
                 return
             elif self._cmd is None:
-                tmp = self._commandQueue.get()
+                tmp = self._command_queue.get()
                 if isinstance(tmp, basestring):
                     self._cmd = {"cmd": tmp}
                 elif isinstance(tmp, dict):
@@ -775,14 +785,13 @@ class MachineCom(object):
         :return:
         """
         cmd = cmd.strip()
-        if cmd == self.COMMAND_STATUS:
-            self._sendCommand(self.COMMAND_STATUS)
-        elif cmd == self.COMMAND_HOLD:
-            self._sendCommand(self.COMMAND_HOLD)
-        elif cmd == self.COMMAND_RESUME:
-            self._sendCommand(self.COMMAND_RESUME)
-        elif cmd == self.COMMAND_RESET:
-            self._sendCommand(self.COMMAND_RESET)
+        if cmd in (
+            self.COMMAND_STATUS,
+            self.COMMAND_HOLD,
+            self.COMMAND_RESUME,
+            self.COMMAND_RESET,
+        ):
+            self._sendCommand(cmd)
         else:
             return False
         return True
@@ -907,7 +916,7 @@ class MachineCom(object):
             return None
         except TypeError as e:
             # While closing or reopening sometimes we get this exception:
-            # 	File "build/bdist.linux-armv7l/egg/serial/serialposix.py", line 468, in read
+            #     File "build/bdist.linux-armv7l/egg/serial/serialposix.py", line 468, in read
             #     buf = os.read(self.fd, size-len(read))
             self._logger.exception(
                 "TypeError in _readline. Did this happen while closing or re-opening serial?: {e}".format(
@@ -938,14 +947,14 @@ class MachineCom(object):
 
     def _getNext(self):
         if self._finished_currentFile is False:
-            line = self._currentFile.getNext()
+            line, pos, lineno = self._currentFile.getNext()
             if line is None:
                 self._finished_passes += 1
                 if self._finished_passes >= self._passes:
                     self._finished_currentFile = True
-            return line
+            return line, pos, lineno
         else:
-            return None
+            return None, None, None
 
     def _set_print_finished(self):
         self._logger.debug("_set_print_finished() called")
@@ -1098,10 +1107,10 @@ class MachineCom(object):
 
         # # update working pos from acknowledged gcode
         # if item and item['cmd'].startswith('G'):
-        # 	self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
-        # 	# since we just got a postion update we can reset the wait time for the next status poll
-        # 	# ideally we never poll statuses during engravings
-        # 	self._reset_status_polling_waittime()
+        #     self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
+        #     # since we just got a postion update we can reset the wait time for the next status poll
+        #     # ideally we never poll statuses during engravings
+        #     self._reset_status_polling_waittime()
 
     def _handle_error_message(self, line):
         """
@@ -1170,8 +1179,8 @@ class MachineCom(object):
                     dict(error=self.getErrorString(), analytics=False),
                 )
 
-        with self._commandQueue.mutex:
-            self._commandQueue.queue.clear()
+        with self._command_queue.mutex:
+            self._command_queue.queue.clear()
         self._acc_line_buffer.reset()
         self._send_event.clear(completely=True)
         self._fire_print_failed()
@@ -1195,8 +1204,8 @@ class MachineCom(object):
                 self._pauseWaitStartTime = None
                 self._pauseWaitTimeLost = 0.0
                 self._send_event.clear(completely=True)
-                with self._commandQueue.mutex:
-                    self._commandQueue.queue.clear()
+                with self._command_queue.mutex:
+                    self._command_queue.queue.clear()
                 self._log(errorMsg)
                 self._logger.error(
                     errorMsg, serial=True, analytics=True, terminal_dump=True
@@ -1384,7 +1393,7 @@ class MachineCom(object):
                     self._logger.info(
                         "Re-queue: %s  RECOVERY", recover_cmd, terminal_as_comm=True
                     )
-                    self._lines_recoverd_total += 1
+                    self._lines_recovered_total += 1
                     self.sendCommand(recover_cmd, processed=True)
                 else:
                     # the we did'nt get a command let's wait a bit. there might be a new one shortly
@@ -1449,7 +1458,6 @@ class MachineCom(object):
         self, retries=0, timeout=0.0, force_thread=False
     ):
         settings_count = self._laserCutterProfile["grbl"]["settings_count"]
-        settings_expected = self._laserCutterProfile["grbl"]["settings"]
         self._logger.debug(
             "GRBL Settings waiting... timeout: %s, settings count: %s",
             timeout,
@@ -1469,6 +1477,7 @@ class MachineCom(object):
             myThread.name = "CommAcc2_GrblSettings"
             myThread.start()
         else:
+            settings_expected = self._laserCutterProfile["grbl"]["settings"]
             my_grbl_settings = self._grbl_settings.copy()  # to avoid race conditions
 
             log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
@@ -1758,7 +1767,7 @@ class MachineCom(object):
         self._logger.info("{} grbl: '%s'", log_verb.capitalize(), grbl_path)
 
         if is_connected:
-            self.close(isError=False, next_state=self.STATE_FLASHING)
+            self.close(is_error=False, next_state=self.STATE_FLASHING)
             time.sleep(1)
 
         # FYI: Fuses can't be changed from over srial
@@ -2027,34 +2036,6 @@ class MachineCom(object):
                 time.time() - ts,
             )
 
-    # def _handle_command_handler_result(self, command, command_type, gcode, handler_result):
-    # 	original_tuple = (command, command_type, gcode)
-    #
-    # 	if handler_result is None:
-    # 		# handler didn't return anything, we'll just continue
-    # 		return original_tuple
-    #
-    # 	if isinstance(handler_result, basestring):
-    # 		# handler did return just a string, we'll turn that into a 1-tuple now
-    # 		handler_result = (handler_result,)
-    # 	elif not isinstance(handler_result, (tuple, list)):
-    # 		# handler didn't return an expected result format, we'll just ignore it and continue
-    # 		return original_tuple
-    #
-    # 	hook_result_length = len(handler_result)
-    # 	if hook_result_length == 1:
-    # 		# handler returned just the command
-    # 		command, = handler_result
-    # 	elif hook_result_length == 2:
-    # 		# handler returned command and command_type
-    # 		command, command_type = handler_result
-    # 	else:
-    # 		# handler returned a tuple of an unexpected length
-    # 		return original_tuple
-    #
-    # 	gcode = self._gcode_command_for_cmd(command)
-    # 	return command, command_type, gcode
-
     def _replace_feedrate(self, cmd):
         obj = self._regex_feedrate.search(cmd)
         if obj is not None:
@@ -2095,9 +2076,9 @@ class MachineCom(object):
                 self._current_intensity = self._gcode_intensity_limit
 
             # self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor} and '
-            # 				  'intensity limit {limit})'.format(old=parsed_intensity, new=self._current_intensity,
-            # 													factor=self._power_correction_factor,
-            # 													limit=self._gcode_intensity_limit))
+            #                   'intensity limit {limit})'.format(old=parsed_intensity, new=self._current_intensity,
+            #                                                     factor=self._power_correction_factor,
+            #                                                     limit=self._gcode_intensity_limit))
 
             return cmd.replace(intensity_cmd, "S%d" % self._current_intensity)
         return cmd
@@ -2230,8 +2211,11 @@ class MachineCom(object):
     def _gcode_S_sending(self, cmd, cmd_type=None):
         return self._replace_intensity(cmd)
 
-    def sendCommand(self, cmd, cmd_type=None, processed=False):
-        if cmd is not None and cmd.strip().startswith("/"):
+    @logExceptions
+    def sendCommand(self, cmd, cmd_type=None, processed=False, **kwargs):
+        if cmd is None:
+            return
+        if isinstance(cmd, str) and cmd.strip().startswith("/"):
             self._handle_user_command(cmd)
         elif self._handle_rt_command(cmd):
             pass
@@ -2259,7 +2243,7 @@ class MachineCom(object):
                     )
                     return
 
-            self._commandQueue.put(cmd_obj)
+            self._command_queue.put(cmd_obj)
             self._send_event.set()
             self.watch_dog.notify_command(cmd_obj)
 
@@ -2402,8 +2386,12 @@ class MachineCom(object):
                 self._log("   /disconnect")
                 self._log("   /reset")
                 self._log("   /correct_settings")
-                self._log("   /power_correction <x>		--> Enable: x = 1; Disable: x = 0")
-                self._log("   /show_checksums <x>		--> Enable: x = 1; Disable: x = 0")
+                self._log(
+                    "   /power_correction <x>        --> Enable: x = 1; Disable: x = 0"
+                )
+                self._log(
+                    "   /show_checksums <x>        --> Enable: x = 1; Disable: x = 0"
+                )
                 self._log(
                     "   /verify_grbl [? | <file>] // ?: list of available files; If omitted default grbl version will be verified ."
                 )
@@ -2417,11 +2405,11 @@ class MachineCom(object):
                 terminal_as_comm=True,
             )
 
-    def selectFile(self, filename, sd):
+    def selectFile(self, filename, sd=None, user=None, tags=None):
         if self.isBusy():
             return
 
-        self._currentFile = PrintingGcodeFileInformation(filename)
+        self._currentFile = PrintingGcodeFileInformation(filename, user=user)
         eventManager().fire(
             OctoPrintEvents.FILE_SELECTED,
             {
@@ -2431,7 +2419,7 @@ class MachineCom(object):
             },
         )
         self._callback.on_comm_file_selected(
-            filename, self._currentFile.getFilesize(), False
+            filename, self._currentFile.getFilesize(), False, user=user
         )
 
     def selectGCode(self, gcode):
@@ -2502,28 +2490,30 @@ class MachineCom(object):
             return
 
         # first pause (feed hold) before doing the soft reset in order to retain machine pos.
-        self._sendCommand(self.COMMAND_HOLD)
-        time.sleep(0.5)
+        with self._jobLock:
+            self._changeState(self.STATE_CANCELLING)
+            self._sendCommand(self.COMMAND_HOLD)
+            time.sleep(0.5)
 
-        with self._commandQueue.mutex:
-            self._commandQueue.queue.clear()
-        self._cmd = None
+            with self._command_queue.mutex:
+                self._command_queue.queue.clear()
+            self._cmd = None
 
-        self.watch_dog.stop()
-        self._sendCommand(self.COMMAND_RESET)
-        self._acc_line_buffer.reset()
-        self._send_event.clear(completely=True)
-        self._changeState(self.STATE_LOCKED)
+            self.watch_dog.stop()
+            self._sendCommand(self.COMMAND_RESET)
+            self._acc_line_buffer.reset()
+            self._send_event.clear(completely=True)
+            self._changeState(self.STATE_LOCKED)
 
-        payload = self._get_printing_file_state()
+            payload = self._get_printing_file_state()
 
-        if failed:
-            if not payload.get("error_msg", None):
-                payload["error_msg"] = error_msg
+            if failed:
+                if not payload.get("error_msg", None):
+                    payload["error_msg"] = error_msg
 
-            eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
-        else:
-            eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
+                eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
+            else:
+                eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
     def setPause(
         self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False
@@ -2582,90 +2572,42 @@ class MachineCom(object):
         self._passes = value
         self._logger.info("set Passes to %d" % self._passes, terminal_as_comm=True)
 
-    def sendGcodeScript(self, scriptName, replacements=None):
+    def sendGcodeScript(self, *args, **kwargs):
         pass
 
-    def getStateId(self, state=None):
+    def getStateId(self, state=None, *args, **kwargs):
         if state is None:
             state = self._state
 
-        possible_states = filter(
-            lambda x: x.startswith("STATE_"), self.__class__.__dict__.keys()
+        possible_states = list(
+            filter(lambda x: x.startswith("STATE_"), dir(self.__class__))
         )
         for possible_state in possible_states:
             if getattr(self, possible_state) == state:
                 return possible_state[len("STATE_") :]
 
+        self._logger.warning("RETURNED STATE ID %s" % "UNKNOWN")
         return "UNKNOWN"
+        # ret = octocomm.MachineCom.getStateId(self, *args, **kwargs)
+        # return ret
 
     def getStateString(self, state=None):
+        # overloaded from OctoPrint to handle inherited STATEs as well.
         if state is None:
             state = self._state
-        if state == self.STATE_NONE:
-            return "Offline"
-        if state == self.STATE_OPEN_SERIAL:
-            return "Opening serial port"
-        if state == self.STATE_DETECT_SERIAL:
-            return "Detecting serial port"
-        if state == self.STATE_DETECT_BAUDRATE:
-            return "Detecting baudrate"
-        if state == self.STATE_CONNECTING:
-            return "Connecting"
-        if state == self.STATE_OPERATIONAL:
-            return "Operational"
         if state == self.STATE_PRINTING:
             # return "Printing"
             return "Lasering"
-        if state == self.STATE_PAUSED:
-            return "Paused"
-        if state == self.STATE_CLOSED:
-            return "Closed"
-        if state == self.STATE_ERROR:
-            return "Error: %s" % (self.getErrorString())
-        if state == self.STATE_CLOSED_WITH_ERROR:
-            return "Error: %s" % (self.getErrorString())
-        if state == self.STATE_TRANSFERING_FILE:
-            return "Transfering file to SD"
-        if self._state == self.STATE_LOCKED:
+        elif state == self.STATE_LOCKED:
             return "Locked"
-        if self._state == self.STATE_HOMING:
+        elif state == self.STATE_HOMING:
             return "Homing"
-        if self._state == self.STATE_FLASHING:
+        elif state == self.STATE_FLASHING:
             return "Flashing"
-        return "Unknown State (%d)" % (self._state)
+        else:
+            return octocomm.MachineCom.getStateString(self, state)
 
-    def getPrintProgress(self):
-        if self._currentFile is None:
-            return None
-        return self._currentFile.getProgress()
-
-    def getPrintFilepos(self):
-        if self._currentFile is None:
-            return None
-        return self._currentFile.getFilepos()
-
-    def getCleanedPrintTime(self):
-        printTime = self.getPrintTime()
-        if printTime is None:
-            return None
-        return printTime
-
-    def getConnection(self):
-        return self._port, self._baudrate
-
-    def isOperational(self):
-        return (
-            self._state == self.STATE_OPERATIONAL
-            or self._state == self.STATE_PRINTING
-            or self._state == self.STATE_PAUSED
-        )
-
-    def isPrinting(self):
-        return self._state == self.STATE_PRINTING
-
-    def isPaused(self):
-        return self._state == self.STATE_PAUSED
-
+    # "overloaded" functions from octocomm.MachineCom
     def isLocked(self):
         return self._state == self.STATE_LOCKED
 
@@ -2675,38 +2617,11 @@ class MachineCom(object):
     def isFlashing(self):
         return self._state == self.STATE_FLASHING
 
-    def isBusy(self):
-        return self.isPrinting() or self.isPaused()
-
-    def isError(self):
-        return (
-            self._state == self.STATE_ERROR
-            or self._state == self.STATE_CLOSED_WITH_ERROR
-        )
-
-    def isClosedOrError(self):
-        return (
-            self._state == self.STATE_ERROR
-            or self._state == self.STATE_CLOSED_WITH_ERROR
-            or self._state == self.STATE_CLOSED
-        )
-
     def isSdReady(self):
         return False
 
     def isStreaming(self):
         return False
-
-    def getErrorString(self):
-        return self._errorValue
-
-    def getPrintTime(self):
-        if self._currentFile is None or self._currentFile.getStartTime() is None:
-            return None
-        else:
-            return (
-                time.time() - self._currentFile.getStartTime() - self._pauseWaitTimeLost
-            )
 
     def getGrblVersion(self):
         return self._grbl_version
@@ -2719,30 +2634,42 @@ class MachineCom(object):
             "time": self.getPrintTime(),
             "mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
             "file_lines_total": self._currentFile.getLinesTotal(),
-            "file_lines_read": self._currentFile.getLinesRead(),
+            "file_read_lines": self._currentFile.getLinesRead(),
             "file_lines_remaining": self._currentFile.getLinesRemaining(),
-            "lines_recovered": self._lines_recoverd_total,
+            "lines_recovered": self._lines_recovered_total,
         }
 
         return file_state
 
-    def close(self, isError=False, next_state=None):
+    def close(self, is_error=False, next_state=None, *args, **kwargs):
+        """
+        Closes the connection to the machine.
+
+        If ``is_error`` is False, will attempt to send the ``beforePrinterDisconnected``
+        gcode script. If ``is_error`` is False and ``wait`` is True, will wait
+        until all messages in the send queue (including the ``beforePrinterDisconnected``
+        gcode script) have been sent to the printer.
+
+        Arguments:
+        is_error (bool): Whether the closing takes place due to an error (True)
+            or not (False, default)
+        next_state (int): switch to this state if connection was open and no error occured
+        wait (bool): Whether to wait for all messages in the send
+            queue to be processed before closing (True, default) or not (False)
+        """
         self._monitoring_active = False
-        self._sending_active = False
+        self._send_queue_active = False
         self._status_polling_interval = 0
 
-        printing = self.isPrinting() or self.isPaused()
-        if self._serial is not None:
-            if isError:
-                self._changeState(self.STATE_CLOSED_WITH_ERROR)
-            elif next_state:
-                self._changeState(next_state)
-            else:
-                self._changeState(self.STATE_CLOSED)
-            self._serial.close()
-        self._serial = None
+        was_printing = self.isPrinting() or self.isPaused()
 
-        if printing:
+        octocomm.MachineCom.close(self, is_error, *args, **kwargs)
+        if is_error:
+            self._changeState(self.STATE_CLOSED_WITH_ERROR)
+        elif not self.isClosedOrError() and next_state:
+            self._changeState(next_state)
+
+        if was_printing:
             payload = None
             if self._currentFile is not None:
                 payload = self._get_printing_file_state()
@@ -2752,7 +2679,7 @@ class MachineCom(object):
     def _set_compressor(self, value):
         try:
             _mrbeam_plugin_implementation.compressor_handler.set_compressor(value)
-        except:
+        except Exception:
             self._logger.exception("Exception in _set_air_pressure() ")
 
     def _set_compressor_pause(self, paused):
@@ -2761,56 +2688,11 @@ class MachineCom(object):
                 _mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
             else:
                 _mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
-        except:
+        except Exception:
             self._logger.exception("Exception in _set_air_pressure() ")
 
 
-### MachineCom callback ################################################################################################
-class MachineComPrintCallback(object):
-    def on_comm_log(self, message):
-        pass
-
-    def on_comm_temperature_update(self, temp, bedTemp):
-        pass
-
-    def on_comm_state_change(self, state):
-        pass
-
-    def on_comm_message(self, message):
-        pass
-
-    def on_comm_progress(self):
-        pass
-
-    def on_comm_print_job_done(self):
-        pass
-
-    def on_comm_z_change(self, newZ):
-        pass
-
-    def on_comm_file_selected(self, filename, filesize, sd):
-        pass
-
-    def on_comm_sd_state_change(self, sdReady):
-        pass
-
-    def on_comm_sd_files(self, files):
-        pass
-
-    def on_comm_file_transfer_started(self, filename, filesize):
-        pass
-
-    def on_comm_file_transfer_done(self, filename):
-        pass
-
-    def on_comm_force_disconnect(self):
-        pass
-
-    def on_comm_pos_update(self, MPos, WPos):
-        pass
-
-
-class PrintingFileInformation(object):
+class PrintingFileInformation(octocomm.PrintingFileInformation):
     """
     Encapsulates information regarding the current file being printed: file name, current position, total size and
     time the print started.
@@ -2818,30 +2700,18 @@ class PrintingFileInformation(object):
     value between 0 and 1.
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, user=None):
+        octocomm.PrintingFileInformation.__init__(self, filename, user=user)
         self._logger = mrb_logger(
-            "octoprint.plugins.mrbeam.comm_acc2.PrintingFileInformation"
+            "octoprint.plugins.mrbeam.comm_acc2." + self.__class__.__name__
         )
-        self._filename = filename
-        self._pos = 0
-        self._size = None
         self._comment_size = None
-        self._start_time = None
-
-    def getStartTime(self):
-        return self._start_time
-
-    def getFilename(self):
-        return self._filename
-
-    def getFilesize(self):
-        return self._size
 
     def getFilepos(self):
-        return self._pos - self._comment_size
-
-    def getFileLocation(self):
-        return FileDestinations.LOCAL
+        if self._pos is None:
+            return None
+        else:
+            return self._pos - self._comment_size
 
     def getProgress(self):
         """
@@ -2854,131 +2724,115 @@ class PrintingFileInformation(object):
             self._size - self._comment_size
         )
 
-    def reset(self):
-        """
-        Resets the current file position to 0.
-        """
-        self._pos = 0
 
-    def start(self):
-        """
-        Marks the print job as started and remembers the start time.
-        """
-        self._start_time = time.time()
-
-    def close(self):
-        """
-        Closes the print job.
-        """
-        pass
-
-
-class PrintingGcodeFileInformation(PrintingFileInformation):
+class PrintingGcodeFileInformation(
+    octocomm.PrintingGcodeFileInformation, PrintingFileInformation
+):
     """
     Encapsulates information regarding an ongoing direct print. Takes care of the needed file handle and ensures
     that the file is closed in case of an error.
     """
 
-    def __init__(self, filename, offsets_callback=None, current_tool_callback=None):
-        PrintingFileInformation.__init__(self, filename)
+    def __init__(
+        self, filename, offsets_callback=None, current_tool_callback=None, user=None
+    ):
+        octocomm.PrintingGcodeFileInformation.__init__(
+            self, filename, offsets_callback, current_tool_callback, user
+        )
+        PrintingFileInformation.__init__(self, filename, user=user)
 
-        self._handle = None
-
+        # Custom tracking values
+        # TODO explain why / what they are for
         self._first_line = None
-
-        self._offsets_callback = offsets_callback
-        self._current_tool_callback = current_tool_callback
-
-        if not os.path.exists(self._filename) or not os.path.isfile(self._filename):
-            raise IOError("File %s does not exist" % self._filename)
-
-        self._size = os.stat(self._filename).st_size
-        self._pos = 0
         self._comment_size = 0
-        self._lines_total = self._calc_total_lines()
-        self._lines_read = 0
-        self._lines_read_bak = 0
+        self.lines_total = self._calc_total_lines()
+        self._read_lines_bak = 0  # QUESTION - Axel - What is this for?
 
     def start(self):
         """
         Opens the file for reading and determines the file size.
         """
-        PrintingFileInformation.start(self)
-        self._handle = open(self._filename, "r")
-        self._lines_read = 0
-        self._lines_read_bak = 0
-
-    def close(self):
-        """
-        Closes the file if it's still open.
-        """
-        PrintingFileInformation.close(self)
-        if self._handle is not None:
-            try:
-                self._handle.close()
-            except:
-                pass
-        self._handle = None
+        self._read_lines_bak = 0
+        octocomm.PrintingGcodeFileInformation.start(self)
 
     def resetToBeginning(self):
         """
         resets the file handle so you can read from the beginning again.
         """
         self._logger.debug(
-            "resetToBeginning() self._lines_read %s, self._lines_read_bak: %s",
-            self._lines_read,
-            self._lines_read_bak,
+            "resetToBeginning() self._read_lines %s, self._read_lines_bak: %s",
+            self._read_lines,
+            self._read_lines_bak,
         )
         self._handle = open(self._filename, "r")
-        self._lines_read = 0
+        self._read_lines = 0
 
     def getNext(self):
         """
         Retrieves the next line for printing.
+        Few changes on function overwritten function.
         """
-        if self._handle is None:
-            raise ValueError("File %s is not open for reading" % self._filename)
+        with self._handle_mutex:
+            if self._handle is None:
+                self._logger.warning(
+                    "File {} is not open for reading".format(self._filename)
+                )
+                return None, None, None
 
-        try:
-            processed = None
-            while processed is None:
-                if self._handle is None:
-                    # file got closed just now
-                    self._logger.debug(
-                        "getNext() self._handle is None -> returning None"
-                    )
-                    return None
-                line = self._handle.readline()
-                if not line:
-                    self._logger.debug(
-                        "getNext() read line is None -> closing self._handle"
-                    )
-                    self.close()
-                else:
-                    self._lines_read += 1
-                    self._lines_read_bak += 1
-                    # self._logger.debug("getNext() increased self._lines_read to %s", self._lines_read)
-                processed = process_gcode_line(line)
-                if processed is None:
-                    self._comment_size += len(line)
-            self._pos = self._handle.tell()
+            try:
+                offsets = (
+                    self._offsets_callback()
+                    if self._offsets_callback is not None
+                    else None
+                )
+                current_tool = (
+                    self._current_tool_callback()
+                    if self._current_tool_callback is not None
+                    else None
+                )
 
-            return processed
-        except Exception as e:
-            self.close()
-            self._logger.exception("Exception while processing line")
-            raise e
+                processed = None
+                while processed is None:
+                    if self._handle is None:
+                        # file got closed just now
+                        self._pos = self._size
+                        self._done = True
+                        self._report_stats()
+                        return None, None, None
+
+                    # we need to manually keep track of our pos here since
+                    # codecs' readline will make our handle's tell not
+                    # return the actual number of bytes read, but also the
+                    # already buffered bytes (for detecting the newlines)
+                    line = self._handle.readline()
+                    self._pos += len(line.encode("utf-8"))
+
+                    if not line:
+                        self.close()
+                    processed = self._process(line, offsets, current_tool)
+                    if processed is None:
+                        self._comment_size += len(line)
+                self._read_lines += 1
+                self._read_lines_bak += 1
+                return processed, self._pos, self._read_lines
+            except Exception as e:
+                self.close()
+                self._logger.exception("Exception while processing line")
+                raise e
 
     def getLinesTotal(self):
-        return self._lines_total
+        # DEPRECATED - prefer using self.lines_total
+        return self.lines_total
 
     def getLinesRead(self):
-        return self._lines_read or self._lines_read_bak
+        return self._read_lines or self._read_lines_bak
 
     def getLinesRemaining(self):
         return self.getLinesTotal() - self.getLinesRead()
 
     def _calc_total_lines(self):
+        # FIXME: This also counts the empty lines,
+        # which aren't counted towards self._read_lines
         res = -1
         try:
             tmp, code = exec_cmd_output(
@@ -2988,33 +2842,23 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
                 res = int(tmp)
             else:
                 self._logger.error(
-                    "Can't convert _lines_total to int: command returned exit code %s, output: %s",
+                    "Can't convert lines_total to int: command returned exit code %s, output: %s",
                     code,
                     tmp,
                 )
         except ValueError:
-            self._logger.error("Can't convert _lines_total to int: value is %s", tmp)
+            self._logger.error("Can't convert lines_total to int: value is %s", tmp)
         return res
 
 
 class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
+    # FIXME gcode is a string, not a file or stringIO (cannot be opened or interpreted as bytes)
+
     def __init__(self, gcode):
         PrintingFileInformation.__init__(self, "in_memory_gcode")
         self._gcode = gcode.split("\n")
         self._size = len(gcode)
-        self._first_line = None
-        self._offsets_callback = None
-        self._current_tool_callback = None
-        self._pos = 0
-        self._comment_size = 0
-        self._lines_total = len(self._gcode)
-        self._lines_read = 0
-        self._lines_read_bak = 0
-
-    def start(self):
-        PrintingFileInformation.start(self)
-        self._lines_read = 0
-        self._lines_read_bak = 0
+        self.lines_total = len(self._gcode)
 
     def close(self):
         PrintingFileInformation.close(self)
@@ -3022,11 +2866,11 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
 
     def resetToBeginning(self):
         self._logger.debug(
-            "resetToBeginning() self._lines_read %s, self._lines_read_bak: %s",
-            self._lines_read,
-            self._lines_read_bak,
+            "resetToBeginning() self._read_lines %s, self._read_lines_bak: %s",
+            self._read_lines,
+            self._read_lines_bak,
         )
-        self._lines_read = 0
+        self._read_lines = 0
         self._pos = 0
         self._comment_size = 0
 
@@ -3034,6 +2878,7 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
         """
         Retrieves the next line for printing.
         """
+        # FIXME : Supposed to return tuple of size 3
         if self._gcode is None:
             raise ValueError("Line buffer is not filled")
 
@@ -3049,9 +2894,9 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
 
                 line = None
                 try:
-                    line = self._gcode[self._lines_read]
-                    self._lines_read += 1
-                    self._lines_read_bak += 1
+                    line = self._gcode[self._read_lines]
+                    self._read_lines += 1
+                    self._read_lines_bak += 1
                     self._pos += len(line)
                 except IndexError:
                     self._logger.debug(
@@ -3104,25 +2949,8 @@ def convert_pause_triggers(configured_triggers):
 
 
 def process_gcode_line(line):
-    line = strip_comment(line).strip()
-    line = line.replace(" ", "")
-    if not len(line):
-        return None
-    return line
-
-
-def strip_comment(line):
-    if not ";" in line:
-        # shortcut
-        return line
-    escaped = False
-    result = []
-    for c in line:
-        if c == ";" and not escaped:
-            break
-        result += c
-        escaped = (c == "\\") and not escaped
-    return "".join(result)
+    line = octocomm.process_gcode_line(line)
+    return line if line is None else line.replace(" ", "")
 
 
 def get_new_timeout(t):

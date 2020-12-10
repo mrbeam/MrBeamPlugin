@@ -39,3 +39,9 @@ li.nav-header {
 #settings_plugin_softwareupdate div.pull-right > button {
   display: none;
 }
+
+/* Software Update plugin */
+.settings_plugin_softwareupdate_column_information a.btn {
+  /* Disable the "Update" button for individual plugins / packages */
+  display: none;
+}

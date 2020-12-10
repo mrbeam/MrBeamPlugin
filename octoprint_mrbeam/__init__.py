@@ -18,9 +18,7 @@ from subprocess import check_output
 import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
-from flask.ext.babel import gettext
-import octoprint.filemanager as op_filemanager
-from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping, FileManager
+from flask_babel import gettext
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import (
     restricted_access,
@@ -53,6 +51,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
+from octoprint_mrbeam.util import logExceptions
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
@@ -89,6 +88,7 @@ from octoprint_mrbeam import camera
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
 __builtin__.__package_path__ = os.path.dirname(__file__)
+__plugin_pythoncompat__ = "<2.8"  # ">=2.7,<4"
 
 
 class MrBeamPlugin(
@@ -715,8 +715,21 @@ class MrBeamPlugin(
         # template, using the render_kwargs as provided by OctoPrint
         from flask import make_response, render_template, g
 
-        firstRun = render_kwargs["firstRun"]
         language = g.locale.language if g.locale else "en"
+        enable_accesscontrol = self._user_manager.enabled
+
+        if self.support_mode:
+            firstRun = False
+            accesscontrol_active = False
+            wizard = False
+        else:
+            firstRun = render_kwargs["firstRun"]
+            accesscontrol_active = (
+                enable_accesscontrol and self._user_manager.has_been_customized()
+            )
+            wizard = bool(
+                dict_get(render_kwargs, ["templates", "wizard", "order"], False)
+            )
 
         if (
             request.headers.get("User-Agent")
@@ -724,29 +737,19 @@ class MrBeamPlugin(
         ):
             self._track_ui_render_calls(request, language)
 
-        enable_accesscontrol = self._user_manager.enabled
-        accesscontrol_active = (
-            enable_accesscontrol and self._user_manager.hasBeenCustomized()
-        )
-
         selectedProfile = self.laserCutterProfileManager.get_current_or_default()
         enable_focus = selectedProfile["focus"]
         safety_glasses = selectedProfile["glasses"]
         # render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
-        wizard = render_kwargs["templates"] is not None and bool(
-            render_kwargs["templates"]["wizard"]["order"]
-        )
-
-        if render_kwargs["templates"]["wizard"]["entries"]:
-            if "firstrunstart" in render_kwargs["templates"]["wizard"]["entries"]:
-                render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1][
+        _entries = dict_get(render_kwargs, ["templates", "wizard", "entries"])
+        if _entries:
+            if "firstrunstart" in _entries:
+                _entries["firstrunstart"][1][
                     "template"
                 ] = "wizard/firstrun_start.jinja2"
-            if "firstrunend" in render_kwargs["templates"]["wizard"]["entries"]:
-                render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1][
-                    "template"
-                ] = "wizard/firstrun_end.jinja2"
+            if "firstrunend" in _entries:
+                _entries["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
 
         display_version_string = "{} on {}".format(
             self._plugin_version, self.getHostname()
@@ -755,11 +758,6 @@ class MrBeamPlugin(
             display_version_string = "{} ({} branch) on {}".format(
                 self._plugin_version, self._branch, self.getHostname()
             )
-
-        if self.support_mode:
-            firstRun = False
-            accesscontrol_active = False
-            wizard = False
 
         render_kwargs.update(
             dict(
@@ -956,7 +954,7 @@ class MrBeamPlugin(
         if not (
             self.isFirstRun()
             and self._user_manager.enabled
-            and not self._user_manager.hasBeenCustomized()
+            and not self._user_manager.has_been_customized()
         ):
             return make_response("Forbidden", 403)
 
@@ -1031,7 +1029,7 @@ class MrBeamPlugin(
 
     # simpleApiCommand: lasersafety_confirmation; simpleApiCommand: lasersafety_confirmation;
     def lasersafety_wizard_api(self, data):
-        from flask.ext.login import current_user
+        from flask_login import current_user
 
         # get JSON from request data, or send user back home
         data = request.values
@@ -1680,17 +1678,6 @@ class MrBeamPlugin(
             dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL)
         )
 
-    def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-        """
-        Defines the maximum size that is accepted for upload.
-        If the uploaded file size exeeds this limit,
-        you'll see only a ERR_CONNECTION_RESET in Chrome.
-        """
-        return [
-            ("POST", r"/convert", 100 * 1024 * 1024),
-            ("POST", r"/save_store_bought_svg", 100 * 1024 * 1024),
-        ]
-
     @octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
     @restricted_access
     def save_store_bought_svg(self):
@@ -1732,6 +1719,7 @@ class MrBeamPlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
     @restricted_access
+    # @logExceptions
     def gcodeConvertCommand(self):
         # In order to reactivate the cancel button in the processing screen,
         # we need should run the code in here in a separate thread and return the http call as soon as possible
@@ -1836,6 +1824,7 @@ class MrBeamPlugin(
                 self._printer.set_colors(currentFilename, data["vector"])
 
                 # callback definition
+                # @logExceptions
                 def slicing_done(
                     gcode_name,
                     select_after_slicing,
@@ -2610,9 +2599,9 @@ class MrBeamPlugin(
             lines_recovered = None
             if self._printer and self._printer._comm is not None:
                 print_time = self._printer._comm.getPrintTime()
-                lines_recovered = self._printer._comm._lines_recoverd_total
+                lines_recovered = self._printer._comm._lines_recovered_total
                 if self._printer._comm._currentFile:
-                    lines_total = self._printer._comm._currentFile.getLinesTotal()
+                    lines_total = self._printer._comm._currentFile.lines_total
                     lines_read = self._printer._comm._currentFile.getLinesRead()
                     lines_remaining = (
                         self._printer._comm._currentFile.getLinesRemaining()
@@ -2678,56 +2667,6 @@ class MrBeamPlugin(
             if config.get("branch", None) != config.get("branch_default", None):
                 result[name] = config["branch"]
         return result
-
-    # inject a Laser object instead the original Printer from standard.py
-    def laser_factory(self, components, *args, **kwargs):
-        from octoprint_mrbeam.printing.printer import Laser
-
-        return Laser(
-            components["file_manager"],
-            components["analysis_queue"],
-            laserCutterProfileManager(),
-        )
-
-    def laser_filemanager(self, *args, **kwargs):
-        def _image_mime_detector(path):
-            p = path.lower()
-            if p.endswith(".jpg") or p.endswith(".jpeg") or p.endswith(".jpe"):
-                return "image/jpeg"
-            elif p.endswith(".png"):
-                return "image/png"
-            elif p.endswith(".gif"):
-                return "image/gif"
-            elif p.endswith(".bmp"):
-                return "image/bmp"
-            elif p.endswith(".pcx"):
-                return "image/x-pcx"
-            elif p.endswith(".webp"):
-                return "image/webp"
-
-        return dict(
-            # extensions for image / 3d model files
-            model=dict(
-                # TODO enable once 3d support is ready
-                # stl=ContentTypeMapping(["stl"], "application/sla"),
-                image=ContentTypeDetector(
-                    ["jpg", "jpeg", "jpe", "png", "gif", "bmp", "pcx", "webp"],
-                    _image_mime_detector,
-                ),
-                svg=ContentTypeMapping(["svg"], "image/svg+xml"),
-                dxf=ContentTypeMapping(["dxf"], "application/dxf"),
-            ),
-            # .mrb files are svgs, representing the whole working area of a job
-            recentjob=dict(
-                svg=ContentTypeMapping(["mrb"], "image/svg+xml"),
-            ),
-            # extensions for printable machine code
-            machinecode=dict(
-                gcode=ContentTypeMapping(
-                    ["nc"], "text/plain"
-                )  # already defined by OP: "gcode", "gco", "g"
-            ),
-        )
 
     def get_mrb_state(self):
         """
@@ -3102,7 +3041,6 @@ def __plugin_load__():
     global __plugin_implementation__
     __plugin_implementation__ = MrBeamPlugin()
     __builtin__._mrbeam_plugin_implementation = __plugin_implementation__
-    # MRBEAM_PLUGIN_IMPLEMENTATION = __plugin_implementation__
 
     global __plugin_settings_overlay__
     __plugin_settings_overlay__ = dict(
@@ -3168,7 +3106,18 @@ def __plugin_load__():
                 ),
                 disabled=dict(
                     wizard=["plugin_softwareupdate"],
-                    settings=["serial", "webcam", "terminalfilters"],
+                    settings=[
+                        "serial",
+                        "webcam",
+                        "terminalfilters",
+                        "plugin_action_command_prompt",
+                        "plugin_tracking",
+                        "plugin_appkeys",
+                        "plugin_backup",
+                        "plugin_errortracking",
+                        "plugin_pi_support",
+                        "plugin_pluginmanager",
+                    ],
                 ),
             )
         ),
@@ -3187,13 +3136,16 @@ def __plugin_load__():
     )
 
     from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
+    from octoprint_mrbeam.printing.printer import laser_factory
+    from octoprint_mrbeam import hooks
 
     global __plugin_hooks__
     __plugin_hooks__ = {
-        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
-        "octoprint.printer.factory": __plugin_implementation__.laser_factory,
-        "octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
-        "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,  # Only used in OP v1.3.11 +
-        "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.cli.commands": get_cli_commands,
+        "octoprint.filemanager.extension_tree": hooks.filemanager_extensions,
+        "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,
+        "octoprint.plugin.loginui.theming": hooks.loginui_theming,
+        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+        "octoprint.printer.factory": laser_factory,
+        "octoprint.server.http.bodysize": hooks.http_bodysize,
     }

@@ -88,7 +88,7 @@ $(function () {
             });
         };
 
-        $(window).load(function () {
+        $(window).on("load", function () {
             self.window_load_ts = new Date().getTime();
         });
 

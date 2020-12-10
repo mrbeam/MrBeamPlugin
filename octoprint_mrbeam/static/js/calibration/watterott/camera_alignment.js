@@ -15,7 +15,7 @@ $(function () {
         self.lensCalibration = parameters[2];
 
         self.qa_cameraalignment_image_loaded = ko.observable(false);
-        $("#qa_cameraalignment_image").load(function () {
+        $("#qa_cameraalignment_image").on("load", function () {
             self.qa_cameraalignment_image_loaded(true);
         });
     }
