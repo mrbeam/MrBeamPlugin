@@ -40,6 +40,8 @@ from job_params import JobParams
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
+EXTRA_OVERSHOOT_EXTRA_DURATION = 0.45
+
 
 class ImageProcessor:
 
@@ -544,6 +546,9 @@ class ImageProcessor:
                         # self.log.info("  start x %s, y %s" % tuple(start))
                         # self.log.info("  end   x %s, y %s" % tuple(end))
                         # self.log.info("  gcode \n%s" % overshoot_gco)
+                        overshoot_gco += (
+                            "; " + str(EXTRA_OVERSHOOT_EXTRA_DURATION) + "s"
+                        )
                         self._append_gcode(overshoot_gco)
 
                     # prepare line start

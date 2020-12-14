@@ -17,6 +17,23 @@ import threading
 FIND_X_VALUE = r"X(\d+\.?\d+)"
 FIND_Y_VALUE = r"Y(\d+\.?\d+)"
 FIND_FEEDRATE = r"F(\d+\.?\d+)"
+MATCH_COMMENT_ADD_TIME = re.compile(r"[\+-]?[0-9]+\.?[0-9]*s")
+
+
+def time_from_comment(comment):
+    """
+    Returns the number of seconds read in the comment if the comment matches a float:
+        ; [\+-]?[0-9]+\.?[0-9]*s
+
+    Example:
+        ; +1.3s
+    """
+    # comment = comment.trim("; ")
+    match = MATCH_COMMENT_ADD_TIME.search(comment)
+    if match:
+        float(match.group(0))
+    else:
+        return 0
 
 
 class JobTimeEstimation:
@@ -286,7 +303,8 @@ class JobTimeEstimation:
                         duration = self.distance(x, y, old_x, old_y) / feedrate * 60
                         total_duration += duration
 
-                    # prevent JTE from pulling to hard on the CPU if the user already started the job
+                    # prevent JTE from pulling to hard on the CPU if the
+                    # user already started the job
                     if do_sleep and calc_lines % 100 == 0:
                         calc_duration_woke += time.time() - start_wake_ts
                         sleep_time = 0.002
@@ -297,6 +315,8 @@ class JobTimeEstimation:
 
                 elif first_char == "F":
                     feedrate = float(re.findall(FIND_FEEDRATE, line)[0])
+                elif first_char == ";":
+                    total_duration += time_from_comment(line)
 
         total_duration_rounded = self.round_total_duration(total_duration)
         calc_duration_woke += time.time() - start_wake_ts
