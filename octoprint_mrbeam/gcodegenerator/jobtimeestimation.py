@@ -25,15 +25,27 @@ def time_from_comment(comment):
     Returns the number of seconds read in the comment if the comment matches a float:
         ; [\+-]?[0-9]+\.?[0-9]*s
 
-    Example:
-        ; +1.3s
+    Examples:
+        >>> time_from_comment("0.19s")
+        0.19
+        >>> time_from_comment("; +0.19s")
+        0.19
+        >>> time_from_comment("; +50s")
+        50.0
+        >>> time_from_comment("; this is not a number")
+        0.0
+        >>> time_from_comment("; here is a number -70s")
+        -70.0
+        >>> time_from_comment("; not formatted 70")
+        0.0
+        >>> time_from_comment("cannot do 2 numbers 6.9s 42.0s")
+        6.9
     """
-    # comment = comment.trim("; ")
     match = MATCH_COMMENT_ADD_TIME.search(comment)
     if match:
         float(match.group(0))
     else:
-        return 0
+        return 0.0
 
 
 class JobTimeEstimation:
