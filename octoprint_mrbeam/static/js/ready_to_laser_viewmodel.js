@@ -4,6 +4,7 @@
 $(function () {
     function ReadyToLaserViewModel(params) {
         var self = this;
+        window.mrbeam.viewModels["readyToLaserViewModel"] = self;
 
         self.ESTIMATED_DURATION_PLACEHOLDER = " ?";
 
@@ -11,7 +12,7 @@ $(function () {
         self.state = params[1];
         self.laserCutterProfiles = params[2];
 
-        self.oneButton = false;
+        self.oneButton = true;
 
         self.dialogElement = $(); // initialize not to undefined
         self.dialogShouldBeOpen = false;
@@ -34,6 +35,31 @@ $(function () {
 
         self.DEBUG = false;
 
+        self.debug = function (triggerEvent) {
+            console.log(
+                "ReadyToLaserViewModel.debug: (" +
+                    triggerEvent +
+                    ") is_rtl_mode: " +
+                    self.is_rtl_mode() +
+                    ", is_pause_mode: " +
+                    self.is_pause_mode() +
+                    ", interlocksClosed: " +
+                    self.state.interlocksClosed() +
+                    ", self.lid_fully_open" +
+                    self.lid_fully_open() +
+                    ", is_cooling_mode: " +
+                    self.is_cooling_mode() +
+                    ", is_fan_connected" +
+                    self.is_fan_connected() +
+                    ", $('#ready_to_laser_dialog').is(':visible'): " +
+                    $("#ready_to_laser_dialog").is(":visible") +
+                    ", $('#laser_job_done_dialog').is(':visible'): " +
+                    $("#laser_job_done_dialog").is(":visible") +
+                    ", mrb_state: " +
+                    JSON.stringify(window.mrbeam.mrb_state)
+            );
+        };
+
         self.onStartupComplete = function () {
             // I think this should already be done in on Startup()
             // But I do not want to change it  shortly before a rlease.
@@ -43,22 +69,24 @@ $(function () {
                 self.resetJobTimeEstimation();
             });
 
-            /**
-             * OneButton
-             * The proper way to do this would be to have a callback that gets called by laserCutterProfiles once data are loaded.
-             * However, at some point we must register these. And it's safer to assume there is a OneButton...
-             */
-            self.oneButton =
-                self.laserCutterProfiles.currentProfileData().start_method !=
-                    undefined &&
-                self.laserCutterProfiles.currentProfileData().start_method() ==
-                    "onebutton";
-            if (!self.laserCutterProfiles.hasDataLoaded) {
-                self.oneButton = true;
-                console.warn(
-                    "OneButton setting not loaded. Assuming OneButton=true for safety reasons. Try reloading the page if you don't have a OneButton."
-                );
-            }
+            // /**
+            //  * OneButton
+            //  * The proper way to do this would be to have a callback that gets called by laserCutterProfiles once data are loaded.
+            //  * However, at some point we must register these. And it's safer to assume there is a OneButton...
+            //  */
+            // self.oneButton =
+            //     self.laserCutterProfiles.currentProfileData().start_method !=
+            //         undefined &&
+            //     self.laserCutterProfiles.currentProfileData().start_method() ==
+            //         "onebutton";
+            // if (!self.laserCutterProfiles.hasDataLoaded) {
+            //     self.oneButton = true;
+            //     console.warn(
+            //         "OneButton setting not loaded. Assuming OneButton=true for safety reasons. Try reloading the page if you don't have a OneButton."
+            //     );
+            // }
+            // yeah, we just set it to true! nothing else!
+            self.oneButton = true;
 
             if (self.oneButton) {
                 console.log("OneButton activated.");
@@ -236,6 +264,14 @@ $(function () {
         };
 
         self._fromData = function (payload, event) {
+            // this is just for debugging
+            if (event) {
+                self.debug(event);
+                setTimeout(function () {
+                    self.debug(event);
+                }, 1000);
+            }
+
             if (!payload || !"mrb_state" in payload || !payload["mrb_state"]) {
                 return;
             }

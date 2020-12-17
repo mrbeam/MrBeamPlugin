@@ -1699,6 +1699,12 @@ ul.dropdown-menu li a {
   height: 30px;
 }
 
+.controls .btn-group input[type="radio"] {
+  /* Make native radio act the same as bootstrap's radio.*/
+  /* See https://stackoverflow.com/a/51387109/11136955 */
+  display: none;
+}
+
 /** Terminal output */
 #terminal-output {
   font-size: 11px;

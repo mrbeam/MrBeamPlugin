@@ -493,7 +493,8 @@ def handleBoardPicture(image, count, board_size, q_out=None):
     logging.info("Finding board")
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     success, found_pattern = findBoard(gray, board_size)
-    _pattern = found_pattern.reshape(-1, 2)
+    if success and found_pattern is not None:
+        _pattern = found_pattern.reshape(-1, 2)
 
     center = None
     bbox = None
@@ -515,14 +516,17 @@ def handleBoardPicture(image, count, board_size, q_out=None):
         bbox = None
         # TODO log this
 
-    drawnImg = cv2.drawChessboardCorners(
-        img,
-        board_size,
-        found_pattern,
-        success,
-    )
-    height, width, _ = drawnImg.shape
-    differed_imwrite(path, drawnImg)
+    if success:
+        drawnImg = cv2.drawChessboardCorners(
+            img,
+            board_size,
+            found_pattern,
+            success,
+        )
+        height, width, _ = drawnImg.shape
+        differed_imwrite(path, drawnImg)
+    else:
+        height, width = None, None
     if q_out is not None:
         q_out.put(
             dict(

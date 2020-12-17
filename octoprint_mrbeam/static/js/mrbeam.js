@@ -197,35 +197,6 @@ mrbeam.isWatterottMode = function () {
 };
 
 $(function () {
-    // catch and log jQuery ajax errors
-    $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
-        let msg =
-            jqXHR.status +
-            " (" +
-            jqXHR.statusText +
-            "): " +
-            settings.type +
-            " " +
-            settings.url;
-        if (settings.data) {
-            msg +=
-                ', body: "' +
-                (settings.data.length > 200
-                    ? settings.data.substr(0, 200) + "&hellip;"
-                    : settings.data);
-        }
-        console.everything.push({
-            level: "error",
-            msg: msg,
-            ts: event.timeStamp,
-            file: null,
-            function: "ajaxError",
-            line: null,
-            col: null,
-            stacktrace: null,
-        });
-    });
-
     // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
     // Force input of the "Add User" E-mail address in Settings > Access Control to lowercase.
     $("#settings-usersDialogAddUserName").attr(
@@ -379,7 +350,7 @@ $(function () {
                     thrownError
                 ) {
                     if (jqXHR.status == 401) {
-                        self._handle_session_expired();
+                        self._handle_session_expired(settings.url);
                     }
                 });
             }
@@ -438,27 +409,51 @@ $(function () {
             }
         };
 
-        self._handle_session_expired = function () {
+        self._handle_session_expired = function (triggerUrl) {
             if (self.loginState && self.loginState.loggedIn()) {
-                console.error(
-                    "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Showing 'Session expired' to the user."
-                );
-                let pn_obj = {
-                    id: "session_expired",
-                    title: gettext("Session expired"),
-                    text: gettext("Please login again to continue."),
-                    type: "warn",
-                    // tag: "conversion_error",
-                    hide: false,
-                };
-                mrbeam.updatePNotify(pn_obj);
-                if (settings.url != "/api/logout") {
-                    // we would get into an endless loop then...
-                    console.error("Triggering self.loginState.logout()");
-                    self.loginState.logout();
+                if (
+                    !triggerUrl.includes("api/logout") &&
+                    !triggerUrl.includes("plugin/mrbeam/console")
+                ) {
+                    console.error(
+                        "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Trying passive login..."
+                    );
+                    let pn_obj = {
+                        id: "session_expired",
+                        title: gettext("Session expired"),
+                        text: gettext("Trying to do a re-login..."),
+                        type: "warn",
+                        hide: true,
+                    };
+                    mrbeam.updatePNotify(pn_obj);
+
+                    // try passive login
+                    self.loginState.requestData().always(function () {
+                        if (self.loginState.loggedIn()) {
+                            let pn_obj = {
+                                id: "session_expired",
+                                title: gettext("Session expired"),
+                                text: gettext(
+                                    "Re-login successful.<br/>Please repeat the last action."
+                                ),
+                                type: "warn",
+                                hide: true,
+                            };
+                            mrbeam.updatePNotify(pn_obj);
+                        } else {
+                            let pn_obj = {
+                                id: "session_expired",
+                                title: gettext("Session expired"),
+                                text: gettext("Please login again."),
+                                type: "warn",
+                                hide: true,
+                            };
+                            mrbeam.updatePNotify(pn_obj);
+                        }
+                        // Reconnect socket connection
+                        OctoPrint.socket.reconnect();
+                    });
                 }
-                // Reconnect socket connection
-                OctoPrint.socket.reconnect();
             } else {
                 console.log(
                     "Server responded UNAUTHORIZED and loginStateViewModel is loggedOut. Consistent."
@@ -593,9 +588,19 @@ $(function () {
                                 !$(this)[0].hasChildNodes() &&
                                 modalElement.length === 1
                             ) {
-                                $("body").removeClass("modal-open");
-                                backDrop.remove();
-                                $(this)[0].remove();
+                                setTimeout(() => {
+                                    if (
+                                        !$(this)[0].hasChildNodes() &&
+                                        modalElement.length === 1
+                                    ) {
+                                        $("body").removeClass("modal-open");
+                                        backDrop.remove();
+                                        $(this)[0].remove();
+                                        console.warn(
+                                            "mutationCallback: removed incomplete modal after 500ms"
+                                        );
+                                    }
+                                }, 500);
                             } else if (
                                 !$(this)[0].hasChildNodes() &&
                                 modalElement.length > 1 &&

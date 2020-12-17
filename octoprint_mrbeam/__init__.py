@@ -83,6 +83,7 @@ from octoprint_mrbeam.util.device_info import deviceInfo
 from octoprint_mrbeam.util.flask import restricted_unless_calibration_tool_mode
 from octoprint_mrbeam.camera.label_printer import labelPrinter
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
+from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
@@ -172,6 +173,8 @@ class MrBeamPlugin(
         self._time_ntp_check_count = 0
         self._time_ntp_check_last_ts = 0.0
         self._time_ntp_shift = 0.0
+
+        self._gcode_deletion_thread = None
 
         # MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
         MrBeamEvents.register_with_octoprint()
@@ -1748,162 +1751,174 @@ class MrBeamPlugin(
         del data["gcodeFilesToAppend"]
 
         if command == "convert":
-            filename = "local/temp.svg"  # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
-            content = data["svg"]
-
-            # write local/temp.svg to convert it
-            self.mrb_file_manager.add_file_to_design_library(
-                file_name=filename, content=content
-            )
-
-            del data["svg"]
-
-            # safe history
-            ts = time.gmtime()
-            history_filename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
-            self.mrb_file_manager.add_file_to_design_library(
-                file_name=history_filename, content=content
-            )
-
-            slicer = "svgtogcode"
-            slicer_instance = self._slicing_manager.get_slicer(slicer)
-            if slicer_instance.get_slicer_properties()["same_device"] and (
-                self._printer.is_printing()
-                or self._printer.is_paused()
-                or self.lid_handler.lensCalibrationStarted
-            ):
-                # slicer runs on same device as OctoPrint, slicing while printing is hence disabled
-                _while = (
-                    "calibrating the camera lens"
-                    if self.lid_handler.lensCalibrationStarted
-                    else "lasering"
-                )
-                msg = "Cannot convert while {} due to performance reasons".format(
-                    _while, **locals()
-                )
-                if self.lid_handler.lensCalibrationStarted:
-                    msg += "\n  Please abort the lens calibration first."
-                self._logger.error("gcodeConvertCommand: %s", msg)
-                return make_response(msg, 409)
-
-            if "gcode" in data.keys() and data["gcode"]:
-                gcode_name = data["gcode"]
-                del data["gcode"]
-            else:
-                name, _ = os.path.splitext(filename)
-                gcode_name = name + ".gco"
-
-            # append number if file exists
-            name, ext = os.path.splitext(gcode_name)
-            i = 1
-            while self.mrb_file_manager.file_exists(FileDestinations.LOCAL, gcode_name):
-                gcode_name = name + "." + str(i) + ext
-                i += 1
-
-            # prohibit overwriting the file that is currently being printed
-            currentOrigin, currentFilename = self._getCurrentFile()
-            if (
-                currentFilename == gcode_name
-                and currentOrigin == FileDestinations.LOCAL
-                and (self._printer.is_printing() or self._printer.is_paused())
-            ):
-                msg = "Trying to slice into file that is currently being printed: {}".format(
-                    gcode_name
-                )
-                self._logger.error("gcodeConvertCommand: %s", msg)
-                make_response(msg, 409)
-
-            select_after_slicing = False
-            print_after_slicing = False
-
-            # get job params out of data json
-            overrides = dict()
-            overrides["vector"] = data["vector"]
-            overrides["raster"] = data["raster"]
-
-            with open(self._CONVERSION_PARAMS_PATH, "w") as outfile:
-                json.dump(data, outfile)
-                self._logger.info(
-                    "Wrote job parameters to %s", self._CONVERSION_PARAMS_PATH
-                )
-
-            self._printer.set_colors(currentFilename, data["vector"])
-
-            # callback definition
-            def slicing_done(
-                gcode_name,
-                select_after_slicing,
-                print_after_slicing,
-                append_these_files,
-            ):
-                # append additional gcodes
-                output_path = self.mrb_file_manager.path_on_disk(
-                    FileDestinations.LOCAL, gcode_name
-                )
-                with open(output_path, "ab") as wfd:
-                    for f in append_these_files:
-                        path = self.mrb_file_manager.path_on_disk(
-                            f["origin"], f["name"]
-                        )
-                        wfd.write("\n; " + f["name"] + "\n")
-
-                        with open(path, "rb") as fd:
-                            shutil.copyfileobj(fd, wfd, 1024 * 1024 * 10)
-
-                        wfd.write("\nM05\n")  # ensure that the laser is off.
-                        self._logger.info("Slicing finished: %s" % path)
-
-                if select_after_slicing or print_after_slicing:
-                    sd = False
-                    filenameToSelect = self.mrb_file_manager.path_on_disk(
-                        FileDestinations.LOCAL, gcode_name
-                    )
-                    printer.select_file(filenameToSelect, sd, True)
-
-                # keep only x recent files in job history and gcode.
-                self.mrb_file_manager.delete_old_files()
-
             try:
-                self.mrb_file_manager.slice(
-                    slicer,
-                    FileDestinations.LOCAL,
-                    filename,
-                    FileDestinations.LOCAL,
-                    gcode_name,
-                    profile=None,  # profile,
-                    printer_profile_id=None,  # printerProfile,
-                    position=None,  # position,
-                    overrides=overrides,
-                    callback=slicing_done,
-                    callback_args=[
-                        gcode_name,
-                        select_after_slicing,
-                        print_after_slicing,
-                        appendGcodeFiles,
-                    ],
+                filename = "local/temp.svg"  # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
+                content = data["svg"]
+
+                # write local/temp.svg to convert it
+                self.mrb_file_manager.add_file_to_design_library(
+                    file_name=filename, content=content
                 )
-            except octoprint.slicing.UnknownProfile:
-                msg = "Profile {profile} doesn't exist".format(**locals())
-                self._logger.error("gcodeConvertCommand: %s", msg)
-                return make_response(msg, 400)
 
-            location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
-            result = {
-                "name": gcode_name,
-                "origin": "local",
-                "refs": {
-                    "resource": location,
-                    "download": url_for("index", _external=True)
-                    + "downloads/files/"
-                    + FileDestinations.LOCAL
-                    + "/"
-                    + gcode_name,
-                },
-            }
+                del data["svg"]
 
-            r = make_response(jsonify(result), 202)
-            r.headers["Location"] = location
-            return r
+                # safe history
+                ts = time.gmtime()
+                history_filename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
+                self.mrb_file_manager.add_file_to_design_library(
+                    file_name=history_filename, content=content
+                )
+
+                slicer = "svgtogcode"
+                slicer_instance = self._slicing_manager.get_slicer(slicer)
+                if slicer_instance.get_slicer_properties()["same_device"] and (
+                    self._printer.is_printing()
+                    or self._printer.is_paused()
+                    or self.lid_handler.lensCalibrationStarted
+                ):
+                    # slicer runs on same device as OctoPrint, slicing while printing is hence disabled
+                    _while = (
+                        "calibrating the camera lens"
+                        if self.lid_handler.lensCalibrationStarted
+                        else "lasering"
+                    )
+                    msg = "Cannot convert while {} due to performance reasons".format(
+                        _while, **locals()
+                    )
+                    if self.lid_handler.lensCalibrationStarted:
+                        msg += "\n  Please abort the lens calibration first."
+                    self._logger.error("gcodeConvertCommand: %s", msg)
+                    return make_response(msg, 409)
+
+                if "gcode" in data.keys() and data["gcode"]:
+                    gcode_name = data["gcode"]
+                    del data["gcode"]
+                else:
+                    name, _ = os.path.splitext(filename)
+                    gcode_name = name + ".gco"
+
+                # append number if file exists
+                name, ext = os.path.splitext(gcode_name)
+                i = 1
+                while self.mrb_file_manager.file_exists(
+                    FileDestinations.LOCAL, gcode_name
+                ):
+                    gcode_name = name + "." + str(i) + ext
+                    i += 1
+
+                # prohibit overwriting the file that is currently being printed
+                currentOrigin, currentFilename = self._getCurrentFile()
+                if (
+                    currentFilename == gcode_name
+                    and currentOrigin == FileDestinations.LOCAL
+                    and (self._printer.is_printing() or self._printer.is_paused())
+                ):
+                    msg = "Trying to slice into file that is currently being printed: {}".format(
+                        gcode_name
+                    )
+                    self._logger.error("gcodeConvertCommand: %s", msg)
+                    make_response(msg, 409)
+
+                select_after_slicing = False
+                print_after_slicing = False
+
+                # get job params out of data json
+                overrides = dict()
+                overrides["vector"] = data["vector"]
+                overrides["raster"] = data["raster"]
+
+                with open(self._CONVERSION_PARAMS_PATH, "w") as outfile:
+                    json.dump(data, outfile)
+                    self._logger.info(
+                        "Wrote job parameters to %s", self._CONVERSION_PARAMS_PATH
+                    )
+
+                self._printer.set_colors(currentFilename, data["vector"])
+
+                # callback definition
+                def slicing_done(
+                    gcode_name,
+                    select_after_slicing,
+                    print_after_slicing,
+                    append_these_files,
+                ):
+                    try:
+                        # append additional gcodes
+                        output_path = self.mrb_file_manager.path_on_disk(
+                            FileDestinations.LOCAL, gcode_name
+                        )
+                        with open(output_path, "ab") as wfd:
+                            for f in append_these_files:
+                                path = self.mrb_file_manager.path_on_disk(
+                                    f["origin"], f["name"]
+                                )
+                                wfd.write("\n; " + f["name"] + "\n")
+
+                                with open(path, "rb") as fd:
+                                    shutil.copyfileobj(fd, wfd, 1024 * 1024 * 10)
+
+                                wfd.write("\nM05\n")  # ensure that the laser is off.
+                                self._logger.info("Slicing finished: %s" % path)
+
+                        if select_after_slicing or print_after_slicing:
+                            sd = False
+                            filenameToSelect = self.mrb_file_manager.path_on_disk(
+                                FileDestinations.LOCAL, gcode_name
+                            )
+                            printer.select_file(filenameToSelect, sd, True)
+
+                        # keep only x recent files in job history and gcode.
+                        self.mrb_file_manager.delete_old_files()
+                    except Exception as e:
+                        mrb_logger("octoprint.plugins.mrbeam").exception(
+                            "Exception in slicing_done(), callback of /convert call:"
+                        )
+                        raise e
+
+                try:
+                    self.mrb_file_manager.slice(
+                        slicer,
+                        FileDestinations.LOCAL,
+                        filename,
+                        FileDestinations.LOCAL,
+                        gcode_name,
+                        profile=None,  # profile,
+                        printer_profile_id=None,  # printerProfile,
+                        position=None,  # position,
+                        overrides=overrides,
+                        callback=slicing_done,
+                        callback_args=[
+                            gcode_name,
+                            select_after_slicing,
+                            print_after_slicing,
+                            appendGcodeFiles,
+                        ],
+                    )
+                except octoprint.slicing.UnknownProfile:
+                    msg = "Profile {profile} doesn't exist".format(**locals())
+                    self._logger.error("gcodeConvertCommand: %s", msg)
+                    return make_response(msg, 400)
+
+                location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
+                result = {
+                    "name": gcode_name,
+                    "origin": "local",
+                    "refs": {
+                        "resource": location,
+                        "download": url_for("index", _external=True)
+                        + "downloads/files/"
+                        + FileDestinations.LOCAL
+                        + "/"
+                        + gcode_name,
+                    },
+                }
+
+                r = make_response(jsonify(result), 202)
+                r.headers["Location"] = location
+                return r
+            except Exception as e:
+                self._logger.exception('Exception in gcodeConvertCommand() "/convert":')
+                raise e
 
         return NO_CONTENT
 
@@ -2085,7 +2100,20 @@ class MrBeamPlugin(
         self._settings.save()  # This is necessary because without it the value is not saved
         # Everytime the gcode auto deletion is enabled, it will be triggered
         if enable_deletion:
-            self.mrb_file_manager.delete_old_gcode_files()
+            if (
+                self._gcode_deletion_thread is None
+                or not self._gcode_deletion_thread.is_alive()
+            ):
+                self._logger.info(
+                    "set_gcode_deletion: Starting threaded bulk deletion of gcode files."
+                )
+                self._gcode_deletion_thread = get_thread(daemon=True)(
+                    self.mrb_file_manager.delete_old_gcode_files
+                )()
+            else:
+                self._logger.warn(
+                    "set_gcode_deletion: NOT Starting threaded bulk deletion of gcode files: Other thread already running."
+                )
 
     @octoprint.plugin.BlueprintPlugin.route("/console", methods=["POST"])
     def console_log(self):
@@ -2746,8 +2774,10 @@ class MrBeamPlugin(
             return None, None
 
     def _fixEmptyUserManager(self):
-        if len(self._user_manager._users) <= 0 and (
-            self._user_manager._customized or not self.isFirstRun()
+        if (
+            hasattr(self, "_user_manager")
+            and len(self._user_manager._users) <= 0
+            and (self._user_manager._customized or not self.isFirstRun())
         ):
             self._logger.debug("_fixEmptyUserManager")
             self._user_manager._customized = False
