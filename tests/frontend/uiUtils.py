@@ -66,7 +66,7 @@ def close_notifications(driver):
     # login successful
     # corner calibration
     # update notification
-    js = "PNotify.removeAll()"
+    js = "PNotify.removeAll();"
     driver.execute_script(js)
 
 
@@ -147,16 +147,26 @@ def start_conversion(driver, material="bamboo"):
         EC.visibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
     )
 
+    # ensure material is selected
     if material == "bamboo":
         materialSelector = SELECTOR_MATERIAL_BAMBOO
     else:
         materialSelector = SELECTOR_MATERIAL_FIRST
 
-    # materialElem = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, materialSelector)))
-    materialElem = wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, materialSelector))
+    isMaterialSelected = driver.execute_script(
+        """
+        vm = ko.dataFor(document.getElementById('material_row'));
+        return (vm.selected_material() !== null);
+    """
     )
-    materialElem.click()
+
+    if not isMaterialSelected:
+
+        # materialElem = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, materialSelector)))
+        materialElem = wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, materialSelector))
+        )
+        materialElem.click()
 
     driver.find_element(By.ID, "start_job_btn").click()
 
@@ -167,6 +177,7 @@ def cancel_job(driver):
     let vm = ko.dataFor(document.getElementById('ready_to_laser_dialog'));
     vm.state.cancel();
     """
+    driver.execute_script(js)
 
 
 def cleanup_after_conversion(driver):
@@ -197,7 +208,7 @@ def cleanup_after_conversion(driver):
         EC.invisibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
     )
 
-    # reset conversin dialog
+    # reset conversion dialog
 
     # clear working area
 
@@ -209,8 +220,12 @@ def clear_working_area(driver):
         let vm = ko.dataFor(document.getElementById('area_preview'));
         vm.clear();
     """
+    driver.execute_script(js)
+
     # driver.find_element(By.ID, "clear_working_area_btn").click()
     designCount = driver.execute_script(
         "return snap.selectAll('#userContent>*').length"
     )
-    # assert designCount == 0, "WorkingArea not empty after clear()"
+    assert designCount == 0, "WorkingArea not empty after clear(), was " + str(
+        designCount
+    )

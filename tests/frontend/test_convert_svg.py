@@ -5,12 +5,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-import logging
-
-selenium_logger = logging.getLogger("selenium.webdriver.remote.remote_connection")
-selenium_logger.setLevel(logging.WARNING)  # Only display possible problems
 
 import uiUtils
+import webdriverUtils
 import time
 
 
@@ -27,7 +24,8 @@ class TestConvertSvg:
             "Wichtel_neu.svg",
         ]
 
-        self.driver = webdriver.Chrome(service_log_path="/dev/null")
+        # self.driver = webdriver.Chrome(service_log_path="/dev/null")
+        self.driver = webdriverUtils.get_chrome_driver()
 
     def teardown_method(self, method):
         self.driver.quit()
@@ -47,13 +45,14 @@ class TestConvertSvg:
         uiUtils.close_notifications(self.driver)
 
         for svg in self.critical_svgs:
-            print("CONVERSION: " + svg)
 
             # add a remote svg
             svgUrl = self.resource_base + svg
             uiUtils.add_svg_url(self.driver, svgUrl)
+            print("FETCHED: " + svgUrl)
 
             # start conversion
+            print("  CONVERTING: " + svg)
             uiUtils.start_conversion(self.driver)
 
             # check result
