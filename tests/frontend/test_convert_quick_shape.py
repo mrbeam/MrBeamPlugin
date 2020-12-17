@@ -33,6 +33,7 @@ class TestConvertQuickShape:
 
         # load ui
         url = "localhost:5000"  # should be configurable or static resolved on each dev laptop to the current mr beam
+        # url = "http://mrbeam-axel.local"  # should be configurable or static resolved on each dev laptop to the current mr beam
         uiUtils.load_webapp(self.driver, url)
 
         # login

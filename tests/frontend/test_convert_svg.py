@@ -27,7 +27,7 @@ class TestConvertSvg:
             "Wichtel_neu.svg",
         ]
 
-        self.driver = webdriver.Chrome()
+        self.driver = webdriver.Chrome(service_log_path="/dev/null")
 
     def teardown_method(self, method):
         self.driver.quit()
@@ -36,22 +36,22 @@ class TestConvertSvg:
 
         wait = WebDriverWait(self.driver, 10)
 
+        # load ui
+        url = "localhost:5000"  # should be configurable or static resolved on each dev laptop to the current mr beam
+        uiUtils.load_webapp(self.driver, url)
+
+        # login
+        uiUtils.login(self.driver)
+
+        # close notifications
+        uiUtils.close_notifications(self.driver)
+
         for svg in self.critical_svgs:
             print("CONVERSION: " + svg)
 
-            # load ui
-            url = "localhost:5000"  # should be configurable or static resolved on each dev laptop to the current mr beam
-            uiUtils.load_webapp(self.driver, url)
-
-            # login
-            uiUtils.login(self.driver)
-
-            # close notifications
-            uiUtils.close_notifications(self.driver)
-
-            url = self.resource_base + svg
             # add a remote svg
-            uiUtils.add_svg_url(self.driver, url)
+            svgUrl = self.resource_base + svg
+            uiUtils.add_svg_url(self.driver, svgUrl)
 
             # start conversion
             uiUtils.start_conversion(self.driver)
@@ -64,6 +64,9 @@ class TestConvertSvg:
             )
             print("  SUCCESS: " + svg)
 
-            uiUtils.clear_working_area(self.driver)
+            uiUtils.cleanup_after_conversion(self.driver)
 
+            uiUtils.clear_working_area(self.driver)
             # uiUtils.cancel_job(self.driver)
+
+            # self.driver.delete_all_cookies()

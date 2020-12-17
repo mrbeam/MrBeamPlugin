@@ -102,7 +102,7 @@ def add_svg_url(driver, url):
     js = """
         let vm = ko.dataFor(document.getElementById('area_preview'));
         const file = {{
-          date: 1605722811,
+          date: 1234567890,
           display: "{0}",
           name: "{0}",
           origin: "local",
@@ -118,7 +118,7 @@ def add_svg_url(driver, url):
         }};
         vm.placeSVG(file, function(id){{ console.log(id); alert(id); }});
     """.format(
-        url, url, url
+        url
     )
     driver.execute_script(js)
 
@@ -167,6 +167,39 @@ def cancel_job(driver):
     let vm = ko.dataFor(document.getElementById('ready_to_laser_dialog'));
     vm.state.cancel();
     """
+
+
+def cleanup_after_conversion(driver):
+    wait = WebDriverWait(driver, 10)
+
+    # hide conversion dialog
+    js = """
+    PNotify.removeAll();
+    $("#dialog_vector_graphics_conversion").modal("hide");
+    """
+    driver.execute_script(js)
+    conversion_dialog = wait.until(
+        EC.invisibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
+    )
+
+    driver.execute_script(
+        "$('#laser_button').click();"
+    )  # works on teja's local installation
+    conversion_dialog = wait.until(
+        EC.visibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
+    )
+
+    js = """
+    $("#dialog_vector_graphics_conversion").modal("hide");
+    """
+    driver.execute_script(js)
+    conversion_dialog = wait.until(
+        EC.invisibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
+    )
+
+    # reset conversin dialog
+
+    # clear working area
 
 
 def clear_working_area(driver):
