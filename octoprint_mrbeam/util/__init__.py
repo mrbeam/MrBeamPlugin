@@ -124,7 +124,7 @@ def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
     return wrapper
 
 
-def makedirs(path, parent=False, *a, **kw):
+def makedirs(path, parent=False, exist_ok=True, *a, **kw):
     """
     Same as os.makedirs but doesn't throw exception if dir exists
     @param parentif: bool create the parent directory for the path given and not the full path
@@ -140,10 +140,13 @@ def makedirs(path, parent=False, *a, **kw):
         _p = dirname(path)
     else:
         _p = path
-    try:
-        makedirs(_p, *a, **kw)
-    except OSError as exc:
-        if exc.errno == errno.EEXIST and isdir(_p):
-            pass
-        else:
-            raise
+    if sys.version_info >= (3, 2, 0):
+        makedirs(_p, exist_ok=exist_ok, *a, **kw)
+    else:
+        try:
+            makedirs(_p, *a, **kw)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and isdir(_p) and exist_ok:
+                pass
+            else:
+                raise

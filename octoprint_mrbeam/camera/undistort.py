@@ -484,7 +484,7 @@ def _getCamParams(path_to_params_file):
     :returns cam_params as dict
     """
     if not isfile(path_to_params_file) or os.stat(path_to_params_file).st_size == 0:
-        logging.warning("Camera calibration file not found.")
+        logging.warning("Camera lens calibration file not found.")
         return None
     else:
         try:

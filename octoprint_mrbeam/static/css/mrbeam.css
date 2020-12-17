@@ -2122,115 +2122,6 @@ input.search-query,
   border-radius: 8px;
 }
 
-.workingarea {
-  border: 1px solid black;
-  height: 80vh;
-  width: auto;
-  position: relative;
-}
-
-.workingarea .laserpos {
-  position: absolute;
-  right: 0.5em;
-  bottom: 0.3em;
-  color: #999;
-}
-
-.workingarea .laser_btn {
-  position: absolute;
-  right: 0.5em;
-  top: 0.3em;
-}
-
-/* TODO ... don't use :hover ... tablets!
-.file_list_entry .action-buttons,
-.file_list_entry .uploaded,
-.file_list_entry .size {
-	display: none;
-}
-
-.file_list_entry:hover .action-buttons,
-.file_list_entry:hover .uploaded,
-.file_list_entry:hover .size  {
-	display: block;
-}
-*/
-
-.file_list_entry .action-buttons {
-  margin: 5px 5px 0 0;
-}
-
-#wa_filelist .file_list_entry {
-  border-bottom: 1px dotted lightgray;
-  margin-bottom: 1em;
-}
-
-#wa_filelist .file_list_entry .title {
-  max-width: 80%;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  cursor: default;
-  user-select: none;
-}
-
-#wa_filelist .file_list_entry .detail_information {
-  clear: both;
-}
-
-#wa_filelist .file_list_entry .local_transformation span {
-  margin-left: 0em;
-  margin-right: 0.8em;
-}
-
-#wa_filelist .detail_information,
-#wa_filelist .detail_information input.decent_input {
-  font-size: 0.8rem;
-}
-
-#wa_filelist .detail_information input {
-  width: calc(30% - 1em);
-  margin-bottom: 0;
-  box-sizing: border-box;
-  padding-left: 0;
-  padding-top: 0;
-}
-
-#wa_filelist .detail_information input.wide {
-  width: calc(45% - 1em);
-}
-
-#wa_filelist .file_list_entry .dropdown {
-  display: inline-block;
-}
-
-#wa_filelist .file_list_entry .dropdown li.mrb_inactive_item {
-  padding: 0.6em 0.8em;
-}
-
-#wa_filelist .file_list_entry .dropdown li {
-  color: #555;
-}
-
-#wa_filelist .file_list_entry .dropdown li i {
-  color: #e25303;
-}
-
-.misfit_warning {
-  display: none;
-}
-
-.misfit .misfit_warning {
-  display: block;
-}
-
-/* disabled. uses 100% cpu in the browser */
-/*#crosshair {
-    transition-property: transform;
-	transition-timing-function: linear;
-	transition-duration: 2s;
-	transition-delay: 0s;
-}*/
-
 .footer > * {
   padding-top: 1em;
 }
@@ -2262,21 +2153,6 @@ input.search-query,
 
 #control_btns .distance {
   min-height: 24px;
-}
-
-#working_area_files .entry {
-  /*height: 30px;*/
-  margin-bottom: 0.3em;
-}
-
-/* hack to avoid that the burger menu is pushed out of the viewable area.*/
-#working_area_files .entry:last-of-type {
-  margin-bottom: 162px;
-}
-
-#wa_filelist > div {
-  height: 50vh;
-  overflow-y: auto;
 }
 
 .print-control {
@@ -2702,49 +2578,6 @@ input.search-query,
 }
 
 /*
-* === IMAGE PREPROCESSING  ACCORDION ===
-*/
-.working_area_image_preprocessing {
-  margin-bottom: 0;
-}
-
-.working_area_image_preprocessing_heading {
-  padding: 0;
-  color: #999;
-}
-
-.working_area_image_preprocessing_sliders {
-  margin-left: 18px;
-}
-
-.working_area_image_preprocessing_link
-  > button.image-preprocessing-collapsible {
-  outline: transparent;
-  text-decoration: none;
-  color: #555;
-  padding: 0;
-  /*margin: 0;*/
-  white-space: nowrap;
-  font-size: 0.8rem;
-}
-
-.working_area_image_preprocessing_link > button.collapsed:before {
-  padding: 0;
-  content: "\270f" !important;
-  color: #999;
-  display: inline-block;
-  transform: rotate(-45deg);
-}
-
-.working_area_image_preprocessing_link > button:before {
-  padding: 0;
-  content: "\270f" !important;
-  color: #999;
-  display: inline-block;
-  transform: rotate(45deg);
-}
-
-/*
 * === SOFTWARE CHANNEL SELECTOR ===
 */
 #software_channel_select {
@@ -2871,15 +2704,6 @@ input.search-query,
 
 .maintenance-laserhead-serial {
   margin-left: 30px;
-}
-
-/*
-* === WORKING AREA FOOTER ===
-*/
-.working_area_footer_text {
-  font-size: 10px;
-  color: darkgrey;
-  margin: 0 0 0 30px;
 }
 
 /*
@@ -3250,68 +3074,6 @@ div.hopscotch-bubble h3 {
 }
 
 /*App font family*/
-
-/*Laser button */
-
-#laser_button {
-  background-color: #e25303;
-  background-image: none;
-}
-
-/*Laser button */
-
-/*Sliders*/
-input#quick_shape_rect_radius,
-input#quick_shape_star_sharpness,
-input#quick_shape_heart_lr {
-  margin-top: 14px;
-}
-
-input#img-preprocess-contrast,
-input#img-preprocess-brightness,
-input#img-preprocess-sharpen,
-input#img-preprocess-gamma {
-  margin: 13px 5px;
-  width: 80% !important;
-  float: right;
-}
-
-@media only screen and (max-width: 1248px) {
-  input#img-preprocess-contrast,
-  input#img-preprocess-brightness,
-  input#img-preprocess-sharpen,
-  input#img-preprocess-gamma {
-    width: 70% !important;
-  }
-}
-
-@media only screen and (max-width: 900px) {
-  input#img-preprocess-contrast,
-  input#img-preprocess-brightness,
-  input#img-preprocess-sharpen,
-  input#img-preprocess-gamma {
-    width: 60% !important;
-  }
-}
-
-.img-preprocess-cont {
-  margin-bottom: 8px;
-}
-
-.working_area_image_preprocessing_sliders {
-  margin-top: 4px;
-}
-
-#preview-brightness {
-  margin-left: 5px;
-  vertical-align: middle;
-}
-
-#wa_filelist .img-preprocess-cont i {
-  vertical-align: bottom;
-}
-
-/*Sliders*/
 
 /*Setting buttons*/
 
