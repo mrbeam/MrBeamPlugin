@@ -12,10 +12,22 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 SELECTOR_SUCCESS_NOTIFICATION = "body > div.ui-pnotify > div.alert-success"
-SELECTOR_MATERIAL_BAMBOO = (
-    '#material_list > li[mrb_name="/plugin/mrbeam/static/img/materials/Bamboo.jpg"]'
-)
-SELECTOR_MATERIAL_FIRST = "#material_list > li[mrb_name]:first"
+SELECTOR_MATERIAL = {
+    "bamboo": '#material_list > li[mrb_name="/plugin/mrbeam/static/img/materials/Bamboo.jpg"]',
+    "felt": '#material_list > li[mrb_name="/plugin/mrbeam/static/img/materials/Felt.jpg"]',
+    "first": "#material_list > li[mrb_name]:first-child",
+}
+
+SELECTOR_MATERIAL_COLOR = {
+    "first": "#color_list > li.material_color_entry:first-child",
+    "felt": "#material_color_eb5a3e",
+}
+
+SELECTOR_MATERIAL_THICKNESS = {
+    "first": "#thickness_list > div.thickness_sample:first-child",
+    "felt": "#material_thickness_3",
+    "engrave": "#material_thickness_-1",
+}
 
 
 def load_webapp(driver, baseUrl):
@@ -137,22 +149,76 @@ def add_svg_url(driver, url):
     # svgElem = wait.until(EC.visibility_of_element_located((By.ID, placedSvgId+'-0'))) # does not work. exec js instead?
 
 
-def start_conversion(driver, material="bamboo"):
-    wait = WebDriverWait(driver, 10, poll_frequency=2.0)
-    # driver.find_element(By.ID, "laser_button").click() # does not work on teja's local installation
+def select_material(driver, material="felt", cut=True, engrave=True):
+    # ensure conversion dialog is open
+    try:
+        element = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located(
+                (By.ID, "dialog_vector_graphics_conversion")
+            )
+        )
+    finally:
+        # log conversion dialog not visible: Did cou call start conversion?
+        pass
+
+    # ensure no material is selected
+    isMaterialSelected = driver.execute_script(
+        """
+        vm = ko.dataFor(document.getElementById('material_row'));
+        return (vm.selected_material() !== null);
+    """
+    )
+    if isMaterialSelected:
+        unselect_material()
+
+    close_notifications(
+        driver
+    )  # ensure no "Text elements" or "Update Notification" covers the material list
+
+    # select material
+    materialElem = WebDriverWait(driver, 2).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, SELECTOR_MATERIAL[material]))
+    )
+    materialElem.click()
+
+    time.sleep(1)
+    materialColor = driver.find_element_by_css_selector(
+        SELECTOR_MATERIAL_COLOR["first"]
+    )
+    materialColor.click()
+
+    time.sleep(1)
+    materialThickness = driver.find_element_by_css_selector(
+        SELECTOR_MATERIAL_THICKNESS["first"]
+    )
+    materialThickness.click()
+
+    # enable cutting if desired and material does not provide settings
+
+    # enable engraving if desired and material does not provide settings
+
+    # return success
+
+
+def unselect_material(driver):
     driver.execute_script(
-        "$('#laser_button').click();"
-    )  # works on teja's local installation
+        """
+        vm = ko.dataFor(document.getElementById('material_row'));
+        vm.select_material(null);
+    """
+    )
+    # wait?
+
+
+def start_conversion(driver, material="felt"):
+    wait = WebDriverWait(driver, 10, poll_frequency=2.0)
+    # driver.find_element(By.ID, "laser_button").click() # does not work??
+    driver.execute_script("$('#laser_button').click();")  # workaround
     conversion_dialog = wait.until(
         EC.visibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
     )
 
     # ensure material is selected
-    if material == "bamboo":
-        materialSelector = SELECTOR_MATERIAL_BAMBOO
-    else:
-        materialSelector = SELECTOR_MATERIAL_FIRST
-
     isMaterialSelected = driver.execute_script(
         """
         vm = ko.dataFor(document.getElementById('material_row'));
@@ -161,14 +227,15 @@ def start_conversion(driver, material="bamboo"):
     )
 
     if not isMaterialSelected:
-
-        # materialElem = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, materialSelector)))
-        materialElem = wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, materialSelector))
-        )
-        materialElem.click()
+        select_material(driver, "felt")
 
     driver.find_element(By.ID, "start_job_btn").click()
+
+
+#    startJobBtn = wait.until(
+#        EC.element_to_be_clickable((By.ID, "start_job_btn"))
+#    )
+#    startJobBtn.click()
 
 
 def cancel_job(driver):
@@ -186,6 +253,9 @@ def cleanup_after_conversion(driver):
     # hide conversion dialog
     js = """
     PNotify.removeAll();
+    let vm = ko.dataFor(document.getElementById('material_row'));
+    vm.slicing_in_progress(false);
+    vm.set_material();
     $("#dialog_vector_graphics_conversion").modal("hide");
     """
     driver.execute_script(js)
@@ -193,24 +263,25 @@ def cleanup_after_conversion(driver):
         EC.invisibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
     )
 
-    driver.execute_script(
-        "$('#laser_button').click();"
-    )  # works on teja's local installation
-    conversion_dialog = wait.until(
-        EC.visibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
-    )
 
-    js = """
-    $("#dialog_vector_graphics_conversion").modal("hide");
-    """
-    driver.execute_script(js)
-    conversion_dialog = wait.until(
-        EC.invisibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
-    )
+#    driver.execute_script(
+#        "$('#laser_button').click();"
+#    )  # works on teja's local installation
+#    conversion_dialog = wait.until(
+#        EC.visibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
+#    )
+#
+#    js = """
+#   $("#dialog_vector_graphics_conversion").modal("hide");
+# """
+#    driver.execute_script(js)
+#    conversion_dialog = wait.until(
+#        EC.invisibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
+#    )
 
-    # reset conversion dialog
+# reset conversion dialog
 
-    # clear working area
+# clear working area
 
 
 def clear_working_area(driver):

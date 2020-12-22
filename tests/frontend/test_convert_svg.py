@@ -28,7 +28,8 @@ class TestConvertSvg:
         self.driver = webdriverUtils.get_chrome_driver()
 
     def teardown_method(self, method):
-        self.driver.quit()
+        # self.driver.quit()
+        pass
 
     def test_convert_svg(self):
 
