@@ -39,7 +39,19 @@ class TestFillingsInDefs:
         uiUtils.add_svg_url(self.driver, svgUrl)
         print("FETCHED: " + svgUrl)
 
-        # TODO check dimensions & position
+        # check dimensions & position
+        bbox = uiUtils.get_bbox(self.driver)
+        {
+            "y": 51.783084869384766,
+            "x": 76.14178466796875,
+            "w": 159.1521759033203,
+            "h": 251.14407348632812,
+        }
+
+        assert bbox[u"x"] == 76.14178466796875, "BBox mismatch: X-Position" + str(bbox)
+        assert bbox[u"y"] == 51.783084869384766, "BBox mismatch: Y-Position" + str(bbox)
+        assert bbox[u"w"] == 159.1521759033203, "BBox mismatch: Width" + str(bbox)
+        assert bbox[u"h"] == 251.14407348632812, "BBox mismatch: Height" + str(bbox)
 
         # start conversion
         print("  CONVERTING: " + self.critical_svg)

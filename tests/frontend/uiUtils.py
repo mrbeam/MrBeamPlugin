@@ -141,6 +141,31 @@ def add_svg_url(driver, url):
     # svgElem = wait.until(EC.visibility_of_element_located((By.ID, placedSvgId+'-0'))) # does not work. exec js instead?
 
 
+def get_bbox(driver):
+    js = """
+        let bb = snap.select('#userContent').getBBox();
+        return bb;
+    """
+    bbox = driver.execute_script(js)
+    # {u'vb': u'76.14178466796875 51.783084869384766 159.1521759033203 251.14407348632812',
+    # u'r0': 148.66300880016152,
+    # u'r1': 79.57608795166016,
+    # u'r2': 125.57203674316406,
+    # u'h': 251.14407348632812,
+    # u'height': 251.14407348632812,
+    # u'width': 159.1521759033203,
+    # u'cy': 177.35512161254883,
+    # u'cx': 155.7178726196289,
+    # u'w': 159.1521759033203,
+    # u'x': 76.14178466796875,
+    # u'x2': 235.29396057128906,
+    # u'path': [[u'M', 76.14178466796875, 51.783084869384766], [u'l', 159.1521759033203, 0], [u'l', 0, 251.14407348632812], [u'l', -159.1521759033203, 0], [u'z']],
+    # u'y2': 302.9271583557129,
+    # u'y': 51.783084869384766}
+
+    return bbox
+
+
 def select_material(driver, material="felt", cut=True, engrave=True):
     # ensure conversion dialog is open
     try:
