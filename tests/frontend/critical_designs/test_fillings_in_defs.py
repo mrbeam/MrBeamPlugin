@@ -54,17 +54,17 @@ class TestFillingsInDefs:
 
         # check dimensions & position
         bbox = uiUtils.get_bbox(self.driver)
-        {
+        exp = {
             "y": 51.783084869384766,
             "x": 76.14178466796875,
             "w": 159.1521759033203,
             "h": 251.14407348632812,
         }
 
-        assert bbox[u"x"] == 76.14178466796875, "BBox mismatch: X-Position" + str(bbox)
-        assert bbox[u"y"] == 51.783084869384766, "BBox mismatch: Y-Position" + str(bbox)
-        assert bbox[u"w"] == 159.1521759033203, "BBox mismatch: Width" + str(bbox)
-        assert bbox[u"h"] == 251.14407348632812, "BBox mismatch: Height" + str(bbox)
+        assert bbox[u"x"] == exp["x"], "BBox mismatch: X-Position"
+        assert bbox[u"y"] == exp["y"], "BBox mismatch: Y-Position"
+        assert bbox[u"w"] == exp["w"], "BBox mismatch: Width"
+        assert bbox[u"h"] == exp["h"], "BBox mismatch: Height"
         self.log.info("DIMENSIONS OK: " + self.critical_svg)
 
         # start conversion
