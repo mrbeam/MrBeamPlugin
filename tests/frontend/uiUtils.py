@@ -1,4 +1,8 @@
 import time
+import re
+import json
+import logging
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -249,8 +253,26 @@ def start_conversion(driver, material="felt"):
     driver.find_element(By.ID, "start_job_btn").click()
 
 
-def get_latest_gcode(driver):
-    pass
+def wait_for_slicing_done(driver):
+    # log message Example
+    # Got event SlicingDone with payload: {\\"gcode_location\\":\\"local\\",\\"gcode\\":\\"httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.17.gco\\",\\"stl\\":\\"local/temp.svg\\",\\"time\\":1.9296720027923584,\\"stl_location\\":\\"local\\"}"', u'timestamp': 1609170424979, u'level': u'DEBUG'}
+    pattern = r"(.+\"Got event SlicingDone with payload: )(?P<payload>.+)\""
+    regex = re.compile(pattern)
+    msg = wait_for_console_msg(driver, pattern)
+    if msg:
+        m = regex.match(msg[u"message"])
+        payload = m.group("payload")
+        payload = payload.replace("\\", "")
+        d = json.loads(payload)
+        return d
+    else:
+        return None
+
+
+def wait_for_console_msg(driver, pattern):
+    wait = WebDriverWait(driver, 10)
+    logEntry = wait.until(CEC.console_log_contains(pattern))
+    return logEntry
 
 
 def cancel_job(driver):
@@ -277,26 +299,6 @@ def cleanup_after_conversion(driver):
     conversion_dialog = wait.until(
         EC.invisibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
     )
-
-
-#    driver.execute_script(
-#        "$('#laser_button').click();"
-#    )  # works on teja's local installation
-#    conversion_dialog = wait.until(
-#        EC.visibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
-#    )
-#
-#    js = """
-#   $("#dialog_vector_graphics_conversion").modal("hide");
-# """
-#    driver.execute_script(js)
-#    conversion_dialog = wait.until(
-#        EC.invisibility_of_element_located((By.ID, "dialog_vector_graphics_conversion"))
-#    )
-
-# reset conversion dialog
-
-# clear working area
 
 
 def clear_working_area(driver):

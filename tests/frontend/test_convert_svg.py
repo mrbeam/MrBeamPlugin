@@ -18,7 +18,7 @@ class TestConvertSvg:
         self.critical_svgs = [
             #            "Display-none.svg",
             "Fillings-in-defs.svg",
-            "Schild_Olga_Geb_druckfertig_2.svg",
+            "umlaut_in_arialabel.svg",
             "Elements-without-id.svg",
             "Namespace_references_to_ENTITYs_outside_the_xml.svg",
             "Wichtel_neu.svg",

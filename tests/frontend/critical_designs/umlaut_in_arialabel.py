@@ -1,7 +1,3 @@
-import time
-import logging
-
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -9,17 +5,14 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from .. import uiUtils
 from .. import webdriverUtils
-from .. import gcodeUtils
-from .. import custom_expected_conditions as CEC
+import time
 
 
 class TestFillingsInDefs:
     def setup_method(self, method):
 
-        self.log = logging.getLogger()
         self.resource_base = "https://mrbeam.github.io/test_rsc/critical_designs/"
-        self.critical_svg = "Fillings-in-defs.svg"
-        self.expected_gcode = "Fillings-in-defs.gco"
+        self.critical_svg = "umlaut_in_arialabel.svg"
 
         # self.driver = webdriver.Chrome(service_log_path="/dev/null")
         self.driver = webdriverUtils.get_chrome_driver()
@@ -32,14 +25,8 @@ class TestFillingsInDefs:
         wait = WebDriverWait(self.driver, 10)
 
         # load ui
-        try:
-            uiUtils.load_webapp(self.driver, baseurl)
-        except:
-            self.log.error(
-                "Error: Unable to load beamOS ("
-                + baseurl
-                + ")\nPlease run pytest with --baseurl=http://mrbeam-7E57.local or similar pointing to your test machine."
-            )
+        baseurl = "localhost:5000"  # should be configurable or static resolved on each dev laptop to the current mr beam
+        uiUtils.load_webapp(self.driver, baseurl)
 
         # login
         uiUtils.login(self.driver)
@@ -50,7 +37,7 @@ class TestFillingsInDefs:
         # add a remote svg
         svgUrl = self.resource_base + self.critical_svg
         uiUtils.add_svg_url(self.driver, svgUrl)
-        self.log.info("FETCHED: " + svgUrl)
+        print("FETCHED: " + svgUrl)
 
         # check dimensions & position
         bbox = uiUtils.get_bbox(self.driver)
@@ -65,9 +52,9 @@ class TestFillingsInDefs:
         assert bbox[u"y"] == 51.783084869384766, "BBox mismatch: Y-Position" + str(bbox)
         assert bbox[u"w"] == 159.1521759033203, "BBox mismatch: Width" + str(bbox)
         assert bbox[u"h"] == 251.14407348632812, "BBox mismatch: Height" + str(bbox)
-        self.log.info("DIMENSIONS OK: " + self.critical_svg)
 
         # start conversion
+        print("  CONVERTING: " + self.critical_svg)
         uiUtils.start_conversion(self.driver)
 
         # check result
@@ -76,24 +63,13 @@ class TestFillingsInDefs:
                 (By.CSS_SELECTOR, uiUtils.SELECTOR_SUCCESS_NOTIFICATION)
             )
         )
+        print("  SUCCESS: " + self.critical_svg)
 
-        # print(success_notification)
-        # gcode_url = success_notification.text
-        # self.log.info("CONVERTED: " + self.critical_svg + " to " + gcode_url)
+        uiUtils.cleanup_after_conversion(self.driver)
 
-        # check gcode
-        # payload example
-        # {u'gcode_location': u'local', u'gcode': u'httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.8.gco', u'stl': u'local/temp.svg', u'stl_location': u'local', u'time': 3.1736087799072266}
-        payload = uiUtils.wait_for_slicing_done(self.driver)
-        gcodeUrl = baseurl + "/downloads/files/local/" + payload[u"gcode"]
+        uiUtils.clear_working_area(self.driver)
+        # uiUtils.cancel_job(self.driver)
 
-        generated = gcodeUtils.get_gcode(gcodeUrl)
-        expected = gcodeUtils.get_gcode(self.resource_base + self.expected_gcode)
-        diff = gcodeUtils.compare(generated, expected)
-        assert (
-            len(diff) == 0
-        ), "GCode mismatch! {} lines are different. First 10 changes:\n\n{}".format(
-            len(diff), "\n".join(diff[:10])
-        )
+        # TODO check gcode
 
-        self.log.info("SUCCESS: " + self.critical_svg)
+        # self.driver.delete_all_cookies()
