@@ -1,14 +1,13 @@
 <div id="laser_job_done_dialog" class="modal hide fade" data-backdrop="static">
-    <div>
+
+    <div data-bind="visible: !is_dust_mode()">
         <div class="modal-header">
-            <a href="#" class="close" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">&times;</a>
-            <h3 data-bind='visible: is_dust_mode()'>{{ _('Dust extraction') }}</h3>
-            <h3 data-bind='visible: !is_dust_mode()'>{{ _('Laser Job Finished') }}</h3>
+            <a href="#" class="close" data-bind='click: cancel_btn' aria-hidden="true">&times;</a>
+            <h3>{{ _('Laser Job Finished') }}</h3>
         </div>
         <div class="modal-body">
 
-            <img data-bind='visible: is_dust_mode()' src="/plugin/mrbeam/static/img/dusting.jpg">
-            <div data-bind='visible: !is_dust_mode()' class="laser_job_done_image" style="background-image: url('/plugin/mrbeam/static/img/done_empty.jpg')">
+            <div class="laser_job_done_image" style="background-image: url('/plugin/mrbeam/static/img/done_empty.jpg')">
                 <i id="laser_job_done_image_check" class="icon-ok-sign show"></i>
                 <div id="laser_job_done_image_text">
                         <p>{{ _('Inspire the Mr Beam Community') }}</p>
@@ -25,16 +24,31 @@
                         </div>
                     </div>
             </div>
-            <h5 data-bind='visible: is_dust_mode()'>{{ _('Please wait a few seconds until Mr Beam cleared most of the dust particles out of the working area.') }}</h5>
-{#            <h5 data-bind='visible: !is_dust_mode()'>{{ _('Done. Now check out what you have created with your Mr Beam!') }}</h5>#}
-            <h4 data-bind='visible: !is_dust_mode()'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'>    </span>
-                <small>({{ _('Estimated:') }} <span data-bind='text: readyToLaser.estimated_duration'></span>)</small>
+            <h4 data-bind='visible: readyToLaser.jobTimeEstimationCalculated'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'>    </span>
+                <small>({{ _('Estimated:') }} <span data-bind='text: readyToLaser.jobTimeEstimationString'></span>)</small>
             </h4>
         </div>
         <div class="modal-footer">
-            <h4 data-bind='visible: is_dust_mode()' class="pull-right" >{{ _('Almost done...') }}</h4>
-            <a class="btn btn-link" id="laser_job_done_repeat_btn" data-bind='visible: !is_dust_mode(), click: repeat_job' aria-hidden="true"><i class="icon icon-repeat"></i> {{ _('Repeat Job') }}</a>
-            <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">{{ _('Close') }}</a>
+            <a class="btn" id="laser_job_done_repeat_btn" data-bind='click: repeat_job' aria-hidden="true"><i class="icon icon-repeat"></i> {{ _('Repeat Job') }}</a>
+            <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='click: cancel_btn' aria-hidden="true">{{ _('Close') }}</a>
         </div>
     </div>
+
+    <div data-bind="visible: is_dust_mode()">
+        <div class="modal-header">
+            <h3>{{ _('Air Filter run-on') }}</h3>
+        </div>
+        <div class="modal-body">
+
+            <img data-bind='visible: is_dust_mode()' src="/plugin/mrbeam/static/img/dusting.jpg">
+            <h5 data-bind='visible: is_dust_mode()'>{{ _('Please wait a few seconds until Mr Beam cleared most of the dust particles out of the working area.') }}</h5>
+            <h4 data-bind='readyToLaser.jobTimeEstimationCalculated'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'>    </span>
+                <small>({{ _('Estimated:') }} <span data-bind='text: readyToLaser.jobTimeEstimationString'></span>)</small>
+            </h4>
+        </div>
+        <div class="modal-footer">
+            <a class="btn pull-left" id="laser_job_done_cancel_dusting_btn" data-bind='visible: is_dust_mode(), click: cancelFinalExtraction' aria-hidden="true">{{ _('Cancel Air Filter run-on') }}</a>
+        </div>
+    </div>
+
 </div>

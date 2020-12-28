@@ -1,11 +1,10 @@
-$(function() {
-
-	function LaserCutterProfilesViewModel(params) {
+$(function () {
+    function LaserCutterProfilesViewModel(params) {
         var self = this;
 
         self.control = params[0];
 
-        self._cleanProfile = function() {
+        self._cleanProfile = function () {
             return {
                 id: "",
                 name: "",
@@ -16,28 +15,36 @@ $(function() {
                     depth: 297,
                     height: 0,
                     origin_offset_x: 1,
-                    origin_offset_y: 1
+                    origin_offset_y: 1,
                 },
                 zAxis: false,
                 focus: false,
                 glasses: true,
                 axes: {
-                    x: {speed: 6000, inverted: false},
-                    y: {speed: 6000, inverted: false},
-                    z: {speed: 200, inverted: false}
-                }
+                    x: { speed: 6000, inverted: false },
+                    y: { speed: 6000, inverted: false },
+                    z: { speed: 200, inverted: false },
+                },
             };
         };
 
         self.profiles = new ItemListHelper(
             "laserCutterProfiles",
             {
-                "name": function(a, b) {
+                name: function (a, b) {
                     // sorts ascending
-                    if (a["name"].toLocaleLowerCase() < b["name"].toLocaleLowerCase()) return -1;
-                    if (a["name"].toLocaleLowerCase() > b["name"].toLocaleLowerCase()) return 1;
+                    if (
+                        a["name"].toLocaleLowerCase() <
+                        b["name"].toLocaleLowerCase()
+                    )
+                        return -1;
+                    if (
+                        a["name"].toLocaleLowerCase() >
+                        b["name"].toLocaleLowerCase()
+                    )
+                        return 1;
                     return 0;
-                }
+                },
             },
             {},
             "name",
@@ -51,7 +58,9 @@ $(function() {
         self.defaultProfile = ko.observable();
         self.currentProfile = ko.observable();
 
-        self.currentProfileData = ko.observable(ko.mapping.fromJS(self._cleanProfile()));
+        self.currentProfileData = ko.observable(
+            ko.mapping.fromJS(self._cleanProfile())
+        );
 
         self.editorNew = ko.observable(false);
 
@@ -75,36 +84,39 @@ $(function() {
         self.editorAxisYInverted = ko.observable(false);
         self.editorAxisZInverted = ko.observable(false);
 
-        self.makeDefault = function(data) {
+        self.makeDefault = function (data) {
             var profile = {
                 id: data.id,
-                default: true
+                default: true,
             };
 
             self.updateProfile(profile);
         };
 
-        self.requestData = function() {
+        self.requestData = function () {
             $.ajax({
                 url: BASEURL + "plugin/mrbeam/profiles",
                 type: "GET",
                 dataType: "json",
-                success: self.fromResponse
-            })
+                success: self.fromResponse,
+            });
         };
 
-        self.fromResponse = function(data) {
+        self.fromResponse = function (data) {
             var items = [];
             var defaultProfile = undefined;
             var currentProfile = undefined;
             var currentProfileData = undefined;
-            _.each(data.profiles, function(entry) {
+            _.each(data.profiles, function (entry) {
                 if (entry.default) {
                     defaultProfile = entry.id;
                 }
                 if (entry.current) {
                     currentProfile = entry.id;
-                    currentProfileData = ko.mapping.fromJS(entry, self.currentProfileData);
+                    currentProfileData = ko.mapping.fromJS(
+                        entry,
+                        self.currentProfileData
+                    );
                 }
                 entry["isdefault"] = ko.observable(entry.default);
                 entry["iscurrent"] = ko.observable(entry.current);
@@ -122,33 +134,33 @@ $(function() {
             // self.conversion.maxSpeed(maxSpeed);
         };
 
-        self.addProfile = function(callback) {
+        self.addProfile = function (callback) {
             var profile = self._editorData();
             $.ajax({
                 url: BASEURL + "plugin/mrbeam/profiles",
                 type: "POST",
                 dataType: "json",
                 contentType: "application/json; charset=UTF-8",
-                data: JSON.stringify({profile: profile}),
-                success: function() {
+                data: JSON.stringify({ profile: profile }),
+                success: function () {
                     if (callback !== undefined) {
                         callback();
                     }
                     self.requestData();
-                }
+                },
             });
         };
 
-        self.removeProfile = function(data) {
+        self.removeProfile = function (data) {
             $.ajax({
                 url: data.resource,
                 type: "DELETE",
                 dataType: "json",
-                success: self.requestData
-            })
+                success: self.requestData,
+            });
         };
 
-        self.updateProfile = function(profile, callback) {
+        self.updateProfile = function (profile, callback) {
             if (profile == undefined) {
                 profile = self._editorData();
             }
@@ -158,17 +170,17 @@ $(function() {
                 type: "PATCH",
                 dataType: "json",
                 contentType: "application/json; charset=UTF-8",
-                data: JSON.stringify({profile: profile}),
-                success: function() {
+                data: JSON.stringify({ profile: profile }),
+                success: function () {
                     if (callback !== undefined) {
                         callback();
                     }
                     self.requestData();
-                }
+                },
             });
         };
 
-        self.showEditProfileDialog = function(data) {
+        self.showEditProfileDialog = function (data) {
             var add = false;
             if (data == undefined) {
                 data = self._cleanProfile();
@@ -200,16 +212,20 @@ $(function() {
             var confirmButton = $("button.btn-confirm", editDialog);
             var dialogTitle = $("h3.modal-title", editDialog);
 
-            dialogTitle.text(add ? "Add Profile": _.sprintf("Edit Profile \"%(name)s\"", {name: data.name}));
+            dialogTitle.text(
+                add
+                    ? "Add Profile"
+                    : _.sprintf('Edit Profile "%(name)s"', { name: data.name })
+            );
             confirmButton.unbind("click");
-            confirmButton.bind("click", function() {
+            confirmButton.bind("click", function () {
                 self.confirmEditProfile(add);
             });
             editDialog.modal("show");
         };
 
-        self.confirmEditProfile = function(add) {
-            var callback = function() {
+        self.confirmEditProfile = function (add) {
+            var callback = function () {
                 $("#settings_laserCutterProfiles_editDialog").modal("hide");
             };
 
@@ -220,11 +236,11 @@ $(function() {
             }
         };
 
-        self.isReadOnly = function (data){
-            return (data.id === "_mrbeam_senior" || data.id === "_mrbeam_junior");
+        self.isReadOnly = function (data) {
+            return data.id === "_mrbeam_senior" || data.id === "_mrbeam_junior";
         };
 
-        self._editorData = function() {
+        self._editorData = function () {
             var profile = {
                 id: self.editorIdentifier(),
                 name: self.editorName(),
@@ -240,37 +256,36 @@ $(function() {
                 axes: {
                     x: {
                         speed: parseInt(self.editorAxisXSpeed()),
-                        inverted: self.editorAxisXInverted()
+                        inverted: self.editorAxisXInverted(),
                     },
                     y: {
                         speed: parseInt(self.editorAxisYSpeed()),
-                        inverted: self.editorAxisYInverted()
+                        inverted: self.editorAxisYInverted(),
                     },
                     z: {
                         speed: parseInt(self.editorAxisZSpeed()),
-                        inverted: self.editorAxisZInverted()
-                    }
-                }
+                        inverted: self.editorAxisZInverted(),
+                    },
+                },
             };
-
 
             return profile;
         };
 
         self.onSettingsShown = self.requestData;
-        self.onStartup = function(){
+        self.onStartup = function () {
             self.requestData();
-            self.control.showZAxis = ko.computed(function(){
-                var has = self.currentProfileData()['zAxis']();
+            self.control.showZAxis = ko.computed(function () {
+                var has = self.currentProfileData()["zAxis"]();
                 return has;
             }); // dependency injection
-	};
-}
-
+        };
+    }
 
     // view model class, identifier, parameters for constructor, container to bind to
-    ADDITIONAL_VIEWMODELS.push([LaserCutterProfilesViewModel,
-		["controlViewModel"],
-		document.getElementById("lasercutterprofiles")]);
-
+    ADDITIONAL_VIEWMODELS.push([
+        LaserCutterProfilesViewModel,
+        ["controlViewModel"],
+        document.getElementById("lasercutterprofiles"),
+    ]);
 });

@@ -1,71 +1,73 @@
 .tinyColorPicker {
-	display: inline-block;
-    width:          20px;
-    height:         20px;
-    position: relative;
-    clear: both;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  position: relative;
+  clear: both;
 }
 
 .tinyColorPicker.active {
-	z-index: 9999999;
+  z-index: 9999999;
 }
 
 .tinyColorPicker .track {
-    background:     #EFEFEF no-repeat 50% 50%;
-    height:         150px;
-    width:          150px;
-    padding:        11px;
-    position:       absolute;
-    cursor:         crosshair;
-    float:          left;
-    left:           -71px;
-    top:            -71px;
-    /*display:        none;*/
-    border:         1px solid #ccc;
-    z-index:        10;
-    border-radius: 150px;
-	background-image: url(../img/color_picker_material.png);
-	transform: scale(0.1);
-	transition: transform 0.2s ease-out;
+  background: #efefef no-repeat 50% 50%;
+  height: 150px;
+  width: 150px;
+  padding: 11px;
+  position: absolute;
+  cursor: crosshair;
+  float: left;
+  left: -71px;
+  top: -71px;
+  /*display:        none;*/
+  border: 1px solid #ccc;
+  z-index: 10;
+  border-radius: 150px;
+  background-image: url(../img/color_picker_material.png);
+  transform: scale(0.1);
+  transition: transform 0.2s ease-out;
 }
 
-.tinyColorPicker.active .track { transform: scale(1); }
+.tinyColorPicker.active .track {
+  transform: scale(1);
+}
 
 .tinyColorPicker .tcp_color {
-    width:          25px;
-    height:         25px;
-    padding:        3px;
-    border:         1px solid #ccc;
-    display:        block;
-    position:       relative;
-    z-index:        11;
-    background-color: #EFEFEF;
-    border-radius: 27px;
-    cursor: pointer;
+  width: 25px;
+  height: 25px;
+  padding: 3px;
+  border: 1px solid #ccc;
+  display: block;
+  position: relative;
+  z-index: 11;
+  background-color: #efefef;
+  border-radius: 27px;
+  cursor: pointer;
 }
 
 .tinyColorPicker .colorInner {
-    width:          25px;
-    height:         25px;
-    border-radius: 27px;
+  width: 25px;
+  height: 25px;
+  border-radius: 27px;
 }
 
 .tinyColorPicker .dropdown {
-    list-style: none;
-    display: none;
-    width: 27px;
-    position: absolute;
-    top: 28px;
-    border: 1px solid #ccc;
-    left: 0;
-    z-index: 1000;
+  list-style: none;
+  display: none;
+  width: 27px;
+  position: absolute;
+  top: 28px;
+  border: 1px solid #ccc;
+  left: 0;
+  z-index: 1000;
 }
 
 .tinyColorPicker .dropdown li {
-    height: 25px;
-    cursor: pointer;
+  height: 25px;
+  cursor: pointer;
 }
 
 .tinyColorPicker.blackWhite .track {
-	background-image: url(../img/color_picker_bw.png);
+  background-image: url(../img/color_picker_bw.png);
 }
