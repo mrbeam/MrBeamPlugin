@@ -11,6 +11,8 @@ import custom_expected_conditions as CEC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 
+from frontend import frontendTestUtils
+
 SELECTOR_SUCCESS_NOTIFICATION = "body > div.ui-pnotify > div.alert-success"
 SELECTOR_MATERIAL = {
     "bamboo": '#material_list > li[mrb_name="/plugin/mrbeam/static/img/materials/Bamboo.jpg"]',
@@ -51,6 +53,8 @@ def load_webapp(driver, baseUrl):
     loading_overlay = wait.until(
         EC.invisibility_of_element_located((By.ID, "loading_overlay"))
     )
+    versions = frontendTestUtils.get_versions(driver)
+    logging.getLogger().info("Testing {}".format(versions))
 
 
 def login(driver, user="dev@mr-beam.org", pw="a"):
