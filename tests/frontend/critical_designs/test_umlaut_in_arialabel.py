@@ -33,8 +33,6 @@ class TestFillingsInDefs:
 
     def test_convert_svg(self, baseurl):
 
-        wait = WebDriverWait(self.driver, 10)
-
         # load ui
         try:
             self.testEnvironment = uiUtils.load_webapp(self.driver, baseurl)
@@ -74,10 +72,12 @@ class TestFillingsInDefs:
         uiUtils.start_conversion(self.driver)
 
         # check result
+        wait = WebDriverWait(self.driver, 20, poll_frequency=2.0)
         success_notification = wait.until(
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, uiUtils.SELECTOR_SUCCESS_NOTIFICATION)
-            )
+            ),
+            message="Waiting for conversion finished PNotify",
         )
 
         # check gcode
