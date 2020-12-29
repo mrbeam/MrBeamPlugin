@@ -30,11 +30,11 @@ class console_log_contains(object):
     returns the WebElement once it has the particular css class
     """
 
-    def __init__(self, pattern, since=0):
-        # self.level = "ALL"
-        self.timestamp = since
+    def __init__(self, pattern, consumed_logs_callback=None):
+
         self.regex = re.compile(pattern)
         self.log = logging.getLogger()
+        self.log_callback = consumed_logs_callback
 
     def __call__(self, driver):
         # log entry example
@@ -42,10 +42,12 @@ class console_log_contains(object):
         #  u'message': u'http://localhost:5000/?1609167298.58 110:33 "Could not instantiate the following view models due to unresolvable dependencies:"',
         #  u'timestamp': 1609167299977,
         #  u'level': u'SEVERE'}
-        for entry in driver.get_log("browser"):
-            # self.log.info(entry[u'message'])
-            if self.timestamp > entry[u"timestamp"]:
-                pass
+        logs = driver.get_log("browser")
+        if self.log_callback != None:
+            self.log_callback(logs)
+        # self.log.debug("got {} console log lines".format(len(logs)))
+        for entry in logs:
+            # self.log.debug("Entry {}".format(entry))
 
             if self.regex.match(entry[u"message"]):
                 return entry

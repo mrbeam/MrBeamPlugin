@@ -253,12 +253,12 @@ def start_conversion(driver, material="felt"):
     driver.find_element(By.ID, "start_job_btn").click()
 
 
-def wait_for_slicing_done(driver):
+def wait_for_slicing_done(driver, log_callback):
     # log message Example
     # Got event SlicingDone with payload: {\\"gcode_location\\":\\"local\\",\\"gcode\\":\\"httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.17.gco\\",\\"stl\\":\\"local/temp.svg\\",\\"time\\":1.9296720027923584,\\"stl_location\\":\\"local\\"}"', u'timestamp': 1609170424979, u'level': u'DEBUG'}
     pattern = r"(.+\"Got event SlicingDone with payload: )(?P<payload>.+)\""
     regex = re.compile(pattern)
-    msg = wait_for_console_msg(driver, pattern)
+    msg = wait_for_console_msg(driver, pattern, log_callback)
     if msg:
         m = regex.match(msg[u"message"])
         payload = m.group("payload")
@@ -269,9 +269,9 @@ def wait_for_slicing_done(driver):
         return None
 
 
-def wait_for_console_msg(driver, pattern):
+def wait_for_console_msg(driver, pattern, log_callback):
     wait = WebDriverWait(driver, 10)
-    logEntry = wait.until(CEC.console_log_contains(pattern))
+    logEntry = wait.until(CEC.console_log_contains(pattern, log_callback))
     return logEntry
 
 

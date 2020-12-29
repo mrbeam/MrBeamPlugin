@@ -1,16 +1,14 @@
 import time
 import logging
 
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
-from .. import uiUtils
-from .. import webdriverUtils
-from .. import gcodeUtils
-from .. import custom_expected_conditions as CEC
+from frontend import uiUtils
+from frontend import webdriverUtils
+from frontend import gcodeUtils
+from frontend import frontendTestUtils
 
 
 class TestFillingsInDefs:
@@ -18,14 +16,19 @@ class TestFillingsInDefs:
 
         self.log = logging.getLogger()
         self.resource_base = "https://mrbeam.github.io/test_rsc/critical_designs/"
-        self.critical_svg = "umlaut_in_arialabel.svg"
-        self.expected_gcode = "umlaut_in_arialabel.gco"
+        self.critical_svg = "Elements-without-id.svg"
+        self.expected_gcode = "Elements-without-id.gco"
 
         # self.driver = webdriver.Chrome(service_log_path="/dev/null")
         self.driver = webdriverUtils.get_chrome_driver()
+        self.browserLog = []
 
     def teardown_method(self, method):
         self.driver.quit()
+        pass
+
+    def append_logs(self, logs):
+        self.browserLog.extend(logs)
 
     def test_convert_svg(self, baseurl):
 
@@ -54,18 +57,11 @@ class TestFillingsInDefs:
 
         # check dimensions & position
         bbox = uiUtils.get_bbox(self.driver)
-        exp = {
-            "y": 27.573705673217773,
-            "x": 5.796566963195801,
-            "w": 149.99998474121094,
-            "h": 149.99998474121094,
-        }
+        exp = {"x": 0, "y": 0, "w": 499.959625244, "h": 399.967712402}
 
-        assert bbox[u"x"] == exp["x"], "BBox mismatch: X-Position"
-        assert bbox[u"y"] == exp["y"], "BBox mismatch: Y-Position"
-        assert bbox[u"w"] == exp["w"], "BBox mismatch: Width"
-        assert bbox[u"h"] == exp["h"], "BBox mismatch: Height"
-        self.log.info("DIMENSIONS OK: " + self.critical_svg)
+        ok, msg = frontendTestUtils.compare_dimensions(bbox, exp)
+        assert ok, msg
+        self.log.info("DIMENSIONS OK: {} {} {}".format(ok, msg, self.critical_svg))
 
         # start conversion
         uiUtils.start_conversion(self.driver)
@@ -80,7 +76,7 @@ class TestFillingsInDefs:
         # check gcode
         # payload example
         # {u'gcode_location': u'local', u'gcode': u'httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.8.gco', u'stl': u'local/temp.svg', u'stl_location': u'local', u'time': 3.1736087799072266}
-        payload = uiUtils.wait_for_slicing_done(self.driver)
+        payload = uiUtils.wait_for_slicing_done(self.driver, self.append_logs)
         gcodeUrl = baseurl + "/downloads/files/local/" + payload[u"gcode"]
 
         generated = gcodeUtils.get_gcode(gcodeUrl)
@@ -93,3 +89,15 @@ class TestFillingsInDefs:
         )
 
         self.log.info("SUCCESS: " + self.critical_svg)
+        self.append_logs(self.driver.get_log("browser"))
+        msg, warningsInLogs, summary = webdriverUtils.get_console_log_summary(
+            self.browserLog
+        )
+        if warningsInLogs:
+            self.log.warn(msg)
+        else:
+            self.log.info(msg)
+
+        # TODO assert no js errors
+        # assert summary["WARNING"] == 0, "{} Javascript warnings occured".format(summary["WARNING"])
+        # assert summary["SEVERE"] == 0, "{} Javascript errors occured".format(summary["SEVERE"])

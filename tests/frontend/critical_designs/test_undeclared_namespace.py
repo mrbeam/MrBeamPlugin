@@ -16,8 +16,8 @@ class TestFillingsInDefs:
 
         self.log = logging.getLogger()
         self.resource_base = "https://mrbeam.github.io/test_rsc/critical_designs/"
-        self.critical_svg = "Fillings-in-defs.svg"
-        self.expected_gcode = "Fillings-in-defs.gco"
+        self.critical_svg = "undeclared_namespace.svg"
+        self.expected_gcode = "undeclared_namespace.gco"
 
         # self.driver = webdriver.Chrome(service_log_path="/dev/null")
         self.driver = webdriverUtils.get_chrome_driver()
@@ -58,15 +58,15 @@ class TestFillingsInDefs:
         # check dimensions & position
         bbox = uiUtils.get_bbox(self.driver)
         exp = {
-            "x": 76.14178466796875,
-            "y": 51.783084869384766,
-            "w": 159.1521759033203,
-            "h": 251.14407348632812,
+            "x": 8.46249389648,
+            "y": 8.36135959625,
+            "w": 82.8678207397461,
+            "h": 83.33135986328125,
         }
 
         ok, msg = frontendTestUtils.compare_dimensions(bbox, exp)
+        self.log.info("DIMENSIONS OK: {} {} {}".format(ok, msg, self.critical_svg))
         assert ok, msg
-        self.log.info("DIMENSIONS OK: " + self.critical_svg)
 
         # start conversion
         uiUtils.start_conversion(self.driver)
@@ -77,10 +77,6 @@ class TestFillingsInDefs:
                 (By.CSS_SELECTOR, uiUtils.SELECTOR_SUCCESS_NOTIFICATION)
             )
         )
-
-        # print(success_notification)
-        # gcode_url = success_notification.text
-        # self.log.info("CONVERTED: " + self.critical_svg + " to " + gcode_url)
 
         # check gcode
         # payload example
