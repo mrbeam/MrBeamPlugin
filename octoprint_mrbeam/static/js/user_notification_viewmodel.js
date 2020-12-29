@@ -184,6 +184,7 @@ $(function () {
 
         self._getErrorString = function (err) {
             if (err) {
+                err = Array.isArray(err) ? err.join(",<br />") : err;
                 return (
                     "<br/><br/><strong>" +
                     gettext("Error:") +
