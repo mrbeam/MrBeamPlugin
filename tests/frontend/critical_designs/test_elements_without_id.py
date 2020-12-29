@@ -22,6 +22,7 @@ class TestFillingsInDefs:
         # self.driver = webdriver.Chrome(service_log_path="/dev/null")
         self.driver = webdriverUtils.get_chrome_driver()
         self.browserLog = []
+        self.testEnvironment = {}
 
     def teardown_method(self, method):
         self.driver.quit()
@@ -36,7 +37,7 @@ class TestFillingsInDefs:
 
         # load ui
         try:
-            uiUtils.load_webapp(self.driver, baseurl)
+            self.testEnvironment = uiUtils.load_webapp(self.driver, baseurl)
         except:
             self.log.error(
                 "Error: Unable to load beamOS ("
@@ -45,7 +46,8 @@ class TestFillingsInDefs:
             )
 
         # login
-        uiUtils.login(self.driver)
+        apikey = uiUtils.login(self.driver)
+        self.testEnvironment["APIKEY"] = apikey
 
         # close notifications
         uiUtils.close_notifications(self.driver)
@@ -78,14 +80,27 @@ class TestFillingsInDefs:
         # {u'gcode_location': u'local', u'gcode': u'httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.8.gco', u'stl': u'local/temp.svg', u'stl_location': u'local', u'time': 3.1736087799072266}
         payload = uiUtils.wait_for_slicing_done(self.driver, self.append_logs)
         gcodeUrl = baseurl + "/downloads/files/local/" + payload[u"gcode"]
+        expUrl = self.resource_base + self.expected_gcode
 
         generated = gcodeUtils.get_gcode(gcodeUrl)
-        expected = gcodeUtils.get_gcode(self.resource_base + self.expected_gcode)
+        self.log.info("GEN: " + generated[:50])
+        assert (
+            len(generated) > 0
+        ), "Generated gcode was empty or not downloadable. {}\n{}".format(
+            gcodeUrl, generated[:100]
+        )
+        expected = gcodeUtils.get_gcode(expUrl)
+        self.log.info("EXP: " + expected[:50])
+        assert (
+            len(expected) > 0
+        ), "Expected gcode was empty or not downloadable. {}\n{}".format(
+            expUrl, expected[:100]
+        )
         diff = gcodeUtils.compare(generated, expected)
         assert (
             len(diff) == 0
-        ), "GCode mismatch! {} lines are different. First 10 changes:\n\n{}".format(
-            len(diff), "\n".join(diff[:10])
+        ), "GCode mismatch! {} lines are different. First 30 changes:\n\n{}".format(
+            len(diff), "\n".join(diff[:30])
         )
 
         self.log.info("SUCCESS: " + self.critical_svg)

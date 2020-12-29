@@ -16,6 +16,9 @@ def get_versions(driver):
       'MRBEAM_GRBL_VERSION': MRBEAM_GRBL_VERSION,
       'MRBEAM_SW_TIER': MRBEAM_SW_TIER,
       'MRBEAM_WIZARD_TO_SHOW': MRBEAM_WIZARD_TO_SHOW,
+      'OCTOPRINT_VERSION': VERSION,
+      'OCTOPRINT_BRANCH': BRANCH,
+      'APIKEY': OctoPrint.options.apikey,
     };
     """
     return driver.execute_script(js)

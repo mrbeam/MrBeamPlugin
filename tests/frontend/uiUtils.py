@@ -13,6 +13,21 @@ from selenium.webdriver.common.keys import Keys
 
 from frontend import frontendTestUtils
 
+DEFAULT_ENV = {
+    u"BEAMOS_VERSION": "?",
+    u"BEAMOS_BRANCH": "?",
+    u"BEAMOS_IMAGE": "?",
+    u"MRBEAM_ENV": "?",
+    u"MRBEAM_MODEL": "?",
+    u"MRBEAM_LANGUAGE": "?",
+    u"MRBEAM_SERIAL": "?",
+    u"MRBEAM_PRODUCT_NAME": "?",
+    u"MRBEAM_GRBL_VERSION": "?",
+    u"MRBEAM_SW_TIER": "?",
+    u"MRBEAM_WIZARD_TO_SHOW": "?",
+    u"APIKEY": "?",
+}
+
 SELECTOR_SUCCESS_NOTIFICATION = "body > div.ui-pnotify > div.alert-success"
 SELECTOR_MATERIAL = {
     "bamboo": '#material_list > li[mrb_name="/plugin/mrbeam/static/img/materials/Bamboo.jpg"]',
@@ -55,9 +70,40 @@ def load_webapp(driver, baseUrl):
     )
     versions = frontendTestUtils.get_versions(driver)
     logging.getLogger().info("Testing {}".format(versions))
+    return versions
 
 
 def login(driver, user="dev@mr-beam.org", pw="a"):
+    js = 'return mrbeam.isOctoPrintVersionMin("1.4")'
+    useModernLogin = driver.execute_script(js)
+    # logging.getLogger().debug("useModern... {}".format(useModernLogin))
+    if useModernLogin:
+        return loginOctoprint_1_4(driver, user, pw)
+    else:
+        return loginOctoprint_1_3(driver, user, pw)
+
+
+def loginOctoprint_1_4(driver, user, pw):
+    # TODO: port to Octoprint 1.4
+    wait = WebDriverWait(driver, 10)
+    # 3 | click | id=login_screen_email_address_in |
+    inputUser = driver.find_element(By.ID, "login_screen_email_address_in")
+    inputUser.clear()
+    inputUser.send_keys(user)
+    # 4 | click | id=login_screen_password_in |
+    inputPassword = driver.find_element(By.ID, "login_screen_password_in")
+    inputPassword.clear()
+    inputPassword.send_keys(pw)
+    # 5 | click | id=login_screen_login_btn |
+    driver.find_element(By.ID, "login_screen_login_btn").click()
+    login_dialog = wait.until(
+        EC.invisibility_of_element_located((By.ID, "loginscreen_dialog"))
+    )
+    js = "return OctoPrint.options.apikey;"
+    return driver.execute_script(js)
+
+
+def loginOctoprint_1_3(driver, user, pw):
     wait = WebDriverWait(driver, 10)
 
     # 3 | click | id=login_screen_email_address_in |
@@ -73,7 +119,8 @@ def login(driver, user="dev@mr-beam.org", pw="a"):
     login_dialog = wait.until(
         EC.invisibility_of_element_located((By.ID, "loginscreen_dialog"))
     )
-    return login_dialog
+    js = "return OctoPrint.options.apikey;"
+    return driver.execute_script(js)
 
 
 def close_notifications(driver):
@@ -206,13 +253,13 @@ def select_material(driver, material="felt", cut=True, engrave=True):
     )
     materialElem.click()
 
-    time.sleep(1)
+    time.sleep(1)  # important to ensure css transition is finished
     materialColor = driver.find_element_by_css_selector(
         SELECTOR_MATERIAL_COLOR["first"]
     )
     materialColor.click()
 
-    time.sleep(1)
+    time.sleep(1)  # important to ensure css transition is finished
     materialThickness = driver.find_element_by_css_selector(
         SELECTOR_MATERIAL_THICKNESS["first"]
     )
