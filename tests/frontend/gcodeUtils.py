@@ -17,12 +17,17 @@ def get_gcode(url):
     return content
 
 
-def compare(gcode1, gcode2, ignoreComments=True):
+def compare(gcode1, gcode2, ignoreComments=True, maxLines=500):
     arr1 = gcode1.splitlines()
     arr2 = gcode2.splitlines()
+    logging.getLogger().info(
+        "comparing gcodes: generated {} lines, expected {} lines (Limit: {} lines)...".format(
+            len(arr1), len(arr2), maxLines
+        )
+    )
     if ignoreComments:
-        arr1 = map(_strip_comments, arr1)
-        arr2 = map(_strip_comments, arr2)
+        arr1 = map(_strip_comments, arr1[:maxLines])
+        arr2 = map(_strip_comments, arr2[:maxLines])
 
     output_list = [li for li in difflib.ndiff(arr1, arr2) if li[0] != " "]
     return output_list
@@ -32,4 +37,4 @@ def _strip_comments(line):
     if len(line) > 0 and line[0] == ";":
         return "; ---"
     else:
-        return line
+        return line.split(";", 1)[0]
