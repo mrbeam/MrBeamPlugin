@@ -683,6 +683,9 @@ $(function () {
             self.gcodefiles.requestData({
                 switchToPath: self.gcodefiles.currentPath(),
             });
+            console.log(
+                "SELENIUM_CONVERSION_FINISHED:" + JSON.stringify(payload)
+            );
         };
 
         // filter function for the file list. Easier to modify than the original listHelper(). listHelper is still used for sorting.
