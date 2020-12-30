@@ -45,6 +45,9 @@ SELECTOR_MATERIAL_THICKNESS = {
     "felt": "#material_thickness_3",
     "engrave": "#material_thickness_-1",
 }
+SELECTOR_CONVERSION_PROGRESS_HEADLINE = (
+    "#dialog_vector_graphics_conversion > div.modal-header > h3:nth-child(2)"
+)
 
 
 def load_webapp(driver, baseUrl):
@@ -328,13 +331,14 @@ def start_conversion(driver, material="felt"):
 def wait_for_conversion_started(driver, log_callback):
     # log message Example
     # Conversion started. {\\"gcode_location\\":\\"local\\",\\"gcode\\":\\"httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.17.gco\\",\\"stl\\":\\"local/temp.svg\\",\\"time\\":1.9296720027923584,\\"stl_location\\":\\"local\\"}"', u'timestamp': 1609170424979, u'level': u'DEBUG'}
-    pattern = r"(.+\"Conversion started.\")(?P<payload>.+)\""
+    # pattern = r"(.+\"Conversion started.)(?P<payload>.+)\""
+    pattern = r"(.+\"SELENIUM_CONVERSION_FINISHED:)(?P<payload>.+)\""
     regex = re.compile(pattern)
     msg = wait_for_console_msg(
         driver,
         pattern,
         log_callback,
-        message="Listening on console.log for 'Conversion started.' ...",
+        message="Listening on console.log for {} ...".format(pattern),
     )
     if msg:
         m = regex.match(msg[u"message"])
@@ -346,34 +350,16 @@ def wait_for_conversion_started(driver, log_callback):
         return None
 
 
-def wait_for_slicing_done(driver):
+def wait_for_ready_to_laser_dialog(driver):
     wait = WebDriverWait(driver, 20, poll_frequency=0.5)
     js = "return mrbeam.mrb_state.rtl_mode"
     wait.until(
         CEC.js_expression_true(js),
         message="Waiting for js '{}' to return true...".format(js),
     )
-
-
-# def wait_for_slicing_done_via_console_log(driver, log_callback):
-#    # log message Example
-#    # Got event SlicingDone with payload: {\\"gcode_location\\":\\"local\\",\\"gcode\\":\\"httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.17.gco\\",\\"stl\\":\\"local/temp.svg\\",\\"time\\":1.9296720027923584,\\"stl_location\\":\\"local\\"}"', u'timestamp': 1609170424979, u'level': u'DEBUG'}
-#    pattern = r"(.+\"Got event SlicingDone with payload: )(?P<payload>.+)\""
-#    regex = re.compile(pattern)
-#    msg = wait_for_console_msg(
-#        driver,
-#        pattern,
-#        log_callback,
-#        message="Listening on console.log for SlicingDone event...",
-#    )
-#    if msg:
-#        m = regex.match(msg[u"message"])
-#        payload = m.group("payload")
-#        payload = payload.replace("\\", "")
-#        d = json.loads(payload)
-#        return d
-#    else:
-#        return None
+    js = "return mrbeam.viewModels.readyToLaserViewModel.gcodeFile"
+    gcode = driver.execute_script(js)
+    return gcode
 
 
 def wait_for_console_msg(driver, pattern, log_callback, message=""):

@@ -1939,9 +1939,6 @@ $(function () {
                 self.svg = undefined;
                 $("#dialog_vector_graphics_conversion").modal("hide");
             }
-            console.log(
-                "SELENIUM_CONVERSION_FINISHED:" + JSON.stringify(payload)
-            );
         };
 
         self.onEventSettingsUpdated = function () {
