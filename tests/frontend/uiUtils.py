@@ -91,15 +91,8 @@ def login(driver, user="dev@mr-beam.org", pw="a"):
 def loginOctoprint_1_4(driver, user, pw):
 
     wait = WebDriverWait(driver, 3, poll_frequency=0.5)
-    # 3 | click | id=login_screen_email_address_in |
-    inputUser = driver.find_element(By.ID, "login-user")
-    inputUser.clear()
-    inputUser.send_keys(user)
-    # 4 | click | id=login_screen_password_in |
-    inputPassword = driver.find_element(By.ID, "login-password")
-    inputPassword.clear()
-    inputPassword.send_keys(pw)
-    # 5 | click | id=login_screen_login_btn |
+    inputUser = _fill_input(driver, "#login-user", user)
+    inputPassword = _fill_input(driver, "#login-password", pw)
     driver.find_element(By.ID, "login-button").click()
     skip_loading_animation(driver)
 
@@ -110,15 +103,8 @@ def loginOctoprint_1_4(driver, user, pw):
 def loginOctoprint_1_3(driver, user, pw):
     wait = WebDriverWait(driver, 10)
 
-    # 3 | click | id=login_screen_email_address_in |
-    inputUser = driver.find_element(By.ID, "login_screen_email_address_in")
-    inputUser.clear()
-    inputUser.send_keys(user)
-    # 4 | click | id=login_screen_password_in |
-    inputPassword = driver.find_element(By.ID, "login_screen_password_in")
-    inputPassword.clear()
-    inputPassword.send_keys(pw)
-    # 5 | click | id=login_screen_login_btn |
+    inputUser = _fill_input(driver, "#login_screen_email_address_in", user)
+    inputPassword = _fill_input(driver, "#login_screen_password_in", pw)
     driver.find_element(By.ID, "login_screen_login_btn").click()
     login_dialog = wait.until(
         EC.invisibility_of_element_located((By.ID, "loginscreen_dialog"))
@@ -199,7 +185,7 @@ def add_svg_url(driver, url):
           typePath: ["model", "svg"],
           weight: 1
         }};
-        vm.placeSVG(file, function(id){{ console.log(id); alert(id); }});
+        vm.placeSVG(file, function(id){{ alert(id); }});
     """.format(
         url
     )
@@ -218,6 +204,7 @@ def add_svg_url(driver, url):
     alert.dismiss()
     listElem = wait.until(EC.visibility_of_element_located((By.ID, placedSvgId)))
     # svgElem = wait.until(EC.visibility_of_element_located((By.ID, placedSvgId+'-0'))) # does not work. exec js instead?
+    return listElem
 
 
 def get_bbox(driver):
@@ -241,7 +228,6 @@ def get_bbox(driver):
     # u'path': [[u'M', 76.14178466796875, 51.783084869384766], [u'l', 159.1521759033203, 0], [u'l', 0, 251.14407348632812], [u'l', -159.1521759033203, 0], [u'z']],
     # u'y2': 302.9271583557129,
     # u'y': 51.783084869384766}
-
     return bbox
 
 
@@ -290,7 +276,31 @@ def select_material(driver, material="felt", cut=True, engrave=True):
     materialThickness.click()
 
     # enable cutting if desired and material does not provide settings
-
+    _click_on(driver, "#parameter_assignment_show_advanced_settings_cb")
+    el = driver.find_element(
+        By.CSS_SELECTOR, "#engrave_job div.not_possible_on_this_material > a"
+    )
+    if el.is_displayed():
+        el.click()
+    el = driver.find_element(
+        By.CSS_SELECTOR, "#first_job div.not_possible_on_this_material > a"
+    )
+    if el.is_displayed():
+        el.click()
+    _fill_input(driver, "#svgtogcode_img_intensity_white", "7")
+    _fill_input(driver, "#svgtogcode_img_intensity_black", "77")
+    _fill_input(driver, "#svgtogcode_img_feedrate_white", "888")
+    _fill_input(driver, "#svgtogcode_img_feedrate_black", "88")
+    _fill_input(driver, "#parameter_assignment_pierce_time_in", "1")
+    _fill_input(driver, "#svgtogcode_img_line_dist", "1")
+    _fill_input(driver, "#first_job input.param_intensity", "99")
+    _fill_input(driver, "#first_job input.param_feedrate", "999")
+    _fill_input(driver, "#first_job input.param_passes", "1")
+    # _fill_input(driver, '#first_job input.compressor_input', '1')
+    _click_on(driver, "#parameter_assignment_engraving_mode_precise_btn")
+    driver.execute_script("$('#engrave_job input[name=overshoot_type]').click()")
+    # _click_on(driver, '#engrave_job input[name=overshoot_type]')
+    _fill_input(driver, "#first_job input.param_piercetime", "1")
     # enable engraving if desired and material does not provide settings
 
     # return success
@@ -431,3 +441,21 @@ def clear_working_area(driver):
     assert designCount == 0, "WorkingArea not empty after clear(), was " + str(
         designCount
     )
+
+
+def _fill_input(driver, selector, string):
+    input = driver.find_element(By.CSS_SELECTOR, selector)
+    # input.clear()
+    input.send_keys(Keys.CONTROL + "a")
+    # time.sleep(1.2)
+    input.send_keys(string)
+    # time.sleep(1.2)
+    return input
+
+
+def _click_on(driver, selector):
+    el = WebDriverWait(driver, 10, poll_frequency=0.5).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, selector)),
+        message="Waiting for {} to be clickable".format(selector),
+    )
+    el.click()

@@ -50,6 +50,9 @@ class TestFillingsInDefs:
         # close notifications
         uiUtils.close_notifications(self.driver)
 
+        # ensure homing cycle
+        uiUtils.ensure_device_homed(self.driver)
+
         # add a remote svg
         svgUrl = self.resource_base + self.critical_svg
         uiUtils.add_svg_url(self.driver, svgUrl)
@@ -115,7 +118,7 @@ class TestFillingsInDefs:
         diff = gcodeUtils.compare(generated, expected)
         assert (
             len(diff) == 0
-        ), "GCode mismatch! {} lines are different. First 30 changes:\n\n{}".format(
+        ), "GCode mismatch! {} lines are different. First 30 changes (- generated / + expected):\n\n{}".format(
             len(diff), "\n".join(diff[:30])
         )
 
