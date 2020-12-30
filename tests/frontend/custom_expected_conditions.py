@@ -31,7 +31,7 @@ class document_ready(object):
 
     def __init__(self):
         self.log = logging.getLogger()
-        self.js = "return document.readyState === 'complete'"
+        self.js = "return document.readyState === 'complete';"
 
     def __call__(self, driver):
         fullyLoaded = driver.execute_script(self.js)
@@ -39,9 +39,9 @@ class document_ready(object):
 
 
 class js_expression_true(object):
-    """An expectation for checking that page has fully loaded.
+    """An expectation for checking a particular js expression value.
 
-    returns the WebElement once it has the particular css class
+    returns the js return value
     """
 
     def __init__(self, js):
@@ -49,6 +49,7 @@ class js_expression_true(object):
         self.js = js
 
     def __call__(self, driver):
+        # self.log.info(self.js+" = {}".format(driver.execute_script("return mrbeam.mrb_state;")))
         evaluation = driver.execute_script(self.js)
         return evaluation
 
@@ -78,7 +79,7 @@ class console_log_contains(object):
             self.log_callback(logs)
         # self.log.debug("got {} console log lines".format(len(logs)))
         for entry in logs:
-            self.log.debug("__{}: {}".format(entry[u"level"], entry[u"message"]))
+            # self.log.debug("__{}: {}".format(entry[u"level"], entry[u"message"]))
 
             if self.regex.match(entry[u"message"]):
                 return entry
