@@ -49,33 +49,35 @@ SELECTOR_MATERIAL_THICKNESS = {
 
 def load_webapp(driver, baseUrl):
     # init
-    wait = WebDriverWait(driver, 10, poll_frequency=1.0)
+    wait = WebDriverWait(driver, 10, poll_frequency=0.5)
 
     # Step # | name | target | value
     # 1 | open | / |
     driver.get(baseUrl + "?" + str(time.time()))
     # 2 | setWindowSize | 1280x800 |
     driver.set_window_size(1280, 800)
+
     loading_overlay = wait.until(
-        EC.visibility_of_element_located((By.ID, "loading_overlay"))
+        CEC.document_ready(), "Waiting for document.readyState == 'complete'"
     )
-    body = wait.until(
-        CEC.element_has_css_class(
-            (By.TAG_NAME, "body"), "run_loading_overlay_animation"
-        )
-    )
-    loading_overlay.click()
-    loading_overlay = wait.until(
-        EC.invisibility_of_element_located((By.ID, "loading_overlay"))
-    )
+
+    modernLogin = isOctoPrint_1_4(driver)
+    if not modernLogin:
+        skip_loading_animation(driver)
+
     versions = frontendTestUtils.get_versions(driver)
     logging.getLogger().info("Testing {}".format(versions))
     return versions
 
 
+def isOctoPrint_1_4(driver):
+    # js = 'return mrbeam.isOctoPrintVersionMin("1.4")'
+    js = 'return (document.title == "OctoPrint Login")'
+    return driver.execute_script(js)
+
+
 def login(driver, user="dev@mr-beam.org", pw="a"):
-    js = 'return mrbeam.isOctoPrintVersionMin("1.4")'
-    useModernLogin = driver.execute_script(js)
+    useModernLogin = isOctoPrint_1_4(driver)
     # logging.getLogger().debug("useModern... {}".format(useModernLogin))
     if useModernLogin:
         return loginOctoprint_1_4(driver, user, pw)
@@ -84,21 +86,20 @@ def login(driver, user="dev@mr-beam.org", pw="a"):
 
 
 def loginOctoprint_1_4(driver, user, pw):
-    # TODO: port to Octoprint 1.4
-    wait = WebDriverWait(driver, 10)
+
+    wait = WebDriverWait(driver, 3, poll_frequency=0.5)
     # 3 | click | id=login_screen_email_address_in |
-    inputUser = driver.find_element(By.ID, "login_screen_email_address_in")
+    inputUser = driver.find_element(By.ID, "login-user")
     inputUser.clear()
     inputUser.send_keys(user)
     # 4 | click | id=login_screen_password_in |
-    inputPassword = driver.find_element(By.ID, "login_screen_password_in")
+    inputPassword = driver.find_element(By.ID, "login-password")
     inputPassword.clear()
     inputPassword.send_keys(pw)
     # 5 | click | id=login_screen_login_btn |
-    driver.find_element(By.ID, "login_screen_login_btn").click()
-    login_dialog = wait.until(
-        EC.invisibility_of_element_located((By.ID, "loginscreen_dialog"))
-    )
+    driver.find_element(By.ID, "login-button").click()
+    skip_loading_animation(driver)
+
     js = "return OctoPrint.options.apikey;"
     return driver.execute_script(js)
 
@@ -121,6 +122,26 @@ def loginOctoprint_1_3(driver, user, pw):
     )
     js = "return OctoPrint.options.apikey;"
     return driver.execute_script(js)
+
+
+def skip_loading_animation(driver):
+    wait = WebDriverWait(driver, 60, poll_frequency=0.5)
+    loading_overlay = wait.until(
+        EC.visibility_of_element_located((By.ID, "loading_overlay")),
+        "Waiting for #loading_overlay to appear...",
+    )
+    body = wait.until(
+        CEC.element_has_css_class(
+            (By.TAG_NAME, "body"), "run_loading_overlay_animation"
+        ),
+        "Waiting for <body> to get class .run_loading_overlay_animation ...",
+    )
+    loading_overlay.click()
+    loading_overlay = wait.until(
+        EC.invisibility_of_element_located((By.ID, "loading_overlay")),
+        "Waiting for #loading_overlay to disappear...",
+    )
+    return body
 
 
 def close_notifications(driver):
@@ -304,16 +325,16 @@ def start_conversion(driver, material="felt"):
     driver.find_element(By.ID, "start_job_btn").click()
 
 
-def wait_for_slicing_done(driver, log_callback):
+def wait_for_conversion_started(driver, log_callback):
     # log message Example
-    # Got event SlicingDone with payload: {\\"gcode_location\\":\\"local\\",\\"gcode\\":\\"httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.17.gco\\",\\"stl\\":\\"local/temp.svg\\",\\"time\\":1.9296720027923584,\\"stl_location\\":\\"local\\"}"', u'timestamp': 1609170424979, u'level': u'DEBUG'}
-    pattern = r"(.+\"Got event SlicingDone with payload: )(?P<payload>.+)\""
+    # Conversion started. {\\"gcode_location\\":\\"local\\",\\"gcode\\":\\"httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.17.gco\\",\\"stl\\":\\"local/temp.svg\\",\\"time\\":1.9296720027923584,\\"stl_location\\":\\"local\\"}"', u'timestamp': 1609170424979, u'level': u'DEBUG'}
+    pattern = r"(.+\"Conversion started.\")(?P<payload>.+)\""
     regex = re.compile(pattern)
     msg = wait_for_console_msg(
         driver,
         pattern,
         log_callback,
-        message="Listening on console.log for SlicingDone event...",
+        message="Listening on console.log for 'Conversion started.' ...",
     )
     if msg:
         m = regex.match(msg[u"message"])
@@ -325,12 +346,61 @@ def wait_for_slicing_done(driver, log_callback):
         return None
 
 
+def wait_for_slicing_done(driver):
+    wait = WebDriverWait(driver, 20, poll_frequency=0.5)
+    js = "return mrbeam.mrb_state.rtl_mode"
+    wait.until(
+        CEC.js_expression_true(js),
+        message="Waiting for js '{}' to return true...".format(js),
+    )
+
+
+# def wait_for_slicing_done_via_console_log(driver, log_callback):
+#    # log message Example
+#    # Got event SlicingDone with payload: {\\"gcode_location\\":\\"local\\",\\"gcode\\":\\"httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.17.gco\\",\\"stl\\":\\"local/temp.svg\\",\\"time\\":1.9296720027923584,\\"stl_location\\":\\"local\\"}"', u'timestamp': 1609170424979, u'level': u'DEBUG'}
+#    pattern = r"(.+\"Got event SlicingDone with payload: )(?P<payload>.+)\""
+#    regex = re.compile(pattern)
+#    msg = wait_for_console_msg(
+#        driver,
+#        pattern,
+#        log_callback,
+#        message="Listening on console.log for SlicingDone event...",
+#    )
+#    if msg:
+#        m = regex.match(msg[u"message"])
+#        payload = m.group("payload")
+#        payload = payload.replace("\\", "")
+#        d = json.loads(payload)
+#        return d
+#    else:
+#        return None
+
+
 def wait_for_console_msg(driver, pattern, log_callback, message=""):
-    wait = WebDriverWait(driver, 20, poll_frequency=2.0)
+    wait = WebDriverWait(driver, 20, poll_frequency=0.5)
     logEntry = wait.until(
         CEC.console_log_contains(pattern, log_callback), message=message
     )
     return logEntry
+
+
+def ensure_device_homed(driver):
+    js = """
+        let isHomed = mrbeam.mrb_state.is_homed;
+        if(!isHomed){
+            mrbeam.viewModels.workingAreaViewModel.performHomingCycle('position_buttons');
+        }
+    """
+    driver.execute_script(js)
+    wait = WebDriverWait(driver, 20, poll_frequency=0.5)
+    el = wait.until(
+        EC.text_to_be_present_in_element(
+            (By.CSS_SELECTOR, "#mrb_state_header > span:nth-child(2) > span"),
+            "Operational",
+        ),
+        "Waiting for homing cycle to finish...",
+    )
+    return el
 
 
 def cancel_job(driver):

@@ -83,9 +83,12 @@ class TestFillingsInDefs:
         # check gcode
         # payload example
         # {u'gcode_location': u'local', u'gcode': u'httpsmrbeam.github.iotest_rsccritical_designsFillings-in-defs.8.gco', u'stl': u'local/temp.svg', u'stl_location': u'local', u'time': 3.1736087799072266}
-        payload = uiUtils.wait_for_slicing_done(self.driver, self.append_logs)
+        payload = uiUtils.wait_for_conversion_started(self.driver, self.append_logs)
         gcodeUrl = baseurl + "/downloads/files/local/" + payload[u"gcode"]
         expUrl = self.resource_base + self.expected_gcode
+        self.log.info("gcodeUrl: " + gcodeUrl)
+
+        uiUtils.wait_for_slicing_done(self.driver)
 
         generated = gcodeUtils.get_gcode(gcodeUrl)
         self.log.info("GEN: " + generated[:50])

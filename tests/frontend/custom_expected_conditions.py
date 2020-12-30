@@ -23,10 +23,41 @@ class element_has_css_class(object):
             return False
 
 
-class console_log_contains(object):
-    """An expectation for checking that an element has a particular css class.
+class document_ready(object):
+    """An expectation for checking that page has fully loaded.
 
-    locator - used to find the element
+    returns the WebElement once it has the particular css class
+    """
+
+    def __init__(self):
+        self.log = logging.getLogger()
+        self.js = "return document.readyState === 'complete'"
+
+    def __call__(self, driver):
+        fullyLoaded = driver.execute_script(self.js)
+        return fullyLoaded
+
+
+class js_expression_true(object):
+    """An expectation for checking that page has fully loaded.
+
+    returns the WebElement once it has the particular css class
+    """
+
+    def __init__(self, js):
+        self.log = logging.getLogger()
+        self.js = js
+
+    def __call__(self, driver):
+        evaluation = driver.execute_script(self.js)
+        return evaluation
+
+
+class console_log_contains(object):
+    """An expectation for checking that console.log contains a message matching particular pattern.
+
+    pattern - used to match the log message
+    consumed_logs_callback - callback to do something / preserve the consumed logs
     returns the WebElement once it has the particular css class
     """
 
@@ -47,7 +78,7 @@ class console_log_contains(object):
             self.log_callback(logs)
         # self.log.debug("got {} console log lines".format(len(logs)))
         for entry in logs:
-            # self.log.debug("Entry {}".format(entry))
+            self.log.debug("__{}: {}".format(entry[u"level"], entry[u"message"]))
 
             if self.regex.match(entry[u"message"]):
                 return entry
