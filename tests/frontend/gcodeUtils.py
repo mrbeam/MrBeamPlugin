@@ -1,3 +1,4 @@
+import os
 import logging
 import difflib
 
@@ -5,15 +6,28 @@ import difflib
 import urllib
 
 
-def get_gcode(url):
-    f = urllib.urlopen(url)
-    httpCode = f.getcode()
-    if httpCode != 200:
-        logging.getLogger().error(
-            "HTTP Code {} while fetching resource {}".format(httpCode, url)
+def get_gcode(url, local=None):
+    log = logging.getLogger()
+    content = ""
+    if local != None and os.path.isfile(local):
+        with open(local, "r") as file:
+            content = file.read()
+        log.info("GCode fetched from {}".format(local))
+        return content
+    else:
+        f = urllib.urlopen(url)
+        httpCode = f.getcode()
+        if httpCode != 200:
+            logging.getLogger().error(
+                "HTTP Code {} while fetching resource {}".format(httpCode, url)
+            )
+            return ""
+        log.info(
+            "GCode fetched from {} as local file '{}' was not readable.".format(
+                url, local
+            )
         )
-        return ""
-    content = f.read()
+        content = f.read()
     return content
 
 

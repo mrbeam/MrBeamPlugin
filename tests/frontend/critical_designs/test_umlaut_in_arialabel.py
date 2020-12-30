@@ -31,7 +31,7 @@ class TestFillingsInDefs:
     def append_logs(self, logs):
         self.browserLog.extend(logs)
 
-    def test_convert_svg(self, baseurl):
+    def test_convert_svg(self, baseurl, rsc_folder):
 
         # load ui
         try:
@@ -51,7 +51,8 @@ class TestFillingsInDefs:
         uiUtils.close_notifications(self.driver)
 
         # ensure homing cycle
-        uiUtils.ensure_device_homed(self.driver)
+        if not baseurl.startswith("http://localhost:"):
+            uiUtils.ensure_device_homed(self.driver)
 
         # add a remote svg
         svgUrl = self.resource_base + self.critical_svg
@@ -106,7 +107,8 @@ class TestFillingsInDefs:
         )
 
         expUrl = self.resource_base + self.expected_gcode
-        expected = gcodeUtils.get_gcode(expUrl)
+        local = rsc_folder + "/critical_designs/" + self.expected_gcode
+        expected = gcodeUtils.get_gcode(expUrl, local=local)
         linesExp = len(expected)
         self.log.info("EXP: " + expected[:50])
         assert (
