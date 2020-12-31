@@ -20,8 +20,3 @@ class TestElementsWithoutId(BaseProcedure):
         self.driver = webdriverUtils.get_chrome_driver()
         self.browserLog = []
         self.testEnvironment = {}
-
-        # self.driver = webdriver.Chrome(service_log_path="/dev/null")
-        self.driver = webdriverUtils.get_chrome_driver()
-        self.browserLog = []
-        self.testEnvironment = {}

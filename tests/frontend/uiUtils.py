@@ -139,31 +139,65 @@ def close_notifications(driver):
     driver.execute_script(js)
 
 
-def add_quick_shape_heart(driver, w="99", h="77"):
-    wait = WebDriverWait(driver, 10)
+def add_quick_shape_rect(driver, w=99, h=77, r=0, stroke=True, fill=False):
+    _click_on(driver, "#working_area_tab_shape_btn")
+    _click_on(driver, "#shape_tab_link_rect")
+    _fill_input(driver, "#quick_shape_rect_w", str(w))
+    _fill_input(driver, "#quick_shape_rect_h", str(h))
+    _fill_input(driver, "#quick_shape_rect_radius", str(r))
+    _set_checkbox(driver, "#quick_shape_stroke", stroke)
+    _set_checkbox(driver, "#quick_shape_fill", fill)
+    _click_on(driver, "#quick_shape_shape_done_btn")
+    quickShapeElement, listElement = get_design(driver)
+    return quickShapeElement, listElement
 
-    # 12 | click | id=working_area_tab_shape_btn |
-    driver.find_element(By.ID, "working_area_tab_shape_btn").click()
-    # 13 | click | css=#shape_tab_link_heart > .icon |
-    element = wait.until(EC.element_to_be_clickable((By.ID, "shape_tab_link_heart")))
-    element.click()
-    # 14 | fillInput | id=quick_shape_heart_w |
-    inputW = driver.find_element(By.ID, "quick_shape_heart_w")
-    inputW.clear()
-    inputW.send_keys(w)
-    # 15 | fillInput | id=quick_shape_heart_w |
-    inputW = driver.find_element(By.ID, "quick_shape_heart_h")
-    inputW.clear()
-    inputW.send_keys(h)
-    # 16 | click | id=quick_shape_shape_done_btn |
-    driver.find_element(By.ID, "quick_shape_shape_done_btn").click()
-    qsSvgElement = wait.until(
-        EC.visibility_of_element_located(
-            (By.CSS_SELECTOR, "#userContent g.userSVG._freeTransformInProgress")
-        )
+
+def add_quick_shape_circle(driver, r=77, stroke=True, fill=False):
+    _click_on(driver, "#working_area_tab_shape_btn")
+    _click_on(driver, "#shape_tab_link_circle")
+    _fill_input(driver, "#quick_shape_circle_radius", str(r))
+    _set_checkbox(driver, "#quick_shape_stroke", stroke)
+    _set_checkbox(driver, "#quick_shape_fill", fill)
+    _click_on(driver, "#quick_shape_shape_done_btn")
+    quickShapeElement, listElement = get_design(driver)
+    return quickShapeElement, listElement
+
+
+def add_quick_shape_star(driver, corners=5, r=77, sharpness=0.3):
+    _click_on(driver, "#working_area_tab_shape_btn")
+    _click_on(driver, "#shape_tab_link_star")
+    _fill_input(driver, "#quick_shape_star_radius", str(r))
+    _fill_input(driver, "#quick_shape_star_corners", str(corners))
+    _fill_input(driver, "#quick_shape_star_sharpness", str(sharpness))
+    _click_on(driver, "#quick_shape_shape_done_btn")
+    quickShapeElement, listElement = get_design(driver)
+    return quickShapeElement, listElement
+
+
+def get_design(driver):
+    wait = WebDriverWait(driver, 10, poll_frequency=0.5)
+    designElement = wait.until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, "#userContent g.userSVG")),
+        message="Waiting for design to appear on working area.",
     )
+    listId = designElement.get_attribute("mb:origin")
+    listElement = driver.find_element_by_id(listId)
+    logging.getLogger().info("Found design #{}".format(listId))
+    return (designElement, listElement)
 
-    return qsSvgElement
+
+def get_paths(driver, selector):
+    js = """
+        let dAttrs = [];
+        const elements = snap.selectAll('{} path');
+        for(let i = 0; i < elements.length; i++){{
+            dAttrs.push(elements[i].attr('d'));
+        }}
+        return dAttrs;
+    """.format(
+        selector
+    )
+    return driver.execute_script(js)
 
 
 def add_svg_url(driver, url):
@@ -233,15 +267,10 @@ def get_bbox(driver):
 
 def select_material(driver, material="felt", cut=True, engrave=True):
     # ensure conversion dialog is open
-    try:
-        element = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located(
-                (By.ID, "dialog_vector_graphics_conversion")
-            )
-        )
-    finally:
-        # log conversion dialog not visible: Did cou call start conversion?
-        pass
+    element = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "dialog_vector_graphics_conversion")),
+        message="Conversion dialog not visible: Did cou call start conversion?",
+    )
 
     # ensure no material is selected
     isMaterialSelected = driver.execute_script(
@@ -446,6 +475,7 @@ def clear_working_area(driver):
 def _fill_input(driver, selector, string):
     input = driver.find_element(By.CSS_SELECTOR, selector)
     # input.clear()
+    # time.sleep(1.2)
     input.send_keys(Keys.CONTROL + "a")
     # time.sleep(1.2)
     input.send_keys(string)
@@ -459,3 +489,12 @@ def _click_on(driver, selector):
         message="Waiting for {} to be clickable".format(selector),
     )
     el.click()
+
+
+def _set_checkbox(driver, selector, checked=True):
+    el = WebDriverWait(driver, 10, poll_frequency=0.5).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, selector)),
+        message="Waiting for {} to be clickable".format(selector),
+    )
+    if el.get_attribute("checked") != checked:
+        el.click()
