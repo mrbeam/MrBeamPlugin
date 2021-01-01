@@ -163,12 +163,29 @@ def add_quick_shape_circle(driver, r=77, stroke=True, fill=False):
     return quickShapeElement, listElement
 
 
-def add_quick_shape_star(driver, corners=5, r=77, sharpness=0.3):
+def add_quick_shape_star(
+    driver, corners=5, r=77, sharpness=0.3, stroke=True, fill=False
+):
     _click_on(driver, "#working_area_tab_shape_btn")
     _click_on(driver, "#shape_tab_link_star")
     _fill_input(driver, "#quick_shape_star_radius", str(r))
     _fill_input(driver, "#quick_shape_star_corners", str(corners))
     _fill_input(driver, "#quick_shape_star_sharpness", str(sharpness))
+    _set_checkbox(driver, "#quick_shape_stroke", stroke)
+    _set_checkbox(driver, "#quick_shape_fill", fill)
+    _click_on(driver, "#quick_shape_shape_done_btn")
+    quickShapeElement, listElement = get_design(driver)
+    return quickShapeElement, listElement
+
+
+def add_quick_shape_heart(driver, w=99, h=55, magic=0.4, stroke=True, fill=False):
+    _click_on(driver, "#working_area_tab_shape_btn")
+    _click_on(driver, "#shape_tab_link_heart")
+    _fill_input(driver, "#quick_shape_heart_w", str(w))
+    _fill_input(driver, "#quick_shape_heart_h", str(h))
+    _fill_input(driver, "#quick_shape_heart_lr", str(magic))
+    _set_checkbox(driver, "#quick_shape_stroke", stroke)
+    _set_checkbox(driver, "#quick_shape_fill", fill)
     _click_on(driver, "#quick_shape_shape_done_btn")
     quickShapeElement, listElement = get_design(driver)
     return quickShapeElement, listElement
@@ -474,12 +491,16 @@ def clear_working_area(driver):
 
 def _fill_input(driver, selector, string):
     input = driver.find_element(By.CSS_SELECTOR, selector)
-    # input.clear()
-    # time.sleep(1.2)
-    input.send_keys(Keys.CONTROL + "a")
-    # time.sleep(1.2)
-    input.send_keys(string)
-    # time.sleep(1.2)
+    # slider
+    if input.get_attribute("type") == "range":
+        _set_range(driver, input, string)
+    else:
+        # input.clear()
+        # time.sleep(1.2)
+        input.send_keys(Keys.CONTROL + "a")
+        # time.sleep(1.2)
+        input.send_keys(string)
+        # time.sleep(1.2)
     return input
 
 
@@ -496,5 +517,71 @@ def _set_checkbox(driver, selector, checked=True):
         EC.element_to_be_clickable((By.CSS_SELECTOR, selector)),
         message="Waiting for {} to be clickable".format(selector),
     )
-    if el.get_attribute("checked") != checked:
+    isChecked = el.get_attribute("checked") == "true"
+    if isChecked != checked:
         el.click()
+
+
+def _set_range(driver, el, val):
+    # The adjustment helper to drag the slider thumb
+    def adjust(deltax):
+        if deltax < 0:
+            deltax = int(math.floor(min(-1, deltax)))
+        else:
+            deltax = int(math.ceil(max(1, deltax)))
+        ac = ActionChains(driver)
+        ac.click_and_hold(None)
+        ac.move_by_offset(deltax, 0)
+        ac.release(None)
+        ac.perform()
+
+    minval = float(el.get_attribute("min") or 0)
+    maxval = float(el.get_attribute("max") or 100)
+    v = max(0, min(1, (float(val) - minval) / (maxval - minval)))
+    width = el.size["width"]
+    target = float(width) * v
+
+    ac = ActionChains(driver)
+
+    # drag from min to max value, to ensure oninput event
+    ac.move_to_element_with_offset(el, 0, 1)
+    ac.click_and_hold()
+    ac.move_by_offset(width, 0)
+
+    # drag to the calculated position
+    ac.move_to_element_with_offset(el, target, 1)
+
+    ac.release()
+    ac.perform()
+
+    # perform a binary search and adjust the slider thumb until the value matches
+    while True:
+        curval = el.get_attribute("value")
+        if float(curval) == float(val):
+            return True
+        prev_guess = target
+        if float(curval) < float(val):
+            minguess = target
+            target += (maxguess - target) / 2
+        else:
+            maxguess = target
+            target = minguess + (target - minguess) / 2
+        deltax = target - prev_guess
+        if abs(deltax) < 0.5:
+            break  # cannot find a way, fallback to javascript.
+
+        time.sleep(0.1)  # Don't consume CPU too much
+
+        adjust(deltax)
+
+    # Finally, if the binary search algoritm fails to achieve the final value
+    # we'll revert to the javascript method so at least the value will be changed
+    # even though the browser events wont' be triggered.
+
+    # Fallback
+    driver.execute_script("arguments[0].value=arguments[1];", el, val)
+    curval = el.get_attribute("value")
+    if float(curval) == float(val):
+        return True
+    else:
+        raise Exception("Can't set value %f for the element." % val)
