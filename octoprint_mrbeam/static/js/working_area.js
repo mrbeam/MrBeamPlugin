@@ -2265,11 +2265,12 @@ $(function () {
 
                     var fx = width / widthVBox;
                     var fy = height / heightVBox;
+                    const finalF = Math.min(fx, fy);
                     var dx = offsetVBoxX * fx;
                     var dy = offsetVBoxY * fy;
                     return [
-                        [fx, 0, 0],
-                        [0, fy, 0],
+                        [finalF, 0, 0],
+                        [0, finalF, 0],
                         [dx, dy, 1],
                     ];
                 }
