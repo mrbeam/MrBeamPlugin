@@ -2489,14 +2489,14 @@ $(function () {
             content.append(userContent);
 
             // remove all items maked with deleteBeforeRendering class
-            var dels = compSvg.selectAll(".deleteBeforeRendering");
-            if (dels && dels.length > 0) {
-                for (var i = 0; i < dels.length; i++) {
-                    dels[i].remove();
-                }
-            }
+            //            var dels = compSvg.selectAll(".deleteBeforeRendering");
+            //            if (dels && dels.length > 0) {
+            //                for (var i = 0; i < dels.length; i++) {
+            //                    dels[i].remove();
+            //                }
+            //            }
             // TODO why not shorter?
-            // compSvg.selectAll('.deleteBeforeRendering').remove();
+            compSvg.selectAll(".deleteBeforeRendering").remove();
 
             // embed the fonts as dataUris
             if (userContent.selectAll(".userText").length > 0) {
@@ -2508,13 +2508,12 @@ $(function () {
                 );
             }
 
-            self.renderInfill(
+            self.rasterInfill(
                 compSvg,
                 namespaces,
                 wPT,
                 hPT,
                 fillAreas,
-                engraveStroke,
                 wMM,
                 hMM,
                 pxPerMM,
@@ -2923,20 +2922,18 @@ $(function () {
             }
         };
 
-        // render the infill and inject it as an image into the svg
-        self.renderInfill = function (
+        // raster the infill and inject it as an image into the svg
+        self.rasterInfill = function (
             svg,
             namespaces,
             svgWidthPT,
             svgHeightPT,
             fillAreas,
-            engraveStroke,
             wMM,
             hMM,
             pxPerMM,
             callback
         ) {
-            //TODO engraveStroke use it and make it work
             var tmpSvg = self.getNewSvg("tmpSvg", svgWidthPT, svgHeightPT);
             var attrs = {};
             _.merge(attrs, namespaces);

@@ -19,13 +19,12 @@
 
 Snap.plugin(function (Snap, Element, Paper, global) {
     /**
-     * @param {elem} elem start point
+     * @param {boolean} fillPaths true if filledPaths should be rastered
      *
-     * @returns {path}
+     * @returns {set} set of elements to be rastered.
      */
 
     Element.prototype.removeUnfilled = function (fillPaths) {
-        //todo check if remove of all elements with mb:color is also working
         var elem = this;
         var selection = [];
         var children = elem.children();
@@ -56,6 +55,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 selection.push(elem);
             } else {
                 if (fillPaths && elem.is_filled()) {
+                    elem.attr("stroke", "none");
                     selection.push(elem);
                 } else {
                     elem.remove();
