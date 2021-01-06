@@ -51,7 +51,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
-from octoprint_mrbeam.util import logExceptions
+from octoprint_mrbeam.util import logExceptions, dict_get
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
