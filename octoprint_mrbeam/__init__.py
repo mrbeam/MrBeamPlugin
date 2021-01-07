@@ -948,12 +948,12 @@ class MrBeamPlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
     def acl_wizard_api(self):
-        if not (
-            self.isFirstRun()
-            and self._user_manager.enabled
-            and not self._user_manager.has_been_customized()
-        ):
+        from octoprint.access import ADMIN_GROUP, USER_GROUP
+
+        if not (self.isFirstRun() and not self._user_manager.has_been_customized()):
             return make_response("Forbidden", 403)
+
+        self._user_manager.enable()  # Always enable user manager
 
         data = request.values
         if hasattr(request, "json") and request.json:
@@ -971,8 +971,13 @@ class MrBeamPlugin(
             self._logger.debug("acl_wizard_api() creating admin user: %s", data["user"])
             self._settings.global_set_boolean(["accessControl", "enabled"], True)
             self._user_manager.enable()
-            self._user_manager.addUser(
-                data["user"], data["pass1"], True, ["user", "admin"], overwrite=True
+            self._user_manager.add_user(
+                data["user"],
+                data["pass1"],
+                True,
+                [],
+                [USER_GROUP, ADMIN_GROUP],
+                overwrite=True,
             )
 
             # We activate the flag to ask for a review for new users

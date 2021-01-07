@@ -68,11 +68,16 @@ def set_support_user(plugin, support_mode):
     Does nothing if firstRun is True
     :param support_mode
     """
+    from octoprint.access import ADMIN_GROUP, USER_GROUP
 
     if support_mode:
         _logger.info("Enabling support_mode for user: %s", USER_NAME)
-        plugin._user_manager.addUser(
-            USER_NAME, USER_PW, active=True, roles=["user", "admin"], overwrite=True
+        plugin._user_manager.add_user(
+            USER_NAME,
+            USER_PW,
+            active=True,
+            groups=[USER_GROUP, ADMIN_GROUP],
+            overwrite=True,
         )
         plugin.setUserSetting(
             USER_NAME,
@@ -88,5 +93,5 @@ def set_support_user(plugin, support_mode):
         try:
             # raises UnknownUser exception if user not existing
             plugin._user_manager.remove_user(USER_NAME)
-        except:
+        except Exception:
             pass
