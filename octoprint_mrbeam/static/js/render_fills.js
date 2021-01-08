@@ -55,10 +55,60 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 selection.push(elem);
             } else {
                 if (fillPaths && elem.is_filled()) {
-                    elem.attr("stroke", "none");
+                    //                    elem.attr("stroke", "none");
                     selection.push(elem);
                 } else {
                     elem.remove();
+                }
+            }
+        }
+        return selection;
+    };
+
+    Element.prototype.markFilled = function (className, fillPaths) {
+        var elem = this;
+        var selection = [];
+        var children = elem.children();
+        if (elem.type === "desc") {
+            return [];
+        }
+
+        if (children.length > 0) {
+            var goRecursive =
+                elem.type !== "defs" && // ignore these tags
+                elem.type !== "clipPath" &&
+                elem.type !== "metadata" &&
+                elem.type !== "rdf:rdf" &&
+                elem.type !== "cc:work" &&
+                elem.type !== "sodipodi:namedview";
+
+            if (goRecursive) {
+                for (var i = 0; i < children.length; i++) {
+                    var child = children[i];
+                    selection = selection.concat(
+                        child.markFilled(className, fillPaths)
+                    );
+                }
+            }
+        } else {
+            if (
+                elem.type === "image" ||
+                elem.type === "text" ||
+                elem.type === "#text"
+            ) {
+                if (elem.type === "#text") {
+                    let parent = elem.parent();
+                    console.log("Parent of #text:", parent);
+                    parent.addClass(className);
+                    selection.push(parent);
+                } else {
+                    elem.addClass(className);
+                    selection.push(elem);
+                }
+            } else {
+                if (fillPaths && elem.is_filled()) {
+                    elem.addClass(className);
+                    selection.push(elem);
                 }
             }
         }
@@ -93,7 +143,51 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return false;
     };
 
-    Element.prototype.embedImage = function (callback) {
+    Element.prototype.embedImage = function () {
+        let elem = this;
+        if (elem.type !== "image") return;
+
+        let url = null;
+        if (elem.attr("xlink:href") !== null) {
+            url = elem.attr("xlink:href");
+        } else if (elem.attr("href") !== null) {
+            url = elem.attr("href");
+        }
+        if (url === null || url.startsWith("data:")) {
+            return;
+        }
+
+        let prom = loadImagePromise(url)
+            .then(function (image) {
+                var canvas = document.createElement("canvas");
+                canvas.width = image.naturalWidth; // or 'width' if you want a special/scaled size
+                canvas.height = image.naturalHeight; // or 'height' if you want a special/scaled size
+
+                canvas.getContext("2d").drawImage(image, 0, 0);
+
+                const ratio = getWhitePixelRatio(canvas);
+                console.log(
+                    `embedImage() white pixel ratio: ${(ratio * 100).toFixed(
+                        2
+                    )}%, total white pixel: ${
+                        canvas.width * canvas.height * ratio
+                    }, image:${image.src}`
+                );
+
+                var dataUrl = canvas.toDataURL("image/png");
+                elem.attr("href", dataUrl);
+                console.log("in then...", dataUrl);
+                canvas.remove();
+            })
+            .catch(function (error) {
+                console.error(
+                    `Slicing Error - embedImage: error while loading image: ${error}`
+                );
+            });
+        return prom;
+    };
+
+    Element.prototype.embedImage_XXX = function (callback) {
         var elem = this;
         if (elem.type !== "image") return;
 
@@ -158,14 +252,79 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         image.src = url;
     };
 
+    //    Element.prototype.embedImage = function (callback) {
+    //        var elem = this;
+    //        if (elem.type !== "image") return;
+    //
+    //        var url = elem.attr("href");
+    //        var image = new Image();
+    //
+    //        image.onload = function () {
+    //            var canvas = document.createElement("canvas");
+    //            canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
+    //            canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
+    //
+    //            canvas.getContext("2d").drawImage(this, 0, 0);
+    //
+    //            // count ratio of white pixel
+    //            var id = canvas
+    //                .getContext("2d")
+    //                .getImageData(0, 0, canvas.width, canvas.height).data;
+    //            var countWhite = 0;
+    //            var countNoneWhite = 0;
+    //            for (var p = 0; p < id.length; p += 4) {
+    //                id[p] == 255 &&
+    //                id[p + 1] == 255 &&
+    //                id[p + 2] == 255 &&
+    //                id[p + 3] == 255
+    //                    ? countWhite++
+    //                    : countNoneWhite++;
+    //            }
+    //            var ratio = countWhite / (countNoneWhite + countWhite);
+    //            console.log(
+    //                "embedImage() white pixel ratio: " +
+    //                    parseFloat(ratio * 100).toFixed(2) +
+    //                    "%, total white pixel: " +
+    //                    countWhite +
+    //                    ", image:" +
+    //                    this.src
+    //            );
+    //
+    //            var dataUrl = canvas.toDataURL("image/png");
+    //            elem.attr("href", dataUrl);
+    //            canvas.remove();
+    //            if (typeof callback === "function") {
+    //                console.log(
+    //                    "embedImage() " +
+    //                        canvas.width +
+    //                        "*" +
+    //                        canvas.height +
+    //                        " px, dataurl: " +
+    //                        getDataUriSize(dataUrl) +
+    //                        ", image: " +
+    //                        this.src
+    //                );
+    //                callback(elem.attr("id"));
+    //            }
+    //        };
+    //        image.onerror = function () {
+    //            console.error(
+    //                "Slicing Error - embedImage: error while loading image: " +
+    //                    this.src
+    //            );
+    //        };
+    //
+    //        image.src = url;
+    //    };
+
     Element.prototype.renderPNG = function (
         wPT,
         hPT,
         wMM,
         hMM,
         pxPerMM,
-        renderBBoxMM = null,
-        callback = null
+        renderBBoxMM = null
+        //        callback = null
     ) {
         var elem = this;
         //console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
@@ -255,81 +414,107 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             renderCanvas.height
         );
 
+        // TODO "preload" the quicktext fonts - otherwise async loading leads to unpredicted results.
+        //        var link = document.createElement('link');
+        //        link.rel = 'stylesheet';
+        //        link.type = 'text/css';
+        //        link.href = 'http://fonts.googleapis.com/css?family=Vast+Shadow';
+        //        document.getElementsByTagName('head')[0].appendChild(link);
+        //
+        //        // Trick from https://stackoverflow.com/questions/2635814/
+        //        var image = new Image();
+        //        image.src = link.href;
+        //        image.onerror = function () {
+        //            ctx.font = '50px "Vast Shadow"';
+        //            ctx.textBaseline = 'top';
+        //            ctx.fillText('Hello!', 20, 10);
+        //        };
+
         var source = new Image();
 
         // render SVG image to the canvas once it loads.
-        source.onload = function () {
-            const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
-            const cx = bbox.x * srcScale;
-            const cy = bbox.y * srcScale;
-            const cw = bbox.w * srcScale;
-            const ch = bbox.h * srcScale;
+        let prom = new Promise(function (resolve, reject) {
+            source.src = svgDataUri;
+            source.onload = resolve();
+            source.onerror = reject();
+        })
+            .then(
+                // after onload
+                function () {
+                    const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+                    const cx = bbox.x * srcScale;
+                    const cy = bbox.y * srcScale;
+                    const cw = bbox.w * srcScale;
+                    const ch = bbox.h * srcScale;
 
-            // drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
-            console.log(
-                "rasterizing: " +
-                    cw +
-                    "*" +
-                    ch +
-                    " @ " +
-                    cx +
-                    "," +
-                    cy +
-                    "(scale: " +
-                    srcScale +
-                    "+)"
-            );
-            renderCanvasContext.drawImage(
-                source,
-                cx,
-                cy,
-                cw,
-                ch,
-                0,
-                0,
-                renderCanvas.width,
-                renderCanvas.height
-            );
+                    // drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
+                    console.log(
+                        "rasterizing: " +
+                            cw +
+                            "*" +
+                            ch +
+                            " @ " +
+                            cx +
+                            "," +
+                            cy +
+                            "(scale: " +
+                            srcScale +
+                            "+)"
+                    );
+                    renderCanvasContext.drawImage(
+                        source,
+                        cx,
+                        cy,
+                        cw,
+                        ch,
+                        0,
+                        0,
+                        renderCanvas.width,
+                        renderCanvas.height
+                    );
 
-            // place fill bitmap into svg
-            var fillBitmap = renderCanvas.toDataURL("image/png");
-            console.info(
-                "renderPNG rendered dataurl has " + getDataUriSize(fillBitmap)
-            );
-            if (typeof callback === "function") {
-                callback(fillBitmap, bbox.x, bbox.y, bbox.w, bbox.h);
-            }
-            if (!MRBEAM_DEBUG_RENDERING) {
-                renderCanvas.remove();
-            }
-        };
-
-        // catch browsers without native svg support
-        source.onerror = function (e) {
-            //            var len = svgDataUri ? svgDataUri.length : -1;
-            var len = getDataUriSize(svgDataUri, "B");
-            var msg =
-                "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length: " +
-                len +
-                ")";
-            console.error(msg, e);
-            console.log(
-                "renderPNG ERR: original svgStr that failed to load: ",
-                svgStr
-            );
-            console.log(
-                "renderPNG ERR: svgDataUri that failed to load: ",
-                svgDataUri
-            );
-            new PNotify({
-                title: gettext("Conversion failed"),
-                text: msg,
-                type: "error",
-                hide: false,
+                    // place fill bitmap into svg
+                    const fillBitmap = renderCanvas.toDataURL("image/png");
+                    const size = getDataUriSize(fillBitmap);
+                    console.info("renderPNG rendered dataurl has " + size);
+                    //            if (typeof callback === "function") {
+                    //                callback(fillBitmap, bbox.x, bbox.y, bbox.w, bbox.h);
+                    //            }
+                    if (!MRBEAM_DEBUG_RENDERING) {
+                        renderCanvas.remove();
+                    }
+                    return { dataUrl: fillBitmap, size: size, bbox: bbox };
+                },
+                // after onerror
+                function () {
+                    // var len = svgDataUri ? svgDataUri.length : -1;
+                    var len = getDataUriSize(svgDataUri, "B");
+                    var msg =
+                        "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length: " +
+                        len +
+                        ")";
+                    console.error(msg, e);
+                    console.debug(
+                        "renderPNG ERR: original svgStr that failed to load: ",
+                        svgStr
+                    );
+                    console.debug(
+                        "renderPNG ERR: svgDataUri that failed to load: ",
+                        svgDataUri
+                    );
+                    new PNotify({
+                        title: gettext("Conversion failed"),
+                        text: msg,
+                        type: "error",
+                        hide: false,
+                    });
+                }
+            )
+            .catch(function (error) {
+                console.error(error);
             });
-        };
 
-        source.src = svgDataUri;
+        return prom;
     };
 
     function getDataUriSize(datauri, unit) {

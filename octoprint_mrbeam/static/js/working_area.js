@@ -2891,7 +2891,7 @@ $(function () {
             }
         };
 
-        self._embedAllImages = function (svg, callback) {
+        self._embedAllImages_old = function (svg, callback) {
             var allImages = svg.selectAll("image");
             var linkedImages = allImages.items.filter(function (i) {
                 if (i.attr("xlink:href") !== null) {
@@ -2922,9 +2922,24 @@ $(function () {
             }
         };
 
+        self._embedAllImages = async function (svg) {
+            // TODO... improve selector to catch href & xlink:href (https://stackoverflow.com/questions/23034283/is-it-possible-to-use-htmls-queryselector-to-select-by-xlink-attribute-in-an)
+            // var allImages snap.selectAll("#userContent image[*|href]");
+            var allImages = svg.selectAll("image");
+
+            await Promise.all(
+                allImages.items.map(async (data) => {
+                    const embedded = await data.embedImage();
+                    console.log("promise inside", embedded);
+                })
+            );
+
+            console.log("embed images promise all");
+        };
+
         // raster the infill and inject it as an image into the svg
         self.rasterInfill = function (
-            svg,
+            svg, // is compSvg reference
             namespaces,
             svgWidthPT,
             svgHeightPT,
@@ -2934,28 +2949,82 @@ $(function () {
             pxPerMM,
             callback
         ) {
-            var tmpSvg = self.getNewSvg("tmpSvg", svgWidthPT, svgHeightPT);
-            var attrs = {};
-            _.merge(attrs, namespaces);
-            attrs.viewBox = "0 0 " + wMM + " " + hMM;
-            tmpSvg.attr(attrs);
-            // get only filled items and embed the images
-            var userContent = svg.clone();
-            tmpSvg.append(userContent);
+            // mark all rastered elements
+            let marked = svg.markFilled("toRaster", fillAreas);
 
-            // copy defs for filters
-            var originalFilters = snap.selectAll("defs>filter");
-            var target = userContent.select("defs");
-            for (var i = 0; i < originalFilters.length; i++) {
-                var original_id = originalFilters[i].attr("id");
-                var clone = originalFilters[i].clone();
-                var destFilter = clone.appendTo(target);
-                // restore id to keep references working
-                destFilter.attr({ id: original_id });
+            // cluster overlapping
+            let clusterCount = 0;
+            let clusters = [];
+            for (let i = 0; i < marked.length; i++) {
+                let rasterEl = marked[i];
+                const bbox = rasterEl.get_total_bbox();
+                let match = false;
+                for (var j = 0; j < clusters.length; j++) {
+                    var cluster = clusters[j];
+                    if (Snap.path.isBBoxIntersect(cluster.bbox, bbox)) {
+                        match = true;
+                        cluster.bbox = Snap.path.merge_bbox(cluster.bbox, bbox); // TODO: not neccessary to merge. better check all bboxes
+                        cluster.elements.push(rasterEl);
+                        rasterEl.addClass("rasterCluster" + j);
+                    }
+                }
+                if (match === false) {
+                    rasterEl.addClass("rasterCluster" + clusterCount);
+                    clusters.push({ bbox: bbox, elements: [rasterEl] });
+                    clusterCount++;
+                }
             }
 
-            self._embedAllImages(tmpSvg, function () {
-                var fillings = userContent.removeUnfilled(fillAreas);
+            // get only filled items and embed the images
+            // loop over non overlapping clusters to-raster elements.
+            for (var c = 0; c < clusters.length; c++) {
+                var rasterCluster = clusters[c];
+                var rasterContentSvg = svg.clone(); // Avoids wrapping svg in svg.
+                svg.attr("id", "rasterCluster_" + c);
+                svg.addClass("tmpSvg");
+
+                for (var notc = 0; notc < clusters.length; notc++) {
+                    if (notc !== c) {
+                        const selector = ".rasterCluster" + notc;
+                        userContent.selectAll(selector).remove();
+                    }
+                }
+
+                console.log("Rastering cluster " + c);
+                //                let rasterContentSvg = self.getNewSvg(
+                //                    "rasterContentSvg",
+                //                    svgWidthPT,
+                //                    svgHeightPT
+                //                );
+                var attrs = {};
+                _.merge(attrs, namespaces);
+                attrs.viewBox = "0 0 " + wMM + " " + hMM;
+                rasterContentSvg.attr(attrs);
+                //                rasterContentSvg.append(userContent);
+
+                // copy defs for filters
+                var originalFilters = snap.selectAll("defs>filter");
+                var target = rasterContentSvg.select("defs");
+                for (var i = 0; i < originalFilters.length; i++) {
+                    var original_id = originalFilters[i].attr("id");
+                    var clone = originalFilters[i].clone();
+                    var destFilter = clone.appendTo(target);
+                    // restore id to keep references working
+                    destFilter.attr({ id: original_id });
+                }
+
+                // embed the fonts as dataUris
+                if (svg.selectAll(".userText").length > 0) {
+                    $("#compSvg defs").append(
+                        '<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>'
+                    );
+                    self._qt_copyFontsToSvg(
+                        svg.select(".quickTextFontPlaceholder").node
+                    );
+                }
+                self._embedAllImages(rasterContentSvg);
+                //                self._embedAllImages(rasterContentSvg, function () {
+                var fillings = rasterContentSvg.removeUnfilled(fillAreas);
                 for (var i = 0; i < fillings.length; i++) {
                     var item = fillings[i];
 
@@ -2975,41 +3044,11 @@ $(function () {
                     }
                 }
 
-                var cb = function (result, x, y, w, h) {
-                    if (MRBEAM_DEBUG_RENDERING) {
-                        debugBase64(result, "Step 2: Canvas result .png");
-                    }
-
-                    if (fillings.length > 0) {
-                        // fill rendering replaces all
-                        svg.selectAll("image").remove();
-                        svg.selectAll(".deleteAfterRendering").remove();
-                        svg.selectAll("text,tspan").remove();
-
-                        if (result !== null) {
-                            var fillImage = snap.image(result, x, y, w, h);
-                            fillImage.attr("id", "fillRendering");
-                            svg.append(fillImage);
-                        }
-                    }
-                    if (typeof callback === "function") {
-                        callback(svg);
-                        if (MRBEAM_DEBUG_RENDERING) {
-                            const data = { width: w, height: h, x: x, y: y };
-                            debugBase64(
-                                svg.toDataURL(),
-                                "Step 3: SVG with fill rendering",
-                                data
-                            );
-                        }
-                    }
-                    self._cleanup_render_mess();
-                };
-
-                let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
+                // take bbox from rasterCluster ??? TODO
+                let renderBBoxMM = rasterContentSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
                 if (MRBEAM_DEBUG_RENDERING) {
                     debugBase64(
-                        tmpSvg.toDataURL(),
+                        rasterContentSvg.toDataURL(),
                         "Step 1: SVG ready for canvas, renderBBox",
                         renderBBoxMM
                     );
@@ -3018,23 +3057,73 @@ $(function () {
                     "Rendering " + fillings.length + " filled elements."
                 );
                 if (fillAreas) {
-                    tmpSvg.renderPNG(
-                        svgWidthPT,
-                        svgHeightPT,
-                        wMM,
-                        hMM,
-                        pxPerMM,
-                        renderBBoxMM,
-                        cb
-                    );
+                    const rasterResultPromise = rasterContentSvg
+                        .renderPNG(
+                            svgWidthPT,
+                            svgHeightPT,
+                            wMM,
+                            hMM,
+                            pxPerMM,
+                            renderBBoxMM
+                        )
+                        .then(function (rasterResult) {
+                            if (MRBEAM_DEBUG_RENDERING) {
+                                debugBase64(
+                                    rasterResult.dataUrl,
+                                    "Step 2: Canvas result .png"
+                                );
+                            }
+
+                            if (fillings.length > 0) {
+                                // fill rendering replaces all
+                                svg.selectAll("image").remove();
+                                svg.selectAll(".deleteAfterRendering").remove();
+                                svg.selectAll("text,tspan").remove();
+
+                                if (rasterResult.dataUrl !== null) {
+                                    const x = rasterResult.bbox.x;
+                                    const y = rasterResult.bbox.y;
+                                    const w = rasterResult.bbox.w;
+                                    const h = rasterResult.bbox.h;
+                                    var fillImage = snap.image(
+                                        rasterResult.dataUrl,
+                                        x,
+                                        y,
+                                        w,
+                                        h
+                                    );
+                                    fillImage.attr("id", "fillRendering");
+                                    svg.append(fillImage);
+                                }
+                            }
+                            if (typeof callback === "function") {
+                                callback(svg);
+                                if (MRBEAM_DEBUG_RENDERING) {
+                                    const data = {
+                                        width: rasterResult.bbox.w,
+                                        height: rasterResult.bbox.h,
+                                        x: rasterResult.bbox.x,
+                                        y: rasterResult.bbox.y,
+                                    };
+                                    debugBase64(
+                                        svg.toDataURL(),
+                                        "Step 3: SVG with fill rendering",
+                                        data
+                                    );
+                                }
+                            }
+                            self._cleanup_render_mess();
+                        });
                 } else {
-                    cb(null);
+                    callback(svg);
                 }
-            });
+                //                });
+            }
         };
 
         self._cleanup_render_mess = function () {
-            $("#tmpSvg").remove();
+            $("#rasterContentSvg").remove();
+            $(".tmpSvg").remove();
         };
 
         self.onBeforeBinding = function () {
@@ -3047,6 +3136,7 @@ $(function () {
             svg.attr("xmlns", "http://www.w3.org/2000/svg");
             svg.attr("xmlns:mb", "http://www.mr-beam.org/mbns");
             svg.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
+            svg.selectAll("desc").remove();
             return svg;
         };
 

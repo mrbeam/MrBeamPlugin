@@ -19,7 +19,7 @@
 
 Snap.plugin(function (Snap, Element, Paper, global) {
     // just a helper
-    var _merge_bbox = function (bb1, bb2) {
+    Snap.path.merge_bbox = function (bb1, bb2) {
         let r = _.clone(bb1);
         r.x = Math.min(bb2.x, bb1.x);
         r.y = Math.min(bb2.y, bb1.y);
@@ -30,6 +30,26 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         r.width = r.w;
         r.height = r.h;
         return r;
+    };
+
+    Snap.path.transformBBox = function (bb, matrix) {
+        let r = _.clone(bb);
+        r.x = matrix.x(bb.x, bb.y);
+        r.y = matrix.y(bb.x, bb.y);
+        r.x2 = matrix.x(bb.x2, bb.y2);
+        r.y2 = matrix.y(bb.x2, bb.y2);
+        r.w = r.x2 - r.x;
+        r.h = r.y2 - r.y;
+        r.width = r.w;
+        r.height = r.h;
+        return r;
+    };
+
+    Element.prototype.get_total_bbox = function () {
+        const el = this;
+        const mat = el.transform().totalMatrix;
+        const bb = el.getBBox();
+        return Snap.path.transformBBox(bb, mat);
     };
 
     /**
@@ -185,7 +205,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             bbs.push(e.bbox);
             let merged_bb = _.reduce(bbs, function (bb, bb2add) {
                 if (!bb) return bb2add;
-                return _merge_bbox(bb, bb2add);
+                return Snap.path.merge_bbox(bb, bb2add);
             });
 
             by_bbox.push({ bbox: merged_bb, ids: ids });
