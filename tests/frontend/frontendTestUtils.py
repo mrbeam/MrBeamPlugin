@@ -24,7 +24,7 @@ def get_versions(driver):
     return driver.execute_script(js)
 
 
-def compare_dimensions(bbox, exp):
+def compare_dimensions(bbox, exp, tolerance=0.0001):
     #    exp = {
     #        "y": 27.573705673217773,
     #        "x": 5.796566963195801,
@@ -32,20 +32,17 @@ def compare_dimensions(bbox, exp):
     #        "h": 149.99998474121094,
     #    }
 
-    mx = abs(bbox[u"x"] - exp["x"]) < 0.0001
-    my = abs(bbox[u"y"] - exp["y"]) < 0.0001
-    mw = abs(bbox[u"w"] - exp["w"]) < 0.0001
-    mh = abs(bbox[u"h"] - exp["h"]) < 0.0001
-    if mx and my and mw and mh:
-        return (True, "")
+    success_result = {}
+    err_msg = "Dimensions do not match:"
+    for key in "xywh":
+        ukey = unicode(key)
+        if ukey in bbox and key in exp:
+            in_tolerance = abs(bbox[ukey] - exp[key]) < tolerance
+            success_result[key] = in_tolerance
+            if not in_tolerance:
+                err_msg += " {}: {} != {}".format(key, bbox[ukey], exp[key])
+
+    if all(success_result.values()):
+        return True, ""
     else:
-        msg = "Dimensions do not match:"
-        if not mx:
-            msg += " X-Pos: {} != {}".format(bbox[u"x"], exp["x"])
-        if not my:
-            msg += " Y-Pos: {} != {}".format(bbox[u"y"], exp["y"])
-        if not mw:
-            msg += " Width: {} != {}".format(bbox[u"w"], exp["w"])
-        if not mh:
-            msg += " Height: {} != {}".format(bbox[u"h"], exp["h"])
-        return False, msg
+        return False, err_msg
