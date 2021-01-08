@@ -2,6 +2,7 @@ import time
 import re
 import json
 import logging
+import platform
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -495,9 +496,11 @@ def _fill_input(driver, selector, string):
     if input.get_attribute("type") == "range":
         _set_range(driver, input, string)
     else:
+        # on Mac we need the command key
+        ctrl_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
         # input.clear()
         # time.sleep(1.2)
-        input.send_keys(Keys.CONTROL + "a")
+        input.send_keys(ctrl_key + "a")
         # time.sleep(1.2)
         input.send_keys(string)
         # time.sleep(1.2)
