@@ -1685,7 +1685,7 @@ $(function () {
                         self.workingArea.gc_meta
                     ); // hack
                     self.workingArea.getCompositionSVG(
-                        self.do_engrave(),
+                        self.do_raster_engrave(),
                         pixPerMM,
                         self.engrave_outlines(),
                         function (composition) {
@@ -1708,7 +1708,7 @@ $(function () {
                             var design_files = self.get_design_files_info();
                             var data = {
                                 command: "convert",
-                                engrave: self.do_engrave(),
+                                engrave: self.do_raster_engrave(),
                                 vector: multicolor_data,
                                 raster: engraving_data,
                                 slicer: "svgtogcode",
@@ -1802,15 +1802,15 @@ $(function () {
             }
         };
 
-        self.do_engrave = function () {
+        self.do_raster_engrave = function () {
             const assigned_images = $(
-                "#engrave_job .assigned_colors"
-            ).children().length;
-            return (
+                "#engrave_job .assigned_colors #cd_engraving"
+            ).length;
+            const res =
                 assigned_images > 0 &&
                 self.show_image_parameters() &&
-                self.has_engraving_proposal()
-            );
+                self.has_engraving_proposal();
+            return res;
         };
 
         self._sanitize = function (name) {
