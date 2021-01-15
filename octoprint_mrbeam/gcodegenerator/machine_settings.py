@@ -1,34 +1,31 @@
+def gcode_before_job(color="#000000", compressor=100):
+    gcode = []
+    if compressor is not None:
+        gcode.append("; gcode_before_job - color: {color}".format(color=color))
+        gcode.append("M100P{p} ; mrbeam_compressor: {p}".format(p=compressor))
+        gcode.append("G4P0.2")
+    else:
+        gcode.append("; gcode_before_job - color: {color}".format(color=color))
+        gcode.append("; mrbeam_compressor: no compressor")
+    gcode.append("\n")
+    return "\n".join(gcode)
 
 
-
-def gcode_before_job(color = '#000000', compressor = 100):
-	gcode = []
-	if compressor is not None:
-		gcode.append("; gcode_before_job - color: {color}".format(color=color))
-		gcode.append("M100P{p} ; mrbeam_compressor: {p}".format(p=compressor))
-		gcode.append("G4P0.2")
-	else:
-		gcode.append("; gcode_before_job - color: {color}".format(color=color))
-		gcode.append("; mrbeam_compressor: no compressor")
-	gcode.append("\n")
-	return "\n".join(gcode)
+def gcode_after_job(color="#000000"):
+    return ""
 
 
-def gcode_after_job(color = '#000000'):
-	return ""
+def gcode_before_path_color(color="#000000", intensity=0):
+    gcode = []
+    gcode.append("; gcode_before_path_color")
+    gcode.append("M3S0")
+    gcode.append("G4P0")
+    gcode.append("M03 S{i} ; color: {c}".format(i=intensity, c=color))
+    return "\n".join(gcode)
 
-
-def gcode_before_path_color(color = '#000000', intensity = 0):
-	gcode = []
-	gcode.append("; gcode_before_path_color")
-	gcode.append("M3S0")
-	gcode.append("G4P0")
-	gcode.append("M03 S{i} ; color: {c}".format(i=intensity, c=color))
-	return "\n".join(gcode)
 
 def gcode_after_path():
-	return "M05"
-
+    return "M05"
 
 
 # TODO remove this or fetch machine settings from settings. (G92 X0 Y0 Z0 looks badly wrong for Mr Beam II machines.)
@@ -43,7 +40,7 @@ M5
 
 gcode_header = """
 $H
-G92 X0 Y0 Z0 
+G92 X0 Y0 Z0
 G90
 M08
 """
@@ -57,5 +54,3 @@ G0 X500.000 Y390.000
 M09
 M02
 """
-
-
