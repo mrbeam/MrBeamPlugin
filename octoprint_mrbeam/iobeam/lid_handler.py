@@ -1240,6 +1240,8 @@ class PhotoCreator(object):
                 else:
                     for k in ["calibMarkers", "shutter_speed"]:
                         ret.append(settings.get(k, None))
+                    for k in settings.get("calibMarkers", {}):
+                        ret[0][k] = ret[0][k][::-1] # FIXME re-revert 0.8
             return ret
         except (IOError, OSError) as e:
             self._logger.warning("New or Legacy marker memory not found.")
@@ -1264,6 +1266,7 @@ class PhotoCreator(object):
             for k, v in _markers.items():
                 if type(v) is np.ndarray:
                     _markers[k] = v.tolist()
+                _markers[k] = _markers[k][::-1] # FIXME for 0.8 -> re-reverse marker x-y values
         else:
             _markers = {}
 
