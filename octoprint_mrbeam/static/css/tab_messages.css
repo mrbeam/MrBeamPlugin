@@ -159,12 +159,18 @@ h1.mrb-messages-title{
     transform: scale(1.018);
     transition: transform 0.3s ease;
 }
+.mrb-message-element.mrb-message-read{
+    background: #ddd;
+}
 .mrb-message-element.selected {
     color: #ffffff;
     background: #e25303;
 }
 h5.mrb-message-title{
 	margin: 0;
+}
+#no-mrb-messages-selected{
+
 }
 #mrb-message-view{
 	/*padding: 20px;*/

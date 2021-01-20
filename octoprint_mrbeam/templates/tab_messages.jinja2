@@ -5,14 +5,31 @@
                 <div class="mrb-messages-container rounded_container">
                     <h1 class="mrb-messages-title">Messages From Mr. Beam</h1>
                     <div class="mrb-message-list" data-bind="foreach: messages">
-                        <div class="mrb-message-element rounded_container"
-                             data-bind="css: { selected: $index() == $root.selectedIndex() }, click: $root.onIndexSelected.bind($root, $index())">
-                            <h5 class="mrb-message-title" data-bind="text: content.title"></h5>
+                        <div data-bind="if: read">
+                            <div class="mrb-message-element rounded_container mrb-message-read"
+{#                                 data-bind="css: { selected: $index() == $root.selectedIndex(), 'mrb-message-read': $index() == $root.selectedIndex() }, click: $root.onIndexSelected.bind($root, $index())">#}
+{#                                 data-bind="css: { selected: $index() == $root.selectedIndex() }, click: $root.onIndexSelected.bind($root, $index())">#}
+                                 data-bind="css: { selected: $index() == $root.selectedIndex() }, click: function(data, event) { $root.onIndexSelected($index(), data, event) }">
+                                <h5 class="mrb-message-title" data-bind="text: content.title"></h5>
+                            </div>
                         </div>
+                        <div data-bind="ifnot: read">
+                            <div class="mrb-message-element rounded_container "
+{#                                 data-bind="css: { selected: $index() == $root.selectedIndex() }, click: $root.onIndexSelected.bind($root, $index())">#}
+                                 data-bind="css: { selected: $index() == $root.selectedIndex() }, click: function(data, event) { $root.onIndexSelected($index(), data, event) }">
+                                <h5 class="mrb-message-title" data-bind="text: content.title"></h5>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
             <div class="span8">
+                <!-- ko if: $root.selectedIndex() == undefined -->
+                <div id="no-mrb-messages-selected">
+                    <h1> No Messages selected </h1>
+                </div>
+                <!-- /ko -->
                 <div id="mrb-message-view" data-bind="with: $root.messages()[$root.selectedIndex()]">
                     <div class="mrb-message-content">
                         <div data-bind="visible: images[0] != undefined">
