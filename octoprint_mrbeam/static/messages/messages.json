@@ -93,6 +93,16 @@
     {
       "id": 5,
       "date": "23. 3. 2020",
+      "restrictions": {
+        "__": "Evaluation  of restrictions needs to be true to show the message",
+        "channels": [],
+        "version": [],
+        "version_and_newer": null,
+        "version_and_older": null,
+        "not_first_run": false,
+        "ts_after": "2011-10-10T14:48:00",
+        "ts_before": 0
+      },
       "content": {
         "en": {
           "title": "fifth message",
@@ -103,7 +113,7 @@
         "sticky": 30,
         "type": "info",
         "en": {
-          "title": "Fourth message",
+          "title": "fifth message",
           "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt"
         }
       }
@@ -111,6 +121,16 @@
     {
       "id": 6,
       "date": "24. 3. 2020",
+      "restrictions": {
+        "__": "Evaluation  of restrictions needs to be true to show the message",
+        "channels": [],
+        "version": [],
+        "version_and_newer": null,
+        "version_and_older": null,
+        "not_first_run": false,
+        "ts_after": 0,
+        "ts_before": "2011-10-10T14:48:00"
+      },
       "content": {
         "en": {
           "title": "sixth message",
@@ -121,7 +141,147 @@
         "sticky": 30,
         "type": "info",
         "en": {
-          "title": "Fourth message",
+          "title": "sixth message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "date": "25. 3. 2020",
+      "restrictions": {
+        "__": "Evaluation  of restrictions needs to be true to show the message",
+        "channels": ["DEV"],
+        "version": [],
+        "version_and_newer": null,
+        "version_and_older": null,
+        "not_first_run": false,
+        "ts_after": 0,
+        "ts_before": 0
+      },
+      "content": {
+        "en": {
+          "title": "seventh message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet."
+        }
+      },
+      "notification": {
+        "sticky": 30,
+        "type": "info",
+        "en": {
+          "title": "seventh message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "date": "25. 3. 2020",
+      "restrictions": {
+        "__": "Evaluation  of restrictions needs to be true to show the message",
+        "channels": [],
+        "version": ["0.8.0.1"],
+        "version_and_newer": null,
+        "version_and_older": null,
+        "not_first_run": false,
+        "ts_after": 0,
+        "ts_before": 0
+      },
+      "content": {
+        "en": {
+          "title": "eighth message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet."
+        }
+      },
+      "notification": {
+        "sticky": 30,
+        "type": "info",
+        "en": {
+          "title": "eighth message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "date": "25. 3. 2020",
+      "restrictions": {
+        "__": "Evaluation  of restrictions needs to be true to show the message",
+        "channels": [],
+        "version": [],
+        "version_and_newer": "0.8.0.2",
+        "version_and_older": null,
+        "not_first_run": false,
+        "ts_after": 0,
+        "ts_before": 0
+      },
+      "content": {
+        "en": {
+          "title": "ninth message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet."
+        }
+      },
+      "notification": {
+        "sticky": 30,
+        "type": "info",
+        "en": {
+          "title": "ninth message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "date": "25. 3. 2020",
+      "restrictions": {
+        "__": "Evaluation  of restrictions needs to be true to show the message",
+        "channels": [],
+        "version": [],
+        "version_and_newer": null,
+        "version_and_older": "0.8.0.0",
+        "not_first_run": false,
+        "ts_after": 0,
+        "ts_before": 0
+      },
+      "content": {
+        "en": {
+          "title": "tenth message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet."
+        }
+      },
+      "notification": {
+        "sticky": 30,
+        "type": "info",
+        "en": {
+          "title": "tenth message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "date": "25. 3. 2020",
+      "restrictions": {
+        "__": "Evaluation  of restrictions needs to be true to show the message",
+        "channels": [],
+        "version": [],
+        "version_and_newer": null,
+        "version_and_older": null,
+        "not_first_run": true,
+        "ts_after": 0,
+        "ts_before": 0
+      },
+      "content": {
+        "en": {
+          "title": "eleventh message",
+          "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet."
+        }
+      },
+      "notification": {
+        "sticky": 30,
+        "type": "info",
+        "en": {
+          "title": "eleventh message",
           "body": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt"
         }
       }

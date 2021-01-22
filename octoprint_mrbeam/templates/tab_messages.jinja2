@@ -7,15 +7,12 @@
                     <div class="mrb-message-list" data-bind="foreach: messages">
                         <div data-bind="if: read">
                             <div class="mrb-message-element rounded_container mrb-message-read"
-{#                                 data-bind="css: { selected: $index() == $root.selectedIndex(), 'mrb-message-read': $index() == $root.selectedIndex() }, click: $root.onIndexSelected.bind($root, $index())">#}
-{#                                 data-bind="css: { selected: $index() == $root.selectedIndex() }, click: $root.onIndexSelected.bind($root, $index())">#}
                                  data-bind="css: { selected: $index() == $root.selectedIndex() }, click: function(data, event) { $root.onIndexSelected($index(), data, event) }">
                                 <h5 class="mrb-message-title" data-bind="text: content.title"></h5>
                             </div>
                         </div>
                         <div data-bind="ifnot: read">
                             <div class="mrb-message-element rounded_container "
-{#                                 data-bind="css: { selected: $index() == $root.selectedIndex() }, click: $root.onIndexSelected.bind($root, $index())">#}
                                  data-bind="css: { selected: $index() == $root.selectedIndex() }, click: function(data, event) { $root.onIndexSelected($index(), data, event) }">
                                 <h5 class="mrb-message-title" data-bind="text: content.title"></h5>
                             </div>
@@ -51,7 +48,6 @@
                                         <div class="thumbnail-list">
                                             <ul class="thumbnails"
                                                 data-bind="foreach: { data: images, as: 'img' }">
-                                                {#                                                    <li class="span3">#}
                                                 <li>
                                                     <a href="#"
                                                        class="thumbnail">
@@ -65,21 +61,6 @@
                                     </div>
                                 </div>
                                 <div class="span6">
-
-                                    {#                                    ------------------#}
-
-                                    {#                                    <div id="myCarousel" class="carousel slide">#}
-                                    {#                                        <!-- Carousel items -->#}
-                                    {#                                        <div class="carousel-inner" data-bind="foreach: { data: images, as: 'img' }">#}
-                                    {#                                            <div class="item"><img data-bind="attr:{src: img}"></div>#}
-                                    {#                                        </div>#}
-                                    {#                                      <!-- Carousel nav -->#}
-                                    {#                                      <a class="carousel-control left" href="#myCarousel" data-slide="prev">&lsaquo;</a>#}
-                                    {#                                      <a class="carousel-control right" href="#myCarousel" data-slide="next">&rsaquo;</a>#}
-                                    {#                                    </div>#}
-
-                                    {#                                    ------------------#}
-
                                     <div class="single-design-img-gallery rounded_container">
                                         <div class="inner-container">
                                             <div class="design-img-container rounded_container">
@@ -87,20 +68,6 @@
                                                      data-bind="style: {'background-image': 'url('+images[0]+')' }">
                                                 </div>
                                             </div>
-                                            {#                                            <div class="thumbnail-list">#}
-                                            {#                                                <ul class="thumbnails"#}
-                                            {#                                                    data-bind="foreach: { data: images, as: 'img' }">#}
-                                            {#                                                    <li class="span3">#}
-                                            {#                                                    <li class="">#}
-                                            {#                                                        <a href="#"#}
-                                            {#                                                           class="thumbnail">#}
-                                            {#                                                            <div class="preview"#}
-                                            {#                                                                 data-bind="click: $root.selectImage, style: {'background-image': 'url('+img+')' }">#}
-                                            {#                                                            </div>#}
-                                            {#                                                        </a>#}
-                                            {#                                                    </li>#}
-                                            {#                                                </ul>#}
-                                            {#                                            </div>#}
                                         </div>
                                     </div>
                                 </div>
