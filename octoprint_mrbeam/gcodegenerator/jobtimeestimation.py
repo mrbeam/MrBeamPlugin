@@ -17,7 +17,7 @@ import threading
 FIND_X_VALUE = r"X(\d+\.?\d+)"
 FIND_Y_VALUE = r"Y(\d+\.?\d+)"
 FIND_FEEDRATE = r"F(\d+\.?\d+)"
-MATCH_COMMENT_ADD_TIME = re.compile(r"[\+-]?[0-9]+\.?[0-9]*s")
+MATCH_COMMENT_ADD_TIME = re.compile(r"EXTRA_TIME [\+-]?[0-9]+\.?[0-9]*s")
 
 
 def time_from_comment(comment):
@@ -26,24 +26,24 @@ def time_from_comment(comment):
         ; [\+-]?[0-9]+\.?[0-9]*s
 
     Examples:
-        >>> time_from_comment("0.19s")
+        >>> time_from_comment("EXTRA_TIME 0.19s")
         0.19
-        >>> time_from_comment("; +0.19s")
+        >>> time_from_comment(";EXTRA_TIME +0.19s")
         0.19
-        >>> time_from_comment("; +50s")
+        >>> time_from_comment(";EXTRA_TIME +50s")
         50.0
         >>> time_from_comment("; this is not a number")
         0.0
-        >>> time_from_comment("; here is a number -70s")
+        >>> time_from_comment("; here is a number EXTRA_TIME -70s")
         -70.0
-        >>> time_from_comment("; not formatted 70")
+        >>> time_from_comment("; EXTRA_TIME not formatted 70")
         0.0
-        >>> time_from_comment("cannot do 2 numbers 6.9s 42.0s")
+        >>> time_from_comment("cannot do 2 numbers EXTRA_TIME 6.9s EXTRA_TIME 42.0s")
         6.9
     """
     match = MATCH_COMMENT_ADD_TIME.search(comment)
     if match:
-        float(match.group(0))
+        float(match.group(1))
     else:
         return 0.0
 
