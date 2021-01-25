@@ -1508,53 +1508,6 @@ class MrBeamPlugin(
             )
         return jsonify(dict(profiles=all_profiles))
 
-    @octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["POST"])
-    @restricted_access
-    def laserCutterProfilesAdd(self):
-        if not "application/json" in request.headers["Content-Type"]:
-            return make_response("Expected content-type JSON", 400)
-
-        try:
-            json_data = request.json
-        except JSONBadRequest:
-            return make_response("Malformed JSON body in request", 400)
-
-        if not "profile" in json_data:
-            return make_response("No profile included in request", 400)
-
-        base_profile = self.laserCutterProfileManager.get_default()
-        if "basedOn" in json_data and isinstance(json_data["basedOn"], basestring):
-            other_profile = self.laserCutterProfileManager.get(json_data["basedOn"])
-            if other_profile is not None:
-                base_profile = other_profile
-
-        if "id" in base_profile:
-            del base_profile["id"]
-        if "name" in base_profile:
-            del base_profile["name"]
-        if "default" in base_profile:
-            del base_profile["default"]
-
-        new_profile = json_data["profile"]
-        make_default = False
-        if "default" in new_profile:
-            make_default = True
-            del new_profile["default"]
-
-        profile = dict_merge(base_profile, new_profile)
-        try:
-            saved_profile = self.laserCutterProfileManager.save(
-                profile, allow_overwrite=False, make_default=make_default
-            )
-        except InvalidProfileError:
-            return make_response("Profile is invalid", 400)
-        except CouldNotOverwriteError:
-            return make_response(
-                "Profile already exists and overwriting was not allowed", 400
-            )
-        else:
-            return jsonify(dict(profile=self._convert_profile(saved_profile)))
-
     @octoprint.plugin.BlueprintPlugin.route(
         "/profiles/<string:identifier>", methods=["GET"]
     )
@@ -1565,74 +1518,7 @@ class MrBeamPlugin(
         else:
             return jsonify(self._convert_profile(profile))
 
-    @octoprint.plugin.BlueprintPlugin.route(
-        "/profiles/<string:identifier>", methods=["DELETE"]
-    )
-    @restricted_access
-    def laserCutterProfilesDelete(self, identifier):
-        self.laserCutterProfileManager.remove(identifier)
-        return NO_CONTENT
-
-    @octoprint.plugin.BlueprintPlugin.route(
-        "/profiles/<string:identifier>", methods=["PATCH"]
-    )
-    @restricted_access
-    def laserCutterProfilesUpdate(self, identifier):
-        if not "application/json" in request.headers["Content-Type"]:
-            return make_response("Expected content-type JSON", 400)
-
-        try:
-            json_data = request.json
-        except JSONBadRequest:
-            return make_response("Malformed JSON body in request", 400)
-
-        if not "profile" in json_data:
-            return make_response("No profile included in request", 400)
-
-        profile = self.laserCutterProfileManager.get(identifier)
-        if profile is None:
-            profile = self.laserCutterProfileManager.get_default()
-
-        new_profile = json_data["profile"]
-        new_profile = dict_merge(profile, new_profile)
-
-        make_default = False
-        if "default" in new_profile:
-            make_default = True
-            del new_profile["default"]
-
-        # edit width and depth in grbl firmware
-        ### TODO queue the commands if not in locked or operational mode
-        if make_default or (
-            self.laserCutterProfileManager.get_current_or_default()["id"] == identifier
-        ):
-            if self._printer.is_locked() or self._printer.is_operational():
-                if "volume" in new_profile:
-                    if "width" in new_profile["volume"]:
-                        width = float(new_profile["volume"]["width"])
-                        width += float(new_profile["volume"]["origin_offset_x"])
-                        self._printer.commands("$130=" + str(width))
-                        time.sleep(0.1)  ### TODO find better solution then sleep
-                    if "depth" in new_profile["volume"]:
-                        depth = float(new_profile["volume"]["depth"])
-                        depth += float(new_profile["volume"]["origin_offset_y"])
-                        self._printer.commands("$131=" + str(depth))
-
-        new_profile["id"] = identifier
-
-        try:
-            saved_profile = self.laserCutterProfileManager.save(
-                new_profile, allow_overwrite=True, make_default=make_default
-            )
-        except InvalidProfileError:
-            return make_response("Profile is invalid", 400)
-        except CouldNotOverwriteError:
-            return make_response(
-                "Profile already exists and overwriting was not allowed", 400
-            )
-        else:
-            return jsonify(dict(profile=self._convert_profile(saved_profile)))
-
+    # ~ Calibration
     def generateCalibrationMarkersSvg(self):
         """Used from the calibration screen to engrave the calibration markers"""
         # TODO mv this func to other file

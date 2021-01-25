@@ -6,5 +6,4 @@ profile = dict(
     id="MrBeam2Dummy",
     name="Dummy Laser",
     model="X",
-    start_method="onebutton",  # change ?
 )

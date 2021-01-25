@@ -129,7 +129,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
         self.select(profile_id or settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID))
 
     def _migrate_old_default_profile(self):
-        # TODO
+        # overwritten to prevent defautl OP migration.
         pass
 
     def _verify_default_available(self):
@@ -228,26 +228,6 @@ class LaserCutterProfileManager(PrinterProfileManager):
         profile = PrinterProfileManager.save(
             self, profile, allow_overwrite, make_default=False
         )
-        # TODO : I don't really understand what this is for - investigate
-        # if identifier == "_default":
-        #     default_profile = dict_merge(self._load_default(), profile)
-        #     if not self._ensure_valid_profile(default_profile):
-        #         raise InvalidProfileError()
-
-        #     settings().set(
-        #         self.SETTINGS_PATH_PROFILE_DEFAULT_PROFILE,
-        #         default_profile,
-        #         defaults=dict(
-        #             lasercutterprofiles=dict(defaultProfile=LASER_PROFILE_DEFAULT)
-        #         ),
-        #     )
-        #     settings().save()
-        # else:
-        #     self._save_to_path(
-        #         self._get_profile_path(identifier),
-        #         profile,
-        #         allow_overwrite=allow_overwrite,
-        #     )
 
         # ``PrinterProfileManager.save`` forces profile to use the key ``id``
         # to reference the profile identifier
@@ -315,10 +295,6 @@ class LaserCutterProfileManager(PrinterProfileManager):
         # Ensuring that all keys are present is the default behaviour of the OP ``PrinterProfileManager``
         # This ``LaserCutterProfileManager`` can use partially declared profiles, as they are
         # completed using the default profile.
-        #
-        # # ensure all keys are present
-        # if not dict_contains_keys(self.default, profile):
-        #     return False
 
         # conversion helper
         def convert_value(profile, path, converter):
