@@ -547,7 +547,7 @@ class ImageProcessor:
                         # self.log.info("  end   x %s, y %s" % tuple(end))
                         # self.log.info("  gcode \n%s" % overshoot_gco)
                         overshoot_gco += (
-                            "; " + str(EXTRA_OVERSHOOT_EXTRA_DURATION) + "s"
+                            "; EXTRA_TIME " + str(EXTRA_OVERSHOOT_EXTRA_DURATION) + "s"
                         )
                         self._append_gcode(overshoot_gco)
 
