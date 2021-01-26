@@ -10,14 +10,14 @@ def _identity(x):
     return x
 
 
-def wrap_if(condition=False, decorator=identity):
+def wrap_if(condition=False, decorator=_identity):
     """
     Run a decorator function` if ``condition`` is met.
     """
     if condition:
         return decorator
     else:
-        return identity
+        return _identity
 
 
 def abort_if(condition=False, code=401):
