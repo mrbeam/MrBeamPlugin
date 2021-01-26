@@ -2266,19 +2266,6 @@ class MrBeamPlugin(
             description=description,
         )
 
-    def save_slicer_profile(self, path, profile, allow_overwrite=True, overrides=None):
-        if os.path.exists(path) and not allow_overwrite:
-            raise octoprint.slicing.ProfileAlreadyExists("cura", profile.name)
-
-        new_profile = Profile.merge_profile(profile.data, overrides=overrides)
-
-        if profile.display_name is not None:
-            new_profile["_display_name"] = profile.display_name
-        if profile.description is not None:
-            new_profile["_description"] = profile.description
-
-        self._save_profile(path, new_profile, allow_overwrite=allow_overwrite)
-
     def do_slice(
         self,
         model_path,
@@ -2290,15 +2277,14 @@ class MrBeamPlugin(
         on_progress_args=None,
         on_progress_kwargs=None,
     ):
-        if not profile_path:
-            profile_path = self._settings.get(["default_profile"])
+        # TODO profile_path is not used because only the default (selected) profile is.
         if not machinecode_path:
             path, _ = os.path.splitext(model_path)
             machinecode_path = path + ".gco"
 
         self._logger.info(
-            "Slicing %s to %s using profile stored at %s, %s"
-            % (model_path, machinecode_path, profile_path, self._CONVERSION_PARAMS_PATH)
+            "Slicing %s to %s -- parameters -- %s"
+            % (model_path, machinecode_path, self._CONVERSION_PARAMS_PATH)
         )
 
         def is_job_cancelled():
@@ -2319,7 +2305,7 @@ class MrBeamPlugin(
         params["noheaders"] = "true"  # TODO... booleanify
 
         if self._settings.get(["debug_logging"]):
-            log_path = homedir + "/.octoprint/logs/svgtogcode.log"
+            log_path = "~/.octoprint/logs/svgtogcode.log"
             params["log_filename"] = log_path
         else:
             params["log_filename"] = ""
@@ -2352,10 +2338,8 @@ class MrBeamPlugin(
 
             is_job_cancelled()  # check if canceled during conversion
 
-            return (
-                True,
-                None,
-            )  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
+            # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
+            return True, None
         except octoprint.slicing.SlicingCancelled as e:
             self._logger.info("Conversion cancelled")
             raise e

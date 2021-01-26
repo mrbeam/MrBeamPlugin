@@ -133,43 +133,30 @@ class LaserCutterProfileManager(PrinterProfileManager):
         pass
 
     def _verify_default_available(self):
-        # Overloaded from OP because of printerProfiles path ``default_id``
+        # Overloaded from OP because of printerProfiles path ``default_id`` and hard-coded profiles
         default_id = settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID)
         if default_id is None:
             default_id = "_default"
 
         if not self.exists(default_id):
+            # fmt: off
             if not self.exists("_default"):
                 if default_id == "_default":
-                    self._logger.error(
-                        "Profile _default does not exist, creating _default again and setting it as default"
-                    )
+                    self._logger.error("Profile _default does not exist, it should be part of the defined profiles.")
                 else:
-                    self._logger.error(
-                        "Selected default profile {} and _default do not exist, creating _default again and setting it as default".format(
-                            default_id
-                        )
-                    )
-                self.save(
-                    self.__class__.default, allow_overwrite=True, make_default=True
-                )
+                    self._logger.error("Selected default profile {} and _default does not exist, _default should be defined in the hard coded profiles.".format(default_id))
             else:
-                self._logger.error(
-                    "Selected default profile {} does not exists, resetting to _default".format(
-                        default_id
-                    )
-                )
+                self._logger.error("Selected default profile {} does not exists, resetting to _default".format(default_id))
                 settings().set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, "_default")
                 settings().save()
+            # fmt: on
             default_id = "_default"
 
         profile = self.get(default_id)
         if profile is None:
-            self._logger.error(
-                "Selected default profile {} is invalid, resetting to default values".format(
-                    default_id
-                )
-            )
+            # fmt: off
+            self._logger.error("Selected default profile {} is invalid, resetting to default values".format(default_id))
+            # fmt: on
             profile = copy.deepcopy(self.__class__.default)
             profile["id"] = default_id
             self.save(self.__class__.default, allow_overwrite=True, make_default=True)
@@ -215,30 +202,6 @@ class LaserCutterProfileManager(PrinterProfileManager):
         elif settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID) == identifier:
             return False
         return self._remove_from_path(self._get_profile_path(identifier))
-
-    def save(self, profile, allow_overwrite=False, make_default=False):
-        """
-        Saves given profile to file.
-        /!\ make_default uses the octoprint printerProfile path.
-        :param profile:
-        :param allow_overwrite:
-        :param make_default:
-        :return:
-        """
-        profile = PrinterProfileManager.save(
-            self, profile, allow_overwrite, make_default=False
-        )
-
-        # ``PrinterProfileManager.save`` forces profile to use the key ``id``
-        # to reference the profile identifier
-        identifier = profile["id"]
-        if make_default:
-            self.set_default(identifier)
-
-        # Not sure if we want to sync to OP's PrinterprofileManager
-        # _mrbeam_plugin_implementation._printer_profile_manager.save(profile, allow_overwrite, make_default)
-
-        return self.get(identifier)
 
     def is_default_unmodified(self):
         # Overloaded because of settings path and barely used by OP
