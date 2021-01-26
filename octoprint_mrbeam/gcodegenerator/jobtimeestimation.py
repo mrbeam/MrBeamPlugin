@@ -67,7 +67,7 @@ class JobTimeEstimation:
             estimation_thread.daemon = True
             estimation_thread.start()
 
-        if event == OctoPrintEvents.CLIENT_OPENED:
+        if event == OctoPrintEvents.CLIENT_OPENED and self._last_estimation != -1:
             self._send_estimate_to_frontend()
 
     def _calculate_estimation_threaded(self, file_name):
