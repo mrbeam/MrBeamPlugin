@@ -14,8 +14,8 @@ $(function () {
         self.userSettings = parameters[1];
         self.loginState = parameters[2];
 
-        const MESSAGES_URL = "/plugin/mrbeam/static/messages/messages.json";
-        // const MESSAGES_URL = "https://messages.beamos.mr-beam.org/messages.json";
+        const FIRST_MESSAGE_LOCATION = "/plugin/mrbeam/static/messages/messages.json";
+        const MESSAGES_URL = "https://messages.beamos.mr-beam.org/messages.json";
 
         self.messages = ko.observableArray();
         self.messagesIds = ko.observableArray();
@@ -34,12 +34,12 @@ $(function () {
             }
             // load remote messages
             if (!self.messagesLoaded) {
-                self.loadRemoteMessages();
+                self.loadRemoteMessages(MESSAGES_URL);
             }
         };
 
-        self.loadRemoteMessages = function () {
-            fetch(MESSAGES_URL, {
+        self.loadRemoteMessages = function (messageUrl) {
+            fetch(messageUrl, {
                 method: 'GET'
             }).then(function (response) {
                 return response.json();
@@ -86,6 +86,7 @@ $(function () {
                 .fail(function (response) {
                     console.log("Local Messages loading failed!");
                     console.log(response);
+                    self.loadRemoteMessages(FIRST_MESSAGE_LOCATION);
                 });
         };
 
@@ -241,7 +242,7 @@ $(function () {
             if (unreadIds.length === 0) {
                 unreadIds = null;
                 self.hasUnread(false);
-            }else{
+            } else {
                 self.hasUnread(true);
             }
             // save to user settings
@@ -257,7 +258,7 @@ $(function () {
 
         self.onIndexSelected = function (index, data, event) {
             // add message read class
-            $(event.currentTarget).addClass("mrb-message-read");
+            $(event.currentTarget).parent().addClass("mrb-message-read");
             // update selected index
             this.selectedIndex(index);
             // update user read message data

@@ -7,8 +7,8 @@
 	--unfoldAnimation: 0.3s ease;
 	margin-top: 20px;
 }
-#messages_nav_tab.hasUnread { color: #e25303; }
-#messages_nav_tab.hasUnread:hover { color: #a63e03; }
+#messages_nav_tab.has-unread-messages { color: #e25303; }
+#messages_nav_tab.has-unread-messages:hover { color: #a63e03; }
 .mrb-messages-container{
 	padding: 25px 20px;
 }
@@ -27,7 +27,7 @@ h1.mrb-messages-title{
     transform: scale(1.018);
     transition: transform 0.3s ease;
 }
-.mrb-message-element.mrb-message-read{
+.mrb-message-read .mrb-message-element{
     background: #ddd;
 }
 .mrb-message-element.selected {

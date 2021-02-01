@@ -75,9 +75,8 @@
 
                     <!-- ko allowBindings: false -->
                     {# Translators: Name of the tab #}
-{#					<li data-bind="visible: unreadCounter() > 0">#}
 					<li>
-						<a id="messages_nav_tab" href="#messages" data-toggle="tab" data-bind="css: { hasUnread: hasUnread }">
+						<a id="messages_nav_tab" href="#messages" data-toggle="tab" data-bind="css: { 'has-unread-messages': hasUnread }">
 							<i class="icon icon-envelope icon-large"></i>
 						</a>
 					</li>
