@@ -51,6 +51,12 @@ class ImageProcessor:
 
     ENGRAVING_MODE_DEFAULT = ENGRAVING_MODE_PRECISE
 
+    # Machine Profile Mock, TODO get proper machine profile
+    FEEDRATE_MIN = 30
+    FEEDRATE_MAX = 5000
+    INTENSITY_MIN = 0
+    INTENSITY_MAX = 1300
+
     def __init__(
         self,
         output_filehandle=None,
@@ -132,9 +138,7 @@ class ImageProcessor:
         self.intensity_black_user = intensity_black_user
         self.intensity_white_user = intensity_white_user
         self.feedrate_white = float(speed_white) if speed_white else JobParams.Max.SPEED
-        self.feedrate_black = (
-            float(speed_black) if speed_black else 0.0
-        )  # TODO: should this be min speed?
+        self.feedrate_black = float(speed_black) if speed_black else self.FEEDRATE_MIN
         self.compressor = (
             eng_compressor  # This value might be None if there is no compressor
         )
@@ -481,71 +485,16 @@ class ImageProcessor:
             pix = img.load()
             first_row = True
             for row in range(height_px - 1, -1, -1):
-
                 line_info = self.get_pixelinfo_of_line(pix, size, row)
                 y = img_pos_mm[1] - (self.beam * line_info["row"])
 
                 if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
 
+                    # TODO integrate octogon overshoots in write_gcode_for_line_start
                     if not first_row and self.extra_overshoot:
-                        # This is messy and to be overwritten with streamlined logic
-                        # octogon_overshoot
-                        # /!\ direction_positive reverted at the end of loop
-                        if not direction_positive:
-                            _minmax = max
-                            side = "right"
-                            k = 1
-                        else:
-                            _minmax = min
-                            side = "left"
-                            k = -1
-
-                        _ov = self.overshoot_distance
-                        _bk = self.backlash_compensation_x
-                        extrema_x = _minmax(
-                            self.gc_ctx.x,
-                            img_pos_mm[0]
-                            + self.beam * line_info[side]
-                            + k * (2 * _ov + _bk),
+                        overshoot_gco = self._get_octogon_linefeed(
+                            direction_positive, img_pos_mm, line_info, y, row
                         )
-                        start = np.array([extrema_x, self.gc_ctx.y])
-                        end = np.array([extrema_x, y])
-                        dy = end[1] - start[1]
-                        _vsp = _ov  # extra vertical_spacing in the overshoot
-                        _line1 = np.array([k, 0.0])
-                        _line2 = np.array([0.0, 1.0])
-                        _line3 = np.array([k, 1.0])
-                        _line4 = np.array([k, -1.0])
-                        # Extend the start and end point differently depending on
-                        # the line so there is no overlap between the overshoots
-                        shift = _ov * (row % (_vsp / dy)) / 2 * _line1
-                        start = start + shift
-                        end = end + shift
-                        # base size of the octogon (dictates length of sides)
-                        _size = 2 * _ov
-                        overshoot_gco = "".join(
-                            map(
-                                lambda v: self._get_gcode_g0(
-                                    x=v[0], y=v[1], comment="octogon"
-                                )
-                                + "\n",
-                                np.cumsum(
-                                    [
-                                        start + (_size + _vsp / 2) * _line4,
-                                        _size * _line1 / 2,
-                                        (_size + dy / 2) * _line3,
-                                        _vsp * _line2,
-                                        -(_size - dy / 2) * _line4,
-                                        -_size * _line1 / 2,
-                                    ],
-                                    axis=0,
-                                ),
-                            )
-                        )
-                        # self.log.info(" Overshoot direction %s, side %s", k, side)
-                        # self.log.info("  start x %s, y %s" % tuple(start))
-                        # self.log.info("  end   x %s, y %s" % tuple(end))
-                        # self.log.info("  gcode \n%s" % overshoot_gco)
                         overshoot_gco += (
                             "; EXTRA_TIME " + str(EXTRA_OVERSHOOT_EXTRA_DURATION) + "s"
                         )
@@ -862,39 +811,108 @@ class ImageProcessor:
         # self.is_first_pixel = False
         return target_x, None
 
+    def _get_octogon_linefeed(self, direction_positive, img_pos_mm, line_info, y, row):
+        # This is messy and to be overwritten with streamlined logic
+        # octogon_overshoot
+        # /!\ direction_positive reverted at the end of loop
+        if not direction_positive:
+            _minmax = max
+            side = "right"
+            k = 1
+        else:
+            _minmax = min
+            side = "left"
+            k = -1
+
+        _ov = self.overshoot_distance
+        _bk = self.backlash_compensation_x
+        extrema_x = _minmax(
+            self.gc_ctx.x,
+            img_pos_mm[0] + self.beam * line_info[side] + k * (2 * _ov + _bk),
+        )
+        start = np.array([extrema_x, self.gc_ctx.y])  # None, None
+        end = np.array([extrema_x, y])  # None, 0
+        print start
+        print end
+        dy = end[1] - start[1]
+        _vsp = _ov  # extra vertical_spacing in the overshoot
+        _line1 = np.array([k, 0.0])
+        _line2 = np.array([0.0, 1.0])
+        _line3 = np.array([k, 1.0])
+        _line4 = np.array([k, -1.0])
+        # Extend the start and end point differently depending on
+        # the line so there is no overlap between the overshoots
+        shift = _ov * (row % (_vsp / dy)) / 2 * _line1
+        start = start + shift
+        end = end + shift
+        # base size of the octogon (dictates length of sides)
+        _size = 2 * _ov
+        overshoot_gco = "".join(
+            map(
+                lambda v: self._get_gcode_g0(x=v[0], y=v[1], comment="octogon") + "\n",
+                np.cumsum(
+                    [
+                        start + (_size + _vsp / 2) * _line4,
+                        _size * _line1 / 2,
+                        (_size + dy / 2) * _line3,
+                        _vsp * _line2,
+                        -(_size - dy / 2) * _line4,
+                        -_size * _line1 / 2,
+                    ],
+                    axis=0,
+                ),
+            )
+        )
+        # self.log.info(" Overshoot direction %s, side %s", k, side)
+        # self.log.info("  start x %s, y %s" % tuple(start))
+        # self.log.info("  end   x %s, y %s" % tuple(end))
+        # self.log.info("  gcode \n%s" % overshoot_gco)
+        return overshoot_gco
+
     def _get_gcode_g0(self, x=None, y=None, comment=None):
-        x, x_cmt = self._ensure_coordinate_in_range(x, self.workingAreaWidth, 0, "X")
-        y, y_cmt = self._ensure_coordinate_in_range(y, self.workingAreaHeight, 0, "Y")
+        x, x_cmt = self._ensure_value_in_range(x, self.workingAreaWidth, 0, "X")
+        y, y_cmt = self._ensure_value_in_range(y, self.workingAreaHeight, 0, "Y")
         x_gc = self._get_gcode_literal("X", x)
         y_gc = self._get_gcode_literal("Y", y)
         all_comments = self._join_gc_comments(comment, x_cmt, y_cmt)
         return "G0{}{}S0{}".format(x_gc, y_gc, all_comments)
 
     def _get_gcode_g1(self, x=None, y=None, s=None, f=None, comment=None):
-        x, x_cmt = self._ensure_coordinate_in_range(x, self.workingAreaWidth, 0)
-        y, y_cmt = self._ensure_coordinate_in_range(y, self.workingAreaHeight, 0)
+        if x == None and y == None and s == None and f == None:
+            raise ValueError("GCode 'G1' at least requires one literal.")
+        x, x_cmt = self._ensure_value_in_range(x, self.workingAreaWidth, 0, "X")
+        y, y_cmt = self._ensure_value_in_range(y, self.workingAreaHeight, 0, "Y")
+        s, s_cmt = self._ensure_value_in_range(
+            s, self.INTENSITY_MAX, self.INTENSITY_MIN, "S"
+        )
+        f, f_cmt = self._ensure_value_in_range(
+            f, self.FEEDRATE_MAX, self.FEEDRATE_MIN, "F"
+        )
         x_gc = self._get_gcode_literal("X", x)
         y_gc = self._get_gcode_literal("Y", y)
         s_gc = self._get_gcode_literal("S", s)
         f_gc = self._get_gcode_literal("F", f)
 
-        all_comments = self._join_gc_comments(comment, x_cmt, y_cmt)
+        all_comments = self._join_gc_comments(comment, x_cmt, y_cmt, s_cmt, f_cmt)
         return "G1{}{}{}{}{}".format(x_gc, y_gc, s_gc, f_gc, all_comments)
 
-    def _ensure_coordinate_in_range(self, value, maximum, minimum=0, prefix=""):
+    def _ensure_value_in_range(self, value, maximum, minimum=0, prefix=""):
         # returns (cropped?) value and comment if cropped.
         if value == None:
             return None, ""
         elif value < minimum:
-            return (
-                max(value, minimum),
-                prefix + " set to {}, was {}".format(minimum, value),
-            )
+            val = max(value, minimum)
+            message = "{} set to {}, was {}".format(prefix, minimum, value)
+            self.log.warning(message)
+            return (val, message)
         elif value > maximum:
-            return (
-                min(value, maximum),
-                prefix + " set to {}, was {}".format(maximum, value),
-            )
+            val = min(value, maximum)
+            message = "{} set to {}, was {}".format(prefix, maximum, value)
+            self.log.warning(message)
+            return (val, message)
+        # TODO uncomment after fixing
+        # elif isinstance(value, float) and math.isnan(value): # math.isnan() fails on non-float types
+        #    raise ValueError("Coordinate is NaN")
         else:
             return value, ""
 
@@ -915,6 +933,9 @@ class ImageProcessor:
             return ""
 
     def _get_gcode_literal(self, lit, value):
+        # TODO uncomment after fixing
+        #        if isinstance(value, float) and math.isnan(value):
+        #            raise ValueError("NaN Value in GCode Literal {}".format(lit))
         if value != None:
             if lit == "X" or lit == "Y":
                 return lit + self.twodigits(value)
@@ -1282,7 +1303,7 @@ M2
         ip.profiler.log.addHandler(lh)
 
         path = args[0]
-        print(options)
+        print (options)
         ip.img_to_gcode(
             path, options.width, options.height, options.x, options.y, datauri
         )
@@ -1290,4 +1311,4 @@ M2
 
         fh.write(footer)
 
-    print("gcode written to " + gcodefile)
+    print ("gcode written to " + gcodefile)
