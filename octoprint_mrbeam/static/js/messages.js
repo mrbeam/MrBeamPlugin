@@ -20,7 +20,7 @@ $(function () {
         self.messages = ko.observableArray();
         self.messagesIds = ko.observableArray();
         self.selectedIndex = ko.observable();
-        self.unreadCounter = ko.observable(0);
+        self.hasUnread = ko.observable(false);
         self.lastMessageId = -1;
         self.oldUnreadMessageIds = -1;
         self.notificationsHandled = false;
@@ -225,7 +225,6 @@ $(function () {
                         } catch (e) {
                             console.error("Error showing notification for message id " + myMessage.id + ": ", e);
                         }
-                        self.unreadCounter(self.unreadCounter() + 1);
                     }
                 });
                 self.notificationsHandled = true;
@@ -241,6 +240,9 @@ $(function () {
             let unreadIds = self.getArray(self.messagesIds());
             if (unreadIds.length === 0) {
                 unreadIds = null;
+                self.hasUnread(false);
+            }else{
+                self.hasUnread(true);
             }
             // save to user settings
             if (self.loginState.currentUser()) {

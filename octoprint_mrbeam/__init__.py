@@ -910,13 +910,6 @@ class MrBeamPlugin(
                 suffix="_custom_material",
                 custom_bindings=True,
             ),
-            dict(
-                type='settings',
-                name=gettext("Messages"),
-                template='settings/messages_settings.jinja2',
-                suffix="_messages",
-                custom_bindings=True
-            ),
             # disabled in appearance
             # dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
         ]
