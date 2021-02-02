@@ -7,7 +7,7 @@ class WizardConfig:
         # Just a random number, but we can't go down anymore, just up.
         # If we want to release Beta, then WIZARD_VERSION_BETA should be a higher number than the old WIZARD_VERSION_STABLE
         self.WIZARD_VERSION_STABLE = (
-            19  # v0.7.0: camera, custom materials backup, SVG split, ...
+            22  # v0.9.0: GCode deletion
         )
         self.WIZARD_VERSION_BETA = 21  # v0.7.11: GCode deletion, DXFlib update, ...
 
@@ -138,49 +138,49 @@ class WizardConfig:
         whatsnew_wizard_tabs = dict(
             wizard_whatsnew_0=dict(
                 type="wizard",
-                name=gettext("Improved camera"),
+                name=gettext("GCode auto-deletion"),
                 required=True,
                 mandatory=False,
                 suffix="_whatsnew_0",
                 template="wizard/wizard_whatsnew_0.jinja2",
                 div="wizard_plugin_corewizard_whatsnew_0",
             ),
-            wizard_whatsnew_1=dict(
-                type="wizard",
-                name=gettext("Custom material backup"),
-                required=True,
-                mandatory=False,
-                suffix="_whatsnew_1",
-                template="wizard/wizard_whatsnew_1.jinja2",
-                div="wizard_plugin_corewizard_whatsnew_1",
-            ),
-            wizard_whatsnew_2=dict(
-                type="wizard",
-                name=gettext("SVG split"),
-                required=True,
-                mandatory=False,
-                suffix="_whatsnew_2",
-                template="wizard/wizard_whatsnew_2.jinja2",
-                div="wizard_plugin_corewizard_whatsnew_2",
-            ),
-            wizard_whatsnew_3=dict(
-                type="wizard",
-                name=gettext("...and more!"),
-                required=True,
-                mandatory=False,
-                suffix="_whatsnew_3",
-                template="wizard/wizard_whatsnew_3.jinja2",
-                div="wizard_plugin_corewizard_whatsnew_3",
-            ),
-            wizard_analytics=dict(
-                type="wizard",
-                name=gettext("Analytics"),
-                required=self._is_analytics_wizard_required(),
-                mandatory=False,
-                suffix="_analytics",
-                template="wizard/wizard_analytics.jinja2",
-                div="wizard_plugin_corewizard_analytics",
-            ),
+            # wizard_whatsnew_1=dict(
+            #     type="wizard",
+            #     name=gettext("Custom material backup"),
+            #     required=True,
+            #     mandatory=False,
+            #     suffix="_whatsnew_1",
+            #     template="wizard/wizard_whatsnew_1.jinja2",
+            #     div="wizard_plugin_corewizard_whatsnew_1",
+            # ),
+            # wizard_whatsnew_2=dict(
+            #     type="wizard",
+            #     name=gettext("SVG split"),
+            #     required=True,
+            #     mandatory=False,
+            #     suffix="_whatsnew_2",
+            #     template="wizard/wizard_whatsnew_2.jinja2",
+            #     div="wizard_plugin_corewizard_whatsnew_2",
+            # ),
+            # wizard_whatsnew_3=dict(
+            #     type="wizard",
+            #     name=gettext("...and more!"),
+            #     required=True,
+            #     mandatory=False,
+            #     suffix="_whatsnew_3",
+            #     template="wizard/wizard_whatsnew_3.jinja2",
+            #     div="wizard_plugin_corewizard_whatsnew_3",
+            # ),
+            # wizard_analytics=dict(
+            #     type="wizard",
+            #     name=gettext("Analytics"),
+            #     required=self._is_analytics_wizard_required(),
+            #     mandatory=False,
+            #     suffix="_analytics",
+            #     template="wizard/wizard_analytics.jinja2",
+            #     div="wizard_plugin_corewizard_analytics",
+            # ),
         )
 
         return whatsnew_wizard_tabs
