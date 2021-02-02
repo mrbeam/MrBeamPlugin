@@ -21,7 +21,10 @@ h1.mrb-messages-title{
     padding: 10px 15px;
 	margin-bottom:10px;
 	border-radius: 4px;
+    border: 1px solid #e25303;
+    box-shadow: 2px 2px 4px 1px #e25303;
 }
+
 .mrb-message-element:hover{
     background-color: transparent;
     transform: scale(1.018);
@@ -29,6 +32,8 @@ h1.mrb-messages-title{
 }
 .mrb-message-read .mrb-message-element{
     background: #ddd;
+    border: none;
+    box-shadow: none;
 }
 .mrb-message-element.selected {
     color: #ffffff;
