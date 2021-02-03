@@ -30,6 +30,7 @@ class ReviewHandler:
         self._plugin = plugin
         self._event_bus = plugin._event_bus
         self._settings = plugin._settings
+        self._device_info = plugin._device_info
 
         self.review_folder = os.path.join(
             self._settings.getBaseFolder("base"),
@@ -48,11 +49,28 @@ class ReviewHandler:
         ReviewFileUploader.upload_now(self._plugin, self._review_lock)
 
     def save_review_data(self, data):
-        self._write_review_to_file(data)
-        self._settings.set_boolean(["review", "given"], data["dontShowAgain"])
-        self._settings.save()  # This is necessary because without it the value is not saved
+        given = self._settings.get(["review", "given"])
+        if not given or data.get("debug", False):
+            data = self._add_review_data(data)
+            self._write_review_to_file(data)
+            self._settings.set_boolean(["review", "given"], data["dontShowAgain"])
+            self._settings.save()  # This is necessary because without it the value is not saved
 
-        ReviewFileUploader.upload_now(self._plugin, self._review_lock)
+            ReviewFileUploader.upload_now(self._plugin, self._review_lock)
+        else:
+            self._logger.warn("Not accepting user review since it was already given.")
+
+    def _add_review_data(self, data):
+        try:
+            data["env"] = self._plugin.get_env()
+            data["snr"] = self._device_info.get_serial()
+            data["sw_version"] = self._plugin._plugin_version
+            data["sw_tier"] = self._settings.get(["dev", "software_tier"])
+            data["model"] = self._device_info.get_model()
+            data["production_date"] = self._device_info.get_production_date()
+        except:
+            self._logger.exception("Unable to fill system data to user review.")
+        return data
 
     def _write_review_to_file(self, review):
         try:
