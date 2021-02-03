@@ -143,7 +143,7 @@ class WizardConfig:
                 mandatory=False,
                 suffix="_whatsnew_0",
                 template="wizard/wizard_whatsnew_0.jinja2",
-                div="wizard_plugin_corewizard_whatsnew_0",
+                div="wizard_plugin_corewizard_news_gcode",
             ),
             # wizard_whatsnew_1=dict(
             #     type="wizard",
@@ -202,7 +202,7 @@ class WizardConfig:
                 mandatory=False,
                 suffix="_beta_news_0",
                 template="wizard/wizard_beta_news_0.jinja2",
-                div="wizard_plugin_corewizard_beta_news_0",
+                div="wizard_plugin_corewizard_news_gcode",
             ),
         )
 
