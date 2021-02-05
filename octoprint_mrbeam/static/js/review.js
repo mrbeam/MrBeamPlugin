@@ -158,7 +158,6 @@ $(function () {
                 rating: self.rating(),
                 review: review,
                 ts: new Date().getTime(),
-                sw_tier: MRBEAM_SW_TIER,
                 number: self.REVIEW_NUMBER,
             };
 
