@@ -4,6 +4,7 @@ $(function () {
         window.mrbeam.viewModels["WizardGcodeDeletionViewModel"] = self;
 
         self.wizard = parameters[0];
+        self.settings = parameters[1];
 
         self.gcodeAutoDeletion = ko.observable(false);
         self.containsGcodeDeletionTab = false;
@@ -11,6 +12,13 @@ $(function () {
         self.onAfterBinding = function () {
             if (self.is_bound()) {
                 self.containsGcodeDeletionTab = true;
+            }
+        };
+
+        self.onWizardDetails = function() {
+            if(self.settings.settings.plugins.mrbeam.gcodeAutoDeletion() && $("#wizard_plugin_corewizard_news_gcode.active").length){
+                $('#wizard_plugin_corewizard_news_gcode input[type="checkbox"]').prop('checked', true);
+                $('#wizard_dialog .button-next').click();
             }
         };
 
@@ -60,7 +68,7 @@ $(function () {
     var DOM_ELEMENT_TO_BIND_TO = "wizard_plugin_corewizard_news_gcode";
     OCTOPRINT_VIEWMODELS.push([
         WizardGcodeDeletionViewModel,
-        ["wizardWhatsnewViewModel"],
+        ["wizardWhatsnewViewModel", "settingsViewModel"],
         "#" + DOM_ELEMENT_TO_BIND_TO,
     ]);
 });
