@@ -183,6 +183,10 @@ class WizardConfig:
             # ),
         )
 
+        # remove gcode deletion screen if it is already enabled
+        if self._plugin._settings.get(["gcodeAutoDeletion"]):
+            del whatsnew_wizard_tabs["wizard_whatsnew_0"]
+
         return whatsnew_wizard_tabs
 
     @staticmethod
