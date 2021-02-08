@@ -501,16 +501,33 @@ input.decent_input:hover {
 /*Laser button */
 
 /* Quick text */
+#quick_text_dialog_intensity {
+  margin-top: 4em;
+  margin-bottom: 2em;
+}
+
 #quick_text_dialog #qt_round_text_section img {
   width: 3em;
 }
 
-#qt_round_text_section .round-text-icon {
+/*#qt_round_text_section .round-text-icon {
   display: none;
 }
 #qt_round_text_section.clockwise .round-text-icon.clockwise,
 #qt_round_text_section:not(.clockwise) .round-text-icon.counterclockwise {
   display: inline-block;
+}*/
+#qt_round_text_section .btn-group .btn {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+#qt_round_text_section.straight #quick_text_dialog_circle {
+  display: none;
+}
+#quick_text_dialog_circle {
+  width: 60%;
+  margin: 1em;
+  float: right;
 }
 
 /*Sliders*/

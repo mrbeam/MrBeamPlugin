@@ -65,7 +65,7 @@ button:focus {
 .btn.active {
   box-shadow: none;
   border: 1px solid #383e42;
-  border-radius: 8px;
+  /*border-radius: 8px; Commented by TP. breaks active button groups! */
   background: #ffffff;
 }
 
