@@ -3453,6 +3453,26 @@ $(function () {
             $("#qt_round_text_section").removeClass("straight");
             self._qt_setCirclePath(false, 30);
         });
+        //        /**
+        //         * callback/subscription for the circle direction toggler
+        //         */
+        //        $("#quick_text_dialog_clockwise").on("click", function (event) {
+        //            event.target
+        //                .closest(".mini_switch")
+        //                .classList.toggle("counterclockwise");
+        //            if (self.currentQuickTextFile) {
+        //                self.currentQuickTextFile.clockwise = !event.target
+        //                    .closest(".mini_switch")
+        //                    .classList.contains("counterclockwise");
+        //                $("#qt_round_text_section").toggleClass(
+        //                    "clockwise",
+        //                    self.currentQuickTextFile.clockwise
+        //                );
+        //                self.lastQuickTextClockwise =
+        //                    self.currentQuickTextFile.clockwise;
+        //                self._qt_currentQuickTextUpdate();
+        //            }
+        //        });
 
         /**
          * callback for the next font button
