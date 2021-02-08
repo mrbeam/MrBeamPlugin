@@ -98,18 +98,21 @@ $(function () {
                 $("#dont_ask_review_link").hide();
                 $("#review_question").hide();
 
-                if (val >= 7) {
-                    $("#review_thank_you").show();
-                } else if (val < 7) {
+                // if (val >= 7) {
+                //     $("#review_thank_you").show();
+                // } else if (val < 7) {
                     $("#rating_block").hide();
                     $("#review_how_can_we_improve").show();
-                }
+                    $("#change_review").show();
+
+                    // console.log("------------->", self.rating());
+                // }
             });
         };
 
         self.fillAndDisableRating = function (userRating) {
             let allBtns = $(".rating button");
-            allBtns.off("click");
+            // allBtns.off("click");
 
             allBtns.each(function (i, obj) {
                 $(this).prop("disabled", true);
@@ -133,6 +136,28 @@ $(function () {
             self.exitReview();
         };
 
+        self.changeReview = function () {
+            // "Back" button: Go back to the rating bar for the user to change their answer
+            $("#dont_ask_review_link").show();
+            $("#review_question").show();
+            $("#rating_block").show();
+            $("#review_how_can_we_improve").hide();
+            $("#change_review").hide();
+            self.unfillAndEnableRating();
+        };
+
+        self.unfillAndEnableRating = function () {
+            let allBtns = $(".rating button");
+            // allBtns.on("click");
+
+            allBtns.each(function (i, obj) {
+                $(this).prop("disabled", false);
+                // if (parseInt($(this).attr("value")) <= parseInt(userRating)) {
+                    $(this).removeClass("rating-hover");
+                // }
+            });
+        };
+
         self.exitXBtn = function () {
             // "x" button in the corner: we send the review but show it again in the next session
             self.exitReview();
@@ -152,11 +177,13 @@ $(function () {
 
         self.sendReviewToServer = function () {
             let review = $("#review_textarea").val();
+            let user_email_or_phone = $("#review_input_phone_email").val();
             let data = {
                 // more data is added by the backend
                 dontShowAgain: self.dontShowAgain(),
                 rating: self.rating(),
                 review: review,
+                userEmailOrPhone: user_email_or_phone,
                 ts: new Date().getTime(),
                 number: self.REVIEW_NUMBER,
             };

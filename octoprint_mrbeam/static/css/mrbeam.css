@@ -2848,11 +2848,11 @@ input.search-query,
   margin: auto 20px 15px 20px;
 }
 
-#dont_ask_review_link {
+#dont_ask_review_link, #change_review {
   color: dimgray;
 }
 
-#review_textarea {
+#review_textarea, #review_input_phone_email {
   display: flex;
   margin-left: auto;
   margin-right: auto;
