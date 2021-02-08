@@ -13,7 +13,15 @@
 				<div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontNext"> {{ _('Aa') }} <i class="icon-chevron-right" title="{{ _('Next Font') }}"></i></div>
 			</div>
 			<input id="quick_text_dialog_intensity" class="precisionslider grayscale quicktext-slider padding-top" type="range" min="0" max="255"/>
-			<div id="qt_round_text_section" class="clockwise">
+            <div id="qt_round_text_section" class="straight">
+                <div  class="btn-group">
+                    <div id="quick_text_straight" class="btn active"><img src="/plugin/mrbeam/static/img/straight_text.svg" alt="straight text"/></div>
+                    <div id="quick_text_cw" class="btn"><img src="/plugin/mrbeam/static/img/round_text_outside.svg" alt="round text" class="round-text-icon clockwise pull-right"/></div>
+                    <div id="quick_text_ccw" class="btn"><img src="/plugin/mrbeam/static/img/round_text_inside.svg" alt="round text" class="round-text-icon counterclockwise pull-right"/></div>
+                </div>
+                <input id="quick_text_dialog_circle" class="precisionslider padding-top" type="range" min="0" max="100" value="0" />
+            </div>
+<!--			<div id="qt_round_text_section" class="clockwise">
 				<img src="/plugin/mrbeam/static/img/straight_text.svg" alt="straight text"/>
 				<img src="/plugin/mrbeam/static/img/round_text_outside.svg" alt="round text" class="round-text-icon clockwise pull-right"/>
 				<img src="/plugin/mrbeam/static/img/round_text_inside.svg" alt="round text" class="round-text-icon counterclockwise pull-right"/>
@@ -23,7 +31,7 @@
 				<span class="mini_switch_label">{{ _('outside') }}</span>
 				<span class="mini_switch_label mini_switch_trigger"><div></div></span>
 				<span class="mini_switch_label">{{ _('inside') }}</span>
-			</div>
+			</div>-->
         </form>
     </div>
     <div class="modal-footer">

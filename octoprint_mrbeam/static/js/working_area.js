@@ -3386,6 +3386,15 @@ $(function () {
             $("#quick_text_dialog_intensity").val(
                 self.currentQuickTextFile.intensity
             );
+            // round text radio buttons & slider
+            $("#qt_round_text_section div.btn").removeClass("active");
+            const cw = self.currentQuickTextFile.clockwise;
+            const straight = self.currentQuickTextFile.circle === 0;
+            let btn = "#quick_text_straight";
+            if (!straight) btn = cw ? "#quick_text_cw" : "#quick_text_ccw";
+            $(btn).addClass("active");
+            $("#qt_round_text_section").toggleClass("straight", straight);
+            self._qt_setCirclePath(cw, self.currentQuickTextFile.circle);
             $("#quick_text_dialog_text_input").focus();
         };
 
@@ -3426,22 +3435,23 @@ $(function () {
         /**
          * callback/subscription for the circle direction toggler
          */
-        $("#quick_text_dialog_clockwise").on("click", function (event) {
-            event.target
-                .closest(".mini_switch")
-                .classList.toggle("counterclockwise");
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.clockwise = !event.target
-                    .closest(".mini_switch")
-                    .classList.contains("counterclockwise");
-                $("#qt_round_text_section").toggleClass(
-                    "clockwise",
-                    self.currentQuickTextFile.clockwise
-                );
-                self.lastQuickTextClockwise =
-                    self.currentQuickTextFile.clockwise;
-                self._qt_currentQuickTextUpdate();
-            }
+        $("#quick_text_straight").on("click", function (event) {
+            $("#qt_round_text_section div.btn").removeClass("active");
+            $("#quick_text_straight").addClass("active");
+            $("#qt_round_text_section").addClass("straight");
+            self._qt_setCirclePath(true, 0);
+        });
+        $("#quick_text_cw").on("click", function (event) {
+            $("#qt_round_text_section div.btn").removeClass("active");
+            $("#quick_text_cw").addClass("active");
+            $("#qt_round_text_section").removeClass("straight");
+            self._qt_setCirclePath(true, 30);
+        });
+        $("#quick_text_ccw").on("click", function (event) {
+            $("#qt_round_text_section div.btn").removeClass("active");
+            $("#quick_text_ccw").addClass("active");
+            $("#qt_round_text_section").removeClass("straight");
+            self._qt_setCirclePath(false, 30);
         });
 
         /**
@@ -3538,9 +3548,12 @@ $(function () {
                 );
 
                 // curve path
-                const counterclockwise = $(
-                    "#quick_text_dialog_clockwise"
-                ).hasClass("counterclockwise");
+                //                const counterclockwise = $(
+                //                    "#quick_text_dialog_clockwise"
+                //                ).hasClass("counterclockwise");
+                const counterclockwise = $("#quick_text_ccw").hasClass(
+                    "active"
+                );
                 const textPathAttr = text.textPath.attr();
                 const path = snap.select(textPathAttr.href);
                 const textLength = self._qt_currentQuicktextGetTextLength(
@@ -3576,6 +3589,17 @@ $(function () {
                     font_index: self.currentQuickTextFile.fontIndex,
                 };
             }
+        };
+
+        self._qt_setCirclePath = function (cw, amount) {
+            self.currentQuickTextFile.circle = amount;
+            self.currentQuickTextFile.clockwise = cw;
+            self.lastQuickTextCircle = self.currentQuickTextFile.circle;
+            self.lastQuickTextClockwise = self.currentQuickTextFile.clockwise;
+            $("#quick_text_dialog_circle").val(
+                self.currentQuickTextFile.circle
+            );
+            self._qt_currentQuickTextUpdate();
         };
 
         /**
