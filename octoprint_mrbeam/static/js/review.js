@@ -29,7 +29,7 @@ $(function () {
                 self.loginState.currentUser().active
             ) {
                 let totalUsage = self.settings.settings.plugins.mrbeam.usage.totalUsage();
-                let shouldAsk = self.settings.settings.plugins.mrbeam.review.ask();
+                let shouldAsk = self.settings.settings.plugins.mrbeam.review.ask_again();
                 let reviewGiven = self.settings.settings.plugins.mrbeam.review.given();
 
                 return (
