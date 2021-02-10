@@ -22,7 +22,7 @@ class Migration(object):
     VERSION_SYNC_GRBL_SETTINGS = "0.1.24"
     VERSION_FIX_SSH_KEY_PERMISSION = "0.1.28"
     VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS = "0.1.37"
-    VERSION_UPDATE_LOGROTATE_CONF = "0.1.45"
+    VERSION_UPDATE_LOGROTATE_CONF = "0.8.0.2"
     VERSION_INFLATE_FILE_SYSTEM = "0.1.51"
     VERSION_PREFILL_MRB_HW_INFO = "0.1.55"
     VERSION_AVRDUDE_AUTORESET_SCRIPT = "0.2.0"
@@ -461,6 +461,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("update_logrotate_conf() ")
 
         logrotate_d_files = [
+            "analytics",
             "haproxy",
             "iobeam",
             "mount_manager",
