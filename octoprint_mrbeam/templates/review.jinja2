@@ -21,16 +21,17 @@
                 <h3 class="review_title">{{ _('Thank you!') }}</h3>
                 <label for="review_textarea" class="review_explanation">{{ _('Thank you for the feedback, is there anything else you want to tell us? Please share your thoughts with us so we can keep improving:') }}</label>
                 <textarea class="form-control" id="review_textarea" rows="4"></textarea>
-                <br>
+            </div>
+            <div id="review_thank_you" class="review_hidden_part">
+                <h3 class="review_title">{{ _('Thank you!') }}</h3>
+                <p class="review_explanation">{{ _('We love getting feedback from our customers! Do you have three minutes to leave a review for us? We’d be so excited to read it!') }}
+                    <a id="give_review_link" target="_blank" href="https://store.mr-beam.org/products/mr-beam-ii-dreamcut-air-filter-ii-bundle?utm_source=beamos&utm_medium=beamos&utm_campaign=review_screen#shopify-product-reviews">{{ _('Give review') }}</a>
+                </p>
+            </div>
+            <div id="ask_user_details" class="review_hidden_part">
                 <label for="review_input_phone_email" class="review_explanation">{{ _('Please add your Email address or phone number if you don\'t mind us contacting you in case we have questions:') }}</label>
                 <input type="text" class="form-control" id="review_input_phone_email">
             </div>
-{#            <div id="review_thank_you" class="review_hidden_part">#}
-{#                <h3 class="review_title">{{ _('Wow, thank you!') }}</h3>#}
-{#                <p class="review_explanation">{{ _('We love getting feedback from our customers! Do you have three minutes to leave a review for us? We’d be so excited to read it!') }}#}
-{#                    <a id="give_review_link" target="_blank" href="https://store.mr-beam.org/products/mr-beam-ii-dreamcut-air-filter-ii-bundle?utm_source=beamos&utm_medium=beamos&utm_campaign=review_screen#shopify-product-reviews">{{ _('Give review') }}</a>#}
-{#                </p>#}
-{#            </div>#}
         </div>
         <div class="modal-footer">
             <a id="change_review" class="btn btn-link pull-left review_hidden_part" data-bind='click:changeReview' aria-hidden="true">{{ _('Back') }}</a>

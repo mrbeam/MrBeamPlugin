@@ -97,22 +97,22 @@ $(function () {
                 self.fillAndDisableRating(val);
                 $("#dont_ask_review_link").hide();
                 $("#review_question").hide();
+                $("#rating_block").hide();
 
-                // if (val >= 7) {
-                //     $("#review_thank_you").show();
-                // } else if (val < 7) {
-                    $("#rating_block").hide();
+                if (val >= 7) {
+                    $("#review_thank_you").show();
+                } else if (val < 7) {
+                    // $("#rating_block").hide();
                     $("#review_how_can_we_improve").show();
-                    $("#change_review").show();
+                }
 
-                    // console.log("------------->", self.rating());
-                // }
+                $("#change_review").show();
+                $("#ask_user_details").show();
             });
         };
 
         self.fillAndDisableRating = function (userRating) {
             let allBtns = $(".rating button");
-            // allBtns.off("click");
 
             allBtns.each(function (i, obj) {
                 $(this).prop("disabled", true);
@@ -141,20 +141,19 @@ $(function () {
             $("#dont_ask_review_link").show();
             $("#review_question").show();
             $("#rating_block").show();
+            $("#review_thank_you").hide();
             $("#review_how_can_we_improve").hide();
+            $("#ask_user_details").hide();
             $("#change_review").hide();
             self.unfillAndEnableRating();
         };
 
         self.unfillAndEnableRating = function () {
             let allBtns = $(".rating button");
-            // allBtns.on("click");
 
             allBtns.each(function (i, obj) {
                 $(this).prop("disabled", false);
-                // if (parseInt($(this).attr("value")) <= parseInt(userRating)) {
-                    $(this).removeClass("rating-hover");
-                // }
+                $(this).removeClass("rating-hover");
             });
         };
 
