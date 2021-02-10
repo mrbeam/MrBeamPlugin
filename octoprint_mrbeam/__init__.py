@@ -228,11 +228,11 @@ class MrBeamPlugin(
 
         self.analytics_handler = analyticsHandler(self)
         self.user_notification_system = user_notification_system(self)
-        self.review_handler = reviewHandler(self)
         self.onebutton_handler = oneButtonHandler(self)
         self.interlock_handler = interLockHandler(self)
         self.lid_handler = lidHandler(self)
         self.usage_handler = usageHandler(self)
+        self.review_handler = reviewHandler(self)
         self.led_event_listener = LedEventListener(self)
         self.led_event_listener.set_brightness(
             self._settings.get(["leds", "brightness"])
@@ -372,8 +372,8 @@ class MrBeamPlugin(
             ),
             laser_heads=dict(filename="laser_heads.yaml"),
             review=dict(
-                given=False,
-                ask=False,
+                given=False,  # deprecated in settings, moved to usage_handler
+                ask_again=True,  # deprecated I assume
             ),
             focusReminder=True,
             analyticsEnabled=None,
@@ -467,8 +467,8 @@ class MrBeamPlugin(
             software_update_branches=self.get_update_branch_info(),
             _version=self._plugin_version,
             review=dict(
-                given=self._settings.get(["review", "given"]),
-                ask=self._settings.get(["review", "ask"]),
+                given=self.review_handler.is_review_already_given(),
+                ask_again=self._settings.get(["review", "ask_again"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
