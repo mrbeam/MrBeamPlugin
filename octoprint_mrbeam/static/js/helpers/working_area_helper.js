@@ -158,6 +158,15 @@ class WorkingAreaHelper {
                 return { generator: gen, version: version };
             }
 
+            // Affinity designer by Serif
+            // <svg ... xmlns:serif="http://www.serif.com/" ...>
+            if (
+                root_attrs["xmlns:serif"] &&
+                root_attrs["xmlns:serif"].value.search("serif.com") > 0
+            ) {
+                return { generator: "Serif Affinity", version: "unknown" };
+            }
+
             // detect Corel Draw by comment
             // <!-- Creator: CorelDRAW X5 -->
             // or <!-- Creator: CorelDRAW -->

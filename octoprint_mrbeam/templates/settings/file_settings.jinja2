@@ -1,39 +1,43 @@
 <div id="settings_svg_conversion">
     <h3>{{ _('Files') }}</h3>
 
-    <h4>{{ _('File import settings') }}</h4>
-    <form class="form-horizontal">
-        <div class="control-group">
-            <label class="control-label" for="settings-svgtogcode-svgDPI">{{ _('SVG dpi') }}</label>
-            <div class="controls">
-                <input id="settings-svgtogcode-svgDPI" type="number" min="0" class="input-block-level" data-bind="value: settings.plugins.mrbeam.svgDPI">
-                <br />
-                <div><small>{{ _('In case beamOS can\'t recognize what dpi value your graphic program uses, this value will be the fallback. Files from Illustrator or Inkscape or Corel Draw tend to work fine regardless of this value.') }}</small></div>
-            </div>
-        </div>
+    <div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
 
-        <div class="control-group">
-            <label class="control-label" for="settings-svgtogcode-dxfScale">{{ _('DXF Default Scale Factor') }}</label>
-            <div class="controls">
-                <input id="settings-svgtogcode-dxfScale" type="number" min="0" class="input-block-level" data-bind="value: settings.plugins.mrbeam.dxfScale">
-                <br />
-                <div><small>{{ _('Set default scale factor for DXF files (AutoCAD). Set to >1 (like 10) to magnify graphic, set between 0 and 1 (like 0.1) to decrease its size.') }} </small></div>
-                <div><small>{{ _('Here are some suggestions depending on the program you use to create your DXF files: Illustrator: 1, Vector Works: 10, ArchiCAD: 1000') }}</small></div>
+        <h4>{{ _('File import settings') }}</h4>
+        <form class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label" for="settings-svgtogcode-svgDPI">{{ _('SVG dpi') }}</label>
+                <div class="controls">
+                    <input id="settings-svgtogcode-svgDPI" type="number" min="0" class="input-block-level" data-bind="value: settings.plugins.mrbeam.svgDPI">
+                    <br />
+                    <div><small>{{ _('In case beamOS can\'t recognize what dpi value your graphic program uses, this value will be the fallback. Files from Illustrator or Inkscape or Corel Draw tend to work fine regardless of this value.') }}</small></div>
+                </div>
             </div>
-        </div>
-    </form>
 
-    <h4>{{ _('GCode auto-deletion') }}</h4>
-    <form class="form-horizontal">
-        <div class="control-group">
-            <div>
-                <p>{{ _('Every time you run a laser job, a GCode file is automatically created. We recommend to enable the auto-deletion of GCode files so that your Mr Beam doesn\'t get too loaded and it can work faster. With this enabled, only the last 25 GCode files will be stored.') }} </p>
-                <p>{{ _('You can alternativelly delete the GCode files manually in the Design Library.') }} </p>
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.gcodeAutoDeletion">
-                    <strong>{{ _('Delete GCode files automatically') }}</strong>  ({{ _('recommended') }})
-                </label>
+            <div class="control-group">
+                <label class="control-label" for="settings-svgtogcode-dxfScale">{{ _('DXF Default Scale Factor') }}</label>
+                <div class="controls">
+                    <input id="settings-svgtogcode-dxfScale" type="number" min="0" class="input-block-level" data-bind="value: settings.plugins.mrbeam.dxfScale">
+                    <br />
+                    <div><small>{{ _('Set default scale factor for DXF files (AutoCAD). Set to >1 (like 10) to magnify graphic, set between 0 and 1 (like 0.1) to decrease its size.') }} </small></div>
+                    <div><small>{{ _('Here are some suggestions depending on the program you use to create your DXF files: Illustrator: 1, Vector Works: 10, ArchiCAD: 1000') }}</small></div>
+                </div>
             </div>
-        </div>
-    </form>
+        </form>
+
+        <h4>{{ _('GCode auto-deletion') }}</h4>
+        <form class="form-horizontal">
+            <div class="control-group">
+                <div>
+                    <p>{{ _('Every time you run a laser job, a GCode file is automatically created. We recommend to enable the auto-deletion of GCode files so that your Mr Beam doesn\'t get too loaded and it can work faster. With this enabled, only the last 25 GCode files will be stored.') }} </p>
+                    <p>{{ _('You can alternativelly delete the GCode files manually in the Design Library.') }} </p>
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.gcodeAutoDeletion">
+                        <strong>{{ _('Delete GCode files automatically') }}</strong>  ({{ _('recommended') }})
+                    </label>
+                </div>
+            </div>
+        </form>
+
+    </div>
 </div>

@@ -1,4 +1,9 @@
 $(function () {
+    /**
+     * To debug the user review screen, set window.FORCE_REVIEW_SCREEN = true
+     * This will trigger the review screen to come up during all laser jobs for debugging.
+     * Review data is sent to the backend but will be marked with a 'debug' key set to true
+     */
     function ReviewViewModel(params) {
         let self = this;
         self.REVIEW_NUMBER = 1;
@@ -24,7 +29,7 @@ $(function () {
                 self.loginState.currentUser().active
             ) {
                 let totalUsage = self.settings.settings.plugins.mrbeam.usage.totalUsage();
-                let shouldAsk = self.settings.settings.plugins.mrbeam.review.ask();
+                let shouldAsk = self.settings.settings.plugins.mrbeam.review.ask_again();
                 let reviewGiven = self.settings.settings.plugins.mrbeam.review.given();
 
                 return (
@@ -62,8 +67,9 @@ $(function () {
             setTimeout(function () {
                 // The short jobs are always estimated 60s, so has to be more
                 if (
-                    self.shouldAskForReview() &&
-                    self.jobTimeEstimation() >= 61
+                    (self.shouldAskForReview() &&
+                        self.jobTimeEstimation() >= 61) ||
+                    FORCE_REVIEW_SCREEN
                 ) {
                     self.showReviewDialog(true);
                     self.reviewDialog.modal("show");
@@ -147,15 +153,17 @@ $(function () {
         self.sendReviewToServer = function () {
             let review = $("#review_textarea").val();
             let data = {
+                // more data is added by the backend
                 dontShowAgain: self.dontShowAgain(),
                 rating: self.rating(),
                 review: review,
                 ts: new Date().getTime(),
-                env: MRBEAM_ENV_LOCAL,
-                sw_tier: MRBEAM_SW_TIER,
-                snr: MRBEAM_SERIAL,
                 number: self.REVIEW_NUMBER,
             };
+
+            if (FORCE_REVIEW_SCREEN) {
+                data["debug"] = true;
+            }
 
             OctoPrint.simpleApiCommand("mrbeam", "review_data", data)
                 .done(function (response) {

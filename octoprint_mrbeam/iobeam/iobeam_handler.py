@@ -485,13 +485,14 @@ class IoBeamHandler(object):
                         data = None
                         try:
                             sock_data = self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
-                            if len(temp_buffer) > 0:
-                                self._logger.warn(
-                                    "ANDYTEST temp_buffer: %s", len(temp_buffer)
-                                )
-                            if len(sock_data) > self.MESSAGE_LENGTH_MAX - 6:
-                                self._logger.warn(
-                                    "ANDYTEST sock_data: %s", len(sock_data)
+                            if (
+                                len(temp_buffer) >= self.MESSAGE_LENGTH_MAX
+                                or len(sock_data) >= self.MESSAGE_LENGTH_MAX - 5
+                            ):
+                                self._logger.info(
+                                    "Receiving long message - buffer size: %s, receiving size : %s",
+                                    len(temp_buffer),
+                                    len(sock_data),
                                 )
                             data = temp_buffer + sock_data
                         except Exception as e:
@@ -512,22 +513,15 @@ class IoBeamHandler(object):
                             )
                             break
 
-                        # Processed buffered data as messages or skip and continue buffering the data
-                        if not data:
-                            my_errors = 1
-                            temp_buffer = b""
+                        # Split all JSON messages by new line character
+                        messages = data.split(self.MESSAGE_NEWLINE)
+
+                        if not data.endswith(self.MESSAGE_NEWLINE):
+                            # Record remaining part of data into temp buffer, to read messages longer than MESSAGE_LENGTH_MAX
+                            temp_buffer = messages.pop()
                         else:
-                            # Split all JSON messages by new line character
-                            messages = data.split(self.MESSAGE_NEWLINE)
-
-                            if not data.endswith(self.MESSAGE_NEWLINE):
-                                # Record remaining part of data into temp buffer, to read messages longer than MESSAGE_LENGTH_MAX
-                                temp_buffer = messages.pop()
-                            else:
-                                temp_buffer = b""
-
-                            # here we see what's in the data...
-                            my_errors, _ = self._handle_messages(messages)
+                            temp_buffer = b""
+                        my_errors, _ = self._handle_messages(messages)
 
                         if my_errors > 0:
                             self._errors += my_errors
@@ -585,26 +579,24 @@ class IoBeamHandler(object):
                         json_dict = json.loads(json_data)
                         # Now there could be "data" and "response"
                         if "data" in json_dict:
-                            if self.MESSAGE_ERROR not in json_dict["data"]:
+                            _data = json_dict["data"]
+                            if self.MESSAGE_ERROR not in _data:
                                 # Process all data sets
-                                if isinstance(json_dict["data"], dict):
+                                if isinstance(_data, dict):
                                     # We have to process the iobeam dataset first, because we need the iobeam version for analytics
-                                    iobeam_dataset = json_dict["data"].pop(
-                                        "iobeam", None
-                                    )
-                                    if iobeam_dataset:
+                                    if "iobeam" in _data.keys():
                                         error_count += self._handle_dataset(
-                                            "iobeam", iobeam_dataset
+                                            "iobeam", _data.pop("iobeam", None)
                                         )
 
-                                    for dataset in json_dict["data"]:
+                                    for data_id, dataset in _data.items():
                                         error_count += self._handle_dataset(
-                                            dataset, json_dict["data"][dataset]
+                                            data_id, dataset
                                         )
                             else:
                                 self._logger.debug(
                                     "Received error in data '%s'",
-                                    json_dict["data"][self.MESSAGE_ERROR],
+                                    _data[self.MESSAGE_ERROR],
                                 )
                                 error_count += 1
                         elif "response" in json_dict:
@@ -616,29 +608,32 @@ class IoBeamHandler(object):
                             "iobeam:version:"
                         ):
                             tokens = json_data.split(":")
-                            version_str = None
-                            version_obj = None
                             try:
-                                version_str = tokens[2]
+                                self.iobeam_version = tokens[2]
                                 version_obj = LooseVersion(tokens[2])
                             except ValueError:
+                                self.iobeam_version = None
+                                version_obj = None
                                 self._logger.debug(
-                                    "Could not parse data '%s' as JSON", json_data
+                                    "Could not parse iobeam version and data '%s' as JSON",
+                                    json_data,
                                 )
 
-                            # BACKWARD_COMPATIBILITY: If there is an iobeam version that does not use JSON (< v0.7.0),
-                            #  we check the version number here
-                            self.iobeam_version = version_str
+                            # BACKWARD_COMPATIBILITY:
+                            # If there is an iobeam version that does not use
+                            # JSON (< v0.7.0), we check the version number here
                             if not self.is_iobeam_version_ok():
                                 self.notify_user_old_iobeam()
 
                         else:
                             self._logger.debug(
-                                "Could not parse data '%s' as JSON", json_data
+                                "Could not parse data '%s' as JSON - err : %s",
+                                json_data,
+                                ve,
                             )
                     except Exception as e2:
                         self._logger.debug("Some error with data '%s'", json_data)
-                        self._logger.debug(e2)
+                        self._logger.error(e2)
                         error_count += 1
 
         except Exception as e:
@@ -952,15 +947,7 @@ class IoBeamHandler(object):
         }
         if isinstance(dataset, dict):
             before_state = self.open_interlocks()
-            for lock_id, lock_state in dataset.iteritems():
-                self._logger.debug(
-                    "_handle_interlock() dataset: %s, lock_id: %s, lock_state: %s, before_state: %s",
-                    dataset,
-                    lock_id,
-                    lock_state,
-                    before_state,
-                )
-
+            for lock_id, lock_state in dataset.items():
                 if lock_id is not None:
                     lock_name = name[lock_id]
                     if lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
@@ -972,14 +959,13 @@ class IoBeamHandler(object):
                 else:
                     return self._handle_invalid_message(dataset)
 
-                now_state = self.open_interlocks()
-                if now_state != before_state:
-                    if self.is_interlock_closed():
-                        # self._logger.debug("Interlock CLOSED")
-                        self._fireEvent(IoBeamEvents.INTERLOCK_CLOSED)
-                    else:
-                        # self._logger.debug("Interlock OPEN")
-                        self._fireEvent(IoBeamEvents.INTERLOCK_OPEN, now_state)
+            now_state = self.open_interlocks()
+            if now_state != before_state:
+                if self.is_interlock_closed():
+                    self._fireEvent(IoBeamEvents.INTERLOCK_CLOSED)
+                else:
+                    self._fireEvent(IoBeamEvents.INTERLOCK_OPEN, now_state)
+                self._logger.info("Open interlocks : %s", now_state)
         return 0
 
     def _handle_lid(self, action):
