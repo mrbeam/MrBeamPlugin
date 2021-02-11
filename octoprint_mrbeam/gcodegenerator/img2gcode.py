@@ -41,6 +41,7 @@ from job_params import JobParams
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 EXTRA_OVERSHOOT_EXTRA_DURATION = 0.45
+EXTRA_OVERSHOOT_MIN_DIST = 1  # in mm
 
 
 class ImageProcessor:
@@ -488,15 +489,46 @@ class ImageProcessor:
                 line_info = self.get_pixelinfo_of_line(pix, size, row)
                 y = img_pos_mm[1] - (self.beam * line_info["row"])
 
+                if direction_positive:
+                    _minmax = min
+                    side = "left"
+                    k = -1
+                else:
+                    _minmax = max
+                    side = "right"
+                    k = 1
                 if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
 
-                    # TODO integrate octogon overshoots in write_gcode_for_line_start
                     if not first_row and self.extra_overshoot:
-                        overshoot_gco = self._get_octogon_linefeed(
-                            direction_positive, img_pos_mm, line_info, y, row
+                        overshoot_gco = (
+                            "; EXTRA_TIME "
+                            + str(EXTRA_OVERSHOOT_EXTRA_DURATION)
+                            + "s\n"
                         )
-                        overshoot_gco += (
-                            "; EXTRA_TIME " + str(EXTRA_OVERSHOOT_EXTRA_DURATION) + "s"
+                        # Use the most extreme position of x from one line to an other
+                        # assumes that self.gc_ctx.x was previously set
+                        extrema_next_line = (
+                            img_pos_mm[0]
+                            + self.beam * line_info[side]
+                            + k
+                            * (
+                                2 * self.overshoot_distance
+                                + self.backlash_compensation_x
+                            ),
+                        )
+                        extrema_x = _minmax(self.gc_ctx.x, extrema_next_line)
+                        # start and end are the positions the laserhead should be
+                        # before and after the overshoot.
+                        # Assumes that self.gc_ctx.y was previously set
+                        start = np.array([extrema_x, self.gc_ctx.y])
+                        end = np.array([extrema_x, y])
+                        # /!\ direction_positive reverted at the end of loop
+                        overshoot_gco += self.get_overshoot(
+                            start,
+                            end,
+                            direction_positive,
+                            self.overshoot_distance,
+                            offset_counter=row,
                         )
                         self._append_gcode(overshoot_gco)
 
@@ -523,12 +555,11 @@ class ImageProcessor:
                     # flip direction after each line to go back and forth
                     direction_positive = not direction_positive
                     first_row = False
-                else:
-                    if line_info["left"] != None:
-                        # skip line vertical out of working area
-                        self._append_gcode(
-                            "; ignoring line y={}, out of working area.".format(y)
-                        )
+                elif line_info["left"] != None:
+                    # skip line vertical out of working area
+                    self._append_gcode(
+                        "; ignoring line y={}, out of working area.".format(y)
+                    )
 
             self._append_gcode("; EndPart")
             self._append_gcode("M3S0")
@@ -811,42 +842,29 @@ class ImageProcessor:
         # self.is_first_pixel = False
         return target_x, None
 
-    def _get_octogon_linefeed(self, direction_positive, img_pos_mm, line_info, y, row):
+    # @staticmethod
+    def get_overshoot(self, start, end, direction, size, offset_counter=0):
+        # only need self for the g0 code
+        # offset_counter sets a different offset as it increments,
+        # which spreads any remaining burn marks if any
+
         # This is messy and to be overwritten with streamlined logic
         # octogon_overshoot
-        # /!\ direction_positive reverted at the end of loop
-        if not direction_positive:
-            _minmax = max
-            side = "right"
-            k = 1
-        else:
-            _minmax = min
-            side = "left"
-            k = -1
 
-        _ov = self.overshoot_distance
-        _bk = self.backlash_compensation_x
-        extrema_x = _minmax(
-            self.gc_ctx.x,
-            img_pos_mm[0] + self.beam * line_info[side] + k * (2 * _ov + _bk),
-        )
-        start = np.array([extrema_x, self.gc_ctx.y])  # None, None
-        end = np.array([extrema_x, y])  # None, 0
-        print start
-        print end
         dy = end[1] - start[1]
-        _vsp = _ov  # extra vertical_spacing in the overshoot
+        # extra vertical_spacing in the overshoot
+        _vsp = max(EXTRA_OVERSHOOT_MIN_DIST, size)
         _line1 = np.array([k, 0.0])
         _line2 = np.array([0.0, 1.0])
         _line3 = np.array([k, 1.0])
         _line4 = np.array([k, -1.0])
         # Extend the start and end point differently depending on
         # the line so there is no overlap between the overshoots
-        shift = _ov * (row % (_vsp / dy)) / 2 * _line1
+        shift = size * (offset_counter % (_vsp / dy)) / 2 * _line1
         start = start + shift
         end = end + shift
         # base size of the octogon (dictates length of sides)
-        _size = 2 * _ov
+        _size = 2 * size
         overshoot_gco = "".join(
             map(
                 lambda v: self._get_gcode_g0(x=v[0], y=v[1], comment="octogon") + "\n",
@@ -1303,7 +1321,7 @@ M2
         ip.profiler.log.addHandler(lh)
 
         path = args[0]
-        print (options)
+        print(options)
         ip.img_to_gcode(
             path, options.width, options.height, options.x, options.y, datauri
         )
@@ -1311,4 +1329,4 @@ M2
 
         fh.write(footer)
 
-    print ("gcode written to " + gcodefile)
+    print("gcode written to " + gcodefile)

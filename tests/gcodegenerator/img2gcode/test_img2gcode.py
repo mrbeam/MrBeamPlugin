@@ -7,9 +7,9 @@ Test the gcode creating functions
 import StringIO
 import numpy as np
 
-from PIL import Image
 import logging
 import pytest
+from octoprint.util import dict_merge
 from octoprint_mrbeam.gcodegenerator import img2gcode
 
 # from os.path import dirname, basename, join, split, realpath
@@ -17,7 +17,9 @@ from octoprint_mrbeam.gcodegenerator import img2gcode
 
 class TestG0Generation:
     def setup_method(self, method):
-
+        """
+        Setup to allow each function to have a generic image processor.
+        """
         self.fh = StringIO.StringIO()
 
         # with open("/tmp/test_img2gcode.gco", "w") as self.fh:
@@ -41,6 +43,7 @@ class TestG0Generation:
             eng_compressor=100,
             material=None,
         )
+
         # basics
         self.log = logging.getLogger()
 
@@ -117,24 +120,18 @@ class TestG0Generation:
             self.ip._get_gcode_g1(x=None, y=float("NaN"), comment=None)
         assert "Coordinate is NaN" in str(exception.value)
 
-    def test_get_octogon_linefeed(self):
-        direction_positive = True
-        img_pos_mm = (0, 0)
-        line_info = {
-            "left": 0,
-            "right": 10,
-            "row": 0,
-            "img_w": 10,
-            "img_h": 3,
-        }
-        y = 0
-        row = 0
-        gc = self.ip._get_octogon_linefeed(
-            direction_positive, img_pos_mm, line_info, y, row
-        )
-        assert gc == "foo", "octogon false"
+    def test_overshoot(self):
+        for overshoot_size in [0, 0.0, 1.123456, 30]:
+            self.ip.backlash_x = overshoot_size
+            start = np.array([0, 0])
+            end = np.array([0, 2])
+            gc = self.ip.get_overshoot(start, end, True, overshoot_size)
+            assert "nan" not in gc.lower()
+            # assert gc == "foo"
 
     def test_generate_gcode(self):
+        from PIL import Image
+
         black10x3 = Image.new("L", (10, 3), (0))
         imgArray = [{"i": black10x3, "x": 0, "y": 0, "id": "black10x3"}]
         xMM = 495
@@ -146,76 +143,3 @@ class TestG0Generation:
         gc = self.fh.getvalue()
         print gc
         assert gc == "foo"
-
-    def test_octo(self):
-        direction_positive = not True
-        img_pos_mm = (333, 111)
-        line_info = {
-            "left": None,
-            "right": -1,
-            "row": 0,
-            "img_w": 0,
-            "img_h": 3,
-        }
-        y = 0
-        row = 0
-        gc_ctx = {"x": 100, "y": 55}
-        beam = 0.1
-
-        if not direction_positive:
-            _minmax = max
-            side = "right"
-            k = 1
-        else:
-            _minmax = min
-            side = "left"
-            k = -1
-
-        _ov = 0  ###
-        _bk = 10  ###
-        extrema_x = _minmax(
-            gc_ctx["x"],
-            img_pos_mm[0] + beam * line_info[side] + k * (2 * _ov + _bk),
-        )
-        start = np.array([extrema_x, gc_ctx["y"]])  # None, None
-        end = np.array([extrema_x, y])  # None, 0
-        self.log.info("start: {}".format(start))
-        self.log.info("end: {}".format(end))
-        dy = end[1] - start[1]
-        _vsp = _ov  # extra vertical_spacing in the overshoot
-        _line1 = np.array([k, 0.0])
-        _line2 = np.array([0.0, 1.0])
-        _line3 = np.array([k, 1.0])
-        _line4 = np.array([k, -1.0])
-        # Extend the start and end point differently depending on
-        # the line so there is no overlap between the overshoots
-        self.log.info(
-            "_ov={}, row={}, _vsp={}, dy={}, _line1={}".format(
-                _ov, row, _vsp, dy, _line1
-            )
-        )
-        # _ov=0, row=0, _vsp=0, dy=-55.0, _line1=[ 1.  0.]
-        shift = _ov * (row % (_vsp / dy)) / 2 * _line1
-        start = start + shift
-        end = end + shift
-        self.log.warning("start: {}, end: {}, shift:{}".format(start, end, shift))
-        # base size of the octogon (dictates length of sides)
-        _size = 2 * _ov
-        overshoot_gco = "".join(
-            map(
-                lambda v: self.ip._get_gcode_g0(x=v[0], y=v[1], comment="octogon")
-                + "\n",
-                np.cumsum(
-                    [
-                        start + (_size + _vsp / 2) * _line4,
-                        _size * _line1 / 2,
-                        (_size + dy / 2) * _line3,
-                        _vsp * _line2,
-                        -(_size - dy / 2) * _line4,
-                        -_size * _line1 / 2,
-                    ],
-                    axis=0,
-                ),
-            )
-        )
-        self.log.info(overshoot_gco)
