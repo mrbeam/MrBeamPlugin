@@ -514,7 +514,7 @@ class ImageProcessor:
                             * (
                                 2 * self.overshoot_distance
                                 + self.backlash_compensation_x
-                            ),
+                            )
                         )
                         extrema_x = _minmax(self.gc_ctx.x, extrema_next_line)
                         # start and end are the positions the laserhead should be
@@ -526,7 +526,7 @@ class ImageProcessor:
                         overshoot_gco += self.get_overshoot(
                             start,
                             end,
-                            direction_positive,
+                            k,
                             self.overshoot_distance,
                             offset_counter=row,
                         )
@@ -847,24 +847,28 @@ class ImageProcessor:
         # only need self for the g0 code
         # offset_counter sets a different offset as it increments,
         # which spreads any remaining burn marks if any
+        # direction should be +- 1 and dictates whether to turn clockwise or anticlockwise
 
         # This is messy and to be overwritten with streamlined logic
         # octogon_overshoot
 
         dy = end[1] - start[1]
+        # changed measurment so the final size of the overshoot matches expected size.
+        corrected_size = float(max(EXTRA_OVERSHOOT_MIN_DIST, size)) / 4
         # extra vertical_spacing in the overshoot
-        _vsp = max(EXTRA_OVERSHOOT_MIN_DIST, size)
+        _vsp = corrected_size
+        k = direction
         _line1 = np.array([k, 0.0])
         _line2 = np.array([0.0, 1.0])
         _line3 = np.array([k, 1.0])
         _line4 = np.array([k, -1.0])
         # Extend the start and end point differently depending on
         # the line so there is no overlap between the overshoots
-        shift = size * (offset_counter % (_vsp / dy)) / 2 * _line1
+        shift = corrected_size * (offset_counter % (_vsp / dy)) / 2 * _line1
         start = start + shift
         end = end + shift
         # base size of the octogon (dictates length of sides)
-        _size = 2 * size
+        _size = 2 * corrected_size
         overshoot_gco = "".join(
             map(
                 lambda v: self._get_gcode_g0(x=v[0], y=v[1], comment="octogon") + "\n",
@@ -915,22 +919,22 @@ class ImageProcessor:
         return "G1{}{}{}{}{}".format(x_gc, y_gc, s_gc, f_gc, all_comments)
 
     def _ensure_value_in_range(self, value, maximum, minimum=0, prefix=""):
-        # returns (cropped?) value and comment if cropped.
+        """
+        Returns a tuple :
+          - number closest to value in range of minimum and maximum
+          - comment if the input and output value don't match ; also logs it
+        """
         if value == None:
             return None, ""
-        elif value < minimum:
-            val = max(value, minimum)
-            message = "{} set to {}, was {}".format(prefix, minimum, value)
-            self.log.warning(message)
+        elif isinstance(value, float) and math.isnan(value):
+            # math.isnan() fails on non-float types
+            raise ValueError("Coordinate is NaN")
+
+        val = max(min(value, maximum), minimum)
+        if val != value:
+            message = "{} set to {}, was {}".format(prefix, val, value)
+            self.log.debug(message)
             return (val, message)
-        elif value > maximum:
-            val = min(value, maximum)
-            message = "{} set to {}, was {}".format(prefix, maximum, value)
-            self.log.warning(message)
-            return (val, message)
-        # TODO uncomment after fixing
-        # elif isinstance(value, float) and math.isnan(value): # math.isnan() fails on non-float types
-        #    raise ValueError("Coordinate is NaN")
         else:
             return value, ""
 

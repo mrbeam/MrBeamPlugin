@@ -123,9 +123,9 @@ class TestG0Generation:
     def test_overshoot(self):
         for overshoot_size in [0, 0.0, 1.123456, 30]:
             self.ip.backlash_x = overshoot_size
-            start = np.array([0, 0])
-            end = np.array([0, 2])
-            gc = self.ip.get_overshoot(start, end, True, overshoot_size)
+            start = np.array([0, 2])
+            end = np.array([0, 5])
+            gc = self.ip.get_overshoot(start, end, 1, overshoot_size)
             assert "nan" not in gc.lower()
             # assert gc == "foo"
 
@@ -141,5 +141,5 @@ class TestG0Generation:
         file_id = "generic black 10x3 px"
         self.ip.generate_gcode(imgArray, xMM, yMM, wMM, hMM, file_id)
         gc = self.fh.getvalue()
-        print gc
-        assert gc == "foo"
+        print(gc)
+        # assert gc == "foo"
