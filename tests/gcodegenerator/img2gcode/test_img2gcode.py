@@ -126,6 +126,7 @@ class TestG0Generation:
             start = np.array([0, 2])
             end = np.array([0, 5])
             gc = self.ip.get_overshoot(start, end, 1, overshoot_size)
+            self.log.debug(str(tuple(start)) + " - > " + str(tuple(end)) + "\n" + gc)
             assert "nan" not in gc.lower()
             # assert gc == "foo"
 
@@ -141,5 +142,5 @@ class TestG0Generation:
         file_id = "generic black 10x3 px"
         self.ip.generate_gcode(imgArray, xMM, yMM, wMM, hMM, file_id)
         gc = self.fh.getvalue()
-        print(gc)
+        self.log.debug("\n" + gc)
         # assert gc == "foo"

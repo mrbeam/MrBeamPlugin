@@ -843,53 +843,50 @@ class ImageProcessor:
         return target_x, None
 
     # @staticmethod
-    def get_overshoot(self, start, end, direction, size, offset_counter=0):
+    def get_overshoot(self, start, end, direction, size, offset_counter=None):
+        """
+        Create the gcode for a diamond / octogon overshoot, the returned gcode does not contain the start and end positions.
+        size : base size of the octogon (dictates length of sides) - It's approximative
+        offset_counter : Sets a different offset as it increments
+        """
         # only need self for the g0 code
-        # offset_counter sets a different offset as it increments,
         # which spreads any remaining burn marks if any
         # direction should be +- 1 and dictates whether to turn clockwise or anticlockwise
 
         # This is messy and to be overwritten with streamlined logic
         # octogon_overshoot
 
-        dy = end[1] - start[1]
-        # changed measurment so the final size of the overshoot matches expected size.
-        corrected_size = float(max(EXTRA_OVERSHOOT_MIN_DIST, size)) / 4
+        dy = float(end[1] - start[1])
+        # changed measurement so the final size of the overshoot matches expected size.
+        _size = float(max(EXTRA_OVERSHOOT_MIN_DIST, size)) / 4
         # extra vertical_spacing in the overshoot
-        _vsp = corrected_size
         k = direction
         _line1 = np.array([k, 0.0])
         _line2 = np.array([0.0, 1.0])
         _line3 = np.array([k, 1.0])
         _line4 = np.array([k, -1.0])
-        # Extend the start and end point differently depending on
-        # the line so there is no overlap between the overshoots
-        shift = corrected_size * (offset_counter % (_vsp / dy)) / 2 * _line1
-        start = start + shift
-        end = end + shift
-        # base size of the octogon (dictates length of sides)
-        _size = 2 * corrected_size
-        overshoot_gco = "".join(
+        if isinstance(offset_counter, int):
+            # Extend the start and end point differently depending on
+            # the line so there is no overlap between the overshoots
+            shift = _size * (offset_counter % max(int(2 * _size / dy), 1)) / 2 * _line1
+            start = start + shift
+            end = end + shift
+        return "".join(
             map(
                 lambda v: self._get_gcode_g0(x=v[0], y=v[1], comment="octogon") + "\n",
                 np.cumsum(
                     [
-                        start + (_size + _vsp / 2) * _line4,
-                        _size * _line1 / 2,
-                        (_size + dy / 2) * _line3,
-                        _vsp * _line2,
-                        -(_size - dy / 2) * _line4,
-                        -_size * _line1 / 2,
+                        start + _size * _line4,
+                        _size * _line1,
+                        (_size + dy / 4) * _line3,
+                        dy / 2 * _line2,
+                        -(_size + dy / 4) * _line4,
+                        -_size * _line1,
                     ],
                     axis=0,
                 ),
             )
         )
-        # self.log.info(" Overshoot direction %s, side %s", k, side)
-        # self.log.info("  start x %s, y %s" % tuple(start))
-        # self.log.info("  end   x %s, y %s" % tuple(end))
-        # self.log.info("  gcode \n%s" % overshoot_gco)
-        return overshoot_gco
 
     def _get_gcode_g0(self, x=None, y=None, comment=None):
         x, x_cmt = self._ensure_value_in_range(x, self.workingAreaWidth, 0, "X")
