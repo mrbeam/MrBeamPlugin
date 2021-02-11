@@ -71,6 +71,7 @@ from octoprint_mrbeam.software_update_information import (
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
+from .messages import messages
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from octoprint_mrbeam.gcodegenerator.job_params import JobParams
 from .analytics.uploader import AnalyticsFileUploader
@@ -228,11 +229,11 @@ class MrBeamPlugin(
 
         self.analytics_handler = analyticsHandler(self)
         self.user_notification_system = user_notification_system(self)
-        self.review_handler = reviewHandler(self)
         self.onebutton_handler = oneButtonHandler(self)
         self.interlock_handler = interLockHandler(self)
         self.lid_handler = lidHandler(self)
         self.usage_handler = usageHandler(self)
+        self.review_handler = reviewHandler(self)
         self.led_event_listener = LedEventListener(self)
         self.led_event_listener.set_brightness(
             self._settings.get(["leds", "brightness"])
@@ -294,8 +295,8 @@ class MrBeamPlugin(
         self._logger.info(msg, terminal=True)
 
         msg = (
-            "MrBeam Lasercutter Profile: %s"
-            % self.laserCutterProfileManager.get_current_or_default()
+                "MrBeam Lasercutter Profile: %s"
+                % self.laserCutterProfileManager.get_current_or_default()
         )
         self._logger.info(msg, terminal=True)
         self._frontend_logger.info(msg)
@@ -355,8 +356,9 @@ class MrBeamPlugin(
             terminal=False,
             terminal_show_checksums=True,
             converter_min_required_disk_space=100
-            * 1024
-            * 1024,  # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
+                                              * 1024
+                                              * 1024,
+            # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
             dev=dict(
                 debug=False,  # deprecated
                 terminalMaxLines=2000,
@@ -372,8 +374,8 @@ class MrBeamPlugin(
             ),
             laser_heads=dict(filename="laser_heads.yaml"),
             review=dict(
-                given=False,
-                ask=False,
+                given=False,  # deprecated in settings, moved to usage_handler
+                ask_again=True,  # deprecated I assume
             ),
             focusReminder=True,
             analyticsEnabled=None,
@@ -467,8 +469,8 @@ class MrBeamPlugin(
             software_update_branches=self.get_update_branch_info(),
             _version=self._plugin_version,
             review=dict(
-                given=self._settings.get(["review", "given"]),
-                ask=self._settings.get(["review", "ask"]),
+                given=self.review_handler.is_review_already_given(),
+                ask_again=self._settings.get(["review", "ask_again"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
@@ -520,9 +522,9 @@ class MrBeamPlugin(
                     data["terminal_show_checksums"]
                 )
             if (
-                "gcode_nextgen" in data
-                and isinstance(data["gcode_nextgen"], collections.Iterable)
-                and "clip_working_area" in data["gcode_nextgen"]
+                    "gcode_nextgen" in data
+                    and isinstance(data["gcode_nextgen"], collections.Iterable)
+                    and "clip_working_area" in data["gcode_nextgen"]
             ):
                 self._settings.set_boolean(
                     ["gcode_nextgen", "clip_working_area"],
@@ -646,6 +648,7 @@ class MrBeamPlugin(
                 "js/user_notification_viewmodel.js",
                 "js/lib/load-image.all.min.js",  # to load custom material images
                 "js/settings/custom_material.js",
+                "js/messages.js",
                 "js/design_store.js",
                 "js/settings/dev_design_store.js",
                 "js/settings_menu_navigation.js",
@@ -668,6 +671,7 @@ class MrBeamPlugin(
                 "css/sliders.css",
                 "css/hopscotch.min.css",
                 "css/wizard.css",
+                "css/tab_messages.css",
             ],
             less=["less/mrbeam.less"],
         )
@@ -706,14 +710,14 @@ class MrBeamPlugin(
         language = g.locale.language if g.locale else "en"
 
         if (
-            request.headers.get("User-Agent")
-            != self.analytics_handler._timer_handler.SELF_CHECK_USER_AGENT
+                request.headers.get("User-Agent")
+                != self.analytics_handler._timer_handler.SELF_CHECK_USER_AGENT
         ):
             self._track_ui_render_calls(request, language)
 
         enable_accesscontrol = self._user_manager.enabled
         accesscontrol_active = (
-            enable_accesscontrol and self._user_manager.hasBeenCustomized()
+                enable_accesscontrol and self._user_manager.hasBeenCustomized()
         )
 
         selectedProfile = self.laserCutterProfileManager.get_current_or_default()
@@ -941,9 +945,9 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
     def acl_wizard_api(self):
         if not (
-            self.isFirstRun()
-            and self._user_manager.enabled
-            and not self._user_manager.hasBeenCustomized()
+                self.isFirstRun()
+                and self._user_manager.enabled
+                and not self._user_manager.hasBeenCustomized()
         ):
             return make_response("Forbidden", 403)
 
@@ -954,10 +958,10 @@ class MrBeamPlugin(
             return make_response("Unable to interprete request", 400)
 
         if (
-            "user" in data.keys()
-            and "pass1" in data.keys()
-            and "pass2" in data.keys()
-            and data["pass1"] == data["pass2"]
+                "user" in data.keys()
+                and "pass1" in data.keys()
+                and "pass2" in data.keys()
+                and data["pass1"] == data["pass2"]
         ):
             # configure access control
             self._logger.debug("acl_wizard_api() creating admin user: %s", data["user"])
@@ -1030,11 +1034,11 @@ class MrBeamPlugin(
         # check if username is ok
         username = data.get("username", "")
         if (
-            current_user is None
-            or current_user.is_anonymous()
-            or not current_user.is_user()
-            or not current_user.is_active()
-            or current_user.get_name() != username
+                current_user is None
+                or current_user.is_anonymous()
+                or not current_user.is_user()
+                or not current_user.is_active()
+                or current_user.get_name() != username
         ):
             return make_response("Invalid user", 403)
 
@@ -1162,6 +1166,26 @@ class MrBeamPlugin(
         # self._logger.info("custom_material(): response: %s", data)
         return make_response(jsonify(res), 200)
 
+    # simpleApiCommand: messages;
+    def messages(self, data):
+
+        res = dict(
+            messages=[],
+            put=0)
+
+        try:
+            if 'put' in data and isinstance(data['put'], dict):
+                for key, m in data['put'].iteritems():
+                    messages(self).put_custom_message(key, m)
+
+            res['messages'] = messages(self).get_custom_messages()
+
+        except:
+            self._logger.exception("Exception while handling messages(): ")
+            return make_response("Error while handling messages request.", 500)
+
+        return make_response(jsonify(res), 200)
+
     # simpleApiCommand: leds;
     def set_leds_update(self, data):
         self._logger.info("leds() request: %s", data)
@@ -1192,8 +1216,8 @@ class MrBeamPlugin(
     # simpleApiCommand: generate_backlash_compenation_pattern_gcode
     def generate_backlash_compenation_pattern_gcode(self, data):
         srcFile = (
-            __builtin__.__package_path__
-            + "/static/gcode/backlash_compensation_x@cardboard.gco"
+                __builtin__.__package_path__
+                + "/static/gcode/backlash_compensation_x@cardboard.gco"
         )
         with open(srcFile, "r") as fh:
             gcoString = fh.read()
@@ -1398,7 +1422,7 @@ class MrBeamPlugin(
         )
 
         if not "result" in json_data or not all(
-            k in json_data["result"].keys() for k in ["newCorners", "newMarkers"]
+                k in json_data["result"].keys() for k in ["newCorners", "newMarkers"]
         ):
             # TODO correct error message
             return make_response("No profile included in request", 400)
@@ -1428,10 +1452,10 @@ class MrBeamPlugin(
 
         # validate input
         if (
-            i < JobParams.Min.INTENSITY
-            or i > JobParams.Max.INTENSITY
-            or f < JobParams.Min.SPEED
-            or f > JobParams.Max.SPEED
+                i < JobParams.Min.INTENSITY
+                or i > JobParams.Max.INTENSITY
+                or f < JobParams.Min.SPEED
+                or f > JobParams.Max.SPEED
         ):
             return make_response("Invalid parameters", 400)
         cm = CalibrationMarker(
@@ -1449,7 +1473,7 @@ class MrBeamPlugin(
 
         seconds = 0
         while (
-            self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26
+                self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26
         ):  # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
             time.sleep(1.0)  # wait a second
             seconds += 1
@@ -1590,10 +1614,10 @@ class MrBeamPlugin(
                 "refs": {
                     "resource": location,
                     "download": url_for("index", _external=True)
-                    + "downloads/files/"
-                    + FileDestinations.LOCAL
-                    + "/"
-                    + file_name,
+                                + "downloads/files/"
+                                + FileDestinations.LOCAL
+                                + "/"
+                                + file_name,
                 },
             }
 
@@ -1645,9 +1669,9 @@ class MrBeamPlugin(
                 slicer = "svgtogcode"
                 slicer_instance = self._slicing_manager.get_slicer(slicer)
                 if slicer_instance.get_slicer_properties()["same_device"] and (
-                    self._printer.is_printing()
-                    or self._printer.is_paused()
-                    or self.lid_handler.lensCalibrationStarted
+                        self._printer.is_printing()
+                        or self._printer.is_paused()
+                        or self.lid_handler.lensCalibrationStarted
                 ):
                     # slicer runs on same device as OctoPrint, slicing while printing is hence disabled
                     _while = (
@@ -1674,7 +1698,7 @@ class MrBeamPlugin(
                 name, ext = os.path.splitext(gcode_name)
                 i = 1
                 while self.mrb_file_manager.file_exists(
-                    FileDestinations.LOCAL, gcode_name
+                        FileDestinations.LOCAL, gcode_name
                 ):
                     gcode_name = name + "." + str(i) + ext
                     i += 1
@@ -1682,9 +1706,9 @@ class MrBeamPlugin(
                 # prohibit overwriting the file that is currently being printed
                 currentOrigin, currentFilename = self._getCurrentFile()
                 if (
-                    currentFilename == gcode_name
-                    and currentOrigin == FileDestinations.LOCAL
-                    and (self._printer.is_printing() or self._printer.is_paused())
+                        currentFilename == gcode_name
+                        and currentOrigin == FileDestinations.LOCAL
+                        and (self._printer.is_printing() or self._printer.is_paused())
                 ):
                     msg = "Trying to slice into file that is currently being printed: {}".format(
                         gcode_name
@@ -1710,10 +1734,10 @@ class MrBeamPlugin(
 
                 # callback definition
                 def slicing_done(
-                    gcode_name,
-                    select_after_slicing,
-                    print_after_slicing,
-                    append_these_files,
+                        gcode_name,
+                        select_after_slicing,
+                        print_after_slicing,
+                        append_these_files,
                 ):
                     try:
                         # append additional gcodes
@@ -1779,10 +1803,10 @@ class MrBeamPlugin(
                     "refs": {
                         "resource": location,
                         "download": url_for("index", _external=True)
-                        + "downloads/files/"
-                        + FileDestinations.LOCAL
-                        + "/"
-                        + gcode_name,
+                                    + "downloads/files/"
+                                    + FileDestinations.LOCAL
+                                    + "/"
+                                    + gcode_name,
                     },
                 }
 
@@ -1814,10 +1838,12 @@ class MrBeamPlugin(
             ready_to_laser=[],
             cli_event=["event"],
             custom_materials=[],
+            messages=[],
             analytics_init=[],  # user's analytics choice from welcome wizard
             gcode_deletion_init=[],  # user's gcode deletion choice from welcome wizard
             analytics_upload=[],  # triggers an upload of analytics files
-            take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
+            take_undistorted_picture=[],
+            # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
             focus_reminder=[],
             remember_markers_across_sessions=[],
             review_data=[],
@@ -1846,7 +1872,7 @@ class MrBeamPlugin(
     def on_api_command(self, command, data):
         if command == "position":
             if isinstance(data["x"], (int, long, float)) and isinstance(
-                data["y"], (int, long, float)
+                    data["y"], (int, long, float)
             ):
                 self._printer.position(data["x"], data["y"])
             else:
@@ -1861,6 +1887,8 @@ class MrBeamPlugin(
             return self.lasersafety_wizard_api(data)
         elif command == "custom_materials":
             return self.custom_materials(data)
+        elif command == "messages":
+            return self.messages(data)
         elif command == "ready_to_laser":
             return self.ready_to_laser(data)
         elif command == "send_corner_calibration":
@@ -1944,7 +1972,7 @@ class MrBeamPlugin(
                 jsonify(
                     {
                         "alive": self.lid_handler.boardDetectorDaemon is not None
-                        and self.lid_handler.boardDetectorDaemon.is_alive(),
+                                 and self.lid_handler.boardDetectorDaemon.is_alive(),
                     }
                 ),
                 200,
@@ -1974,8 +2002,8 @@ class MrBeamPlugin(
         # Everytime the gcode auto deletion is enabled, it will be triggered
         if enable_deletion:
             if (
-                self._gcode_deletion_thread is None
-                or not self._gcode_deletion_thread.is_alive()
+                    self._gcode_deletion_thread is None
+                    or not self._gcode_deletion_thread.is_alive()
             ):
                 self._logger.info(
                     "set_gcode_deletion: Starting threaded bulk deletion of gcode files."
@@ -2267,15 +2295,15 @@ class MrBeamPlugin(
         )
 
     def do_slice(
-        self,
-        model_path,
-        printer_profile,
-        machinecode_path=None,
-        profile_path=None,
-        position=None,
-        on_progress=None,
-        on_progress_args=None,
-        on_progress_kwargs=None,
+            self,
+            model_path,
+            printer_profile,
+            machinecode_path=None,
+            profile_path=None,
+            position=None,
+            on_progress=None,
+            on_progress_args=None,
+            on_progress_kwargs=None,
     ):
         # TODO profile_path is not used because only the default (selected) profile is.
         if not machinecode_path:
@@ -2482,13 +2510,13 @@ class MrBeamPlugin(
             self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, payload)
 
     def on_slicing_progress(
-        self,
-        slicer,
-        source_location,
-        source_path,
-        destination_location,
-        destination_path,
-        progress,
+            self,
+            slicer,
+            source_location,
+            source_path,
+            destination_location,
+            destination_path,
+            progress,
     ):
         # TODO: this method should be moved into printer.py or comm_acc2 or so.
         flooredProgress = progress - (progress % 10)
@@ -2618,10 +2646,10 @@ class MrBeamPlugin(
     def _getCurrentFile(self):
         currentJob = self._printer.get_current_job()
         if (
-            currentJob is not None
-            and "file" in currentJob.keys()
-            and "name" in currentJob["file"]
-            and "origin" in currentJob["file"]
+                currentJob is not None
+                and "file" in currentJob.keys()
+                and "name" in currentJob["file"]
+                and "origin" in currentJob["file"]
         ):
             return currentJob["file"]["origin"], currentJob["file"]["name"]
         else:
@@ -2629,9 +2657,9 @@ class MrBeamPlugin(
 
     def _fixEmptyUserManager(self):
         if (
-            hasattr(self, "_user_manager")
-            and len(self._user_manager._users) <= 0
-            and (self._user_manager._customized or not self.isFirstRun())
+                hasattr(self, "_user_manager")
+                and len(self._user_manager._users) <= 0
+                and (self._user_manager._customized or not self.isFirstRun())
         ):
             self._logger.debug("_fixEmptyUserManager")
             self._user_manager._customized = False
@@ -2829,8 +2857,8 @@ class MrBeamPlugin(
             # ntpq_out, code = exec_cmd_output("ntpq -p", shell=True, log=False)
             # self._logger.debug("ntpq -p:\n%s", ntpq_out)
             cmd = (
-                "ntpq -pn | /usr/bin/awk 'BEGIN { ntp_offset=%s } $1 ~ /^\*/ { ntp_offset=$9 } END { print ntp_offset }'"
-                % max_offset
+                    "ntpq -pn | /usr/bin/awk 'BEGIN { ntp_offset=%s } $1 ~ /^\*/ { ntp_offset=$9 } END { print ntp_offset }'"
+                    % max_offset
             )
             output, code = exec_cmd_output(cmd, shell=True, log=False)
             try:
@@ -2859,7 +2887,7 @@ class MrBeamPlugin(
         )
         if self._time_ntp_check_last_ts > 0.0:
             local_time_shift = (
-                now - self._time_ntp_check_last_ts - interval_last
+                    now - self._time_ntp_check_last_ts - interval_last
             )  # if there was no shift, this should sum up to zero
         self._time_ntp_shift += local_time_shift
         self._time_ntp_synced = ntp_offset is not None
