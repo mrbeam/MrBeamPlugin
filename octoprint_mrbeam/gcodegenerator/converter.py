@@ -14,6 +14,7 @@ import simpletransform
 import cubicsuperpath
 
 from profiler import Profiler
+from job_params import JobParams
 from img2gcode import ImageProcessor
 from svg_util import get_path_d, _add_ns, unittouu
 
@@ -34,16 +35,16 @@ class Converter:
         "noheaders": "false",
         "engrave": False,
         "raster": {
-            "intensity_white": 0,
-            "intensity_black": 500,
-            "speed_white": 1500,
-            "speed_black": 250,
-            "contrast": 1.0,
-            "sharpening": 1.0,
-            "dithering": False,
-            "beam_diameter": 0.2,
-            "pierce_time": 0,
-            "eng_compressor": 100,
+            "intensity_white": JobParams.Default.INTENSITY_WHITE,
+            "intensity_black": JobParams.Default.INTENSITY_BLACK,
+            "speed_white": JobParams.Default.FEEDRATE_WHITE,
+            "speed_black": JobParams.Default.FEEDRATE_BLACK,
+            "contrast": JobParams.Default.CONTRAST,
+            "sharpening": JobParams.Default.SHARPENING,
+            "dithering": JobParams.Default.DITHERING,
+            "beam_diameter": JobParams.Default.BEAM_DIAMETER,
+            "pierce_time": JobParams.Default.PIERCE_TIME,
+            "eng_compressor": JobParams.Default.ENG_COMPRESSOR,
         },
         "vector": [],
         "material": None,
@@ -98,7 +99,7 @@ class Converter:
                 self._log.info("Using default %s = %s" % (key, str(self.options[key])))
 
     @staticmethod
-    def _calculate_mpr_value(intensity, speed, passes=1):
+    def _calculate_mpr_value(intensity, speed, passes=JobParams.Default.PASSES):
         if intensity and speed and passes:
             mpr = round(float(intensity) / float(speed) * int(passes), 2)
         else:
@@ -337,6 +338,7 @@ class Converter:
                             dithering=rasterParams["dithering"],
                             pierce_time=rasterParams["pierce_time"],
                             engraving_mode=rasterParams["engraving_mode"],
+                            extra_overshoot=rasterParams["extra_overshoot"],
                             eng_compressor=rasterParams["eng_compressor"],
                             material=self.options["material"],
                         )
@@ -527,7 +529,9 @@ class Converter:
                             fr = int(settings["feedrate"])
                             passes = int(settings["passes"])
                             for p in range(0, passes):
-                                if passes > 1 and settings.get("progressive", False):
+                                if passes > JobParams.Min.PASSES and settings.get(
+                                    "progressive", False
+                                ):
                                     f = round(fr * (1 - 0.5 * p / (passes - 1)))
                                 else:
                                     f = fr
@@ -658,7 +662,7 @@ class Converter:
     def parse(self, file=None):
         try:
             stream = open(self.svg_file, "r")
-            p = etree.XMLParser(huge_tree=True)
+            p = etree.XMLParser(huge_tree=True, recover=True)
             self.document = etree.parse(stream, parser=p)
             stream.close()
             self._log.info("parsed %s" % self.svg_file)
@@ -783,7 +787,7 @@ class Converter:
         if color in self.colorParams.keys():
             return True
         else:
-            self._log.info("Skipping color: %s " % color)
+            self._log.debug("Skipping color: %s " % color)
             return False
 
     def _check_dir(self):

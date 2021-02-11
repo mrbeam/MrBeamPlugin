@@ -18,7 +18,7 @@ def usageHandler(plugin):
 
 
 class UsageHandler(object):
-    MAX_DUST_FACTOR = 1.0
+    MAX_DUST_FACTOR = 2.0
     MIN_DUST_FACTOR = 0.5
     MAX_DUST_VALUE = 0.5
     MIN_DUST_VALUE = 0.2
@@ -190,6 +190,11 @@ class UsageHandler(object):
                 self._usage_data["compressor"]["job_time"] = (
                     self.start_time_compressor + job_duration
                 )
+            self._logger.debug(
+                "job_duration actual: {:.1f}s, weighted: {:.1f}s, factor: {:.2f}".format(
+                    job_duration, job_duration * dust_factor, dust_factor
+                )
+            )
             self._write_usage_data()
 
     def _calculate_ntp_fix_compensation(self, job_duration):
@@ -240,6 +245,14 @@ class UsageHandler(object):
         self.start_time_prefilter = -1
         self._write_usage_data()
         self.write_usage_analytics(action="reset_gantry")
+
+    def get_review_given(self):
+        return self._usage_data.get("review", {}).get("given", False)
+
+    def set_review_given(self):
+        if not self.get_review_given():
+            self._usage_data["review"] = {"given": True}
+            self._write_usage_data()
 
     def _log_usage_data(self, usage_data):
         self._logger.info(
@@ -307,6 +320,12 @@ class UsageHandler(object):
     def get_total_usage(self):
         if "total" in self._usage_data:
             return self._usage_data["total"]["job_time"]
+        else:
+            return 0
+
+    def get_total_jobs(self):
+        if "succ_jobs" in self._usage_data:
+            return self._usage_data["succ_jobs"]["count"]
         else:
             return 0
 

@@ -1,12 +1,13 @@
 const MARKERS = ["NW", "NE", "SE", "SW"];
 
 $(function () {
-    function CameraViewModel(params) {
+    function CameraViewModel(parameters) {
         var self = this;
         window.mrbeam.viewModels["cameraViewModel"] = self;
 
-        self.settings = params[0];
-        self.state = params[1];
+        self.settings = parameters[0];
+        self.state = parameters[1];
+        self.loginState = parameters[2];
 
         self.TAB_NAME_WORKING_AREA = "#workingarea";
         self.FALLBACK_IMAGE_URL =
@@ -19,6 +20,7 @@ $(function () {
         };
 
         self.needsCornerCalibration = ko.observable(false);
+        self.needsRawCornerCalibration = ko.observable(false);
 
         self.rawUrl = "/downloads/files/local/cam/debug/raw.jpg"; // TODO get from settings
         self.undistortedUrl =
@@ -31,10 +33,12 @@ $(function () {
         self.countImagesLoaded = ko.observable(0);
         self.imagesInSession = ko.observable(0);
 
-        self.markersFound = ko.observable(
-            new Map(MARKERS.map((elm) => [elm, undefined]))
-        );
-
+        self.markersFound = {
+            NW: ko.observable(),
+            SW: ko.observable(),
+            SE: ko.observable(),
+            NE: ko.observable(),
+        };
         self.maxObjectHeight = 38; // in mm
         self.defaultMargin = self.maxObjectHeight / 582;
         self.objectZ = ko.observable(0); // in mm
@@ -130,13 +134,13 @@ $(function () {
             if (
                 MARKERS.reduce(
                     (prev, key) =>
-                        prev || self.markersFound()[key] === undefined,
+                        prev || self.markersFound[key]() === undefined,
                     false
                 )
             )
                 return undefined;
             return MARKERS.reduce(
-                (prev_val, key) => prev_val + self.markersFound()[key],
+                (prev_val, key) => prev_val + self.markersFound[key](),
                 0
             );
         });
@@ -155,8 +159,8 @@ $(function () {
             var ret = "";
             MARKERS.forEach(function (m) {
                 if (
-                    self.markersFound()[m] !== undefined &&
-                    !self.markersFound()[m]
+                    self.markersFound[m]() !== undefined &&
+                    !self.markersFound[m]()
                 )
                     ret = ret + " marker" + m;
             });
@@ -175,19 +179,19 @@ $(function () {
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
             if ("need_camera_calibration" in data) {
-                self._needCalibration(data["camera_calibration"]);
+                self._needCalibration(data["need_camera_calibration"]);
             }
+            if ("need_raw_camera_calibration" in data) {
+                self.needsRawCornerCalibration(
+                    data["need_raw_camera_calibration"]
+                );
+            }
+
             if ("beam_cam_new_image" in data) {
                 const mf = data["beam_cam_new_image"]["markers_found"];
-                _markersFound = {};
                 MARKERS.forEach(function (m) {
-                    if (mf.includes(m)) {
-                        _markersFound[m] = true;
-                    } else {
-                        _markersFound[m] = false;
-                    }
+                    self.markersFound[m](mf.includes(m));
                 });
-                self.markersFound(_markersFound);
 
                 if (data["beam_cam_new_image"]["error"] === undefined) {
                     self._needCalibration(false);
@@ -248,11 +252,15 @@ $(function () {
                         type: "GET",
                         url: "/plugin/mrbeam/on_camera_picture_transfer",
                     });
-                } else {
+                } else if (self.loginState.loggedIn()) {
                     OctoPrint.simpleApiCommand(
                         "mrbeam",
                         "on_camera_picture_transfer",
                         {}
+                    );
+                } else {
+                    console.warn(
+                        "User not logged in, cannot confirm picture download."
                     );
                 }
                 self.imagesInSession(self.imagesInSession() + 1);
@@ -287,18 +295,24 @@ $(function () {
         };
 
         self.send_camera_image_to_analytics = function () {
-            OctoPrint.simpleApiCommand(
-                "mrbeam",
-                "send_camera_image_to_analytics",
-                {}
-            );
+            if (self.loginState.loggedIn()) {
+                OctoPrint.simpleApiCommand(
+                    "mrbeam",
+                    "send_camera_image_to_analytics",
+                    {}
+                );
+            } else {
+                console.warn(
+                    "User not logged in, cannot send image to analytics."
+                );
+            }
         };
     }
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([
         CameraViewModel,
-        ["settingsViewModel", "printerStateViewModel"],
+        ["settingsViewModel", "printerStateViewModel", "loginStateViewModel"],
         [], // nothing to bind.
     ]);
 });

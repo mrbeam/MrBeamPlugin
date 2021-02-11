@@ -26,7 +26,9 @@ class DustManager(object):
     DEFAUL_DUST_MAX_AGE = 10  # seconds
     FAN_MAX_INTENSITY = 100
 
-    FINAL_DUSTING_DURATION = 30
+    FINAL_DUSTING_PHASE1_DURATION = 30
+    FINAL_DUSTING_PHASE2_DURATION = 120
+    FINAL_DUSTING_PHASE2_INTENSITY = 15
 
     FAN_COMMAND_RETRIES = 2
     FAN_COMMAND_WAITTIME = 1.0
@@ -61,6 +63,7 @@ class DustManager(object):
         self._shutting_down = False
         self._final_extraction_thread = None
         self._continue_final_extraction = False
+        self._user_abort_final_extraction = False
         self._validation_timer = None
         self._validation_timer_interval = self.DEFAULT_VALIDATION_TIMER_INTERVAL
         self._timer_boost_ts = 0
@@ -72,10 +75,7 @@ class DustManager(object):
         self._job_dust_values = []
 
         self.extraction_limit = 0.3
-        self.final_extraction_auto_mode_duration = 120  # ANDYTEST
-        # values from profile are not good.
-        # self.extraction_limit = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
-        # self.auto_mode_time = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
+        self.extraction_limit = 0.01
 
         self._event_bus.subscribe(
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
@@ -112,6 +112,9 @@ class DustManager(object):
     def is_fan_connected(self):
         return self._connected
 
+    def set_user_abort_final_extraction(self):
+        self._user_abort_final_extraction = True
+
     def shutdown(self):
         self._shutting_down = True
 
@@ -126,6 +129,7 @@ class DustManager(object):
         self._iobeam.subscribe(
             IoBeamValueEvents.FAN_AUTO_RESPONSE, self._on_command_response
         )
+        self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self._onEvent)
         self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self._onEvent)
         self._event_bus.subscribe(IoBeamEvents.CONNECT, self._onEvent)
         self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._onEvent)
@@ -218,6 +222,9 @@ class DustManager(object):
             if self._just_initialized:
                 self._stop_dust_extraction()
                 self._just_initialized = False
+        elif event == IoBeamEvents.LID_OPENED:
+            if self.is_final_extraction_mode:
+                self.set_user_abort_final_extraction()
 
     def _start_test_fan_rpm(self):
         self._logger.debug(
@@ -302,6 +309,7 @@ class DustManager(object):
                     c.append(t.getName())
                     t.cancel()
             self._continue_final_extraction = False
+            self._user_abort_final_extraction = False
             self._fan_timers = []
             if c:
                 self._logger.debug(
@@ -329,6 +337,7 @@ class DustManager(object):
                 )
                 dust_start_ts = self._data_ts
                 self._continue_final_extraction = True
+                self._user_abort_final_extraction = False
                 if self.__continue_dust_extraction(
                     self.extraction_limit, dust_start_ts
                 ):
@@ -340,6 +349,7 @@ class DustManager(object):
                     )
                     while (
                         self._continue_final_extraction
+                        and not self._user_abort_final_extraction
                         and self.__continue_dust_extraction(
                             self.extraction_limit, dust_start_ts
                         )
@@ -347,18 +357,19 @@ class DustManager(object):
                         time.sleep(1)
                     self.is_final_extraction_mode = False
                     self._logger.debug(
-                        "Final extraction: DUSTING_MODE_START end. duration: %s",
+                        "Final extraction: DUSTING_MODE_START end. duration was: %s",
                         time.time() - dust_start_ts,
                     )
                 if self._continue_final_extraction:
-                    self._start_final_extraction_auto_mode(
-                        self.final_extraction_auto_mode_duration
+                    self._start_final_extraction_phase2(
+                        self.FINAL_DUSTING_PHASE2_DURATION
                     )
                     self._continue_final_extraction = False
                     self.send_laser_job_event()
 
                 self._final_extraction_thread = None
                 self.is_final_extraction_mode = False
+                self._user_abort_final_extraction = False
             else:
                 self._logger.warning(
                     "No dust value received so far. Skipping trial dust extraction!"
@@ -391,25 +402,25 @@ class DustManager(object):
             )
 
     def __continue_dust_extraction(self, value, started):
-        if (
-            time.time() - started > self.FINAL_DUSTING_DURATION
-        ):  # TODO: get this value from laser profile
+        if time.time() - started > self.FINAL_DUSTING_PHASE1_DURATION:
             return False
         if self._dust is not None and self._dust < value:
             return False
         return True
 
-    def _start_final_extraction_auto_mode(self, value):
-        self._logger.debug("Final extraction: Starting auto_mode for %s secs", value)
-        self._start_dust_extraction(cancel_all_timers=False)
-        my_timer = threading.Timer(value, self._final_extraction_auto_mode_timed)
-        my_timer.setName("DustManager:final_extraction_auto_mode")
+    def _start_final_extraction_phase2(self, value):
+        self._logger.debug("Final extraction: Starting phase2 for %s secs", value)
+        self._start_dust_extraction(
+            value=self.FINAL_DUSTING_PHASE2_INTENSITY, cancel_all_timers=False
+        )
+        my_timer = threading.Timer(value, self._final_extraction_phase2_timed)
+        my_timer.setName("DustManager:final_extraction_phase2")
         my_timer.daemon = True
         my_timer.start()
         self._fan_timers.append(my_timer)
 
-    def _final_extraction_auto_mode_timed(self):
-        self._logger.debug("Final extraction: DONE. Stopping auto_mode")
+    def _final_extraction_phase2_timed(self):
+        self._logger.debug("Final extraction: DONE. Stopping phase2")
         self._stop_dust_extraction()
 
     def _send_fan_command(self, action, value=None):

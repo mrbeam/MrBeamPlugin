@@ -72,16 +72,16 @@
             <a class="accordion-toggle" data-bind="click:calibration.loadUndistortedPicture, visible: !cornerCalibrationActive()"><i
                     class="icon-repeat"></i> {{ _('refresh') }}</a>
             <div class="marker_selection_desc calibration_waiting_for_picture">
-                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound['NW'] }"><i
                         class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.NW"></span>
                 </div>
-                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound['SW'] }"><i
                         class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.SW"></span>
                 </div>
-                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound['SE'] }"><i
                         class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.SE"></span>
                 </div>
-                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i
+                <div class="marker_found_indicator" data-bind="css: { active: camera.markersFound['NE'] }"><i
                         class="icon-ok"></i> <span data-bind="text: camera.MARKER_DESCRIPTIONS.NE"></span>
                 </div>
                 <div class="marker_found_indicator" data-bind="visible: !calImgReady()"><i
@@ -96,16 +96,16 @@
             <div data-bind="css: {complete: cornerCalibrationComplete()}">
                 <!-- "Debug" values of where the user pointed the tip of the arrow. -->
                 <div data-bind="visible: calImgReady() && cornerCalibrationActive()">
-                    <div id="NW" class="cal-row" data-bind="click: goToMarker(1)">
+                    <div id="NW" class="cal-row" data-bind="click: function() {goToMarker(1)}">
                         <div class="cal-arrow NW"></div>
                         <span data-bind="text: camera.MARKER_DESCRIPTIONS.NW"></span>: <span data-bind="text: _formatPoint(currentResults()['NW'])"></span></div>
-                    <div id="SW" class="cal-row" data-bind="click: goToMarker(2)">
+                    <div id="SW" class="cal-row" data-bind="click: function() {goToMarker(2)}">
                         <div class="cal-arrow SW"></div>
                         <span data-bind="text: camera.MARKER_DESCRIPTIONS.SW"></span>: <span data-bind="text: _formatPoint(currentResults()['SW'])"></span></div>
-                    <div id="SE" class="cal-row" data-bind="click: goToMarker(3)">
+                    <div id="SE" class="cal-row" data-bind="click: function() {goToMarker(3)}">
                         <div class="cal-arrow SE"></div>
                         <span data-bind="text: camera.MARKER_DESCRIPTIONS.SE"></span>: <span data-bind="text: _formatPoint(currentResults()['SE'])"></span></div>
-                    <div id="NE" class="cal-row" data-bind="click: goToMarker(4)">
+                    <div id="NE" class="cal-row" data-bind="click: function() {goToMarker(4)}">
                         <div class="cal-arrow NE"></div>
                         <span data-bind="text: camera.MARKER_DESCRIPTIONS.NE"></span>: <span data-bind="text: _formatPoint(currentResults()['NE'])"></span></div>
                 </div>

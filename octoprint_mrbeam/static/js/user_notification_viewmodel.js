@@ -91,25 +91,7 @@ $(function () {
 
                 for (let i = 0; i < nu_notifications.length; i++) {
                     let pn_obj = self._getPnObj(nu_notifications[i]);
-
-                    // find notification in screen
-                    let existing_notification = null;
-                    for (let n = 0; n < PNotify.notices.length; n++) {
-                        if (
-                            PNotify.notices[n].state != "closed" &&
-                            PNotify.notices[n].options &&
-                            PNotify.notices[n].options.id ==
-                                nu_notifications[i].notification_id
-                        ) {
-                            existing_notification = PNotify.notices[n];
-                            break;
-                        }
-                    }
-                    if (existing_notification) {
-                        existing_notification.update(pn_obj);
-                    } else {
-                        new PNotify(pn_obj);
-                    }
+                    mrbeam.updatePNotify(pn_obj);
                 }
             }
         };
@@ -202,6 +184,7 @@ $(function () {
 
         self._getErrorString = function (err) {
             if (err) {
+                err = Array.isArray(err) ? err.join(",<br />") : err;
                 return (
                     "<br/><br/><strong>" +
                     gettext("Error:") +

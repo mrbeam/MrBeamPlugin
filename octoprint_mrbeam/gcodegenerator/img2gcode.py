@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import optparse
 import logging
 import math
+import numpy as np
 from PIL import Image
 from PIL import ImageEnhance
 import base64
@@ -35,7 +36,11 @@ import sys
 import re
 from img_separator import ImageSeparator
 from profiler import Profiler
+from job_params import JobParams
+
 from octoprint_mrbeam.mrb_logger import mrb_logger
+
+EXTRA_OVERSHOOT_EXTRA_DURATION = 0.45
 
 
 class ImageProcessor:
@@ -51,21 +56,22 @@ class ImageProcessor:
         output_filehandle=None,
         workingAreaWidth=None,
         workingAreaHeight=None,
-        contrast=1.0,
-        sharpening=1.0,
-        beam_diameter=0.25,
+        contrast=JobParams.Default.CONTRAST,
+        sharpening=JobParams.Default.SHARPENING,
+        beam_diameter=JobParams.Default.BEAM_DIAMETER,
         backlash_x=0.0,
-        intensity_black=500,
-        intensity_white=0,
+        intensity_black=JobParams.Default.INTENSITY_BLACK,
+        intensity_white=JobParams.Default.INTENSITY_WHITE,
         intensity_black_user=None,
         intensity_white_user=None,
-        speed_black=500,
-        speed_white=3000,
-        dithering=False,
+        speed_black=JobParams.Min.SPEED,
+        speed_white=JobParams.Max.SPEED,
+        dithering=JobParams.Default.DITHERING,
         engraving_mode=None,
-        pierce_time=0,
+        pierce_time=JobParams.Default.PIERCE_TIME,
         overshoot_distance=1,
-        eng_compressor=100,  # DreamCut.
+        extra_overshoot=False,
+        eng_compressor=JobParams.Default.ENG_COMPRESSOR,
         material=None,
     ):
 
@@ -79,7 +85,13 @@ class ImageProcessor:
         self.debug = True  # general debug
         self.debugPreprocessing = False  # write each step image to /tmp
         # backlash compensation will be applied only on lines in negative axis direction
-        self.backlash_compensation_x = backlash_x
+        self.backlash_compensation_x = 0.0
+        try:
+            self.backlash_compensation_x = float(backlash_x)
+        except ValueError:
+            self.log.warn(
+                "Can't convert backlash_x into float. value is: '%s'", backlash_x
+            )
 
         try:
             self.debug = _mrbeam_plugin_implementation._settings.get(
@@ -88,7 +100,7 @@ class ImageProcessor:
             self.debugPreprocessing = _mrbeam_plugin_implementation._settings.get(
                 ["dev", "debug_gcode"]
             )
-        except NameError:
+        except (NameError, AttributeError):
             self.debug = True
             self.debugPreprocessing = True
             self.log.info(
@@ -102,17 +114,27 @@ class ImageProcessor:
             self.log.setLevel(logging.DEBUG)
 
         self.output_filehandle = output_filehandle
-        self.beam = float(beam_diameter) if beam_diameter else 0.25
-        self.pierce_time = float(pierce_time) / 1000.0 if pierce_time else 0.0
-        self.pierce_intensity = 1000  # TODO parametrize
+        self.beam = (
+            float(beam_diameter) if beam_diameter else JobParams.Default.BEAM_DIAMETER
+        )
+        self.pierce_time = (
+            float(pierce_time) / 1000.0 if pierce_time else JobParams.Min.PIERCE_TIME
+        )
+        self.pierce_intensity = JobParams.Default.PIERCE_INTENSITY
         self.ignore_brighter_than = 254  # TODO parametrize
         self.ignore_darker_than = 1  # TODO parametrize
-        self.intensity_black = float(intensity_black) if intensity_black else 0.0
-        self.intensity_white = float(intensity_white) if intensity_white else 0.0
+        self.intensity_black = (
+            float(intensity_black) if intensity_black else JobParams.Min.INTENSITY
+        )
+        self.intensity_white = (
+            float(intensity_white) if intensity_white else JobParams.Min.INTENSITY
+        )
         self.intensity_black_user = intensity_black_user
         self.intensity_white_user = intensity_white_user
-        self.feedrate_white = float(speed_white) if speed_white else 3000.0
-        self.feedrate_black = float(speed_black) if speed_black else 0.0
+        self.feedrate_white = float(speed_white) if speed_white else JobParams.Max.SPEED
+        self.feedrate_black = (
+            float(speed_black) if speed_black else 0.0
+        )  # TODO: should this be min speed?
         self.compressor = (
             eng_compressor  # This value might be None if there is no compressor
         )
@@ -121,6 +143,7 @@ class ImageProcessor:
         self.sharpeningFactor = float(sharpening) if sharpening else 0.0
         self.dithering = dithering == True or dithering == "True"
         self.overshoot_distance = overshoot_distance
+        self.extra_overshoot = extra_overshoot
         # engraving mode switches
         self.engraving_mode = engraving_mode or self.ENGRAVING_MODE_DEFAULT
         self.separation = self.engraving_mode == self.ENGRAVING_MODE_FAST
@@ -135,7 +158,7 @@ class ImageProcessor:
         # self.overshoot_distance = 1 # 1mm comfortable compromise, TODO: calculate individually
         self.workingAreaWidth = workingAreaWidth
         self.workingAreaHeight = workingAreaHeight
-        if self.pierce_time > 0 and self.overshoot_distance > 0:
+        if self.pierce_time > JobParams.Min.PIERCE_TIME and self.overshoot_distance > 0:
             self.log.info("Disabling overshoot, pierce time is set.")
             self.overshoot_distance = 0
 
@@ -456,12 +479,77 @@ class ImageProcessor:
             self._append_gcode("M3S0\nG4P0")  # initialize laser
             # iterate line by line
             pix = img.load()
+            first_row = True
             for row in range(height_px - 1, -1, -1):
 
                 line_info = self.get_pixelinfo_of_line(pix, size, row)
                 y = img_pos_mm[1] - (self.beam * line_info["row"])
 
                 if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
+
+                    if not first_row and self.extra_overshoot:
+                        # This is messy and to be overwritten with streamlined logic
+                        # octogon_overshoot
+                        # /!\ direction_positive reverted at the end of loop
+                        if not direction_positive:
+                            _minmax = max
+                            side = "right"
+                            k = 1
+                        else:
+                            _minmax = min
+                            side = "left"
+                            k = -1
+
+                        _ov = self.overshoot_distance
+                        _bk = self.backlash_compensation_x
+                        extrema_x = _minmax(
+                            self.gc_ctx.x,
+                            img_pos_mm[0]
+                            + self.beam * line_info[side]
+                            + k * (2 * _ov + _bk),
+                        )
+                        start = np.array([extrema_x, self.gc_ctx.y])
+                        end = np.array([extrema_x, y])
+                        dy = end[1] - start[1]
+                        _vsp = _ov  # extra vertical_spacing in the overshoot
+                        _line1 = np.array([k, 0.0])
+                        _line2 = np.array([0.0, 1.0])
+                        _line3 = np.array([k, 1.0])
+                        _line4 = np.array([k, -1.0])
+                        # Extend the start and end point differently depending on
+                        # the line so there is no overlap between the overshoots
+                        shift = _ov * (row % (_vsp / dy)) / 2 * _line1
+                        start = start + shift
+                        end = end + shift
+                        # base size of the octogon (dictates length of sides)
+                        _size = 2 * _ov
+                        overshoot_gco = "".join(
+                            map(
+                                lambda v: self._get_gcode_g0(
+                                    x=v[0], y=v[1], comment="octogon"
+                                )
+                                + "\n",
+                                np.cumsum(
+                                    [
+                                        start + (_size + _vsp / 2) * _line4,
+                                        _size * _line1 / 2,
+                                        (_size + dy / 2) * _line3,
+                                        _vsp * _line2,
+                                        -(_size - dy / 2) * _line4,
+                                        -_size * _line1 / 2,
+                                    ],
+                                    axis=0,
+                                ),
+                            )
+                        )
+                        # self.log.info(" Overshoot direction %s, side %s", k, side)
+                        # self.log.info("  start x %s, y %s" % tuple(start))
+                        # self.log.info("  end   x %s, y %s" % tuple(end))
+                        # self.log.info("  gcode \n%s" % overshoot_gco)
+                        overshoot_gco += (
+                            "; EXTRA_TIME " + str(EXTRA_OVERSHOOT_EXTRA_DURATION) + "s"
+                        )
+                        self._append_gcode(overshoot_gco)
 
                     # prepare line start
                     self.write_gcode_for_line_start(
@@ -485,6 +573,7 @@ class ImageProcessor:
 
                     # flip direction after each line to go back and forth
                     direction_positive = not direction_positive
+                    first_row = False
                 else:
                     if line_info["left"] != None:
                         # skip line vertical out of working area
@@ -752,7 +841,7 @@ class ImageProcessor:
                     intensity=self.pierce_intensity, time=self.pierce_time
                 )
                 self._append_gcode(gcode)
-                self.gc_ctx.s = self.pierce_intensity
+                self.gc_ctx.s = JobParams.Default.PIERCE_INTENSITY
 
         else:
             intensity = self.get_intensity(brightness)

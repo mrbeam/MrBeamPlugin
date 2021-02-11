@@ -362,6 +362,45 @@ $(function () {
             }
         };
 
+        /**
+         * All this logging is for debugging.
+         * In version 0.7.11 (beta) some users complained that they were not able to home
+         * @param source
+         */
+        self.performHomingCycle = function (source) {
+            let stateString = self.state ? self.state.stateString() : null;
+            OctoPrint.printer
+                .home(["x", "y"])
+                .done(function () {
+                    console.log(
+                        "Homing call OK (source: " +
+                            source +
+                            ", stateString: " +
+                            stateString +
+                            ")"
+                    );
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    setTimeout(function () {
+                        let stateStringNew = self.state
+                            ? self.state.stateString()
+                            : null;
+                        console.error(
+                            "Homing call ERROR (source: " +
+                                source +
+                                ", stateString: " +
+                                stateString +
+                                ", stateStringNew: " +
+                                stateStringNew +
+                                "): " +
+                                jqXHR.status +
+                                " " +
+                                errorThrown
+                        );
+                    }, 500);
+                });
+        };
+
         self.crosshairX = function () {
             var pos = self.state.currentPos();
             if (pos !== undefined) {
@@ -2228,11 +2267,12 @@ $(function () {
 
                     var fx = width / widthVBox;
                     var fy = height / heightVBox;
+                    const finalF = Math.min(fx, fy);
                     var dx = offsetVBoxX * fx;
                     var dy = offsetVBoxY * fy;
                     return [
-                        [fx, 0, 0],
-                        [0, fy, 0],
+                        [finalF, 0, 0],
+                        [0, finalF, 0],
                         [dx, dy, 1],
                     ];
                 }
@@ -2764,11 +2804,14 @@ $(function () {
 
             // opens preview pane on the left if hovered over one of the pink markers on the working area
             $("#camera_markers circle").mouseenter(function (e) {
+                // If found is undefined, we do not show the markers
+                found = self.camera.markersFound[
+                    $(e.target).attr("id").replace("marker", "")
+                ]();
                 if (
                     !$("#wa_view_settings_body").hasClass("in") &&
-                    !self.camera.markersFound()[
-                        $(e.target).attr("id").replace("marker", "")
-                    ]
+                    found !== undefined &&
+                    !found
                 ) {
                     $("#wa_view_settings_body").collapse("toggle");
                 }

@@ -95,110 +95,131 @@ class WorkingAreaHelper {
             root_attrs = fragment.select("svg").node.attributes;
         }
 
-        // detect BeamOS generated Files by attribute
-        // <svg
-        //    ...
-        //    xmlns:mb="http://www.mr-beam.org"
-        //    ...
-        //    mb:beamOS_version="0.3.4"
-        var beamOS_version = root_attrs["mb:beamOS_version"];
-        if (beamOS_version !== undefined) {
-            gen = "beamOS";
-            version = version.value;
-            //				console.log("Generator:", gen, version);
-            return { generator: gen, version: version };
-        }
+        try {
+            // detect BeamOS generated Files by attribute
+            // <svg
+            //    ...
+            //    xmlns:mb="http://www.mr-beam.org"
+            //    ...
+            //    mb:beamOS_version="0.3.4"
+            var beamOS_version = root_attrs["mb:beamOS_version"];
+            if (beamOS_version !== undefined) {
+                gen = "beamOS";
+                version = version.value;
+                //				console.log("Generator:", gen, version);
+                return { generator: gen, version: version };
+            }
 
-        // detect Inkscape by attribute
-        // <svg
-        //    ...
-        //    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-        //    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-        //    ...
-        //    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-        //    sodipodi:docname="Mr. Beam Jack of Spades Project Cards Inkscape.svg">
-        var inkscape_version = root_attrs["inkscape:version"];
-        if (inkscape_version !== undefined) {
-            gen = "inkscape";
-            version = inkscape_version.value;
-            //				console.log("Generator:", gen, version);
-            return { generator: gen, version: version };
-        }
+            // detect Inkscape by attribute
+            // <svg
+            //    ...
+            //    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            //    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            //    ...
+            //    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+            //    sodipodi:docname="Mr. Beam Jack of Spades Project Cards Inkscape.svg">
+            var inkscape_version = root_attrs["inkscape:version"];
+            if (inkscape_version !== undefined) {
+                gen = "inkscape";
+                version = inkscape_version.value;
+                //				console.log("Generator:", gen, version);
+                return { generator: gen, version: version };
+            }
 
-        // <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
-        // if (root_attrs['xmlns:bx'] && root_attrs['xmlns:bx'].value.search("boxy-svg.com")>0) {
-        //     return { generator: "boxy-svg", version: "unknown" };
-        // }
+            // <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+            // if (root_attrs['xmlns:bx'] && root_attrs['xmlns:bx'].value.search("boxy-svg.com")>0) {
+            //     return { generator: "boxy-svg", version: "unknown" };
+            // }
 
-        // detect Illustrator by comment (works with 'save as svg')
-        // <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-        var children = fragment.node.childNodes;
-        for (var i = 0; i < children.length; i++) {
-            var node = children[i];
-            if (node.nodeType === 8) {
-                // check for comment
-                if (node.textContent.indexOf("Illustrator") > -1) {
-                    gen = "illustrator";
-                    var matches = node.textContent.match(/\d+\.\d+(\.\d+)*/g);
-                    version = matches.join("_");
-                    //						console.log("Generator:", gen, version);
-                    return { generator: gen, version: version };
+            // detect Illustrator by comment (works with 'save as svg')
+            // <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+            var children = fragment.node.childNodes;
+            for (var i = 0; i < children.length; i++) {
+                var node = children[i];
+                if (node.nodeType === 8) {
+                    // check for comment
+                    if (node.textContent.indexOf("Illustrator") > -1) {
+                        gen = "illustrator";
+                        var matches = node.textContent.match(
+                            /\d+\.\d+(\.\d+)*/g
+                        );
+                        version = matches.join("_");
+                        //						console.log("Generator:", gen, version);
+                        return { generator: gen, version: version };
+                    }
                 }
             }
-        }
 
-        // detect Illustrator by data-name (for 'export as svg')
-        if (root_attrs && root_attrs["data-name"]) {
-            gen = "illustrator";
-            version = "?";
-            //				console.log("Generator:", gen, version);
-            return { generator: gen, version: version };
-        }
+            // detect Illustrator by data-name (for 'export as svg')
+            if (root_attrs && root_attrs["data-name"]) {
+                gen = "illustrator";
+                version = "?";
+                //				console.log("Generator:", gen, version);
+                return { generator: gen, version: version };
+            }
 
-        // detect Corel Draw by comment
-        // <!-- Creator: CorelDRAW X5 -->
-        var children = fragment.node.childNodes;
-        for (var i = 0; i < children.length; i++) {
-            var node = children[i];
-            if (node.nodeType === 8) {
-                // check for comment
-                if (node.textContent.indexOf("CorelDRAW") > -1) {
-                    gen = "coreldraw";
-                    var version = node.textContent.match(
-                        /(Creator: CorelDRAW) (\S+)/
-                    )[2];
-                    //						console.log("Generator:", gen, version);
-                    return { generator: gen, version: version };
+            // Affinity designer by Serif
+            // <svg ... xmlns:serif="http://www.serif.com/" ...>
+            if (
+                root_attrs["xmlns:serif"] &&
+                root_attrs["xmlns:serif"].value.search("serif.com") > 0
+            ) {
+                return { generator: "Serif Affinity", version: "unknown" };
+            }
+
+            // detect Corel Draw by comment
+            // <!-- Creator: CorelDRAW X5 -->
+            // or <!-- Creator: CorelDRAW -->
+            var children = fragment.node.childNodes;
+            for (var i = 0; i < children.length; i++) {
+                var node = children[i];
+                if (node.nodeType === 8) {
+                    // check for comment
+                    if (node.textContent.indexOf("CorelDRAW") > -1) {
+                        gen = "coreldraw";
+                        const match = node.textContent.match(
+                            /(Creator: CorelDRAW) (\S+)/
+                        );
+                        version = match ? match[2] : "?";
+                        //						console.log("Generator:", gen, version);
+                        return { generator: gen, version: version };
+                    }
                 }
             }
-        }
 
-        // detect Method Draw by comment
-        // <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
-        for (var i = 0; i < children.length; i++) {
-            var node = children[i];
-            if (node.nodeType === 8) {
-                // check for comment
-                if (node.textContent.indexOf("Method Draw") > -1) {
-                    gen = "method draw";
-                    //						console.log("Generator:", gen, version);
-                    return { generator: gen, version: version };
+            // detect Method Draw by comment
+            // <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+            for (var i = 0; i < children.length; i++) {
+                var node = children[i];
+                if (node.nodeType === 8) {
+                    // check for comment
+                    if (node.textContent.indexOf("Method Draw") > -1) {
+                        gen = "method draw";
+                        version = "?";
+                        //						console.log("Generator:", gen, version);
+                        return { generator: gen, version: version };
+                    }
                 }
             }
-        }
 
-        // detect dxf.js generated svg
-        // <!-- Created with dxf.js -->
-        for (var i = 0; i < children.length; i++) {
-            var node = children[i];
-            if (node.nodeType === 8) {
-                // check for comment
-                if (node.textContent.indexOf("Created with dxf.js") > -1) {
-                    gen = "dxf.js";
-                    console.log("Generator:", gen, version);
-                    return { generator: gen, version: version };
+            // detect dxf.js generated svg
+            // <!-- Created with dxf.js -->
+            for (var i = 0; i < children.length; i++) {
+                var node = children[i];
+                if (node.nodeType === 8) {
+                    // check for comment
+                    if (node.textContent.indexOf("Created with dxf.js") > -1) {
+                        gen = "dxf.js";
+                        console.log("Generator:", gen, version);
+                        return { generator: gen, version: version };
+                    }
                 }
             }
+        } catch (e) {
+            console.error(
+                "Error while detecting svg generator and version:",
+                e
+            );
         }
         //			console.log("Generator:", gen, version);
         return { generator: "unknown", version: "unknown" };

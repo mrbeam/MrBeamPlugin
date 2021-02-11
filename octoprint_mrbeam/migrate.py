@@ -1,3 +1,4 @@
+from collections import Iterable, Sized, Mapping
 import os
 import platform
 import re
@@ -21,16 +22,17 @@ class Migration(object):
     VERSION_SYNC_GRBL_SETTINGS = "0.1.24"
     VERSION_FIX_SSH_KEY_PERMISSION = "0.1.28"
     VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS = "0.1.37"
-    VERSION_UPDATE_LOGROTATE_CONF = "0.1.45"
+    VERSION_UPDATE_LOGROTATE_CONF = "0.8.0.2"
     VERSION_INFLATE_FILE_SYSTEM = "0.1.51"
     VERSION_PREFILL_MRB_HW_INFO = "0.1.55"
     VERSION_AVRDUDE_AUTORESET_SCRIPT = "0.2.0"
     VERSION_USERNAME_LOWCASE = "0.2.0"
     VERSION_GRBL_AUTO_UPDATE = "0.2.1"
-    VERSION_MOUNT_MANAGER_171 = "0.6.14.3"
+    VERSION_MOUNT_MANAGER_172 = "0.7.13.1"
     VERSION_INITD_NETCONNECTD = "0.5.5"
     VERSION_DELETE_UPLOADED_STL_FILES = "0.6.1"
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
+    VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.10.2"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
@@ -44,7 +46,7 @@ class Migration(object):
     GRBL_VERSIONS_NEED_UPDATE = ["0.9g_20190329_ec6a7c7-dirty"]
 
     # mount manager version
-    MOUNT_MANAGER_VERSION = StrictVersion("1.7.1")
+    MOUNT_MANAGER_VERSION = StrictVersion("1.7.2")
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
@@ -117,7 +119,7 @@ class Migration(object):
 
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
-                    self.VERSION_MOUNT_MANAGER_171,
+                    self.VERSION_MOUNT_MANAGER_172,
                     equal_ok=False,
                 ):
                     self.update_mount_manager()
@@ -184,6 +186,19 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.rm_camera_calibration_repo()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    "0.7.9.2",
+                    equal_ok=False,
+                ):
+                    self.fix_settings()
+
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    self.VERSION_DISABLE_GCODE_AUTO_DELETION,
+                    equal_ok=False,
+                ):
+                    self.disable_gcode_auto_deletion()
 
                 # migrations end
 
@@ -446,6 +461,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("update_logrotate_conf() ")
 
         logrotate_d_files = [
+            "analytics",
             "haproxy",
             "iobeam",
             "mount_manager",
@@ -592,6 +608,11 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         )
         exec_cmd("sudo {script}".format(script=script))
 
+    def disable_gcode_auto_deletion(self):
+        # For all the old Mr Beams, we preset the value to False. Then we will ask the users if they want to change it.
+        if not self.plugin.isFirstRun():
+            self.plugin._settings.set_boolean(["gcodeAutoDeletion"], False)
+
     ##########################################################
     #####             lasercutterProfiles                #####
     ##########################################################
@@ -712,8 +733,87 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("Removing mb-camera-calibration from the config file...")
         sett = settings()  # .octoprint/config.yaml
         sett.remove(
-            ["plugins", "softwareupdate", "check_prviders", "mb-camera-calibration"]
+            ["plugins", "softwareupdate", "check_providers", "mb-camera-calibration"]
         )
         sett.remove(["plugins", "softwareupdate", "checks", "mb-camera-calibration"])
         sett.save()
         self._logger.info("Done")
+
+    def fix_settings(self):
+        """Sanitize the data from the settings"""
+
+        from octoprint.settings import settings
+
+        self._logger.info("Sanitizing the config file...")
+        data = settings().get(["plugins", "mrbeam"])
+
+        def _set(path, _data, set_func, fullpath=None):
+            """
+            If _data has given path, then set settings
+            with that value.
+            """
+            if not isinstance(path, (Iterable, Sized)) or len(path) <= 0:
+                return
+            elif isinstance(_data, Mapping) and path[0] in _data.keys():
+                if fullpath is None:
+                    # for settings() you need to provide
+                    # path to the plugin data as well
+                    fullpath = ["plugins", "mrbeam"] + path
+                value = _data[path[0]]
+                if len(path) > 1:
+                    _set(path[1:], value, set_func, fullpath)
+                else:
+                    set_func(fullpath, value)
+
+        # ~ Do some action before saving to settings
+        if "machine" in data and isinstance(data["machine"], Mapping):
+            if "backlash_compensation_x" in data["machine"]:
+                _val = data["machine"]["backlash_compensation_x"]
+                min_mal = -1.0
+                max_val = 1.0
+                val = 0.0
+                try:
+                    val = float(_val)
+                except:
+                    self._logger.warning(
+                        "Failed to convert %s to a float for backlash", _val
+                    )
+                else:
+                    data["machine"]["backlash_compensation_x"] = max(
+                        min(max_val, val), min_mal
+                    )
+                    _set(
+                        ["machine", "backlash_compensation_x"],
+                        data,
+                        settings().setFloat,
+                    )
+
+        # ~ Sanitize data type
+        float_params = (
+            ["cam", "previewOpacity"],
+            ["dxfScale"],
+        )
+        int_params = (
+            ["cam", "markerRecognitionMinPixel"],
+            ["svgDPI"],
+            ["leds", "fps"],
+            ["leds", "brightness"],
+        )
+        bool_params = (
+            ["terminal"],
+            ["terminal_show_checksums"],
+            ["gcode_nextgen", "clip_working_area"],
+            ["analyticsEnabled"],
+            ["focusReminder"],
+            ["analytics", "job_analytics"],
+            ["cam", "remember_markers_across_sessions"],
+        )
+
+        for path in float_params:
+            _set(path, data, settings().setFloat)
+        for path in int_params:
+            _set(path, data, settings().setInt)
+        for path in bool_params:
+            _set(path, data, settings().setBoolean)
+        settings().save()
+        self._logger.info("Done.")

@@ -31,10 +31,12 @@ from octoprint_mrbeam.camera.definitions import (
     DIST_KEY,
     ERR_NEED_CALIB,
     LEGACY_STILL_RES,
+    LENS_CALIBRATION,
     MAX_OBJ_HEIGHT,
     MTX_KEY,
     MIN_BOARDS_DETECTED,
     QD_KEYS,
+    TMP_RAW_FNAME_RE_NPZ,
 )
 from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint_mrbeam.camera import exc as exc
@@ -44,13 +46,11 @@ from octoprint_mrbeam.camera.undistort import (
     _getCamParams,
     prepareImage,
 )
-from octoprint_mrbeam.camera import corners
-from octoprint_mrbeam.camera.corners import (
-    need_corner_calibration,
-)
+from octoprint_mrbeam.camera import corners, config
 from octoprint_mrbeam.camera.lens import (
     BoardDetectorDaemon,
     FACTORY,
+    USER,
 )
 from octoprint_mrbeam.util import dict_merge, dict_map, get_thread, makedirs
 from octoprint_mrbeam.util.log import json_serialisor, logme
@@ -179,14 +179,7 @@ class LidHandler(object):
                 "onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed
             )
             self._client_opened = True
-            pic_settings = get_corner_calibration(
-                self._settings.get(["cam", "correctionSettingsFile"])
-            )
-            if need_corner_calibration(pic_settings):
-                self._logger.warning(ERR_NEED_CALIB)
-                self._plugin_manager.send_plugin_message(
-                    "mrbeam", dict(need_camera_calibration=True)
-                )
+            self.tell_client_calibration_status()
             self._startStopCamera(event)
         # Please re-enable when the OctoPrint is more reliable at
         # detecting when a user actually disconnected.
@@ -337,6 +330,44 @@ class LidHandler(object):
     def refresh_settings(self):
         # Let's the worker know to refresh the picture settings while running
         self._photo_creator.refresh_pic_settings.set()
+        self.tell_client_calibration_status()
+
+    def need_corner_calibration(self, pic_settings=None):
+        args = (
+            self._settings.get(["cam", "lensCalibration", "legacy"]),
+            self._settings.get(["cam", "lensCalibration", "user"]),
+        )
+        if pic_settings is None:
+            return config.calibration_needed_from_file(
+                self._settings.get(["cam", "correctionSettingsFile"]), *args
+            )
+        else:
+            return config.calibration_needed_from_flat(pic_settings, *args)
+
+    def tell_client_calibration_status(self):
+        try:
+            with open(self._settings.get(["cam", "correctionSettingsFile"])) as f:
+                pic_settings = yaml.load(f)
+        except IOError:
+            need_corner_calibration = True
+            need_raw_camera_calibration = True
+            pic_settings = None
+        else:
+            need_corner_calibration = self.need_corner_calibration(pic_settings)
+            need_raw_camera_calibration = config.calibration_needed_from_flat(
+                pic_settings
+            )
+        # self._logger.warning("pic settings %s", pic_settings)
+
+        self._plugin_manager.send_plugin_message(
+            "mrbeam",
+            dict(
+                need_camera_calibration=need_corner_calibration,
+                need_raw_camera_calibration=need_raw_camera_calibration,
+            ),
+        )
+        if need_corner_calibration:
+            self._logger.warning(ERR_NEED_CALIB)
 
     def get_calibration_file(self, calibration_type=None):
         """Gives the location of the best existing lens calibration file, or
@@ -460,6 +491,13 @@ class LidHandler(object):
                     os.remove(my_path)
 
     def stopLensCalibration(self):
+        self._analytics_handler.add_camera_session_details(
+            {
+                "message": "Stopping lens calibration",
+                "id": "cam_lens_calib_stop",
+                "lens_calib_state": self.boardDetectorDaemon.state.analytics_friendly(),
+            }
+        )
         self.boardDetectorDaemon.stopAsap()
         if self.boardDetectorDaemon.is_alive():
             self.boardDetectorDaemon.join()
@@ -503,18 +541,25 @@ class LidHandler(object):
             self._logger.info("Board detector not alive, starting now")
             self.boardDetectorDaemon.start()
 
+        self._analytics_handler.add_camera_session_details(
+            {
+                "message": "Saving lens calibration",
+                "id": "cam_lens_calib_save",
+                "lens_calib_state": self.boardDetectorDaemon.state.analytics_friendly(),
+            }
+        )
         self.boardDetectorDaemon.saveCalibration()
         # Remove the lens distorted corner calibration keys
         pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
         pic_settings = corners.get_corner_calibration(pic_settings_path)
-        corners.rm_undidtorted_keys(
+        config.rm_undistorted_keys(
             pic_settings, factory=self._plugin.calibration_tool_mode
         )
         corners.write_corner_calibration(
             pic_settings,
             pic_settings_path,
         )
-        if corners.need_corner_calibration(pic_settings):
+        if self.need_corner_calibration(pic_settings):
             self._logger.warning(ERR_NEED_CALIB)
             self._plugin_manager.send_plugin_message(
                 "mrbeam", dict(need_camera_calibration=True)
@@ -532,13 +577,14 @@ class LidHandler(object):
         - Refreshes settings.
         """
         files = []
+        lens_calib = self._settings.get(["cam", "lensCalibration", USER])
+        if os.path.isfile(lens_calib):
+            os.remove(lens_calib)
         for fname in os.listdir(self.debugFolder):
             if re.match(TMP_RAW_FNAME_RE, fname) or re.match(
                 TMP_RAW_FNAME_RE_NPZ, fname
             ):
                 files.append(os.path.join(self.debugFolder, fname))
-            elif fname == self._settings.get(["cam", "lensCalibration", "user"]):
-                files.append(fname)
         for fname in files:
             try:
                 os.remove(fname)
@@ -547,6 +593,12 @@ class LidHandler(object):
                 # raising error because I made sure all the files existed before-hand
                 self.refresh_settings()
                 raise
+        self._analytics_handler.add_camera_session_details(
+            {
+                "message": "Reverting lens calibration",
+                "id": "cam_lens_calib_revert",
+            }
+        )
         self.refresh_settings()
 
     def updateFrontendCC(self, data):
@@ -735,13 +787,17 @@ class PhotoCreator(object):
         except Exception as e:
             if e.__class__.__name__.startswith("PiCamera"):
                 self._logger.exception(
-                    "PiCamera_Error_while_preparing_camera_%s_%s",
+                    "PiCamera_Error_while_preparing_camera_%s_%s, locals : %s",
                     e.__class__.__name__,
                     e,
+                    locals(),
                 )
             else:
                 self._logger.exception(
-                    "Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e
+                    "Exception_while_preparing_camera_%s_%s, locals : %s",
+                    e.__class__.__name__,
+                    e,
+                    locals(),
                 )
         self.stopEvent.set()
 
@@ -921,11 +977,14 @@ class PhotoCreator(object):
                     prev = latest
                     self._front_ready.set()
                 else:
-                    time.sleep(
-                        0.8
-                    )  # Let the raspberry breathe a bit (prevent overheating)
+                    # Let the raspberry breathe a bit (prevent overheating)
+                    time.sleep(0.8)
                     continue
 
+            if self._plugin.lid_handler.need_corner_calibration():
+                # triggers missing calibration warning while still taking a raw picture
+                # which is necessary if you want to calibrate the camera.
+                pic_settings = None
             # Get the desired scale and quality of the picture to serve
             upscale_factor, quality = pic_qualities[pic_qual_index]
             scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
@@ -1238,10 +1297,10 @@ class PhotoCreator(object):
         )
 
     def _createFolder_if_not_existing(self, filename):
-        path = os.path.dirname(filename)
-        if not os.path.exists(path):
-            os.makedirs(path)
-            self._logger.debug("Created folder '%s' for camera images.", path)
+        folder = os.path.dirname(filename)
+        if not os.path.exists(folder):
+            makedirs(folder)
+            self._logger.debug("Created folder '%s' for camera images.", folder)
 
     def load_camera_settings(self, path="/home/pi/.octoprint/cam/last_session.yaml"):
         """
@@ -1311,6 +1370,7 @@ class PhotoCreator(object):
                 "version": octoprint_mrbeam.__version__,
             },
         )
+        makedirs(path, parent=True, exist_ok=True)
         try:
             with open(path, "w") as f:
                 f.write(yaml.dump(settings))
@@ -1318,7 +1378,7 @@ class PhotoCreator(object):
             self._logger.error(e)
         except TypeError as e:
             self._logger.warning(
-                "Data that I tried writing to %s :\n%s" % (path, settings)
+                "Data that I tried writing to %s :\n%s\n%s" % (path, settings, e)
             )
 
 

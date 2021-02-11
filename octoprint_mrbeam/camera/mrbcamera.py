@@ -58,7 +58,7 @@ class MrbCamera(CameraClass, BaseCamera):
         # TODO set sensor mode and framerate etc...
         # This is a bit hacky but it makes sure that we don't try using PiCamera in case it's not imported
         # might need to change if inheriting from multiple classes
-        self._logger = mrb_logger("octoprint.plugins.mrbeam.util.camera.mrbcamera")
+        # self._logger = mrb_logger("octoprint.plugins.mrbeam.util.camera.mrbcamera", lvl=logging.INFO)
         BaseCamera.__init__(self, worker, shutter_speed=shutter_speed)
         # PiCamera constructor does not take a worker or shutter_speed
         # https://picamera.readthedocs.io/en/release-1.13/api_camera.html#picamera.PiCamera
@@ -85,7 +85,8 @@ class MrbCamera(CameraClass, BaseCamera):
         if PICAMERA_AVAILABLE:
             PiCamera.__enter__(self)
         # Cannot set shutter speed before opening the camera (picamera)
-        self.shutter_speed = self._shutter_speed
+        if self._shutter_speed:
+            self.shutter_speed = self._shutter_speed
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -102,6 +103,10 @@ class MrbCamera(CameraClass, BaseCamera):
             self._busy.acquire()
         try:
             CameraClass.capture(self, output, format=format, *args, **kwargs)
+        except AttributeError as e:
+            self._logger.warning(
+                "Caught Picamera internal error - self._camera is None"
+            )
         finally:
             if PICAMERA_AVAILABLE:
                 self._busy.release()

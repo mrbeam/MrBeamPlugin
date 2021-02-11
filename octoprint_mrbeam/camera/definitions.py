@@ -77,28 +77,22 @@ MAX_MARKER_PIX = 1500
 
 # Calibration file :
 # Position of the pink circles, as found during calibration
-UNDIST_CALIB_MARKERS_KEY = "calibMarkers"
+UNDIST_CALIB_MARKERS_KEY = "user_undist_calibMarkers"
 RAW_CALIB_MARKERS_KEY = "raw_calibMarkers"
-FACT_UNDIST_CALIB_MARKERS_KEY = "factory_undist_calibMarkers"
+FACT_UNDIST_CALIB_MARKERS_KEY = "calibMarkers"  # legacy
 FACT_RAW_CALIB_MARKERS_KEY = "factory_raw_calibMarkers"
 
 # Calibration file :
 # Position of the corners (arrow tips), as found during the calibration
-UNDIST_CORNERS_KEY = "cornersFromImage"
+UNDIST_CORNERS_KEY = "user_undist_cornersFromImage"
 RAW_CORNERS_KEY = "raw_cornersFromImage"
-FACT_UNDIST_CORNERS_KEY = "factory_undist_cornersFromImage"
+FACT_UNDIST_CORNERS_KEY = "cornersFromImage"  # legacy
 FACT_RAW_CORNERS_KEY = "factory_raw_cornersFromImage"
-
-# Calibration File : DEPRECATED keys
-M2C_VECTOR_KEY = "marker2cornerVecs"  # DEPRECATED Key
-CALIBRATION_UPDATED_KEY = "calibration_updated"
-BLUR_FACTOR_THRESHOLD_KEY = "blur_factor_threshold"
 
 # Empty settings config
 PIC_SETTINGS = {
     UNDIST_CALIB_MARKERS_KEY: None,
     UNDIST_CORNERS_KEY: None,
-    CALIBRATION_UPDATED_KEY: False,
 }
 CALIB_REFS = dict(
     markers=dict(

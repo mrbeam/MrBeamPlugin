@@ -30,6 +30,8 @@ class ReviewHandler:
         self._plugin = plugin
         self._event_bus = plugin._event_bus
         self._settings = plugin._settings
+        self._usage_handler = plugin.usage_handler
+        self._device_info = plugin._device_info
 
         self.review_folder = os.path.join(
             self._settings.getBaseFolder("base"),
@@ -40,6 +42,9 @@ class ReviewHandler:
 
         self._current_job_time_estimation = -1
 
+        # sync given value from settings to usage_handler
+        self._sync_given_val_to_usage_handler()
+
         self._event_bus.subscribe(
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
         )
@@ -47,12 +52,53 @@ class ReviewHandler:
     def _on_mrbeam_plugin_initialized(self, event, payload):
         ReviewFileUploader.upload_now(self._plugin, self._review_lock)
 
-    def save_review_data(self, data):
-        self._write_review_to_file(data)
-        self._settings.set_boolean(["review", "given"], data["dontShowAgain"])
-        self._settings.save()  # This is necessary because without it the value is not saved
+    def is_review_already_given(self):
+        return bool(
+            self._usage_handler.get_review_given()
+            # deprecated
+            or self._settings.get(["review", "given"])
+        )
 
-        ReviewFileUploader.upload_now(self._plugin, self._review_lock)
+    def save_review_data(self, data):
+        if not self.is_review_already_given() or data.get("debug", False):
+            data = self._add_review_data(data)
+            self._write_review_to_file(data)
+            ask_again = not data["dontShowAgain"]
+            if data["dontShowAgain"] and data["rating"] > 0:
+                self._usage_handler.set_review_given()
+                self._settings.set_boolean(["review", "given"], True)
+                ask_again = False
+            # deprecated but needed while this version is in beta and users could go back
+            self._settings.set_boolean(["review", "ask_again"], ask_again)
+            self._settings.save()  # This is necessary because without it the value is not saved
+
+            ReviewFileUploader.upload_now(self._plugin, self._review_lock)
+        else:
+            self._logger.warn("Not accepting user review since it was already given.")
+
+    def _sync_given_val_to_usage_handler(self):
+        """
+        _settings.get(["review", "given"]) is deprecated
+        """
+        if not self._usage_handler.get_review_given() and self._settings.get(
+            ["review", "given"]
+        ):
+            self._logger.info("Syncing review state 'given' to _usage_handler...")
+            self._usage_handler.set_review_given()
+
+    def _add_review_data(self, data):
+        try:
+            data["env"] = self._plugin.get_env()
+            data["snr"] = self._device_info.get_serial()
+            data["sw_version"] = self._plugin._plugin_version
+            data["sw_tier"] = self._settings.get(["dev", "software_tier"])
+            data["model"] = self._device_info.get_model()
+            data["production_date"] = self._device_info.get_production_date()
+            data["total_usage"] = self._usage_handler.get_total_usage()
+            data["total_jobs"] = self._usage_handler.get_total_jobs()
+        except:
+            self._logger.exception("Unable to fill system data to user review.")
+        return data
 
     def _write_review_to_file(self, review):
         try:

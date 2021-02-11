@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
 from converter import Converter
+from job_params import JobParams
 
 import optparse
 import os
@@ -133,15 +134,15 @@ if __name__ == "__main__":
     params["vector"] = debug_multicolor
     params["engrave"] = option_dict["engrave"]
     params["raster"] = {
-        "intensity_white": 0,
-        "intensity_black": 500,
-        "speed_white": 1500,
-        "speed_black": 250,
-        "contrast": 1.0,
-        "sharpening": 1.0,
-        "dithering": False,
-        "beam_diameter": 0.2,
-        "pierce_time": 0,
+        "intensity_white": JobParams.Default.INTENSITY_WHITE,
+        "intensity_black": JobParams.Default.INTENSITY_BLACK,
+        "speed_white": JobParams.Default.FEEDRATE_WHITE,
+        "speed_black": JobParams.Default.FEEDRATE_BLACK,
+        "contrast": JobParams.Default.CONTRAST,
+        "sharpening": JobParams.Default.SHARPENING,
+        "dithering": JobParams.Default.DITHERING,
+        "beam_diameter": JobParams.Default.BEAM_DIAMETER,
+        "pierce_time": JobParams.Default.PIERCE_TIME,
     }
 
     e = Converter(params, svg_file)

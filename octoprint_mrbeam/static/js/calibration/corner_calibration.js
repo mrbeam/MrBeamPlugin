@@ -94,10 +94,11 @@ $(function () {
         });
 
         self.calImgReady = ko.computed(function () {
-            if (Object.keys(self.camera.markersFound()).length !== 4)
+            if (Object.keys(self.camera.markersFound).length !== 4)
                 return false;
-            return Object.values(self.camera.markersFound()).reduce(
-                (x, y) => x && y
+            return Object.values(self.camera.markersFound).reduce(
+                (x, y) => x && y(),
+                true
             );
         });
 
@@ -187,6 +188,12 @@ $(function () {
             }
         };
 
+        self.onSettingsHidden = function () {
+            if (self.cornerCalibrationActive()) {
+                self.abortCornerCalibration();
+            }
+        };
+
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
 
@@ -268,6 +275,7 @@ $(function () {
         };
 
         self.abortCornerCalibration = function () {
+            self.analytics.send_fontend_event("corner_calibration_abort", {});
             self.stopCornerCalibration();
             self.resetView();
         };
@@ -278,15 +286,10 @@ $(function () {
         };
 
         self.saveCornerCalibrationData = function () {
-            let _corners = self.currentResults();
-            let _k;
-            for (_k of Object.keys(_corners)) {
-                _corners[_k] = [_corners[_k].x, _corners[_k].y];
-            }
             let data = {
                 result: {
                     newMarkers: self.markersFoundPositionCopy,
-                    newCorners: _corners,
+                    newCorners: self.currentResults(),
                 },
             };
             console.log("Sending data:", data);
@@ -316,7 +319,7 @@ $(function () {
                 title: gettext("Couldn't send calibration data."),
                 text: gettext("Please check your connection to the device."),
                 type: "warning",
-                hide: true,
+                hide: false,
             });
 
             self.resetView();
@@ -324,7 +327,6 @@ $(function () {
 
         self._saveMarkersSuccess = function (response) {
             self.cornerCalibrationActive(false);
-            self.calibration.cornerCalibrationComplete(true);
             self.analytics.send_fontend_event("corner_calibration_finish", {});
             new PNotify({
                 title: gettext("Camera Calibrated."),
@@ -397,9 +399,7 @@ $(function () {
             let i = self.currentMarker - 1;
             if (!self.cornerCalibrationComplete() && i === 0) i = -1;
             if (i < 0) i = self.calibrationMarkers.length - 1;
-            self.currentMarker = i;
-            let nextStep = self.calibrationMarkers[self.currentMarker];
-            self._highlightStep(nextStep);
+            self.goToMarker(i);
         };
 
         self.nextMarker = function () {
@@ -407,8 +407,7 @@ $(function () {
                 (self.currentMarker + 1) % self.calibrationMarkers.length;
             if (!self.cornerCalibrationComplete() && self.currentMarker === 0)
                 self.currentMarker = 1;
-            let nextStep = self.calibrationMarkers[self.currentMarker];
-            self._highlightStep(nextStep);
+            self.goToMarker(self.currentMarker);
         };
 
         self._highlightStep = function (step) {
@@ -421,7 +420,7 @@ $(function () {
 
         self._formatPoint = function (p) {
             if (typeof p === "undefined") return "?,?";
-            else return p.x + "," + p.y;
+            else return p[0] + "," + p[1];
         };
 
         // USER CLICKS
@@ -440,7 +439,7 @@ $(function () {
                 var x = Math.round(cPos.xImg);
                 var y = Math.round(cPos.yImg);
                 var tmp = self.currentResults();
-                tmp[step.name] = { x: x, y: y };
+                tmp[step.name] = [x, y];
                 self.currentResults(tmp);
                 $("#click_" + step.name).attr({
                     x: x - self.crossSize(),
