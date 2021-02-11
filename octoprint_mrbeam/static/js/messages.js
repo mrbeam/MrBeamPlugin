@@ -1,10 +1,3 @@
-/*
- * View model for Mr Beam
- *
- * Author: Andy Werner <andy@mr-beam.org>
- */
-/* global OctoPrint, OCTOPRINT_VIEWMODELS */
-
 $(function () {
     function MessagesViewModel(parameters) {
         let self = this;
@@ -48,7 +41,6 @@ $(function () {
                 self.saveNewMessages(json);
             }).catch(function (exception) {
                 console.log("Remote Messages loading failed! Loading Local Messages");
-                // console.log("", exception);
                 self.loadLocalMessages();
             });
         };
@@ -224,7 +216,6 @@ $(function () {
                     if (myMessage.notification && myMessage.id > self.lastMessageId) {
                         try {
                             new PNotify({
-                                // TODO
                                 title: myMessage.notification.title || '',
                                 text: myMessage.notification.body || '',
                                 type: myMessage.notification.type || 'info',

@@ -1,7 +1,6 @@
 import os
 import yaml
-# import httplib
-# import requests
+
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
@@ -17,7 +16,6 @@ def messages(plugin):
 
 class Messages(object):
 	FILE_CUSTOM_MESSAGES = "messages.yaml"
-	# FILE_REMOTE_MESSAGES = "https://messages.beamos.mr-beam.org/messages.json"
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.messages")
