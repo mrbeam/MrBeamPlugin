@@ -847,15 +847,12 @@ class ImageProcessor:
         """
         Create the gcode for a diamond / octogon overshoot, the returned gcode does not contain the start and end positions.
         size : base size of the octogon (dictates length of sides) - It's approximative
-        offset_counter : Sets a different offset as it increments
+        offset_counter : Sets a different offset as it increments which spreads any remaining burn marks
         """
         # only need self for the g0 code
-        # which spreads any remaining burn marks if any
         # direction should be +- 1 and dictates whether to turn clockwise or anticlockwise
 
         # This is messy and to be overwritten with streamlined logic
-        # octogon_overshoot
-
         dy = float(end[1] - start[1])
         # changed measurement so the final size of the overshoot matches expected size.
         _size = float(max(EXTRA_OVERSHOOT_MIN_DIST, size)) / 4
