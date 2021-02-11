@@ -3,7 +3,7 @@
         <div class="row-fluid">
             <div class="span4">
                 <div class="mrb-messages-container rounded_container">
-                    <h1 class="mrb-messages-title">Messages From Mr. Beam</h1>
+                    <h1 class="mrb-messages-title">{{ _('Messages From Mr Beam') }}</h1>
                     <div class="mrb-message-list" data-bind="foreach: messages">
                         <div data-bind="css: { 'mrb-message-read': read }">
                             <div class="mrb-message-element rounded_container"
@@ -17,7 +17,7 @@
             <div class="span8">
                 <!-- ko if: $root.selectedIndex() == undefined -->
                 <div id="no-mrb-messages-selected">
-                    <h1> No Messages selected </h1>
+                    <h1> {{ _('No Messages selected') }} </h1>
                 </div>
                 <!-- /ko -->
                 <div id="mrb-message-view" data-bind="with: $root.messages()[$root.selectedIndex()]">
@@ -33,7 +33,9 @@
                             <div class="row-fluid">
                                 <div class="span6">
                                     <div class="mrb-message-text-container rounded_container">
-                                        <div class="mrb-message-text" data-bind="text: content.body"></div>
+                                        <div class="mrb-message-text">
+                                            <span style="white-space: pre-wrap" data-bind="text: content.body"></span>
+                                        </div>
                                         <div class="cta" data-bind="visible: content.cta_url">
                                             <a href="#" target="_blank"
                                                data-bind="text:content.cta_label, attr: { href: content.cta_url }"></a>
@@ -73,7 +75,9 @@
                                         data-bind="text: content.title"></h2>
                                     <div class="mrb-message-date" data-bind="text: date"></div>
                                     <div class="mrb-message-text-container no-img rounded_container">
-                                        <div class="mrb-message-text" data-bind="text: content.body"></div>
+                                        <div class="mrb-message-text">
+                                            <span style="white-space: pre-wrap" data-bind="text: content.body"></span>
+                                        </div>
                                         <div class="cta" data-bind="visible: content.cta_url">
                                             <a href="#" target="_blank"
                                                data-bind="text:content.cta_label, attr: { href: content.cta_url }"></a>

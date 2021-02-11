@@ -15,7 +15,7 @@ $(function () {
         self.loginState = parameters[2];
 
         const FIRST_MESSAGE_LOCATION = "/plugin/mrbeam/static/messages/messages.json";
-        const MESSAGES_URL = "https://mr-beam.org/beamos/messages";
+        const MESSAGES_URL = "https://mr-beam.org/beamos/messagess";
 
         self.messages = ko.observableArray();
         self.messagesIds = ko.observableArray();
@@ -48,7 +48,7 @@ $(function () {
                 self.saveNewMessages(json);
             }).catch(function (exception) {
                 console.log("Remote Messages loading failed! Loading Local Messages");
-                console.log(exception);
+                // console.log("", exception);
                 self.loadLocalMessages();
             });
         };
@@ -80,12 +80,20 @@ $(function () {
         self.loadLocalMessages = function () {
             OctoPrint.simpleApiCommand("mrbeam", "messages", {})
                 .done(function (data) {
-                    console.log("Local Messages loaded: ", data);
-                    self.handleMessages(data);
+                    if (Object.keys(data.messages).length === 0 && data.messages.constructor === Object) {
+                        // Load First Generic Message
+                        console.log("Loading First Message");
+                        self.loadRemoteMessages(FIRST_MESSAGE_LOCATION);
+                    } else {
+                        console.log("Local Messages loaded: ", data.messages);
+                        self.handleMessages(data);
+                    }
                 })
                 .fail(function (response) {
                     console.log("Local Messages loading failed!");
                     console.log(response);
+                    // Load First Generic Message
+                    console.log("Loading First Message");
                     self.loadRemoteMessages(FIRST_MESSAGE_LOCATION);
                 });
         };
@@ -122,8 +130,8 @@ $(function () {
                         if (myMessage.notification && myMessage.notification[myLocale]) {
                             if (self.checkRestriction(myMessage.notification.restrictions)) {
                                 msgObj.notification = {
-                                    sticky: 30, // TODO
-                                    type: 'info', // TODO
+                                    sticky: myMessage.notification.sticky,
+                                    type: myMessage.notification.type,
                                     title: myMessage.notification[myLocale].title,
                                     body: myMessage.notification[myLocale].body
                                 };
