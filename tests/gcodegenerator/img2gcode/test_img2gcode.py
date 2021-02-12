@@ -121,14 +121,17 @@ class TestG0Generation:
         assert "Coordinate is NaN" in str(exception.value)
 
     def test_overshoot(self):
-        for overshoot_size in [0, 0.0, 1.123456, 30]:
-            self.ip.backlash_x = overshoot_size
-            start = np.array([0, 2])
-            end = np.array([0, 5])
-            gc = self.ip.get_overshoot(start, end, 1, overshoot_size)
-            self.log.debug(str(tuple(start)) + " - > " + str(tuple(end)) + "\n" + gc)
-            assert "nan" not in gc.lower()
-            # assert gc == "foo"
+        for size in [0, 0.0, 1.123456, 30]:
+            for dy in [0, 0.001, 0.5, 3, 50]:
+                # for dx in [0, .001, .5, 3, 50]:
+                dx = 0  # change when the overshoot can change with a higher dx
+                self.ip.backlash_x = size
+                start = np.array([2, 2])
+                end = start + np.array([dx, dy])
+                gc = self.ip.get_overshoot(start, end, 1, size, offset_counter=0)
+                self.log.debug("{} - size {} -> {}\n{}".format(start, size, end, gc))
+                assert "nan" not in gc.lower()
+                # assert gc == "foo"
 
     def test_generate_gcode(self):
         from PIL import Image

@@ -846,8 +846,11 @@ class ImageProcessor:
     def get_overshoot(self, start, end, direction, size, offset_counter=None):
         """
         Create the gcode for a diamond / octogon overshoot, the returned gcode does not contain the start and end positions.
+        This overshoot only goes from start and then "up" on the the y axis.
+        end : Actually only uses the y value of the end
         size : base size of the octogon (dictates length of sides) - It's approximative
         offset_counter : Sets a different offset as it increments which spreads any remaining burn marks
+
         """
         # only need self for the g0 code
         # direction should be +- 1 and dictates whether to turn clockwise or anticlockwise
@@ -857,6 +860,9 @@ class ImageProcessor:
         # changed measurement so the final size of the overshoot matches expected size.
         _size = float(max(EXTRA_OVERSHOOT_MIN_DIST, size)) / 4
         # extra vertical_spacing in the overshoot
+        # necessary if dy < _size, it could otherwise still burn the material
+        # This allows all edges to be at least _size long
+        extra_vert = max(0, _size - dy)
         k = direction
         _line1 = np.array([k, 0.0])
         _line2 = np.array([0.0, 1.0])
@@ -865,7 +871,7 @@ class ImageProcessor:
         if isinstance(offset_counter, int):
             # Extend the start and end point differently depending on
             # the line so there is no overlap between the overshoots
-            shift = _size * (offset_counter % max(int(2 * _size / dy), 1)) / 2 * _line1
+            shift = _size * (offset_counter % max(dy, 1)) / 2 * _line1
             start = start + shift
             end = end + shift
         return "".join(
@@ -873,10 +879,10 @@ class ImageProcessor:
                 lambda v: self._get_gcode_g0(x=v[0], y=v[1], comment="octogon") + "\n",
                 np.cumsum(
                     [
-                        start + _size * _line4,
+                        start + (extra_vert / 2 + _size) * _line4,
                         _size * _line1,
                         (_size + dy / 4) * _line3,
-                        dy / 2 * _line2,
+                        (extra_vert + dy / 2) * _line2,
                         -(_size + dy / 4) * _line4,
                         -_size * _line1,
                     ],
