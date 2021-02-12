@@ -69,19 +69,21 @@ from octoprint_mrbeam.software_update_information import (
     SW_UPDATE_TIER_DEV,
 )
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
-from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
+from .messages import messages
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from octoprint_mrbeam.gcodegenerator.job_params import JobParams
 from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
-from octoprint_mrbeam.util.material_csv_parser import parse_csv
-from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
 from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
-from octoprint_mrbeam.util.device_info import deviceInfo
-from octoprint_mrbeam.util.flask import restricted_unless_calibration_tool_mode
 from octoprint_mrbeam.camera.label_printer import labelPrinter
+from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
+from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
+from octoprint_mrbeam.util.device_info import deviceInfo
+from octoprint_mrbeam.util.log import logExceptions
+from octoprint_mrbeam.util.material_csv_parser import parse_csv
+from octoprint_mrbeam.util.flask import calibration_tool_mode_only
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
@@ -164,8 +166,14 @@ class MrBeamPlugin(
         self._mac_addrs = dict()
         self._model_id = None
         self._grbl_version = None
-        self._device_series = self._device_info.get("device_series")  # '2C'
+        self._device_series = self._device_info.get_series()
         self.called_hosts = []
+
+        # Create the ``laserCutterProfileManager`` early to inject into the ``Laser``
+        # See ``laser_factory``
+        self.laserCutterProfileManager = laserCutterProfileManager(
+            profile_id="MrBeam" + self._device_series
+        )
 
         self._boot_grace_period_counter = 0
 
@@ -208,8 +216,6 @@ class MrBeamPlugin(
 
         self._fixEmptyUserManager()
 
-        self.laserCutterProfileManager = laserCutterProfileManager()
-
         try:
             pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
             if pluginInfo is None:
@@ -223,11 +229,11 @@ class MrBeamPlugin(
 
         self.analytics_handler = analyticsHandler(self)
         self.user_notification_system = user_notification_system(self)
-        self.review_handler = reviewHandler(self)
         self.onebutton_handler = oneButtonHandler(self)
         self.interlock_handler = interLockHandler(self)
         self.lid_handler = lidHandler(self)
         self.usage_handler = usageHandler(self)
+        self.review_handler = reviewHandler(self)
         self.led_event_listener = LedEventListener(self)
         self.led_event_listener.set_brightness(
             self._settings.get(["leds", "brightness"])
@@ -295,24 +301,6 @@ class MrBeamPlugin(
         self._logger.info(msg, terminal=True)
         self._frontend_logger.info(msg)
 
-    def _convert_profiles(self, profiles):
-        result = dict()
-        for identifier, profile in profiles.items():
-            result[identifier] = self._convert_profile(profile)
-        return result
-
-    def _convert_profile(self, profile):
-        default = self.laserCutterProfileManager.get_default()["id"]
-        current = self.laserCutterProfileManager.get_current_or_default()["id"]
-
-        converted = copy.deepcopy(profile)
-        converted["resource"] = url_for(
-            ".laserCutterProfilesGet", identifier=profile["id"], _external=True
-        )
-        converted["default"] = profile["id"] == default
-        converted["current"] = profile["id"] == current
-        return converted
-
     def get_additional_environment(self):
         """
         Mixin: octoprint.plugin.EnvironmentDetectionPlugin
@@ -361,16 +349,14 @@ class MrBeamPlugin(
         )
 
         return dict(
-            current_profile_id="_mrbeam_junior",  # yea, this needs to be like this # 2018: not so sure anymore...
             svgDPI=90,
             dxfScale=1,
             beta_label="",
             job_time=0.0,
             terminal=False,
             terminal_show_checksums=True,
-            converter_min_required_disk_space=100
-            * 1024
-            * 1024,  # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
+            converter_min_required_disk_space=100 * 1024 * 1024,
+            # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
             dev=dict(
                 debug=False,  # deprecated
                 terminalMaxLines=2000,
@@ -386,8 +372,8 @@ class MrBeamPlugin(
             ),
             laser_heads=dict(filename="laser_heads.yaml"),
             review=dict(
-                given=False,
-                ask=False,
+                given=False,  # deprecated in settings, moved to usage_handler
+                ask_again=True,  # deprecated I assume
             ),
             focusReminder=True,
             analyticsEnabled=None,
@@ -481,8 +467,8 @@ class MrBeamPlugin(
             software_update_branches=self.get_update_branch_info(),
             _version=self._plugin_version,
             review=dict(
-                given=self._settings.get(["review", "given"]),
-                ask=self._settings.get(["review", "ask"]),
+                given=self.review_handler.is_review_already_given(),
+                ask_again=self._settings.get(["review", "ask_again"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
@@ -623,7 +609,7 @@ class MrBeamPlugin(
                 "js/matrix_oven.js",
                 "js/snap_separate.js",
                 "js/unref.js",
-                "js/drag_scale_rotate.js",
+                "js/snap_transform_plugin.js",
                 "js/convert.js",
                 "js/snap_gc_plugin.js",
                 "js/gcode_parser.js",
@@ -660,6 +646,7 @@ class MrBeamPlugin(
                 "js/user_notification_viewmodel.js",
                 "js/lib/load-image.all.min.js",  # to load custom material images
                 "js/settings/custom_material.js",
+                "js/messages.js",
                 "js/design_store.js",
                 "js/settings/dev_design_store.js",
                 "js/settings_menu_navigation.js",
@@ -674,6 +661,7 @@ class MrBeamPlugin(
                 "css/mrbeam.css",
                 "css/backlash_settings.css",
                 "css/tab_designlib.css",
+                "css/tab_workingarea.css",
                 "css/tinyColorPicker.css",
                 "css/svgtogcode.css",
                 "css/ui_mods.css",
@@ -681,6 +669,7 @@ class MrBeamPlugin(
                 "css/sliders.css",
                 "css/hopscotch.min.css",
                 "css/wizard.css",
+                "css/tab_messages.css",
             ],
             less=["less/mrbeam.less"],
         )
@@ -1175,6 +1164,24 @@ class MrBeamPlugin(
         # self._logger.info("custom_material(): response: %s", data)
         return make_response(jsonify(res), 200)
 
+    # simpleApiCommand: messages;
+    def messages(self, data):
+
+        res = dict(messages=[], put=0)
+
+        try:
+            if "put" in data and isinstance(data["put"], dict):
+                for key, m in data["put"].iteritems():
+                    messages(self).put_custom_message(key, m)
+
+            res["messages"] = messages(self).get_custom_messages()
+
+        except:
+            self._logger.exception("Exception while handling messages(): ")
+            return make_response("Error while handling messages request.", 500)
+
+        return make_response(jsonify(res), 200)
+
     # simpleApiCommand: leds;
     def set_leds_update(self, data):
         self._logger.info("leds() request: %s", data)
@@ -1266,7 +1273,7 @@ class MrBeamPlugin(
         return False
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def calibration_wrapper(self):
         from flask import make_response, render_template
         from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
@@ -1323,7 +1330,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/take_undistorted_picture", methods=["GET"]
     )
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     # @firstrun_only_access
     def takeUndistortedPictureForInitialCalibration(self):
         self._logger.info("INITIAL_CALIBRATION TAKE PICTURE")
@@ -1333,7 +1340,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/on_camera_picture_transfer", methods=["GET"]
     )
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def onCameraPictureTransfer(self):
         self.lid_handler.on_front_end_pic_received()
         return NO_CONTENT
@@ -1341,25 +1348,25 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/calibration_save_raw_pic", methods=["GET"]
     )
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def onCalibrationSaveRawPic(self):
         self.lid_handler.saveRawImg()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration_get_raw_pic", methods=["GET"])
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def onCalibrationGetRawPic(self):
         self.lid_handler.getRawImg()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration_lens_start", methods=["GET"])
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def onLensCalibrationStart(self):
         self.lid_handler.onLensCalibrationStart()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration_del_pic", methods=["POST"])
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def onCalibrationDelRawPic(self):
         self._logger.debug("Command given : /calibration_del_pic")
         try:
@@ -1378,7 +1385,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/camera_run_lens_calibration", methods=["POST"]
     )
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def onCalibrationRunLensDistort(self):
         self._logger.debug("Command given : camera_run_lens_calibration")
         self.lid_handler.saveLensCalibration()
@@ -1387,7 +1394,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/camera_stop_lens_calibration", methods=["POST"]
     )
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def onCalibrationStopLensDistort(self):
         self._logger.debug("Command given : camera_stop_lens_calibration")
         self.lid_handler.stopLensCalibration()
@@ -1396,7 +1403,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/send_corner_calibration", methods=["POST"]
     )
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     # @firstrun_only_access #@maintenance_stick_only_access
     def sendInitialCalibrationMarkers(self):
         if not "application/json" in request.headers["Content-Type"]:
@@ -1420,7 +1427,7 @@ class MrBeamPlugin(
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/print_label", methods=["POST"])
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     def printLabel(self):
         res = labelPrinter(self, use_dummy_values=IS_X86).print_label(request)
         return make_response(jsonify(res), 200 if res["success"] else 502)
@@ -1429,7 +1436,7 @@ class MrBeamPlugin(
         "/engrave_calibration_markers/<string:intensity>/<string:feedrate>",
         methods=["GET"],
     )
-    @restricted_unless_calibration_tool_mode
+    @calibration_tool_mode_only
     # @firstrun_only_access #@maintenance_stick_only_access
     def engraveCalibrationMarkers(self, intensity, feedrate):
         profile = self.laserCutterProfileManager.get_current_or_default()
@@ -1514,55 +1521,12 @@ class MrBeamPlugin(
     # Laser cutter profiles
     @octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
     def laserCutterProfilesList(self):
-        all_profiles = self.laserCutterProfileManager.get_all()
-        return jsonify(dict(profiles=self._convert_profiles(all_profiles)))
-
-    @octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["POST"])
-    @restricted_access
-    def laserCutterProfilesAdd(self):
-        if not "application/json" in request.headers["Content-Type"]:
-            return make_response("Expected content-type JSON", 400)
-
-        try:
-            json_data = request.json
-        except JSONBadRequest:
-            return make_response("Malformed JSON body in request", 400)
-
-        if not "profile" in json_data:
-            return make_response("No profile included in request", 400)
-
-        base_profile = self.laserCutterProfileManager.get_default()
-        if "basedOn" in json_data and isinstance(json_data["basedOn"], basestring):
-            other_profile = self.laserCutterProfileManager.get(json_data["basedOn"])
-            if other_profile is not None:
-                base_profile = other_profile
-
-        if "id" in base_profile:
-            del base_profile["id"]
-        if "name" in base_profile:
-            del base_profile["name"]
-        if "default" in base_profile:
-            del base_profile["default"]
-
-        new_profile = json_data["profile"]
-        make_default = False
-        if "default" in new_profile:
-            make_default = True
-            del new_profile["default"]
-
-        profile = dict_merge(base_profile, new_profile)
-        try:
-            saved_profile = self.laserCutterProfileManager.save(
-                profile, allow_overwrite=False, make_default=make_default
+        all_profiles = self.laserCutterProfileManager.converted_profiles()
+        for profile_id, profile in all_profiles.items():
+            all_profiles[profile_id]["resource"] = url_for(
+                ".laserCutterProfilesGet", identifier=profile["id"], _external=True
             )
-        except InvalidProfileError:
-            return make_response("Profile is invalid", 400)
-        except CouldNotOverwriteError:
-            return make_response(
-                "Profile already exists and overwriting was not allowed", 400
-            )
-        else:
-            return jsonify(dict(profile=self._convert_profile(saved_profile)))
+        return jsonify(dict(profiles=all_profiles))
 
     @octoprint.plugin.BlueprintPlugin.route(
         "/profiles/<string:identifier>", methods=["GET"]
@@ -1574,78 +1538,7 @@ class MrBeamPlugin(
         else:
             return jsonify(self._convert_profile(profile))
 
-    @octoprint.plugin.BlueprintPlugin.route(
-        "/profiles/<string:identifier>", methods=["DELETE"]
-    )
-    @restricted_access
-    def laserCutterProfilesDelete(self, identifier):
-        self.laserCutterProfileManager.remove(identifier)
-        return NO_CONTENT
-
-    @octoprint.plugin.BlueprintPlugin.route(
-        "/profiles/<string:identifier>", methods=["PATCH"]
-    )
-    @restricted_access
-    def laserCutterProfilesUpdate(self, identifier):
-        if not "application/json" in request.headers["Content-Type"]:
-            return make_response("Expected content-type JSON", 400)
-
-        try:
-            json_data = request.json
-        except JSONBadRequest:
-            return make_response("Malformed JSON body in request", 400)
-
-        if not "profile" in json_data:
-            return make_response("No profile included in request", 400)
-
-        profile = self.laserCutterProfileManager.get(identifier)
-        if profile is None:
-            profile = self.laserCutterProfileManager.get_default()
-
-        new_profile = json_data["profile"]
-        new_profile = dict_merge(profile, new_profile)
-
-        make_default = False
-        if "default" in new_profile:
-            make_default = True
-            del new_profile["default"]
-
-        # edit width and depth in grbl firmware
-        ### TODO queue the commands if not in locked or operational mode
-        if make_default or (
-            self.laserCutterProfileManager.get_current_or_default()["id"] == identifier
-        ):
-            if self._printer.is_locked() or self._printer.is_operational():
-                if "volume" in new_profile:
-                    if "width" in new_profile["volume"]:
-                        width = float(new_profile["volume"]["width"])
-                        if identifier == "_mrbeam_senior":
-                            width *= 2
-                        width += float(new_profile["volume"]["origin_offset_x"])
-                        self._printer.commands("$130=" + str(width))
-                        time.sleep(0.1)  ### TODO find better solution then sleep
-                    if "depth" in new_profile["volume"]:
-                        depth = float(new_profile["volume"]["depth"])
-                        if identifier == "_mrbeam_senior":
-                            depth *= 2
-                        depth += float(new_profile["volume"]["origin_offset_y"])
-                        self._printer.commands("$131=" + str(depth))
-
-        new_profile["id"] = identifier
-
-        try:
-            saved_profile = self.laserCutterProfileManager.save(
-                new_profile, allow_overwrite=True, make_default=make_default
-            )
-        except InvalidProfileError:
-            return make_response("Profile is invalid", 400)
-        except CouldNotOverwriteError:
-            return make_response(
-                "Profile already exists and overwriting was not allowed", 400
-            )
-        else:
-            return jsonify(dict(profile=self._convert_profile(saved_profile)))
-
+    # ~ Calibration
     def generateCalibrationMarkersSvg(self):
         """Used from the calibration screen to engrave the calibration markers"""
         # TODO mv this func to other file
@@ -1668,7 +1561,7 @@ class MrBeamPlugin(
 
         # 'name': 'Dummy Laser',
         # 'volume': {'width': 500.0, 'depth': 390.0, 'height': 0.0, 'origin_offset_x': 1.1, 'origin_offset_y': 1.1},
-        # 'model': 'X', 'id': 'my_default', 'glasses': False}
+        # 'model': 'X', 'id': '_default', 'glasses': False}
 
         filename = "CalibrationMarkers.svg"
 
@@ -1941,10 +1834,12 @@ class MrBeamPlugin(
             ready_to_laser=[],
             cli_event=["event"],
             custom_materials=[],
+            messages=[],
             analytics_init=[],  # user's analytics choice from welcome wizard
             gcode_deletion_init=[],  # user's gcode deletion choice from welcome wizard
             analytics_upload=[],  # triggers an upload of analytics files
-            take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
+            take_undistorted_picture=[],
+            # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
             focus_reminder=[],
             remember_markers_across_sessions=[],
             review_data=[],
@@ -1988,6 +1883,8 @@ class MrBeamPlugin(
             return self.lasersafety_wizard_api(data)
         elif command == "custom_materials":
             return self.custom_materials(data)
+        elif command == "messages":
+            return self.messages(data)
         elif command == "ready_to_laser":
             return self.ready_to_laser(data)
         elif command == "send_corner_calibration":
@@ -2393,19 +2290,6 @@ class MrBeamPlugin(
             description=description,
         )
 
-    def save_slicer_profile(self, path, profile, allow_overwrite=True, overrides=None):
-        if os.path.exists(path) and not allow_overwrite:
-            raise octoprint.slicing.ProfileAlreadyExists("cura", profile.name)
-
-        new_profile = Profile.merge_profile(profile.data, overrides=overrides)
-
-        if profile.display_name is not None:
-            new_profile["_display_name"] = profile.display_name
-        if profile.description is not None:
-            new_profile["_description"] = profile.description
-
-        self._save_profile(path, new_profile, allow_overwrite=allow_overwrite)
-
     def do_slice(
         self,
         model_path,
@@ -2417,20 +2301,15 @@ class MrBeamPlugin(
         on_progress_args=None,
         on_progress_kwargs=None,
     ):
-        if not profile_path:
-            profile_path = self._settings.get(["default_profile"])
+        # TODO profile_path is not used because only the default (selected) profile is.
         if not machinecode_path:
             path, _ = os.path.splitext(model_path)
             machinecode_path = path + ".gco"
 
         self._logger.info(
-            "Slicing %s to %s using profile stored at %s, %s"
-            % (model_path, machinecode_path, profile_path, self._CONVERSION_PARAMS_PATH)
+            "Slicing %s to %s -- parameters -- %s"
+            % (model_path, machinecode_path, self._CONVERSION_PARAMS_PATH)
         )
-
-        # TODO remove profile dependency completely
-        # profile = Profile(self._load_profile(profile_path))
-        # params = profile.convert_to_engine2()
 
         def is_job_cancelled():
             if self._cancel_job:
@@ -2450,7 +2329,7 @@ class MrBeamPlugin(
         params["noheaders"] = "true"  # TODO... booleanify
 
         if self._settings.get(["debug_logging"]):
-            log_path = homedir + "/.octoprint/logs/svgtogcode.log"
+            log_path = "~/.octoprint/logs/svgtogcode.log"
             params["log_filename"] = log_path
         else:
             params["log_filename"] = ""
@@ -2483,10 +2362,8 @@ class MrBeamPlugin(
 
             is_job_cancelled()  # check if canceled during conversion
 
-            return (
-                True,
-                None,
-            )  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
+            # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
+            return True, None
         except octoprint.slicing.SlicingCancelled as e:
             self._logger.info("Conversion cancelled")
             raise e
@@ -2538,6 +2415,7 @@ class MrBeamPlugin(
         with open(path, "wb") as f:
             yaml.safe_dump(profile, f, indent="  ", allow_unicode=True)
 
+    @logExceptions
     def _convert_to_engine(self, profile_path):
         profile = Profile(self._load_profile(profile_path))
         return profile.convert_to_engine()
@@ -2686,7 +2564,7 @@ class MrBeamPlugin(
         return Laser(
             components["file_manager"],
             components["analysis_queue"],
-            laserCutterProfileManager(),
+            self.laserCutterProfileManager,
         )
 
     def laser_filemanager(self, *args, **kwargs):

@@ -23,6 +23,7 @@ from octoprint_mrbeam.util.img import differed_imwrite
 (cvMajor, cvMinor) = cv2.__version__.split(".")[:2]
 isCV2 = cvMajor == "2"
 isCV31 = cvMajor == "3" and cvMinor == "1"
+isCV34 = cvMajor == "3" and cvMinor == "4"
 
 
 class ImageSeparator:
@@ -42,7 +43,7 @@ class ImageSeparator:
             self.debug = _mrbeam_plugin_implementation._settings.get(
                 ["dev", "debug_gcode"]
             )
-        except NameError:
+        except (NameError, AttributeError):
             self.debug = True
             self.log.info(
                 "Gcode debugging enabled (not running in Mr Beam Plugin environment"
@@ -326,29 +327,29 @@ class ImageSeparator:
         return filtered
 
     def _get_contours(self, img, method=cv2.RETR_EXTERNAL):
+        self.log.info("OpenCV Version:" + cv2.__version__)
         # RETR_EXTERNAL, RETR_LIST, RETR_TREE, RETR_CCOMP
         # see https://docs.opencv.org/ref/master/d9/d8b/tutorial_py_contours_hierarchy.html
         # TODO: switch to RETR_LIST and handle hierarchy recursively
         if isCV2:
-            contours, hierarchy = cv2.findContours(
-                img.copy(), method, cv2.CHAIN_APPROX_SIMPLE
-            )
             self.log.info(
                 "OpenCV "
                 + cv2.__version__
                 + " : filtering top level contours with img size cropped by one px on each side"
             )
+            contours, hierarchy = cv2.findContours(
+                img.copy(), method, cv2.CHAIN_APPROX_SIMPLE
+            )
 
         else:
+            self.log.info(
+                "OpenCV "
+                + cv2.__version__
+                + " : filtering top level contours with img size cropped by one px on each side"
+            )
             _, contours, hierarchy = cv2.findContours(
                 img, method, cv2.CHAIN_APPROX_SIMPLE
             )
-            if isCV31:
-                self.log.info(
-                    "OpenCV "
-                    + cv2.__version__
-                    + " : filtering top level contours with img size cropped by one px on each side"
-                )
         return (img, contours, hierarchy)
 
     def _is_only_whitespace(self, img):

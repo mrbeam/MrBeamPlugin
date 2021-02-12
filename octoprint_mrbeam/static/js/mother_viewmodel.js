@@ -91,42 +91,66 @@ $(function () {
             });
 
             $("body").on("keydown", function (event) {
-                if (!self.settings.feature_keyboardControl()) return;
+                self.addClassesForModifierKeys(event);
+
                 if (
                     event.target.nodeName === "INPUT" ||
                     event.target.nodeName === "TEXTAREA" ||
                     $(".modal.in").length > 0
-                )
-                    return;
+                ) {
+                    return true; // true does not "consume" the event.
+                }
 
+                //                if (!self.settings.feature_keyboardControl()) return true;
                 var button = undefined;
                 var wa_id = $("nav li.active a").attr("href");
+                let movementFactor = 1;
+                if (event.shiftKey) movementFactor *= 10;
+                if (event.altKey) movementFactor /= 10;
                 switch (event.which) {
                     case 37: // left arrow key:
                         // button = $("#control-xdec");
                         if (wa_id === "#workingarea") {
-                            self.workingArea.moveSelectedDesign(-1, 0);
+                            self.workingArea.moveSelectedDesign(
+                                -1 * movementFactor,
+                                0
+                            );
+                            if (event.altKey) {
+                                // Alt + LeftArrow usually triggers Browser's back button; This prevents it.
+                                event.cancelBubble = true;
+                                event.returnValue = false;
+                                event.preventDefault();
+                            }
                             return;
                         }
                         break;
                     case 38: // up arrow key
                         // button = $("#control-yinc");
                         if (wa_id === "#workingarea") {
-                            self.workingArea.moveSelectedDesign(0, -1);
+                            self.workingArea.moveSelectedDesign(
+                                0,
+                                -1 * movementFactor
+                            );
                             return;
                         }
                         break;
                     case 39: // right arrow key
                         // button = $("#control-xinc");
                         if (wa_id === "#workingarea") {
-                            self.workingArea.moveSelectedDesign(1, 0);
+                            self.workingArea.moveSelectedDesign(
+                                1 * movementFactor,
+                                0
+                            );
                             return;
                         }
                         break;
                     case 40: // down arrow key
                         // button = $("#control-ydec");
                         if (wa_id === "#workingarea") {
-                            self.workingArea.moveSelectedDesign(0, 1);
+                            self.workingArea.moveSelectedDesign(
+                                0,
+                                1 * movementFactor
+                            );
                             return;
                         }
                         break;
@@ -164,6 +188,24 @@ $(function () {
                     button.click();
                 }
             });
+
+            $("body").on("keyup", function (event) {
+                self.removeClassesForModifierKeys(event);
+            });
+
+            self.addClassesForModifierKeys = function (event) {
+                if (event.which === 16) document.body.classList.add("shiftKey");
+                if (event.which === 17) document.body.classList.add("ctrlKey");
+                if (event.which === 18) document.body.classList.add("altKey");
+            };
+            self.removeClassesForModifierKeys = function (event) {
+                if (event.which === 16)
+                    document.body.classList.remove("shiftKey");
+                if (event.which === 17)
+                    document.body.classList.remove("ctrlKey");
+                if (event.which === 18)
+                    document.body.classList.remove("altKey");
+            };
 
             // TODO forward to control viewmodel
             self.state.isLocked = ko.observable(true);
@@ -683,6 +725,9 @@ $(function () {
             self.gcodefiles.requestData({
                 switchToPath: self.gcodefiles.currentPath(),
             });
+            console.log(
+                "SELENIUM_CONVERSION_FINISHED:" + JSON.stringify(payload)
+            );
         };
 
         // filter function for the file list. Easier to modify than the original listHelper(). listHelper is still used for sorting.

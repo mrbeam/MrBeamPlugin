@@ -7,10 +7,14 @@ from octoprint_mrbeam.camera.exc import MrbCameraError
 from octoprint_mrbeam.camera.mrbcamera import mrbCamera, MrbCamera
 from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint.settings import settings
+from testutils.fetch_resource import fetch
 
 sett = settings(init=True)  # fix some init bug
 path = dirname(realpath(__file__))
 CAM_DIR = join(path, "rsc", "camera")
+
+RESOURCES = [join(CAM_DIR, "raw.jpg")]
+fetch(RESOURCES)
 
 
 @pytest.mark.datafiles(

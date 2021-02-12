@@ -14,7 +14,7 @@
         <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
         <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
 
-        {% include 'error_logging_script.jinja2' %}
+        <!--{% include 'error_logging_script.jinja2' %}-->
 
         {#  Dirty to have this (== body elements) in the head section.
            Chrome ends head-tag and opens body-tag which means that all following is in the page's bodey instead of the head  #}
@@ -73,6 +73,15 @@
 						{% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- /ko -->{% endif %}
 					{% endfor %}
 
+                    <!-- ko allowBindings: false -->
+                    {# Translators: Name of the tab #}
+					<li>
+						<a id="messages_nav_tab" href="#messages" data-toggle="tab" data-bind="css: { 'has-unread-messages': hasUnread }">
+							<i class="icon icon-envelope icon-large"></i>
+						</a>
+					</li>
+					<!-- /ko -->
+
 					<li id="burger_menu" class="dropdown mrb_menu">
 						<a href="#" id="burger_menu_link" class="dropdown-toggle" data-toggle="dropdown">
 							<i class="icon-reorder icon-large"></i>
@@ -115,6 +124,7 @@
                     {%      include 'tab_terminal.jinja2' %}
                     {% endif %}
 					{% include 'tab_designlib.jinja2' %}
+                    {% include 'tab_messages.jinja2' %}
                     {% include 'tab_designstore.jinja2' %}
 					{% if not enableFocus %}
                     {%      include 'tab_focus.jinja2' %}
