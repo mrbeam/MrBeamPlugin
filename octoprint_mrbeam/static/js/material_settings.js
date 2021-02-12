@@ -327,23 +327,23 @@ $(function () {
                 name: gettext("Sign Material"),
                 img: "Sign-Material.jpg",
                 description: "",
-                hints: "",
+                hints: gettext("The material is supplied with a protective film. It can be removed before or after processing."),
                 safety_notes: "",
             },
             "Stamp Rubber": {
                 name: gettext("Stamp Rubber"),
                 img: "Stamp-Rubber.jpg",
                 description: "",
-                hints: "",
+                hints: gettext("Repeat the engraving once ore twice for a better result."),
                 safety_notes: "",
             },
-            Wellboard: {
-                name: gettext("Wellboard"),
-                img: "",
-                description: "",
-                hints: "",
-                safety_notes: "",
-            },
+            // Wellboard: {
+            //     name: gettext("Wellboard"),
+            //     img: "",
+            //     description: "",
+            //     hints: "",
+            //     safety_notes: "",
+            // },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
     }
