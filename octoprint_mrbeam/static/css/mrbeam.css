@@ -2867,6 +2867,10 @@ input.search-query,
   width: 90%;
 }
 
+#positive_review p{
+  white-space: pre-wrap;
+}
+
 .dont-break {
   white-space: nowrap;
 }

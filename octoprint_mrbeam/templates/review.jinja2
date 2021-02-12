@@ -5,7 +5,7 @@
             <h3 id="review_question" class="review_title">{{ _('How likely are you to recommend Mr Beam to a friend or colleague?') }}</h3>
             <div id="rating_block">
                 <div class="rating">
-                    <span class="rating-label">Not at all likely</span>
+                    <span class="rating-label">{{ _('Not at all likely') }}</span>
                     <button value="1">1</button>
                     <button value="2">2</button>
                     <button value="3">3</button>
@@ -16,7 +16,7 @@
                     <button value="8">8</button>
                     <button value="9">9</button>
                     <button value="10">10</button>
-                    <span class="rating-label">Extremely likely</span>
+                    <span class="rating-label">{{ _('Extremely likely') }}</span>
                 </div>
             </div>
             <div id="review_thank_you" class="review_hidden_part">
@@ -34,12 +34,9 @@
             </div>
             <div id="positive_review" class="review_hidden_part">
                 <h3 class="review_title">{{ _('Thank you for your response.') }}</h3>
-                <p>{{ _('Positive reviews from awesome customers like you help others to feel confident about choosing Mr Beam too.') }}</p>
-                <p>{{ _('Could you take 60 seconds to go to the ') }}
-                    <a id="give_review_link" target="_blank" href="https://store.mr-beam.org/products/mr-beam-ii-dreamcut-air-filter-ii-bundle?utm_source=beamos&utm_medium=beamos&utm_campaign=review_screen#shopify-product-reviews">{{ _('Mr Beam Store') }}</a>
-                 {{ _('and share your happy experiences?') }}
-                </p>
-                <br>
+                <p>{{ _('Positive reviews from awesome customers like you help others to feel confident about choosing Mr Beam too. <br />Could you take 60 seconds to go to the %(opening_tag)sMr Beam Store%(closing_tag)s and share your happy experiences?',
+                opening_tag='<a id="give_review_link" href="https://mr-beam.org/beamos/review" target="_blank">',
+                closing_tag='</a>') }}</p>
                 <p>{{ _('We will be forever grateful. Thank you in advance for helping us out!') }}</p>
                 <p>{{ _('Your Mr Beam team') }}</p>
             </div>
