@@ -95,21 +95,20 @@ $(function () {
                 self.rating(val);
 
                 self.fillAndDisableRating(val);
+
                 $("#dont_ask_review_link").hide();
                 $("#review_question").hide();
+                $("#rating_block").hide();
 
-                if (val >= 7) {
-                    $("#review_thank_you").show();
-                } else if (val < 7) {
-                    $("#rating_block").hide();
-                    $("#review_how_can_we_improve").show();
-                }
+                $("#review_thank_you").show();
+                $("#review_how_can_we_improve").show();
+                $("#ask_user_details").show();
+                $("#change_review").show();
             });
         };
 
         self.fillAndDisableRating = function (userRating) {
             let allBtns = $(".rating button");
-            allBtns.off("click");
 
             allBtns.each(function (i, obj) {
                 $(this).prop("disabled", true);
@@ -133,6 +132,27 @@ $(function () {
             self.exitReview();
         };
 
+        self.changeReview = function () {
+            // "Back" button: Go back to the rating bar for the user to change their answer
+            $("#dont_ask_review_link").show();
+            $("#review_question").show();
+            $("#rating_block").show();
+            $("#review_thank_you").hide();
+            $("#review_how_can_we_improve").hide();
+            $("#ask_user_details").hide();
+            $("#change_review").hide();
+            self.unfillAndEnableRating();
+        };
+
+        self.unfillAndEnableRating = function () {
+            let allBtns = $(".rating button");
+
+            allBtns.each(function (i, obj) {
+                $(this).prop("disabled", false);
+                $(this).removeClass("rating-hover");
+            });
+        };
+
         self.exitXBtn = function () {
             // "x" button in the corner: we send the review but show it again in the next session
             self.exitReview();
@@ -140,9 +160,26 @@ $(function () {
 
         self.exitReview = function () {
             self.ratingGiven = false;
-            self.reviewDialog.modal("hide");
             self.justGaveReview(true); // We show it only once per session
             self.sendReviewToServer();
+
+            $("#review_thank_you").hide();
+            $("#review_how_can_we_improve").hide();
+            $("#ask_user_details").hide();
+            $("#change_review").hide();
+            $("#review_done_btn").hide();
+
+            if (self.rating() >= 7) {
+                $("#positive_review").show();
+            } else if (self.rating() < 7) {
+                $("#negative_review").show();
+            }
+
+            $("#close_review_modal").removeClass("review_hidden_part").css("width", "20%");
+        };
+
+        self.closeReview = function() {
+            self.reviewDialog.modal("hide");
         };
 
         self.exitAndDontShowAgain = function () {
@@ -152,11 +189,13 @@ $(function () {
 
         self.sendReviewToServer = function () {
             let review = $("#review_textarea").val();
+            let user_email_or_phone = $("#review_input_phone_email").val();
             let data = {
                 // more data is added by the backend
                 dontShowAgain: self.dontShowAgain(),
                 rating: self.rating(),
                 review: review,
+                userEmailOrPhone: user_email_or_phone,
                 ts: new Date().getTime(),
                 number: self.REVIEW_NUMBER,
             };
