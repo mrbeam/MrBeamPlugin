@@ -95,19 +95,15 @@ $(function () {
                 self.rating(val);
 
                 self.fillAndDisableRating(val);
+
                 $("#dont_ask_review_link").hide();
                 $("#review_question").hide();
                 $("#rating_block").hide();
 
-                if (val >= 7) {
-                    $("#review_thank_you").show();
-                } else if (val < 7) {
-                    // $("#rating_block").hide();
-                    $("#review_how_can_we_improve").show();
-                }
-
-                $("#change_review").show();
+                $("#review_thank_you").show();
+                $("#review_how_can_we_improve").show();
                 $("#ask_user_details").show();
+                $("#change_review").show();
             });
         };
 
@@ -164,9 +160,26 @@ $(function () {
 
         self.exitReview = function () {
             self.ratingGiven = false;
-            self.reviewDialog.modal("hide");
             self.justGaveReview(true); // We show it only once per session
             self.sendReviewToServer();
+
+            $("#review_thank_you").hide();
+            $("#review_how_can_we_improve").hide();
+            $("#ask_user_details").hide();
+            $("#change_review").hide();
+            $("#review_done_btn").hide();
+
+            if (self.rating() >= 7) {
+                $("#positive_review").show();
+            } else if (self.rating() < 7) {
+                $("#negative_review").show();
+            }
+
+            $("#close_review_modal").removeClass("review_hidden_part").css("width", "20%");
+        };
+
+        self.closeReview = function() {
+            self.reviewDialog.modal("hide");
         };
 
         self.exitAndDontShowAgain = function () {
