@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-02-12 13:15+0100\n"
-"PO-Revision-Date: 2021-02-12 13:28+0100\n"
+"POT-Creation-Date: 2021-02-12 14:18+0100\n"
+"PO-Revision-Date: 2021-02-12 14:19+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -687,13 +687,22 @@ msgstr ""
 msgid "Sign Material"
 msgstr "Schildmaterial"
 
+#: octoprint_mrbeam/static/js/material_settings.js:330
+msgid ""
+"The material is supplied with a protective film. It can be removed before or "
+"after processing."
+msgstr ""
+"Das Material wird mit einer Schutzfolie geliefert. Sie kann vor oder nach "
+"der Verarbeitung entfernt werden."
+
 #: octoprint_mrbeam/static/js/material_settings.js:334
 msgid "Stamp Rubber"
 msgstr "Stempelgummi"
 
-#: octoprint_mrbeam/static/js/material_settings.js:341
-msgid "Wellboard"
-msgstr "Wellboard"
+#: octoprint_mrbeam/static/js/material_settings.js:337
+msgid "Repeat the engraving once ore twice for a better result."
+msgstr ""
+"Wiederhole die Gravur ein- bis zweimal, um ein besseres Ergebnis zu erzielen."
 
 #: octoprint_mrbeam/static/js/mother_viewmodel.js:48
 msgid "Starts the laser job"
@@ -5535,6 +5544,9 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
+
+#~ msgid "Wellboard"
+#~ msgstr "Wellboard"
 
 #~ msgid "Thank you!"
 #~ msgstr "Danke!"
