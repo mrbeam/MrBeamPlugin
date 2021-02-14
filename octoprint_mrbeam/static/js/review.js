@@ -29,12 +29,14 @@ $(function () {
                 self.loginState.currentUser().active
             ) {
                 let totalUsage = self.settings.settings.plugins.mrbeam.usage.totalUsage();
-                let shouldAsk = self.settings.settings.plugins.mrbeam.review.ask_again();
+                let shouldAsk = self.settings.settings.plugins.mrbeam.review.ask();
+                let doNotAskAgain = self.settings.settings.plugins.mrbeam.review.doNotAskAgain();
                 let reviewGiven = self.settings.settings.plugins.mrbeam.review.given();
 
                 return (
                     totalUsage >= self.SHOW_AFTER_USAGE_H &&
                     shouldAsk &&
+                    !doNotAskAgain &&
                     !reviewGiven &&
                     !self.justGaveReview()
                 );
