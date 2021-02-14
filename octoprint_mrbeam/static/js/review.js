@@ -69,7 +69,8 @@ $(function () {
                 if (
                     (self.shouldAskForReview() &&
                         self.jobTimeEstimation() >= 61) ||
-                    FORCE_REVIEW_SCREEN
+                    (typeof FORCE_REVIEW_SCREEN !== "undefined" &&
+                        FORCE_REVIEW_SCREEN)
                 ) {
                     self.showReviewDialog(true);
                     self.reviewDialog.modal("show");
@@ -175,10 +176,12 @@ $(function () {
                 $("#negative_review").show();
             }
 
-            $("#close_review_modal").removeClass("review_hidden_part").css("width", "20%");
+            $("#close_review_modal")
+                .removeClass("review_hidden_part")
+                .css("width", "20%");
         };
 
-        self.closeReview = function() {
+        self.closeReview = function () {
             self.reviewDialog.modal("hide");
         };
 
@@ -200,7 +203,10 @@ $(function () {
                 number: self.REVIEW_NUMBER,
             };
 
-            if (FORCE_REVIEW_SCREEN) {
+            if (
+                typeof FORCE_REVIEW_SCREEN !== "undefined" &&
+                FORCE_REVIEW_SCREEN
+            ) {
                 data["debug"] = true;
             }
 
