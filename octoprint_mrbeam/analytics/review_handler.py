@@ -63,14 +63,16 @@ class ReviewHandler:
         if not self.is_review_already_given() or data.get("debug", False):
             data = self._add_review_data(data)
             self._write_review_to_file(data)
-            ask_again = not data["dontShowAgain"]
-            if data["dontShowAgain"] and data["rating"] > 0:
-                self._usage_handler.set_review_given()
-                self._settings.set_boolean(["review", "given"], True)
-                ask_again = False
-            # deprecated but needed while this version is in beta and users could go back
-            self._settings.set_boolean(["review", "ask_again"], ask_again)
-            self._settings.save()  # This is necessary because without it the value is not saved
+            if data["dontShowAgain"]:
+                if data["rating"] > 0:
+                    # write here only if we really go a review
+                    # if user clicked don't show again, we ask after a reset or rescue stick
+                    self._usage_handler.set_review_given(migrated=False)
+                    # deprecated but needed while this version is in beta and users could go back
+                    self._settings.set_boolean(["review", "given"], True)
+                else:
+                    self._settings.set_boolean(["review", "doNotAskAgain"], True)
+                self._settings.save()  # This is necessary because without it the value is not saved
 
             ReviewFileUploader.upload_now(self._plugin, self._review_lock)
         else:
@@ -84,7 +86,7 @@ class ReviewHandler:
             ["review", "given"]
         ):
             self._logger.info("Syncing review state 'given' to _usage_handler...")
-            self._usage_handler.set_review_given()
+            self._usage_handler.set_review_given(migrated=True)
 
     def _add_review_data(self, data):
         try:

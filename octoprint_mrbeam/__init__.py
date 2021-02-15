@@ -375,7 +375,11 @@ class MrBeamPlugin(
             laser_heads=dict(filename="laser_heads.yaml"),
             review=dict(
                 given=False,  # deprecated in settings, moved to usage_handler
-                ask_again=True,  # deprecated I assume
+                # set to True during welcome wizard.
+                # This is to make sure that not all but only new devices get the review screen
+                ask=False,
+                # if the user does not want to be asked again and does not want to review
+                doNotAskAgain=False,
             ),
             focusReminder=True,
             analyticsEnabled=None,
@@ -470,7 +474,8 @@ class MrBeamPlugin(
             _version=self._plugin_version,
             review=dict(
                 given=self.review_handler.is_review_already_given(),
-                ask_again=self._settings.get(["review", "ask_again"]),
+                ask=self._settings.get(["review", "ask"]),
+                doNotAskAgain=self._settings.get(["review", "doNotAskAgain"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
