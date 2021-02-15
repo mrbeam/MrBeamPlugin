@@ -264,13 +264,16 @@ g#camera_markers.markerSW.gray circle#markerSW {
 #wa_filelist .entry.isMirrored .mirror_toggler .mini_switch_trigger > div {
   right: 0.025em;
 }
-
+/** Quicktext circle direction **/
+#quick_text_dialog_clockwise.counterclockwise .mini_switch_trigger > div {
+  right: 0.025em;
+}
 /*** mini switch (used for toggling mm/% units and mirroring designs) ***/
-#wa_filelist .mini_switch {
+.mini_switch {
   cursor: pointer;
   user-select: none;
 }
-#wa_filelist .file_list_entry .local_transformation span.mini_switch_label {
+span.mini_switch_label {
   font-size: 0.75rem;
   color: #555;
   margin: 0;
@@ -278,10 +281,7 @@ g#camera_markers.markerSW.gray circle#markerSW {
   width: 2.1em;
   text-align: center;
 }
-#wa_filelist
-  .file_list_entry
-  .local_transformation
-  span.mini_switch_label.mini_switch_trigger {
+span.mini_switch_label.mini_switch_trigger {
   display: inline-block;
   border-radius: 1em;
   border: 1px solid #ccc;
@@ -293,7 +293,7 @@ g#camera_markers.markerSW.gray circle#markerSW {
   font-size: 10px;
   top: 2px;
 }
-#wa_filelist .mini_switch_trigger > div {
+.mini_switch_trigger > div {
   width: 1em;
   background-color: #e25303;
   border-radius: 50%;
@@ -498,7 +498,35 @@ input.decent_input:hover {
 
 /*Laser button */
 
+/* Quick text */
+#quick_text_dialog_intensity {
+  margin-top: 4em;
+  margin-bottom: 2em;
+}
+
+#quick_text_dialog #qt_round_text_section img {
+  width: 3em;
+}
+
+#qt_round_text_section .btn-group .btn {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+#qt_round_text_section.straight #quick_text_dialog_circle {
+  display: none;
+}
+
+#quick_text_dialog_circle {
+  width: 60%;
+  margin: 1em;
+  float: right;
+}
+
 /*Sliders*/
+input#quick_text_dialog_circle {
+  border-radius: 0;
+}
+
 input#quick_shape_rect_radius,
 input#quick_shape_star_sharpness,
 input#quick_shape_heart_lr {

@@ -222,4 +222,49 @@ class QuickShapeHelper {
             "z";
         return d;
     }
+
+    static getTextPath(
+        cx,
+        cy,
+        circlePercent,
+        textLength,
+        counterclockwise = false
+    ) {
+        if (circlePercent === 0) {
+            return `M${cx},${cy}m${-textLength},0h${textLength * 2}`; // half of the line would be enough, but overlength is uncritical on a straight line.
+        } else {
+            const f = circlePercent / 100.0; // factor, how much of the circle outline is text
+            const r = textLength / f / (Math.PI * 2); // resulting radius
+
+            // Text will be aligned in the center of the path (50%), tc = text center
+            //
+            //   ^    <text center>
+            // cy+    ______b______
+            //   |   /             \
+            //   |  |               |
+            //   |  |       |       |
+            //   |  |       |r      |
+            //   |   \______|______/
+            //   |          a
+            //   |
+            //   0----------+---------------->
+            //             cx
+
+            const a = counterclockwise ? [cx, cy - 2 * r] : [cx, cy + 2 * r];
+            const b = counterclockwise ? [0, 2 * r] : [0, -2 * r];
+            const b2 = [0, -b[1]];
+
+            const sweep = counterclockwise ? 0 : 1;
+
+            // this is for easier debugging
+            // const d = `M${a.join(',')}a${r.toFixed(1)} ${r.toFixed(1)} 0 1 ${sweepFlag} ${b.join(',')} a${r.toFixed(1)} ${r.toFixed(1)} 0 1 ${sweepFlag} ${b2[0]+5}, ${b2[1].toFixed(1)}l2,2`;
+
+            // this is for production
+            const d = `M${a.join(",")}a${r} ${r} 0 1 ${sweep} ${b.join(
+                ","
+            )} a${r} ${r} 0 1 ${sweep} ${b2.join(",")}`;
+
+            return d;
+        }
+    }
 }

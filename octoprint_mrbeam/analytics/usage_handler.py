@@ -246,6 +246,19 @@ class UsageHandler(object):
         self._write_usage_data()
         self.write_usage_analytics(action="reset_gantry")
 
+    def get_review_given(self):
+        return self._usage_data.get("review", {}).get("given", False)
+
+    def set_review_given(self, migrated=False):
+        if not self.get_review_given():
+            self._usage_data["review"] = {
+                "given": True,
+                "ts": time.time(),
+                "v": self._plugin_version,
+                "migrated": migrated,
+            }
+            self._write_usage_data()
+
     def _log_usage_data(self, usage_data):
         self._logger.info(
             "USAGE DATA: prefilter={pre}, carbon_filter={carbon}, laser_head={lh}, gantry={gantry}, compressor={compressor}".format(
@@ -312,6 +325,12 @@ class UsageHandler(object):
     def get_total_usage(self):
         if "total" in self._usage_data:
             return self._usage_data["total"]["job_time"]
+        else:
+            return 0
+
+    def get_total_jobs(self):
+        if "succ_jobs" in self._usage_data:
+            return self._usage_data["succ_jobs"]["count"]
         else:
             return 0
 
