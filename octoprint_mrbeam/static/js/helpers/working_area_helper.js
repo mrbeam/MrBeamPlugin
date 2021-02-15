@@ -335,3 +335,4 @@ class WorkingAreaHelper {
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = "bcdfghjklmnpqrstvwxz";
 WorkingAreaHelper.HUMAN_READABLE_IDS_VOCALS = "aeiouy";
+window.WorkingAreaHelper = WorkingAreaHelper;
