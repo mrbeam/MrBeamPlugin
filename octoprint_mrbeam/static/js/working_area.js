@@ -1,4 +1,4 @@
-/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper, mrbeam, QuickShapeHelper */
+/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper, mrbeam, QuickShapeHelper, Promise */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
 MRBEAM_WORKINGAREA_PAN_MM = [0, 0]; // global available in this viewmodel and in snap plugins at the same time.
@@ -2940,6 +2940,51 @@ $(function () {
             console.log("embed images promise all");
         };
 
+        self._embedAllRasteredImages = async function (
+            targetSvg,
+            rasterClusters,
+            wPT,
+            hPT,
+            wMM,
+            hMM,
+            pxPerMM
+        ) {
+            let clusterIndex = 0;
+            let pAll = await Promise.all(
+                rasterClusters.map(async (data) => {
+                    const renderBBoxMM = data.bbox;
+                    const rasterResult = await data.svg.renderPNG(
+                        wPT,
+                        hPT,
+                        wMM,
+                        hMM,
+                        pxPerMM,
+                        renderBBoxMM
+                    ); // returns { dataUrl: fillBitmap, size: size, bbox: bbox };
+                    if (rasterResult.dataUrl !== null) {
+                        const x = rasterResult.bbox.x;
+                        const y = rasterResult.bbox.y;
+                        const w = rasterResult.bbox.w;
+                        const h = rasterResult.bbox.h;
+                        var fillImage = targetSvg.image(
+                            rasterResult.dataUrl,
+                            x,
+                            y,
+                            w,
+                            h
+                        );
+                        fillImage.attr("id", `fillRendering${clusterIndex}`);
+                    }
+                    clusterIndex++;
+                    console.log("promise inside", fillImage);
+                    return rasterResult;
+                })
+            );
+
+            console.log("_embedAllRasteredImages promise all");
+            return pAll;
+        };
+
         // raster the infill and inject it as an image into the svg
         self.rasterInfill = function (
             svg, // is compSvg reference
@@ -2952,53 +2997,18 @@ $(function () {
             pxPerMM,
             callback
         ) {
-            // mark all rastered elements
-            let marked = svg.markFilled("toRaster", fillAreas);
-
-            // cluster overlapping
-            let clusterCount = 0;
-            let clusters = [];
-            for (let i = 0; i < marked.length; i++) {
-                let rasterEl = marked[i];
-                const bbox = rasterEl.get_total_bbox();
-                let match = false;
-                for (var j = 0; j < clusters.length; j++) {
-                    var cluster = clusters[j];
-                    if (Snap.path.isBBoxIntersect(cluster.bbox, bbox)) {
-                        match = true;
-                        cluster.bbox = Snap.path.merge_bbox(cluster.bbox, bbox); // TODO: not neccessary to merge. better check all bboxes
-                        cluster.elements.push(rasterEl);
-                        rasterEl.addClass("rasterCluster" + j);
-                    }
-                }
-                if (match === false) {
-                    rasterEl.addClass("rasterCluster" + clusterCount);
-                    clusters.push({ bbox: bbox, elements: [rasterEl] });
-                    clusterCount++;
-                }
-            }
+            let clusters = svg.splitRasterClusters(fillAreas);
 
             // get only filled items and embed the images
             // loop over non overlapping clusters to-raster elements.
             for (var c = 0; c < clusters.length; c++) {
+                //            for (var c = 0; c < clusters.length; c++) {
                 var rasterCluster = clusters[c];
-                var rasterContentSvg = svg.clone(); // Avoids wrapping svg in svg.
-                svg.attr("id", "rasterCluster_" + c);
-                svg.addClass("tmpSvg");
-
-                for (var notc = 0; notc < clusters.length; notc++) {
-                    if (notc !== c) {
-                        const selector = ".rasterCluster" + notc;
-                        userContent.selectAll(selector).remove();
-                    }
-                }
+                var rasterContentSvg = rasterCluster.svg; // Avoids wrapping svg in svg.
+                rasterContentSvg.attr("id", "rasterCluster_" + c);
+                rasterContentSvg.addClass("tmpSvg");
 
                 console.log("Rastering cluster " + c);
-                //                let rasterContentSvg = self.getNewSvg(
-                //                    "rasterContentSvg",
-                //                    svgWidthPT,
-                //                    svgHeightPT
-                //                );
                 var attrs = {};
                 _.merge(attrs, namespaces);
                 attrs.viewBox = "0 0 " + wMM + " " + hMM;
@@ -3017,12 +3027,16 @@ $(function () {
                 }
 
                 // embed the fonts as dataUris
-                if (svg.selectAll(".userText").length > 0) {
-                    $("#compSvg defs").append(
+                if (rasterContentSvg.selectAll(".userText").length > 0) {
+                    console.log("Copy fonts rasterContentSvg");
+                    rasterContentSvg.select("defs").append(
+                        //                    $("#compSvg defs").append( // TODO ???
                         '<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>'
                     );
                     self._qt_copyFontsToSvg(
-                        svg.select(".quickTextFontPlaceholder").node
+                        rasterContentSvg.select(".quickTextFontPlaceholder")
+                            .node
+                        //                        svg.select(".quickTextFontPlaceholder").node
                     );
                 }
                 self._embedAllImages(rasterContentSvg);
@@ -3048,79 +3062,46 @@ $(function () {
                 }
 
                 // take bbox from rasterCluster ??? TODO
-                let renderBBoxMM = rasterContentSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
+                let renderBBoxMM = rasterCluster.bbox; // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
                 if (MRBEAM_DEBUG_RENDERING) {
                     debugBase64(
                         rasterContentSvg.toDataURL(),
-                        "Step 1: SVG ready for canvas, renderBBox",
+                        `Step 1: Raster Cluster ${c}, renderBBox`,
                         renderBBoxMM
                     );
                 }
-                console.log(
-                    "Rendering " + fillings.length + " filled elements."
-                );
-                if (fillAreas) {
-                    const rasterResultPromise = rasterContentSvg
-                        .renderPNG(
-                            svgWidthPT,
-                            svgHeightPT,
-                            wMM,
-                            hMM,
-                            pxPerMM,
-                            renderBBoxMM
-                        )
-                        .then(function (rasterResult) {
-                            if (MRBEAM_DEBUG_RENDERING) {
-                                debugBase64(
-                                    rasterResult.dataUrl,
-                                    "Step 2: Canvas result .png"
-                                );
-                            }
-
-                            if (fillings.length > 0) {
-                                // fill rendering replaces all
-                                svg.selectAll("image").remove();
-                                svg.selectAll(".deleteAfterRendering").remove();
-                                svg.selectAll("text,tspan").remove();
-
-                                if (rasterResult.dataUrl !== null) {
-                                    const x = rasterResult.bbox.x;
-                                    const y = rasterResult.bbox.y;
-                                    const w = rasterResult.bbox.w;
-                                    const h = rasterResult.bbox.h;
-                                    var fillImage = snap.image(
-                                        rasterResult.dataUrl,
-                                        x,
-                                        y,
-                                        w,
-                                        h
-                                    );
-                                    fillImage.attr("id", "fillRendering");
-                                    svg.append(fillImage);
-                                }
-                            }
-                            if (typeof callback === "function") {
-                                callback(svg);
-                                if (MRBEAM_DEBUG_RENDERING) {
-                                    const data = {
-                                        width: rasterResult.bbox.w,
-                                        height: rasterResult.bbox.h,
-                                        x: rasterResult.bbox.x,
-                                        y: rasterResult.bbox.y,
-                                    };
-                                    debugBase64(
-                                        svg.toDataURL(),
-                                        "Step 3: SVG with fill rendering",
-                                        data
-                                    );
-                                }
-                            }
-                            self._cleanup_render_mess();
-                        });
-                } else {
-                    callback(svg);
-                }
-                //                });
+            }
+            console.log("Rendering " + fillings.length + " filled elements.");
+            if (fillAreas) {
+                self._embedAllRasteredImages(
+                    svg,
+                    clusters,
+                    svgWidthPT,
+                    svgHeightPT,
+                    wMM,
+                    hMM,
+                    pxPerMM
+                ).then(function (rasterResults) {
+                    if (fillings.length > 0) {
+                        // fill rendering replaces all
+                        //                                svg.selectAll("image").remove();
+                        //                                svg.selectAll(".deleteAfterRendering").remove();
+                        //                                svg.selectAll("text,tspan").remove();
+                    }
+                    if (typeof callback === "function") {
+                        callback(svg);
+                        if (MRBEAM_DEBUG_RENDERING) {
+                            debugBase64(
+                                svg.toDataURL(),
+                                "Step 3: SVG with fill rendering",
+                                rasterResults
+                            );
+                        }
+                    }
+                    self._cleanup_render_mess();
+                });
+            } else {
+                callback(svg);
             }
         };
 

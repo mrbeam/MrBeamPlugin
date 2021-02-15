@@ -115,6 +115,71 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return selection;
     };
 
+    Element.prototype.splitRasterClusters = function (fillAreas) {
+        const svg = this;
+        let marked = svg.markFilled("toRaster", fillAreas);
+
+        // cluster overlapping
+        let clusterCount = 0;
+        let clusters = [];
+        for (let i = 0; i < marked.length; i++) {
+            let rasterEl = marked[i];
+            const bbox = rasterEl.get_total_bbox();
+            // find overlaps
+            let lastOverlap = -1;
+            for (var j = 0; j < clusters.length; j++) {
+                var cluster = clusters[j];
+                if (Snap.path.isBBoxIntersect(cluster.bbox, bbox)) {
+                    if (lastOverlap === -1) {
+                        // merge element in cluster (1st overlap)
+                        cluster.bbox = Snap.path.merge_bbox(cluster.bbox, bbox);
+                        cluster.elements.push(rasterEl);
+                        rasterEl.addClass("rasterCluster" + j);
+                        lastOverlap = j;
+                    } else {
+                        // merge clusters (multiple overlaps)
+                        cluster.bbox = Snap.path.merge_bbox(
+                            cluster.bbox,
+                            clusters[lastOverlap].bbox
+                        );
+                        cluster.elements = cluster.elements.concat(
+                            clusters[lastOverlap].elements
+                        );
+                        clusters[lastOverlap] = null;
+                        lastOverlap = j;
+                    }
+                }
+            }
+            clusters = clusters.filter((c) => c !== null);
+            if (lastOverlap === -1) {
+                // create new cluster
+                rasterEl.addClass("rasterCluster" + clusterCount);
+                clusters.push({ bbox: bbox, elements: [rasterEl] });
+                clusterCount++;
+            }
+        }
+
+        for (let c = 0; c < clusters.length; c++) {
+            let cluster = clusters[c];
+            let tmpSvg = svg.clone();
+            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
+            cluster.svg = tmpSvg;
+        }
+        return clusters;
+    };
+
+    //    Element.prototype._cloneEmpty = function(){
+    //        const svg = this;
+    //        if(svg.type !== "svg"){
+    //            console.log("_cloneEmpty only works on root nodes! Found: " + svg.type);
+    //            return;
+    //        } else {
+    //            let c = svg.clone();
+    //            c.selectAll('svg>g').remove();
+    //            return c;
+    //        }
+    //    }
+
     Element.prototype.is_filled = function () {
         var elem = this;
 
@@ -187,70 +252,70 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return prom;
     };
 
-    Element.prototype.embedImage_XXX = function (callback) {
-        var elem = this;
-        if (elem.type !== "image") return;
-
-        var url = elem.attr("href");
-        var image = new Image();
-
-        image.onload = function () {
-            var canvas = document.createElement("canvas");
-            canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
-            canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
-
-            canvas.getContext("2d").drawImage(this, 0, 0);
-
-            // count ratio of white pixel
-            var id = canvas
-                .getContext("2d")
-                .getImageData(0, 0, canvas.width, canvas.height).data;
-            var countWhite = 0;
-            var countNoneWhite = 0;
-            for (var p = 0; p < id.length; p += 4) {
-                id[p] == 255 &&
-                id[p + 1] == 255 &&
-                id[p + 2] == 255 &&
-                id[p + 3] == 255
-                    ? countWhite++
-                    : countNoneWhite++;
-            }
-            var ratio = countWhite / (countNoneWhite + countWhite);
-            console.log(
-                "embedImage() white pixel ratio: " +
-                    parseFloat(ratio * 100).toFixed(2) +
-                    "%, total white pixel: " +
-                    countWhite +
-                    ", image:" +
-                    this.src
-            );
-
-            var dataUrl = canvas.toDataURL("image/png");
-            elem.attr("href", dataUrl);
-            canvas.remove();
-            if (typeof callback === "function") {
-                console.log(
-                    "embedImage() " +
-                        canvas.width +
-                        "*" +
-                        canvas.height +
-                        " px, dataurl: " +
-                        getDataUriSize(dataUrl) +
-                        ", image: " +
-                        this.src
-                );
-                callback(elem.attr("id"));
-            }
-        };
-        image.onerror = function () {
-            console.error(
-                "Slicing Error - embedImage: error while loading image: " +
-                    this.src
-            );
-        };
-
-        image.src = url;
-    };
+    //    Element.prototype.embedImage_XXX = function (callback) {
+    //        var elem = this;
+    //        if (elem.type !== "image") return;
+    //
+    //        var url = elem.attr("href");
+    //        var image = new Image();
+    //
+    //        image.onload = function () {
+    //            var canvas = document.createElement("canvas");
+    //            canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
+    //            canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
+    //
+    //            canvas.getContext("2d").drawImage(this, 0, 0);
+    //
+    //            // count ratio of white pixel
+    //            var id = canvas
+    //                .getContext("2d")
+    //                .getImageData(0, 0, canvas.width, canvas.height).data;
+    //            var countWhite = 0;
+    //            var countNoneWhite = 0;
+    //            for (var p = 0; p < id.length; p += 4) {
+    //                id[p] == 255 &&
+    //                id[p + 1] == 255 &&
+    //                id[p + 2] == 255 &&
+    //                id[p + 3] == 255
+    //                    ? countWhite++
+    //                    : countNoneWhite++;
+    //            }
+    //            var ratio = countWhite / (countNoneWhite + countWhite);
+    //            console.log(
+    //                "embedImage() white pixel ratio: " +
+    //                    parseFloat(ratio * 100).toFixed(2) +
+    //                    "%, total white pixel: " +
+    //                    countWhite +
+    //                    ", image:" +
+    //                    this.src
+    //            );
+    //
+    //            var dataUrl = canvas.toDataURL("image/png");
+    //            elem.attr("href", dataUrl);
+    //            canvas.remove();
+    //            if (typeof callback === "function") {
+    //                console.log(
+    //                    "embedImage() " +
+    //                        canvas.width +
+    //                        "*" +
+    //                        canvas.height +
+    //                        " px, dataurl: " +
+    //                        getDataUriSize(dataUrl) +
+    //                        ", image: " +
+    //                        this.src
+    //                );
+    //                callback(elem.attr("id"));
+    //            }
+    //        };
+    //        image.onerror = function () {
+    //            console.error(
+    //                "Slicing Error - embedImage: error while loading image: " +
+    //                    this.src
+    //            );
+    //        };
+    //
+    //        image.src = url;
+    //    };
 
     //    Element.prototype.embedImage = function (callback) {
     //        var elem = this;
@@ -329,18 +394,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         var elem = this;
         //console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
         console.info(
-            "renderPNG: SVG " +
-                wPT +
-                "*" +
-                hPT +
-                " (pt) with viewBox " +
-                wMM +
-                "*" +
-                hMM +
-                " (mm), rendering @ " +
-                pxPerMM +
-                " px/mm, cropping to bbox (mm): ",
-            renderBBoxMM
+            `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM}`
         );
 
         let bboxFromElem = elem.getBBox();
@@ -449,17 +503,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
                     // drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
                     console.log(
-                        "rasterizing: " +
-                            cw +
-                            "*" +
-                            ch +
-                            " @ " +
-                            cx +
-                            "," +
-                            cy +
-                            "(scale: " +
-                            srcScale +
-                            "+)"
+                        `rasterizing: ${cw}*${ch} @ ${cx},${cy} (scale: ${srcScale})`
                     );
                     renderCanvasContext.drawImage(
                         source,
@@ -508,6 +552,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                         type: "error",
                         hide: false,
                     });
+                    if (!MRBEAM_DEBUG_RENDERING) {
+                        renderCanvas.remove();
+                    }
                 }
             )
             .catch(function (error) {
