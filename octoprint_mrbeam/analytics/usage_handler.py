@@ -249,9 +249,14 @@ class UsageHandler(object):
     def get_review_given(self):
         return self._usage_data.get("review", {}).get("given", False)
 
-    def set_review_given(self):
+    def set_review_given(self, migrated=False):
         if not self.get_review_given():
-            self._usage_data["review"] = {"given": True}
+            self._usage_data["review"] = {
+                "given": True,
+                "ts": time.time(),
+                "v": self._plugin_version,
+                "migrated": migrated,
+            }
             self._write_usage_data()
 
     def _log_usage_data(self, usage_data):
