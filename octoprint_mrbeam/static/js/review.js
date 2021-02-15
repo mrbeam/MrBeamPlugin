@@ -158,29 +158,38 @@ $(function () {
 
         self.exitXBtn = function () {
             // "x" button in the corner: we send the review but show it again in the next session
-            self.exitReview();
+            if(self.rating() !== 0 && self.ratingGiven) {
+                self.ratingGiven = false;
+                self.justGaveReview(true); // We show it only once per session
+                self.sendReviewToServer();
+            }
+            self.closeReview();
         };
 
         self.exitReview = function () {
-            self.ratingGiven = false;
-            self.justGaveReview(true); // We show it only once per session
-            self.sendReviewToServer();
+            if(self.rating() !== 0) {
+                self.ratingGiven = false;
+                self.justGaveReview(true); // We show it only once per session
+                self.sendReviewToServer();
 
-            $("#review_thank_you").hide();
-            $("#review_how_can_we_improve").hide();
-            $("#ask_user_details").hide();
-            $("#change_review").hide();
-            $("#review_done_btn").hide();
+                $("#review_thank_you").hide();
+                $("#review_how_can_we_improve").hide();
+                $("#ask_user_details").hide();
+                $("#change_review").hide();
+                $("#review_done_btn").hide();
 
-            if (self.rating() >= 7) {
-                $("#positive_review").show();
-            } else if (self.rating() < 7) {
-                $("#negative_review").show();
+                if (self.rating() >= 7) {
+                    $("#positive_review").show();
+                } else if (self.rating() < 7) {
+                    $("#negative_review").show();
+                }
+
+                $("#close_review_modal")
+                    .removeClass("review_hidden_part")
+                    .css("width", "20%");
+            }else{
+                self.closeReview();
             }
-
-            $("#close_review_modal")
-                .removeClass("review_hidden_part")
-                .css("width", "20%");
         };
 
         self.closeReview = function () {
