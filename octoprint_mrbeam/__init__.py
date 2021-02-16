@@ -2248,8 +2248,9 @@ class MrBeamPlugin(
             pic_settings_path,
             data["result"]["newCorners"],
             data["result"]["newMarkers"],
-            self._hostname,
-            check_calibration_tool_mode(self),
+            hostname=self._hostname,
+            plugin_version=self._plugin_version,
+            from_factory=check_calibration_tool_mode(self),
         )
         self.lid_handler.refresh_settings()
         return NO_CONTENT
