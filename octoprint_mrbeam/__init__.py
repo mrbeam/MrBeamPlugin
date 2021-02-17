@@ -607,6 +607,7 @@ class MrBeamPlugin(
                 "js/working_area.js",
                 "js/camera.js",
                 "js/lib/snap.svg-min.js",
+                "js/snap_helpers.js",
                 "js/lib/dxf.js",
                 "js/snap-dxf.js",
                 "js/render_fills.js",

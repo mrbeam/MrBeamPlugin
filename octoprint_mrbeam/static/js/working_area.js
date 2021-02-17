@@ -1,4 +1,4 @@
-/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper, mrbeam, QuickShapeHelper, Promise */
+/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper, mrbeam, QuickShapeHelper, Promise, BEAMOS_VERSION */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
 MRBEAM_WORKINGAREA_PAN_MM = [0, 0]; // global available in this viewmodel and in snap plugins at the same time.
@@ -2583,29 +2583,6 @@ $(function () {
                 // Firefox bug workaround.
                 svgStr = WorkingAreaHelper.fix_svg_string(svgStr);
                 return svgStr;
-
-                //            var svgStr = content.innerSVG();
-                //            if (svgStr !== "") {
-                //            let nsList = Object.keys(namespaces)
-                //                .map((key) => `${key}="${namespaces[key]}"`)
-                //                .join(" ");
-                //                var wMM = self.workingAreaWidthMM();
-                //                var hMM = self.workingAreaHeightMM();
-                //                var dpiFactor = 90 / 25.4; // we create SVG always with 90 dpi.  // TODO ... switch to 96dpi ?
-                //                var w = dpiFactor * wMM;
-                //                var h = dpiFactor * hMM;
-                //                var viewBox = "0 0 " + wMM + " " + hMM;
-                //
-                //                svgStr = WorkingAreaHelper.fix_svg_string(svgStr); // Firefox bug workaround.
-                //
-                //                var svg = `
-                //<svg version="1.1" ${nsList}
-                //  mb:beamOS_version="${BEAMOS_VERSION}"
-                //  width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_options_str}">
-                //<defs/>
-                //  ${svgStr}
-                //</svg>`;
-                //                return svg;
             } else {
                 return; // TODO raise exception
             }
