@@ -29,28 +29,28 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         var selection = [];
         var children = elem.children();
 
-        if (children.length > 0) {
-            var goRecursive =
-                elem.type !== "defs" && // ignore these tags
-                elem.type !== "clipPath" &&
-                elem.type !== "metadata" &&
-                elem.type !== "rdf:rdf" &&
-                elem.type !== "cc:work" &&
-                elem.type !== "sodipodi:namedview";
+        var goRecursive =
+            elem.type !== "defs" && // ignore these tags
+            elem.type !== "clipPath" &&
+            elem.type !== "metadata" &&
+            elem.type !== "desc" &&
+            elem.type !== "text" &&
+            elem.type !== "rdf:rdf" &&
+            elem.type !== "cc:work" &&
+            elem.type !== "sodipodi:namedview" &&
+            children.length > 0;
 
-            if (goRecursive) {
-                for (var i = 0; i < children.length; i++) {
-                    var child = children[i];
-                    selection = selection.concat(
-                        child.removeUnfilled(fillPaths)
-                    );
-                }
+        if (goRecursive) {
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i];
+                selection = selection.concat(child.removeUnfilled(fillPaths));
             }
         } else {
             if (
                 elem.type === "image" ||
                 elem.type === "text" ||
-                elem.type === "#text"
+                elem.type === "textPath" //||
+                //                elem.type === "#text"
             ) {
                 selection.push(elem);
             } else {
@@ -58,7 +58,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     //                    elem.attr("stroke", "none");
                     selection.push(elem);
                 } else {
-                    elem.remove();
+                    if (elem.type !== "#text" && elem.type !== "defs") {
+                        elem.remove();
+                    }
                 }
             }
         }
@@ -163,22 +165,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             let cluster = clusters[c];
             let tmpSvg = svg.clone();
             tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
+            // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
+            tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
+            // DON'T fix IDs of textPath references, they're cloned correct.
+            //tmpSvg.fixIds("defs .quicktext_curve_path", "[mb\\:id]");
             cluster.svg = tmpSvg;
         }
         return clusters;
     };
-
-    //    Element.prototype._cloneEmpty = function(){
-    //        const svg = this;
-    //        if(svg.type !== "svg"){
-    //            console.log("_cloneEmpty only works on root nodes! Found: " + svg.type);
-    //            return;
-    //        } else {
-    //            let c = svg.clone();
-    //            c.selectAll('svg>g').remove();
-    //            return c;
-    //        }
-    //    }
 
     Element.prototype.is_filled = function () {
         var elem = this;
@@ -208,9 +202,53 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return false;
     };
 
+    /**
+     * Removes fill of element. In case element was a filled shape without stroke, element will be removed.
+     * @returns {Boolean} if element was removed completely.
+     */
+    Element.prototype.unfillOrRemove = function () {
+        let elem = this;
+
+        // TODO opacity support
+        if (
+            elem.type !== "circle" &&
+            elem.type !== "rect" &&
+            elem.type !== "ellipse" &&
+            elem.type !== "line" &&
+            elem.type !== "polygon" &&
+            elem.type !== "polyline" &&
+            elem.type !== "path" &&
+            elem.type !== "textPath" &&
+            elem.type !== "text" &&
+            elem.type !== "tspan" &&
+            elem.type !== "image"
+        ) {
+            console.warn(`Element ${elem} is not a native type. Skip.`);
+            return false;
+        }
+
+        const stroke = elem.attr("stroke");
+        if (stroke !== "none") {
+            elem.attr({ fill: "none" });
+            return false;
+        } else {
+            elem.remove();
+            return true;
+        }
+    };
+
+    /**
+     * Reads a linked image and embeds it with a dataUrl
+     * @returns {Promise} Promise with the element or null in case of non-image element.
+     */
     Element.prototype.embedImage = function () {
         let elem = this;
-        if (elem.type !== "image") return;
+        if (elem.type !== "image") {
+            console.warn(
+                `embedImage only supports <image> elements. Got ${elem}`
+            );
+            return Promise.resolve(null);
+        }
 
         let url = null;
         if (elem.attr("xlink:href") !== null) {
@@ -219,12 +257,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             url = elem.attr("href");
         }
         if (url === null || url.startsWith("data:")) {
-            return;
+            console.info(`embedImage: nothing do to. Url was ${url}`);
+            return Promise.resolve(elem);
         }
 
         let prom = loadImagePromise(url)
             .then(function (image) {
-                var canvas = document.createElement("canvas");
+                let canvas = document.createElement("canvas");
                 canvas.width = image.naturalWidth; // or 'width' if you want a special/scaled size
                 canvas.height = image.naturalHeight; // or 'height' if you want a special/scaled size
 
@@ -239,10 +278,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     }, image:${image.src}`
                 );
 
-                var dataUrl = canvas.toDataURL("image/png");
+                const dataUrl = canvas.toDataURL("image/png");
                 elem.attr("href", dataUrl);
-                console.log("in then...", dataUrl);
                 canvas.remove();
+                return elem;
             })
             .catch(function (error) {
                 console.error(
@@ -252,144 +291,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return prom;
     };
 
-    //    Element.prototype.embedImage_XXX = function (callback) {
-    //        var elem = this;
-    //        if (elem.type !== "image") return;
-    //
-    //        var url = elem.attr("href");
-    //        var image = new Image();
-    //
-    //        image.onload = function () {
-    //            var canvas = document.createElement("canvas");
-    //            canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
-    //            canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
-    //
-    //            canvas.getContext("2d").drawImage(this, 0, 0);
-    //
-    //            // count ratio of white pixel
-    //            var id = canvas
-    //                .getContext("2d")
-    //                .getImageData(0, 0, canvas.width, canvas.height).data;
-    //            var countWhite = 0;
-    //            var countNoneWhite = 0;
-    //            for (var p = 0; p < id.length; p += 4) {
-    //                id[p] == 255 &&
-    //                id[p + 1] == 255 &&
-    //                id[p + 2] == 255 &&
-    //                id[p + 3] == 255
-    //                    ? countWhite++
-    //                    : countNoneWhite++;
-    //            }
-    //            var ratio = countWhite / (countNoneWhite + countWhite);
-    //            console.log(
-    //                "embedImage() white pixel ratio: " +
-    //                    parseFloat(ratio * 100).toFixed(2) +
-    //                    "%, total white pixel: " +
-    //                    countWhite +
-    //                    ", image:" +
-    //                    this.src
-    //            );
-    //
-    //            var dataUrl = canvas.toDataURL("image/png");
-    //            elem.attr("href", dataUrl);
-    //            canvas.remove();
-    //            if (typeof callback === "function") {
-    //                console.log(
-    //                    "embedImage() " +
-    //                        canvas.width +
-    //                        "*" +
-    //                        canvas.height +
-    //                        " px, dataurl: " +
-    //                        getDataUriSize(dataUrl) +
-    //                        ", image: " +
-    //                        this.src
-    //                );
-    //                callback(elem.attr("id"));
-    //            }
-    //        };
-    //        image.onerror = function () {
-    //            console.error(
-    //                "Slicing Error - embedImage: error while loading image: " +
-    //                    this.src
-    //            );
-    //        };
-    //
-    //        image.src = url;
-    //    };
-
-    //    Element.prototype.embedImage = function (callback) {
-    //        var elem = this;
-    //        if (elem.type !== "image") return;
-    //
-    //        var url = elem.attr("href");
-    //        var image = new Image();
-    //
-    //        image.onload = function () {
-    //            var canvas = document.createElement("canvas");
-    //            canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
-    //            canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
-    //
-    //            canvas.getContext("2d").drawImage(this, 0, 0);
-    //
-    //            // count ratio of white pixel
-    //            var id = canvas
-    //                .getContext("2d")
-    //                .getImageData(0, 0, canvas.width, canvas.height).data;
-    //            var countWhite = 0;
-    //            var countNoneWhite = 0;
-    //            for (var p = 0; p < id.length; p += 4) {
-    //                id[p] == 255 &&
-    //                id[p + 1] == 255 &&
-    //                id[p + 2] == 255 &&
-    //                id[p + 3] == 255
-    //                    ? countWhite++
-    //                    : countNoneWhite++;
-    //            }
-    //            var ratio = countWhite / (countNoneWhite + countWhite);
-    //            console.log(
-    //                "embedImage() white pixel ratio: " +
-    //                    parseFloat(ratio * 100).toFixed(2) +
-    //                    "%, total white pixel: " +
-    //                    countWhite +
-    //                    ", image:" +
-    //                    this.src
-    //            );
-    //
-    //            var dataUrl = canvas.toDataURL("image/png");
-    //            elem.attr("href", dataUrl);
-    //            canvas.remove();
-    //            if (typeof callback === "function") {
-    //                console.log(
-    //                    "embedImage() " +
-    //                        canvas.width +
-    //                        "*" +
-    //                        canvas.height +
-    //                        " px, dataurl: " +
-    //                        getDataUriSize(dataUrl) +
-    //                        ", image: " +
-    //                        this.src
-    //                );
-    //                callback(elem.attr("id"));
-    //            }
-    //        };
-    //        image.onerror = function () {
-    //            console.error(
-    //                "Slicing Error - embedImage: error while loading image: " +
-    //                    this.src
-    //            );
-    //        };
-    //
-    //        image.src = url;
-    //    };
-
     Element.prototype.renderPNG = function (
+        clusterIdx,
         wPT,
         hPT,
         wMM,
         hMM,
         pxPerMM,
         renderBBoxMM = null
-        //        callback = null
     ) {
         var elem = this;
         //console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
@@ -404,20 +313,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             // warning: correct result depends upon all resources (img, fonts, ...) have to be fully loaded already.
             bbox = elem.getBBox();
             console.log(
-                "renderPNG(): fetched render bbox from element: ",
-                bbox
+                `renderPNG(): fetched render bbox from element: ${bbox}`
             );
         } else {
             bbox = renderBBoxMM;
             console.log(
-                "renderPNG(): got render bbox from caller: ",
-                bbox,
-                "(elem bbox is ",
-                bboxFromElem,
-                ")"
+                `renderPNG(): got render bbox from caller: ${bbox}, (elem bbox is ${bboxFromElem})`
             );
         }
 
+        // TODO only enlarge on images and fonts
         // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
         const enlargement_x = 0.4; // percentage of the width added to each side
         const enlargement_y = 0.4; // percentage of the height added to each side
@@ -433,22 +338,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         bbox.h = h;
 
         console.info(
-            "enlarged renderBBox (in mm): " +
-                bbox.w +
-                "*" +
-                bbox.h +
-                " @ " +
-                bbox.x +
-                "," +
-                bbox.y
+            `enlarged renderBBox (in mm): ${bbox.w}*${bbox.h} @ ${bbox.x},${bbox.y}`
         );
 
         // get svg as dataUrl
-        var svgDataUri = elem.toDataURL();
+        var svgDataUri = elem.toDataURL(); // TODO remove comment. OK here
 
         // init render canvas and attach to page
         var renderCanvas = document.createElement("canvas");
-        renderCanvas.id = "renderCanvas";
+        renderCanvas.id = `renderCanvas_${clusterIdx}`;
+        renderCanvas.class = "renderCanvas";
         renderCanvas.width = bbox.w * pxPerMM;
         renderCanvas.height = bbox.h * pxPerMM;
         if (MRBEAM_DEBUG_RENDERING) {
@@ -460,13 +359,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         }
         document.getElementsByTagName("body")[0].appendChild(renderCanvas);
         var renderCanvasContext = renderCanvas.getContext("2d");
-        renderCanvasContext.fillStyle = "white"; // avoids one backend rendering step (has to be disabled in the backend)
-        renderCanvasContext.fillRect(
-            0,
-            0,
-            renderCanvas.width,
-            renderCanvas.height
-        );
+        //        renderCanvasContext.fillStyle = "white"; // avoids one backend rendering step (has to be disabled in the backend)
+        //        renderCanvasContext.fillRect(
+        //            0,
+        //            0,
+        //            renderCanvas.width,
+        //            renderCanvas.height
+        //        );
 
         // TODO "preload" the quicktext fonts - otherwise async loading leads to unpredicted results.
         //        var link = document.createElement('link');
@@ -484,38 +383,37 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         //            ctx.fillText('Hello!', 20, 10);
         //        };
 
-        var source = new Image();
-
-        // render SVG image to the canvas once it loads.
-        let prom = new Promise(function (resolve, reject) {
-            source.src = svgDataUri;
-            source.onload = resolve();
-            source.onerror = reject();
-        })
+        let prom = loadImagePromise(svgDataUri)
             .then(
-                // after onload
-                function () {
-                    const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
-                    const cx = bbox.x * srcScale;
-                    const cy = bbox.y * srcScale;
-                    const cw = bbox.w * srcScale;
-                    const ch = bbox.h * srcScale;
+                function (imgTag) {
+                    try {
+                        const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+                        const cx = bbox.x * srcScale;
+                        const cy = bbox.y * srcScale;
+                        const cw = bbox.w * srcScale;
+                        const ch = bbox.h * srcScale;
 
-                    // drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
-                    console.log(
-                        `rasterizing: ${cw}*${ch} @ ${cx},${cy} (scale: ${srcScale})`
-                    );
-                    renderCanvasContext.drawImage(
-                        source,
-                        cx,
-                        cy,
-                        cw,
-                        ch,
-                        0,
-                        0,
-                        renderCanvas.width,
-                        renderCanvas.height
-                    );
+                        // drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
+                        console.log(
+                            `rasterizing: ${cw}*${ch} @ ${cx},${cy} (scale: ${srcScale})`
+                        );
+                        renderCanvasContext.drawImage(
+                            imgTag,
+                            cx,
+                            cy,
+                            cw,
+                            ch,
+                            0,
+                            0,
+                            renderCanvas.width,
+                            renderCanvas.height
+                        );
+                    } catch (exception) {
+                        console.error(
+                            "renderCanvasContext.drawImage failed:",
+                            exception
+                        );
+                    }
 
                     // place fill bitmap into svg
                     const fillBitmap = renderCanvas.toDataURL("image/png");
@@ -527,10 +425,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     if (!MRBEAM_DEBUG_RENDERING) {
                         renderCanvas.remove();
                     }
-                    return { dataUrl: fillBitmap, size: size, bbox: bbox };
+                    return {
+                        dataUrl: fillBitmap,
+                        size: size,
+                        bbox: bbox,
+                        clusterIndex: clusterIdx,
+                    };
                 },
                 // after onerror
-                function () {
+                function (e) {
                     // var len = svgDataUri ? svgDataUri.length : -1;
                     var len = getDataUriSize(svgDataUri, "B");
                     var msg =
@@ -562,6 +465,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             });
 
         return prom;
+    };
+
+    Element.prototype.fixIds = function (selector, srcIdAttr) {
+        const root = this;
+        let elemsToFix = root.selectAll(selector);
+        for (let i = 0; i < elemsToFix.length; i++) {
+            const e = elemsToFix[i];
+            const originalId = e.attr(srcIdAttr);
+            if (originalId !== null && originalId !== "") {
+                e.attr({ id: originalId });
+            }
+            //console.log(`fixed Id: ${e.type}#${originalId}`);
+        }
     };
 
     function getDataUriSize(datauri, unit) {

@@ -284,16 +284,16 @@ class ImageProcessor:
         #
         #
         # 			self.profiler.stop('crop').start('remove_transparency')
-        #
-        # 			# 2. remove transparency
-        # 			if (not self.is_inverted) and (img.mode == 'RGBA'):
-        # 				whitebg = Image.new('RGBA', (bb_w, bb_h), "white")
-        # 				img = Image.alpha_composite(whitebg, img)
-        #
-        # 				if self.debugPreprocessing:
-        # 					img.save("/tmp/img2gcode_2_whitebg.png")
-        #
-        # 			self.profiler.stop('remove_transparency').start('contrast')
+
+        # 2. remove transparency
+        if (not self.is_inverted) and (img.mode == "RGBA"):
+            whitebg = Image.new("RGBA", (dest_wpx, dest_hpx), "white")
+            img = Image.alpha_composite(whitebg, img)
+
+            if self.debugPreprocessing:
+                img.save("/tmp/img2gcode_2_whitebg.png")
+
+        self.profiler.stop("remove_transparency").start("contrast")
 
         # 3. contrast
         if self.contrastFactor > 1.0:
