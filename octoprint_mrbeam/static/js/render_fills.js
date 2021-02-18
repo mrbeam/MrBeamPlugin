@@ -172,7 +172,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             //tmpSvg.fixIds("defs .quicktext_curve_path", "[mb\\:id]");
             cluster.svg = tmpSvg;
         }
-        console.log("Clusters", clusters);
+        //console.log("Clusters", clusters);
         return clusters;
     };
 
@@ -304,7 +304,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     ) {
         var elem = this;
         //console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
-        console.info(
+        console.debug(
             `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM}`
         );
 
@@ -337,9 +337,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         bbox.w = w;
         bbox.h = h;
 
-        console.info(
-            `enlarged renderBBox (in mm): ${bbox.w}*${bbox.h} @ ${bbox.x},${bbox.y}`
-        );
+        //        console.debug(
+        //            `enlarged renderBBox (in mm): ${bbox.w}*${bbox.h} @ ${bbox.x},${bbox.y}`
+        //        );
 
         // get svg as dataUrl
         var svgDataUri = elem.toDataURL(); // TODO remove comment. OK here
@@ -393,10 +393,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                         const cw = bbox.w * srcScale;
                         const ch = bbox.h * srcScale;
 
+                        //                        console.debug(
+                        //                            `rasterizing: ${cw}*${ch} @ ${cx},${cy} (scale: ${srcScale})`
+                        //                        );
                         // drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
-                        console.log(
-                            `rasterizing: ${cw}*${ch} @ ${cx},${cy} (scale: ${srcScale})`
-                        );
                         renderCanvasContext.drawImage(
                             imgTag,
                             cx,
@@ -418,7 +418,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     // place fill bitmap into svg
                     const fillBitmap = renderCanvas.toDataURL("image/png");
                     const size = getDataUriSize(fillBitmap);
-                    console.info("renderPNG rendered dataurl has " + size);
+                    //                    console.debug("renderPNG rendered dataurl has " + size);
 
                     renderCanvas.remove();
                     return {
