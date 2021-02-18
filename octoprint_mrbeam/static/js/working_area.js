@@ -2674,7 +2674,27 @@ $(function () {
         self.getPlacedGcodes = ko.computed(function () {
             var gcodeFiles = [];
             ko.utils.arrayForEach(self.placedDesigns(), function (design) {
-                if (design.type === "machinecode") gcodeFiles.push(design);
+                if (design.type === "machinecode") {
+                    const gcf = {
+                        // filter properties. "components", "components_engrave" and "parent" cause circular dependencies during json generation
+                        date: design.date,
+                        display: design.display,
+                        hash: design.hash,
+                        links: design.links,
+                        name: design.name,
+                        notes: design.notes,
+                        origin: design.origin,
+                        //parent: {children: Array(126), parent: undefined}
+                        path: design.path,
+                        previewId: design.previewId,
+                        refs: design.refs,
+                        size: design.size,
+                        type: design.type,
+                        typePath: design.typePath,
+                        weight: design.weight,
+                    };
+                    gcodeFiles.push(gcf);
+                }
             });
             return gcodeFiles;
         }, self);
