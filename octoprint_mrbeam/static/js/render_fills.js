@@ -100,7 +100,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             ) {
                 if (elem.type === "#text") {
                     let parent = elem.parent();
-                    console.log("Parent of #text:", parent);
                     parent.addClass(className);
                     selection.push(parent);
                 } else {
@@ -132,11 +131,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             for (var j = 0; j < clusters.length; j++) {
                 var cluster = clusters[j];
                 if (Snap.path.isBBoxIntersect(cluster.bbox, bbox)) {
+                    // TODO refined overlap method
                     if (lastOverlap === -1) {
                         // merge element in cluster (1st overlap)
                         cluster.bbox = Snap.path.merge_bbox(cluster.bbox, bbox);
                         cluster.elements.push(rasterEl);
-                        rasterEl.addClass("rasterCluster" + j);
                         lastOverlap = j;
                     } else {
                         // merge clusters (multiple overlaps)
@@ -155,7 +154,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             clusters = clusters.filter((c) => c !== null);
             if (lastOverlap === -1) {
                 // create new cluster
-                rasterEl.addClass("rasterCluster" + clusterCount);
                 clusters.push({ bbox: bbox, elements: [rasterEl] });
                 clusterCount++;
             }
@@ -163,6 +161,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
         for (let c = 0; c < clusters.length; c++) {
             let cluster = clusters[c];
+            cluster.elements.forEach((rasterEl) =>
+                rasterEl.addClass(`rasterCluster${c}`)
+            );
             let tmpSvg = svg.clone();
             tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
             // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
@@ -171,6 +172,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             //tmpSvg.fixIds("defs .quicktext_curve_path", "[mb\\:id]");
             cluster.svg = tmpSvg;
         }
+        console.log("Clusters", clusters);
         return clusters;
     };
 
@@ -312,14 +314,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         if (renderBBoxMM === null) {
             // warning: correct result depends upon all resources (img, fonts, ...) have to be fully loaded already.
             bbox = elem.getBBox();
-            console.log(
-                `renderPNG(): fetched render bbox from element: ${bbox}`
-            );
+            //console.log(`renderPNG(): fetched render bbox from element: ${bbox}`);
         } else {
             bbox = renderBBoxMM;
-            console.log(
-                `renderPNG(): got render bbox from caller: ${bbox}, (elem bbox is ${bboxFromElem})`
-            );
+            //            console.log(
+            //                `renderPNG(): got render bbox from caller: ${bbox}, (elem bbox is ${bboxFromElem})`
+            //            );
         }
 
         // TODO only enlarge on images and fonts
@@ -419,12 +419,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     const fillBitmap = renderCanvas.toDataURL("image/png");
                     const size = getDataUriSize(fillBitmap);
                     console.info("renderPNG rendered dataurl has " + size);
-                    //            if (typeof callback === "function") {
-                    //                callback(fillBitmap, bbox.x, bbox.y, bbox.w, bbox.h);
-                    //            }
-                    if (!MRBEAM_DEBUG_RENDERING) {
-                        renderCanvas.remove();
-                    }
+
+                    renderCanvas.remove();
                     return {
                         dataUrl: fillBitmap,
                         size: size,
