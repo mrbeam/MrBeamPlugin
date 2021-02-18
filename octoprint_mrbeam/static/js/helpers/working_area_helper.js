@@ -294,6 +294,7 @@ class WorkingAreaHelper {
             // remember caret position
             const selStart = event.target.selectionStart;
             const selEnd = event.target.selectionEnd;
+            let cursorShift = 0;
             let val = event.keyCode === 38 ? 1 : -1;
             if (event.altKey) {
                 val = val * options.alt;
@@ -308,28 +309,48 @@ class WorkingAreaHelper {
                 }`;
             } else {
                 const v = event.target.value;
-                const idxDelimiter = v.search(new RegExp(options.delimiter));
-                if (selStart <= idxDelimiter) {
-                    const v1 = v.substring(0, idxDelimiter);
-                    const newV1 = parseFloat(v1) + val;
-                    event.target.value = `${newV1.toFixed(
-                        options.digits
-                    )}${v.substring(idxDelimiter)}`;
-                } else {
-                    const d = idxDelimiter + options.delimiter.length;
-                    const v2 = v.substring(d);
-                    const newV2 = parseFloat(v2) + val;
-                    event.target.value = `${v.substring(0, d)}${newV2.toFixed(
-                        options.digits
-                    )}`;
+
+                let parts = this._getSubstringAtIndex(
+                    v,
+                    selStart,
+                    options.delimiter
+                );
+                const newV1 = (parseFloat(parts[1]) + val).toFixed(
+                    options.digits
+                );
+                event.target.value = `${parts[0]}${newV1}${parts[2]}`;
+                // maintain cursor position
+                if (selStart > parts[0].length) {
+                    cursorShift = newV1.length - parts[1].length;
                 }
             }
             // restore caret position
-            event.target.selectionStart = selStart;
-            event.target.selectionEnd = selEnd;
+            event.target.selectionStart = selStart + cursorShift;
+            event.target.selectionEnd = selEnd + cursorShift;
             return false; // swallow the default action
         }
         return true;
+    }
+
+    static _getSubstringAtIndex(input, index, delimiter = "[^a-zA-Z0-9.,]+") {
+        const iter = input.matchAll(delimiter);
+        let idx1 = 0;
+        let idx2 = input.length;
+        let del;
+        while ((del = iter.next()) !== null) {
+            if (del.done) break;
+            if (del.value.index < index) {
+                idx1 = del.value.index + del.value[0].length;
+            } else {
+                idx2 = del.value.index;
+                break;
+            }
+        }
+        const strBefore = input.substring(0, idx1);
+        const v1 = input.substring(idx1, idx2);
+        const strAfter = input.substring(idx2);
+        //console.debug("idx, idx1 -> idx2", index, idx1, idx2);
+        return [strBefore, v1, strAfter];
     }
 }
 

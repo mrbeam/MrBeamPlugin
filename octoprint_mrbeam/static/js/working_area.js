@@ -1712,19 +1712,32 @@ $(function () {
         self._svgMultiplyUpdate = function (data, colsRowsStr) {
             self.abortFreeTransforms();
             var svg = snap.select("#" + data.previewId);
-            var dist = 2;
-            var cols = 1;
-            var rows = 1;
+            let distX = 2;
+            let distY = 2;
+            let cols = 1;
+            let rows = 1;
+            let gridValueCount = 2;
             if (colsRowsStr !== undefined) {
-                var gridsize = colsRowsStr.split(/[^0-9.]+/);
-                cols = Math.round(parseFloat(gridsize[0])) || 1;
-                rows = Math.round(parseFloat(gridsize[1])) || 1;
+                var gridValues = colsRowsStr.split(/[^0-9.]+/);
+                gridValueCount = gridValues.length;
+                cols = Math.round(parseFloat(gridValues[0])) || 1;
+                rows = Math.round(parseFloat(gridValues[1])) || 1;
+                distX = parseFloat(gridValues[2]) || 2;
+                distY = parseFloat(gridValues[3]) || distX;
             }
-            svg.grid(cols, rows, dist);
+            svg.grid(cols, rows, distX, distY);
             var mb_meta = self._set_mb_attributes(svg);
             svg.mbtOnTransform();
             self.check_sizes_and_placements();
-            return cols + "×" + rows;
+            if (distX === 2 && distY === 2 && gridValueCount === 2) {
+                return `${cols}×${rows}`;
+            } else {
+                if (distX === distY && gridValueCount === 3) {
+                    return `${cols}×${rows} ${distX}`;
+                } else {
+                    return `${cols}×${rows} ${distX}⬌${distY}`;
+                }
+            }
         };
         self.imgManualAdjust = function (data, event) {
             if (
@@ -3034,7 +3047,7 @@ $(function () {
                 rasterContentSvg.attr("id", "rasterCluster_" + c);
                 rasterContentSvg.addClass("tmpSvg");
 
-                console.log("Rastering cluster " + c);
+                //console.log("Rastering cluster " + c);
                 var attrs = {};
                 _.merge(attrs, namespaces);
                 attrs.viewBox = "0 0 " + wMM + " " + hMM;
