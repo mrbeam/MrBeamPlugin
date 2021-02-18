@@ -252,38 +252,52 @@ class ImageProcessor:
         self.profiler.stop("scale")
 
         left, upper, right, lower = (0, 0, dest_wpx, dest_hpx)
-        # 		bbox = img.getbbox()
-        # 		self.log.info("#####")
-        # 		self.log.info(bbox)
-        # 		self.log.info((0, 0, dest_wpx, dest_hpx))
-        #
-        # 		if(False):
-        # 			self.profiler.start('crop')
-        #
-        # 			# 1a. crop to bbox
-        # 			# TODO: this removes only transparent pixels, white pixels are still counted as content.
-        # 			bbox = img.getbbox()
-        # 			if bbox is None:
-        # 				self.log.debug("img_prepare() Empty bounding box, nothing to engrave. Returning")
-        # 				return []
-        #
-        # 			left, upper, right, lower = bbox # bbox is a tuple of four
-        # 			bb_w = right - left
-        # 			bb_h = lower - upper
-        # 			if bb_w != dest_wpx or bb_h != dest_hpx:
-        # 				img = img.crop(bbox)
-        # 				old_pixels = dest_wpx * dest_hpx
-        # 				bb_area = bb_w * bb_h
-        # 				ratio = bb_area / old_pixels
-        # 				self.log.debug("Cropped to bbox: Pixel reduction: %i -> %i (%f%%), bb_w: %s, bb_h: %s, left: %s, upper: %s, right: %s, lower: %s ", old_pixels, bb_area, ratio, bb_w, bb_h, left, upper, right, lower)
-        # 				if self.debugPreprocessing:
-        # 					img.save("/tmp/img2gcode_1a_cropped.png")
-        #
-        # 			else:
-        # 				self.log.debug("Cropping skipped. Not necessary.")
-        #
-        #
-        # 			self.profiler.stop('crop').start('remove_transparency')
+        bbox = img.getbbox()
+        #        self.log.info("#####")
+        #        self.log.info(bbox)
+        #        self.log.info((0, 0, dest_wpx, dest_hpx))
+
+        # 1a. crop to bbox
+        if True:
+            self.profiler.start("crop")
+
+            # TODO: this removes only transparent pixels, white pixels are still counted as content.
+            bbox = img.getbbox()
+            if bbox is None:
+                self.log.debug(
+                    "img_prepare() Empty bounding box, nothing to engrave. Returning"
+                )
+                return []
+
+            left, upper, right, lower = bbox  # bbox is a tuple of four
+            bb_w = right - left
+            bb_h = lower - upper
+            if bb_w != dest_wpx or bb_h != dest_hpx:
+                img = img.crop(bbox)
+                old_pixels = dest_wpx * dest_hpx
+                bb_area = bb_w * bb_h
+                ratio = bb_area / old_pixels
+                self.log.debug(
+                    "Cropped to bbox: Pixel reduction: %i -> %i (%f%%), bb_w: %s, bb_h: %s, left: %s, upper: %s, right: %s, lower: %s ",
+                    old_pixels,
+                    bb_area,
+                    ratio,
+                    bb_w,
+                    bb_h,
+                    left,
+                    upper,
+                    right,
+                    lower,
+                )
+                if self.debugPreprocessing:
+                    img.save("/tmp/img2gcode_1a_cropped.png")
+                dest_wpx = bb_w
+                dest_hpx = bb_h
+
+            else:
+                self.log.debug("Cropping skipped. Not necessary.")
+
+            self.profiler.stop("crop").start("remove_transparency")
 
         # 2. remove transparency
         if (not self.is_inverted) and (img.mode == "RGBA"):
@@ -477,8 +491,16 @@ class ImageProcessor:
                     img_data["id"], img_data["x"], img_data["y"], size[0], size[1]
                 )
             )
+
+            # TODO improvement: find first non-white pixel from lower left
+            x_start = x_off
+            y_start = (
+                y_off - height_px * self.beam
+            )  # lower left of the image, but with safety whitespace around the content
             gc = self._get_gcode_g0(
-                x=x_off, y=y_off, comment="; Move to start ({},{})".format(x_off, y_off)
+                x=x_start,
+                y=y_start,
+                comment="; Move to start ({},{})".format(x_start, y_start),
             )
             self._append_gcode(gc)
             self._append_gcode("M3S0\nG4P0")  # initialize laser
