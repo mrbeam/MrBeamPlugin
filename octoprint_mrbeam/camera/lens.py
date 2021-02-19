@@ -104,6 +104,17 @@ def undist_dict(dict_pts, *a, **kw):
     return {keys[i]: np.array(pos) for i, pos in enumerate(res_iter)}
 
 
+def clean_unexpected_files(path):
+    """
+    Removes unexpected files in the directory path
+    - .npz files that do not have the corresponding image anymore
+    """
+    files = os.path.listdir(path)
+    for f in files:
+        if re.match(TMP_RAW_FNAME_RE_NPZ, f) and not f[:-4] in files:
+            os.remove(path.join(path, f))
+
+
 ### CAMERA LENS CALIBRATION
 
 

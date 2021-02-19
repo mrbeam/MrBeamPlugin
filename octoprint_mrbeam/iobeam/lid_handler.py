@@ -287,6 +287,11 @@ class LidHandler(object):
             self._end_photo_worker()
 
     def _start_photo_worker(self):
+        if self._photo_creator.active:
+            self._logger.debug(
+                "Another PhotoCreator thread is already active! Not starting a new one."
+            )
+            return
         path_to_cam_params = self.get_calibration_file()
         path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 
@@ -298,22 +303,17 @@ class LidHandler(object):
         cam_params = _getCamParams(path_to_cam_params)
         self._logger.debug("Loaded cam_params: {}".format(cam_params))
 
-        if not self._photo_creator.active:
-            if self._photo_creator.stopping:
-                self._photo_creator.restart(
-                    pic_settings=path_to_pic_settings,
-                    cam_params=cam_params,
-                    out_pic_size=out_pic_size,
-                )
-            else:
-                self._photo_creator.start(
-                    pic_settings=path_to_pic_settings,
-                    cam_params=cam_params,
-                    out_pic_size=out_pic_size,
-                )
+        if self._photo_creator.stopping:
+            self._photo_creator.restart(
+                pic_settings=path_to_pic_settings,
+                cam_params=cam_params,
+                out_pic_size=out_pic_size,
+            )
         else:
-            self._logger.debug(
-                "Another PhotoCreator thread is already active! Not starting a new one."
+            self._photo_creator.start(
+                pic_settings=path_to_pic_settings,
+                cam_params=cam_params,
+                out_pic_size=out_pic_size,
             )
 
     def _end_photo_worker(self):
@@ -489,6 +489,7 @@ class LidHandler(object):
                     my_path = path.join(self.debugFolder, filename)
                     self._logger.debug("Removing tmp calibration file %s" % my_path)
                     os.remove(my_path)
+            lens.clean_unexpected_files(self.debugFolder)
 
     def stopLensCalibration(self):
         self._analytics_handler.add_camera_session_details(
