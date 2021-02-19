@@ -14,11 +14,16 @@ $(function () {
                 " " +
                 settings.url;
             if (settings.data) {
-                msg +=
-                    ', body: "' +
-                    (settings.data.length > 200
-                        ? settings.data.substr(0, 200) + "&hellip;"
-                        : settings.data);
+                if (settings.url.includes("api/login")) {
+                    msg +=
+                        ", Login rejected. [body removed to avoid credentials from being logged.]";
+                } else {
+                    msg +=
+                        ', body: "' +
+                        (settings.data.length > 200
+                            ? settings.data.substr(0, 200) + "&hellip;"
+                            : settings.data);
+                }
             }
 
             let data = {
