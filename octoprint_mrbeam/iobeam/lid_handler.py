@@ -46,7 +46,7 @@ from octoprint_mrbeam.camera.undistort import (
     _getCamParams,
     prepareImage,
 )
-from octoprint_mrbeam.camera import corners, config
+from octoprint_mrbeam.camera import corners, config, lens
 from octoprint_mrbeam.camera.lens import (
     BoardDetectorDaemon,
     FACTORY,
@@ -426,6 +426,8 @@ class LidHandler(object):
     def saveRawImg(self):
         # TODO debug/raw.jpg -> copy image over
         # TODO careful when deleting pic + setting new name -> hash
+        if os.path.isdir(self.debugFolder):
+            lens.clean_unexpected_files(self.debugFolder)
         if (
             self._photo_creator
             and self._photo_creator.active

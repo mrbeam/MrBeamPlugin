@@ -1329,8 +1329,8 @@ class MrBeamPlugin(
         r = add_non_caching_response_headers(r)
         return r
 
-    ### Initial Camera Calibration - START ###
-    # The next calls are needed for first-run and initial camera calibration
+    ### Camera Calibration - START ###
+    # The next calls are needed for the camera calibration
 
     @octoprint.plugin.BlueprintPlugin.route(
         "/take_undistorted_picture", methods=["GET"]
@@ -1478,7 +1478,7 @@ class MrBeamPlugin(
         self._printer._comm.startPrint()
         return NO_CONTENT
 
-    ### Initial Camera Calibration - END ###
+    ### Camera Calibration - END ###
 
     # 	@octoprint.plugin.BlueprintPlugin.route("/engrave_precision_calibration_pattern", methods=["GET"])
     # 	@restricted_access
