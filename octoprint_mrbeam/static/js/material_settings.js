@@ -287,7 +287,7 @@ $(function () {
                 hints: gettext(
                     "Watch out for dedicated laser plywood - it has better surface quality and better glue."
                 ),
-                safety_notes: gettext(""),
+                safety_notes: "",
             },
             Polypropylene: {
                 name: gettext("Polypropylene"),
@@ -327,14 +327,18 @@ $(function () {
                 name: gettext("Sign Material"),
                 img: "Sign-Material.jpg",
                 description: "",
-                hints: gettext("The material is supplied with a protective film. It can be removed before or after processing."),
+                hints: gettext(
+                    "The material is supplied with a protective film. It can be removed before or after processing."
+                ),
                 safety_notes: "",
             },
             "Stamp Rubber": {
                 name: gettext("Stamp Rubber"),
                 img: "Stamp-Rubber.jpg",
                 description: "",
-                hints: gettext("Repeat the engraving once ore twice for a better result."),
+                hints: gettext(
+                    "Repeat the engraving once ore twice for a better result."
+                ),
                 safety_notes: "",
             },
             // Wellboard: {
