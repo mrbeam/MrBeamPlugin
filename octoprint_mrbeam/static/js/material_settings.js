@@ -296,7 +296,7 @@ $(function () {
                     "Because of its flexibility and durability it is great for outdoor applications. On engraved lines you can easily fold and reinforce it."
                 ),
                 hints: gettext(
-                    "For the best results, use opaque and dark collored polyprpylene."
+                    "For the best results, use opaque and dark colored polypropylene."
                 ),
             },
             Slate: {
