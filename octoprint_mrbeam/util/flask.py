@@ -50,3 +50,13 @@ def restricted_access_if(condition=False):
         return restricted_access
     else:
         return _identity
+
+
+def restricted_access_or_calibration_tool_mode(func):
+    @functools.wraps(func)
+    def decorated_view(cls_obj, *args, **kwargs):
+        return restricted_access_if(not cls_obj.calibration_tool_mode)(func)(
+            cls_obj, *args, **kwargs
+        )
+
+    return decorated_view
