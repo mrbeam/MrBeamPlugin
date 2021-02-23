@@ -138,40 +138,40 @@ class WizardConfig:
         whatsnew_wizard_tabs = dict(
             wizard_whatsnew_0=dict(
                 type="wizard",
-                name=gettext("GCode auto-deletion"),
+                name=gettext("Design Store"),
                 required=True,
                 mandatory=False,
                 suffix="_whatsnew_0",
                 template="wizard/wizard_whatsnew_0.jinja2",
-                div="wizard_plugin_corewizard_news_gcode",
+                div="wizard_plugin_corewizard_whatsnew_0",
             ),
             wizard_whatsnew_1=dict(
                 type="wizard",
-                name=gettext("Material list updated"),
+                name=gettext("New Toolset Features"),
                 required=True,
                 mandatory=False,
                 suffix="_whatsnew_1",
                 template="wizard/wizard_whatsnew_1.jinja2",
                 div="wizard_plugin_corewizard_whatsnew_1",
             ),
-            # wizard_whatsnew_2=dict(
-            #     type="wizard",
-            #     name=gettext("SVG split"),
-            #     required=True,
-            #     mandatory=False,
-            #     suffix="_whatsnew_2",
-            #     template="wizard/wizard_whatsnew_2.jinja2",
-            #     div="wizard_plugin_corewizard_whatsnew_2",
-            # ),
-            # wizard_whatsnew_3=dict(
-            #     type="wizard",
-            #     name=gettext("...and more!"),
-            #     required=True,
-            #     mandatory=False,
-            #     suffix="_whatsnew_3",
-            #     template="wizard/wizard_whatsnew_3.jinja2",
-            #     div="wizard_plugin_corewizard_whatsnew_3",
-            # ),
+            wizard_whatsnew_2=dict(
+                type="wizard",
+                name=gettext("GCode auto-deletion"),
+                required=True,
+                mandatory=False,
+                suffix="_whatsnew_2",
+                template="wizard/wizard_whatsnew_2.jinja2",
+                div="wizard_plugin_corewizard_news_gcode",
+            ),
+            wizard_whatsnew_3=dict(
+                type="wizard",
+                name=gettext("...and more!"),
+                required=True,
+                mandatory=False,
+                suffix="_whatsnew_3",
+                template="wizard/wizard_whatsnew_3.jinja2",
+                div="wizard_plugin_corewizard_whatsnew_3",
+            ),
             # wizard_analytics=dict(
             #     type="wizard",
             #     name=gettext("Analytics"),
@@ -185,7 +185,7 @@ class WizardConfig:
 
         # remove gcode deletion screen if it is already enabled
         if self._plugin._settings.get(["gcodeAutoDeletion"]):
-            del whatsnew_wizard_tabs["wizard_whatsnew_0"]
+            del whatsnew_wizard_tabs["wizard_gcode"]
 
         return whatsnew_wizard_tabs
 
