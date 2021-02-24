@@ -460,6 +460,19 @@ li.material_entry span {
     0 0 10px #fff;
   cursor: pointer;
 }
+
+.thickness_sample.overThick::after {
+  border: 1px solid #ffffff;
+  width: 102%;
+  content: "";
+  display: block;
+  height: 0.5em;
+  background-color: white;
+  position: relative;
+  left: -1%;
+  top: 0.55em;
+}
+
 .thickness_sample:hover,
 .thickness_sample.active {
   font-weight: bold;
