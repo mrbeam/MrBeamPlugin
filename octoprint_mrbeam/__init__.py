@@ -71,6 +71,7 @@ from octoprint_mrbeam.software_update_information import (
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
+from .messages import messages
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from octoprint_mrbeam.gcodegenerator.job_params import JobParams
 from .analytics.uploader import AnalyticsFileUploader
@@ -228,11 +229,11 @@ class MrBeamPlugin(
 
         self.analytics_handler = analyticsHandler(self)
         self.user_notification_system = user_notification_system(self)
-        self.review_handler = reviewHandler(self)
         self.onebutton_handler = oneButtonHandler(self)
         self.interlock_handler = interLockHandler(self)
         self.lid_handler = lidHandler(self)
         self.usage_handler = usageHandler(self)
+        self.review_handler = reviewHandler(self)
         self.led_event_listener = LedEventListener(self)
         self.led_event_listener.set_brightness(
             self._settings.get(["leds", "brightness"])
@@ -354,9 +355,8 @@ class MrBeamPlugin(
             job_time=0.0,
             terminal=False,
             terminal_show_checksums=True,
-            converter_min_required_disk_space=100
-            * 1024
-            * 1024,  # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
+            converter_min_required_disk_space=100 * 1024 * 1024,
+            # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
             dev=dict(
                 debug=False,  # deprecated
                 terminalMaxLines=2000,
@@ -372,8 +372,12 @@ class MrBeamPlugin(
             ),
             laser_heads=dict(filename="laser_heads.yaml"),
             review=dict(
-                given=False,
+                given=False,  # deprecated in settings, moved to usage_handler
+                # set to True during welcome wizard.
+                # This is to make sure that not all but only new devices get the review screen
                 ask=False,
+                # if the user does not want to be asked again and does not want to review
+                doNotAskAgain=False,
             ),
             focusReminder=True,
             analyticsEnabled=None,
@@ -467,8 +471,9 @@ class MrBeamPlugin(
             software_update_branches=self.get_update_branch_info(),
             _version=self._plugin_version,
             review=dict(
-                given=self._settings.get(["review", "given"]),
+                given=self.review_handler.is_review_already_given(),
                 ask=self._settings.get(["review", "ask"]),
+                doNotAskAgain=self._settings.get(["review", "doNotAskAgain"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
@@ -646,6 +651,7 @@ class MrBeamPlugin(
                 "js/user_notification_viewmodel.js",
                 "js/lib/load-image.all.min.js",  # to load custom material images
                 "js/settings/custom_material.js",
+                "js/messages.js",
                 "js/design_store.js",
                 "js/settings/dev_design_store.js",
                 "js/settings_menu_navigation.js",
@@ -668,6 +674,7 @@ class MrBeamPlugin(
                 "css/sliders.css",
                 "css/hopscotch.min.css",
                 "css/wizard.css",
+                "css/tab_messages.css",
             ],
             less=["less/mrbeam.less"],
         )
@@ -1160,6 +1167,24 @@ class MrBeamPlugin(
             return make_response("Error while handling custom_materials request.", 500)
 
         # self._logger.info("custom_material(): response: %s", data)
+        return make_response(jsonify(res), 200)
+
+    # simpleApiCommand: messages;
+    def messages(self, data):
+
+        res = dict(messages=[], put=0)
+
+        try:
+            if "put" in data and isinstance(data["put"], dict):
+                for key, m in data["put"].iteritems():
+                    messages(self).put_custom_message(key, m)
+
+            res["messages"] = messages(self).get_custom_messages()
+
+        except:
+            self._logger.exception("Exception while handling messages(): ")
+            return make_response("Error while handling messages request.", 500)
+
         return make_response(jsonify(res), 200)
 
     # simpleApiCommand: leds;
@@ -1814,10 +1839,12 @@ class MrBeamPlugin(
             ready_to_laser=[],
             cli_event=["event"],
             custom_materials=[],
+            messages=[],
             analytics_init=[],  # user's analytics choice from welcome wizard
             gcode_deletion_init=[],  # user's gcode deletion choice from welcome wizard
             analytics_upload=[],  # triggers an upload of analytics files
-            take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
+            take_undistorted_picture=[],
+            # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
             focus_reminder=[],
             remember_markers_across_sessions=[],
             review_data=[],
@@ -1861,6 +1888,8 @@ class MrBeamPlugin(
             return self.lasersafety_wizard_api(data)
         elif command == "custom_materials":
             return self.custom_materials(data)
+        elif command == "messages":
+            return self.messages(data)
         elif command == "ready_to_laser":
             return self.ready_to_laser(data)
         elif command == "send_corner_calibration":
@@ -2219,8 +2248,9 @@ class MrBeamPlugin(
             pic_settings_path,
             data["result"]["newCorners"],
             data["result"]["newMarkers"],
-            self._hostname,
-            check_calibration_tool_mode(self),
+            hostname=self._hostname,
+            plugin_version=self._plugin_version,
+            from_factory=check_calibration_tool_mode(self),
         )
         self.lid_handler.refresh_settings()
         return NO_CONTENT
