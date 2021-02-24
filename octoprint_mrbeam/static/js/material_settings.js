@@ -315,11 +315,11 @@ $(function () {
                 description: "",
                 hints: "",
             },
-            "Vegan Leather": {
-                name: gettext("Vegan Leather"),
-                img: "Vegan-Leather.jpg",
+            "Laser Leather": {
+                name: gettext("Laser Leather"),
+                img: "Laser-Leather.jpg",
                 description: gettext(
-                    "Vegan leather is robust in everyday life, it can be washed, sewn and creatively processed with Mr Beam."
+                    "Laser leather is robust in everyday life, it can be washed, sewn and creatively processed with Mr Beam."
                 ),
                 hints: "",
             },
@@ -341,13 +341,13 @@ $(function () {
                 ),
                 safety_notes: "",
             },
-            // Wellboard: {
-            //     name: gettext("Wellboard"),
-            //     img: "",
-            //     description: "",
-            //     hints: "",
-            //     safety_notes: "",
-            // },
+            "Swiss stone pine": {
+                name: gettext("Swiss stone pine"),
+                img: "Zirbenholz.jpg",
+                description: "",
+                hints: "",
+                safety_notes: "",
+            },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
     }
