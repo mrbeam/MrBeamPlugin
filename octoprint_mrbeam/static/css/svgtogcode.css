@@ -462,7 +462,7 @@ li.material_entry span {
 }
 
 .thickness_sample.overThick::after {
-  border: 1px solid #ffffff;
+  border: none;
   width: 102%;
   content: "";
   display: block;
@@ -470,7 +470,17 @@ li.material_entry span {
   background-color: white;
   position: relative;
   left: -1%;
-  top: 0.55em;
+  top: -0.35em;
+  transform: rotate(-5deg);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 1) 35%,
+    rgba(255, 255, 255, 0) 36%,
+    rgba(255, 255, 255, 0) 64%,
+    rgba(255, 255, 255, 1) 65%,
+    rgba(255, 255, 255, 1) 100%
+  );
 }
 
 .thickness_sample:hover,
