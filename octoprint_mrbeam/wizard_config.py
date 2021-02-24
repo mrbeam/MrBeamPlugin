@@ -172,20 +172,20 @@ class WizardConfig:
                 template="wizard/wizard_whatsnew_3.jinja2",
                 div="wizard_plugin_corewizard_whatsnew_3",
             ),
-            # wizard_analytics=dict(
-            #     type="wizard",
-            #     name=gettext("Analytics"),
-            #     required=self._is_analytics_wizard_required(),
-            #     mandatory=False,
-            #     suffix="_analytics",
-            #     template="wizard/wizard_analytics.jinja2",
-            #     div="wizard_plugin_corewizard_analytics",
-            # ),
+            wizard_analytics=dict(
+                type="wizard",
+                name=gettext("Analytics"),
+                required=self._is_analytics_wizard_required(),
+                mandatory=False,
+                suffix="_analytics",
+                template="wizard/wizard_analytics.jinja2",
+                div="wizard_plugin_corewizard_analytics",
+            ),
         )
 
         # remove gcode deletion screen if it is already enabled
         if self._plugin._settings.get(["gcodeAutoDeletion"]):
-            del whatsnew_wizard_tabs["wizard_gcode"]
+            del whatsnew_wizard_tabs["wizard_whatsnew_2"]
 
         return whatsnew_wizard_tabs
 
