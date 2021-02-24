@@ -2167,7 +2167,6 @@ $(function () {
                     self.removeSVG(fileObj);
                 }
             }
-            return;
         };
 
         self._getFileObjectForSvg = function (svg) {
@@ -2563,7 +2562,6 @@ $(function () {
 </svg>`;
                 return svg;
             } else {
-                return;
             }
         };
 
@@ -3895,14 +3893,18 @@ $(function () {
         // ***********************************************************
 
         // general modification keys
+        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_down = function (target, ev) {
             console.log("Keydown", target, ev);
-            if (ev.originalEvent.ctrlKey) {
+            // ctrlKey for PC, metaKey for Mac command key
+            if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
                 target.classList.add("ctrl");
             }
         };
+        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_up = function (target, ev) {
-            if (ev.originalEvent.ctrlKey) {
+            // ctrlKey for PC, metaKey for Mac command key
+            if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
                 target.classList.remove("ctrl");
             }
         };

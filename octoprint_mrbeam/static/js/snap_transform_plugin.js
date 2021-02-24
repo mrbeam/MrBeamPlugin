@@ -40,7 +40,8 @@
             elem.add_fill();
             elem.unclick(); // avoid multiple click actions
             elem.click(function (event, i) {
-                if (event.ctrlKey) {
+                // ctrlKey for PC, metaKey for Mac command key
+                if (event.ctrlKey || event.metaKey) {
                     elem.paper.mbtransform.toggleElement(elem);
                 } else {
                     elem.paper.mbtransform.activate(elem);
@@ -222,7 +223,8 @@
 
         self.translateStart = function (target, x, y, event) {
             // x, y, dx, dy pixel coordinates according to <svg width="..." height="..." >
-            if (event.ctrlKey) {
+            // ctrlKey for PC, metaKey for Mac command key
+            if (event.ctrlKey || event.metaKey) {
                 console.info(
                     "translateStart with ShiftKey down: Should bubble event to target inside. Not supported right now."
                 );
@@ -944,7 +946,6 @@
         self.toggle = function (elements_to_transform) {
             if (self.transformHandleGroup.node.classList.contains("active")) {
                 self.deactivate();
-                return;
             } else {
                 self.activate(elements_to_transform);
             }
