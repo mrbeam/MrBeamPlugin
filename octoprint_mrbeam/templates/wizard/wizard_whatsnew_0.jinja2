@@ -1,8 +1,37 @@
-<h3>{{ _("Improved Camera") }}</h3>
+<h3 style="text-transform: uppercase; color: #e25303">
+    <img id="ds_title_stars" src="plugin/mrbeam/static/img/whatsnew_dialog/stars.svg" alt="">
+    <span>{{ _("The new Mr Beam Design Store") }}</span>
+</h3>
 
 <div class="wizard-content">
-    <p><strong>{{ _('The camera is much more reliable now!') }}</strong></p>
-    <p>{{ _('You will feel an improvement specially when using dark materials or with difficult light conditions, thanks to the self-adjusting shutter speed. ') }}</p>
-    <p>{{ _('Check the status of your camera in the new camera settings panel:') }}</p>
-    <img class="wizard-big-img wizard-shadowed-img" src="/plugin/mrbeam/static/img/whatsnew_dialog/camera_status.png">
+    <div class="beta-news-ds-use-case-grid">
+        <div>
+            <img class="wizard-shadowed-img" src="plugin/mrbeam/static/img/whatsnew_dialog/skyline_design.png" alt="">
+        </div>
+        <div style="display: flex;">
+            <img class="beta-news-arrow" src="plugin/mrbeam/static/img/back_arrow.svg" alt="">
+        </div>
+        <div>
+            <img src="plugin/mrbeam/static/img/whatsnew_dialog/skyline_product.jpg" alt="">
+        </div>
+        <div>
+            {{ _("Buy beautiful designs, integrated in your Mr&nbsp;Beam software") }}
+        </div>
+        <div></div>
+        <div>
+            {{ _("Create wonderful objects") }}
+        </div>
+    </div>
+    <div class="beta-news-ds-info-grid">
+        <div>
+            <img src="plugin/mrbeam/static/img/whatsnew_dialog/question_mark.svg" alt="">
+        </div>
+        <div style="display: flex;">
+            <p style="margin: auto 0">
+                {{ _("For more information about the Design Store, visit our %(tag_open)sKnowledge Base%(tag_close)s.",
+                tag_open='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000588725" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                tag_close='</a>') }}
+            </p>
+        </div>
+    </div>
 </div>
