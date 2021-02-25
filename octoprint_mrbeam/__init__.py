@@ -83,7 +83,10 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.util.device_info import deviceInfo
 from octoprint_mrbeam.util.log import logExceptions
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
-from octoprint_mrbeam.util.flask import calibration_tool_mode_only
+from octoprint_mrbeam.util.flask import (
+    calibration_tool_mode_only,
+    restricted_access_or_calibration_tool_mode,
+)
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
@@ -1329,14 +1332,13 @@ class MrBeamPlugin(
         r = add_non_caching_response_headers(r)
         return r
 
-    ### Initial Camera Calibration - START ###
-    # The next calls are needed for first-run and initial camera calibration
+    ### Camera Calibration - START ###
+    # The next calls are needed for the camera calibration
 
     @octoprint.plugin.BlueprintPlugin.route(
         "/take_undistorted_picture", methods=["GET"]
     )
-    @calibration_tool_mode_only
-    # @firstrun_only_access
+    @restricted_access_or_calibration_tool_mode
     def takeUndistortedPictureForInitialCalibration(self):
         self._logger.info("INITIAL_CALIBRATION TAKE PICTURE")
         # return same as the Simple Api Call
@@ -1345,7 +1347,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/on_camera_picture_transfer", methods=["GET"]
     )
-    @calibration_tool_mode_only
+    @restricted_access_or_calibration_tool_mode
     def onCameraPictureTransfer(self):
         self.lid_handler.on_front_end_pic_received()
         return NO_CONTENT
@@ -1353,25 +1355,25 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/calibration_save_raw_pic", methods=["GET"]
     )
-    @calibration_tool_mode_only
+    @restricted_access_or_calibration_tool_mode
     def onCalibrationSaveRawPic(self):
         self.lid_handler.saveRawImg()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration_get_raw_pic", methods=["GET"])
-    @calibration_tool_mode_only
+    @restricted_access_or_calibration_tool_mode
     def onCalibrationGetRawPic(self):
         self.lid_handler.getRawImg()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration_lens_start", methods=["GET"])
-    @calibration_tool_mode_only
+    @restricted_access_or_calibration_tool_mode
     def onLensCalibrationStart(self):
         self.lid_handler.onLensCalibrationStart()
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/calibration_del_pic", methods=["POST"])
-    @calibration_tool_mode_only
+    @restricted_access_or_calibration_tool_mode
     def onCalibrationDelRawPic(self):
         self._logger.debug("Command given : /calibration_del_pic")
         try:
@@ -1390,7 +1392,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/camera_run_lens_calibration", methods=["POST"]
     )
-    @calibration_tool_mode_only
+    @restricted_access_or_calibration_tool_mode
     def onCalibrationRunLensDistort(self):
         self._logger.debug("Command given : camera_run_lens_calibration")
         self.lid_handler.saveLensCalibration()
@@ -1399,7 +1401,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/camera_stop_lens_calibration", methods=["POST"]
     )
-    @calibration_tool_mode_only
+    @restricted_access_or_calibration_tool_mode
     def onCalibrationStopLensDistort(self):
         self._logger.debug("Command given : camera_stop_lens_calibration")
         self.lid_handler.stopLensCalibration()
@@ -1408,8 +1410,7 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route(
         "/send_corner_calibration", methods=["POST"]
     )
-    @calibration_tool_mode_only
-    # @firstrun_only_access #@maintenance_stick_only_access
+    @restricted_access_or_calibration_tool_mode
     def sendInitialCalibrationMarkers(self):
         if not "application/json" in request.headers["Content-Type"]:
             return make_response("Expected content-type JSON", 400)
@@ -1441,8 +1442,7 @@ class MrBeamPlugin(
         "/engrave_calibration_markers/<string:intensity>/<string:feedrate>",
         methods=["GET"],
     )
-    @calibration_tool_mode_only
-    # @firstrun_only_access #@maintenance_stick_only_access
+    @restricted_access_or_calibration_tool_mode
     def engraveCalibrationMarkers(self, intensity, feedrate):
         profile = self.laserCutterProfileManager.get_current_or_default()
         try:
@@ -1488,7 +1488,7 @@ class MrBeamPlugin(
         self._printer._comm.startPrint()
         return NO_CONTENT
 
-    ### Initial Camera Calibration - END ###
+    ### Camera Calibration - END ###
 
     # 	@octoprint.plugin.BlueprintPlugin.route("/engrave_precision_calibration_pattern", methods=["GET"])
     # 	@restricted_access
@@ -2248,8 +2248,9 @@ class MrBeamPlugin(
             pic_settings_path,
             data["result"]["newCorners"],
             data["result"]["newMarkers"],
-            self._hostname,
-            check_calibration_tool_mode(self),
+            hostname=self._hostname,
+            plugin_version=self._plugin_version,
+            from_factory=check_calibration_tool_mode(self),
         )
         self.lid_handler.refresh_settings()
         return NO_CONTENT

@@ -287,7 +287,7 @@ $(function () {
                 hints: gettext(
                     "Watch out for dedicated laser plywood - it has better surface quality and better glue."
                 ),
-                safety_notes: gettext(""),
+                safety_notes: "",
             },
             Polypropylene: {
                 name: gettext("Polypropylene"),
@@ -296,7 +296,7 @@ $(function () {
                     "Because of its flexibility and durability it is great for outdoor applications. On engraved lines you can easily fold and reinforce it."
                 ),
                 hints: gettext(
-                    "For the best results, use opaque and dark collored polyprpylene."
+                    "For the best results, use opaque and dark colored polypropylene."
                 ),
             },
             Slate: {
@@ -315,11 +315,11 @@ $(function () {
                 description: "",
                 hints: "",
             },
-            "Vegan Leather": {
-                name: gettext("Vegan Leather"),
-                img: "Vegan-Leather.jpg",
+            "Laser Leather": {
+                name: gettext("Laser Leather"),
+                img: "Laser-Leather.jpg",
                 description: gettext(
-                    "Vegan leather is robust in everyday life, it can be washed, sewn and creatively processed with Mr Beam."
+                    "Laser leather is robust in everyday life, it can be washed, sewn and creatively processed with Mr Beam."
                 ),
                 hints: "",
             },
@@ -327,23 +327,27 @@ $(function () {
                 name: gettext("Sign Material"),
                 img: "Sign-Material.jpg",
                 description: "",
-                hints: gettext("The material is supplied with a protective film. It can be removed before or after processing."),
+                hints: gettext(
+                    "The material is supplied with a protective film. It can be removed before or after processing."
+                ),
                 safety_notes: "",
             },
             "Stamp Rubber": {
                 name: gettext("Stamp Rubber"),
                 img: "Stamp-Rubber.jpg",
                 description: "",
-                hints: gettext("Repeat the engraving once ore twice for a better result."),
+                hints: gettext(
+                    "Repeat the engraving once ore twice for a better result."
+                ),
                 safety_notes: "",
             },
-            // Wellboard: {
-            //     name: gettext("Wellboard"),
-            //     img: "",
-            //     description: "",
-            //     hints: "",
-            //     safety_notes: "",
-            // },
+            "Swiss stone pine": {
+                name: gettext("Swiss stone pine"),
+                img: "Zirbenholz.jpg",
+                description: "",
+                hints: "",
+                safety_notes: "",
+            },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
     }
