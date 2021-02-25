@@ -7,7 +7,8 @@ class WizardConfig:
         # Just a random number, but we can't go down anymore, just up.
         # If we want to release Beta, then WIZARD_VERSION_BETA should be a higher number than the old WIZARD_VERSION_STABLE
         self.WIZARD_VERSION_STABLE = (
-            22  # v0.9.0: GCode deletion
+            22  # v0.9.0: Design Store, Toolset updated, Messaging system, New material settings, GCode deletion (
+            # just for the wizard), ...
         )
         self.WIZARD_VERSION_BETA = 21  # v0.7.11: GCode deletion, DXFlib update, ...
 
