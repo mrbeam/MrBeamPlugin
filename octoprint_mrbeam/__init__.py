@@ -2021,8 +2021,11 @@ class MrBeamPlugin(
     def console_log(self):
         try:
             data = request.json
-            event = data.get("event")
+            event = data.get("event").encode("utf-8")
             payload = data.get("payload", dict())
+            for key in payload.keys():
+                if isinstance(payload[key], basestring):
+                    payload[key] = payload[key].encode("utf-8")
             func = payload.get("function", None)
             f_level = payload.get("level", None)
             stack = None
@@ -2042,6 +2045,8 @@ class MrBeamPlugin(
             except:
                 pass
             msg = payload.get("msg", "")
+            msg = msg[:1000] + "..." if len(msg) > 1000 else msg
+
             if func and func is not "null":
                 msg = "{} ({})".format(msg, func)
             self._frontend_logger.log(
@@ -2070,8 +2075,11 @@ class MrBeamPlugin(
     def analytics_data(self):
         try:
             data = request.json
-            event = data.get("event")
+            event = data.get("event").encode("utf-8")
             payload = data.get("payload", dict())
+            for key in payload.keys():
+                if isinstance(payload[key], basestring):
+                    payload[key] = payload[key].encode("utf-8")
             self.analytics_handler.add_frontend_event(event, payload)
 
         except Exception as e:
