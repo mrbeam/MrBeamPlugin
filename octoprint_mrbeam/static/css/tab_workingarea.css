@@ -91,6 +91,7 @@ svg g#crosshair {
 
 svg g#camera_markers circle {
   opacity: 0;
+  pointer-events: none;
 }
 
 circle#marker_preview_pane,
@@ -100,6 +101,7 @@ g#camera_markers.markerNW circle#markerNW,
 g#camera_markers.markerSW circle#markerSW {
   opacity: 1;
   animation: blinker 2s linear infinite;
+  pointer-events: auto;
 }
 
 g#camera_markers.markerNE.gray circle#markerNE,
@@ -108,6 +110,7 @@ g#camera_markers.markerNW.gray circle#markerNW,
 g#camera_markers.markerSW.gray circle#markerSW {
   opacity: 0.6;
   animation: none;
+  pointer-events: auto;
 }
 
 @keyframes blinker {
@@ -759,4 +762,5 @@ body.ctrlKey #translateHandle {
   stroke-dasharray: none;
   stroke-dashoffset: 0;
   stroke-opacity: 1;
+  pointer-events: none;
 }
