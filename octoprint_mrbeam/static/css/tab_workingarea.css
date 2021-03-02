@@ -505,6 +505,7 @@ input.decent_input:hover {
 #quick_text_dialog_intensity {
   margin-top: 4em;
   margin-bottom: 2em;
+  width: 100%;
 }
 
 #quick_text_dialog #qt_round_text_section img {
@@ -526,10 +527,6 @@ input.decent_input:hover {
 }
 
 /*Sliders*/
-input#quick_text_dialog_circle {
-  border-radius: 0;
-}
-
 input#quick_shape_rect_radius,
 input#quick_shape_star_sharpness,
 input#quick_shape_heart_lr {
