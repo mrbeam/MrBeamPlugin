@@ -460,6 +460,29 @@ li.material_entry span {
     0 0 10px #fff;
   cursor: pointer;
 }
+
+.thickness_sample.overThick::after {
+  border: none;
+  width: 102%;
+  content: "";
+  display: block;
+  height: 0.5em;
+  background-color: white;
+  position: relative;
+  left: -1%;
+  top: -0.35em;
+  transform: rotate(-5deg);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 1) 35%,
+    rgba(255, 255, 255, 0) 36%,
+    rgba(255, 255, 255, 0) 64%,
+    rgba(255, 255, 255, 1) 65%,
+    rgba(255, 255, 255, 1) 100%
+  );
+}
+
 .thickness_sample:hover,
 .thickness_sample.active {
   font-weight: bold;
