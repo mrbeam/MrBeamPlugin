@@ -2674,28 +2674,28 @@ class MrBeamPlugin(
                 hostname_socket = socket.gethostname()
             except:
                 self._logger.exception("Exception while reading hostname from socket.")
-                pass
+                self._hostname = hostname_dev_info
+            else:
+                # yes, let's go with the actual host name until changes have applied.
+                self._hostname = hostname_socket
 
-            # yes, let's go with the actual host name until changes have applied.
-            self._hostname = hostname_socket
-
-            if hostname_dev_info != hostname_socket and not IS_X86:
-                self._logger.warn(
-                    "getHostname() Hostname from device_info file does NOT match system hostname. device_info: {dev_info}, system hostname: {sys}. Setting system hostname to {dev_info}".format(
-                        dev_info=hostname_dev_info, sys=hostname_socket
+                # TODO - The hostname should not be modified by the plugin itself.
+                # To create a custom name, use `/usr/bin/beamos_hostname XXXX`
+                if hostname_dev_info != hostname_socket and not IS_X86:
+                    self._logger.warn(
+                        "getHostname() Hostname from device_info file does NOT match system hostname. device_info: {dev_info}, system hostname: {sys}. Setting system hostname to {dev_info}".format(
+                            dev_info=hostname_dev_info, sys=hostname_socket
+                        )
                     )
-                )
-                exec_cmd(
-                    "sudo /root/scripts/change_hostname {}".format(hostname_dev_info)
-                )
-                exec_cmd(
-                    "sudo /root/scripts/change_apname {}".format(hostname_dev_info)
-                )
-                self._logger.warn(
-                    "getHostname() system hostname got changed to: {}. Requires reboot to take effect!".format(
-                        hostname_dev_info
+                    exec_cmd(
+                        "sudo /usr/bin/beamos_hostname {}".format(hostname_dev_info)
                     )
-                )
+                    exec_cmd("sudo /usr/bin/reset_apname {}".format(hostname_dev_info))
+                    self._logger.warn(
+                        "getHostname() system hostname got changed to: {}. Requires reboot to take effect!".format(
+                            hostname_dev_info
+                        )
+                    )
         return self._hostname
 
     def get_product_name(self):
