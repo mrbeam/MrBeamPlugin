@@ -118,3 +118,6 @@ class HwMalfunctionHandler(object):
             )
 
         self._user_notification_system.show_notifications(notifications)
+
+    def get_messages_to_show(self):
+        return self._messages_to_show
