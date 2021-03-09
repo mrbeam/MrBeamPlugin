@@ -1593,7 +1593,9 @@ $(function () {
             ) {
                 self.abortFreeTransforms();
                 var svg = snap.select("#" + data.previewId);
-                var newRotate = parseFloat(event.target.value);
+                var newRotate = WorkingAreaHelper.parseFloatTolerant(
+                    event.target.value
+                );
                 const oldRotation = svg.transform().localMatrix.split().rotate;
                 snap.mbtransform.manualTransform(svg, {
                     angle: newRotate - oldRotation,
@@ -1625,7 +1627,9 @@ $(function () {
                     "scale_proportional"
                 );
                 const isMirrored = $(`#${data.id}`).hasClass("isMirrored");
-                const value = parseFloat(event.target.value);
+                const value = WorkingAreaHelper.parseFloatTolerant(
+                    event.target.value
+                );
                 const lm = svg.transform().localMatrix;
                 const currentSx = Math.sqrt(lm.a * lm.a + lm.b * lm.b); // rotation independent scalex factor
                 const currentWidth = svg.getBBox().width;
@@ -1667,7 +1671,9 @@ $(function () {
                 const isProp = $(`#${data.id} .file_list_entry`).hasClass(
                     "scale_proportional"
                 );
-                const value = parseFloat(event.target.value);
+                const value = WorkingAreaHelper.parseFloatTolerant(
+                    event.target.value
+                );
                 const lm = svg.transform().localMatrix;
                 const currentSy = Math.sqrt(lm.c * lm.c + lm.d * lm.d); // rotation independent scaley factor
                 const currentHeight = svg.getBBox().height;
