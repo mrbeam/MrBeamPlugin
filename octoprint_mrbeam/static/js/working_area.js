@@ -1359,6 +1359,14 @@ $(function () {
                 });
             }
 
+            if (newSvg.attr("class").includes("userText")) {
+                const newCurvePathId = previewId + "_baselinepath";
+                let curvePathId = srcElem.select("textPath").attr("href");
+                let newCurvePath = snap.select(curvePathId).clone();
+                newCurvePath.attr("id", newCurvePathId);
+                newSvg.select("textPath").attr("href", `#${newCurvePathId}`);
+            }
+
             // TODO use self._prepareAndInsertSVG()
             // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
 
@@ -3577,7 +3585,8 @@ $(function () {
                     fill: "rgb(" + ity + "," + ity + "," + ity + ")",
                     // stroke: 'rgb('+ity+','+ity+','+ity+')',
                 });
-                text.textPath.node.textContent = displayText;
+
+                text.select("textPath").node.textContent = displayText;
                 var bb = text.getBBox();
                 g.select("rect").attr({
                     x: bb.x,
@@ -3615,7 +3624,7 @@ $(function () {
                 const counterclockwise = $("#quick_text_ccw").hasClass(
                     "active"
                 );
-                const textPathAttr = text.textPath.attr();
+                const textPathAttr = text.select("textPath").attr();
                 const path = snap.select(textPathAttr.href);
                 const textLength = self._qt_currentQuicktextGetTextLength(
                     displayText,
