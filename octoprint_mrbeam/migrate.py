@@ -10,6 +10,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
+from octoprint_mrbeam.__version import __version__
 
 
 def migrate(plugin):
@@ -52,7 +53,7 @@ class Migration(object):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
         self.plugin = plugin
 
-        self.version_previous = self.plugin._settings.get(["version"]) or "0.0.0"
+        self.version_previous = self.plugin._settings.get(["version"]) or __version__
         self.version_current = self.plugin.get_plugin_version()
         self.suppress_migrations = (
             self.plugin._settings.get(["dev", "suppress_migrations"]) or IS_X86
