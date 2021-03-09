@@ -2043,14 +2043,17 @@ class MrBeamPlugin(
                 pass
             msg = payload.get("msg", "")
             if func and func is not "null":
-                msg = "{} ({})".format(msg, func)
+                msg = u"{} ({})".format(msg, func)
+            else:
+                msg = u"{}".format(msg)
+
             self._frontend_logger.log(
                 level,
-                "%s - %s - %s %s",
+                u"%s - %s - %s %s",
                 browser_time,
                 f_level,
                 msg,
-                "\n  " + ("\n   ".join(stack)) if stack else "",
+                "\n  " + (u"\n   ".join(stack)) if stack else "",
             )
 
             if level >= logging.WARNING:
