@@ -23,7 +23,6 @@ class DeviceInfo(object):
     KEY_HOSTNAME = "hostname"
     KEY_SERIAL = "serial"
     KEY_OCTOPI = "octopi"
-    KEY_IMAGE_CORRECTION_MARKERS = "image_correction_markers"
     KEY_PRODUCTION_DATE = "production_date"
     KEY_MODEL = "model"
 
@@ -80,7 +79,6 @@ class DeviceInfo(object):
             device_series="2X",
             device_type="MrBeam2X",
             serial="000000000694FD5D-2X",
-            image_correction_markers="MrBeam2C-pink",
             model="MRBEAM2_DC",
             production_date="2014-06-11",
         )
