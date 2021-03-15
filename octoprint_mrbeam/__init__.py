@@ -207,7 +207,9 @@ class MrBeamPlugin(
         self.start_time_ntp_timer()
 
         # do os health care
-        os_health_care(self)
+        if False:
+            # TODO : Trigger for Jessie images
+            os_health_care(self)
         # do migration if needed
         if not IS_X86:
             migrate(self)
