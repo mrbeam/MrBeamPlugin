@@ -69,12 +69,34 @@
 										<div id="wa_view_settings" class="accordion-inner">
 											<div class="accordion-heading ">
 												<a id="wa_view_settings_toggle" href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
-													<i class="icon-camera"></i> {{ _('Preview') }}:
+													<i class="icon-camera"></i> {{ _('Preview') }}
+                                                    <span style="color:#383e42;">
+                                                        <!-- Translators: millimiters, unit of length -->
+                                                        <span style="cursor: default;">{{ _('(optimized for') }}</span>
+                                                        <span data-bind="text: camera.objectZ" style="cursor: default;"></span>
+    <!--                                                    <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input" value="0"
+                                                               data-bind="value: camera.objectZ, valueUpdate: 'input'"
+                                                               style="width:3.5em; display: inline; margin: 0; padding-right:0;"
+                                                        /> -->
+                                                        <span style="cursor: default;">{{ _('mm material level)') }}</span>
+                                                    </span>
+                                                    <span class="caret" ></span>
 												</a>
-												<span class="caret" style="vertical-align: middle"></span>
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
+                                                    <div>
+                                                        {{ _('Material Height') }}
+														<span class="muted">{{ _(' - Set the height of the surface above the bottom (including accessories like the cutting mats). ') }}:</span>
+                                                        <!-- Translators: millimiters, unit of length -->
+                                                        <div>
+                                                            <i class="icon-download-alt"></i>
+                                                            <input class="mrb_slider" type="range" min="0" max="38" step="1" id="objectZ_input" value="0"
+                                                                   data-bind="value: camera.objectZ, valueUpdate: 'input'"
+                                                                   style="width:80%; display: inline; margin: 1em 0 1em 5px;"
+                                                            />
+                                                        </div>
+                                                    </div>
                                                     <div data-bind="visible: camera.showMarkerWarning">
 
                                                         <div>
@@ -172,14 +194,6 @@
 															</div>
 															<div id="zoom_monitor_hint" data-bind="visible: (zoom() === 1)" class="muted">{{ _('Scroll to zoom') }}</div>
 														</div>
-													</div>
-													<div>
-														<label  style="cursor: default;">{{ _('Object height') }}:</label>
-{#														 Translators: millimiters, unit of length#}
-														<input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input" value="0"
-														       data-bind="value: camera.objectZ, valueUpdate: 'input'"
-														       style="width:3.5em; display: inline; margin: 0; padding-right:0;"
-														/> {{ _('mm') }}
 													</div>
 												</div>
 											</div>
