@@ -546,64 +546,66 @@ def _set_info_mrb_hw_info(self, tier):
         _logger.exception("Exception during _set_info_mrb_hw_info: {}".format(e))
 
 
-def _set_info_rpiws281x(self, tier):
-    name = "rpi-ws281x"
-    module_id = "rpi-ws281x"
-    # this module is installed outside of our virtualenv therefor we can't use default pip command.
-    # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-    pip_command = GLOBAL_PIP_COMMAND
-    pip_name = module_id
+# def _set_info_rpiws281x(self, tier):
+#     # NOTE: As it should now be a dependency of the mrbeam-ledstrips,
+#     #       one simply needs to change the required version in setup.py
+#     name = "rpi-ws281x"
+#     module_id = "rpi-ws281x"
+#     # this module is installed outside of our virtualenv therefor we can't use default pip command.
+#     # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+#     pip_command = GLOBAL_PIP_COMMAND
+#     pip_name = module_id
 
-    try:
-        if _is_override_in_settings(self, module_id):
-            return
+#     try:
+#         if _is_override_in_settings(self, module_id):
+#             return
 
-        version = get_version_of_pip_module(pip_name, pip_command)
+#         version = get_version_of_pip_module(pip_name, pip_command)
 
-        # currently only master branch exists. (June 2020)
-        # Should we want to distribute an update, just create the according branches
-        sw_update_config[module_id] = dict(
-            displayName=_get_display_name(self, name),
-            displayVersion=version,
-            type="github_commit",
-            user="mrbeam",
-            repo="rpi_ws281x_compiled",
-            branch="mrbeam2-stable",
-            branch_default="mrbeam2-stable",
-            pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
-            pip_command=pip_command,
-            restart="environment",
-        )
+#         # currently only master branch exists. (June 2020)
+#         # Should we want to distribute an update, just create the according branches
+#         sw_update_config[module_id] = dict(
+#             displayName=_get_display_name(self, name),
+#             displayVersion=version,
+#             type="github_commit",
+#             user="mrbeam",
+#             repo="rpi_ws281x_compiled",
+#             branch="mrbeam2-stable",
+#             branch_default="mrbeam2-stable",
+#             pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
+#             pip_command=pip_command,
+#             restart="environment",
+#         )
 
-        if tier in [SW_UPDATE_TIER_DEV]:
-            sw_update_config[module_id] = dict(
-                displayName=_get_display_name(self, name),
-                displayVersion=version,
-                type="github_commit",
-                user="mrbeam",
-                repo="rpi_ws281x_compiled",
-                branch="develop",
-                branch_default="develop",
-                pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
-                pip_command=pip_command,
-                restart="environment",
-            )
+#         if tier in [SW_UPDATE_TIER_DEV]:
+#             sw_update_config[module_id] = dict(
+#                 displayName=_get_display_name(self, name),
+#                 displayVersion=version,
+#                 type="github_commit",
+#                 user="mrbeam",
+#                 repo="rpi_ws281x_compiled",
+#                 branch="develop",
+#                 branch_default="develop",
+#                 pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
+#                 pip_command=pip_command,
+#                 restart="environment",
+#             )
 
-        if tier in [SW_UPDATE_TIER_BETA]:
-            sw_update_config[module_id] = dict(
-                displayName=_get_display_name(self, name),
-                displayVersion=version,
-                type="github_commit",
-                user="mrbeam",
-                repo="rpi_ws281x_compiled",
-                branch="mrbeam2-beta",
-                branch_default="mrbeam2-beta",
-                pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
-                pip_command=pip_command,
-                restart="environment",
-            )
-    except Exception as e:
-        _logger.exception("Exception during _set_info_rpiws281x: {}".format(e))
+#         if tier in [SW_UPDATE_TIER_BETA]:
+#             sw_update_config[module_id] = dict(
+#                 displayName=_get_display_name(self, name),
+#                 displayVersion=version,
+#                 type="github_commit",
+#                 user="mrbeam",
+#                 repo="rpi_ws281x_compiled",
+#                 branch="mrbeam2-beta",
+#                 branch_default="mrbeam2-beta",
+#                 pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
+#                 pip_command=pip_command,
+#                 restart="environment",
+#             )
+#     except Exception as e:
+#         _logger.exception("Exception during _set_info_rpiws281x: {}".format(e))
 
 
 def _get_display_name(self, name):
