@@ -2670,32 +2670,39 @@ class MrBeamPlugin(
         :return: String hostname
         """
         if self._hostname is None:
-            hostname_dev_info = self._device_info.get_hostname()
+            hostname_device_info = self._device_info.get_hostname()
             hostname_socket = None
             try:
                 hostname_socket = socket.gethostname()
             except:
                 self._logger.exception("Exception while reading hostname from socket.")
-                self._hostname = hostname_dev_info
+                self._hostname = hostname_device_info
             else:
                 # yes, let's go with the actual host name until changes have applied.
                 self._hostname = hostname_socket
 
-                # TODO - The hostname should not be modified by the plugin itself.
-                # To create a custom name, use `/usr/bin/beamos_hostname XXXX`
-                if hostname_dev_info != hostname_socket and not IS_X86:
+                if not hostname_device_info:
+                    self._logger.debug(
+                        "No hostname defined in /etc/mrbeam, ignoring..."
+                    )
+                elif hostname_device_info != hostname_socket and not IS_X86:
+                    # TODO - The hostname should not be modified by the plugin itself.
+                    # To create a custom name, use `/usr/bin/beamos_hostname XXXX`
+                    # Or consider writing to /boot/octopi-hostname
                     self._logger.warn(
-                        "getHostname() Hostname from device_info file does NOT match system hostname. device_info: {dev_info}, system hostname: {sys}. Setting system hostname to {dev_info}".format(
-                            dev_info=hostname_dev_info, sys=hostname_socket
+                        "Hostname in /etc/mrbeam file ({dev_info}) does NOT match current hostname ({sys})".format(
+                            dev_info=hostname_device_info, sys=hostname_socket
                         )
                     )
+                    # beamos_hostname only uses 4 characters to set the hostname as MrBeam-XXXX
                     exec_cmd(
-                        "sudo /usr/bin/beamos_hostname {}".format(hostname_dev_info)
+                        "sudo /usr/bin/beamos_hostname {}".format(
+                            hostname_device_info[-4:]
+                        )
                     )
-                    exec_cmd("sudo /usr/bin/reset_apname {}".format(hostname_dev_info))
                     self._logger.warn(
                         "getHostname() system hostname got changed to: {}. Requires reboot to take effect!".format(
-                            hostname_dev_info
+                            hostname_device_info
                         )
                     )
         return self._hostname
