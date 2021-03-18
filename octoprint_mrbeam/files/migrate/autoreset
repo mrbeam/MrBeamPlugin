@@ -62,4 +62,4 @@ def process():
 
 
 process()
-print "done with autoreset"
+print("done with autoreset")
