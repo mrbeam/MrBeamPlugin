@@ -1,0 +1,40 @@
+{
+  "messages": [
+    {
+      "id": 1,
+      "date": "11. 2. 2021",
+      "restrictions": {
+        "__": "Evaluation  of restrictions needs to be true to show the message",
+        "channels": [],
+        "version": [],
+        "version_and_newer": null,
+        "version_and_older": null,
+        "not_first_run": false,
+        "ts_after": 0,
+        "ts_before": 0
+      },
+      "content": {
+        "en": {
+          "title": "Introducing “Messages Form Mr Beam”",
+          "body": "With our new feature “Messages Form Mr Beam” you always be kept up to date with the latest news from Mr Beam about your lasercutter.\nMore to come here shortly.\nPlease make sure you and your Mr Beam lasercutter are connected to the internet to get the latest messages.\n\nYour Mr Beam team"
+        },
+        "de": {
+          "title": "Willkommen bei “Nachrichten von Mr Beam”",
+          "body": "Mit unserer neuen Funktion “Nachrichten von Mr Beam” bleibst du immer auf dem Laufenden rund um deinen Mr Beam Lasercutter.\nMehr dazu in Kürze.\nBitte stelle sicher, dass du und dein Mr Beam Lasercutter mit dem Internet verbunden sind, um die neuesten Nachrichten zu bekommen.\n\nDein Mr Beam Team"
+        }
+      },
+      "notification": {
+        "sticky": 30,
+        "type": "info",
+        "en": {
+          "title": "Introducing “Messages Form Mr Beam”",
+          "body": "Stay up to date with the latest news from Mr Beam"
+        },
+        "de": {
+          "title": "Willkommen bei “Nachrichten von Mr Beam”",
+          "body": "Bleibe auf dem Laufenden mit Nachrichten von Mr Beam"
+        }
+      }
+    }
+  ]
+}

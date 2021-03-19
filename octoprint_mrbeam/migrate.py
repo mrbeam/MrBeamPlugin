@@ -22,13 +22,13 @@ class Migration(object):
     VERSION_SYNC_GRBL_SETTINGS = "0.1.24"
     VERSION_FIX_SSH_KEY_PERMISSION = "0.1.28"
     VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS = "0.1.37"
-    VERSION_UPDATE_LOGROTATE_CONF = "0.1.45"
+    VERSION_UPDATE_LOGROTATE_CONF = "0.8.0.2"
     VERSION_INFLATE_FILE_SYSTEM = "0.1.51"
     VERSION_PREFILL_MRB_HW_INFO = "0.1.55"
     VERSION_AVRDUDE_AUTORESET_SCRIPT = "0.2.0"
     VERSION_USERNAME_LOWCASE = "0.2.0"
     VERSION_GRBL_AUTO_UPDATE = "0.2.1"
-    VERSION_MOUNT_MANAGER_171 = "0.6.14.3"
+    VERSION_MOUNT_MANAGER_172 = "0.7.13.1"
     VERSION_INITD_NETCONNECTD = "0.5.5"
     VERSION_DELETE_UPLOADED_STL_FILES = "0.6.1"
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
@@ -46,7 +46,7 @@ class Migration(object):
     GRBL_VERSIONS_NEED_UPDATE = ["0.9g_20190329_ec6a7c7-dirty"]
 
     # mount manager version
-    MOUNT_MANAGER_VERSION = StrictVersion("1.7.1")
+    MOUNT_MANAGER_VERSION = StrictVersion("1.7.2")
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
@@ -119,7 +119,7 @@ class Migration(object):
 
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
-                    self.VERSION_MOUNT_MANAGER_171,
+                    self.VERSION_MOUNT_MANAGER_172,
                     equal_ok=False,
                 ):
                     self.update_mount_manager()
@@ -461,6 +461,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("update_logrotate_conf() ")
 
         logrotate_d_files = [
+            "analytics",
             "haproxy",
             "iobeam",
             "mount_manager",

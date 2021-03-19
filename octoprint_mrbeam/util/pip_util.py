@@ -7,7 +7,7 @@ _freezes = {}
 
 
 def get_version_of_pip_module(pip_name, pip_command=None, disable_pip_ver_check=True):
-    _logger = mrb_logger(__name__ + "get_version_of_pip_module")
+    _logger = mrb_logger(__name__ + ".get_version_of_pip_module")
     global _freezes
     version = None
     returncode = -1
