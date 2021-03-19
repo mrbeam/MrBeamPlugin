@@ -787,7 +787,7 @@ class Converter:
         if color in self.colorParams.keys():
             return True
         else:
-            self._log.debug("Skipping color: %s " % color)
+            self._log.info("Skipping color: %s " % color)
             return False
 
     def _check_dir(self):

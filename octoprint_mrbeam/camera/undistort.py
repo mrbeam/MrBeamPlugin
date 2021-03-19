@@ -484,7 +484,7 @@ def _getCamParams(path_to_params_file):
     :returns cam_params as dict
     """
     if not isfile(path_to_params_file) or os.stat(path_to_params_file).st_size == 0:
-        logging.warning("Camera lens calibration file not found.")
+        logging.warning("Camera calibration file not found.")
         return None
     else:
         try:
@@ -522,8 +522,8 @@ if __name__ == "__main__":
         "-p",
         "--parameters",
         metavar="PARAM.npz",
-        required=False,
-        default=None,
+        required=True,
+        default="/home/pi/.octoprint/cam/lens_correction_2048x1536.npz",
         help="The file storing the camera lens correction",
     )
     parser.add_argument(
@@ -531,7 +531,7 @@ if __name__ == "__main__":
         "--config",
         metavar="PIC_CONFIG.yaml",
         required=False,
-        default=None,  # "/home/pi/.octoprint/cam/pic_settings.yaml",
+        default="/home/pi/.octoprint/cam/pic_settings.yaml",
         help="?",
     )
     parser.add_argument(
@@ -585,23 +585,12 @@ if __name__ == "__main__":
     # imgFiles = list(map(lambda x: x.strip('\n'), args.inimg))
     # print(imgFiles)
     if args.out_folder:
-        out_folder = args.out_folder
+        out_folder = args.outfolder
     else:
         out_folder = os.path.join(os.path.dirname(args.images[0]), "undistort")
     print("Saving detected markers to folder %s" % out_folder)
 
-    cam_param_path = args.parameters
-    if cam_param_path:
-        cam_params = _getCamParams(args.parameters)
-        dist = cam_params[DIST_KEY]
-        mtx = cam_params[MTX_KEY]
-    else:
-        dist = None
-        mtx = None
-
-    # outpath = img + ".out.jpg"
-    if not os.path.exists(args.out_folder):
-        os.mkdir(args.out_folder)
+    cam_params = _getCamParams(args.parameters)
 
     # load pic_settings json
     # pic_settings = _getPicSettings(args.last)
@@ -609,12 +598,12 @@ if __name__ == "__main__":
     for img_path in args.images:
         img = cv2.imread(img_path)
 
-        workspaceCorners, markers, missed, err, _, _ = prepareImage(
+        workspaceCorners, markers, missed, err = prepareImage(
             img,
             path.join(out_folder, path.basename(img_path)),
-            pic_settings=args.config,
-            cam_dist=dist,
-            cam_matrix=mtx,
+            cam_params[DIST_KEY],
+            cam_params[MTX_KEY],
+            pic_settings=pic_settings,
             last_markers=None,
             size=(2000, 1560),
             quality=args.quality,
@@ -625,8 +614,8 @@ if __name__ == "__main__":
             threads=-1,
         )
 
-        if len(missed) > 0:
-            print(
-                "Missed markers : % 15s for picture %s" % (", ".join(missed), img_path)
-            )
         # TODO save in npz file
+
+    # outpath = img + ".out.jpg"
+    if not os.path.exists(args.outfolder):
+        os.mkdir(args.outfolder)

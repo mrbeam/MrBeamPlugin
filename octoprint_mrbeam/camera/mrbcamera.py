@@ -85,8 +85,7 @@ class MrbCamera(CameraClass, BaseCamera):
         if PICAMERA_AVAILABLE:
             PiCamera.__enter__(self)
         # Cannot set shutter speed before opening the camera (picamera)
-        if self._shutter_speed:
-            self.shutter_speed = self._shutter_speed
+        self.shutter_speed = self._shutter_speed
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -103,10 +102,6 @@ class MrbCamera(CameraClass, BaseCamera):
             self._busy.acquire()
         try:
             CameraClass.capture(self, output, format=format, *args, **kwargs)
-        except AttributeError as e:
-            self._logger.warning(
-                "Caught Picamera internal error - self._camera is None"
-            )
         finally:
             if PICAMERA_AVAILABLE:
                 self._busy.release()

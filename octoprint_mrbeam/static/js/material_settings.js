@@ -61,10 +61,8 @@ $(function () {
             Acrylic: {
                 name: gettext("Acrylic"),
                 img: "Acrylic.jpg",
-                description: gettext(
-                    "Use opaque acrylic in red or black to create nice objects and signs. Acrylic is great for outdoor applications."
-                ),
-                hints: "",
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             "Anodized Aluminum": {
                 name: gettext("Anodized Aluminum"),
@@ -83,12 +81,10 @@ $(function () {
             "Balsa Wood": {
                 name: gettext("Balsa Wood"),
                 img: "Balsa-Wood.jpg",
-                description: gettext(
-                    "Balsa wood is a very popular material for light, stiff structures in model making and in particular construction of model aircraft."
-                ),
+                description: "",
                 hints: "",
                 safety_notes: gettext(
-                    "Caution sensitive material. If laser speed is too slow, balsa wood may ignite."
+                    "Take care about ignitions. Never run a job slower than 300 mm/min!"
                 ),
                 // colors: {
                 //     'd4b26f': {
@@ -106,9 +102,7 @@ $(function () {
             Bamboo: {
                 name: gettext("Bamboo Wood"),
                 img: "Bamboo.jpg",
-                description: gettext(
-                    "An individual engraving on a chopping board or a wooden spoon is the perfect spontaneous gift."
-                ),
+                description: "",
                 hints: "",
                 safety_notes: "",
             },
@@ -116,46 +110,42 @@ $(function () {
                 name: gettext("Cardboard, single wave"),
                 img: "Cardboard.jpg",
                 description: gettext(
-                    "Recycle cardboard from packagings to create precise prototypes and models ."
+                    "Ordinary cardboard like most packaging is made of."
                 ),
                 hints: gettext(
-                    "Dont use your Mr Beam packaging. Please keep it for transportation and storage!"
+                    "Engraving looks great if just the first layer is lasered away, so that the wave is visible underneath."
                 ),
                 safety_notes: gettext(
-                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite. Never run a laser job slower than 180 mm/min!"
+                    "Take care about ignitions. Never run a job slower than 180 mm/min!"
                 ),
             },
             "Cardboard, corrugated double wave": {
                 name: gettext("Cardboard, double wave"),
                 img: "Cardboard.jpg",
                 description: gettext(
-                    "Recycle cardboard from packagings to create precise prototypes and models ."
+                    "Ordinary cardboard like strong packaging is made of."
                 ),
                 hints: gettext(
-                    "Dont use your Mr Beam packaging. Please keep it for transportation and storage!"
+                    "Engraving looks great if just the first layer is lasered away, that the wave is visible underneath."
                 ),
                 safety_notes: gettext(
-                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite. Never run a laser job slower than 180 mm/min!"
+                    "Take care about ignitions. Never run a job slower than 180 mm/min!"
                 ),
             },
             Cork: {
                 name: gettext("Cork"),
                 img: "Cork.jpg",
-                description: gettext(
-                    "Create beautiful pin boards or coasters with individual engravings. "
-                ),
-                hints: "",
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             Felt: {
                 // took settings from IHM fair
                 name: gettext("Felt"),
                 img: "Felt.jpg",
                 description: gettext(
-                    "Acrylic felt can be engraved and cut super fast with Mr Beam."
+                    "Acrylic felt like the one sold in many arts and craft stores."
                 ),
-                hints: gettext(
-                    "Be aware that natural felt is something else and smells very strong when you open the lid."
-                ),
+                hints: gettext("Be aware that natural felt is something else."),
                 safety_notes: "",
             },
             "Fabric Cotton": null,
@@ -172,37 +162,29 @@ $(function () {
             Foam: {
                 name: gettext("Foam"),
                 img: "Polyethylene-Foam.jpg",
-                description: gettext(
-                    "Use polyethylene or polyurethane foam to create nice prototypes and mock-ups. "
-                ),
-                hints: "",
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             "Foam Rubber": {
                 name: gettext("Foam Rubber"),
                 img: "Foam-Rubber.jpg",
-                description: gettext(
-                    "Mostly made out of polyurethane and can be engraved and cut super fast with Mr Beam."
-                ),
+                description: gettext("Consists of poly urethane foam."),
                 hints: gettext(
                     "Laser parameters are highly color dependant, bright colors might need pierce time."
                 ),
-                safety_notes: gettext(
-                    "Make sure your foam is not made of PVC and does not contain chlorine!"
-                ),
+                safety_notes: "",
             },
             "Grey Cardboard": {
                 name: gettext("Grey Cardboard"),
                 img: "Grey-Cardboard.jpg",
-                description: "",
-                hints: "",
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             "Jersey Fabric": {
                 name: gettext("Jersey Fabric"),
                 img: "Fabric.jpg",
-                description: gettext(
-                    "Cutting fabric with Mr Beam is so much fun because it doesn't warp and the result is much more accurate than with scissors."
-                ),
-                hints: "",
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             Kraftplex: {
                 name: gettext("Kraftplex"),
@@ -216,41 +198,31 @@ $(function () {
             "Kraftplex (wave)": {
                 name: gettext("Kraftplex (wave)"),
                 img: "Kraftplex-Wave.jpg",
-                description: gettext(
-                    " 100% natural fibers similar to Kraftplex, but wavy. Thickness is measured over the whole wave."
-                ),
+                description: gettext(" "),
             },
             Latex: {
                 name: gettext("Latex"),
                 img: "Latex.jpg",
-                description: "",
-                hints: "",
-                safety_notes: "",
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             Leather: {
                 name: gettext("Leather"),
                 img: "Leather.jpg",
-                description: gettext(
-                    "Use thin and hard leather to get the best result."
-                ),
-                hints: "",
-                safety_notes: gettext(
-                    "If you use artificial leather, make sure that it is not made of PVC and does not contain chlorine!"
-                ),
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             Linoleum: {
                 name: gettext("Linoleum"),
                 img: "Linoleum.jpg",
-                description: "",
-                hints: "",
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             Mirror: {
                 name: gettext("Mirror"),
                 img: "Mirror.jpg",
-                description: gettext(
-                    "Engrave Mirrors only from the back side. But be aware of that you also need to mirror your design!"
-                ),
-                hints: "",
+                description: gettext(" "),
+                hints: gettext(" "),
                 safety_notes: gettext(
                     "Mirrors can only be engraved from the back, otherwise the laser would be reflected."
                 ),
@@ -259,94 +231,57 @@ $(function () {
                 name: gettext("Paper"),
                 img: "Paper.jpg",
                 description: gettext(
-                    "White paper is difficult to engrave. Please do some testing if necessary."
+                    "Ordinary paper like from an office printer."
                 ),
-                hints: gettext(
-                    "Extremely thin paper can vibrate heavily or fly away if using the compressor. In that case, please reduce the power of the compressor."
-                ),
+                hints: "",
                 safety_notes: gettext(
-                    "Caution sensitive material. Very fine structures may be subject of ignition."
+                    "Very fine structures may be subject of ignition."
                 ),
             },
             "Plywood Birch": {
                 name: gettext("Plywood Birch"),
                 img: "Plywood-Birch.jpg",
-                description: gettext(
-                    "Plywood is greate fo all kinds of model making and decoration."
-                ),
-                hints: gettext(
-                    "Watch out for dedicated laser plywood - it has better surface quality and better glue."
-                ),
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             "Plywood Poplar": {
                 name: gettext("Plywood Poplar"),
                 img: "Plywood-Poplar.jpg",
                 description: gettext(
-                    "Plywood is greate fo all kinds of model making and decoration."
+                    "Plywood from an ordinary hardware store or arts and craft supply."
                 ),
                 hints: gettext(
-                    "Watch out for dedicated laser plywood - it has better surface quality and better glue."
+                    "Watch out for dedicated laser plywood - it has better surface quality and only natural glue."
                 ),
-                safety_notes: "",
+                safety_notes: gettext(
+                    "Very fine structures may be subject of ignition."
+                ),
             },
             Polypropylene: {
                 name: gettext("Polypropylene"),
                 img: "Polypropylene.jpg",
-                description: gettext(
-                    "Because of its flexibility and durability it is great for outdoor applications. On engraved lines you can easily fold and reinforce it."
-                ),
-                hints: gettext(
-                    "For the best results, use opaque and dark colored polypropylene."
-                ),
+                description: gettext(" "),
+                hints: gettext(" "),
             },
             Slate: {
                 name: gettext("Slate"),
                 img: "Slate.jpg",
-                description: gettext(
-                    "Slate is greate to engrave and you can create beatiful objects, gifts and signs."
-                ),
+                description: gettext(" "),
                 hints: gettext(
-                    "When engraving slate, the engraving becomes brighter than the original material. The images might need theirs colors inverted."
+                    "When engraving slate, the engraving becomes brighter than the original material. Possibly the design template should be inverted."
                 ),
             },
             Snappap: {
                 name: gettext("Snappap"),
                 img: "Snappap.jpg",
-                description: "",
-                hints: "",
+                description: gettext(" "),
+                hints: gettext(" "),
             },
-            "Laser Leather": {
-                name: gettext("Laser Leather"),
-                img: "Laser-Leather.jpg",
-                description: gettext(
-                    "Laser leather is robust in everyday life, it can be washed, sewn and creatively processed with Mr Beam."
-                ),
-                hints: "",
-            },
-            "Sign Material": {
-                name: gettext("Sign Material"),
-                img: "Sign-Material.jpg",
-                description: "",
-                hints: gettext(
-                    "The material is supplied with a protective film. It can be removed before or after processing."
-                ),
-                safety_notes: "",
-            },
-            "Stamp Rubber": {
-                name: gettext("Stamp Rubber"),
-                img: "Stamp-Rubber.jpg",
-                description: "",
-                hints: gettext(
-                    "Repeat the engraving once ore twice for a better result."
-                ),
-                safety_notes: "",
-            },
-            "Swiss stone pine": {
-                name: gettext("Swiss stone pine"),
-                img: "Zirbenholz.jpg",
-                description: "",
-                hints: "",
-                safety_notes: "",
+            "Vegan Leather": {
+                name: gettext("Vegan Leather"),
+                img: "Vegan-Leather.jpg",
+                description: gettext(" "),
+                hints: gettext(" "),
             },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`

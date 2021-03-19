@@ -12,7 +12,6 @@ import queue
 from os import path
 import numpy as np
 from copy import copy
-import re
 
 from octoprint_mrbeam.camera.definitions import (
     LEGACY_STILL_RES,
@@ -34,7 +33,6 @@ from octoprint_mrbeam.camera.definitions import (
     TMP_PATH,
     TMP_RAW_FNAME,
     TMP_RAW_FNAME_RE,
-    TMP_RAW_FNAME_RE_NPZ,
 )
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import makedirs, get_thread
@@ -104,19 +102,6 @@ def undist_dict(dict_pts, *a, **kw):
     ]  # Preserve in the order in which we have the keys
     res_iter = undist_points(inPts, *a, **kw)
     return {keys[i]: np.array(pos) for i, pos in enumerate(res_iter)}
-
-
-def clean_unexpected_files(tmp_path):
-    """
-    Removes unexpected files in the directory path
-    - .npz files that do not have the corresponding image anymore
-    """
-    files = os.listdir(tmp_path)
-    for f in files:
-        _logger.info("File: {} - file[:-4] - {}".format(f, f[:-4]))
-        if re.match(TMP_RAW_FNAME_RE_NPZ, f) and not f[:-4] in files:
-            _logger.info("Match !")
-            os.remove(path.join(tmp_path, f))
 
 
 ### CAMERA LENS CALIBRATION

@@ -22,18 +22,10 @@ $(function () {
         self.backlash_compensation_x.extend({
             rateLimit: { timeout: 500, method: "notifyWhenChangesStop" },
         });
-        self.backlash_compensation_x.subscribe(function (inputStr) {
-            let val = parseFloat(inputStr);
-            if (!isNaN(val)) {
-                self.settings.settings.plugins.mrbeam.machine.backlash_compensation_x(
-                    val
-                );
-            } else {
-                console.warn(
-                    `Value Error: ${val} is not a Number. Nothing saved.`
-                );
-                return;
-            }
+        self.backlash_compensation_x.subscribe(function (val) {
+            self.settings.settings.plugins.mrbeam.machine.backlash_compensation_x(
+                val
+            );
             self.settings.saveData(undefined, function (newSettings) {
                 console.log(
                     "Saved backlash compensation x",

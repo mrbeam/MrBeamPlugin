@@ -15,14 +15,14 @@ from .definitions import (
 import logging
 from os.path import isfile
 import os
-from octoprint_mrbeam.util import dict_map, makedirs
+from octoprint_mrbeam.util import dict_map
 import numpy as np
 from numpy.linalg import norm
 import cv2
 from octoprint_mrbeam.camera import lens
-from octoprint_mrbeam.mrb_logger import mrb_logger
 
-_logger = mrb_logger("octoprint.plugins.mrbeam.camera.corners")
+# Set this after merging the logging overhaul.
+_logger = logging.getLogger(__name__)
 
 # @logtime()
 def warpImgByCorners(image, corners, zoomed_out=False):
@@ -83,7 +83,7 @@ def warpImgByCorners(image, corners, zoomed_out=False):
 
 
 def save_corner_calibration(
-    path, newCorners, newMarkers, hostname=None, plugin_version=None, from_factory=False
+    path, newCorners, newMarkers, hostname=None, from_factory=False
 ):
     """Save the settings onto a calibration file"""
 
@@ -113,9 +113,7 @@ def save_corner_calibration(
     pic_settings[__CORNERS_KEY] = newCorners
     pic_settings[__MARKERS_KEY] = newMarkers
     if hostname:
-        pic_settings["hostname"] = hostname
-    if plugin_version:
-        pic_settings["version"] = plugin_version
+        pic_settings["hostname_KEY"] = hostname
     write_corner_calibration(pic_settings, path)
 
 
@@ -124,7 +122,6 @@ def write_corner_calibration(pic_settings, path):
         type(pic_settings), pic_settings
     )
     _logger.debug("Saving new corner calibration: {}".format(pic_settings))
-    makedirs(path, parent=True, exist_ok=True)
     with open(path, "wb") as f:
         yaml.safe_dump(pic_settings, f, indent="  ", allow_unicode=True)
     _logger.info("New corner calibration has been saved")

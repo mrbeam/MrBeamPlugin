@@ -161,7 +161,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 elem.attr({
                     style: "transform: scale(1,-1); transform-origin: top",
                     height: -transformedH,
-                    y: -transformedY,
                 });
             }
             return ignoredElements;

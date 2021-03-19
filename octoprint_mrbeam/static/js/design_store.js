@@ -13,7 +13,9 @@ $(function () {
         self.settings = params[3];
 
         self.onUserLoggedIn = function () {
+            if (window.mrbeam.isDev() || window.mrbeam.isBeta()) {
                 self.prepareDesignStoreTab();
+            }
         };
 
         self.getEmail = function () {
