@@ -48,7 +48,7 @@ def get_update_information(self):
     _set_info_netconnectd_daemon(self, tier)
     _set_info_iobeam(self, tier)
     _set_info_mrb_hw_info(self, tier)
-    _set_info_rpiws281x(self, tier)
+    # _set_info_rpiws281x(self, tier)
     # set_info_testplugin(self, tier) # See function definition for more details
 
     # _logger.debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
