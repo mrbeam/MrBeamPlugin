@@ -46,7 +46,7 @@ from octoprint_mrbeam.camera.undistort import (
     _getCamParams,
     prepareImage,
 )
-from octoprint_mrbeam.camera import corners, config
+from octoprint_mrbeam.camera import corners, config, lens
 from octoprint_mrbeam.camera.lens import (
     BoardDetectorDaemon,
     FACTORY,
@@ -287,6 +287,11 @@ class LidHandler(object):
             self._end_photo_worker()
 
     def _start_photo_worker(self):
+        if self._photo_creator.active:
+            self._logger.debug(
+                "Another PhotoCreator thread is already active! Not starting a new one."
+            )
+            return
         path_to_cam_params = self.get_calibration_file()
         path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 
@@ -298,22 +303,17 @@ class LidHandler(object):
         cam_params = _getCamParams(path_to_cam_params)
         self._logger.debug("Loaded cam_params: {}".format(cam_params))
 
-        if not self._photo_creator.active:
-            if self._photo_creator.stopping:
-                self._photo_creator.restart(
-                    pic_settings=path_to_pic_settings,
-                    cam_params=cam_params,
-                    out_pic_size=out_pic_size,
-                )
-            else:
-                self._photo_creator.start(
-                    pic_settings=path_to_pic_settings,
-                    cam_params=cam_params,
-                    out_pic_size=out_pic_size,
-                )
+        if self._photo_creator.stopping:
+            self._photo_creator.restart(
+                pic_settings=path_to_pic_settings,
+                cam_params=cam_params,
+                out_pic_size=out_pic_size,
+            )
         else:
-            self._logger.debug(
-                "Another PhotoCreator thread is already active! Not starting a new one."
+            self._photo_creator.start(
+                pic_settings=path_to_pic_settings,
+                cam_params=cam_params,
+                out_pic_size=out_pic_size,
             )
 
     def _end_photo_worker(self):
@@ -427,6 +427,8 @@ class LidHandler(object):
     def saveRawImg(self):
         # TODO debug/raw.jpg -> copy image over
         # TODO careful when deleting pic + setting new name -> hash
+        if os.path.isdir(self.debugFolder):
+            lens.clean_unexpected_files(self.debugFolder)
         if (
             self._photo_creator
             and self._photo_creator.active
@@ -490,6 +492,7 @@ class LidHandler(object):
                     my_path = path.join(self.debugFolder, filename)
                     self._logger.debug("Removing tmp calibration file %s" % my_path)
                     os.remove(my_path)
+            lens.clean_unexpected_files(self.debugFolder)
 
     def stopLensCalibration(self):
         self._analytics_handler.add_camera_session_details(
@@ -788,13 +791,17 @@ class PhotoCreator(object):
         except Exception as e:
             if e.__class__.__name__.startswith("PiCamera"):
                 self._logger.exception(
-                    "PiCamera_Error_while_preparing_camera_%s_%s",
+                    "PiCamera_Error_while_preparing_camera_%s_%s, locals : %s",
                     e.__class__.__name__,
                     e,
+                    locals(),
                 )
             else:
                 self._logger.exception(
-                    "Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e
+                    "Exception_while_preparing_camera_%s_%s, locals : %s",
+                    e.__class__.__name__,
+                    e,
+                    locals(),
                 )
         self.stopEvent.set()
 
@@ -1297,10 +1304,10 @@ class PhotoCreator(object):
         )
 
     def _createFolder_if_not_existing(self, filename):
-        path = os.path.dirname(filename)
-        if not os.path.exists(path):
-            os.makedirs(path)
-            self._logger.debug("Created folder '%s' for camera images.", path)
+        folder = os.path.dirname(filename)
+        if not os.path.exists(folder):
+            makedirs(folder)
+            self._logger.debug("Created folder '%s' for camera images.", folder)
 
     def load_camera_settings(self, path="/home/pi/.octoprint/cam/last_session.yaml"):
         """
@@ -1370,6 +1377,7 @@ class PhotoCreator(object):
                 "version": octoprint_mrbeam.__version__,
             },
         )
+        makedirs(path, parent=True, exist_ok=True)
         try:
             with open(path, "w") as f:
                 f.write(yaml.dump(settings))
@@ -1377,7 +1385,7 @@ class PhotoCreator(object):
             self._logger.error(e)
         except TypeError as e:
             self._logger.warning(
-                "Data that I tried writing to %s :\n%s" % (path, settings)
+                "Data that I tried writing to %s :\n%s\n%s" % (path, settings, e)
             )
 
 

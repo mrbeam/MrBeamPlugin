@@ -29,7 +29,17 @@
 
             let msg = []
             for (let a of arguments) {
-                msg.push((typeof(a) === "object" && a !== null) ? JSON.stringify(a) : a)
+                if (typeof(a) === "object" && a !== null) {
+                    try {
+                        msg.push(JSON.stringify(a))
+                    } catch (e) {
+                        msg.push("<object non-serializable>")
+                        // nothing
+                    }
+                } else {
+                    msg.push(a)
+                }
+                {#msg.push((typeof(a) === "object" && a !== null) ? JSON.stringify(a) : a)#}
             }
             c = console._getCaller()
             return {

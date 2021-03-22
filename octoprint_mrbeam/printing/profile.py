@@ -8,21 +8,29 @@ __copyright__ = "Copyright (C) 2014 The OctoPrint Project - Released under terms
 
 import os
 import copy
+from flask import url_for
 import re
 import collections
+from itertools import chain
 
+from . import profiles
+
+from octoprint.printer.profile import PrinterProfileManager
 from octoprint.util import dict_merge, dict_clean, dict_contains_keys
 from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util import dict_get
+from octoprint_mrbeam.util.log import logme
+
 
 # singleton
 _instance = None
 
 
-def laserCutterProfileManager():
+def laserCutterProfileManager(*a, **kw):
     global _instance
     if _instance is None:
-        _instance = LaserCutterProfileManager()
+        _instance = LaserCutterProfileManager(*a, **kw)
     return _instance
 
 
@@ -65,394 +73,191 @@ class InvalidProfileError(Exception):
     pass
 
 
-class LaserCutterProfileManager(object):
+LASER_PROFILE_DEFAULT = profiles.default.profile
+LASER_PROFILE_2C = profiles.mrb2c.profile
+LASER_PROFILE_2U = profiles.mrb2u.profile
+LASER_PROFILE_DUMMY = profiles.dummy.profile
+
+LASER_PROFILES_DERIVED = (
+    LASER_PROFILE_2C,
+    profiles.mrb2d.profile,
+    profiles.mrb2e.profile,
+    profiles.mrb2f.profile,
+    profiles.mrb2g.profile,
+    LASER_PROFILE_2U,
+    profiles.mrb2v.profile,
+    LASER_PROFILE_DUMMY,
+)
+
+# fmt: off
+LASER_PROFILES = tuple(chain(
+    (LASER_PROFILE_DEFAULT,),
+    (dict_merge(LASER_PROFILE_DEFAULT, profile) for profile in LASER_PROFILES_DERIVED)
+))
+# fmt: on
+
+# /!\ "id" should always be written into a new laser profile
+LASER_PROFILE_IDENTIFIERS = tuple(pr["id"] for pr in LASER_PROFILES)
+
+LASER_PROFILE_MAP = dict(
+    zip(
+        LASER_PROFILE_IDENTIFIERS,
+        LASER_PROFILES,
+    )
+)
+
+
+class LaserCutterProfileManager(PrinterProfileManager):
 
     SETTINGS_PATH_PROFILE_DEFAULT_ID = ["lasercutterProfiles", "default"]
     SETTINGS_PATH_PROFILE_DEFAULT_PROFILE = ["lasercutterProfiles", "defaultProfile"]
     # SETTINGS_PATH_PROFILE_CURRENT_ID = ['lasercutterProfiles', 'current']
 
-    # old default dictionary for Mr Beam I
-    # default = dict(
-    # 	id = "_mrbeam_junior",
-    # 	name = "Mr Beam",
-    # 	model = "Junior",
-    # 	volume=dict(
-    # 		width = 217,
-    # 		depth = 298,
-    # 		height = 0,
-    # 		origin_offset_x = 1.1,
-    # 		origin_offset_y = 1.1,
-    # 	),
-    # 	zAxis = False,
-    # 	focus = False,
-    # 	glasses = True,
-    # 	axes=dict(
-    # 		x = dict(speed=5000, inverted=False),
-    # 		y = dict(speed=5000, inverted=False),
-    # 		z = dict(speed=1000, inverted=False)
-    # 	),
-    # 	start_method = None,
-    # 	grbl = dict(
-    # 		resetOnConnect = False,
-    # 	),
-    # )
+    default = LASER_PROFILE_DEFAULT
 
-    # we tried to switch to more up-to-date default profiles...
-    # but then more than just one profile had the same name as the default one
-    #    and that confused the whole system.... :-(
-    default = dict(
-        id="my_default",
-        name="Dummy Laser",
-        model="X",
-        axes=dict(
-            x=dict(
-                inverted=False, speed=5000, overshoot=1, homing_direction_positive=True
-            ),
-            y=dict(
-                inverted=False, speed=5000, overshoot=0, homing_direction_positive=True
-            ),
-            z=dict(
-                inverted=False, speed=1000, overshoot=0, homing_direction_positive=True
-            ),
-        ),
-        # False if we need to show focus tab
-        focus=True,
-        # if True, Mr Beam shows warning to put on safety glasses (MrBeamI)
-        glasses=False,
-        # if set to onebutton, MR Beam 2 One Button to start laser is activated.
-        start_method="onebutton",
-        laser=dict(
-            max_temperature=55.0,
-            hysteresis_temperature=48.0,
-            cooling_duration=25,  # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
-            intensity_factor=13,  # to get from 100% intesity to GCODE-intensity of 1300
-            intensity_limit=1300,  # Limits intensity of ALL G-Code commands
-        ),
-        dust=dict(extraction_limit=0.70, auto_mode_time=60),
-        volume=dict(
-            # Grbl values $130 (x max travel) and $131 (y max travel) need to be set to:
-            # x | $130 (x max travel):  width + (2 * working_area_shift_x) + origin_offset_x
-            # y | $131 (y max travel):  depth + (2 * working_area_shift_y) + origin_offset_y
-            # While origin_offset_x = origin_offset_x = $27 (homing pull-off) + 0.1 !!
-            #
-            # Example: D-Series
-            #   has an working_area_shift_x of 7.0, so we have to add it left and right of working_area.
-            #   However, left working_area_shift_x is in negative coordinates.
-            #   So $130 (x max travel) will be 515.1, reaching
-            #       from -7.0: 0 - 7.0(working_area_shift_x)
-            #       till 508.1: 500(width) + 7.0(working_area_shift_x) + 1.1(origin_offset_x)
-            depth=390.0,  # Wrong terminology, should switch with height
-            height=0.0,
-            origin_offset_x=1.1,
-            origin_offset_y=1.1,
-            width=500.0,
-            working_area_shift_x=0.0,
-            working_area_shift_y=0.0,
-        ),
-        grbl=dict(
-            resetOnConnect=True,
-            # legacy ?
-            homing_debounce=1,
-            # GRBL auto update configuration
-            auto_update_file=None,
-            auto_update_version=None,
-            # versions=['0.9g_22270fa', '0.9g_20180223_61638c5'],
-            # GRBL settings that will get synced to GRBL
-            settings_count=33,
-            settings={
-                0: 10,  # step idle delay must be 255
-                1: 255,  # step idle delay, msec
-                2: 0,  # step port invert mask:00000000
-                3: 2,  # dir port invert mask:00000010
-                4: 0,  # step enable invert, bool
-                5: 0,  # limit pins invert, bool
-                6: 0,  # probe pin invert, bool
-                10: 31,  # status report mask:00011111
-                11: 0.020,  # junction deviation, mm
-                12: 0.002,  # arc tolerance, mm
-                13: 0,  # report inches, bool
-                14: 1,  # auto start, bool
-                20: 1,  # soft limits, bool
-                21: 0,  # hard limits, bool
-                22: 1,  # homing cycle, bool
-                23: 0,  # homing dir invert mask:00000000
-                24: 25.000,  # homing feed, mm/min
-                25: 2000.000,  # homing seek, mm/min
-                26: 100,  # homing debounce, msec
-                27: 1.000,  # homing pull-off, mm
-                40: 1,  # turn Laser mode on, bool
-                100: 100.000,  # x, step/mm
-                101: 100.000,  # y, step/mm
-                102: 100.000,  # z, step/mm
-                110: 5000.000,  # x max rate, mm/min
-                111: 5000.000,  # y max rate, mm/min
-                112: 5000.000,  # z max rate, mm/min
-                120: 700.000,  # x accel, mm/sec^2
-                121: 700.000,  # y accel, mm/sec^2
-                122: 100.000,  # z accel, mm/sec^2
-                130: 515.100,  # x max travel, mm       # !! C-Series: 501.1
-                131: 391.100,  # y max travel, mm
-                132: 40.000,  # z max travel, mm
-            },
-        ),
-        zAxis=False,
-        legacy=dict(
-            # 2C series only
-            # https: // github.com / mrbeam / MrBeamPlugin / issues / 211
-            job_done_home_position_x=None
-        ),
-    )
-
-    def __init__(self):
-        self._current = None
-        self.settings = settings()
-        self._folder = (
-            self.settings.getBaseFolder("printerProfiles") + "/lasercutterprofiles"
+    def __init__(self, profile_id=None):
+        _laser_cutter_profile_folder = (
+            settings().getBaseFolder("printerProfiles") + "/lasercutterprofiles"
         )
-        if not os.path.exists(self._folder):
-            os.makedirs(self._folder)
-        self._logger = mrb_logger("octoprint.plugins.mrbeam.profile")
+        if not os.path.exists(_laser_cutter_profile_folder):
+            os.makedirs(_laser_cutter_profile_folder)
+        PrinterProfileManager.__init__(self)
+        self._folder = _laser_cutter_profile_folder
+        self._logger = mrb_logger(__name__)
+        # HACK - select the default profile.
+        # See self.select() - waiting for upstream fix
+        self.select(profile_id or settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID))
 
+    def _migrate_old_default_profile(self):
+        # overwritten to prevent defautl OP migration.
+        pass
+
+    def _verify_default_available(self):
+        # Overloaded from OP because of printerProfiles path ``default_id`` and hard-coded profiles
+        default_id = settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID)
+        if default_id is None:
+            default_id = "_default"
+
+        if not self.exists(default_id):
+            # fmt: off
+            if not self.exists("_default"):
+                if default_id == "_default":
+                    self._logger.error("Profile _default does not exist, it should be part of the defined profiles.")
+                else:
+                    self._logger.error("Selected default profile {} and _default does not exist, _default should be defined in the hard coded profiles.".format(default_id))
+            else:
+                self._logger.error("Selected default profile {} does not exists, resetting to _default".format(default_id))
+                settings().set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, "_default")
+                settings().save()
+            # fmt: on
+            default_id = "_default"
+
+        profile = self.get(default_id)
+        if profile is None:
+            # fmt: off
+            self._logger.error("Selected default profile {} is invalid, resetting to default values".format(default_id))
+            # fmt: on
+            profile = copy.deepcopy(self.__class__.default)
+            profile["id"] = default_id
+            self.save(self.__class__.default, allow_overwrite=True, make_default=True)
+
+    # @logme(True)
+    # fmt: off
     def select(self, identifier):
         """
-        Selects a profile non-persistently
-        :param identifier:
-        :return:
+        Overloaded because OctoPrint uses a global ``PrinterProfileManager``,
+        which on line 612 of ``OctoPrint/src/octoprint/server/__init__.py``
+        selects the ``_default`` printer profile name
+        FIXME - In upstream : create a hook that allows to change ``PrinterProfileManager``
         """
-        if identifier is None or not self.exists(identifier):
-            self._current = self.get_default()
-            return False
-        else:
-            self._current = self.get(identifier)
+        _current_id = dict_get(self._current, ["id",])
+        # self._logger.warning("ID %s, CURR %s", identifier, _current_id)
+        if (identifier in [None, "_default"]) and self.exists(_current_id):
+            self._logger.warning("Not selecting the _default profile because of OP default behaviour. See ``octoprint_mrbeam.printing.profile.select()``.")
             return True
-
-    def deselect(self):
-        self._current = None
-
-    def get_all(self):
-        return self._load_all()
+        else:
+            return PrinterProfileManager.select(self, identifier)
+    # fmt: on
 
     def get(self, identifier):
+        """Extend the file based ``PrinterProfileManager.get`` with the few hardcoded ones we have."""
         try:
+            default = self._load_default()
             if identifier == "_default":
-                return self._load_default()
-            elif self.exists(identifier):
-                return self._load_from_path(self._get_profile_path(identifier))
+                return default
+            elif identifier in LASER_PROFILE_IDENTIFIERS:
+                file_based_result = PrinterProfileManager.get(self, identifier) or {}
+                # Update derivated profiles using the default profile.
+                hard_coded = dict_merge(default, LASER_PROFILE_MAP[identifier])
+                return dict_merge(hard_coded, file_based_result)
             else:
-                return None
+                return dict_merge(default, PrinterProfileManager.get(self, identifier))
         except InvalidProfileError:
             return None
 
     def remove(self, identifier):
-        if identifier == "_default":
+        # Overloaded from OP because of printerProfiles path (default_id)
+        if self._current is not None and self._current["id"] == identifier:
+            return False
+        elif settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID) == identifier:
             return False
         return self._remove_from_path(self._get_profile_path(identifier))
 
-    def save(self, profile, allow_overwrite=False, make_default=False):
-        """
-        Saves given profile to file.
-        :param profile:
-        :param allow_overwrite:
-        :param make_default:
-        :return:
-        """
-        if "id" in profile and profile["id"] != "":
-            identifier = profile["id"]
-        elif "name" in profile:
-            identifier = profile["name"]
-        else:
-            raise InvalidProfileError("profile must contain either id or name")
-
-        identifier = self._sanitize(identifier)
-        profile["id"] = identifier
-        profile = dict_clean(profile, self.__class__.default)
-
-        if identifier == "_default":
-            default_profile = dict_merge(self._load_default(), profile)
-            if not self._ensure_valid_profile(default_profile):
-                raise InvalidProfileError()
-
-            self.settings.set(
-                self.SETTINGS_PATH_PROFILE_DEFAULT_PROFILE,
-                default_profile,
-                defaults=dict(
-                    lasercutterprofiles=dict(defaultProfile=self.__class__.default)
-                ),
-            )
-            self.settings.save()
-        else:
-            self._save_to_path(
-                self._get_profile_path(identifier),
-                profile,
-                allow_overwrite=allow_overwrite,
-            )
-
-            if make_default:
-                self.set_default(identifier)
-
-        # Not sure if we want to sync to OP's PrinterprofileManager
-        # _mrbeam_plugin_implementation._printer_profile_manager.save(profile, allow_overwrite, make_default)
-
-        return self.get(identifier)
+    def is_default_unmodified(self):
+        # Overloaded because of settings path and barely used by OP
+        return True
 
     def get_default(self):
-        default = self.settings.get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID)
+        # Overloaded because of settings path
+        default = settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID)
         if default is not None and self.exists(default):
             profile = self.get(default)
             if profile is not None:
                 return profile
 
-        return self._load_default()
+        return copy.deepcopy(self.__class__.default)
 
     def set_default(self, identifier):
-        all_identifiers = self._load_all_identifiers().keys()
-        if identifier is not None and not identifier in all_identifiers:
+        # Overloaded because of settings path and extended identifiers
+        file_based_identifiers = self._load_all_identifiers().keys()
+        if identifier is not None and not (
+            identifier in file_based_identifiers
+            or identifier in LASER_PROFILE_IDENTIFIERS
+        ):
             return
 
-        self.settings.set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier, force=True)
-        self.settings.save()
+        settings().set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier, force=True)
+        settings().save()
 
+    # @logme(output=True)
     def get_current_or_default(self):
-        if self._current is not None:
-            return self._current
-        else:
-            return self.get_default()
-
-    def get_current(self):
-        return self._current
+        return PrinterProfileManager.get_current_or_default(self)
 
     def exists(self, identifier):
-        if identifier is None:
-            return False
-        elif identifier == "_mrbeam_junior" or identifier == "_mrbeam_senior":
+        if identifier in LASER_PROFILE_IDENTIFIERS:
             return True
         else:
-            path = self._get_profile_path(identifier)
-            return os.path.exists(path) and os.path.isfile(path)
+            return PrinterProfileManager.exists(self, identifier)
 
+    # @logme(output=True)
     def _load_all(self):
-        all_identifiers = self._load_all_identifiers()
-        results = dict()
-        for identifier, path in all_identifiers.items():
-            try:
-                profile = self._load_from_path(path)
-            except InvalidProfileError:
-                continue
-
-            if profile is None:
-                continue
-
-            results[identifier] = dict_merge(
-                self._load_default("_mrbeam_junior"), profile
-            )
-
-        results["_mrbeam_junior"] = self._load_default("_mrbeam_junior")
-        results["_mrbeam_senior"] = self._load_default("_mrbeam_senior")
-        return results
-
-    def _load_all_identifiers(self):
-        results = dict()
-        for entry in os.listdir(self._folder):
-            if (
-                entry.startswith(".")
-                or not entry.endswith(".profile")
-                or entry == "_default.profile"
-            ):
-                continue
-
-            path = os.path.join(self._folder, entry)
-            if not os.path.isfile(path):
-                continue
-
-            identifier = entry[: -len(".profile")]
-            results[identifier] = path
-        return results
-
-    def _load_from_path(self, path):
-        if not os.path.exists(path) or not os.path.isfile(path):
-            return None
-
-        import yaml
-
-        with open(path) as f:
-            profile = yaml.safe_load(f)
-        profile = self._ensure_valid_profile(profile)
-        if not profile:
-            self._logger.warn("Invalid profile: %s" % path)
-            raise InvalidProfileError()
-        profile = self._underlay_profile_with_default(profile)
-        return profile
-
-    def _save_to_path(self, path, profile, allow_overwrite=False):
-        validated_profile = self._ensure_valid_profile(profile)
-        if not validated_profile:
-            raise InvalidProfileError()
-
-        if os.path.exists(path) and not allow_overwrite:
-            raise SaveError(
-                "Profile %s already exists and not allowed to overwrite" % profile["id"]
-            )
-
-        import yaml
-
-        with open(path, "wb") as f:
-            try:
-                yaml.safe_dump(
-                    profile,
-                    f,
-                    default_flow_style=False,
-                    indent="  ",
-                    allow_unicode=True,
-                )
-            except Exception as e:
-                raise SaveError(
-                    "Cannot save profile %s: %s" % (profile["id"], e.message)
-                )
-
-    def _remove_from_path(self, path):
-        try:
-            os.remove(path)
-            return True
-        except:
-            return False
+        """Extend the file based ``PrinterProfileManager._load_all`` with the few hardcoded ones we have."""
+        file_based_profiles = PrinterProfileManager._load_all(self)
+        return dict_merge(LASER_PROFILE_MAP, file_based_profiles)
 
     def _load_default(self, defaultModel=None):
-        default = copy.deepcopy(self.__class__.default)
-        if defaultModel is not None and defaultModel == "_mrbeam_senior":
-            default["volume"]["width"] *= 2
-            default["volume"]["depth"] *= 2
-            default["model"] = "Senior"
-            default["id"] = "_mrbeam_senior"
-
+        # Overloaded because of settings path
+        default = copy.deepcopy(LASER_PROFILE_DEFAULT)
         profile = self._ensure_valid_profile(default)
         if not profile:
             self._logger.warn("Invalid default profile after applying overrides")
             raise InvalidProfileError()
         return profile
 
-    def _get_profile_path(self, identifier):
-        return os.path.join(self._folder, "%s.profile" % identifier)
-
-    def _sanitize(self, name):
-        if name is None:
-            return None
-
-        if "/" in name or "\\" in name:
-            raise ValueError("name must not contain / or \\")
-
-        import string
-
-        valid_chars = "-_.() {ascii}{digits}".format(
-            ascii=string.ascii_letters, digits=string.digits
-        )
-        sanitized_name = "".join(c for c in name if c in valid_chars)
-        sanitized_name = sanitized_name.replace(" ", "_")
-        return sanitized_name
-
     def _ensure_valid_profile(self, profile):
-        # # ensure all keys are present
-        # if not dict_contains_keys(self.default, profile):
-        # 	return False
+        # Ensuring that all keys are present is the default behaviour of the OP ``PrinterProfileManager``
+        # This ``LaserCutterProfileManager`` can use partially declared profiles, as they are
+        # completed using the default profile.
 
         # conversion helper
         def convert_value(profile, path, converter):
@@ -500,139 +305,29 @@ class LaserCutterProfileManager(object):
 
         return profile
 
-    def _underlay_profile_with_default(self, profile):
-        return update(self._load_default(), profile)
+    # ~ Extra functionality
 
+    # @logme(output=True)
+    def converted_profiles(self):
+        ret = {}
 
-def update(d, u):
-    for k, v in u.iteritems():
-        if isinstance(v, collections.Mapping):
-            r = update(d.get(k, {}), v)
-            d[k] = r
-        else:
-            d[k] = u[k]
-    return d
+        default = self.get_default()["id"]
+        current = self.get_current_or_default()["id"]
+        for identifier, profile in self.get_all().items():
+            ret[identifier] = copy.deepcopy(profile)
+            ret[identifier]["default"] = profile["id"] == default
+            ret[identifier]["current"] = profile["id"] == current
+
+        return ret
 
 
 class Profile(object):
-    regex_extruder_offset = re.compile("extruder_offset_([xy])(\d)")
-    regex_filament_diameter = re.compile("filament_diameter(\d?)")
-    regex_print_temperature = re.compile("print_temperature(\d?)")
-    regex_strip_comments = re.compile(";.*$", flags=re.MULTILINE)
+    def __init__(self, profile):
+        self.profile = profile
 
-    @classmethod
-    def from_svgtogcode_ini(cls, path):
-        import os
-
-        if not os.path.exists(path) or not os.path.isfile(path):
-            return None
-
-        import ConfigParser
-
-        config = ConfigParser.ConfigParser()
-        try:
-            config.read(path)
-        except:
-            return None
-
-        arrayified_options = [
-            "print_temperature",
-            "filament_diameter",
-            "start.gcode",
-            "end.gcode",
-        ]
-        translated_options = dict(
-            inset0_speed="outer_shell_speed",
-            insetx_speed="inner_shell_speed",
-            layer0_width_factor="first_layer_width_factor",
-            simple_mode="follow_surface",
-        )
-        translated_options["start.gcode"] = "start_gcode"
-        translated_options["end.gcode"] = "end_gcode"
-        value_conversions = dict(
-            platform_adhesion={
-                "None": PlatformAdhesionTypes.NONE,
-                "Brim": PlatformAdhesionTypes.BRIM,
-                "Raft": PlatformAdhesionTypes.RAFT,
-            },
-            support={
-                "None": SupportLocationTypes.NONE,
-                "Touching buildplate": SupportLocationTypes.TOUCHING_BUILDPLATE,
-                "Everywhere": SupportLocationTypes.EVERYWHERE,
-            },
-            support_type={"Lines": SupportTypes.LINES, "Grid": SupportTypes.GRID},
-            support_dual_extrusion={
-                "Both": SupportDualTypes.BOTH,
-                "First extruder": SupportDualTypes.FIRST,
-                "Second extruder": SupportDualTypes.SECOND,
-            },
-        )
-
-        result = dict()
-        for section in config.sections():
-            if not section in ("profile", "alterations"):
-                continue
-
-            for option in config.options(section):
-                ignored = False
-                key = option
-
-                # try to fetch the value in the correct type
-                try:
-                    value = config.getboolean(section, option)
-                except:
-                    # no boolean, try int
-                    try:
-                        value = config.getint(section, option)
-                    except:
-                        # no int, try float
-                        try:
-                            value = config.getfloat(section, option)
-                        except:
-                            # no float, use str
-                            value = config.get(section, option)
-                index = None
-
-                for opt in arrayified_options:
-                    if key.startswith(opt):
-                        if key == opt:
-                            index = 0
-                        else:
-                            try:
-                                # try to convert the target index, e.g. print_temperature2 => print_temperature[1]
-                                index = int(key[len(opt) :]) - 1
-                            except ValueError:
-                                # ignore entries for which that fails
-                                ignored = True
-                        key = opt
-                        break
-                if ignored:
-                    continue
-
-                if key in translated_options:
-                    # if the key has to be translated to a new value, do that now
-                    key = translated_options[key]
-
-                if key in value_conversions and value in value_conversions[key]:
-                    value = value_conversions[key][value]
-
-                if index is not None:
-                    # if we have an array to fill, make sure the target array exists and has the right size
-                    if not key in result:
-                        result[key] = []
-                    if len(result[key]) <= index:
-                        for n in xrange(index - len(result[key]) + 1):
-                            result[key].append(None)
-                    result[key][index] = value
-                else:
-                    # just set the value if there's no array to fill
-                    result[key] = value
-
-        # merge it with our default settings, the imported profile settings taking precedence
-        return cls.merge_profile(result)
-
-    @classmethod
-    def merge_profile(cls, profile, overrides=None):
+    # fmt: off
+    @staticmethod
+    def merge_profile(profile, overrides=None):
         import copy
 
         result = copy.deepcopy(defaults)
@@ -656,9 +351,6 @@ class Profile(object):
             elif profile_value is not None:
                 result[k] = profile_value
         return result
-
-    def __init__(self, profile):
-        self.profile = profile
 
     def get(self, key):
         if key in self.profile:
@@ -710,12 +402,6 @@ class Profile(object):
         else:
             return value == True
 
-    def get_microns(self, key, default=None):
-        value = self.get_float(key, default=None)
-        if value is None:
-            return default
-        return int(value * 1000)
-
     def convert_to_engine(self):
 
         settings = {
@@ -730,32 +416,6 @@ class Profile(object):
             "--contrast": self.get_float("img_contrast"),
             "--sharpening": self.get_float("img_sharpening"),
             "--img-dithering": self.get_boolean("img_dithering"),
-        }
-
-        return settings
-
-    def convert_to_engine2(self):
-        # engrave is mirrored fill area, needs to be removed in next iteration
-        settings = {
-            "engraving_laser_speed": self.get_int("speed"),
-            "laser_intensity": self.get_int("intensity"),
-            "beam_diameter": self.get_float("beam_diameter"),
-            "intensity_white": self.get_int("intensity_white"),
-            "intensity_black": self.get_int("intensity_black"),
-            "speed_white": self.get_int("feedrate_white"),
-            "speed_black": self.get_int("feedrate_black"),
-            "pierce_time": self.get_float("pierce_time"),
-            "contrast": self.get_float("img_contrast"),
-            "sharpening": self.get_float("img_sharpening"),
-            "dithering": self.get_boolean("img_dithering"),
-            "fill_areas": self.get_boolean("fill_areas"),
-            "engrave": self.get_boolean("fill_areas"),
-            "set_passes": self.get_int("set_passes"),
-            "cut_outlines": self.get_boolean("cut_outlines"),
-            "cross_fill": self.get_boolean("cross_fill"),
-            "fill_angle": self.get_float("fill_angle"),
-            "fill_spacing": self.get_float("fill_spacing"),
-            "svgDPI": self.get_float("svgDPI"),
         }
 
         return settings

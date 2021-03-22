@@ -38,7 +38,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         // 2. replace them and remember the referenced source elements
         for (var i = 0; i < elements_to_replace.length; i++) {
             var e = elements_to_replace[i];
-            var src = e._replace_with_src();
+            var src = e._replace_with_src(i);
             // src might be undefined in some error cases.
             // I intentionally let it crash here to "fail fast" since the user gets an error message.
             used_source_elements.push(src);
@@ -65,7 +65,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
      *
      * @returns {url} : url of the used src element
      */
-    Element.prototype._replace_with_src = function () {
+    Element.prototype._replace_with_src = function (counter) {
         var elem = this;
         if (elem.type !== "use") {
             return;
@@ -90,16 +90,22 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
         if (src_elem) {
             // copy attributes
-            var attr = elem.attr();
-            var new_attrs = src_elem.attr();
+            var elem_attr = elem.attr();
+            var src_attrs = src_elem.attr();
+
+            // make sure our clone has a different id.
+            // if use elem has an id it will override the src id anyway
+            if (src_attrs["id"] !== undefined) {
+                src_attrs["id"] = src_attrs["id"] + "_unref_" + counter;
+            }
 
             // combine transformations / important placement attributes
-            var x_off = attr.x || 0;
-            var y_off = attr.y || 0;
+            var x_off = elem_attr.x || 0;
+            var y_off = elem_attr.y || 0;
             var use_tag_translate_M = Snap.matrix(1, 0, 0, 1, x_off, y_off);
             var transform_M = elem.transform().localMatrix;
             var src_transform_M = Snap.matrix(1, 0, 0, 1, 0, 0); // workaround: assume, in <defs> are mostly no transforms.
-            //			var src_transform_M = src_elem.transform().localMatrix; // raises exception? ... parse attr('transform') instead?
+            //			var src_transform_M = src_elem.transform().localMatrix; // raises exception? ... parse elem_attr('transform') instead?
             var combined_M = transform_M.multLeft(
                 src_transform_M.multLeft(use_tag_translate_M)
             );
@@ -138,7 +144,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             ];
             for (var i = 0; i < attribute_keys.length; i++) {
                 var key = attribute_keys[i];
-                if (attr[key]) new_attrs[key] = attr[key];
+                if (elem_attr[key]) {
+                    src_attrs[key] = elem_attr[key];
+                }
             }
 
             var duplicate;
@@ -152,7 +160,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 duplicate = src_elem.clone();
             }
 
-            duplicate.attr(new_attrs);
+            duplicate.attr(src_attrs);
             duplicate.attr("transform", new_transform);
             elem.before(duplicate);
             elem.remove();

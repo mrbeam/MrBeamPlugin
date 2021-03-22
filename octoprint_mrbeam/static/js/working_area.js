@@ -1,6 +1,7 @@
-/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper */
+/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper, mrbeam, QuickShapeHelper */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
+MRBEAM_WORKINGAREA_PAN_MM = [0, 0]; // global available in this viewmodel and in snap plugins at the same time.
 
 // Render debugging utilities
 MRBEAM_DEBUG_RENDERING = false; // setting to true enables lots of visual debug tools. Can be changed during runtime.
@@ -121,6 +122,8 @@ $(function () {
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
         self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
+        self.lastQuickTextCircle = 0;
+        self.lastQuickTextClockwise = true;
 
         self.zoom = ko.observable(1.0);
         //		self.zoomPercX = ko.observable(0);
@@ -133,6 +136,7 @@ $(function () {
             var h = self.workingAreaHeightMM() * z;
             var x = self.zoomOffX();
             var y = self.zoomOffY();
+            MRBEAM_WORKINGAREA_PAN_MM = [x, y];
             return [x, y, w, h].join(" ");
         });
 
@@ -141,7 +145,7 @@ $(function () {
             var newZ = oldZ + delta;
             newZ = Math.min(Math.max(newZ, 0.25), 1);
             if (newZ !== self.zoom()) {
-                if (newZ == 1) {
+                if (newZ === 1) {
                     self.set_zoom_offX(0);
                     self.set_zoom_offY(0);
                 } else {
@@ -250,15 +254,15 @@ $(function () {
             snap.selectAll("#userContent>*:not(defs)").remove();
             snap.selectAll("#placedGcodes>*").remove();
             snap.selectAll(
-                "rect:not(#coordGrid):not(#highlightMarker)"
-            ).remove();
+                "rect:not(#coordGrid):not(#highlightMarker):not(#translateHandle)"
+            ).remove(); // TODO ? what for?
             self.placedDesigns([]);
         };
 
         self.getUsedColors = function (elem) {
             elem = !elem
                 ? snap.select("#userContent")
-                : typeof elem == "string"
+                : typeof elem === "string"
                 ? snap.select(elem)
                 : elem;
             return self._getColorsOfSelector(".vector_outline", "stroke", elem);
@@ -267,7 +271,7 @@ $(function () {
         self.hasEngraveOnlyComponents = function (elem) {
             elem = !elem
                 ? snap.select("#userContent")
-                : typeof elem == "string"
+                : typeof elem === "string"
                 ? snap.select(elem)
                 : elem;
             return (
@@ -358,6 +362,45 @@ $(function () {
             }
         };
 
+        /**
+         * All this logging is for debugging.
+         * In version 0.7.11 (beta) some users complained that they were not able to home
+         * @param source
+         */
+        self.performHomingCycle = function (source) {
+            let stateString = self.state ? self.state.stateString() : null;
+            OctoPrint.printer
+                .home(["x", "y"])
+                .done(function () {
+                    console.log(
+                        "Homing call OK (source: " +
+                            source +
+                            ", stateString: " +
+                            stateString +
+                            ")"
+                    );
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    setTimeout(function () {
+                        let stateStringNew = self.state
+                            ? self.state.stateString()
+                            : null;
+                        console.error(
+                            "Homing call ERROR (source: " +
+                                source +
+                                ", stateString: " +
+                                stateString +
+                                ", stateStringNew: " +
+                                stateStringNew +
+                                "): " +
+                                jqXHR.status +
+                                " " +
+                                errorThrown
+                        );
+                    }, 500);
+                });
+        };
+
         self.crosshairX = function () {
             var pos = self.state.currentPos();
             if (pos !== undefined) {
@@ -424,7 +467,9 @@ $(function () {
             if (
                 !(
                     elem.data &&
-                    typeof elem.data("ftBeforeTransformCallbacks") === "object"
+                    typeof elem.data(
+                        snap.mbtransform.BEFORE_TRANSFORM_CALLBACKS
+                    ) === "object"
                 )
             ) {
                 console.warn(
@@ -629,11 +674,11 @@ $(function () {
                 analyticsData.file_type = "svg";
                 analyticsData.svg_generator_info = generator_info;
                 analyticsData.svg_generator_info.generator =
-                    analyticsData.svg_generator_info.generator == "unknown"
+                    analyticsData.svg_generator_info.generator === "unknown"
                         ? null
                         : analyticsData.svg_generator_info.generator;
                 analyticsData.svg_generator_info.version =
-                    analyticsData.svg_generator_info.version == "unknown"
+                    analyticsData.svg_generator_info.version === "unknown"
                         ? null
                         : analyticsData.svg_generator_info.version;
                 analyticsData.duration_load = duration_load;
@@ -783,12 +828,12 @@ $(function () {
                         analyticsData.node_types[allNodes[i].type] = 0;
                     }
                     analyticsData.node_types[allNodes[i].type]++;
-                    if (allNodes[i].type == "path") {
+                    if (allNodes[i].type === "path") {
                         analyticsData.path_char_lengths.push(
                             allNodes[i].attr("d").length
                         );
                     }
-                    if (allNodes[i].type == "text") {
+                    if (allNodes[i].type === "text") {
                         let fontFam = allNodes[i].node.style.fontFamily;
                         fontFam = fontFam
                             ? fontFam.replace(/"/g, "").replace(/'/g, "")
@@ -899,17 +944,21 @@ $(function () {
                     var ignoredElements = newSvg.bake(
                         self._bake_progress_callback
                     ); // remove transforms
-                    for (var i = 0; i < ignoredElements.length; i++) {
-                        if (
-                            !(
-                                ignoredElements[i] in
-                                analyticsData.ignored_elements
+                    if (!analyticsData._skip) {
+                        for (var i = 0; i < ignoredElements.length; i++) {
+                            if (
+                                !(
+                                    ignoredElements[i] in
+                                    analyticsData.ignored_elements
+                                )
                             )
-                        )
+                                analyticsData.ignored_elements[
+                                    ignoredElements[i]
+                                ] = 0;
                             analyticsData.ignored_elements[
                                 ignoredElements[i]
-                            ] = 0;
-                        analyticsData.ignored_elements[ignoredElements[i]]++;
+                            ]++;
+                        }
                     }
                 }
                 newSvg
@@ -934,7 +983,7 @@ $(function () {
                 });
 
                 snap.select("#userContent").append(newSvg);
-                self._makeItTransformable(snap.select("#" + id)); // after placement ids have changed => select freshly placed fragment via id.
+                self._addClickAndHoverHandlers(snap.select("#" + id), fileObj); // after placement ids have changed => select freshly placed fragment via id.
 
                 return id;
             } catch (e) {
@@ -1163,12 +1212,16 @@ $(function () {
         };
 
         self.highlightDesign = function (data) {
-            var svgEl = $("#" + data.previewId);
+            const svgEl = $("#" + data.previewId);
             svgEl.addClass("designHighlight");
+            const fileEl = $("#" + data.id);
+            fileEl.addClass("designHighlight");
         };
         self.removeHighlight = function (data) {
-            var svgEl = $("#" + data.previewId);
+            const svgEl = $("#" + data.previewId);
             svgEl.removeClass("designHighlight");
+            const fileEl = $("#" + data.id);
+            fileEl.removeClass("designHighlight");
         };
 
         self.splitSVG = function (elem, event, method) {
@@ -1218,7 +1271,7 @@ $(function () {
                     const previewId = self.generateUniqueId(id, file);
                     let fragment = split_result.parts[i];
                     fragment.clean_gc();
-                    fragment.attr({ id: previewId });
+                    fragment.attr({ id: previewId, "mb:id": previewId });
 
                     file.id = id; // list entry id
                     file.previewId = previewId;
@@ -1231,7 +1284,10 @@ $(function () {
                         fragment,
                         previewId,
                         elem.origin,
-                        ""
+                        "",
+                        { showTransformHandles: false, embedGCode: false },
+                        { _skip: true },
+                        file
                     );
                     self._listPlacedItem(file);
                 }
@@ -1303,12 +1359,22 @@ $(function () {
                 });
             }
 
+            if (newSvg.attr("class").includes("userText")) {
+                const newCurvePathId = previewId + "_baselinepath";
+                let curvePathId = srcElem.select("textPath").attr("href");
+                let newCurvePath = snap.select(curvePathId).clone();
+                newCurvePath.attr("id", newCurvePathId);
+                newSvg.select("textPath").attr("href", `#${newCurvePathId}`);
+            }
+
             // TODO use self._prepareAndInsertSVG()
+            // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
+
             snap.select("#userContent").append(newSvg);
             self.placeSmart(newSvg);
             self.removeHighlight(newSvg);
             self.removeHighlight(file);
-            self._makeItTransformable(newSvg);
+            self._addClickAndHoverHandlers(newSvg, file);
             self.check_sizes_and_placements();
 
             self._listPlacedItem(file);
@@ -1366,17 +1432,30 @@ $(function () {
             elem.transform(elemCTM);
         };
 
-        self._makeItTransformable = function (fragment) {
-            fragment.transformable();
-            fragment.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-            fragment.ftRegisterBeforeTransformCallback(function () {
+        self._addClickAndHoverHandlers = function (fragment, fileObj) {
+            // TODO check why called twice on add?
+            //			console.log("clickhandlers, caller", self._addClickAndHoverHandlers.caller);
+            // add hover handler to highlight design and list entry
+            fragment.unmouseover();
+            fragment.mouseover(function () {
+                self.highlightDesign(fileObj);
+            });
+            fragment.unmouseout();
+            fragment.mouseout(function () {
+                self.removeHighlight(fileObj);
+            });
+
+            // adds onclick handler
+            fragment.transformable(self._updateTransformationButtons); // onclickCallback
+            fragment.mbtRegisterOnTransformCallback(self.svgTransformUpdate);
+            fragment.mbtRegisterBeforeTransformCallback(function () {
                 fragment.clean_gc();
             });
-            fragment.ftRegisterAfterTransformCallback(function () {
+            fragment.mbtRegisterAfterTransformCallback(function () {
                 var mb_meta = self._set_mb_attributes(fragment);
             });
             setTimeout(function () {
-                fragment.ftReportTransformation();
+                fragment.mbtOnTransform();
             }, 200);
         };
 
@@ -1388,9 +1467,18 @@ $(function () {
             if (typeof previewId === "object" && previewId.previewId) {
                 previewId = previewId.previewId;
             }
-            var el = snap.select("#" + previewId);
-            if (el) {
-                el.ftToggleHandles();
+            snap.mbtransform.toggleElement("#" + previewId);
+            self._updateTransformationButtons();
+        };
+
+        self._updateTransformationButtons = function () {
+            // TODO: call this on direct click on design
+            $("#wa_filelist .entry").removeClass("mbtSelected");
+            const items = snap.mbtransform.getSelection();
+            for (var i = 0; i < items.length; i++) {
+                const design = items[i];
+                const file = self._getFileObjectForSvg(design);
+                $("#" + file.id).addClass("mbtSelected");
             }
         };
 
@@ -1403,112 +1491,233 @@ $(function () {
             if (typeof previewId === "object" && previewId.previewId) {
                 previewId = previewId.previewId;
             }
-            var el = snap.select("#" + previewId);
-            if (el) {
-                if (show) {
-                    el.ftCreateHandles();
-                } else {
-                    el.ftRemoveHandles();
-                }
+            if (show) {
+                snap.mbtransform.activate("#" + previewId);
+            } else {
+                snap.mbtransform.deactivate();
             }
+            self._updateTransformationButtons();
+        };
+
+        self.transformReset = function (previewId) {
+            if (typeof previewId === "object" && previewId.previewId) {
+                previewId = previewId.previewId;
+            }
+            self.abortFreeTransforms();
+            const selector = `#${previewId}`;
+            snap.mbtransform.reset_transform(selector);
+            self.svgTransformUpdate(snap.select(selector));
         };
 
         self.svgTransformUpdate = function (svg) {
-            var globalScale = self.scaleMatrix().a;
-            //            var transform = svg.transform();
-            var bbox = svg.getBBox();
-            var tx = bbox.x * globalScale;
-            var ty = self.workingAreaHeightMM() - bbox.y2 * globalScale;
-            var horizontal = (bbox.x2 - bbox.x) * globalScale;
-            var vertical = (bbox.y2 - bbox.y) * globalScale;
-            var rot = svg.ftGetRotation();
-            var id = svg.attr("id");
-            var label_id = id.substr(0, id.indexOf("-"));
+            const iM = svg.data(snap.mbtransform.INITIAL_MATRIX);
+            const cM = svg.transform().localMatrix;
+            const isTransformed =
+                iM !== undefined &&
+                (iM.a !== cM.a ||
+                    iM.b !== cM.b ||
+                    iM.c !== cM.c ||
+                    iM.d !== cM.d ||
+                    iM.e !== cM.e ||
+                    iM.f !== cM.f);
+            const transform = cM.split();
+            const rot = ((transform.rotate + 180 + 720) % 360) - 180; // ensures -180° to 180°
+            //			const shear = transform.shear; // not in use yet
+
+            const globalScale = self.scaleMatrix().a;
+            const bbox = svg.getBBox();
+            const tx = bbox.x * globalScale;
+            const ty = self.workingAreaHeightMM() - bbox.y2 * globalScale;
+            const scalex = Math.abs(transform.scalex);
+            const scaley = Math.abs(transform.scaley);
+            const isMirrored = transform.scalex * transform.scaley < 0;
+            //			const horizontal = bbox.width * globalScale;
+            //			const vertical = bbox.height * globalScale;
+            const horizontal = bbox.width * Math.sign(scalex) * globalScale;
+            const vertical = bbox.height * Math.sign(scaley) * globalScale;
+
+            const id = svg.attr("id");
+            const label_id = id.substr(0, id.indexOf("-"));
+            $("#" + label_id).toggleClass("isTransformed", isTransformed);
+            $("#" + label_id).toggleClass("isMirrored", isMirrored);
             $("#" + label_id + " .translation").val(
-                tx.toFixed(1) + ", " + ty.toFixed(1)
+                `${tx.toFixed(1)}, ${ty.toFixed(1)}`
             );
-            $("#" + label_id + " .horizontal").val(horizontal.toFixed() + "mm");
-            $("#" + label_id + " .vertical").val(vertical.toFixed() + "mm");
-            $("#" + label_id + " .rotation").val(rot.toFixed(1) + "°");
-            var scale = svg.ftGetScale();
-            // var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
-            // $('#'+label_id+' .scale').val((scale/dpiscale*100).toFixed(1) + '%');
-            $("#" + label_id + " .scale").val((scale * 100).toFixed(1) + "%");
+            $("#" + label_id + " .horizontal").val(
+                `${horizontal.toFixed(1)} mm`
+            );
+            $("#" + label_id + " .vertical").val(`${vertical.toFixed(1)} mm`);
+            $("#" + label_id + " .rotation").val(`${rot.toFixed(1)} °`);
+            $("#" + label_id + " .horizontal_percent").val(
+                `${(scalex * 100).toFixed(1)} %`
+            );
+            $("#" + label_id + " .vertical_percent").val(
+                `${(scaley * 100).toFixed(1)} %`
+            );
             self.check_sizes_and_placements();
         };
 
         self.svgManualTranslate = function (data, event) {
-            if (event.keyCode === 13 || event.type === "blur") {
-                var svg = snap.select("#" + data.previewId);
-                var globalScale = self.scaleMatrix().a;
-                var nt = WorkingAreaHelper.splitStringToTwoValues(
+            if (
+                event.keyCode === 13 ||
+                event.type === "blur" ||
+                event.keyCode === 38 ||
+                event.keyCode === 40
+            ) {
+                const svg = snap.select("#" + data.previewId);
+                const nt = WorkingAreaHelper.splitStringToTwoValues(
                     event.target.value
                 );
                 if (nt) {
-                    var ntx = nt[0] / globalScale;
-                    var nty =
+                    const globalScale = self.scaleMatrix().a;
+                    self.abortFreeTransforms();
+                    let ntx = nt[0] / globalScale;
+                    let nty =
                         (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
-                    self.abortFreeTransforms();
-                    svg.ftManualTransform({
-                        tx: ntx,
-                        ty: nty,
-                        diffType: "absolute",
-                    });
+                    snap.mbtransform.manualTransform(svg, { tx: ntx, ty: nty }); // absolute translation
                     self.check_sizes_and_placements();
                 } else {
                     // reset to previous value
-                    svg.ftUpdateTransform();
-                    svg.ftAfterTransform();
+                    svg.mbtOnTransform();
+                    svg.mbtAfterTransform();
                 }
             }
         };
         self.svgManualRotate = function (data, event) {
-            if (event.keyCode === 13 || event.type === "blur") {
+            if (
+                event.keyCode === 13 ||
+                event.type === "blur" ||
+                event.keyCode === 38 ||
+                event.keyCode === 40
+            ) {
                 self.abortFreeTransforms();
                 var svg = snap.select("#" + data.previewId);
-                var newRotate = parseFloat(event.target.value);
-                svg.ftManualTransform({ angle: newRotate });
+                var newRotate = WorkingAreaHelper.parseFloatTolerant(
+                    event.target.value
+                );
+                const oldRotation = svg.transform().localMatrix.split().rotate;
+                snap.mbtransform.manualTransform(svg, {
+                    angle: newRotate - oldRotation,
+                }); // relative angle
                 self.check_sizes_and_placements();
             }
         };
-        self.svgManualScale = function (data, event) {
-            if (event.keyCode === 13 || event.type === "blur") {
+        self.svgManualMirror = function (data, event) {
+            if (event.type === "click") {
                 self.abortFreeTransforms();
-                var svg = snap.select("#" + data.previewId);
-                var newScale = parseFloat(event.target.value) / 100.0;
-                svg.ftManualTransform({ scale: newScale });
+                const svg = snap.select("#" + data.previewId);
+                snap.mbtransform.manualTransform(svg, {
+                    scalex: -1,
+                    proportional: false,
+                }); // relative Scale
                 self.check_sizes_and_placements();
             }
         };
         self.svgManualWidth = function (data, event) {
-            if (event.keyCode === 13 || event.type === "blur") {
+            if (
+                event.keyCode === 13 ||
+                event.type === "blur" ||
+                event.keyCode === 38 ||
+                event.keyCode === 40
+            ) {
                 self.abortFreeTransforms();
-                var svg = snap.select("#" + data.previewId);
-                var desiredW = parseFloat(event.target.value);
-                var currentW = svg.getBBox().w;
-                var globalScale = self.scaleMatrix().a;
-                var newRelativeScale = desiredW / globalScale / currentW;
-                var newScale = newRelativeScale * svg.ftGetScale();
-                svg.ftManualTransform({ scale: newScale });
-                self.check_sizes_and_placements();
+                const svg = snap.select(`#${data.previewId}`);
+                const isProp = $(`#${data.id} .file_list_entry`).hasClass(
+                    "scale_proportional"
+                );
+                const isMirrored = $(`#${data.id}`).hasClass("isMirrored");
+                const value = WorkingAreaHelper.parseFloatTolerant(
+                    event.target.value
+                );
+                const lm = svg.transform().localMatrix;
+                const currentSx = Math.sqrt(lm.a * lm.a + lm.b * lm.b); // rotation independent scalex factor
+                const currentWidth = svg.getBBox().width;
+                if (value !== 0) {
+                    if (event.target.classList.contains("unit_mm")) {
+                        snap.mbtransform.manualTransform(svg, {
+                            width: value,
+                            proportional: isProp,
+                        }); // absolute width
+                    } else if (
+                        event.target.classList.contains("unit_percent")
+                    ) {
+                        const newWidth =
+                            ((currentWidth / Math.abs(currentSx)) * value) /
+                            100.0;
+                        if (Math.abs(newWidth) < 0.1)
+                            newWidth = Math.sign(newWidth) * 0.1; // avoid NaN for too small values
+                        snap.mbtransform.manualTransform(svg, {
+                            width: newWidth,
+                            proportional: isProp,
+                        }); // absolute width
+                    }
+                    self.check_sizes_and_placements();
+                } else {
+                    console.warn("Width can't be 0"); // TODO: reset transform?
+                }
             }
+            return false;
         };
         self.svgManualHeight = function (data, event) {
-            if (event.keyCode === 13 || event.type === "blur") {
+            if (
+                event.keyCode === 13 ||
+                event.type === "blur" ||
+                event.keyCode === 38 ||
+                event.keyCode === 40
+            ) {
                 self.abortFreeTransforms();
-                var svg = snap.select("#" + data.previewId);
-                var desiredH = parseFloat(event.target.value);
-                var currentH = svg.getBBox().h;
-                var globalScale = self.scaleMatrix().a;
-                var newRelativeScale = desiredH / globalScale / currentH;
-                var newScale = newRelativeScale * svg.ftGetScale();
-                svg.ftManualTransform({ scale: newScale });
-                self.check_sizes_and_placements();
+                const svg = snap.select("#" + data.previewId);
+                const isProp = $(`#${data.id} .file_list_entry`).hasClass(
+                    "scale_proportional"
+                );
+                const value = WorkingAreaHelper.parseFloatTolerant(
+                    event.target.value
+                );
+                const lm = svg.transform().localMatrix;
+                const currentSy = Math.sqrt(lm.c * lm.c + lm.d * lm.d); // rotation independent scaley factor
+                const currentHeight = svg.getBBox().height;
+                if (value !== 0) {
+                    if (event.target.classList.contains("unit_mm")) {
+                        snap.mbtransform.manualTransform(svg, {
+                            height: value,
+                            proportional: isProp,
+                        }); // absolute height
+                    } else if (
+                        event.target.classList.contains("unit_percent")
+                    ) {
+                        const newHeight =
+                            ((currentHeight / Math.abs(currentSy)) * value) /
+                            100.0;
+                        if (Math.abs(newHeight) < 0.1)
+                            newHeight = Math.sign(newHeight) * 0.1; // avoid NaN for too small values
+                        snap.mbtransform.manualTransform(svg, {
+                            height: newHeight,
+                            proportional: isProp,
+                        }); // relative scale
+                    }
+                    self.check_sizes_and_placements();
+                } else {
+                    console.warn("Height can't be 0"); // TODO: reset transform?
+                }
             }
         };
+
+        self.svgManualUnitToggle = function (data, event) {
+            $("#" + data.id).toggleClass("show_percent");
+        };
+        self.svgManualProportionalToggle = function (data, event) {
+            event.preventDefault();
+            $(`#${data.id} .file_list_entry`).toggleClass("scale_proportional");
+            //            $(event.target).toggleClass("scale_proportional");
+        };
         self.svgManualMultiply = function (data, event) {
-            if (event.keyCode === 13 || event.type === "blur") {
+            if (
+                event.keyCode === 13 ||
+                event.type === "blur" ||
+                event.keyCode === 38 ||
+                event.keyCode === 40
+            ) {
                 const colsRowsStr = event.target.value;
                 const result = self._svgMultiplyUpdate(data, colsRowsStr);
                 event.target.value = result;
@@ -1521,14 +1730,13 @@ $(function () {
             var cols = 1;
             var rows = 1;
             if (colsRowsStr !== undefined) {
-                var gridsize = colsRowsStr.split(/\D+/);
-                cols = gridsize[0] || 1;
-                rows = gridsize[1] || 1;
+                var gridsize = colsRowsStr.split(/[^0-9.]+/);
+                cols = Math.round(parseFloat(gridsize[0])) || 1;
+                rows = Math.round(parseFloat(gridsize[1])) || 1;
             }
             svg.grid(cols, rows, dist);
             var mb_meta = self._set_mb_attributes(svg);
-            svg.ftStoreInitialTransformMatrix();
-            svg.ftUpdateTransform();
+            svg.mbtOnTransform();
             self.check_sizes_and_placements();
             return cols + "×" + rows;
         };
@@ -1538,6 +1746,8 @@ $(function () {
                 event.type === "blur" ||
                 event.type === "keyUp"
             ) {
+                event.target.dataset.value = event.target.value; // updates tooltips
+
                 self.abortFreeTransforms();
                 var newContrast = $("#" + data.id + " .contrast").val(); // 0..2, 1 means no adjustment
                 var newBrightness = $("#" + data.id + " .brightness").val(); // -1..1, 0 means no adjustment
@@ -1561,6 +1771,7 @@ $(function () {
                 event.type === "blur" ||
                 event.type === "keyUp"
             ) {
+                event.target.dataset.value = event.target.value; // updates tooltips
                 self.abortFreeTransforms();
                 var newVal = $("#" + data.id + " .sharpen").val(); // 0..10, 0 means no adjustment
                 var sharpenVal = parseFloat(newVal);
@@ -1795,22 +2006,24 @@ $(function () {
                     id: previewId,
                     "mb:id": self._normalize_mb_id(previewId),
                     class: "userIMG",
-                    "mb:origin": origin,
+                    "mb:origin": url,
                 });
                 if (textMode) {
                     imgWrapper.attr("style", "filter: url(#scan_text_mode)");
                 }
-
-                imgWrapper.append(newImg);
-                // TODO use self._prepareAndInsertSVG()
-                snap.select("#userContent").append(imgWrapper);
-                self._makeItTransformable(imgWrapper);
 
                 file.id = id;
                 file.previewId = previewId;
                 file.url = url;
                 file.subtype = "bitmap";
                 self._listPlacedItem(file);
+
+                imgWrapper.append(newImg);
+                // TODO use self._prepareAndInsertSVG()
+                // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
+
+                snap.select("#userContent").append(imgWrapper);
+                self._addClickAndHoverHandlers(imgWrapper, file);
 
                 // analytics
                 let analyticsData = {
@@ -1945,47 +2158,44 @@ $(function () {
 
         self.moveSelectedDesign = function (ifX, ifY) {
             var diff = 2;
-            var transformHandles = snap.select("#handlesGroup");
+            var globalScale = self.scaleMatrix().a;
+            var nx = diff * ifX;
+            var ny = diff * ifY;
+            var ntx = nx / globalScale;
+            var nty = ny / globalScale;
 
-            if (transformHandles) {
-                var selectedId = transformHandles.data("parentId");
-                var svg = snap.select("#" + selectedId);
-                var globalScale = self.scaleMatrix().a;
-
-                // var bbox = svg.getBBox();
-                // var nx = bbox.x + diff * ifX;
-                // var ny = bbox.y + diff * ifY;
-
-                var nx = diff * ifX;
-                var ny = diff * ifY;
-
-                var ntx = nx / globalScale;
-                var nty = ny / globalScale;
-
-                svg.ftStoreInitialTransformMatrix();
-                svg.data("tx", ntx);
-                svg.data("ty", nty);
-                svg.ftManualTransform({
-                    tx_rel: ntx,
-                    ty_rel: nty,
-                    diffType: "absolute",
-                });
-            }
+            const selection = snap.mbtransform.getSelection();
+            snap.mbtransform.manualTransform(selection, {
+                tx_rel: ntx,
+                ty_rel: nty,
+            });
         };
 
         self.removeSelectedDesign = function () {
-            var transformHandles = snap.select("#handlesGroup");
-            if (transformHandles) {
-                var selectedId = transformHandles.data("parentId");
-                for (var i = 0; i < self.placedDesigns().length; i++) {
-                    var file = self.placedDesigns()[i];
-                    if (file.previewId === selectedId) {
-                        self.abortFreeTransforms();
-                        self.removeSVG(file);
-                        return;
-                    }
+            const selection = snap.mbtransform.getSelection();
+            for (var s = 0; s < selection.length; s++) {
+                var design = selection[s];
+                const fileObj = self._getFileObjectForSvg(design);
+                if (fileObj !== null) {
+                    self.abortFreeTransforms();
+                    self.removeSVG(fileObj);
                 }
             }
+        };
+
+        self._getFileObjectForSvg = function (svg) {
+            const previewId = svg.attr("mb:id");
+
+            for (var i = 0; i < self.placedDesigns().length; i++) {
+                var file = self.placedDesigns()[i];
+                if (file.previewId === previewId) {
+                    return file;
+                }
+            }
+            console.log(
+                "file object not in placedDesigns. previewId: " + previewId
+            );
+            return null;
         };
 
         self.getUsefulDimensions = function (wpx, hpx) {
@@ -2070,11 +2280,12 @@ $(function () {
 
                     var fx = width / widthVBox;
                     var fy = height / heightVBox;
+                    const finalF = Math.min(fx, fy);
                     var dx = offsetVBoxX * fx;
                     var dy = offsetVBoxY * fy;
                     return [
-                        [fx, 0, 0],
-                        [0, fy, 0],
+                        [finalF, 0, 0],
+                        [0, finalF, 0],
                         [dx, dy, 1],
                     ];
                 }
@@ -2193,6 +2404,8 @@ $(function () {
             $("#coordGrid").on("dblclick", function (event) {
                 self.move_laser({}, event);
             });
+            snap.mbtransform_init();
+            snap.debug_init();
         };
 
         self.draw_coord_grid = function () {
@@ -2264,12 +2477,8 @@ $(function () {
         };
 
         self.abortFreeTransforms = function () {
-            var tip = snap.selectAll("._freeTransformInProgress");
-            for (var i = 0; i < tip.length; i++) {
-                var el = tip[i];
-                el.ftRemoveHandles();
-            }
-            //self.check_sizes_and_placements();
+            snap.mbtransform.deactivate();
+            self._updateTransformationButtons();
         };
 
         self.getCompositionSVG = function (
@@ -2367,7 +2576,6 @@ $(function () {
 </svg>`;
                 return svg;
             } else {
-                return;
             }
         };
 
@@ -2401,7 +2609,7 @@ $(function () {
                 for (var i = 0; i < attrs.length; i++) {
                     if (
                         attrs[i].nodeName.startsWith("mb:") &&
-                        attrs[i].nodeName != "mb:gc"
+                        attrs[i].nodeName !== "mb:gc"
                     ) {
                         my_meta[attrs[i].nodeName] = attrs[i].nodeValue;
                     }
@@ -2409,7 +2617,7 @@ $(function () {
                 var normalized_id = self._normalize_mb_id(id);
                 if (
                     my_meta["mb:id"] &&
-                    normalized_id != my_meta["mb:id"] &&
+                    normalized_id !== my_meta["mb:id"] &&
                     !my_meta["mb:clone_of"]
                 ) {
                     element.attr("mb:clone_of", my_meta["mb:id"]);
@@ -2465,7 +2673,7 @@ $(function () {
         self.hasFilledVectors = function (elem) {
             elem = !elem
                 ? snap.selectAll("#userContent *")
-                : typeof elem == "string"
+                : typeof elem === "string"
                 ? snap.select(elem)
                 : elem.selectAll("*");
             for (var i = 0; i < elem.length; i++) {
@@ -2626,11 +2834,11 @@ $(function () {
             // Since Settings is not a BS dialog anymore,
             // we need to trigger 'show' and 'hidden' events "manually"
             // for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
-            if (current == "#settings") {
+            if (current === "#settings") {
                 if (self.settings && self.settings.settingsDialog) {
                     self.settings.settingsDialog.trigger("show");
                 }
-            } else if (prev == "#settings") {
+            } else if (prev === "#settings") {
                 if (self.settings && self.settings.settingsDialog) {
                     self.settings.settingsDialog.trigger("hide");
                 }
@@ -2638,10 +2846,10 @@ $(function () {
         };
 
         self.onAfterTabChange = function (current, prev) {
-            if (current == "#workingarea") {
+            if (current === "#workingarea") {
                 self.trigger_resize();
             }
-            if (prev == "#settings") {
+            if (prev === "#settings") {
                 // Since Settings is not a BS dialog anymore,
                 // we need to trigger 'show' and 'hidden' events "manually"
                 // for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
@@ -2658,10 +2866,10 @@ $(function () {
         self.check_sizes_and_placements = function () {
             ko.utils.arrayForEach(self.placedDesigns(), function (design) {
                 if (
-                    design.type == "model" ||
-                    design.type == "quicktext" ||
-                    design.type == "quickshape" ||
-                    design.type == "recentjob"
+                    design.type === "model" ||
+                    design.type === "quicktext" ||
+                    design.type === "quickshape" ||
+                    design.type === "recentjob"
                 ) {
                     var svg = snap.select("#" + design.previewId);
                     var misfitting = self.outsideWorkingArea(svg);
@@ -2753,6 +2961,7 @@ $(function () {
             var userContent = svg.clone();
             tmpSvg.append(userContent);
 
+            // TODO introduce a "function clone_preserving_id(selector, target){...}" to replace the two blocks below
             // copy defs for filters
             var originalFilters = snap.selectAll("defs>filter");
             var target = userContent.select("defs");
@@ -2762,6 +2971,19 @@ $(function () {
                 var destFilter = clone.appendTo(target);
                 // restore id to keep references working
                 destFilter.attr({ id: original_id });
+            }
+
+            // copy defs for quicktext paths
+            var originalTextPaths = snap.selectAll(
+                "defs>.quicktext_curve_path"
+            );
+            var target = userContent.select("defs");
+            for (var i = 0; i < originalTextPaths.length; i++) {
+                var original_id = originalTextPaths[i].attr("id");
+                var clone = originalTextPaths[i].clone();
+                var destTextPath = clone.appendTo(target);
+                // restore id to keep references working
+                destTextPath.attr({ id: original_id });
             }
 
             self._embedAllImages(tmpSvg, function () {
@@ -2942,9 +3164,11 @@ $(function () {
                 origin,
                 "",
                 { showTransformHandles: false, embedGCode: false },
-                { _skip: true }
+                { _skip: true },
+                file
             );
             self._listPlacedItem(file);
+            //			self._addClickAndHoverHandlers(fragment, file);
             $("#" + previewId).attr("transform", scaleMatrixStr);
 
             return file;
@@ -3069,7 +3293,7 @@ $(function () {
                 // update svg object
                 var g = snap.select("#" + self.currentQuickShapeFile.previewId);
                 setTimeout(function () {
-                    g.ftReportTransformation();
+                    g.mbtOnTransform();
                 }, 200);
                 var shape = g.select("path");
                 var d;
@@ -3217,6 +3441,15 @@ $(function () {
             $("#quick_text_dialog_intensity").val(
                 self.currentQuickTextFile.intensity
             );
+            // round text radio buttons & slider
+            $("#qt_round_text_section div.btn").removeClass("active");
+            const cw = self.currentQuickTextFile.clockwise;
+            const straight = self.currentQuickTextFile.circle === 0;
+            let btn = "#quick_text_straight";
+            if (!straight) btn = cw ? "#quick_text_cw" : "#quick_text_ccw";
+            $(btn).addClass("active");
+            $("#qt_round_text_section").toggleClass("straight", straight);
+            self._qt_setCirclePath(cw, self.currentQuickTextFile.circle);
             $("#quick_text_dialog_text_input").focus();
         };
 
@@ -3241,6 +3474,60 @@ $(function () {
                 self._qt_currentQuickTextUpdate();
             }
         });
+
+        /**
+         * callback/subscription for the circle slider
+         */
+        $("#quick_text_dialog_circle").on("input change", function (e) {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.circle = parseFloat(
+                    e.currentTarget.value
+                );
+                self.lastQuickTextCircle = self.currentQuickTextFile.circle;
+                self._qt_currentQuickTextUpdate();
+            }
+        });
+        /**
+         * callback/subscription for the circle direction toggler
+         */
+        $("#quick_text_straight").on("click", function (event) {
+            $("#qt_round_text_section div.btn").removeClass("active");
+            $("#quick_text_straight").addClass("active");
+            $("#qt_round_text_section").addClass("straight");
+            self._qt_setCirclePath(true, 0);
+        });
+        $("#quick_text_cw").on("click", function (event) {
+            $("#qt_round_text_section div.btn").removeClass("active");
+            $("#quick_text_cw").addClass("active");
+            $("#qt_round_text_section").removeClass("straight");
+            self._qt_setCirclePath(true, 30);
+        });
+        $("#quick_text_ccw").on("click", function (event) {
+            $("#qt_round_text_section div.btn").removeClass("active");
+            $("#quick_text_ccw").addClass("active");
+            $("#qt_round_text_section").removeClass("straight");
+            self._qt_setCirclePath(false, 30);
+        });
+        //        /**
+        //         * callback/subscription for the circle direction toggler
+        //         */
+        //        $("#quick_text_dialog_clockwise").on("click", function (event) {
+        //            event.target
+        //                .closest(".mini_switch")
+        //                .classList.toggle("counterclockwise");
+        //            if (self.currentQuickTextFile) {
+        //                self.currentQuickTextFile.clockwise = !event.target
+        //                    .closest(".mini_switch")
+        //                    .classList.contains("counterclockwise");
+        //                $("#qt_round_text_section").toggleClass(
+        //                    "clockwise",
+        //                    self.currentQuickTextFile.clockwise
+        //                );
+        //                self.lastQuickTextClockwise =
+        //                    self.currentQuickTextFile.clockwise;
+        //                self._qt_currentQuickTextUpdate();
+        //            }
+        //        });
 
         /**
          * callback for the next font button
@@ -3294,17 +3581,18 @@ $(function () {
                 // update svg object
                 var g = snap.select("#" + self.currentQuickTextFile.previewId);
                 setTimeout(function () {
-                    g.ftReportTransformation();
+                    g.mbtOnTransform();
                 }, 200);
                 var text = g.select("text");
                 var ity = self.currentQuickTextFile.intensity;
                 text.attr({
-                    text: displayText,
                     "font-family":
                         self.fontMap[self.currentQuickTextFile.fontIndex],
                     fill: "rgb(" + ity + "," + ity + "," + ity + ")",
                     // stroke: 'rgb('+ity+','+ity+','+ity+')',
                 });
+
+                text.select("textPath").node.textContent = displayText;
                 var bb = text.getBBox();
                 g.select("rect").attr({
                     x: bb.x,
@@ -3335,6 +3623,26 @@ $(function () {
                     self.fontMap[self.currentQuickTextFile.fontIndex]
                 );
 
+                // curve path
+                //                const counterclockwise = $(
+                //                    "#quick_text_dialog_clockwise"
+                //                ).hasClass("counterclockwise");
+                const counterclockwise = $("#quick_text_ccw").hasClass(
+                    "active"
+                );
+                const textPathAttr = text.select("textPath").attr();
+                const path = snap.select(textPathAttr.href);
+                const textLength = self._qt_currentQuicktextGetTextLength(
+                    displayText,
+                    self.fontMap[self.currentQuickTextFile.fontIndex]
+                );
+                const d = self._qt_currentQuicktextGetCirclePath(
+                    self.currentQuickTextFile.circle,
+                    textLength,
+                    counterclockwise
+                );
+                path.attr({ d: d });
+
                 // update fileslist
                 $("#" + self.currentQuickTextFile.id + " .title").text(
                     displayText
@@ -3359,6 +3667,67 @@ $(function () {
             }
         };
 
+        self._qt_setCirclePath = function (cw, amount) {
+            self.currentQuickTextFile.circle = amount;
+            self.currentQuickTextFile.clockwise = cw;
+            self.lastQuickTextCircle = self.currentQuickTextFile.circle;
+            self.lastQuickTextClockwise = self.currentQuickTextFile.clockwise;
+            $("#quick_text_dialog_circle").val(
+                self.currentQuickTextFile.circle
+            );
+            self._qt_currentQuickTextUpdate();
+        };
+
+        /**
+         * generates <path_data> for the path to align the QT on.
+         *
+         * @param {float} circlePercent percentage of text bending (0: straight line, 100: text aligned on full circle).
+         * @param {float} textLength length of the text to bend in mm (more precise: working area coord units).
+         * @param {boolean} counterclockwise direction of the circle path (clockwise: text on the outside, countercw: text on the inside)
+         */
+        self._qt_currentQuicktextGetCirclePath = function (
+            circlePercent,
+            textLength,
+            counterclockwise
+        ) {
+            const d = QuickShapeHelper.getTextPath(
+                0,
+                0,
+                circlePercent,
+                textLength,
+                counterclockwise
+            );
+            return d;
+        };
+
+        /**
+         * generates <path_data> for the path to align the QT on.
+         *
+         * @param {string} text for which the length is estimated.
+         * @param {string} fontname of the font in use.
+         */
+        self._qt_currentQuicktextGetTextLength = function (text, fontname) {
+            // Lengths estimated by this String "1234567890qwertzuiopü+asdfghjklöä#<yxcvbnm,.-"
+            // total length was measured and divided through those 45 characters to get avg. char width.
+            // Estimation is the text length multiplied with the avg char width.
+            // Estimation is ok. Too short is not critical, too long would not allow to close a full circle
+            const font_width_mapping = {
+                "Allerta Stencil": 499 / 45.0,
+                "Amatic SC": 283 / 45.0,
+                Comfortaa: 492 / 45.0,
+                "Fredericka the Great": 421 / 45.0,
+                Kavivanar: 425 / 45.0,
+                Lobster: 388 / 45.0,
+                Merriweather: 504 / 45.0,
+                "Mr Bedfort": 375 / 45.0,
+                Quattrocento: 445 / 45.0,
+                Roboto: 442 / 45.0,
+            };
+            const textLength = Math.max(text.length, 5);
+            const avgCharWidth = font_width_mapping[fontname] || 12; // Fallback
+            return textLength * avgCharWidth;
+        };
+
         /**
          * removes an QT object with an empty text from stage
          */
@@ -3378,7 +3747,8 @@ $(function () {
         self._qt_currentQuickTextShowTransformHandlesIfNotEmpty = function () {
             if (
                 self.currentQuickTextFile &&
-                self.currentQuickTextFile.previewId
+                self.currentQuickTextFile.previewId &&
+                self.currentQuickTextFile.name !== ""
             ) {
                 self.showTransformHandles(
                     self.currentQuickTextFile.previewId,
@@ -3410,6 +3780,8 @@ $(function () {
                 typePath: ["quicktext"],
                 fontIndex: self.lastQuickTextFontIndex,
                 intensity: self.lastQuickTextIntensity,
+                circle: self.lastQuickTextCircle,
+                clockwise: self.lastQuickTextClockwise,
             };
 
             file.id = self.getEntryId("qt");
@@ -3420,15 +3792,32 @@ $(function () {
             var y = self.workingAreaHeightMM() / 3;
             var size = self.workingAreaHeightMM() / 20;
 
-            // TODO use self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
+            // TODO use self._prepareAndInsertSVG(...)
+            // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
             // replaces all code below.
-            var text = uc.text(x, y, placeholderText);
-            text.attr(
-                "style",
-                "white-space: pre; font-size: " +
+
+            // path for curved text
+            const path = snap
+                .path()
+                .attr({
+                    id: file.previewId + "_baselinepath",
+                    d: `M0,0m${
+                        -self.workingAreaWidthMM() / 2
+                    },0h${self.workingAreaWidthMM()}`,
+                    class: "quicktext_curve_path",
+                    style: "stroke:#00aaff; stroke-width:2; fill:none",
+                })
+                .toDefs();
+
+            var text = uc.text(0, 0, placeholderText);
+            text.attr({
+                style:
+                    "white-space: pre; font-size: " +
                     size +
-                    "px; font-family: Ubuntu; text-anchor: middle"
-            );
+                    "px; font-family: Ubuntu; text-anchor: middle",
+                textpath: path,
+            });
+            text.textPath.attr({ startOffset: "50%" });
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({
@@ -3443,10 +3832,11 @@ $(function () {
                 id: file.previewId,
                 "mb:id": self._normalize_mb_id(file.previewId),
                 class: "userText",
+                transform: `translate(${x},${y})`,
                 "mb:origin": origin, // TODO ??? wtf?
             });
 
-            self._makeItTransformable(group);
+            self._addClickAndHoverHandlers(group, file);
 
             self._listPlacedItem(file);
 
@@ -3516,6 +3906,23 @@ $(function () {
         // ***********************************************************
         //  QUICKTEXT end
         // ***********************************************************
+
+        // general modification keys
+        // TODO: this does not seem to be used anywhere. Remove?
+        self.wa_key_down = function (target, ev) {
+            console.log("Keydown", target, ev);
+            // ctrlKey for PC, metaKey for Mac command key
+            if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
+                target.classList.add("ctrl");
+            }
+        };
+        // TODO: this does not seem to be used anywhere. Remove?
+        self.wa_key_up = function (target, ev) {
+            // ctrlKey for PC, metaKey for Mac command key
+            if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
+                target.classList.remove("ctrl");
+            }
+        };
 
         // on working_area: only works if shift key is down
         self.wheel_zoom_wa = function (target, ev) {
