@@ -24,19 +24,22 @@ $(function () {
                 pierceTime: 0,
                 engCompressor: 0, // This is the value of the slider, different from the backend value
                 cutCompressor: 3,
-                passes: 1,
+                engPasses: 1,
+                cutPasses: 1,
             },
             max: {
                 speed: 3000,
                 compressor: 3,
-                passes: 10,
+                engPasses: 10,
+                cutPasses: 10,
                 pierceTime: 2000,
                 lineDistance: 1.0,
             },
             min: {
                 speed: 50,
                 compressor: 0,
-                passes: 1,
+                engPasses: 1,
+                cutPasses: 1,
                 pierceTime: 0,
                 lineDistance: 0.1,
             },
@@ -91,7 +94,7 @@ $(function () {
             thicknessMM: -1,
             cut_i: "",
             cut_f: "",
-            cut_p: self.JOB_PARAMS.min.passes,
+            cut_p: self.JOB_PARAMS.min.cutPasses,
             cut_pierce: self.JOB_PARAMS.min.pierceTime,
             cut_compressor: 3, // @Andy why is this set to max?
             progressive: false,
@@ -99,6 +102,7 @@ $(function () {
         self.no_engraving = {
             eng_i: ["", ""],
             eng_f: ["", ""],
+            eng_p: self.JOB_PARAMS.default.engPasses,
             eng_pierce: self.JOB_PARAMS.default.pierceTime,
             eng_compressor: 3, // @Andy why is this set to max?
             dithering: self.JOB_PARAMS.default.dithering,
@@ -268,6 +272,7 @@ $(function () {
             var engrave_setting = {
                 eng_i: [e.intensity_white_user, e.intensity_black_user],
                 eng_f: [e.speed_white, e.speed_black],
+                eng_p: e.eng_passes,
                 eng_pierce: e.pierce_time,
                 dithering: e.dithering,
                 eng_compressor: parseInt(e.eng_compressor),
@@ -285,7 +290,8 @@ $(function () {
                     "Custom material setting! Use at your own risk."
                 );
                 new_material.model = MRBEAM_MODEL;
-                (new_material.custom = true), (new_material.v = BEAMOS_VERSION);
+                new_material.custom = true;
+                new_material.v = BEAMOS_VERSION;
             } else {
                 new_material = {
                     name: $("<div>").html(name).text(),
@@ -828,6 +834,7 @@ $(function () {
             self.imgIntensityBlack(p.eng_i[1]);
             self.imgFeedrateWhite(p.eng_f[0]);
             self.imgFeedrateBlack(p.eng_f[1]);
+            self.engravingPasses(p.eng_p || self.JOB_PARAMS.default.engPasses);
             self.imgDithering(p.dithering);
             self.engravingPiercetime(
                 p.eng_pierce || self.JOB_PARAMS.default.pierceTime
@@ -890,6 +897,9 @@ $(function () {
         );
         self.imgFeedrateBlack = ko.observable(
             self.JOB_PARAMS.default.feedrateBlack
+        );
+        self.engravingPasses = ko.observable(
+            self.JOB_PARAMS.default.engPasses
         );
         self.imgDithering = ko.observable(self.JOB_PARAMS.default.dithering);
         self._extraOvershoot = {
@@ -1052,7 +1062,7 @@ $(function () {
                     self._isValidVectorSetting(
                         intensity_user,
                         feedrate,
-                        1,
+                        self.engravingPasses(),
                         self.engravingPiercetime()
                     )
                 ) {
@@ -1068,7 +1078,7 @@ $(function () {
                             intensity_user: intensity_user,
                             feedrate: feedrate,
                             pierce_time: self.engravingPiercetime(),
-                            passes: 1,
+                            passes: self.engravingPasses(),
                             engrave: true,
                             cut_compressor: self.mapCompressorValue(
                                 self.engravingCompressor()
@@ -1212,6 +1222,7 @@ $(function () {
                 line_distance: $("#svgtogcode_img_line_dist").val(),
                 eng_compressor: eng_compressor,
                 extra_overshoot: self.extraOvershoot(),
+                eng_passes: self.engravingPasses(),
             };
             return data;
         };
@@ -2105,10 +2116,16 @@ $(function () {
                 min: self.JOB_PARAMS.min.compressor,
             });
 
-            $(".passes_input").attr({
-                max: self.JOB_PARAMS.max.passes,
-                min: self.JOB_PARAMS.min.passes,
-                value: self.JOB_PARAMS.default.passes,
+            $(".passes_input.engrave_passes_input").attr({
+                max: self.JOB_PARAMS.max.engPasses,
+                min: self.JOB_PARAMS.min.engPasses,
+                value: self.JOB_PARAMS.default.engPasses,
+            });
+
+            $(".passes_input.cut_passes_input").attr({
+                max: self.JOB_PARAMS.max.cutPasses,
+                min: self.JOB_PARAMS.min.cutPasses,
+                value: self.JOB_PARAMS.default.cutPasses,
             });
 
             $(".pierce_time_input").attr({
@@ -2143,13 +2160,23 @@ $(function () {
                 }
             });
 
-            $(".passes_input").on("blur", function () {
+            $(".passes_input.engrave_passes_input").on("blur", function () {
                 let val = $(this).val();
 
-                if (val > self.JOB_PARAMS.max.passes) {
-                    $(this).val(self.JOB_PARAMS.max.passes);
-                } else if (val < self.JOB_PARAMS.min.passes || val === "") {
-                    $(this).val(self.JOB_PARAMS.min.passes);
+                if (val > self.JOB_PARAMS.max.engPasses) {
+                    $(this).val(self.JOB_PARAMS.max.engPasses);
+                } else if (val < self.JOB_PARAMS.min.engPasses || val === "") {
+                    $(this).val(self.JOB_PARAMS.min.engPasses);
+                }
+            });
+
+            $(".passes_input.cut_passes_input").on("blur", function () {
+                let val = $(this).val();
+
+                if (val > self.JOB_PARAMS.max.cutPasses) {
+                    $(this).val(self.JOB_PARAMS.max.cutPasses);
+                } else if (val < self.JOB_PARAMS.min.cutPasses || val === "") {
+                    $(this).val(self.JOB_PARAMS.min.cutPasses);
                 }
             });
 

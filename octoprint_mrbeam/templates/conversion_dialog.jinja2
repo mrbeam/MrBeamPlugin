@@ -287,6 +287,29 @@
 								</div>-->
 							</div>
 
+                            <div class="control-group">
+                                <div data-toggle="tooltip" data-placement="right"
+                                     data-bind="css: showExpertSettings() == true ? 'progressive-control-and-label' : 'engraving-control-and-label'"
+                                     title="<b>{{ _('Indicates the number of times the laser will run over the design to cut it. ') }}</b>
+                                            {{ _('Increase the number of passes if the material does not get cut.') }}<br>
+                                            <ul>
+                                            <li>{{ _('Progressive cut (activate in advanced settings):') }}
+                                            {{ _('Slows down the laser head progressively in every cut.
+                                            Depending on the design, this might save time by making it possible to reduce passes, and can also reduce burn marks.') }}
+                                            </li></ul>">
+                                    <label class="control-label">{{ _('Passes') }}</label>
+                                    <div class="controls">
+                                        <input data-bind="event: {value: engravingPasses, change: flag_customized_material}" class="passes_input engrave_passes_input" type="number" />&nbsp;&times;&nbsp;&nbsp;
+                                        <span style="display: inline-block">
+                                            <label data-bind="visible: showExpertSettings">
+                                                <input data-bind="event: {change: flag_customized_material}" type="checkbox" class="param_progressive"/>
+                                                {{ _('progressive') }}
+                                            </label>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
 							<div class="control-group" data-bind="visible: showExpertSettings ">
                                 <div class="input-control-and-label" data-toggle="tooltip" data-placement="right"
                                      title="<b>{{ _('This is the time which Mr Beam pierces into the material without any movement at the beginning of every new line or shape before it starts moving the laser.') }}</b><br>
@@ -452,7 +475,7 @@
                                             </li></ul>">
                                     <label class="control-label">{{ _('Passes') }}</label>
                                     <div class="controls">
-                                        <input data-bind="event: {change: flag_customized_material}" class="param_passes passes_input" type="number" />&nbsp;&times;&nbsp;&nbsp;
+                                        <input data-bind="event: {change: flag_customized_material}" class="param_passes passes_input cut_passes_input" type="number" />&nbsp;&times;&nbsp;&nbsp;
                                         <span style="display: inline-block">
                                             <label data-bind="visible: showExpertSettings">
                                                 <input data-bind="event: {change: flag_customized_material}" type="checkbox" class="param_progressive"/>
