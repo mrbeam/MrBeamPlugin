@@ -2310,93 +2310,96 @@ class MrBeamPlugin(
         on_progress_args=None,
         on_progress_kwargs=None,
     ):
-        # TODO profile_path is not used because only the default (selected) profile is.
-        if not machinecode_path:
-            path, _ = os.path.splitext(model_path)
-            machinecode_path = path + ".gco"
-
-        self._logger.info(
-            "Slicing %s to %s -- parameters -- %s"
-            % (model_path, machinecode_path, self._CONVERSION_PARAMS_PATH)
-        )
-
-        def is_job_cancelled():
-            if self._cancel_job:
-                self._cancel_job = False
-                self._logger.info("Conversion canceled")
-                raise octoprint.slicing.SlicingCancelled
-
-        # READ PARAMS FROM JSON
-        params = dict()
-        with open(self._CONVERSION_PARAMS_PATH) as data_file:
-            params = json.load(data_file)
-        # self._logger.debug("Read multicolor params %s" % params)
-
-        dest_dir, dest_file = os.path.split(machinecode_path)
-        params["directory"] = dest_dir
-        params["file"] = dest_file
-        params["noheaders"] = "true"  # TODO... booleanify
-
-        if self._settings.get(["debug_logging"]):
-            log_path = "~/.octoprint/logs/svgtogcode.log"
-            params["log_filename"] = log_path
-        else:
-            params["log_filename"] = ""
-
-        from .gcodegenerator.converter import OutOfSpaceException
-
         try:
-            from .gcodegenerator.converter import Converter
+            # TODO profile_path is not used because only the default (selected) profile is.
+            if not machinecode_path:
+                path, _ = os.path.splitext(model_path)
+                machinecode_path = path + ".gco"
 
-            is_job_cancelled()  # check before conversion started
-
-            profile = self.laserCutterProfileManager.get_current_or_default()
-            maxWidth = profile["volume"]["width"]
-            maxHeight = profile["volume"]["depth"]
-
-            # TODO implement cancelled_Jobs, to check if this particular Job has been canceled
-            # TODO implement check "_cancel_job"-loop inside engine.convert(...), to stop during conversion, too
-            engine = Converter(
-                params,
-                model_path,
-                workingAreaWidth=maxWidth,
-                workingAreaHeight=maxHeight,
-                min_required_disk_space=self._settings.get(
-                    ["converter_min_required_disk_space"]
-                ),
-            )
-            engine.convert(
-                is_job_cancelled, on_progress, on_progress_args, on_progress_kwargs
+            self._logger.info(
+                "Slicing %s to %s -- parameters -- %s"
+                % (model_path, machinecode_path, self._CONVERSION_PARAMS_PATH)
             )
 
-            is_job_cancelled()  # check if canceled during conversion
+            def is_job_cancelled():
+                if self._cancel_job:
+                    self._cancel_job = False
+                    self._logger.info("Conversion canceled")
+                    raise octoprint.slicing.SlicingCancelled
 
-            # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
-            return True, None
-        except octoprint.slicing.SlicingCancelled as e:
-            self._logger.info("Conversion cancelled")
-            raise e
-        except OutOfSpaceException as e:
-            msg = "{}: {}".format(type(e).__name__, e)
-            self._logger.exception("Conversion failed: {0}".format(msg))
-            return False, msg
-        except Exception as e:
-            print(e.__doc__)
-            print(e.message)
-            self._logger.exception(
-                "Conversion error ({0}): {1}".format(e.__doc__, e.message)
-            )
-            return False, "Unknown error, please consult the log file"
+            # READ PARAMS FROM JSON
+            params = dict()
+            with open(self._CONVERSION_PARAMS_PATH) as data_file:
+                params = json.load(data_file)
+            # self._logger.debug("Read multicolor params %s" % params)
 
-        finally:
-            with self._cancelled_jobs_mutex:
-                if machinecode_path in self._cancelled_jobs:
-                    self._cancelled_jobs.remove(machinecode_path)
-            with self._slicing_commands_mutex:
-                if machinecode_path in self._slicing_commands:
-                    del self._slicing_commands[machinecode_path]
+            dest_dir, dest_file = os.path.split(machinecode_path)
+            params["directory"] = dest_dir
+            params["file"] = dest_file
+            params["noheaders"] = "true"  # TODO... booleanify
 
-            self._logger.info("-" * 40)
+            if self._settings.get(["debug_logging"]):
+                log_path = "~/.octoprint/logs/svgtogcode.log"
+                params["log_filename"] = log_path
+            else:
+                params["log_filename"] = ""
+
+            from .gcodegenerator.converter import OutOfSpaceException
+
+            try:
+                from .gcodegenerator.converter import Converter
+
+                is_job_cancelled()  # check before conversion started
+
+                profile = self.laserCutterProfileManager.get_current_or_default()
+                maxWidth = profile["volume"]["width"]
+                maxHeight = profile["volume"]["depth"]
+
+                # TODO implement cancelled_Jobs, to check if this particular Job has been canceled
+                # TODO implement check "_cancel_job"-loop inside engine.convert(...), to stop during conversion, too
+                engine = Converter(
+                    params,
+                    model_path,
+                    workingAreaWidth=maxWidth,
+                    workingAreaHeight=maxHeight,
+                    min_required_disk_space=self._settings.get(
+                        ["converter_min_required_disk_space"]
+                    ),
+                )
+                engine.convert(
+                    is_job_cancelled, on_progress, on_progress_args, on_progress_kwargs
+                )
+
+                is_job_cancelled()  # check if canceled during conversion
+
+                # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
+                return True, None
+            except octoprint.slicing.SlicingCancelled as e:
+                self._logger.info("Conversion cancelled")
+                raise e
+            except OutOfSpaceException as e:
+                msg = "{}: {}".format(type(e).__name__, e)
+                self._logger.exception("Conversion failed: {0}".format(msg))
+                return False, msg
+            except Exception as e:
+                print(e.__doc__)
+                print(e.message)
+                self._logger.exception(
+                    "Conversion error ({0}): {1}".format(e.__doc__, e.message)
+                )
+                return False, "Unknown error, please consult the log file"
+
+            finally:
+                with self._cancelled_jobs_mutex:
+                    if machinecode_path in self._cancelled_jobs:
+                        self._cancelled_jobs.remove(machinecode_path)
+                with self._slicing_commands_mutex:
+                    if machinecode_path in self._slicing_commands:
+                        del self._slicing_commands[machinecode_path]
+
+                self._logger.info("-" * 40)
+        except:
+            self._logger.exception("Exception in do_slice(): ")
 
     def cancel_slicing(self, machinecode_path):
         self._logger.info("Canceling Routine: {}".format(machinecode_path))
