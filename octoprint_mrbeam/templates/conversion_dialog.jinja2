@@ -299,10 +299,10 @@
                                             </li></ul>">
                                     <label class="control-label">{{ _('Passes') }}</label>
                                     <div class="controls">
-                                        <input data-bind="event: {value: engravingPasses, change: flag_customized_material}" class="passes_input engrave_passes_input" type="number" />&nbsp;&times;&nbsp;&nbsp;
+                                        <input data-bind="value: engravingPasses, event: {change: flag_customized_material}" class="passes_input engrave_passes_input" type="number" />&nbsp;&times;&nbsp;&nbsp;
                                         <span style="display: inline-block">
                                             <label data-bind="visible: showExpertSettings">
-                                                <input data-bind="event: {change: flag_customized_material}" type="checkbox" class="param_progressive"/>
+                                                <input data-bind="checked: engravingProgressive, event: {change: flag_customized_material}" type="checkbox" class="param_eng_progressive"/>
                                                 {{ _('progressive') }}
                                             </label>
                                         </span>
