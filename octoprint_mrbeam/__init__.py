@@ -2314,7 +2314,6 @@ class MrBeamPlugin(
     ):
         try:
             # TODO profile_path is not used because only the default (selected) profile is.
-
             if not machinecode_path:
                 path, _ = os.path.splitext(model_path)
                 machinecode_path = path + ".gco"
