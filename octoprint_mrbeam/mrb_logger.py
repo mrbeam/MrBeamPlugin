@@ -82,7 +82,12 @@ class MrbLogger(object):
         :param terminal_dump: Collect and log a terminal dump. Terminal dumps are also sent to analytics if analytics is not explicitly set to False.
         :type kwargs:
         """
-        msg = unicode(msg, "utf-8")
+
+        try:
+            msg = unicode(msg, "utf-8")
+        except TypeError:
+            # If it's already unicode we get this TypeError
+            pass
         if kwargs.pop("terminal", True if level >= logging.WARN else False):
             self._terminal(level, msg, *args, **kwargs)
         if kwargs.pop("terminal_as_comm", False) or level == self.LEVEL_COMM:
