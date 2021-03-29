@@ -234,7 +234,7 @@ class Migration(object):
         return LooseVersion(lower_vers) < LooseVersion(higher_vers)
 
     def compare_to_prev_version(self, other_version, *a, **kw):
-        return self_compare_versions(self.version_previous, other_version, *a, **kw)
+        return self._compare_versions(self.version_previous, other_version, *a, **kw)
 
     def save_current_version(self):
         self.plugin._settings.set(["version"], self.version_current, force=True)
