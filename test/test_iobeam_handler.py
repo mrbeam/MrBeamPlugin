@@ -21,7 +21,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 @ddt.ddt
 class IoBeamHandlerTestCase(unittest.TestCase):
 
-    SOCKET_FILE = "/tmp/mrbeam_iobeam.sock"
+    SOCKET_FILE = ioBeamHandler.SOCKET_FILE
 
     def setUp(self):
         self._logger = logging.getLogger(

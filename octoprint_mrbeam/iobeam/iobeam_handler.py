@@ -75,7 +75,7 @@ class IoBeamHandler(object):
     # How to get debug info:
     #       echo "info" |  nc -U -w1 /var/run/mrbeam_iobeam.sock
 
-    SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
+    SOCKET_FILE = "/tmp/mrbeam_iobeam.sock"
     MAX_ERRORS = 50
 
     IOBEAM_MIN_REQUIRED_VERSION = "0.7.4"
