@@ -1,0 +1,9 @@
+/home/pi/.octoprint/log/iobeam.log {
+    daily
+    rotate 3
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
