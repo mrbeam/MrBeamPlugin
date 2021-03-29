@@ -66,7 +66,11 @@ class Migration(object):
             # must be done outside of is_migration_required()-block.
             self.delete_egg_dir_leftovers()
 
-            if self.is_migration_required() and not self.suppress_migrations:
+            if self.suppress_migrations:
+                self._logger.warn(
+                    "No migration done because 'suppress_migrations' is set to true in settings."
+                )
+            elif self.is_migration_required():
                 self._logger.info(
                     "Starting migration from v{} to v{}".format(
                         self.version_previous, self.version_current
@@ -74,20 +78,18 @@ class Migration(object):
                 )
 
                 # migrations
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous, "0.1.13", equal_ok=False
+                if self.compare_to_prev_version(
+                    "0.1.13",
                 ):
                     self.migrate_from_0_0_0()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous, self.VERSION_SETUP_IPTABLES, equal_ok=False
+                if self.compare_to_prev_version(
+                    self.VERSION_SETUP_IPTABLES,
                 ):
                     self.setup_iptables()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_SYNC_GRBL_SETTINGS,
-                    equal_ok=False,
                 ):
                     if self.plugin._device_series == "2C":
                         self.add_grbl_130_maxTravel()
@@ -96,110 +98,87 @@ class Migration(object):
                 if self.plugin.get_octopi_info() == "PROD 2018-01-12 19:15 1515784545":
                     self.fix_wifi_ap_name()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_FIX_SSH_KEY_PERMISSION,
-                    equal_ok=False,
                 ):
                     self.fix_ssh_key_permissions()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS,
-                    equal_ok=False,
                 ):
                     self.update_change_hostename_apname_scripts()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_UPDATE_LOGROTATE_CONF,
-                    equal_ok=False,
                 ):
                     self.update_logrotate_conf()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_MOUNT_MANAGER_172,
-                    equal_ok=False,
                 ):
                     self.update_mount_manager()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous, self.VERSION_GRBL_AUTO_UPDATE, equal_ok=False
+                if self.compare_to_prev_version(
+                    self.VERSION_GRBL_AUTO_UPDATE,
                 ):
                     self.auto_update_grbl()
                 if (
                     self.plugin._settings.get(["grbl_version_lastknown"])
-                    in self.GRBL_VERSIONS_NEED_UPDATE
+                    in self.GRBL_VERSIONS_NEED_UPDATE,
                 ):
                     self.auto_update_grbl()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_INFLATE_FILE_SYSTEM,
-                    equal_ok=False,
                 ):
                     self.inflate_file_system()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_PREFILL_MRB_HW_INFO,
-                    equal_ok=False,
                 ):
                     self.prefill_software_update_for_mrb_hw_info()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_AVRDUDE_AUTORESET_SCRIPT,
-                    equal_ok=False,
                 ):
                     self.avrdude_autoreset_script()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous, self.VERSION_USERNAME_LOWCASE, equal_ok=False
+                if self.compare_to_prev_version(
+                    self.VERSION_USERNAME_LOWCASE,
                 ):
                     self.change_usernames_tolower()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_INITD_NETCONNECTD,
-                    equal_ok=False,
                 ):
                     self.update_etc_initd_netconnectd()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_DELETE_UPLOADED_STL_FILES,
-                    equal_ok=False,
                 ):
                     self.delete_uploaded_stl_files()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_DISABLE_WIFI_POWER_MANAGEMENT,
-                    equal_ok=False,
                 ):
                     self.disable_wifi_power_management()
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     "0.7.7",
-                    equal_ok=False,
                 ):
                     self.rm_camera_calibration_repo()
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     "0.7.9.2",
-                    equal_ok=False,
                 ):
                     self.fix_settings()
 
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
+                if self.compare_to_prev_version(
                     self.VERSION_DISABLE_GCODE_AUTO_DELETION,
-                    equal_ok=False,
                 ):
                     self.disable_gcode_auto_deletion()
-
+                if self.compare_to_prev_version(
+                    "0.9.0.2",
+                ):
+                    self.add_iobeam_local_logrotate()
                 # migrations end
 
                 self.save_current_version()
@@ -207,10 +186,6 @@ class Migration(object):
                     "Finished migration from v{} to v{}.".format(
                         self.version_previous, self.version_current
                     )
-                )
-            elif self.suppress_migrations:
-                self._logger.warn(
-                    "No migration done because 'suppress_migrations' is set to true in settings."
                 )
             else:
                 self._logger.debug("No migration required.")
@@ -231,7 +206,7 @@ class Migration(object):
             return None
         return LooseVersion(self.version_current) > LooseVersion(self.version_previous)
 
-    def _compare_versions(self, lower_vers, higher_vers, equal_ok=True):
+    def _compare_versions(self, lower_vers, higher_vers, equal_ok=False):
         """
         Compares two versions and returns true if lower_vers < higher_vers
         :param lower_vers: needs to be inferior to higher_vers to be True
@@ -239,8 +214,11 @@ class Migration(object):
         :param equal_ok: returned value if lower_vers and lower_vers are equal.
         :return: True or False. None if one of the version was not a valid version number
         """
-        if lower_vers is None or higher_vers is None:
-            return None
+        if lower_vers is None:
+            if higher_vers is None:
+                return None
+            else:
+                return True
         try:
             LooseVersion(lower_vers)
             LooseVersion(higher_vers)
@@ -254,6 +232,9 @@ class Migration(object):
         if LooseVersion(lower_vers) == LooseVersion(higher_vers):
             return equal_ok
         return LooseVersion(lower_vers) < LooseVersion(higher_vers)
+
+    def compare_to_prev_version(self, other_version, *a, **kw):
+        return self_compare_versions(self.version_previous, other_version, *a, **kw)
 
     def save_current_version(self):
         self.plugin._settings.set(["version"], self.version_current, force=True)
@@ -286,7 +267,7 @@ class Migration(object):
 
                     if keep_version is None:
                         keep_version = version
-                    elif self._compare_versions(keep_version, version, equal_ok=False):
+                    elif self._compare_versions(keep_version, version):
                         keep_version = version
 
             if len(folders) > 1:
@@ -817,3 +798,14 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             _set(path, data, settings().setBoolean)
         settings().save()
         self._logger.info("Done.")
+
+    def add_iobeam_local_logrotate(self):
+        """Add a logrotate file to track iobeam logfiles in the .octoprint folder."""
+        from os.path import dirname, join
+
+        self._logger.info("Adding new iobeam logrotate file...")
+        src = join(
+            dirname(__file__), self.MIGRATE_FILES_FOLDER, "iobeam_local.logrotate"
+        )
+        dst = "/etc/logrotate.d/iobeam_local.logrotate"
+        exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
