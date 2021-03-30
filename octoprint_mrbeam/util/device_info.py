@@ -1,8 +1,12 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+import datetime
+import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
+
+BEAMOS_PATTERN = re.compile(r"([A-Z]+)-([0-9]+)")
 
 _instance = None
 
@@ -54,6 +58,18 @@ class DeviceInfo(object):
 
     def get_production_date(self):
         return self._device_data.get(self.KEY_PRODUCTION_DATE, None)
+
+    def get_beamos_version(self):
+        """Expect the beamos version to be formatted as TIER-YYYY-MM-DD"""
+        beamos_ver = self._device_data.get(self.KEY_OCTOPI, None)
+        if not beamos_ver:
+            return None, None
+        match = BEAMOS_PATTERN.match(beamos_ver)
+        if match:
+            date = datetime.date.fromisoformat(match.group(2))
+            return match.group(1), date
+        else:
+            return None, None
 
     def _read_file(self):
         try:

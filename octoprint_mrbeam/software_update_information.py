@@ -1,3 +1,4 @@
+from datetime import datetime
 import os, sys
 
 from octoprint_mrbeam import IS_X86
@@ -26,30 +27,31 @@ GLOBAL_PIP_COMMAND = (
 )
 # GLOBAL_PIP_COMMAND = "sudo {} -m pip".format(GLOBAL_PY_BIN) if os.path.isfile(GLOBAL_PY_BIN) else None #  --disable-pip-version-check
 # VENV_PIP_COMMAND = ("%s -m pip --disable-pip-version-check" % VENV_PY_BIN).split(' ') if os.path.isfile(VENV_PY_BIN) else None
+BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
 
 def get_modules():
     return sw_update_config
 
 
-def get_update_information(self):
+def get_update_information(plugin):
     result = dict()
 
-    tier = self._settings.get(["dev", "software_tier"])
+    tier = plugin._settings.get(["dev", "software_tier"])
+    beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
     _logger.info("SoftwareUpdate using tier: %s", tier)
 
-    _config_octoprint(self, tier)
+    _config_octoprint(plugin, tier)
 
-    _set_info_mrbeam_plugin(self, tier)
-    _set_info_mrbeamdoc(self, tier)
-    _set_info_netconnectd_plugin(self, tier)
-    _set_info_findmymrbeam(self, tier)
-    _set_info_mrbeamledstrips(self, tier)
-    _set_info_netconnectd_daemon(self, tier)
-    _set_info_iobeam(self, tier)
-    _set_info_mrb_hw_info(self, tier)
-    # _set_info_rpiws281x(self, tier)
-    # set_info_testplugin(self, tier) # See function definition for more details
+    _set_info_mrbeam_plugin(plugin, tier)
+    _set_info_mrbeamdoc(plugin, tier)
+    _set_info_netconnectd_plugin(plugin, tier)
+    _set_info_findmymrbeam(plugin, tier)
+    _set_info_mrbeamledstrips(plugin, tier)
+    _set_info_netconnectd_daemon(plugin, tier, beamos_date)
+    _set_info_iobeam(plugin, tier)
+    _set_info_mrb_hw_info(plugin, tier)
+    # _set_info_rpiws281x(plugin, tier)
 
     # _logger.debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
     return sw_update_config
@@ -219,6 +221,11 @@ def _set_info_netconnectd_plugin(self, tier):
     name = "OctoPrint-Netconnectd Plugin"
     module_id = "netconnectd"
 
+    if beamos_date > BEAMOS_LEGACY_DATE:
+        branch = "mrbeam-buster-{tier}"
+    else:
+        branch = "mrbeam2-{tier}"
+
     try:
         if _is_override_in_settings(self, module_id):
             return
@@ -234,8 +241,8 @@ def _set_info_netconnectd_plugin(self, tier):
             type="github_commit",
             user="mrbeam",
             repo="OctoPrint-Netconnectd",
-            branch="mrbeam2-stable",
-            branch_default="mrbeam2-stable",
+            branch=branch.format(tier="stable"),
+            branch_default=branch.format(tier="stable"),
             pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
             restart="octoprint",
         )
@@ -247,8 +254,8 @@ def _set_info_netconnectd_plugin(self, tier):
                 type="github_commit",
                 user="mrbeam",
                 repo="OctoPrint-Netconnectd",
-                branch="develop",
-                branch_default="develop",
+                branch=branch.format(tier="develop"),
+                branch_default=branch.format(tier="develop"),
                 pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
                 restart="octoprint",
             )
@@ -260,8 +267,8 @@ def _set_info_netconnectd_plugin(self, tier):
                 type="github_commit",
                 user="mrbeam",
                 repo="OctoPrint-Netconnectd",
-                branch="mrbeam2-beta",
-                branch_default="mrbeam2-beta",
+                branch=branch.format(tier="beta"),
+                branch_default=branch.format(tier="beta"),
                 pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
                 restart="octoprint",
             )
@@ -383,30 +390,36 @@ def _set_info_mrbeamledstrips(self, tier):
         _logger.exception("Exception during _set_info_mrbeamledstrips: {}".format(e))
 
 
-def _set_info_netconnectd_daemon(self, tier):
+def _set_info_netconnectd_daemon(self, tier, beamos_date):
     name = "Netconnectd Daemon"
     module_id = "netconnectd-daemon"
     # ths module is installed outside of our virtualenv therefor we can't use default pip command.
     # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-    pip_command = GLOBAL_PIP_COMMAND
     pip_name = "netconnectd"
+    if beamos_date > BEAMOS_LEGACY_DATE:
+        branch = "mrbeam-buster"
+        pip_command = GLOBAL_PIP_COMMAND
+    else:
+        branch = "mrbeam2-stable"
+        pip_command = "/usr/local/netconnectd/venv/bin/pip"
 
     try:
         if _is_override_in_settings(self, module_id):
             return
 
-        version = get_version_of_pip_module(pip_name, pip_command)
+        # version = get_version_of_pip_module(pip_name, pip_command)
+
         if version is None:
             return
 
         sw_update_config[module_id] = dict(
             displayName=_get_display_name(self, name),
-            displayVersion=version,
+            # displayVersion=version,
             type="github_commit",
             user="mrbeam",
             repo="netconnectd_mrbeam",
-            branch="mrbeam2-stable",
-            branch_default="mrbeam2-stable",
+            branch=branch,
+            branch_default=branch,
             pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
             pip_command=pip_command,
             restart="environment",
