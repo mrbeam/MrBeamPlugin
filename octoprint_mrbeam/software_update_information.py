@@ -342,13 +342,13 @@ def _set_info_mrbeamledstrips(self, tier):
         if _is_override_in_settings(self, module_id):
             return
 
-        version = get_version_of_pip_module(pip_name, pip_command)
-        if version is None:
-            return
+        # version = get_version_of_pip_module(pip_name, pip_command)
+        # if version is None:
+        #     return
 
         sw_update_config[module_id] = dict(
             displayName=_get_display_name(self, name),
-            displayVersion=version,
+            # displayVersion=version,
             type="github_commit",  # ""github_release",
             user="mrbeam",
             repo="MrBeamLedStrips",
@@ -362,7 +362,7 @@ def _set_info_mrbeamledstrips(self, tier):
         if tier in [SW_UPDATE_TIER_DEV]:
             sw_update_config[module_id] = dict(
                 displayName=_get_display_name(self, name),
-                displayVersion=version,
+                # displayVersion=version,
                 type="github_commit",
                 user="mrbeam",
                 repo="MrBeamLedStrips",
@@ -376,7 +376,7 @@ def _set_info_mrbeamledstrips(self, tier):
         if tier in [SW_UPDATE_TIER_BETA]:
             sw_update_config[module_id] = dict(
                 displayName=_get_display_name(self, name),
-                displayVersion=version,
+                # displayVersion=version,
                 type="github_commit",
                 user="mrbeam",
                 repo="MrBeamLedStrips",
@@ -440,13 +440,13 @@ def _set_info_iobeam(self, tier):
         if _is_override_in_settings(self, module_id):
             return
 
-        version = get_version_of_pip_module(pip_name, pip_command)
-        if version is None:
-            return
+        # version = get_version_of_pip_module(pip_name, pip_command)
+        # if version is None:
+        #     return
 
         sw_update_config[module_id] = dict(
             displayName=_get_display_name(self, name),
-            displayVersion=version,
+            # displayVersion=version,
             type="bitbucket_commit",
             user="mrbeam",
             repo="iobeam",
@@ -462,7 +462,7 @@ def _set_info_iobeam(self, tier):
         if tier in [SW_UPDATE_TIER_DEV]:
             sw_update_config[module_id] = dict(
                 displayName=_get_display_name(self, name),
-                displayVersion=version,
+                # displayVersion=version,
                 type="bitbucket_commit",
                 user="mrbeam",
                 repo="iobeam",
@@ -478,7 +478,7 @@ def _set_info_iobeam(self, tier):
         if tier in [SW_UPDATE_TIER_BETA]:
             sw_update_config[module_id] = dict(
                 displayName=_get_display_name(self, name),
-                displayVersion=version,
+                # displayVersion=version,
                 type="bitbucket_commit",
                 user="mrbeam",
                 repo="iobeam",
@@ -506,12 +506,12 @@ def _set_info_mrb_hw_info(self, tier):
         if _is_override_in_settings(self, module_id):
             return
 
-        version = get_version_of_pip_module(pip_name, pip_command)
+        # version = get_version_of_pip_module(pip_name, pip_command)
         # if version is None: return
 
         sw_update_config[module_id] = dict(
             displayName=_get_display_name(self, name),
-            displayVersion=version,
+            # displayVersion=version,
             type="bitbucket_commit",
             user="mrbeam",
             repo="mrb_hw_info",
@@ -527,7 +527,7 @@ def _set_info_mrb_hw_info(self, tier):
         if tier in [SW_UPDATE_TIER_DEV]:
             sw_update_config[module_id] = dict(
                 displayName=_get_display_name(self, name),
-                displayVersion=version,
+                # displayVersion=version,
                 type="bitbucket_commit",
                 user="mrbeam",
                 repo="mrb_hw_info",
@@ -543,7 +543,7 @@ def _set_info_mrb_hw_info(self, tier):
         if tier in [SW_UPDATE_TIER_BETA]:
             sw_update_config[module_id] = dict(
                 displayName=_get_display_name(self, name),
-                displayVersion=version,
+                # displayVersion=version,
                 type="bitbucket_commit",
                 user="mrbeam",
                 repo="mrb_hw_info",
