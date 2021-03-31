@@ -407,7 +407,7 @@ def _set_info_netconnectd_daemon(self, tier, beamos_date):
         if _is_override_in_settings(self, module_id):
             return
 
-        # version = get_version_of_pip_module(pip_name, pip_command)
+        version = get_version_of_pip_module(pip_name, pip_command)
 
         if version is None:
             return
