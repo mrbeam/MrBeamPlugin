@@ -6,7 +6,7 @@ import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
-BEAMOS_PATTERN = re.compile(r"([A-Z]+)-([0-9]+)")
+BEAMOS_PATTERN = re.compile(r"([A-Z]+)-([0-9]+-[0-9]+-[0-9]+)")
 
 _instance = None
 
