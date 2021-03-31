@@ -66,7 +66,8 @@ class DeviceInfo(object):
             return None, None
         match = BEAMOS_PATTERN.match(beamos_ver)
         if match:
-            date = datetime.date.fromisoformat(match.group(2))
+            # date = datetime.date.fromisoformat(match.group(2)) # available in python3
+            date = datetime.datetime.strptime(match.group(2), "%Y-%m-%d")
             return match.group(1), date
         else:
             return None, None
