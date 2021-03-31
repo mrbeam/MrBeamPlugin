@@ -818,3 +818,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             _set(path, data, settings().setBoolean)
         settings().save()
         self._logger.info("Done.")
+
+    def track_devpi(self):
+        """Move pip.conf to track our devpi server. (removes it from the source files)"""
+        src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, "pip.conf")
+        dst = "/home/pi/.pip/pip.conf"
+        os.renames(src, dst)
