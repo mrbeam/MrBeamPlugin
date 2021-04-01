@@ -45,9 +45,9 @@ def get_update_information(plugin):
 
     _set_info_mrbeam_plugin(plugin, tier)
     _set_info_mrbeamdoc(plugin, tier)
-    _set_info_netconnectd_plugin(plugin, tier)
     _set_info_findmymrbeam(plugin, tier)
     _set_info_mrbeamledstrips(plugin, tier)
+    _set_info_netconnectd_plugin(plugin, tier, beamos_date)
     _set_info_netconnectd_daemon(plugin, tier, beamos_date)
     _set_info_iobeam(plugin, tier)
     _set_info_mrb_hw_info(plugin, tier)
