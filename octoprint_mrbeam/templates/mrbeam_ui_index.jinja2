@@ -14,6 +14,40 @@
         <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
         <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
 
+        {% include 'initscript.jinja2' %}
+        {% include 'mrbeam_initscript.jinja2' %}
+
+        <script src="https://cdn.lr-ingest.io/LogRocket.min.js" crossorigin="anonymous"></script>
+        <script>
+            window.LogRocket && window.LogRocket.init('d3tex5/mrbeamplugin_dev',{
+                dom: {
+                    isEnabled: true,
+                    baseHref: "https://us-central1-mrbeamwebpageint-1563897754905.cloudfunctions.net",
+                },
+                release: BEAMOS_VERSION,
+            });
+
+
+            // This is an example script - don't forget to change it!
+            let dev_suffix = '_dev003'
+            LogRocket.identify(MRBEAM_SERIAL + dev_suffix, {
+
+                name: MRBEAM_HOSTNAME + dev_suffix,
+
+
+                // Add your own custom user variables here, ie:
+                serial: MRBEAM_SERIAL,
+                mrb_name: MRBEAM_HOSTNAME,
+                model: MRBEAM_MODEL,
+                env: MRBEAM_ENV,
+                version: BEAMOS_VERSION,
+                image: BEAMOS_IMAGE,
+                lang: MRBEAM_LANGUAGE,
+                laserhead_serial: MRBEAM_LASER_HEAD_SERIAL,
+                grbl_version: MRBEAM_GRBL_VERSION,
+            });
+        </script>
+
         {% include 'error_logging_script.jinja2' %}
 
         {#  Dirty to have this (== body elements) in the head section.
@@ -24,8 +58,6 @@
 
         {% include 'stylesheets.jinja2' %}
         {% include 'styles.jinja2' %}
-        {% include 'initscript.jinja2' %}
-        {% include 'mrbeam_initscript.jinja2' %}
         {% include 'lasersafety_standalone.jinja2' %}
         {% include 'support_standalone.jinja2' %}
         {% include 'ready_to_laser.jinja2' %}
