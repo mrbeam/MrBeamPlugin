@@ -3007,11 +3007,12 @@ def __plugin_load__():
     __plugin_settings_overlay__ = dict(
         plugins=dict(
             _disabled=[
+                "announcements",
                 "cura",
                 "pluginmanager",
-                "announcements",
                 "corewizard",
                 "octopi_support",
+                "virtual_printer",
             ]  # accepts dict | pfad.yml | callable
         ),
         terminalFilters=[

@@ -9,7 +9,7 @@ import sys
 import time
 import threading
 
-from .log import logExceptions, logtime
+from .log import logExceptions, logtime, logme
 
 
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
