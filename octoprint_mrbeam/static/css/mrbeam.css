@@ -2533,8 +2533,12 @@ input.search-query,
   margin: 10px 0;
 }
 
-.cutting-control-and-label, .engraving-control-and-label {
+.cutting-control-and-label {
   width: 300px;
+}
+
+.engraving-control-and-label {
+  width: 262px;
 }
 
 .progressive-control-and-label {

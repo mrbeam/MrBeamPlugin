@@ -31,7 +31,7 @@ $(function () {
             max: {
                 speed: 3000,
                 compressor: 3,
-                engPasses: 10,
+                engPasses: 4,
                 cutPasses: 10,
                 pierceTime: 2000,
                 lineDistance: 1.0,
@@ -274,7 +274,6 @@ $(function () {
                 eng_i: [e.intensity_white_user, e.intensity_black_user],
                 eng_f: [e.speed_white, e.speed_black],
                 eng_p: e.eng_passes,
-                eng_progressive: e.eng_progressive,
                 eng_pierce: e.pierce_time,
                 dithering: e.dithering,
                 eng_compressor: parseInt(e.eng_compressor),
@@ -837,7 +836,6 @@ $(function () {
             self.imgFeedrateWhite(p.eng_f[0]);
             self.imgFeedrateBlack(p.eng_f[1]);
             self.engravingPasses(p.eng_p || self.JOB_PARAMS.default.engPasses);
-            self.engravingProgressive(p.eng_progressive);
             self.imgDithering(p.dithering);
             self.engravingPiercetime(
                 p.eng_pierce || self.JOB_PARAMS.default.pierceTime
@@ -905,7 +903,6 @@ $(function () {
             self.JOB_PARAMS.default.engPasses
         );
 
-        self.engravingProgressive = ko.observable(self.JOB_PARAMS.default.engProgressive);
         self.imgDithering = ko.observable(self.JOB_PARAMS.default.dithering);
         self._extraOvershoot = {
             selected: ko.observable(self.JOB_PARAMS.default.extraOvershoot),
@@ -1084,7 +1081,7 @@ $(function () {
                             feedrate: feedrate,
                             pierce_time: self.engravingPiercetime(),
                             passes: self.engravingPasses(),
-                            progressive: self.engravingProgressive(),
+                            progressive: false,
                             engrave: true,
                             cut_compressor: self.mapCompressorValue(
                                 self.engravingCompressor()
@@ -1229,7 +1226,6 @@ $(function () {
                 eng_compressor: eng_compressor,
                 extra_overshoot: self.extraOvershoot(),
                 eng_passes: self.engravingPasses(),
-                eng_progressive: self.engravingProgressive(),
             };
             return data;
         };
