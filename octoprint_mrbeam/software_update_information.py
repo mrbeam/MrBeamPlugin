@@ -26,7 +26,7 @@ _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
 # Commented constants are kept in case we update more packages from the virtualenv
 # GLOBAL_PY_BIN = "/usr/bin/python2.7"
 # VENV_PY_BIN = sys.executable
-GLOBAL_PIP_BIN = "sudo /usr/local/bin/pip"
+GLOBAL_PIP_BIN = "/usr/local/bin/pip"
 GLOBAL_PIP_COMMAND = (
     "sudo {}".format(GLOBAL_PIP_BIN) if os.path.isfile(GLOBAL_PIP_BIN) else None
 )
@@ -652,7 +652,7 @@ def _set_info_mrb_hw_info(plugin, tier, beamos_date):
 def _get_octo_plugin_description(module_id, tier, plugin, **kwargs):
     """Additionally get the version from plugin manager (doesn't it do that by default??)"""
     # Commented pluginInfo -> If the module is not installed, then it Should be.
-    # pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
+    pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
     # if pluginInfo is None:
     #     return {}
     if tier == SW_UPDATE_TIER_DEV:
