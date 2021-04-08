@@ -1173,11 +1173,11 @@ body {
   color: #383e42;
 }
 
-.icon {
+.mrb_icon {
   display: inline-block;
-  width: 1.1em;
-  height: 1.1em;
-  vertical-align: -0.1em;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
   stroke-width: 0;
   stroke: #383e42;
   fill: #383e42;
