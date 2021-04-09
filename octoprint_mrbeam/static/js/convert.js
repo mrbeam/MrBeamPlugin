@@ -26,7 +26,6 @@ $(function () {
                 cutCompressor: 3,
                 engPasses: 1,
                 cutPasses: 1,
-                engProgressive: false
             },
             max: {
                 speed: 3000,
