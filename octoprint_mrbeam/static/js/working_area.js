@@ -4075,6 +4075,7 @@ $(function () {
             document.getElementById("quick_text_dialog"),
             document.getElementById("quick_shape_dialog"),
             document.getElementById("wa_view_settings"),
+            document.getElementById("mrb_object_height"),
             document.getElementById("zoomFactor"),
         ],
     ]);
