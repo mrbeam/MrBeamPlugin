@@ -171,6 +171,7 @@ def parse_csv(path=None, laserhead=MRBEAM):
                     "eng_compressor": int(compressor_lvl),
                     "eng_pierce": int(pierce_time),
                     "dithering": dithering,
+                    "eng_p": passes,
                 }
                 settingname = "engrave"
                 i_split = intensity.split("-")

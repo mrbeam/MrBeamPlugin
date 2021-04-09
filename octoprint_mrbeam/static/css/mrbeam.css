@@ -2537,6 +2537,10 @@ input.search-query,
   width: 300px;
 }
 
+.engraving-control-and-label {
+  width: 262px;
+}
+
 .progressive-control-and-label {
   width: 370px;
 }
