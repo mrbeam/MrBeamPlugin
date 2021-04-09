@@ -304,7 +304,7 @@ $(function () {
                 $("body").addClass("env_dev");
                 $("body").removeClass("env_beta");
                 $("body").removeClass("env_prod");
-            } else if (mrbeam.isBeta()) {
+            } else if (mrbeam.isBeta() || MRBEAM_ENV_SUPPORT_MODE) {
                 $("body").addClass("env_beta");
                 $("body").removeClass("env_prod");
             } else if (mrbeam.isProd()) {

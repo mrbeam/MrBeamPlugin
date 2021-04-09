@@ -240,7 +240,9 @@ $(function () {
         self.save_material_settings = function () {
             var name = self.save_custom_material_name();
             var key = self._replace_non_ascii(name).toLowerCase();
-            var thickness = parseFloat(self.save_custom_material_thickness());
+            var thickness = Math.max(
+                parseFloat(self.save_custom_material_thickness(), 38)
+            );
             var color = $("#custom_mat_col").val().substr(1, 6);
             var vectors = self.get_current_multicolor_settings();
             var strength = 0;

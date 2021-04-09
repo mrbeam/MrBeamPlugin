@@ -97,10 +97,8 @@
                                  data-bind="
 										click: function(vm, event){ $root.set_material_thickness($data, event); $root.moveJobsToEngravingEngraveModeSelected($data)},
 										attr: {id: 'material_thickness_'+$data.thicknessMM },
-										css: {active: $root.isThicknessObjEqual($data, $root.selected_material_thickness(), 'active_name'), engrave_only: $data.thicknessMM == -1 },
-
-                                         {#										css: {active: _.isEqual($data, $root.selected_material_thickness()), engrave_only: $data.thicknessMM == -1 },#}
-										style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm 0' },
+										css: {active: $root.isThicknessObjEqual($data, $root.selected_material_thickness(), 'active_name'), engrave_only: $data.thicknessMM == -1, overThick: $data.thicknessMM >= 20 },
+										style: { padding: (Math.min($data.thicknessMM, 20) * $root.mm2px()/2)+'mm 0' },
 										visible: $root.selected_material_thickness() == null || $root.isThicknessObjEqual($data, $root.selected_material_thickness(), 'visible_name'),
 										text: $root.thickness_text($data)
 								 "></div>
