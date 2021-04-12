@@ -8,6 +8,7 @@ from distutils.version import LooseVersion, StrictVersion
 from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
+from octoprint_mrbeam.util import logExceptions
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 from octoprint_mrbeam.__version import __version__
@@ -200,6 +201,12 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.disable_gcode_auto_deletion()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    "0.9.0.2",
+                    equal_ok=False,
+                ):
+                    self.track_devpi()
 
                 # migrations end
 
@@ -819,6 +826,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         settings().save()
         self._logger.info("Done.")
 
+    @logExceptions
     def track_devpi(self):
         """Move pip.conf to track our devpi server. (removes it from the source files)"""
         src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, "pip.conf")
