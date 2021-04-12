@@ -27,6 +27,7 @@ class DeviceInfo(object):
     KEY_HOSTNAME = "hostname"
     KEY_SERIAL = "serial"
     KEY_OCTOPI = "octopi"
+    KEY_IMAGE_CORRECTION_MARKERS = "image_correction_markers"
     KEY_PRODUCTION_DATE = "production_date"
     KEY_MODEL = "model"
 
