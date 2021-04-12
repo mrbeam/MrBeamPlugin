@@ -829,6 +829,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
     @logExceptions
     def track_devpi(self):
         """Move pip.conf to track our devpi server. (removes it from the source files)"""
+        self._logger("Adding pip.conf to track MrBeam update server.")
         src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, "pip.conf")
         dst = "/home/pi/.pip/pip.conf"
         os.renames(src, dst)
