@@ -35,10 +35,6 @@ GLOBAL_PIP_COMMAND = (
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
 
-def get_modules():
-    return sw_update_config
-
-
 def get_update_information(plugin):
     result = dict()
 
@@ -63,7 +59,6 @@ def get_update_information(plugin):
                 _set_info_netconnectd_daemon(plugin, tier, beamos_date),
                 _set_info_iobeam(plugin, tier, beamos_date),
                 _set_info_mrb_hw_info(plugin, tier, beamos_date),
-                # _set_info_rpiws281x(plugin, tier),
             ],
         )
     )
@@ -136,43 +131,6 @@ def _set_info_mrbeam_plugin(plugin, tier):
     )
 
 
-#     name = "MrBeam Plugin"
-#     module_id = "mrbeam"
-
-#     default = dict(
-#             displayName=SORT_UP_PREFIX + name,
-#             displayVersion=self._plugin_version,
-#             type="github_commit",  # "github_release",
-#             user="mrbeam",
-#             repo="MrBeamPlugin",
-#             branch="mrbeam2-stable",
-#             branch_default="mrbeam2-stable",
-#             pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-#             restart="octoprint",
-#     )
-#     try:
-#         if _is_override_in_settings(self, module_id):
-#             return
-
-#         if tier == SW_UPDATE_TIER_DEV:
-#              return dict_merge(default, dict(
-#                 branch="develop",
-#                 branch_default="develop",
-#             ))
-
-#         elif tier == SW_UPDATE_TIER_BETA:
-#              return dict_merge(default, dict(
-#                 branch="mrbeam2-beta",
-#                 branch_default="mrbeam2-beta",
-#             ))
-#         else: # stable
-#             return default
-
-#     except Exception as e:
-#         _logger.exception("Exception during _set_info_mrbeam_plugin: {}".format(e))
-#         return {}
-
-
 def _set_info_mrbeamdoc(plugin, tier):
     return _get_octo_plugin_description(
         "mrbeamdoc",
@@ -183,46 +141,6 @@ def _set_info_mrbeamdoc(plugin, tier):
         pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
         restart="octoprint",
     )
-    # name = "Mr Beam Documentation"
-    # module_id = "mrbeamdoc"
-
-    # try:
-    #     if _is_override_in_settings(self, module_id):
-    #         return
-
-    #     current_version = "-"
-    #     pluginInfo = self._plugin_manager.get_plugin_info(module_id)
-    #     if pluginInfo is not None:
-    #         current_version = pluginInfo.version
-
-    #     default = dict(
-    #         displayName=name,
-    #         displayVersion=current_version,
-    #         type="github_commit",  # "github_release",
-    #         user="mrbeam",
-    #         repo="MrBeamDoc",
-    #         branch="mrbeam2-stable",
-    #         branch_default="mrbeam2-stable",
-    #         pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
-    #         restart="octoprint",
-    #     )
-
-    #     if tier == SW_UPDATE_TIER_DEV:
-    #         return dict_merge(default, dict(
-    #             branch="develop",
-    #             branch_default="develop",
-    #         ))
-
-    #     elif tier == SW_UPDATE_TIER_BETA:
-    #         return dict_merge(default, dict(
-    #             branch="mrbeam2-beta",
-    #             branch_default="mrbeam2-beta",
-    #         ))
-    #     else:
-    #         return default
-    # except Exception as e:
-    #     _logger.exception("Exception during _set_info_mrbeamdoc: {}".format(e))
-    #     return {}
 
 
 def _set_info_netconnectd_plugin(plugin, tier, beamos_date):
@@ -241,51 +159,6 @@ def _set_info_netconnectd_plugin(plugin, tier, beamos_date):
         pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
         restart="octoprint",
     )
-    # name = "OctoPrint-Netconnectd Plugin"
-    # module_id = "netconnectd"
-
-    # if beamos_date > BEAMOS_LEGACY_DATE:
-    #     branch = "mrbeam-buster-{tier}"
-    # else:
-    #     branch = "mrbeam2-{tier}"
-
-    # try:
-    #     if _is_override_in_settings(self, module_id):
-    #         return
-
-    #     pluginInfo = self._plugin_manager.get_plugin_info(module_id)
-    #     if pluginInfo is None:
-    #         return
-    #     current_version = pluginInfo.version
-
-    #     default = dict(
-    #         displayName=name,
-    #         displayVersion=current_version,
-    #         type="github_commit",
-    #         user="mrbeam",
-    #         repo="OctoPrint-Netconnectd",
-    #         branch=branch.format(tier="stable"),
-    #         branch_default=branch.format(tier="stable"),
-    #         pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
-    #         restart="octoprint",
-    #     )
-
-    #     if tier == SW_UPDATE_TIER_DEV:
-    #         return dict_merge(default, dict(
-    #             branch=branch.format(tier="develop"),
-    #             branch_default=branch.format(tier="develop"),
-    #         ))
-
-    #     elif tier == SW_UPDATE_TIER_BETA:
-    #         return dict_merge(default, dict(
-    #             branch=branch.format(tier="beta"),
-    #             branch_default=branch.format(tier="beta"),
-    #         ))
-    #     else:
-    #         return default
-    # except Exception as e:
-    #     _logger.exception("Exception during _set_info_netconnectd_plugin: {}".format(e))
-    #     return {}
 
 
 def _set_info_findmymrbeam(plugin, tier):
@@ -298,46 +171,6 @@ def _set_info_findmymrbeam(plugin, tier):
         pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
         restart="octoprint",
     )
-    # name = "OctoPrint-FindMyMrBeam"
-    # module_id = "findmymrbeam"
-
-    # try:
-    #     if _is_override_in_settings(self, module_id):
-    #         return
-
-    #     pluginInfo = self._plugin_manager.get_plugin_info(module_id)
-    #     if pluginInfo is None:
-    #         return
-    #     current_version = pluginInfo.version
-
-    #     default = dict(
-    #         displayName=name,
-    #         displayVersion=current_version,
-    #         type="github_commit",
-    #         user="mrbeam",
-    #         repo="OctoPrint-FindMyMrBeam",
-    #         branch="mrbeam2-stable",
-    #         branch_default="mrbeam2-stable",
-    #         pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
-    #         restart="octoprint",
-    #     )
-
-    #     if tier == SW_UPDATE_TIER_DEV:
-    #         return dict_merge(default, dict(
-    #             branch="develop",
-    #             branch_default="develop",
-    #         ))
-
-    #     elif tier == SW_UPDATE_TIER_BETA:
-    #         return dict_merge(default, dict(
-    #             branch="mrbeam2-beta",
-    #             branch_default="mrbeam2-beta",
-    #         ))
-    #     else:
-    #         return default
-    # except Exception as e:
-    #     _logger.exception("Exception during _set_info_findmymrbeam: {}".format(e))
-    #     return {}
 
 
 def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
@@ -354,50 +187,6 @@ def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
         repo="MrBeamLedStrips",
         pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
     )
-    # name = "MrBeam LED Strips"
-    # module_id = "mrbeam-ledstrips"
-    # # ths module is installed outside of our virtualenv therefor we can't use default pip command.
-    # # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-
-    # pip_name = "mrbeam-ledstrips"
-
-    # try:
-    #     if _is_override_in_settings(self, module_id):
-    #         return {}
-
-    #     # version = get_version_of_pip_module(pip_name, pip_command)
-    #     # if version is None:
-    #     #     return
-
-    #     default = dict(
-    #         displayName=name,
-    #         # displayVersion=version,
-    #         type="github_commit",  # ""github_release",
-    #         user="mrbeam",
-    #         repo="MrBeamLedStrips",
-    #         branch="mrbeam2-stable",
-    #         branch_default="mrbeam2-stable",
-    #         pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
-    #         pip_command=GLOBAL_PIP_COMMAND,
-    #         restart="environment",
-    #     )
-
-    #     if tier == SW_UPDATE_TIER_DEV:
-    #         return dict_merge(default, dict(
-    #             branch="develop",
-    #             branch_default="develop",
-    #         ))
-
-    #     elif tier == SW_UPDATE_TIER_BETA:
-    #         return dict_merge(default, dict(
-    #             branch="mrbeam2-beta",
-    #             branch_default="mrbeam2-beta",
-    #         ))
-    #     else:
-    #         return default
-    # except Exception as e:
-    #     _logger.exception("Exception during _set_info_mrbeamledstrips: {}".format(e))
-    #     return {}
 
 
 def _set_info_netconnectd_daemon(plugin, tier, beamos_date):
@@ -418,42 +207,6 @@ def _set_info_netconnectd_daemon(plugin, tier, beamos_date):
         pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
         pip_command=pip_command,
     )
-    # name = "Netconnectd Daemon"
-    # module_id = "netconnectd-daemon"
-    # # ths module is installed outside of our virtualenv therefor we can't use default pip command.
-    # # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-    # pip_name = "netconnectd"
-    # if beamos_date > BEAMOS_LEGACY_DATE:
-    #     branch = "mrbeam-buster"
-    #     pip_command = GLOBAL_PIP_COMMAND
-    # else:
-    #     branch = "mrbeam2-stable"
-    #     pip_command = "/usr/local/netconnectd/venv/bin/pip"
-
-    # try:
-    #     if _is_override_in_settings(self, module_id):
-    #         return
-
-    #     version = get_version_of_pip_module(pip_name, pip_command)
-
-    #     if version is None:
-    #         return
-
-    #     return dict(
-    #         displayName=name,
-    #         # displayVersion=version,
-    #         type="github_commit",
-    #         user="mrbeam",
-    #         repo="netconnectd_mrbeam",
-    #         branch=branch,
-    #         branch_default=branch,
-    #         pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
-    #         pip_command=pip_command,
-    #         restart="environment",
-    #     )
-    # except Exception as e:
-    #     _logger.exception("Exception during _set_info_netconnectd_daemon: {}".format(e))
-    #     return {}
 
 
 def _set_info_iobeam(plugin, tier, beamos_date):
@@ -473,52 +226,6 @@ def _set_info_iobeam(plugin, tier, beamos_date):
         api_password="v2T5pFkmdgDqbFBJAqrt",
         pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
     )
-    # name = "iobeam"
-    # module_id = "iobeam"
-    # # this module is installed outside of our virtualenv therefor we can't use default pip command.
-    # # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-
-    # pip_name = "iobeam"
-
-    # try:
-    #     if _is_override_in_settings(self, module_id):
-    #         return
-
-    #     # version = get_version_of_pip_module(pip_name, pip_command)
-    #     # if version is None:
-    #     #     return
-
-    #     default = dict(
-    #         displayName=name,
-    #         # displayVersion=version,
-    #         type="bitbucket_commit",
-    #         user="mrbeam",
-    #         repo="iobeam",
-    #         branch="mrbeam2-stable",
-    #         branch_default="mrbeam2-stable",
-    #         api_user="MrBeamDev",
-    #         api_password="v2T5pFkmdgDqbFBJAqrt",
-    #         pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
-    #         pip_command=GLOBAL_PIP_COMMAND,
-    #         restart="environment",
-    #     )
-
-    #     if tier == SW_UPDATE_TIER_DEV:
-    #         return dict_merge(default, dict(
-    #             branch="develop",
-    #             branch_default="develop",
-    #         ))
-
-    #     elif tier == SW_UPDATE_TIER_BETA:
-    #         return dict_merge(default, dict(
-    #             branch="mrbeam2-beta",
-    #             branch_default="mrbeam2-beta",
-    #         ))
-    #     else:
-    #         return default
-    # except Exception as e:
-    #     _logger.exception("Exception during _set_info_iobeam: {}".format(e))
-    #     return {}
 
 
 def _set_info_mrb_hw_info(plugin, tier, beamos_date):
@@ -538,114 +245,6 @@ def _set_info_mrb_hw_info(plugin, tier, beamos_date):
         api_password="v2T5pFkmdgDqbFBJAqrt",
         pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
     )
-    # name = "mrb_hw_info"
-    # module_id = "mrb_hw_info"
-    # # this module is installed outside of our virtualenv therefor we can't use default pip command.
-    # # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-    # pip_name = "mrb-hw-info"
-
-    # try:
-    #     if _is_override_in_settings(self, module_id):
-    #         return
-
-    #     # version = get_version_of_pip_module(pip_name, pip_command)
-    #     # if version is None: return
-
-    #     default = dict(
-    #         displayName=name,
-    #         # displayVersion=version,
-    #         type="bitbucket_commit",
-    #         user="mrbeam",
-    #         repo="mrb_hw_info",
-    #         branch="mrbeam2-stable",
-    #         branch_default="mrbeam2-stable",
-    #         api_user="MrBeamDev",
-    #         api_password="v2T5pFkmdgDqbFBJAqrt",
-    #         pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
-    #         pip_command=GLOBAL_PIP_COMMAND,
-    #         restart="environment",
-    #     )
-
-    #     if tier == SW_UPDATE_TIER_DEV:
-    #         return dict_merge(default, dict(
-    #             branch="develop",
-    #             branch_default="develop",
-    #         ))
-
-    #     elif tier == SW_UPDATE_TIER_BETA:
-    #         return dict_merge(default, dict(
-    #             branch="mrbeam2-beta",
-    #             branch_default="mrbeam2-beta",
-    #         ))
-    #     else:
-    #         return default
-    # except Exception as e:
-    #     _logger.exception("Exception during _set_info_mrb_hw_info: {}".format(e))
-    #     return {}
-
-
-# def _set_info_rpiws281x(self, tier):
-#     # NOTE: As it should now be a dependency of the mrbeam-ledstrips,
-#     #       one simply needs to change the required version in setup.py
-#     name = "rpi-ws281x"
-#     module_id = "rpi-ws281x"
-#     # this module is installed outside of our virtualenv therefor we can't use default pip command.
-#     # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-#     pip_name = module_id
-
-#     try:
-#         if _is_override_in_settings(self, module_id):
-#             return
-
-#         version = get_version_of_pip_module(pip_name, pip_command)
-
-#         # currently only master branch exists. (June 2020)
-#         # Should we want to distribute an update, just create the according branches
-#         return dict(
-#             displayName=name,
-#             displayVersion=version,
-#             type="github_commit",
-#             user="mrbeam",
-#             repo="rpi_ws281x_compiled",
-#             branch="mrbeam2-stable",
-#             branch_default="mrbeam2-stable",
-#             pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
-#             pip_command=GLOBAL_PIP_COMMAND,
-#             restart="environment",
-#         )
-
-#         if tier == SW_UPDATE_TIER_DEV:
-#             return dict(
-#                 displayName=name,
-#                 displayVersion=version,
-#                 type="github_commit",
-#                 user="mrbeam",
-#                 repo="rpi_ws281x_compiled",
-#                 branch="develop",
-#                 branch_default="develop",
-#                 pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
-#                 pip_command=GLOBAL_PIP_COMMAND,
-#                 restart="environment",
-#             )
-
-#         elif tier == SW_UPDATE_TIER_BETA:
-#             return dict(
-#                 displayName=name,
-#                 displayVersion=version,
-#                 type="github_commit",
-#                 user="mrbeam",
-#                 repo="rpi_ws281x_compiled",
-#                 branch="mrbeam2-beta",
-#                 branch_default="mrbeam2-beta",
-#                 pip="https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
-#                 pip_command=GLOBAL_PIP_COMMAND,
-#                 restart="environment",
-#             )
-#         else:
-#             return default
-#     except Exception as e:
-#         _logger.exception("Exception during _set_info_rpiws281x: {}".format(e))
-#         return {}
 
 
 @logExceptions
