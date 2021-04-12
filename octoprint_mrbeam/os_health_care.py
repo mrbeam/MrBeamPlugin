@@ -12,7 +12,6 @@ def os_health_care(plugin):
 
 
 class OsHealthCare(object):
-    # FIXME : This should be part of the migration scripts
 
     HEALTHCARE_FILES_FOLDER = "files/os_health_care/"
 
