@@ -303,9 +303,9 @@ def _get_package_description(
     """Shorthand to create repo details for octoprint software update plugin to handle."""
     displayName = displayName or module_id
     if "{tier}" in branch:
-        branch = branch.format(tier=tier)
+        branch = branch.format(tier=get_tier_by_id(tier))
     if "{tier}" in branch_default:
-        branch_default = branch_default.format(tier=tier)
+        branch_default = branch_default.format(tier=get_tier_by_id(tier))
     update_info = dict(
         tier=tier,
         displayName=displayName,
@@ -319,6 +319,10 @@ def _get_package_description(
         **kwargs
     )
     return {module_id: update_info}
+
+
+def get_tier_by_id(tier):
+    return DEFAULT_REPO_BRANCH_ID.get(tier, tier)
 
 
 def _is_override_in_settings(plugin, module_id):
