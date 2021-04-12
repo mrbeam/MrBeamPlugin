@@ -2708,10 +2708,10 @@ class MrBeamPlugin(
                             dev_info=hostname_device_info, sys=hostname_socket
                         )
                     )
-                    # beamos_hostname only uses 4 characters to set the hostname as MrBeam-XXXX
+                    # Use octopi-hostname to set the hostname consistently between the images.
                     exec_cmd(
-                        "sudo /usr/bin/beamos_hostname {}".format(
-                            hostname_device_info[-4:]
+                        "echo {} | sudo tee /boot/octopi-hostname".format(
+                            hostname_device_info
                         )
                     )
                     self._logger.warn(
