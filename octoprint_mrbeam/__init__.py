@@ -67,6 +67,7 @@ from octoprint_mrbeam.software_update_information import (
     SW_UPDATE_TIER_PROD,
     SW_UPDATE_TIER_BETA,
     SW_UPDATE_TIER_DEV,
+    BEAMOS_LEGACY_DATE,
 )
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.cli import get_cli_commands
@@ -210,8 +211,9 @@ class MrBeamPlugin(
         self.start_time_ntp_timer()
 
         # do os health care
-        if False:
-            # TODO : Trigger for Jessie images
+        beamos_tier, beamos_date = self._device_info.get_beamos_version()
+        if beamos_date < BEAMOS_LEGACY_DATE:
+            # Only Trigger for Jessie images
             os_health_care(self)
         # do migration if needed
         if not IS_X86:
