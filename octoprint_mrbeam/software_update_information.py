@@ -342,9 +342,9 @@ def _set_info_findmymrbeam(plugin, tier):
 
 def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
     if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = GLOBAL_PIP_COMMAND
-    else:
         pip_command = "sudo /usr/local/iobeam/venv/bin/pip"
+    else:
+        pip_command = GLOBAL_PIP_COMMAND
     return _get_package_description_with_version(
         "mrbeam-ledstrips",
         tier,
@@ -403,10 +403,10 @@ def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
 def _set_info_netconnectd_daemon(plugin, tier, beamos_date):
     if beamos_date > BEAMOS_LEGACY_DATE:
         branch = "mrbeam-buster"
-        pip_command = GLOBAL_PIP_COMMAND
+        pip_command = "sudo /usr/local/netconnectd/venv/bin/pip"
     else:
         branch = "mrbeam2-stable"
-        pip_command = "sudo /usr/local/netconnectd/venv/bin/pip"
+        pip_command = GLOBAL_PIP_COMMAND
     # get_package_description does not force "develop" branch.
     return _get_package_description(
         module_id="netconnectd-daemon",
@@ -458,9 +458,9 @@ def _set_info_netconnectd_daemon(plugin, tier, beamos_date):
 
 def _set_info_iobeam(plugin, tier, beamos_date):
     if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = GLOBAL_PIP_COMMAND
-    else:
         pip_command = "sudo /usr/local/iobeam/venv/bin/pip"
+    else:
+        pip_command = GLOBAL_PIP_COMMAND
     return _get_package_description_with_version(
         module_id="iobeam",
         tier=tier,
@@ -523,9 +523,9 @@ def _set_info_iobeam(plugin, tier, beamos_date):
 
 def _set_info_mrb_hw_info(plugin, tier, beamos_date):
     if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = GLOBAL_PIP_COMMAND
-    else:
         pip_command = "sudo /usr/local/iobeam/venv/bin/pip"
+    else:
+        pip_command = GLOBAL_PIP_COMMAND
     return _get_package_description_with_version(
         module_id="mrb_hw_info",
         tier=tier,
