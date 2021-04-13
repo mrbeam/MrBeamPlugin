@@ -42,8 +42,6 @@ def get_update_information(plugin):
     beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
     _logger.info("SoftwareUpdate using tier: %s", tier)
 
-    _config_octoprint(plugin, tier)
-
     # The increased number of separate virtualenv for iobeam, netconnectd, ledstrips
     # will increase the "discovery time" to find those package versions.
     # "map-reduce" method can decrease lookup time by processing them in parallel
@@ -59,6 +57,7 @@ def get_update_information(plugin):
                 _set_info_netconnectd_daemon(plugin, tier, beamos_date),
                 _set_info_iobeam(plugin, tier, beamos_date),
                 _set_info_mrb_hw_info(plugin, tier, beamos_date),
+                # _config_octoprint(plugin, tier),
             ],
         )
     )
@@ -101,16 +100,16 @@ def switch_software_channel(plugin, channel):
             _logger.exception("Exception while switching software channel: ")
 
 
-def _config_octoprint(plugin, tier):
-    return dict(
-        octoprint=dict(
-            checkout_folder="/home/pi/OctoPrint",
-            pip="https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
-            user="mrbeam",
-            branch="mrbeam2-stable",
-            prerelease=(tier == SW_UPDATE_TIER_DEV),
-        )
-    )
+# def _config_octoprint(plugin, tier):
+#     return dict(
+#         octoprint=dict(
+#             checkout_folder="/home/pi/OctoPrint",
+#             pip="https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
+#             user="mrbeam",
+#             branch="mrbeam2-stable",
+#             prerelease=(tier == SW_UPDATE_TIER_DEV),
+#         )
+#     )
 
 
 def _set_info_mrbeam_plugin(plugin, tier):
@@ -169,7 +168,7 @@ def _set_info_findmymrbeam(plugin, tier):
 
 def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
     if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = "sudo /usr/local/iobeam/venv/bin/pip"
+        pip_command = "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
     else:
         pip_command = GLOBAL_PIP_COMMAND
     return _get_package_description_with_version(
@@ -190,11 +189,15 @@ def _set_info_netconnectd_daemon(plugin, tier, beamos_date):
     else:
         branch = "mrbeam2-stable"
         pip_command = GLOBAL_PIP_COMMAND
+    # get_package_description does not search for package version.
+    version = get_version_of_pip_module(package_name, pip_command)
     # get_package_description does not force "develop" branch.
     return _get_package_description(
         module_id="netconnectd-daemon",
         tier=tier,
+        package_name="netconnectd",
         displayName="Netconnectd Daemon",
+        displayVersion=version,
         repo="netconnectd_mrbeam",
         branch=branch,
         branch_default=branch,
@@ -230,7 +233,7 @@ def _set_info_mrb_hw_info(plugin, tier, beamos_date):
     return _get_package_description_with_version(
         module_id="mrb_hw_info",
         tier=tier,
-        package_name="mrb_hw_info",
+        package_name="mrb-hw-info",
         pip_command=pip_command,
         displayName="mrb_hw_info",
         type="bitbucket_commit",
@@ -267,17 +270,12 @@ def _get_package_description_with_version(
         _b = DEFAULT_REPO_BRANCH_ID[SW_UPDATE_TIER_DEV]
         kwargs.update(branch=_b, branch_default=_b)
 
-    # TODO fix the pip module get_version -> use the pip_command from config.yaml if explicited.
-    # version = get_version_of_pip_module(package_name, pip_command)
-    # if version is None:
-    #     return {}
+    version = get_version_of_pip_module(package_name, pip_command)
+    if version:
+        kwargs.update(dict(displayVersion=version))
 
     return _get_package_description(
-        module_id=module_id,
-        tier=tier,
-        pip_command=pip_command,
-        # displayVersion=pluginInfo.version,
-        **kwargs
+        module_id=module_id, tier=tier, pip_command=pip_command, **kwargs
     )
 
 
