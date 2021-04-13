@@ -102,20 +102,14 @@ def switch_software_channel(plugin, channel):
 
 
 def _config_octoprint(plugin, tier):
-    op_swu_keys = ["plugins", "softwareupdate", "checks", "octoprint"]
-
-    plugin._settings.global_set(op_swu_keys + ["checkout_folder"], "/home/pi/OctoPrint")
-    plugin._settings.global_set(
-        op_swu_keys + ["pip"],
-        "https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
-    )
-    plugin._settings.global_set(op_swu_keys + ["user"], "mrbeam")
-    plugin._settings.global_set(
-        op_swu_keys + ["stable_branch", "branch"], "mrbeam2-stable"
-    )
-
-    plugin._settings.global_set_boolean(
-        op_swu_keys + ["prerelease"], tier == SW_UPDATE_TIER_DEV
+    return dict(
+        octoprint=dict(
+            checkout_folder="/home/pi/OctoPrint",
+            pip="https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
+            user="mrbeam",
+            branch="mrbeam2-stable",
+            prerelease=(tier == SW_UPDATE_TIER_DEV),
+        )
     )
 
 
@@ -145,7 +139,7 @@ def _set_info_mrbeamdoc(plugin, tier):
 
 def _set_info_netconnectd_plugin(plugin, tier, beamos_date):
     if beamos_date > BEAMOS_LEGACY_DATE:
-        branch = "mrbeam-buster-{tier}"
+        branch = "mrbeam2-{tier}-buster"
     else:
         branch = "mrbeam2-{tier}"
     return _get_octo_plugin_description(
