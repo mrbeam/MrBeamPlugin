@@ -1,6 +1,6 @@
 /home/pi/.octoprint/logs/iobeam.log {
-    daily
-    rotate 3
+    size 2M
+    rotate 4
     compress
     delaycompress
     missingok
