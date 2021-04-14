@@ -195,6 +195,9 @@ $(function () {
             $("body").on("keyup", function (event) {
                 self.removeClassesForModifierKeys(event);
             });
+            $("body").on("contextmenu", function (event) {
+                self.removeClassesForModifierKeys(event);
+            });
 
             self.addClassesForModifierKeys = function (event) {
                 if (event.which === 16) document.body.classList.add("shiftKey");
@@ -205,7 +208,16 @@ $(function () {
             self.removeClassesForModifierKeys = function (event) {
                 if (event.which === 16)
                     document.body.classList.remove("shiftKey");
-                if (self.KEY_CODES_CTRL_COMMAND.includes(event.which))
+                if (
+                    self.KEY_CODES_CTRL_COMMAND.includes(event.which) ||
+                    event.type == "contextmenu"
+                )
+                    // Mac specific behavior:
+                    // ctrlKey + click opens context menu.
+                    // In this case the keyUp event is not reported to us and we would leave the ctrlKey in the body.
+                    // This leads to buggy behavior where the user is no longer able to move the design item.
+                    // To avoid this, we remove the ctrlKey in case the context menu is opened.
+                    // This might also lead to inconsistent behavior, but it should be far less impacting.
                     document.body.classList.remove("ctrlKey");
                 if (event.which === 18)
                     document.body.classList.remove("altKey");
