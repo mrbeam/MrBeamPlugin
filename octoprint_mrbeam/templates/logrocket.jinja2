@@ -1,0 +1,29 @@
+
+{# include log rocket only if env=dev#}
+<script src="https://cdn.lr-ingest.io/LogRocket.min.js" crossorigin="anonymous"></script>
+<script>
+    const LOGROCKET_PROJECT_ID = "d3tex5/mrbeamplugin_dev"
+    window.LogRocket && window.LogRocket.init(LOGROCKET_PROJECT_ID, {
+        dom: {
+            isEnabled: true,
+            baseHref: "https://us-central1-mrbeamwebpageint-1563897754905.cloudfunctions.net",
+        },
+        release: BEAMOS_VERSION,
+    });
+
+    let dev_suffix = ''
+    LogRocket.identify(MRBEAM_SERIAL + dev_suffix, {
+        name: MRBEAM_HOSTNAME + dev_suffix,
+
+        // Add your own custom user variables here, ie:
+        serial: MRBEAM_SERIAL,
+        mrb_name: MRBEAM_HOSTNAME,
+        model: MRBEAM_MODEL,
+        env: MRBEAM_ENV,
+        version: BEAMOS_VERSION,
+        image: BEAMOS_IMAGE,
+        lang: MRBEAM_LANGUAGE,
+        laserhead_serial: MRBEAM_LASER_HEAD_SERIAL,
+        grbl_version: MRBEAM_GRBL_VERSION,
+    });
+</script>
