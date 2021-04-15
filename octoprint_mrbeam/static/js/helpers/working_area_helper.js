@@ -29,7 +29,6 @@ class WorkingAreaHelper {
             }
 
             if (v1parts[i] === v2parts[i]) {
-                continue;
             } else if (v1parts[i] > v2parts[i]) {
                 return 1;
             } else {
@@ -234,6 +233,10 @@ class WorkingAreaHelper {
         return fragment.node.querySelectorAll("svg > *").length <= 0;
     }
 
+    static parseFloatTolerant(str) {
+        return parseFloat(str.replace(",", "."));
+    }
+
     /**
      * Parses two number values (float or int) from given string.
      * Tries to accept any comma and any delimiter between the two numbers
@@ -250,8 +253,8 @@ class WorkingAreaHelper {
                 myString.match(/^(-?\d+)[^0-9-]*(-?\d+)$/) ||
                 myString.match(/(-?\d+[.,]?\d*)[^0-9-]*(-?\d+[.,]?\d*)/);
             if (m) {
-                let x = parseFloat(m[1]);
-                let y = parseFloat(m[2]);
+                let x = WorkingAreaHelper.parseFloatTolerant(m[1]);
+                let y = WorkingAreaHelper.parseFloatTolerant(m[2]);
                 if (!isNaN(x) && !isNaN(y)) {
                     res = [x, y];
                 }
@@ -302,7 +305,9 @@ class WorkingAreaHelper {
                 val = val * options.shift;
             }
             if (options.delimiter === null) {
-                const newVal = parseFloat(event.target.value) + val;
+                const newVal =
+                    WorkingAreaHelper.parseFloatTolerant(event.target.value) +
+                    val;
                 event.target.value = `${newVal.toFixed(options.digits)} ${
                     options.unit
                 }`;
@@ -311,14 +316,16 @@ class WorkingAreaHelper {
                 const idxDelimiter = v.search(new RegExp(options.delimiter));
                 if (selStart <= idxDelimiter) {
                     const v1 = v.substring(0, idxDelimiter);
-                    const newV1 = parseFloat(v1) + val;
+                    const newV1 =
+                        WorkingAreaHelper.parseFloatTolerant(v1) + val;
                     event.target.value = `${newV1.toFixed(
                         options.digits
                     )}${v.substring(idxDelimiter)}`;
                 } else {
                     const d = idxDelimiter + options.delimiter.length;
                     const v2 = v.substring(d);
-                    const newV2 = parseFloat(v2) + val;
+                    const newV2 =
+                        WorkingAreaHelper.parseFloatTolerant(v2) + val;
                     event.target.value = `${v.substring(0, d)}${newV2.toFixed(
                         options.digits
                     )}`;
