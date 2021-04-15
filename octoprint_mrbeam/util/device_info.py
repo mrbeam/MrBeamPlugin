@@ -62,7 +62,7 @@ class DeviceInfo(object):
             res = dict()
             with open(self.DEVICE_INFO_FILE, "r") as f:
                 for line in f:
-                    token = map(str.strip, line.split("="))
+                    token = list(map(str.strip, line.split("=")))
                     if len(token) >= 2:
                         res[token[0]] = token[1]
             return res
