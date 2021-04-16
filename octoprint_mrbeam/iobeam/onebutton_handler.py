@@ -426,7 +426,7 @@ class OneButtonHandler(object):
             except Exception:
                 self._logger.exception("Exception while reading cpu load: ")
                 time.sleep(check_interval)
-            self._logger.info(
+            self._logger.debug(
                 "wait_for_cpu_below() cpu_load: %s, cpu_max: %s, cpu_load > cpu_max: %s",
                 cpu_load,
                 cpu_max,
