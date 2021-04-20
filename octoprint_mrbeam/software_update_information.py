@@ -189,13 +189,14 @@ def _set_info_netconnectd_daemon(plugin, tier, beamos_date):
     else:
         branch = "mrbeam2-stable"
         pip_command = GLOBAL_PIP_COMMAND
+    package_name = "netconnectd"
     # get_package_description does not search for package version.
     version = get_version_of_pip_module(package_name, pip_command)
     # get_package_description does not force "develop" branch.
     return _get_package_description(
         module_id="netconnectd-daemon",
         tier=tier,
-        package_name="netconnectd",
+        package_name=package_name,
         displayName="Netconnectd Daemon",
         displayVersion=version,
         repo="netconnectd_mrbeam",
