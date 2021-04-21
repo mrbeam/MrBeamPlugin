@@ -70,7 +70,7 @@ $(function () {
         });
 
         self.send_fontend_event = function (event, payload) {
-            if (self.isStartupComplete && !self.analyticsEnabled()) {
+            if (!self.isStartupComplete || !self.analyticsEnabled()) {
                 return {};
             }
 
