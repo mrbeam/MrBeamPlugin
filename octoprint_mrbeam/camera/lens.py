@@ -503,7 +503,9 @@ def handleBoardPicture(image, count, board_size, q_out=None):
         img = image
         path = TMP_PATH.format(count)
     else:
-        raise ValueError("Expected an image or a path to an image in inputFiles.")
+        raise ValueError(
+            "Expected an image or a path to an image in inputFiles, not %s", repr(image)
+        )
 
     logging.info("Finding board")
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -785,7 +787,7 @@ class CalibrationState(dict):
 
     def load(self, path):
         """Load the results of the detected chessboard in given path"""
-        self[path].update(dict(np.load(path + ".npz")))
+        self[path].update(dict(np.load(path + ".npz", allow_pickle=True)))
         self.onChange()
 
     def saveCalibration(self, path=None):
