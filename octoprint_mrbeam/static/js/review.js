@@ -188,17 +188,13 @@ $(function () {
                     .removeClass("review_hidden_part")
                     .css("width", "20%");
             }else{
+                self.sendReviewToServer();
                 self.closeReview();
             }
         };
 
         self.closeReview = function () {
             self.reviewDialog.modal("hide");
-        };
-
-        self.exitAndDontShowAgain = function () {
-            self.dontShowAgain(true);
-            self.exitReview();
         };
 
         self.sendReviewToServer = function () {
