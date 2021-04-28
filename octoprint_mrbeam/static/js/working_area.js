@@ -3074,7 +3074,6 @@ $(function () {
                     }
                 }
             }
-            console.log("Rendering " + fillings.length + " filled elements.");
 
             if (fillAreas) {
                 self._rasterAndEmbedResult(

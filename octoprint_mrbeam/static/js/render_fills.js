@@ -71,7 +71,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         var elem = this;
         var selection = [];
         var children = elem.children();
-        if (elem.type === "desc") {
+        if (elem.type === "desc" || elem.type === "style") {
             return [];
         }
 
