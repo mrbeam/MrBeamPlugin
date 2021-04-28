@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import absolute_import, print_function, unicode_literals, division
 from collections import Mapping
 import datetime
 from multiprocessing import Event, Process, Queue, Value
@@ -210,7 +211,7 @@ class BoardDetectorDaemon(Thread):
     def start(self):
         self._logger.debug("Starting board detector")
         self._started.set()
-        super(self.__class__, self).start()
+        Thread.start(self)
 
     @property
     def started(self):
@@ -230,8 +231,11 @@ class BoardDetectorDaemon(Thread):
         chessboardSize=(CB_ROWS, CB_COLS),
         state=STATE_PENDING_CAMERA,
         index=None,
+        **kw
     ):  # , rough_location=None, remote=None):
-        self.state.add(image, chessboardSize, state=state, index=index or self.path_inc)
+        self.state.add(
+            image, chessboardSize, state=state, index=index or self.path_inc, **kw
+        )
         self.path_inc += 1
 
     def load_dir(self, path, chessboardSize=(CB_ROWS, CB_COLS)):
@@ -629,11 +633,11 @@ class CalibrationState(dict):
         self.output_file_ts = -1
         self.rawImgLock = rawImgLock
         self.setOutpuFileTimestamp()
-        if os.path.isfile(self.output_file):
+        if os.path.isfile(str(self.output_file)):
             self.loadCalibration()
         else:
             self.lensCalibration = dict(state=STATE_PENDING)
-        super(self.__class__, self).__init__(*args, **kw)
+        dict.__init__(self, *args, **kw)
 
     def onChange(self):
         returnState = dict(
@@ -647,11 +651,18 @@ class CalibrationState(dict):
             self.changeCallback(returnState)
 
     def add(
-        self, path, board_size=(CB_ROWS, CB_COLS), state=STATE_PENDING_CAMERA, index=-1
+        self,
+        path,
+        board_size=(CB_ROWS, CB_COLS),
+        state=STATE_PENDING_CAMERA,
+        index=-1,
+        extra_kw=None,
     ):
         if path in self.keys():
             # was already added
             return
+        if not isinstance(extra_kw, Mapping):
+            extra_kw = {}
         self[path] = dict(
             tm_added=time.time(),  # when picture was taken
             state=state,
@@ -659,6 +670,7 @@ class CalibrationState(dict):
             tm_end=None,  # when processing ended
             board_size=board_size,
             index=index,
+            **extra_kw
         )
         dirlist = os.listdir(os.path.dirname(path))
         self.lensCalibration["state"] = STATE_PENDING
@@ -754,6 +766,9 @@ class CalibrationState(dict):
 
     def getElmInState(self, state):
         return dict(filter(lambda _s: _s[1]["state"] == state, self.items()))
+
+    def get_from_timestamp(self, timestamp):
+        return dict(filter(lambda _s: _s[1]["timestamp"] == timestamp, self.items()))
 
     def getSuccesses(self):
         return self.getElmInState(STATE_SUCCESS).values()
