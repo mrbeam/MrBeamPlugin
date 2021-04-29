@@ -458,7 +458,7 @@ class ImageProcessor:
         self.profiler.stop("sort_imgArray").start("write_img")
         # iterate through the image parts
         for p in range(0, int(self.eng_passes)):
-            self._append_gcode("; pass:%i/%s\n" % (p + 1, int(self.eng_passes)))
+            self._append_gcode("; pass:%i/%s ; Engraving\n" % (p + 1, int(self.eng_passes)))
             for img_data in imgArray:
                 # img_data = {'i': px_data, 'x': offset_px_x, 'y':offset_px_y, 'id': id_str}
                 # note: offset_px_x and offset_px_y are offsets from top left of the unseparated original pixel image
@@ -565,11 +565,11 @@ class ImageProcessor:
                             "; ignoring line y={}, out of working area.".format(y)
                         )
 
-                self._append_gcode("; EndPart")
-                self._append_gcode("M3S0")
-                self._append_gcode("")
-                self.gc_ctx.s = 0
-                self.gc_ctx.laser_active = True
+            self._append_gcode("; EndPart")
+            self._append_gcode("M3S0")
+            self._append_gcode("")
+            self.gc_ctx.s = 0
+            self.gc_ctx.laser_active = True
 
         self._append_gcode(";EndImage\nM5")  # important for gcode preview!
         # self._append_gcode(";EndImage\nM5\nM100P0 ; mrbeam_compressor:0") # important for gcode preview!
