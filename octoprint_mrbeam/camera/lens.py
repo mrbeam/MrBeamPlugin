@@ -38,9 +38,9 @@ from octoprint_mrbeam.camera.definitions import (
     TMP_RAW_FNAME_RE_NPZ,
 )
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.util import makedirs, get_thread
+from octoprint_mrbeam.util import makedirs, get_thread, dict_map, _basestring
 from octoprint_mrbeam.util.img import differed_imwrite
-from octoprint_mrbeam.util.log import logme, logtime, logExceptions
+from octoprint_mrbeam.util.log import logme, logtime, logExceptions, json_serialisor
 from octoprint_mrbeam.mrb_logger import mrb_logger
 import yaml
 from octoprint_mrbeam.support import check_calibration_tool_mode
@@ -495,7 +495,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
     # logger = logging.getLogger()
     # if self._stop.is_set(): return
     # signal.signal(signal.SIGTERM, signal.SIG_DFL)
-    if isinstance(image, str):
+    if isinstance(image, _basestring):
         # self._logger.info("Detecting board in %s" % image)
         img = cv2.imread(image)
         if img is None:
@@ -669,7 +669,7 @@ class CalibrationState(dict):
             tm_end=None,  # when processing ended
             board_size=board_size,
             index=index,
-            **extra_kw
+            **json_serialisor(extra_kw)
         )
         dirlist = os.listdir(os.path.dirname(path))
         self.lensCalibration["state"] = STATE_PENDING
@@ -806,7 +806,12 @@ class CalibrationState(dict):
 
     def load(self, path):
         """Load the results of the detected chessboard in given path"""
-        self[path].update(dict(np.load(path + ".npz", allow_pickle=True)))
+        self[path].update(
+            {
+                k: json_serialisor(v)
+                for k, v in np.load(path + ".npz", allow_pickle=True).items()
+            }
+        )
         self.onChange()
 
     def saveCalibration(self, path=None):
