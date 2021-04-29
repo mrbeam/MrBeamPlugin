@@ -264,6 +264,8 @@ $(function () {
         self.userTyped = ko.observable(false);
         self.invalidEmailHelp = gettext("Invalid e-mail address");
 
+        self.passiveLoginInProgress = false;
+
         // This extender forces the input value to lowercase. Used in loginsreen_viewmode.js and wizard_acl.js
         window.ko.extenders.lowercase = function (target, option) {
             target.subscribe(function (newValue) {
@@ -457,31 +459,43 @@ $(function () {
                     mrbeam.updatePNotify(pn_obj);
 
                     // try passive login
-                    self.loginState.requestData().always(function () {
-                        if (self.loginState.loggedIn()) {
-                            let pn_obj = {
-                                id: "session_expired",
-                                title: gettext("Session expired"),
-                                text: gettext(
-                                    "Re-login successful.<br/>Please repeat the last action."
-                                ),
-                                type: "warn",
-                                hide: true,
-                            };
-                            mrbeam.updatePNotify(pn_obj);
-                        } else {
-                            let pn_obj = {
-                                id: "session_expired",
-                                title: gettext("Session expired"),
-                                text: gettext("Please login again."),
-                                type: "warn",
-                                hide: true,
-                            };
-                            mrbeam.updatePNotify(pn_obj);
-                        }
-                        // Reconnect socket connection
-                        OctoPrint.socket.reconnect();
-                    });
+                    if (!self.passiveLoginInProgress) {
+                        self.passiveLoginInProgress = true;
+                        self.loginState.requestData().always(function () {
+                            if (self.loginState.loggedIn()) {
+                                let pn_obj = {
+                                    id: "session_expired",
+                                    title: gettext("Session expired"),
+                                    text: gettext(
+                                        "Re-login successful.<br/>Please repeat the last action."
+                                    ),
+                                    type: "warn",
+                                    hide: true,
+                                };
+                                mrbeam.updatePNotify(pn_obj);
+                            } else {
+                                let pn_obj = {
+                                    id: "session_expired",
+                                    title: gettext("Session expired"),
+                                    text: gettext("Please login again."),
+                                    type: "warn",
+                                    hide: true,
+                                };
+                                mrbeam.updatePNotify(pn_obj);
+                            }
+                            // Reconnect socket connection
+                            OctoPrint.socket.reconnect();
+
+                            // give it some time to settle before we acept another passive login or logout
+                            setTimeout(function () {
+                                self.passiveLoginInProgress = false;
+                            }, 2000);
+                        });
+                    } else {
+                        console.error(
+                            "Passive login blocked b/c another passive login is already in progress."
+                        );
+                    }
                 }
             } else {
                 console.log(
