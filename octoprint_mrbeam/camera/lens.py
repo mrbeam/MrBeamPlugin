@@ -345,7 +345,6 @@ class BoardDetectorDaemon(Thread):
         resultQueue = Queue()
         # lensCalibrationProcQueue = Queue()
         self._logger.debug("Pool started - %i procs" % MAX_PROCS)
-        lensCalibrationProc = None
         loopcount = 0
         stateIdleAndNotEnoughGoodBoard = False
         while not self.stopping:
@@ -694,7 +693,7 @@ class CalibrationState(dict):
         self.update(path, STATE_IGNORED)
 
     def update(self, path, state, date=None, origin=USER, **kw):
-        date = date or datetime.datetime.now().strftime(DATE_FORMAT)
+        date = date or datetime.datetime.now()
         if state in STATES:
             _data = dict(state=state, date=date, origin=origin, **kw)
             _t = time.time()
@@ -719,7 +718,7 @@ class CalibrationState(dict):
                     dist=dist,
                     rvecs=rvecs,
                     tvecs=tvecs,
-                    date=datetime.datetime.now().strftime(DATE_FORMAT),
+                    date=datetime.datetime.now(),
                     # read with datetime.datetime.strptime(date, DATE_FORMAT)
                     resolution=self.imageSize,
                 )
@@ -768,7 +767,12 @@ class CalibrationState(dict):
         return dict(filter(lambda _s: _s[1]["state"] == state, self.items()))
 
     def get_from_timestamp(self, timestamp):
-        return dict(filter(lambda _s: _s[1]["timestamp"] == timestamp, self.items()))
+        return dict(
+            filter(
+                lambda _s: _s[1]["timestamp"].strftime(DATE_FORMAT) == timestamp,
+                self.items(),
+            )
+        )
 
     def getSuccesses(self):
         return self.getElmInState(STATE_SUCCESS).values()
@@ -878,6 +882,8 @@ class CalibrationState(dict):
                     return list(elm.flat)
                 else:
                     return elm.tolist()
+            elif isinstance(elm, datetime.datetime):
+                return elm.strftime(DATE_FORMAT)
             else:
                 return None
 
