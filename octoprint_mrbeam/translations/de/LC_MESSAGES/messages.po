@@ -7,15 +7,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-04-14 10:06+0200\n"
-"PO-Revision-Date: 2021-04-14 10:10+0200\n"
+"POT-Creation-Date: 2021-04-29 15:13+0200\n"
+"PO-Revision-Date: 2021-04-29 15:17+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.4.2\n"
+"X-Generator: Poedit 2.4.3\n"
 
 #: octoprint_mrbeam/printing/comm_acc2.py:397
 #: octoprint_mrbeam/printing/comm_acc2.py:453
@@ -165,7 +165,7 @@ msgstr ""
 "für dieses Material nicht unterstützt."
 
 #: octoprint_mrbeam/static/js/convert.js:1791
-#: octoprint_mrbeam/static/js/render_fills.js:325
+#: octoprint_mrbeam/static/js/render_fills.js:449
 msgid "Conversion failed"
 msgstr "Konvertierung fehlgeschlagen"
 
@@ -858,11 +858,11 @@ msgstr "Stunde"
 msgid "hours"
 msgstr "Stunden"
 
-#: octoprint_mrbeam/static/js/review.js:236
+#: octoprint_mrbeam/static/js/review.js:232
 msgid "Error while saving review!"
 msgstr "Fehler beim Speichern deine Bewertung!"
 
-#: octoprint_mrbeam/static/js/review.js:238
+#: octoprint_mrbeam/static/js/review.js:234
 #, python-format
 msgid ""
 "Unable to save your review at the moment.%(br)sCheck connection to Mr Beam "
@@ -1428,7 +1428,7 @@ msgstr "Element is nicht zerteilbar mit dieser Methode."
 msgid "Can't split this design."
 msgstr "Dieses Design kann nicht zerteilt werden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1845
+#: octoprint_mrbeam/static/js/working_area.js:1858
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements "
@@ -1437,12 +1437,12 @@ msgstr ""
 "Die SVG-Datei enthält nicht unterstützte Elemente: %(elemName)s' Diese "
 "Elemente wurden entfernt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1853
+#: octoprint_mrbeam/static/js/working_area.js:1866
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr "Nicht unterstützte Elemente in SVG: '%(elemName)s'"
 
-#: octoprint_mrbeam/static/js/working_area.js:1866
+#: octoprint_mrbeam/static/js/working_area.js:1879
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their "
@@ -1453,11 +1453,11 @@ msgstr ""
 "willst,%(br)skonvertiere sie in Pfade.%(br)sAnsonsten werden sie mit Füllung "
 "graviert."
 
-#: octoprint_mrbeam/static/js/working_area.js:1873
+#: octoprint_mrbeam/static/js/working_area.js:1886
 msgid "Text elements found"
 msgstr "Textelemente gefunden"
 
-#: octoprint_mrbeam/static/js/working_area.js:1886
+#: octoprint_mrbeam/static/js/working_area.js:1899
 msgid ""
 "The SVG file contained style elements with online references. Since online "
 "references are not supported, we removed them. The image might look a bit "
@@ -1467,11 +1467,11 @@ msgstr ""
 "Referenzen nicht unterstützt werden, haben wir sie entfernt. Das Bild könnte "
 "jetzt etwas anders aussehen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1891
+#: octoprint_mrbeam/static/js/working_area.js:1904
 msgid "Style elements removed"
 msgstr "Style-Elemente entfernt"
 
-#: octoprint_mrbeam/static/js/working_area.js:1905
+#: octoprint_mrbeam/static/js/working_area.js:1918
 msgid ""
 "The selected design file can not be handled. Please make sure it is a valid "
 "design file."
@@ -1479,25 +1479,25 @@ msgstr ""
 "Die ausgewählte Design-Datei kann nicht bearbeitet werden. Bitte stelle "
 "sicher, dass es sich um eine gültige Design-Datei handelt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1911
+#: octoprint_mrbeam/static/js/working_area.js:1924
 msgid "File error."
 msgstr "Dateifehler."
 
-#: octoprint_mrbeam/static/js/working_area.js:1925
+#: octoprint_mrbeam/static/js/working_area.js:1938
 msgid "The selected design file does not have any content."
 msgstr "Die ausgewählte Design-Datei hat keinen Inhalt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1931
+#: octoprint_mrbeam/static/js/working_area.js:1944
 msgid "Empty File."
 msgstr "Leere Datei."
 
-#: octoprint_mrbeam/static/js/working_area.js:1945
+#: octoprint_mrbeam/static/js/working_area.js:1958
 msgid "An unknown error occurred while processing this design file."
 msgstr ""
 "Ein bekannter Fehler ist während der Verarbeitung dieser Designdatei "
 "aufgetreten."
 
-#: octoprint_mrbeam/static/js/working_area.js:1953
+#: octoprint_mrbeam/static/js/working_area.js:1966
 msgid ""
 "Please try reloading this browser window and try again. If this error "
 "remains, contact the Mr Beam Support Team. Make sure you provide the error "
@@ -1511,8 +1511,8 @@ msgstr ""
 #: octoprint_mrbeam/static/js/calibration/calibration.js:120
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:124
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:367
-#: octoprint_mrbeam/static/js/working_area.js:1960
-#: octoprint_mrbeam/static/js/working_area.js:1965
+#: octoprint_mrbeam/static/js/working_area.js:1973
+#: octoprint_mrbeam/static/js/working_area.js:1978
 msgid "Error"
 msgstr "Fehler"
 
@@ -3082,7 +3082,7 @@ msgid "cancel"
 msgstr "abbrechen"
 
 #: octoprint_mrbeam/templates/ready_to_laser.jinja2:22
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:51
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:54
 msgid "Cancel Laser Job"
 msgstr "Laserjob abbrechen"
 
@@ -3091,7 +3091,7 @@ msgid "Plug in air filter system"
 msgstr "Air Filter System anschließen"
 
 #: octoprint_mrbeam/templates/ready_to_laser.jinja2:24
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:52
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:55
 msgid "Close the lid"
 msgstr "Schließe den Deckel"
 
@@ -3107,17 +3107,25 @@ msgstr "Drücke den Startknopf, um fortzufahren"
 msgid "Cooling"
 msgstr "Abkühlen"
 
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:42
-msgid ""
-"Mr Beam needs a short break to cool down. We'll continue the laser job as "
-"soon as possible. There's nothing you need to do at the moment."
-msgstr ""
-"Mr Beam braucht eine kurze Pause, um sich abzukühlen. Wir werden den "
-"Laserjob so schnell wie möglich fortsetzen. Im Moment gibt es nichts, was Du "
-"tun musst."
-
 #: octoprint_mrbeam/templates/ready_to_laser.jinja2:43
+msgid ""
+"Mr Beam is pausing for a cooling break. The laser job will resume as soon as "
+"possible."
+msgstr ""
+"Mr Beam macht eine Kühlpause. Der Laserjob wird so bald wie möglich "
+"fortgesetzt."
+
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:44
+msgid ""
+"If cooling pauses occur regularly, please clean your laser head. If you have "
+"just cleaned the laser head, please check if it is reassembled correctly."
+msgstr ""
+"Sollten die Kühlpausen häufiger auftreten, reinige bitte deinen Laserkopf. "
+"Falls du den Laserkopf gerade gereinigt haben, überprüfe, ob dieser wieder "
+"richtig zusammengebaut ist."
+
 #: octoprint_mrbeam/templates/ready_to_laser.jinja2:46
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:49
 #, python-format
 msgid ""
 "For more information, please have a look at our article on "
@@ -3126,8 +3134,8 @@ msgstr ""
 "Weitere Informationen findest Du in diesem %(opening_tag)sKnowledge Base-"
 "Artikel%(closing_tag)s"
 
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:53
-msgid "Just relax"
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:56
+msgid "Please wait"
 msgstr "Bitte warten"
 
 #: octoprint_mrbeam/templates/review.jinja2:5
@@ -5569,6 +5577,17 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
+
+#~ msgid ""
+#~ "Mr Beam needs a short break to cool down. We'll continue the laser job as "
+#~ "soon as possible. There's nothing you need to do at the moment."
+#~ msgstr ""
+#~ "Mr Beam braucht eine kurze Pause, um sich abzukühlen. Wir werden den "
+#~ "Laserjob so schnell wie möglich fortsetzen. Im Moment gibt es nichts, was "
+#~ "Du tun musst."
+
+#~ msgid "Just relax"
+#~ msgstr "Bitte warten"
 
 # Settings > About Screen
 #~ msgid "Community Forum"
