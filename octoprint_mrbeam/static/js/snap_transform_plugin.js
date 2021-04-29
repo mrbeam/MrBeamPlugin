@@ -1489,7 +1489,7 @@
         ) {
             if (self._isNotEnabled()) return;
 
-            if (!label) {
+            if (!label || typeof label !== "string") {
                 console.error("debug.line needs a label!");
                 return;
             }
