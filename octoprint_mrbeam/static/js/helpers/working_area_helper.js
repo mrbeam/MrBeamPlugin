@@ -29,7 +29,6 @@ class WorkingAreaHelper {
             }
 
             if (v1parts[i] === v2parts[i]) {
-                continue;
             } else if (v1parts[i] > v2parts[i]) {
                 return 1;
             } else {
@@ -234,6 +233,10 @@ class WorkingAreaHelper {
         return fragment.node.querySelectorAll("svg > *").length <= 0;
     }
 
+    static parseFloatTolerant(str) {
+        return parseFloat(str.replace(",", "."));
+    }
+
     /**
      * Parses two number values (float or int) from given string.
      * Tries to accept any comma and any delimiter between the two numbers
@@ -250,8 +253,8 @@ class WorkingAreaHelper {
                 myString.match(/^(-?\d+)[^0-9-]*(-?\d+)$/) ||
                 myString.match(/(-?\d+[.,]?\d*)[^0-9-]*(-?\d+[.,]?\d*)/);
             if (m) {
-                let x = parseFloat(m[1]);
-                let y = parseFloat(m[2]);
+                let x = WorkingAreaHelper.parseFloatTolerant(m[1]);
+                let y = WorkingAreaHelper.parseFloatTolerant(m[2]);
                 if (!isNaN(x) && !isNaN(y)) {
                     res = [x, y];
                 }
@@ -303,13 +306,14 @@ class WorkingAreaHelper {
                 val = val * options.shift;
             }
             if (options.delimiter === null) {
-                const newVal = parseFloat(event.target.value) + val;
+                const newVal =
+                    WorkingAreaHelper.parseFloatTolerant(event.target.value) +
+                    val;
                 event.target.value = `${newVal.toFixed(options.digits)} ${
                     options.unit
                 }`;
             } else {
                 const v = event.target.value;
-
                 let parts = this._getSubstringAtIndex(
                     v,
                     selStart,

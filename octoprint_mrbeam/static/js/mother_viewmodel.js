@@ -29,6 +29,9 @@ $(function () {
         self.serverPrintTime = 0;
         self.printTimeInterval = null;
 
+        // ctrl or mac command key (https://stackoverflow.com/a/3922353/2631798)
+        self.KEY_CODES_CTRL_COMMAND = [17, 91, 93, 224];
+
         // MrBeam Logo click activates workingarea tab
         $("#mrbeam_logo_link").click(function () {
             $("#wa_tab_btn").tab("show");
@@ -192,16 +195,29 @@ $(function () {
             $("body").on("keyup", function (event) {
                 self.removeClassesForModifierKeys(event);
             });
+            $("body").on("contextmenu", function (event) {
+                self.removeClassesForModifierKeys(event);
+            });
 
             self.addClassesForModifierKeys = function (event) {
                 if (event.which === 16) document.body.classList.add("shiftKey");
-                if (event.which === 17) document.body.classList.add("ctrlKey");
+                if (self.KEY_CODES_CTRL_COMMAND.includes(event.which))
+                    document.body.classList.add("ctrlKey");
                 if (event.which === 18) document.body.classList.add("altKey");
             };
             self.removeClassesForModifierKeys = function (event) {
                 if (event.which === 16)
                     document.body.classList.remove("shiftKey");
-                if (event.which === 17)
+                if (
+                    self.KEY_CODES_CTRL_COMMAND.includes(event.which) ||
+                    event.type == "contextmenu"
+                )
+                    // Mac specific behavior:
+                    // ctrlKey + click opens context menu.
+                    // In this case the keyUp event is not reported to us and we would leave the ctrlKey in the body.
+                    // This leads to buggy behavior where the user is no longer able to move the design item.
+                    // To avoid this, we remove the ctrlKey in case the context menu is opened.
+                    // This might also lead to inconsistent behavior, but it should be far less impacting.
                     document.body.classList.remove("ctrlKey");
                 if (event.which === 18)
                     document.body.classList.remove("altKey");

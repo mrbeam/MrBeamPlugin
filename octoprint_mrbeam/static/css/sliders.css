@@ -356,6 +356,10 @@ input[type="range"].mrb_slider.conversion_range_slider {
   margin: 6px 0px;
 }
 
+input[type="range"].mrb_slider.grayscale {
+  background: linear-gradient(90deg, black, white);
+}
+
 /*
 * === Smaller (Image preprocessing) ===
 */

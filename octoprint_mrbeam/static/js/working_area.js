@@ -1359,6 +1359,14 @@ $(function () {
                 });
             }
 
+            if (newSvg.attr("class").includes("userText")) {
+                const newCurvePathId = previewId + "_baselinepath";
+                let curvePathId = srcElem.select("textPath").attr("href");
+                let newCurvePath = snap.select(curvePathId).clone();
+                newCurvePath.attr("id", newCurvePathId);
+                newSvg.select("textPath").attr("href", `#${newCurvePathId}`);
+            }
+
             // TODO use self._prepareAndInsertSVG()
             // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
 
@@ -1585,7 +1593,9 @@ $(function () {
             ) {
                 self.abortFreeTransforms();
                 var svg = snap.select("#" + data.previewId);
-                var newRotate = parseFloat(event.target.value);
+                var newRotate = WorkingAreaHelper.parseFloatTolerant(
+                    event.target.value
+                );
                 const oldRotation = svg.transform().localMatrix.split().rotate;
                 snap.mbtransform.manualTransform(svg, {
                     angle: newRotate - oldRotation,
@@ -1617,7 +1627,9 @@ $(function () {
                     "scale_proportional"
                 );
                 const isMirrored = $(`#${data.id}`).hasClass("isMirrored");
-                const value = parseFloat(event.target.value);
+                const value = WorkingAreaHelper.parseFloatTolerant(
+                    event.target.value
+                );
                 const lm = svg.transform().localMatrix;
                 const currentSx = Math.sqrt(lm.a * lm.a + lm.b * lm.b); // rotation independent scalex factor
                 const currentWidth = svg.getBBox().width;
@@ -1659,7 +1671,9 @@ $(function () {
                 const isProp = $(`#${data.id} .file_list_entry`).hasClass(
                     "scale_proportional"
                 );
-                const value = parseFloat(event.target.value);
+                const value = WorkingAreaHelper.parseFloatTolerant(
+                    event.target.value
+                );
                 const lm = svg.transform().localMatrix;
                 const currentSy = Math.sqrt(lm.c * lm.c + lm.d * lm.d); // rotation independent scaley factor
                 const currentHeight = svg.getBBox().height;
@@ -2180,7 +2194,6 @@ $(function () {
                     self.removeSVG(fileObj);
                 }
             }
-            return;
         };
 
         self._getFileObjectForSvg = function (svg) {
@@ -3639,7 +3652,8 @@ $(function () {
                     fill: "rgb(" + ity + "," + ity + "," + ity + ")",
                     // stroke: 'rgb('+ity+','+ity+','+ity+')',
                 });
-                text.textPath.node.textContent = displayText;
+
+                text.select("textPath").node.textContent = displayText;
                 var bb = text.getBBox();
                 g.select("rect").attr({
                     x: bb.x,
@@ -3677,7 +3691,7 @@ $(function () {
                 const counterclockwise = $("#quick_text_ccw").hasClass(
                     "active"
                 );
-                const textPathAttr = text.textPath.attr();
+                const textPathAttr = text.select("textPath").attr();
                 const path = snap.select(textPathAttr.href);
                 const textLength = self._qt_currentQuicktextGetTextLength(
                     displayText,
@@ -3955,14 +3969,18 @@ $(function () {
         // ***********************************************************
 
         // general modification keys
+        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_down = function (target, ev) {
             console.log("Keydown", target, ev);
-            if (ev.originalEvent.ctrlKey) {
+            // ctrlKey for PC, metaKey for Mac command key
+            if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
                 target.classList.add("ctrl");
             }
         };
+        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_up = function (target, ev) {
-            if (ev.originalEvent.ctrlKey) {
+            // ctrlKey for PC, metaKey for Mac command key
+            if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
                 target.classList.remove("ctrl");
             }
         };
@@ -4118,6 +4136,7 @@ $(function () {
             document.getElementById("quick_text_dialog"),
             document.getElementById("quick_shape_dialog"),
             document.getElementById("wa_view_settings"),
+            document.getElementById("mrb_object_height"),
             document.getElementById("zoomFactor"),
         ],
     ]);

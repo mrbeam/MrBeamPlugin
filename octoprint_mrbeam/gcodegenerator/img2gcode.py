@@ -80,6 +80,7 @@ class ImageProcessor:
         extra_overshoot=False,
         eng_compressor=JobParams.Default.ENG_COMPRESSOR,
         material=None,
+        eng_passes=JobParams.Default.ENG_PASSES,
     ):
 
         self.log = mrb_logger("octoprint.plugins.mrbeam.img2gcode")
@@ -153,6 +154,7 @@ class ImageProcessor:
         self.engraving_mode = engraving_mode or self.ENGRAVING_MODE_DEFAULT
         self.separation = self.engraving_mode == self.ENGRAVING_MODE_FAST
         self.line_by_line = self.engraving_mode == self.ENGRAVING_MODE_BASIC
+        self.eng_passes = int(eng_passes) if eng_passes else JobParams.Min.ENG_PASSES
 
         # overshoot settings
         # given an acceleration of 700mm/s², these are the ways necessary to reach target speed of
@@ -469,119 +471,121 @@ class ImageProcessor:
 
         self.profiler.stop("sort_imgArray").start("write_img")
         # iterate through the image parts
-        for img_data in imgArray:
-            # img_data = {'i': px_data, 'x': offset_px_x, 'y':offset_px_y, 'id': id_str}
-            # note: offset_px_x and offset_px_y are offsets from top left of the unseparated original pixel image
-            img = img_data["i"]
-            size = img.size  # size of the img fraction in pixels
-            height_px = size[1]
+        for p in range(0, int(self.eng_passes)):
+            self._append_gcode("; pass:%i/%s ; Engraving\n" % (p + 1, int(self.eng_passes)))
+            for img_data in imgArray:
+                # img_data = {'i': px_data, 'x': offset_px_x, 'y':offset_px_y, 'id': id_str}
+                # note: offset_px_x and offset_px_y are offsets from top left of the unseparated original pixel image
+                img = img_data["i"]
+                size = img.size  # size of the img fraction in pixels
+                height_px = size[1]
 
-            # image part has its own pixel offset. Calc general absolute offset in MM
-            x_off = (
-                img_data["x"] * self.beam + xMM
-            )  # mm here, img_data['x'] is in pixels
-            y_off = (
-                hMM - img_data["y"] * self.beam + yMM
-            )  # mm here, but inverted for the y axis
-            # self.log.info("yPx: {}, yMM: {}, hMM: {} => y_final: {}".format(img_data['y'], yMM, hMM, y_off))
-            img_pos_mm = (x_off, y_off)  # lower left corner of partial image in mm
+                # image part has its own pixel offset. Calc general absolute offset in MM
+                x_off = (
+                    img_data["x"] * self.beam + xMM
+                )  # mm here, img_data['x'] is in pixels
+                y_off = (
+                    hMM - img_data["y"] * self.beam + yMM
+                )  # mm here, but inverted for the y axis
+                # self.log.info("yPx: {}, yMM: {}, hMM: {} => y_final: {}".format(img_data['y'], yMM, hMM, y_off))
+                img_pos_mm = (x_off, y_off)  # lower left corner of partial image in mm
 
-            self._append_gcode(
-                "; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(
-                    img_data["id"], img_data["x"], img_data["y"], size[0], size[1]
+                self._append_gcode(
+                    "; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(
+                        img_data["id"], img_data["x"], img_data["y"], size[0], size[1]
+                    )
                 )
-            )
 
-            # TODO improvement: find first non-white pixel from lower left
-            x_start = x_off
-            y_start = (
-                y_off - height_px * self.beam
-            )  # lower left of the image, but with safety whitespace around the content
-            gc = self._get_gcode_g0(
-                x=x_start,
-                y=y_start,
-                comment="; Move to start ({},{})".format(x_start, y_start),
-            )
-            self._append_gcode(gc)
-            self._append_gcode("M3S0\nG4P0")  # initialize laser
-            # iterate line by line
-            pix = img.load()
-            first_row = True
-            for row in range(height_px - 1, -1, -1):
-                line_info = self.get_pixelinfo_of_line(pix, size, row)
-                y = img_pos_mm[1] - (self.beam * line_info["row"])
+                # TODO improvement: find first non-white pixel from lower left
+                x_start = x_off
+                y_start = (
+                    y_off - height_px * self.beam
+                )  # lower left of the image, but with safety whitespace around the content
+                gc = self._get_gcode_g0(
+                    x=x_start,
+                    y=y_start,
+                    comment="; Move to start ({},{})".format(x_start, y_start),
+                )
+                self._append_gcode(gc)
+                self._append_gcode("M3S0\nG4P0")  # initialize laser
+                # iterate line by line
+                pix = img.load()
+                first_row = True
+                for row in range(height_px - 1, -1, -1):
+                    line_info = self.get_pixelinfo_of_line(pix, size, row)
+                    y = img_pos_mm[1] - (self.beam * line_info["row"])
 
-                if direction_positive:
-                    _minmax = min
-                    side = "left"
-                    k = -1
-                else:
-                    _minmax = max
-                    side = "right"
-                    k = 1
-                if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
+                    if direction_positive:
+                        _minmax = min
+                        side = "left"
+                        k = -1
+                    else:
+                        _minmax = max
+                        side = "right"
+                        k = 1
+                    if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
 
-                    if not first_row and self.extra_overshoot:
-                        overshoot_gco = (
-                            "; EXTRA_TIME "
-                            + str(EXTRA_OVERSHOOT_EXTRA_DURATION)
-                            + "s\n"
-                        )
-                        # Use the most extreme position of x from one line to an other
-                        # assumes that self.gc_ctx.x was previously set
-                        extrema_next_line = (
-                            img_pos_mm[0]
-                            + self.beam * line_info[side]
-                            + k
-                            * (
-                                2 * self.overshoot_distance
-                                + self.backlash_compensation_x
+                        if not first_row and self.extra_overshoot:
+                            overshoot_gco = (
+                                "; EXTRA_TIME "
+                                + str(EXTRA_OVERSHOOT_EXTRA_DURATION)
+                                + "s\n"
                             )
+                            # Use the most extreme position of x from one line to an other
+                            # assumes that self.gc_ctx.x was previously set
+                            extrema_next_line = (
+                                img_pos_mm[0]
+                                + self.beam * line_info[side]
+                                + k
+                                * (
+                                    2 * self.overshoot_distance
+                                    + self.backlash_compensation_x
+                                )
+                            )
+                            extrema_x = _minmax(self.gc_ctx.x, extrema_next_line)
+                            # start and end are the positions the laserhead should be
+                            # before and after the overshoot.
+                            # Assumes that self.gc_ctx.y was previously set
+                            start = np.array([extrema_x, self.gc_ctx.y])
+                            end = np.array([extrema_x, y])
+                            # /!\ direction_positive reverted at the end of loop
+                            overshoot_gco += self.get_overshoot(
+                                start,
+                                end,
+                                k,
+                                self.overshoot_distance,
+                                offset_counter=row,
+                            )
+                            self._append_gcode(overshoot_gco)
+
+                        # prepare line start
+                        self.write_gcode_for_line_start(
+                            y,
+                            img_pos_mm,
+                            pix,
+                            line_info,
+                            direction_positive,
+                            debug=self.debug,
                         )
-                        extrema_x = _minmax(self.gc_ctx.x, extrema_next_line)
-                        # start and end are the positions the laserhead should be
-                        # before and after the overshoot.
-                        # Assumes that self.gc_ctx.y was previously set
-                        start = np.array([extrema_x, self.gc_ctx.y])
-                        end = np.array([extrema_x, y])
-                        # /!\ direction_positive reverted at the end of loop
-                        overshoot_gco += self.get_overshoot(
-                            start,
-                            end,
-                            k,
-                            self.overshoot_distance,
-                            offset_counter=row,
+
+                        # do line
+                        self.write_gcode_for_trimmed_line(
+                            img_pos_mm, pix, line_info, direction_positive, debug=self.debug
                         )
-                        self._append_gcode(overshoot_gco)
 
-                    # prepare line start
-                    self.write_gcode_for_line_start(
-                        y,
-                        img_pos_mm,
-                        pix,
-                        line_info,
-                        direction_positive,
-                        debug=self.debug,
-                    )
+                        # after line
+                        self.write_gcode_for_line_end(
+                            img_pos_mm, line_info, direction_positive, debug=self.debug
+                        )
 
-                    # do line
-                    self.write_gcode_for_trimmed_line(
-                        img_pos_mm, pix, line_info, direction_positive, debug=self.debug
-                    )
-
-                    # after line
-                    self.write_gcode_for_line_end(
-                        img_pos_mm, line_info, direction_positive, debug=self.debug
-                    )
-
-                    # flip direction after each line to go back and forth
-                    direction_positive = not direction_positive
-                    first_row = False
-                elif line_info["left"] != None:
-                    # skip line vertical out of working area
-                    self._append_gcode(
-                        "; ignoring line y={}, out of working area.".format(y)
-                    )
+                        # flip direction after each line to go back and forth
+                        direction_positive = not direction_positive
+                        first_row = False
+                    elif line_info["left"] != None:
+                        # skip line vertical out of working area
+                        self._append_gcode(
+                            "; ignoring line y={}, out of working area.".format(y)
+                        )
 
             self._append_gcode("; EndPart")
             self._append_gcode("M3S0")

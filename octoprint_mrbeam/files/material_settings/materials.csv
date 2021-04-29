@@ -107,7 +107,7 @@ Mr Beam II,Plywood Poplar,#e7d27f,Engrave,0-80,1500-450,1,0,0,no,
 Mr Beam II,,#e7d27f,3,100,200,7,0,0,no,
 Do Not Use,,#e7d27f,4,,,,0,0,no,
 Mr Beam II,Slate,#666666,Engrave,0-100,1500-1150,1,0,0,no,
-Mr Beam II,Vegan Leather,#c5935f,Engrave,0-75,1500-800,1,0,0,no,
+Mr Beam II,Laser Leather,#c5935f,Engrave,0-75,1500-800,1,0,0,no,
 Mr Beam II,,#c5935f,"0,6",100,1000,3,0,0,no,
 Do Not Use,Latex,#ffffff,,,,,0,,,
 ,,,,,,,,,,
@@ -222,7 +222,7 @@ MrB II Dreamcut,Plywood Poplar,#e7d27f,Engrave,0-50,1500-1150,1,3,0,no,
 MrB II Dreamcut,,#e7d27f,3,100,170,2,3,0,no,tested
 MrB II Dreamcut,,#e7d27f,4,100,150,3,3,0,no,tested
 MrB II Dreamcut,Slate,#666666,Engrave,0-100,1500-1200,1,3,0,no,
-MrB II Dreamcut,Vegan Leather,#c5935f,Engrave,0-50,1500-1150,1,3,0,no,
+MrB II Dreamcut,Laser Leather,#c5935f,Engrave,0-50,1500-1150,1,3,0,no,
 MrB II Dreamcut,,#c5935f,"0,6",100,750,2,3,0,no,calculated
 Do Not Use,Latex,#ffffff,,,,,3,,,
 MrB II Dreamcut,Plywood Birch,#e8d4bc,Engrave,0-80,1500-1150,1,3,0,no,
@@ -235,3 +235,5 @@ MrB II Dreamcut,Sign Material,#f3de8d,Engrave,0-50,300,1,3,0,no,tested
 MrB II Dreamcut,Sign Material,#f3de8d,"1,5",100,300,3,3,0,no,tested
 MrB II Dreamcut,Sign Material,#d2a477,Engrave,0-50,300,1,3,0,no,tested
 MrB II Dreamcut,Sign Material,#d2a477,"1,5",100,300,3,3,0,no,tested
+MrB II Dreamcut,Swiss stone pine,#bc955a,Engrave,0-50,1500-1150,1,3,0,no,tested
+MrB II Dreamcut,Swiss stone pine,#bc955a,3,100,170,2,3,0,no,tested
