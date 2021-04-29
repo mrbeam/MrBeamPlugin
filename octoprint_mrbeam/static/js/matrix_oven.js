@@ -70,7 +70,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             100,
             (window._matrixOven.done / window._matrixOven.total) * 100
         );
-        callback(percent, window._matrixOven.done, window._matrixOven.total);
+        if (callback && typeof callback === "function")
+            callback(
+                percent,
+                window._matrixOven.done,
+                window._matrixOven.total
+            );
 
         //		if (!elem || (!elem.paper && (elem.type !== "text" && elem.type !== "tspan" && elem.type !== "#text"))){
         //			return ignoredElements;
