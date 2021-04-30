@@ -47,12 +47,12 @@ def json_serialisor(elm):
         if not shape:
             # Single element
             return elm.tolist()
-        elif max(shape) < 10:
+        else:  # max(shape) < 10:
             _e = elm.reshape((np.prod(shape),))
             _e = np.asarray(map(json_serialisor, _e))
             return _e.reshape(shape).tolist()
-        else:
-            return "numpy array with shape %s and type %s " % (elm.shape, elm.dtype)
+        # else:
+        #     return "numpy array with shape %s and type %s " % (elm.shape, elm.dtype)
     else:
         try:
             json.dumps(elm)
