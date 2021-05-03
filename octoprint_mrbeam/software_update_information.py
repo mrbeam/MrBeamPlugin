@@ -49,7 +49,7 @@ def get_update_information(plugin):
         reduce(
             dict_merge,
             [
-                _set_info_mrbeam_plugin(plugin, tier),
+                _set_info_mrbeam_plugin(plugin, tier, beamos_date),
                 _set_info_mrbeamdoc(plugin, tier),
                 _set_info_netconnectd_plugin(plugin, tier, beamos_date),
                 _set_info_findmymrbeam(plugin, tier),
@@ -112,12 +112,18 @@ def switch_software_channel(plugin, channel):
 #     )
 
 
-def _set_info_mrbeam_plugin(plugin, tier):
+def _set_info_mrbeam_plugin(plugin, tier, beamos_date):
+    if beamos_date > BEAMOS_LEGACY_DATE:
+        branch = "mrbeam2-{tier}-buster"
+    else:
+        branch = "mrbeam2-{tier}"
     return _get_octo_plugin_description(
         "mrbeam",
         tier,
         plugin,
         displayName=SORT_UP_PREFIX + "MrBeam Plugin",
+        branch=branch,
+        branch_default=branch,
         repo="MrBeamPlugin",
         pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
         restart="octoprint",
@@ -168,8 +174,10 @@ def _set_info_findmymrbeam(plugin, tier):
 
 def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
     if beamos_date > BEAMOS_LEGACY_DATE:
+        branch = "mrbeam2-{tier}-buster"
         pip_command = "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
     else:
+        branch = "mrbeam2-{tier}"
         pip_command = GLOBAL_PIP_COMMAND
     return _get_package_description_with_version(
         "mrbeam-ledstrips",
