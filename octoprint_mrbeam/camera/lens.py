@@ -144,7 +144,7 @@ class BoardDetectorDaemon(Thread):
         state=None,
         factory=False,
     ):
-        self._logger = mrb_logger(__name__)
+        self._logger = mrb_logger(__name__, lvl=5)
         # runCalibrationAsap : run the lens calibration when we have enough pictures ready
         self.event_bus = event_bus
         self.rawImgLock = rawImgLock
@@ -263,7 +263,21 @@ class BoardDetectorDaemon(Thread):
 
     def remove(self, path):
         self._logger.info("Removing picture %s" % path)
-        self.stopQueue.put(path)
+        if path in self.runningProcs.keys():
+            self._logger.debug("Killing process for path %s" % path)
+            os.kill(self.runningProcs[path].pid, signal.SIGKILL)
+            # termination might cause the pipe to break if it is in use by the process
+            self._logger.debug("Sent kill command for path %s" % path)
+            self.runningProcs[path].join()
+            self._logger.debug("Joined process for path %s" % path)
+            try:
+                self.runningProcs.pop(path)
+            except KeyError:
+                self._logger.debug(
+                    "Unexpected KeyError %s not in runningProcs - %s",
+                    path,
+                    self.runningProcs.keys(),
+                )
         self.state.remove(path)
         if self.idle:
             self.fire_event(MrBeamEvents.LENS_CALIB_IDLE)
@@ -359,7 +373,7 @@ class BoardDetectorDaemon(Thread):
         while not self.stopping:
             loopcount += 1
             # self._logger.info("loopcount %i \r", loopcount)
-            if loopcount % 20 == 0:
+            if loopcount % 100 == 0:
                 self._logger.debug(
                     "Running... %s procs running, stopsignal : %s"
                     % (len(self.runningProcs), self._stop.is_set())
@@ -375,7 +389,7 @@ class BoardDetectorDaemon(Thread):
                     args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,),
                 )
             if self.idle:
-                if loopcount % 20 == 0:
+                if loopcount % 100 == 0:
                     self._logger.debug(
                         "waiting to be restarted, lens calib : %s",
                         self.state.lensCalibration["state"],
@@ -460,15 +474,7 @@ class BoardDetectorDaemon(Thread):
                     else:
                         self._logger.debug("Process exited for path %s." % path)
                     self.runningProcs.pop(path)
-            while not self.stopQueue.empty() and not self.stopping:
-                path = self.stopQueue.get()
-                if path in self.runningProcs.keys():
-                    self._logger.warning("Killing process for path %s" % path)
-                    self.runningProcs[path].terminate()
-                    # termination might cause the pipe to break if it is in use by the process
-                    self.runningProcs[path].join()
-                    self.runningProcs.pop(path)
-            if self._stop.wait(0.02):
+            if self._stop.wait(0.01):
                 break
         self._logger.warning("Stop signal intercepted")
         resultQueue.close()
@@ -832,7 +838,9 @@ class CalibrationState(dict):
 
     def loadCalibration(self, path=None):
         """Load the calibration from path (defaults to self.lensCalibration default path)"""
-        self.lensCalibration = dict(np.load(path or self.output_file))
+        self.lensCalibration = dict(
+            np.load(path or self.output_file, allow_pickle=True)
+        )
         if (
             "mtx" in self.lensCalibration.keys()
             and self.lensCalibration["mtx"] is not None
