@@ -24,8 +24,8 @@ class LabelPrinter(object):
     COMMAND_RLPR = 'echo "{data}" | rlpr -q -H {ip}'
 
     PRINTER = dict(
-        device_label_printer=dict(enabled=True, ip="192.168.1.201"),
-        box_label_printer=dict(enabled=True, ip="192.168.1.202"),
+        device_label_printer=dict(enabled=True, ip="192.168.100.139"),
+        box_label_printer=dict(enabled=True, ip="192.168.100.139"),
     )
     EAN_NUMBERS = dict(
         MRBEAM2=None,
@@ -68,9 +68,9 @@ class LabelPrinter(object):
             self._logger.debug("printLabel() unknown labelType: %s ", label_type)
 
         if ok and blink:
-            self._plugin.fire_event(MrBeamEvents.BLINK_PRINT_LABELS)
+            self._plugin._event_bus.fire(MrBeamEvents.BLINK_PRINT_LABELS)
         elif blink is False:
-            self._plugin.fire_event(MrBeamEvents.LENS_CALIB_DONE)
+            self._plugin._event_bus.fire(MrBeamEvents.LENS_CALIB_DONE)
 
         res = dict(
             labelType=label_type,
@@ -183,13 +183,13 @@ class LabelPrinter(object):
         return """
 			^XA
 			^FWN
-			^FO50,20^BY4
-			^BEN,140,Y,N
+			^FO40,20^BY3
+			^BEN,100,Y,N
 			^FD{ean_num}^FS
 			^CF0,30
-			^FO50,212^FDMr Beam II {model}^FS
-			^CF0,40
-			^FO270,205^FD{prod_string}^FS
+			^FO10,180^FDMr Beam II {model}^FS
+			^CF0,45
+			^FO220,168^FD{prod_string}^FS
 			^XZ
 		""".format(
             prod_string=prod_string, model=self._get_model_abbrev(), ean_num=ean_num
@@ -203,7 +203,7 @@ class LabelPrinter(object):
         :return: Tuple (success, output): success: Boolean, output: commands STDOUT & STDERR (should be empty if successful)
         """
         cmd = self.COMMAND_RLPR.format(ip=ip, data=data)
-        out, code = exec_cmd_output(cmd, log_cmd=False, shell=True)
+        out, code = exec_cmd_output(cmd, log=False, shell=True)
         return (code == 0), out
 
     def _log_print_result(self, name, ok, output, payload=None):
