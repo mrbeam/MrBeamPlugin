@@ -24,8 +24,8 @@ class LabelPrinter(object):
     COMMAND_RLPR = 'echo "{data}" | rlpr -q -H {ip}'
 
     PRINTER = dict(
-        device_label_printer=dict(enabled=True, ip="192.168.100.139"),
-        box_label_printer=dict(enabled=True, ip="192.168.100.139"),
+        device_label_printer=dict(enabled=True, ip="192.168.1.201"),
+        box_label_printer=dict(enabled=True, ip="192.168.1.202"),
     )
     EAN_NUMBERS = dict(
         MRBEAM2=None,
