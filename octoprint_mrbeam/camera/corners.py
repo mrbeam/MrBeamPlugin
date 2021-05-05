@@ -30,7 +30,7 @@ def warpImgByCorners(image, corners, zoomed_out=False):
     Warps the region delimited by the corners in order to straighten it.
     :param image: takes an opencv image
     :param corners: as qd-dict
-    :param zoomed_out: wether to zoom out the pic to account for object height
+    :param zoomed_out: whether to zoom out the pic to account for object height
     :return: image with corners warped
     """
 
@@ -69,8 +69,8 @@ def warpImgByCorners(image, corners, zoomed_out=False):
             [min_dst_x, min_dst_y],  # nw
             [max_dst_x, min_dst_y],  # ne
             [max_dst_x, max_dst_y],  # sw
-            [min_dst_x, max_dst_y],
-        ],  # se
+            [min_dst_x, max_dst_y],  # se
+        ],
         dtype="float32",
     )
 
@@ -235,7 +235,8 @@ def get_deltas(*args, **kwargs):
 
 def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
     # _logger.warning(markers)
-    deltas = get_deltas(pic_settings, False, *args, **kwargs)
+    from_factory = kwargs.pop("from_factory", False)
+    deltas = get_deltas(pic_settings, False, *args, from_factory=from_factory, **kwargs)
     # try getting raw deltas first
     if undistorted:
         if deltas:
@@ -253,4 +254,6 @@ def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
         if deltas is None:
             return None
         else:
-            return {qd: markers[qd] + deltas[qd] for qd in QD_KEYS}
+            # logging.warning(markers)
+            # logging.warning(deltas)
+            return dict({qd: markers[qd] + deltas[qd] for qd in QD_KEYS})

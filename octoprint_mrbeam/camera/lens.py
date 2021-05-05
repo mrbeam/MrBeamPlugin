@@ -367,7 +367,6 @@ class BoardDetectorDaemon(Thread):
         # state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):
         count = 0
         resultQueue = Queue()
-        # lensCalibrationProcQueue = Queue()
         self._logger.debug("Pool started - %i procs" % MAX_PROCS)
         loopcount = 0
         while not self.stopping:
@@ -429,22 +428,7 @@ class BoardDetectorDaemon(Thread):
                 board_size = self.state[path]["board_size"]
                 args = (path, count, board_size, resultQueue)
                 self.runningProcs[path] = Process(target=handleBoardPicture, args=args)
-                # self.runningProcs[path].daemon = True
                 self.runningProcs[path].start()
-            # if not lensCalibrationProcQueue.empty():
-            # 	self._logger.info("Lens calibration has given a result! ")
-            # 	res = lensCalibrationProcQueue.get()
-            # 	self.state.updateCalibration(**res)
-            # 	# self.state.updateCalibration(*tuple(map(lambda x: res[x],
-            # 	# 					['ret', 'mtx', 'dist', 'rvecs', 'tvecs'])
-            # 	lensCalibrationProc.join()
-            # 	self.fire_event(MrBeamEvents.LENS_CALIB_DONE)
-            # 	self._logger.info("EVENT LENS CALIBRATION DONE")
-            # if lensCalibrationProc and \
-            #    lensCalibrationProc.exitcode is not None and \
-            #    lensCalibrationProc.exitcode != 0 :
-            # 	self._logger.warning("Something went wrong with the lens calibration process")
-
             while not resultQueue.empty():
                 # Need to clean the queue before joining processes
                 self._logger.info("Getting result from board detection.")
