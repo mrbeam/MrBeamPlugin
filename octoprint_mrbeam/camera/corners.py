@@ -152,7 +152,7 @@ def get_corner_calibration(pic_settings):
 def get_deltas_and_refs(
     settings,
     undistorted=False,
-    matrix=None,
+    mtx=None,
     dist=None,
     new_mtx=None,
     from_factory=False,
