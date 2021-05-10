@@ -334,9 +334,11 @@ class BoardDetectorDaemon(Thread):
         if self.state.calibrationRunning():
             self._logger.warning("Won't start lens calibration - already processing")
             return False
-        self._logger.info("Start lens calibration.")
         self.state.calibrationBusy()
-        self.startCalibrationWhenIdle = False
+        self._logger.info("Start lens calibration.")
+        # self.startCalibrationWhenIdle = False
+        self.fire_event(MrBeamEvents.LENS_CALIB_RUNNING)
+        self._logger.info("EVENT LENS CALIBRATION RUNNING")
         availableResults = self.state.getSuccesses()
         objPoints = []
         imgPoints = []
@@ -347,8 +349,6 @@ class BoardDetectorDaemon(Thread):
         self._logger.debug(
             "len patterns : %i and %i " % (len(objPoints), len(imgPoints))
         )
-        self.fire_event(MrBeamEvents.LENS_CALIB_RUNNING)
-        self._logger.info("EVENT LENS CALIBRATION RUNNING")
 
         self.state.updateCalibration(
             *runLensCalibration(
@@ -458,7 +458,7 @@ class BoardDetectorDaemon(Thread):
                     else:
                         self._logger.debug("Process exited for path %s." % path)
                     self.runningProcs.pop(path)
-            if self._stop.wait(0.01):
+            if self._stop.wait(0.1):
                 break
         self._logger.warning("Stop signal intercepted")
         resultQueue.close()
