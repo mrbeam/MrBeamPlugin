@@ -64,10 +64,10 @@ def get_update_information(plugin):
 
 
 def software_channels_available(plugin):
-    res = [dict(id=SW_UPDATE_TIER_PROD), dict(id=SW_UPDATE_TIER_BETA)]
+    res = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
     try:
         if plugin.is_dev_env():
-            res.extend([dict(id=SW_UPDATE_TIER_DEV)])
+            res.append(SW_UPDATE_TIER_DEV)
     except:
         pass
     return res
@@ -77,8 +77,8 @@ def switch_software_channel(plugin, channel):
     old_channel = plugin._settings.get(["dev", "software_tier"])
 
     if (
-        channel in (SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA)
-        or (plugin.is_dev_env() and channel in (SW_UPDATE_TIER_DEV,))
+        channel in software_channels_available(plugin)
+        or (plugin.is_dev_env() and channel == SW_UPDATE_TIER_DEV)
     ) and not channel == old_channel:
         _logger.info("Switching software channel to: %s", channel)
         plugin._settings.set(["dev", "software_tier"], channel)
