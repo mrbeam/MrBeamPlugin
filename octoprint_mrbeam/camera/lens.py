@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from collections import Mapping
 import datetime
 from multiprocessing import Event, Process, Queue, Value
-from threading import Thread
+from threading import Thread, RLock
 import logging
 import cv2
 import signal, os
@@ -631,6 +631,7 @@ class CalibrationState(dict):
         self.output_file_ts = -1
         self.rawImgLock = rawImgLock
         self.setOutpuFileTimestamp()
+        self.lock = RLock()
         if os.path.isfile(str(self.output_file)):
             self.loadCalibration()
         else:
@@ -656,84 +657,91 @@ class CalibrationState(dict):
         index=-1,
         extra_kw=None,
     ):
-        self.lensCalibration["state"] = STATE_PENDING
-        if path in self.keys():
-            # was already added
-            return
-        if not isinstance(extra_kw, Mapping):
-            extra_kw = {}
-        default = dict(
-            tm_added=time.time(),  # when picture was taken
-            state=state,
-            tm_proc=None,  # when processing started
-            tm_end=None,  # when processing ended
-            board_size=board_size,
-            index=index,
-            **extra_kw
-        )
-        dirlist = os.listdir(os.path.dirname(path))
-        if os.path.basename(path) + ".npz" in dirlist:
-            self._logger.debug("Found previous npz file for %s" % path)
-            self[path] = dict_merge(default, CalibrationState._load(path))
-        else:
-            self[path] = default
+        with self.lock:
+            self.lensCalibration["state"] = STATE_PENDING
+            if path in self.keys():
+                # was already added
+                return
+            if not isinstance(extra_kw, Mapping):
+                extra_kw = {}
+            default = dict(
+                tm_added=time.time(),  # when picture was taken
+                state=state,
+                tm_proc=None,  # when processing started
+                tm_end=None,  # when processing ended
+                board_size=board_size,
+                index=index,
+                **extra_kw
+            )
+            dirlist = os.listdir(os.path.dirname(path))
+            if os.path.basename(path) + ".npz" in dirlist:
+                self._logger.debug("Found previous npz file for %s" % path)
+                self[path] = dict_merge(default, CalibrationState._load(path))
+            else:
+                self[path] = default
         self.onChange()
 
     def remove(self, path):
-        if self.pop(path, None):  # deletes without checking if the key exists
-            for f in [path, path + ".npz"]:
-                if os.path.isfile(f):
-                    try:
-                        os.remove(f)
-                    except OSError:
-                        pass
+        with self.lock:
+            if self.pop(path, None):  # deletes without checking if the key exists
+                for f in [path, path + ".npz"]:
+                    if os.path.isfile(f):
+                        try:
+                            os.remove(f)
+                        except OSError:
+                            pass
         self.onChange()
 
     def ignore(self, path):
-        self.update(path, STATE_IGNORED)
+        with self.lock:
+            self.update(path, STATE_IGNORED)
 
     def update(self, path, state, date=None, origin=USER, **kw):
         date = date or datetime.datetime.now()
         if state in STATES:
-            _data = dict(state=state, date=date, origin=origin, **kw)
-            _t = time.time()
-            if state == STATE_SUCCESS or state == STATE_FAIL:
-                _data["tm_end"] = _t
-            if state == STATE_PROCESSING:
-                _data["tm_proc"] = _t
-            self[path].update(_data)
-            if state == STATE_SUCCESS or state == STATE_FAIL:
-                self.save(path)
+            with self.lock:
+                _data = dict(state=state, date=date, origin=origin, **kw)
+                _t = time.time()
+                if state == STATE_SUCCESS or state == STATE_FAIL:
+                    _data["tm_end"] = _t
+                if state == STATE_PROCESSING:
+                    _data["tm_proc"] = _t
+                self[path].update(_data)
+                if state == STATE_SUCCESS or state == STATE_FAIL:
+                    self.save(path)
             self.onChange()
         else:
             raise ValueError("Not a valid state: {}", state)
 
     def updateCalibration(self, ret, mtx, dist, rvecs, tvecs):
         if ret != 0.0:
-            self.lensCalibration.update(
-                dict(
-                    state=STATE_SUCCESS,
-                    err=ret,
-                    mtx=mtx,
-                    dist=dist,
-                    rvecs=rvecs,
-                    tvecs=tvecs,
-                    date=datetime.datetime.now(),
-                    # read with datetime.datetime.strptime(date, DATE_FORMAT)
-                    resolution=self.imageSize,
+            with self.lock:
+                self.lensCalibration.update(
+                    dict(
+                        state=STATE_SUCCESS,
+                        err=ret,
+                        mtx=mtx,
+                        dist=dist,
+                        rvecs=rvecs,
+                        tvecs=tvecs,
+                        date=datetime.datetime.now(),
+                        # read with datetime.datetime.strptime(date, DATE_FORMAT)
+                        resolution=self.imageSize,
+                    )
                 )
-            )
-            self.saveCalibration()
+                self.saveCalibration()
         # elif state in STATES:
         # 	self.lastLensCalibrationState = state
         # else:
         # 	raise ValueError("Not a valid state: {}", state)
         else:
-            self.lensCalibration.update(dict(state=STATE_FAIL))
+            with self.lock:
+                self.lensCalibration.update(dict(state=STATE_FAIL))
         self.onChange()
 
     def calibrationBusy(self):
-        self.lensCalibration.update(dict(state=STATE_PROCESSING))
+        with self.lock:
+            self.lensCalibration.update(dict(state=STATE_PROCESSING))
         self.onChange()
 
     def calibrationRunning(self):
@@ -746,33 +754,36 @@ class CalibrationState(dict):
         # self._logger.debug("### REFRESH ###")
         changed = False
         for path, elm in self.items():
-            if elm["state"] == STATE_PENDING_CAMERA and os.path.exists(path):
-                if self.rawImgLock is not None:
-                    self.rawImgLock.acquire()
-                    self.rawImgLock.release()
-                self.update(path, STATE_QUEUED)
-                changed = True
-                if imgFoundCallback is not None:
-                    imgFoundCallback(*args, **kwargs)
-                    self._logger.debug(
-                        "CALLBACK : %s (*%s, **%s)"
-                        % (imgFoundCallback.__name__, args, kwargs)
-                    )
+            with self.lock:
+                if elm["state"] == STATE_PENDING_CAMERA and os.path.exists(path):
+                    if self.rawImgLock is not None:
+                        self.rawImgLock.acquire()
+                        self.rawImgLock.release()
+                    self.update(path, STATE_QUEUED)
+                    changed = True
+                    if imgFoundCallback is not None:
+                        imgFoundCallback(*args, **kwargs)
+                        self._logger.debug(
+                            "CALLBACK : %s (*%s, **%s)"
+                            % (imgFoundCallback.__name__, args, kwargs)
+                        )
         if changed:
             self._logger.debug("something changed")
             self.onChange()
         return changed
 
     def getElmInState(self, state):
-        return dict(filter(lambda _s: _s[1]["state"] == state, self.items()))
+        with self.lock:
+            return dict(filter(lambda _s: _s[1]["state"] == state, self.items()))
 
     def get_from_timestamp(self, timestamp):
-        return dict(
-            filter(
-                lambda _s: _s[1]["timestamp"].strftime(DATE_FORMAT) == timestamp,
-                self.items(),
+        with self.lock:
+            return dict(
+                filter(
+                    lambda _s: _s[1]["timestamp"].strftime(DATE_FORMAT) == timestamp,
+                    self.items(),
+                )
             )
-        )
 
     def getSuccesses(self):
         return self.getElmInState(STATE_SUCCESS).values()
@@ -802,11 +813,13 @@ class CalibrationState(dict):
 
     def save(self, path):
         """Save the results of the detected chessboard in given path"""
-        np.savez(path + ".npz", **self[path])
+        with self.lock:
+            np.savez(path + ".npz", **self[path])
 
     def load(self, path):
         """Load the results of the detected chessboard in given path"""
-        self[path].update(CalibrationState._load(path))
+        with self.lock:
+            self[path].update(CalibrationState._load(path))
         self.onChange()
 
     @staticmethod
@@ -816,41 +829,44 @@ class CalibrationState(dict):
 
     def saveCalibration(self, path=None):
         """Load the calibration to path"""
-        makedirs(path or self.output_file, parent=True)
-        np.savez(path or self.output_file, **self.lensCalibration)
+        with self.lock:
+            makedirs(path or self.output_file, parent=True)
+            np.savez(path or self.output_file, **self.lensCalibration)
         self.setOutpuFileTimestamp()
 
     def loadCalibration(self, path=None):
         """Load the calibration from path (defaults to self.lensCalibration default path)"""
-        self.lensCalibration = dict(
-            np.load(path or self.output_file, allow_pickle=True)
-        )
-        if (
-            "mtx" in self.lensCalibration.keys()
-            and self.lensCalibration["mtx"] is not None
-        ):
-            self.lensCalibration["state"] = STATE_SUCCESS
-        else:
-            self.lensCalibration["state"] = STATE_FAIL
-        if not "resolution" in self.lensCalibration.keys():
-            self.lensCalibration["resolution"] = LEGACY_STILL_RES
+        with self.lock:
+            self.lensCalibration = dict(
+                np.load(path or self.output_file, allow_pickle=True)
+            )
+            if (
+                "mtx" in self.lensCalibration.keys()
+                and self.lensCalibration["mtx"] is not None
+            ):
+                self.lensCalibration["state"] = STATE_SUCCESS
+            else:
+                self.lensCalibration["state"] = STATE_FAIL
+            if not "resolution" in self.lensCalibration.keys():
+                self.lensCalibration["resolution"] = LEGACY_STILL_RES
         self.onChange()
 
     def rm_unused_images(self):
         for path, item in self.items():
-            is_used = (
-                item["state"] == STATE_SUCCESS
-                and "date" in item
-                and "date" in self.lensCalibration
-                and datetime.datetime.strptime(
-                    str(item["date"]), DATE_FORMAT
-                )  # str convert from np array
-                < datetime.datetime.strptime(
-                    str(self.lensCalibration["date"]), DATE_FORMAT
+            with self.lock:
+                is_used = (
+                    item["state"] == STATE_SUCCESS
+                    and "date" in item
+                    and "date" in self.lensCalibration
+                    and datetime.datetime.strptime(
+                        str(item["date"]), DATE_FORMAT
+                    )  # str convert from np array
+                    < datetime.datetime.strptime(
+                        str(self.lensCalibration["date"]), DATE_FORMAT
+                    )
                 )
-            )
-            if not is_used:
-                self.remove(path)
+                if not is_used:
+                    self.remove(path)
         self.onChange()
 
     def rm_from_origin(self, origin=USER):
