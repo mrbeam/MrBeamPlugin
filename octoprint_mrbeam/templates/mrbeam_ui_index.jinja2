@@ -187,6 +187,10 @@
         {% include 'overlays/offline.jinja2' %}
         <!-- End of overlays -->
 
+        <div id="placeWaOverlay">
+            <i class="icon icon-spinner icon-spin" style="font-weight: bold; font-size: 4em"></i>
+        </div>
+
 		 <!-- Generic plugin template files -->
 		{% for key in templates.generic.order %}
 			{% set data = templates.generic.entries[key] %}

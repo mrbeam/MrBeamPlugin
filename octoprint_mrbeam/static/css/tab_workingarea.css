@@ -761,3 +761,52 @@ body.ctrlKey #translateHandle {
   stroke-opacity: 1;
   pointer-events: none;
 }
+
+body.designLoadingActive #placeWaOverlay {
+  opacity: 1;
+  transition: opacity ease-out;
+  transition-duration: 0.5s;
+  transition-delay: 0.5s;
+}
+
+body.designLoadingActive #placeWaOverlay i {
+  transform: scale(1);
+}
+
+#placeWaOverlay {
+  opacity: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  user-select: none;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 99999;
+  transition: opacity ease-out;
+  transition-duration: 0.2s;
+  transition-delay: 0s;
+}
+
+#placeWaOverlay i {
+  position: relative;
+  left: 50vw;
+  top: 50vh;
+  font-size: 4em;
+  transform: scale(0.1);
+  transition-property: transform;
+}
+
+.rotate {
+  animation: rotation 2s infinite linear;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}

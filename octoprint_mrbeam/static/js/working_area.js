@@ -621,6 +621,7 @@ $(function () {
         self.placeSVG = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
+            $("body").addClass("designLoadingActive");
             cb = function (fragment) {
                 var duration_load = Date.now() - start_ts;
                 start_ts = Date.now();
@@ -795,6 +796,8 @@ $(function () {
             fileObj = fileObj || {};
             origin = origin || "";
             start_ts = start_ts || Date.now();
+
+            $("body").addClass("designLoadingActive");
 
             if (!analyticsData._skip) {
                 // this is a flag used by quickShape
@@ -993,6 +996,9 @@ $(function () {
             } finally {
                 analyticsData.duration_processing = Date.now() - start_ts;
                 self._analyticsPrepareAndInsertSVG(analyticsData);
+                setTimeout(function () {
+                    $("body").removeClass("designLoadingActive");
+                }, 1);
             }
         };
 
