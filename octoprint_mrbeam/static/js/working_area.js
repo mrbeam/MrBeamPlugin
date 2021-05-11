@@ -621,7 +621,7 @@ $(function () {
         self.placeSVG = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
-            $("body").addClass("designLoadingActive");
+            $("body").addClass("activitySpinnerActive");
             cb = function (fragment) {
                 var duration_load = Date.now() - start_ts;
                 start_ts = Date.now();
@@ -713,6 +713,7 @@ $(function () {
         self.placeDXF = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
+            $("body").addClass("activitySpinnerActive");
             cb = function (fragment, timestamps) {
                 var duration_load = timestamps.load_done
                     ? timestamps.load_done - start_ts
@@ -797,7 +798,7 @@ $(function () {
             origin = origin || "";
             start_ts = start_ts || Date.now();
 
-            $("body").addClass("designLoadingActive");
+            $("body").addClass("activitySpinnerActive");
 
             if (!analyticsData._skip) {
                 // this is a flag used by quickShape
@@ -997,7 +998,7 @@ $(function () {
                 analyticsData.duration_processing = Date.now() - start_ts;
                 self._analyticsPrepareAndInsertSVG(analyticsData);
                 setTimeout(function () {
-                    $("body").removeClass("designLoadingActive");
+                    $("body").removeClass("activitySpinnerActive");
                 }, 1);
             }
         };
@@ -1994,6 +1995,7 @@ $(function () {
         self.placeIMG = function (file, textMode) {
             var start_ts = Date.now();
             var url = self._getIMGserveUrl(file);
+            $("body").addClass("activitySpinnerActive");
             var img = new Image();
             textMode = textMode || false;
             img.onload = function () {
@@ -2616,7 +2618,7 @@ $(function () {
                 svgStr = WorkingAreaHelper.fix_svg_string(svgStr);
                 return svgStr;
             } else {
-                return; // TODO raise exception
+                // TODO raise exception
             }
         };
 

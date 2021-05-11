@@ -762,18 +762,19 @@ body.ctrlKey #translateHandle {
   pointer-events: none;
 }
 
-body.designLoadingActive #placeWaOverlay {
+body.activitySpinnerActive #activitySpinnerOverlay {
   opacity: 1;
+  pointer-events: auto;
   transition: opacity ease-out;
   transition-duration: 0.5s;
-  transition-delay: 0.5s;
+  transition-delay: 1s;
 }
 
-body.designLoadingActive #placeWaOverlay i {
+body.activitySpinnerActive #activitySpinnerOverlay i {
   transform: scale(1);
 }
 
-#placeWaOverlay {
+#activitySpinnerOverlay {
   opacity: 0;
   position: fixed;
   top: 0;
@@ -789,24 +790,11 @@ body.designLoadingActive #placeWaOverlay i {
   transition-delay: 0s;
 }
 
-#placeWaOverlay i {
+#activitySpinnerOverlay i {
   position: relative;
   left: 50vw;
   top: 50vh;
   font-size: 4em;
   transform: scale(0.1);
   transition-property: transform;
-}
-
-.rotate {
-  animation: rotation 2s infinite linear;
-}
-
-@keyframes rotation {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(359deg);
-  }
 }
