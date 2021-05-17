@@ -1173,6 +1173,16 @@ body {
   color: #383e42;
 }
 
+.mrb_icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  stroke-width: 0;
+  stroke: #383e42;
+  fill: #383e42;
+}
+
 .print-control .btn {
   padding-left: 4px;
   padding-right: 4px;
@@ -2799,7 +2809,7 @@ input.search-query,
   width: 99%;
 }
 
-#rating_block span.rating-label{
+#rating_block span.rating-label {
   font-size: 12px;
   text-align: center;
   line-height: 18px;
@@ -2851,23 +2861,26 @@ input.search-query,
   display: none;
 }
 
-#ask_user_details label, .review_explanation{
+#ask_user_details label,
+.review_explanation {
   font-weight: bold;
   margin: auto 20px 15px 20px;
 }
 
-#dont_ask_review_link, #change_review {
+#dont_ask_review_link,
+#change_review {
   color: dimgray;
 }
 
-#review_textarea, #review_input_phone_email {
+#review_textarea,
+#review_input_phone_email {
   display: flex;
   margin-left: auto;
   margin-right: auto;
   width: 90%;
 }
 
-#positive_review p{
+#positive_review p {
   white-space: pre-wrap;
 }
 
