@@ -192,13 +192,47 @@ def add_quick_shape_heart(driver, w=99, h=55, magic=0.4, stroke=True, fill=False
     return quickShapeElement, listElement
 
 
-def get_design(driver):
+def add_quick_text_alerta_stencil(
+    driver, text="test", font=1, fill_brightness=100, style=1
+):
+    _click_on(driver, "#working_area_tab_text_btn")
+    wait_for_modal(driver, "quick_text_dialog")
+    _fill_input(driver, "#quick_text_dialog_text_input", str(text))
+    _fill_input(driver, "#quick_text_dialog_intensity", fill_brightness)
+
+    if style == 1:
+        _click_on(driver, "#quick_text_straight")  # quick_text_straight - button
+    elif style == 2:
+        _click_on(driver, "#quick_text_cw")  # quick_text_cw - button
+    elif style == 3:
+        _click_on(driver, "#quick_text_ccw")  # quick_text_ccw - button
+    if style == 2 or style == 3:
+        _fill_input(
+            driver, "#quick_text_dialog_circle", 50
+        )  # quick_text_dialog_circle - slider (cw & ccw)
+
+    _click_on(driver, "#quick_text_text_done_btn")
+    quickShapeElement, listElement = get_design(driver, True)
+    return quickShapeElement, listElement
+
+
+def get_design(driver, text=False):
     wait = WebDriverWait(driver, 10, poll_frequency=0.5)
-    designElement = wait.until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, "#userContent g.userSVG")),
-        message="Waiting for design to appear on working area.",
-    )
-    listId = designElement.get_attribute("mb:origin")
+    if text:
+        designElement = wait.until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, "#userContent g.userText")
+            ),
+            message="Waiting for design to appear on working area.",
+        )
+    else:
+        designElement = wait.until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, "#userContent g.userSVG")
+            ),
+            message="Waiting for design to appear on working area.",
+        )
+    listId = designElement.get_attribute("mb:id")
     listElement = driver.find_element_by_id(listId)
     logging.getLogger().info("Found design #{}".format(listId))
     return (designElement, listElement)
@@ -213,6 +247,36 @@ def get_paths(driver, selector):
         }}
         return dAttrs;
     """.format(
+        selector
+    )
+    return driver.execute_script(js)
+
+
+def get_text(driver, selector):
+    js = """
+            let bb = document.querySelector("{0} > g > text > textPath").innerHTML;
+            return bb;
+        """.format(
+        selector
+    )
+    return driver.execute_script(js)
+
+
+def get_text_style(driver, selector):
+    js = """
+                let bb = document.querySelector("{0} > g > text").attributes.style;
+                return bb;
+            """.format(
+        selector
+    )
+    return driver.execute_script(js)
+
+
+def get_text_fill(driver, selector):
+    js = """
+                let bb = document.querySelector("{0} > g > text").attributes.fill.value;
+                return bb;
+            """.format(
         selector
     )
     return driver.execute_script(js)
@@ -427,6 +491,13 @@ def wait_for_console_msg(driver, pattern, log_callback, message=""):
     return logEntry
 
 
+def wait_for_modal(driver, selector):
+    wait = WebDriverWait(driver, 20, poll_frequency=0.5)
+    return wait.until(
+        CEC.element_has_css_class((By.ID, selector), "in"), message="Wait for modal"
+    )
+
+
 def ensure_device_homed(driver):
     js = """
         let isHomed = mrbeam.mrb_state.is_homed;
@@ -502,7 +573,7 @@ def _fill_input(driver, selector, string):
         # time.sleep(1.2)
         input.send_keys(ctrl_key + "a")
         # time.sleep(1.2)
-        input.send_keys(string)
+        input.send_keys(unicode(string.decode("utf-8")))
         # time.sleep(1.2)
     return input
 
@@ -564,10 +635,10 @@ def _set_range(driver, el, val):
             return True
         prev_guess = target
         if float(curval) < float(val):
-            minguess = target
+            maxguess = target
             target += (maxguess - target) / 2
         else:
-            maxguess = target
+            minguess = target
             target = minguess + (target - minguess) / 2
         deltax = target - prev_guess
         if abs(deltax) < 0.5:
