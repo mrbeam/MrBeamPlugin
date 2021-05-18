@@ -1,10 +1,10 @@
 import logging
-from frontend import webdriverUtils
-from frontend import uiUtils
-from frontend.quick_text.base_procedure import BaseProcedure
+from tests.frontend import webdriverUtils
+from tests.frontend import uiUtils
+from tests.frontend.quick_text.base_procedure import BaseProcedure
 
 
-class TestAlertaStencil(BaseProcedure):
+class TestAlertaStencilStraight(BaseProcedure):
     def setup_method(self, method):
 
         # expectations (None means skip)
@@ -27,4 +27,4 @@ class TestAlertaStencil(BaseProcedure):
         self.testEnvironment = {}
 
     def get_quick_text(self):
-        return uiUtils.add_quick_text_alerta_stencil(self.driver, "Test")
+        return uiUtils.add_quick_text(self.driver, "Test")

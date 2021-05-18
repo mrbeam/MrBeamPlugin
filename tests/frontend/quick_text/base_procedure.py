@@ -1,6 +1,6 @@
-from frontend import uiUtils
-from frontend import webdriverUtils
-from frontend import frontendTestUtils
+from tests.frontend import uiUtils
+from tests.frontend import webdriverUtils
+from tests.frontend import frontendTestUtils
 
 
 class BaseProcedure:
@@ -59,16 +59,16 @@ class BaseProcedure:
             assert (
                 text == self.expectedText["text"]
             ), "Quicktext text error: {} != {}".format(text, self.expectedText["text"])
-            fill = uiUtils.get_text_fill(self.driver, selector)
 
+            fill = uiUtils.get_text_fill(self.driver, selector)
             assert (
                 fill == self.expectedText["fill"]
             ), "Quicktext fill error {} != {}".format(fill, self.expectedText["fill"])
-            style = uiUtils.get_text_style(self.driver, selector)
 
-            assert style["value"].index(
-                self.expectedText["font-family"]
-            ), "Quicktext font error {} != {}".format(
+            style = uiUtils.get_text_style(self.driver, selector)
+            assert (
+                style["value"].find(self.expectedText["font-family"]) != -1
+            ), "Quicktext font error {} - don't includes {}".format(
                 style["value"], self.expectedText["font-family"]
             )
 
@@ -81,7 +81,8 @@ class BaseProcedure:
             self.log.warn(msg)
         else:
             self.log.info(msg)
-
         # TODO assert no js errors
         # assert summary["WARNING"] == 0, "{} Javascript warnings occured".format(summary["WARNING"])
-        # assert summary["SEVERE"] == 0, "{} Javascript errors occured".format(summary["SEVERE"])
+        # assert summary["SEVERE"] == 0, "{} Javascript errors occured".format(
+        #     summary["SEVERE"]
+        # )

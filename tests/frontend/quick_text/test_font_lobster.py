@@ -1,27 +1,24 @@
-# coding=utf-8
 import logging
 from tests.frontend import webdriverUtils
 from tests.frontend import uiUtils
 from tests.frontend.quick_text.base_procedure import BaseProcedure
 
 
-class TestAlertaStencilRounded(BaseProcedure):
-    text = "umlaute äüöß"
+class TestLobster(BaseProcedure):
+    text = "Test"
 
     def setup_method(self, method):
-
         # expectations (None means skip)
-        # print(self.text.encode("ISO-8859-1"))
         self.expectedText = {
             "text": unicode(self.text.decode("utf-8")),
-            "font-family": "Allerta Stencil",
+            "font-family": "Lobster",
             "fill": "#9b9b9b",
         }
         self.expectedBBox = {
-            "x": 187.3125,
-            "y": 109.765625,
-            "w": 125.390625,
-            "h": 63.921875,
+            "x": 235.140625,
+            "y": 110.59375,
+            "w": 29.71875,
+            "h": 24.1875,
         }
 
         # basics
@@ -31,5 +28,4 @@ class TestAlertaStencilRounded(BaseProcedure):
         self.testEnvironment = {}
 
     def get_quick_text(self):
-
-        return uiUtils.add_quick_text(self.driver, self.text, style=2)
+        return uiUtils.add_quick_text(self.driver, self.text, font=6)

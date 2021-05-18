@@ -8,9 +8,9 @@
             <input type="text" id="quick_text_dialog_text_input" class="input-block quicktext-input" data-bind="textInput: currentQuickText" placeholder="{{ _('QuickText...') }}" autocomplete="off"/>
 			<div class="row-fluid padding-top">
 				{# Translators: Aa - the first alphabet letter capitalized and not #}
-				<div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontPrev"><i class="icon-chevron-left" title="{{ _('Previous Font') }}"></i> {{ _('Aa') }} </div>
+				<div class="btn btn-small span3 quicktext-font-button" id="quick_text_dialog_prev_font" data-bind="click: currentQuickTextFontPrev"><i class="icon-chevron-left" title="{{ _('Previous Font') }}"></i> {{ _('Aa') }} </div>
 				<div class="span6 quicktext-fontname" id="quick_text_dialog_font_name"></div>
-				<div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontNext"> {{ _('Aa') }} <i class="icon-chevron-right" title="{{ _('Next Font') }}"></i></div>
+				<div class="btn btn-small span3 quicktext-font-button" id="quick_text_dialog_next_font" data-bind="click: currentQuickTextFontNext"> {{ _('Aa') }} <i class="icon-chevron-right" title="{{ _('Next Font') }}"></i></div>
 			</div>
 			<input id="quick_text_dialog_intensity" class="mrb_slider grayscale quicktext-slider" type="range" min="0" max="255"/>
             <div id="qt_round_text_section" class="straight">

@@ -12,7 +12,7 @@ import custom_expected_conditions as CEC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 
-from frontend import frontendTestUtils
+from tests.frontend import frontendTestUtils
 
 DEFAULT_ENV = {
     u"BEAMOS_VERSION": "?",
@@ -192,14 +192,15 @@ def add_quick_shape_heart(driver, w=99, h=55, magic=0.4, stroke=True, fill=False
     return quickShapeElement, listElement
 
 
-def add_quick_text_alerta_stencil(
-    driver, text="test", font=1, fill_brightness=100, style=1
-):
+def add_quick_text(driver, text="test", font=1, fill_brightness=100, style=1):
     _click_on(driver, "#working_area_tab_text_btn")
     wait_for_modal(driver, "quick_text_dialog")
     _fill_input(driver, "#quick_text_dialog_text_input", str(text))
     _fill_input(driver, "#quick_text_dialog_intensity", fill_brightness)
 
+    if font != 1:
+        for i in range(font - 1):
+            _click_on(driver, "#quick_text_dialog_next_font")
     if style == 1:
         _click_on(driver, "#quick_text_straight")  # quick_text_straight - button
     elif style == 2:
