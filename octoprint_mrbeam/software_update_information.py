@@ -174,10 +174,8 @@ def _set_info_findmymrbeam(plugin, tier):
 
 def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
     if beamos_date > BEAMOS_LEGACY_DATE:
-        branch = "mrbeam2-{tier}-buster"
         pip_command = "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
     else:
-        branch = "mrbeam2-{tier}"
         pip_command = GLOBAL_PIP_COMMAND
     return _get_package_description_with_version(
         "mrbeam-ledstrips",
