@@ -411,7 +411,7 @@
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
-																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'×', digits:0}); return true; },
+																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'[^0-9.,-]', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
 
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
@@ -518,7 +518,7 @@
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
-																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'×', digits:0}); return true; },
+																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'[^0-9.,-]', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {
@@ -717,7 +717,7 @@
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
-																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'×', digits:0}); return true; },
+																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'[^0-9.,-]', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {
@@ -807,7 +807,7 @@
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
                                                 <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
-																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'×', digits:0}); return true; },
+																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'[^0-9.,-]', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {

@@ -142,8 +142,8 @@ class Cpu(object):
             return res
 
         except:
-            self._logger.exception(
-                "Exception in _get_cpu_throttle_warnings while converting cpu get_throttled: %s",
+            self._logger.error(
+                "Exception in _get_cpu_throttle_warnings while converting cpu get_throttled: '%s'",
                 t_hex,
             )
             return []
