@@ -207,6 +207,12 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.track_devpi()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    "0.9.4.0",
+                    equal_ok=False,
+                ):
+                    self.hostname_helper_scripts()
 
                 # migrations end
 
@@ -833,3 +839,30 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, "pip.conf")
         dst = "/home/pi/.pip/pip.conf"
         os.renames(src, dst)
+
+    @logExceptions
+    def hostname_helper_scripts(self):
+        """
+        Add systemd files and scripts to auto change the hostname on boot and/or
+        change of name in /etc/mrbeam
+        """
+        self._logger.info("Removing previous first_boot_script...")
+        for rm_fname in [
+            "/root/scripts/change_hostname",
+            "/root/scripts/change_apname",
+            "/root/scripts/change_etc_mrbeam",
+            "/etc/init.d/first_boot_script",
+        ]:
+            os.remove(rm_fname)
+        self._logger.info("Adding hostname helper scripts...")
+        for fname in [
+            "/usr/bin/beamos_hostname",
+            "/usr/bin/beamos_serial",
+            "/etc/init.d/beamos_first_boot",
+        ]:
+            src = os.path.join(
+                os.path.dirname(__file__),
+                self.MIGRATE_FILES_FOLDER,
+                os.path.basename(fname),
+            )
+            os.renames(src, fname)
