@@ -36,12 +36,19 @@ plugin_url = "https://github.com/mrbeam/MrBeamPlugin"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
+import setuptools
+from distutils.version import LooseVersion
+
+if LooseVersion(setuptools.__version__) < LooseVersion("40.0"):
+    picamera = "picamera"
+else:
+    picamera = 'picamera; platform_machine=="armv7l"'
 plugin_requires = [
     "webcolors",
     "pillow",
     "lxml",
     "numpy",
-    'picamera; platform_machine=="armv7l"',
+    picamera,
 ]
 
 ### --------------------------------------------------------------------------------------------------------------------
