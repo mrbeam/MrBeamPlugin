@@ -853,7 +853,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             "/root/scripts/change_etc_mrbeam",
             "/etc/init.d/first_boot_script",
         ]:
-            os.remove(rm_fname)
+            # permission...
+            os.system("sudo rm '%s'" % rm_fname)
+            # os.remove(rm_fname)
         self._logger.info("Adding hostname helper scripts...")
         for fname in [
             "/usr/bin/beamos_hostname",
@@ -865,4 +867,6 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 self.MIGRATE_FILES_FOLDER,
                 os.path.basename(fname),
             )
-            os.renames(src, fname)
+            # permission...
+            os.system("sudo mv '%s' '%s'" % (src, fname))
+            # os.renames(src, fname)

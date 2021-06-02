@@ -28,7 +28,10 @@ def get_version_of_pip_module(pip_name, pip_command=None, disable_pip_ver_check=
     elif isinstance(pip_command, list):
         pip_command = " ".join(pip_command)
     # Checking for pip version outdate takes extra time and text output.
-    for disabled in [DISABLE_PIP_CHECK, DISABLE_PY_WARNING]:
+    # NOTE: Older versions of pip do not have the --no-python-version-warning flag
+    for disabled in [
+        DISABLE_PIP_CHECK,
+    ]:  # DISABLE_PY_WARNING]:
         if disable_pip_ver_check and not disabled in pip_command:
             pip_command += " " + disabled
     venv_packages = _pip_package_version_lists.get(pip_command, None)
@@ -50,6 +53,7 @@ def get_version_of_pip_module(pip_name, pip_command=None, disable_pip_ver_check=
             return None
         else:
             _logger.warning("`%s list` returned code %s", pip_command, returncode)
+            return None
     # Go through the package list available in our venv
     for line in venv_packages:
         token = line.split()

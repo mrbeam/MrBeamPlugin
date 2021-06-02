@@ -62,16 +62,18 @@ class DeviceInfo(object):
 
     def get_beamos_version(self):
         """Expect the beamos version to be formatted as TIER-YYYY-MM-DD"""
+        from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
+
         beamos_ver = self._device_data.get(self.KEY_OCTOPI, None)
         if not beamos_ver:
-            return None, None
+            return None, BEAMOS_LEGACY_DATE
         match = BEAMOS_PATTERN.match(beamos_ver)
         if match:
             # date = datetime.date.fromisoformat(match.group(2)) # available in python3
             date = datetime.datetime.strptime(match.group(2), "%Y-%m-%d").date()
             return match.group(1), date
         else:
-            return None, None
+            return None, BEAMOS_LEGACY_DATE
 
     def _read_file(self):
         try:
