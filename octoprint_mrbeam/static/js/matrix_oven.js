@@ -216,6 +216,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         // We know this issue with SVGs from Vectornator (https://www.vectornator.io/)
         // which creates SVG paths which use a plus sign as separator between parameters. Snap.svg can not handle this.
         // Therefore if the path does not contain any whitespace nor comma but some plus signs, we replace these by commas.
+        // Example: "M129.122+146.728L491.004+152.024L491.004+179.68..." => "M129.122,146.728L491.004,152.024L491.004,179.68..."
         if (d.indexOf(" ") < 0 && d.indexOf(",") < 0 && d.indexOf("+") > 0) {
             let dOld = d;
             d = d.replaceAll("+", ",");
