@@ -1,0 +1,174 @@
+{
+  "version": "0.0.0",
+  "mrbeam": {
+    "name": " MrBeam Plugin",
+    "repo": "MrBeamPlugin",
+    "restart": "octoprint",
+    "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+    "type": "github_commit",
+    "user": "mrbeam",
+    "stable": {
+      "branch": "mrbeam2-stable",
+      "branch_default": "mrbeam2-stable"
+    },
+    "beta": {
+      "branch": "mrbeam2-beta",
+      "branch_default": "mrbeam2-beta"
+    },
+    "develop": {
+      "branch": "develop",
+      "branch_default": "develop"
+    }
+  },
+  "mrbeamdoc": {
+    "name": "Mr Beam Documentation",
+    "type": "github_commit",
+    "user": "mrbeam",
+    "repo": "MrBeamDoc",
+    "pip": "https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
+    "restart": "octoprint",
+    "stable": {
+      "branch": "mrbeam2-stable",
+      "branch_default": "mrbeam2-stable"
+    },
+    "beta": {
+      "branch": "mrbeam2-beta",
+      "branch_default": "mrbeam2-beta"
+    },
+    "develop": {
+      "branch": "develop",
+      "branch_default": "develop"
+    }
+  },
+  "netconnectd": {
+    "name": "OctoPrint-Netconnectd Plugin",
+    "type": "github_commit",
+    "user": "mrbeam",
+    "repo": "OctoPrint-Netconnectd",
+    "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
+    "restart": "octoprint",
+    "stable": {
+      "branch": "mrbeam2-stable",
+      "branch_default": "mrbeam2-stable"
+    },
+    "beta": {
+      "branch": "mrbeam2-beta",
+      "branch_default": "mrbeam2-beta"
+    },
+    "develop": {
+      "branch": "develop",
+      "branch_default": "develop"
+    }
+  },
+  "findmymrbeam": {
+    "name": "OctoPrint-FindMyMrBeam",
+    "type": "github_commit",
+    "user": "mrbeam",
+    "repo": "OctoPrint-FindMyMrBeam",
+    "pip": "https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
+    "restart": "octoprint",
+    "stable": {
+      "branch": "mrbeam2-stable",
+      "branch_default": "mrbeam2-stable"
+    },
+    "beta": {
+      "branch": "mrbeam2-beta",
+      "branch_default": "mrbeam2-beta"
+    },
+    "develop": {
+      "branch": "develop",
+      "branch_default": "develop"
+    }
+  },
+  "mrbeam-ledstrips": {
+    "name": "MrBeam LED Strips",
+    "type": "github_commit",
+    "user": "mrbeam",
+    "repo": "MrBeamLedStrips",
+    "pip": "https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+    "global_pip_command": true,
+    "restart": "environment",
+    "stable": {
+      "branch": "mrbeam2-stable",
+      "branch_default": "mrbeam2-stable"
+    },
+    "beta": {
+      "branch": "mrbeam2-beta",
+      "branch_default": "mrbeam2-beta"
+    },
+    "develop": {
+      "branch": "develop",
+      "branch_default": "develop"
+    }
+  },
+  "netconnectd-daemon": {
+    "name": "Netconnectd Daemon",
+    "type": "github_commit",
+    "user": "mrbeam",
+    "repo": "netconnectd_mrbeam",
+    "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
+    "global_pip_command": true,
+    "pip_name": "netconnectd",
+    "restart": "environment",
+    "branch": "mrbeam2-stable",
+    "branch_default": "mrbeam2-stable"
+  },
+  "iobeam": {
+    "name": "iobeam",
+    "type": "bitbucket_commit",
+    "user": "mrbeam",
+    "repo": "iobeam",
+    "pip": "git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
+    "global_pip_command": true,
+    "api_user": "MrBeamDev",
+    "api_password": "v2T5pFkmdgDqbFBJAqrt",
+    "restart": "environment",
+    "stable": {
+      "branch": "mrbeam2-stable",
+      "branch_default": "mrbeam2-stable"
+    },
+    "beta": {
+      "branch": "mrbeam2-beta",
+      "branch_default": "mrbeam2-beta"
+    },
+    "develop": {
+      "branch": "develop",
+      "branch_default": "develop"
+    }
+  },
+  "mrb_hw_info": {
+    "name": "mrb_hw_info",
+    "type": "bitbucket_commit",
+    "user": "mrbeam",
+    "repo": "mrb_hw_info",
+    "pip": "git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+    "global_pip_command": true,
+    "pip_name": "mrb-hw-info",
+    "api_user": "MrBeamDev",
+    "api_password": "v2T5pFkmdgDqbFBJAqrt",
+    "restart": "environment",
+    "stable": {
+      "branch": "mrbeam2-stable",
+      "branch_default": "mrbeam2-stable"
+    },
+    "beta": {
+      "branch": "mrbeam2-beta",
+      "branch_default": "mrbeam2-beta"
+    },
+    "develop": {
+      "branch": "develop",
+      "branch_default": "develop"
+    }
+  },
+  "rpi-ws281x": {
+    "name": "rpi-ws281x",
+    "type": "github_commit",
+    "user": "mrbeam",
+    "repo": "rpi_ws281x_compiled",
+    "pip": "https://github.com/mrbeam/rpi_ws281x_compiled/archive/{target_version}.zip",
+    "global_pip_command": true,
+    "restart": "environment",
+    "branch": "master",
+    "branch_default": "master"
+  }
+}
