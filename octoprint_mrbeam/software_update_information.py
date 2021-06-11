@@ -1,10 +1,7 @@
-from datetime import datetime, date
 import os, sys
 
-from octoprint.util import dict_merge
 from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.util import logExceptions
 from util.pip_util import get_version_of_pip_module
 
 
@@ -19,11 +16,16 @@ DEFAULT_REPO_BRANCH_ID = {
     SW_UPDATE_TIER_DEV: "develop",
 }
 
+SW_UPDATE_FILE_PATH = "static/updates/update_info.json"
+SW_UPDATE_CLOUD_PATH = "http://192.168.1.48/plugin/mrbeam/static/updates/update_info.json"  # TODO fix link to cloud config
+
 # add to the display name to modules that should be shown at the top of the list
 SORT_UP_PREFIX = " "
 
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
+
+sw_update_config = dict()
 
 # Commented constants are kept in case we update more packages from the virtualenv
 # GLOBAL_PY_BIN = "/usr/bin/python2.7"
@@ -37,41 +39,20 @@ GLOBAL_PIP_COMMAND = (
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
 
-def get_update_information(plugin):
+def get_modules():
+    return sw_update_config
+
+
+def get_update_information(self):
     result = dict()
 
-    tier = plugin._settings.get(["dev", "software_tier"])
-    beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
+    tier = self._settings.get(["dev", "software_tier"])
     _logger.info("SoftwareUpdate using tier: %s", tier)
 
-    # The increased number of separate virtualenv for iobeam, netconnectd, ledstrips
-    # will increase the "discovery time" to find those package versions.
-    # "map-reduce" method can decrease lookup time by processing them in parallel
-    res = dict(
-        reduce(
-            dict_merge,
-            [
-                _set_info_mrbeam_plugin(plugin, tier, beamos_date),
-                _set_info_mrbeamdoc(plugin, tier),
-                _set_info_netconnectd_plugin(plugin, tier, beamos_date),
-                _set_info_findmymrbeam(plugin, tier),
-                _set_info_mrbeamledstrips(plugin, tier, beamos_date),
-                _set_info_netconnectd_daemon(plugin, tier, beamos_date),
-                _set_info_iobeam(plugin, tier, beamos_date),
-                _set_info_mrb_hw_info(plugin, tier, beamos_date),
-                _config_octoprint(plugin, tier),
-            ],
-        )
-    )
-    for pack, updt_info in res.items():
-        _logger.debug(
-            "{} targets branch {} using pip {}".format(
-                pack,
-                updt_info.get("branch"),
-                updt_info.get("pip_command", "~/oprint/bin/pip"),
-            )
-        )
-    return res
+    _config_octoprint(self, tier)
+
+    _set_info_from_file(self, tier)
+    return sw_update_config
 
 
 def software_channels_available(plugin):
@@ -83,7 +64,6 @@ def software_channels_available(plugin):
     return ret
 
 
-@logExceptions
 def switch_software_channel(plugin, channel):
     old_channel = plugin._settings.get(["dev", "software_tier"])
     if channel in software_channels_available(plugin) and channel != old_channel:
@@ -98,232 +78,127 @@ def switch_software_channel(plugin, channel):
         plugin.analytics_handler.add_software_channel_switch_event(old_channel, channel)
 
 
-def _config_octoprint(plugin, tier):
-    prerelease_channel = None
-    type = "github_release"
-    if tier in [SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_BETA]:
-        prerelease_channel = "mrbeam2-{tier}"
+def _config_octoprint(self, tier):
+    op_swu_keys = ["plugins", "softwareupdate", "checks", "octoprint"]
 
-    elif tier in [SW_UPDATE_TIER_DEV]:
-        type = "github_commit"
-
-    return _get_octo_plugin_description(
-        "octoprint",
-        tier,
-        plugin,
-        type=type,
-        displayName="OctoPrint",
-        prerelease=(tier in [SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_BETA]),
-        prerelease_channel=prerelease_channel,
-        restart="octoprint",
-        pip="https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
+    self._settings.global_set(op_swu_keys + ["checkout_folder"], "/home/pi/OctoPrint")
+    self._settings.global_set(
+        op_swu_keys + ["pip"],
+        "https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
+    )
+    self._settings.global_set(op_swu_keys + ["user"], "mrbeam")
+    self._settings.global_set(
+        op_swu_keys + ["stable_branch", "branch"], "mrbeam2-stable"
     )
 
-
-def _set_info_mrbeam_plugin(plugin, tier, beamos_date):
-    branch = "mrbeam2-{tier}"
-    return _get_octo_plugin_description(
-        "mrbeam",
-        tier,
-        plugin,
-        displayName=SORT_UP_PREFIX + "MrBeam Plugin",
-        branch=branch,
-        branch_default=branch,
-        repo="MrBeamPlugin",
-        pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-        restart="octoprint",
-    )
-
-
-def _set_info_mrbeamdoc(plugin, tier):
-    return _get_octo_plugin_description(
-        "mrbeamdoc",
-        tier,
-        plugin,
-        displayName="Mr Beam Documentation",
-        repo="MrBeamDoc",
-        pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
-        restart="octoprint",
-    )
-
-
-def _set_info_netconnectd_plugin(plugin, tier, beamos_date):
-    branch = "mrbeam2-{tier}"
-    return _get_octo_plugin_description(
-        "netconnectd",
-        tier,
-        plugin,
-        displayName="OctoPrint-Netconnectd Plugin",
-        branch=branch,
-        branch_default=branch,
-        repo="OctoPrint-Netconnectd",
-        pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
-        restart="octoprint",
-    )
-
-
-def _set_info_findmymrbeam(plugin, tier):
-    return _get_octo_plugin_description(
-        "findmymrbeam",
-        tier,
-        plugin,
-        displayName="OctoPrint-FindMyMrBeam",
-        repo="OctoPrint-FindMyMrBeam",
-        pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
-        restart="octoprint",
-    )
-
-
-def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
+    if tier in [SW_UPDATE_TIER_DEV]:
+        self._settings.global_set_boolean(op_swu_keys + ["prerelease"], True)
     else:
-        pip_command = GLOBAL_PIP_COMMAND
-    return _get_package_description_with_version(
-        "mrbeam-ledstrips",
-        tier,
-        package_name="mrbeam-ledstrips",
-        pip_command=pip_command,
-        displayName="MrBeam LED Strips",
-        repo="MrBeamLedStrips",
-        pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
-    )
+        self._settings.global_set_boolean(op_swu_keys + ["prerelease"], False)
 
 
-def _set_info_netconnectd_daemon(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        branch = "master"
-        pip_command = "sudo /usr/local/netconnectd/venv/bin/pip"
-    else:
-        branch = "mrbeam2-stable"
-        pip_command = GLOBAL_PIP_COMMAND
-    package_name = "netconnectd"
-    # get_package_description does not search for package version.
-    version = get_version_of_pip_module(package_name, pip_command)
-    # get_package_description does not force "develop" branch.
-    return _get_package_description(
-        module_id="netconnectd-daemon",
-        tier=tier,
-        package_name=package_name,
-        displayName="Netconnectd Daemon",
-        displayVersion=version,
-        repo="netconnectd_mrbeam",
-        branch=branch,
-        branch_default=branch,
-        pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
-        pip_command=pip_command,
-    )
+def _load_update_file_from_cloud():
+    try:
+        r = requests.get(
+            SW_UPDATE_CLOUD_PATH,
+            timeout=10,
+        )
+        with open(join(dirname(realpath(__file__)), SW_UPDATE_FILE_PATH), "r+") as f:
+            serverfile_info = json.loads(r.content)
+            update_info = json.load(f)
+            _logger.info("serverfile_info %s", serverfile_info)
+            _logger.info(
+                "version compare %s - %s",
+                serverfile_info["version"],
+                update_info["version"],
+            )
+            if serverfile_info["version"] > update_info["version"]:
+                _logger.info("update local file from server")
+                f.seek(0)
+                f.write(r.content)
+                f.truncate()
+        # print(update_info)
+    except requests.ReadTimeout:
+        _logger.error("timeout while trying to get the update_config file")
 
 
-def _set_info_iobeam(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = "sudo /usr/local/iobeam/venv/bin/pip"
-    else:
-        pip_command = GLOBAL_PIP_COMMAND
-    return _get_package_description_with_version(
-        module_id="iobeam",
-        tier=tier,
-        package_name="iobeam",
-        pip_command=pip_command,
-        displayName="iobeam",
-        type="bitbucket_commit",
-        repo="iobeam",
-        api_user="MrBeamDev",
-        api_password="v2T5pFkmdgDqbFBJAqrt",
-        pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
-    )
+def _set_info_from_file(self, tier):
+    """
+    loads update info from the update_info.json file
+    the json file should look like:
+        {
+            <module_id>: {
+                <module_settings>,
+                <tier>:{<tier_settings>}
+            }
+        }
+
+    @param tier: the software tier which should be used
+    """
+    # todo check for new file on server
+    _load_update_file_from_cloud()
+
+    with open(join(dirname(realpath(__file__)), SW_UPDATE_FILE_PATH)) as f:
+        update_info = json.load(f)
+    print(update_info)
+    fileversion = update_info.pop("version")
+    _logger.info("Software update file version: %s", fileversion)
+
+    for module_id, module in update_info.items():
+        pip_command = False
+        if tier in [SW_UPDATE_TIER_BETA, SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_PROD]:
+            if _is_override_in_settings(
+                self, module_id
+            ):  # check if update config gets overriden in the settings
+                return
+
+            # get version number
+            current_version = "-"
+            if "global_pip_command" in module and module["global_pip_command"]:
+                # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
+                # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+                pip_command = GLOBAL_PIP_COMMAND
+                pip_name = module["pip_name"] if "pip_name" in module else module_id
+                current_version_global_pip = get_version_of_pip_module(
+                    pip_name, pip_command
+                )
+                if current_version_global_pip is not None:
+                    current_version = current_version_global_pip
+            else:
+                # get versionnumber of octoprint plugin
+                pluginInfo = self._plugin_manager.get_plugin_info(module_id)
+                if pluginInfo is not None:
+                    current_version = pluginInfo.version
+            _logger.info("%s current version: %s", module_id, current_version)
+            sw_update_config[module_id] = dict(
+                displayName=module["name"],
+                displayVersion=current_version,
+            )
+
+            if pip_command:
+                sw_update_config[module_id].update({"pip_command": pip_command})
+
+            _set_update_config_from_dict(
+                sw_update_config[module_id], module
+            )  # set default config
+
+            # get update info for tier branch
+            tierversion = ""
+            if tier == SW_UPDATE_TIER_PROD:
+                tierversion = "stable"
+            elif tier == SW_UPDATE_TIER_BETA:
+                tierversion = "beta"
+            elif tier == SW_UPDATE_TIER_DEV:
+                tierversion = "develop"
+            if tierversion in module:
+                module_tier = module[tierversion]
+                _set_update_config_from_dict(
+                    sw_update_config[module_id], module_tier
+                )  # set tier config
 
 
-def _set_info_mrb_hw_info(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = "sudo /usr/local/iobeam/venv/bin/pip"
-    else:
-        pip_command = GLOBAL_PIP_COMMAND
-    return _get_package_description_with_version(
-        module_id="mrb_hw_info",
-        tier=tier,
-        package_name="mrb-hw-info",
-        pip_command=pip_command,
-        displayName="mrb_hw_info",
-        type="bitbucket_commit",
-        repo="mrb_hw_info",
-        api_user="MrBeamDev",
-        api_password="v2T5pFkmdgDqbFBJAqrt",
-        pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
-    )
-
-
-@logExceptions
-def _get_octo_plugin_description(module_id, tier, plugin, **kwargs):
-    """Additionally get the version from plugin manager (doesn't it do that by default??)"""
-    # Commented pluginInfo -> If the module is not installed, then it Should be.
-    pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
-    if pluginInfo is None:
-        display_version = None
-    else:
-        display_version = pluginInfo.version
-    if tier == SW_UPDATE_TIER_DEV:
-        # Fix: the develop branches are not formatted as "mrbeam2-{tier}"
-        _b = DEFAULT_REPO_BRANCH_ID[SW_UPDATE_TIER_DEV]
-        kwargs.update(branch=_b, branch_default=_b)
-    return _get_package_description(
-        module_id=module_id, tier=tier, displayVersion=display_version, **kwargs
-    )
-
-
-@logExceptions
-def _get_package_description_with_version(
-    module_id, tier, package_name, pip_command, **kwargs
-):
-    """Additionally get the version diplayed through pip_command"""
-    if tier == SW_UPDATE_TIER_DEV:
-        # Fix: the develop branches are not formatted as "mrbeam2-{tier}"
-        _b = DEFAULT_REPO_BRANCH_ID[SW_UPDATE_TIER_DEV]
-        kwargs.update(branch=_b, branch_default=_b)
-
-    version = get_version_of_pip_module(package_name, pip_command)
-    if version:
-        kwargs.update(dict(displayVersion=version))
-
-    return _get_package_description(
-        module_id=module_id, tier=tier, pip_command=pip_command, **kwargs
-    )
-
-
-def _get_package_description(
-    module_id,
-    tier,
-    displayName=None,
-    type="github_commit",
-    user="mrbeam",
-    branch="mrbeam2-{tier}",
-    branch_default="mrbeam2-{tier}",
-    restart="environment",
-    prerelease_channel=None,
-    **kwargs
-):
-    """Shorthand to create repo details for octoprint software update plugin to handle."""
-    displayName = displayName or module_id
-    if "{tier}" in branch:
-        branch = branch.format(tier=get_tier_by_id(tier))
-    if "{tier}" in branch_default:
-        branch_default = branch_default.format(tier=get_tier_by_id(tier))
-    if prerelease_channel and "{tier}" in prerelease_channel:
-        kwargs.update(prerelease_channel=prerelease_channel.format(tier=get_tier_by_id(tier)))
-    if tier in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ALPHA):
-        # adds pip upgrade flag in the develop tier so it will do a upgrade even without a version bump
-        kwargs.update(pip_upgrade_flag=True)
-    update_info = dict(
-        tier=tier,
-        displayName=displayName,
-        user=user,
-        type=type,
-        branch=branch,
-        branch_default=branch_default,
-        restart=restart,
-        **kwargs
-    )
-    return {module_id: update_info}
+def _set_update_config_from_dict(update_config, dict):
+    update_config.update(dict)
 
 
 def get_tier_by_id(tier):
