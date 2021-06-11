@@ -166,6 +166,16 @@ class WorkingAreaHelper {
                 return { generator: "Serif Affinity", version: "unknown" };
             }
 
+            // Vectornator (www.vectornator.io)
+            // <svg ... xmlns:vectornator="http://vectornator.io" ...>
+            if (
+                root_attrs["xmlns:vectornator"] &&
+                root_attrs["xmlns:vectornator"].value.search("vectornator.io") >
+                    0
+            ) {
+                return { generator: "Vectornator", version: "unknown" };
+            }
+
             // detect Corel Draw by comment
             // <!-- Creator: CorelDRAW X5 -->
             // or <!-- Creator: CorelDRAW -->

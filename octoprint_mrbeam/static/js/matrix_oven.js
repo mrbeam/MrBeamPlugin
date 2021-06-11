@@ -208,10 +208,32 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         }
 
         var arr;
+        var arr_orig;
         var d = path_elem.attr("d");
         d = (d || "").trim();
-        var arr_orig;
-        arr = Snap.parsePathString(d);
+
+        // trying to catch and handle bug in Snap.svg
+        // We know this issue with SVGs from Vectornator (https://www.vectornator.io/)
+        // which creates SVG paths which use a plus sign as separator between parameters. Snap.svg can not handle this.
+        // Therefore if the path does not contain any whitespace nor comma but some plus signs, we replace these by commas.
+        // Example: "M129.122+146.728L491.004+152.024L491.004+179.68..." => "M129.122,146.728L491.004,152.024L491.004,179.68..."
+        if (d.indexOf(" ") < 0 && d.indexOf(",") < 0 && d.indexOf("+") > 0) {
+            let dOld = d;
+            d = d.replaceAll("+", ",");
+            arr = Snap.parsePathString(d);
+            console.warn(
+                "matrix_oven: Handled potential Snap.svg bug: Path contains no whitespace and no comma but plus signs. " +
+                    "After replacing all '+' by ',' the new path is " +
+                    arr.length +
+                    "\n\noriginal d:\n" +
+                    dOld +
+                    "\n\nfixed d:\n" +
+                    d
+            );
+        } else {
+            arr = Snap.parsePathString(d);
+        }
+
         if (!toCubics) {
             arr_orig = arr;
             arr = Snap.path.toAbsolute(arr);
