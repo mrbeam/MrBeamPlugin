@@ -9,7 +9,12 @@ import sys
 import time
 import threading
 
-from .log import logExceptions, logtime
+from .log import logExceptions, logtime, logme
+
+if sys.version_info >= (3,):
+    _basestring = str
+else:
+    _basestring = basestring
 
 
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):

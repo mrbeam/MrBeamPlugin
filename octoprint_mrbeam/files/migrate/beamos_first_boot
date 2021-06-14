@@ -1,0 +1,57 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          beamos_first_boot
+# Required-Start:    $local_fs
+# Required-Stop:
+# Default-Start:     3
+# Default-Stop:
+# Short-Description: Things to do on first startup of OctoPi
+# Description:
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+do_start () {
+    logfile=/var/log/beamos_first_boot.log
+    # Do not run multiple times
+    [ -f $logfile ] && return 0
+
+    BEAMOS_HOSTNAME_BIN=/usr/bin/beamos_hostname
+    if [ -x $BEAMOS_HOSTNAME_BIN ]; then
+        echo "Updating the device hostname..." >> $logfile
+        $BEAMOS_HOSTNAME_BIN >> $logfile
+    fi
+    BEAMOS_SERIAL_BIN=/usr/bin/beamos_serial
+    if [ -x $BEAMOS_SERIAL_BIN ]; then
+        echo "Setting the Device Serial name..." >> $logfile
+        $BEAMOS_SERIAL_BIN >> $logfile
+    fi
+
+    # enable the usb mount manager udev rules
+    # rm /etc/udev/rules.d/00-mount_manager.rules
+
+    # enable the i2c bus
+    # Disabled for now - activated during image creation
+    #sudo raspi-config nonint do_i2c 0
+    # enable the uart / hw serial port
+    # Disabled for now - activated during image creation
+    #sudo raspi-config nonint do_serial 2
+    /sbin/reboot
+}
+
+case "$1" in
+  start|"")
+        do_start
+        ;;
+  restart|reload|force-reload)
+        echo "Error: argument '$1' not supported" >&2
+        exit 3
+        ;;
+  stop)
+        # No-op
+        ;;
+  *)
+        echo "Usage: octopi_first_boot [start|stop]" >&2
+        exit 3
+        ;;
+esac
