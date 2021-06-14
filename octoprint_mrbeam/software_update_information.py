@@ -34,6 +34,8 @@ GLOBAL_PIP_BIN = "/usr/local/bin/pip"
 GLOBAL_PIP_COMMAND = (
     "sudo {}".format(GLOBAL_PIP_BIN) if os.path.isfile(GLOBAL_PIP_BIN) else None
 )
+
+
 # GLOBAL_PIP_COMMAND = "sudo {} -m pip".format(GLOBAL_PY_BIN) if os.path.isfile(GLOBAL_PY_BIN) else None #  --disable-pip-version-check
 # VENV_PIP_COMMAND = ("%s -m pip --disable-pip-version-check" % VENV_PY_BIN).split(' ') if os.path.isfile(VENV_PY_BIN) else None
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)
@@ -43,15 +45,19 @@ def get_modules():
     return sw_update_config
 
 
-def get_update_information(self):
-    result = dict()
-
-    tier = self._settings.get(["dev", "software_tier"])
+@logme(False, True)
+def get_update_information(plugin):
+    tier = plugin._settings.get(["dev", "software_tier"])
     _logger.info("SoftwareUpdate using tier: %s", tier)
 
-    _config_octoprint(self, tier)
+    _config_octoprint(plugin, tier)
 
-    _set_info_from_file(self, tier)
+    _set_info_from_file(plugin, tier)
+
+    # _logger.debug(
+    #     "MrBeam Plugin provides this config (might be overridden by settings!):\n%s",
+    #     yaml.dump(sw_update_config, width=50000).strip(),
+    # )
     return sw_update_config
 
 
@@ -78,23 +84,23 @@ def switch_software_channel(plugin, channel):
         plugin.analytics_handler.add_software_channel_switch_event(old_channel, channel)
 
 
-def _config_octoprint(self, tier):
+def _config_octoprint(plugin, tier):
     op_swu_keys = ["plugins", "softwareupdate", "checks", "octoprint"]
 
-    self._settings.global_set(op_swu_keys + ["checkout_folder"], "/home/pi/OctoPrint")
-    self._settings.global_set(
+    plugin._settings.global_set(op_swu_keys + ["checkout_folder"], "/home/pi/OctoPrint")
+    plugin._settings.global_set(
         op_swu_keys + ["pip"],
         "https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
     )
-    self._settings.global_set(op_swu_keys + ["user"], "mrbeam")
-    self._settings.global_set(
+    plugin._settings.global_set(op_swu_keys + ["user"], "mrbeam")
+    plugin._settings.global_set(
         op_swu_keys + ["stable_branch", "branch"], "mrbeam2-stable"
     )
 
     if tier in [SW_UPDATE_TIER_DEV]:
-        self._settings.global_set_boolean(op_swu_keys + ["prerelease"], True)
+        plugin._settings.global_set_boolean(op_swu_keys + ["prerelease"], True)
     else:
-        self._settings.global_set_boolean(op_swu_keys + ["prerelease"], False)
+        plugin._settings.global_set_boolean(op_swu_keys + ["prerelease"], False)
 
 
 def _load_update_file_from_cloud():
@@ -122,7 +128,7 @@ def _load_update_file_from_cloud():
         _logger.error("timeout while trying to get the update_config file")
 
 
-def _set_info_from_file(self, tier):
+def _set_info_from_file(plugin, tier):
     """
     loads update info from the update_info.json file
     the json file should look like:
@@ -148,9 +154,12 @@ def _set_info_from_file(self, tier):
         pip_command = False
         if tier in [SW_UPDATE_TIER_BETA, SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_PROD]:
             if _is_override_in_settings(
-                self, module_id
+                plugin, module_id
             ):  # check if update config gets overriden in the settings
                 return
+
+            # TODO include buster changes
+            # TODO change the update_info file to just change default settings
 
             # get version number
             current_version = "-"
@@ -166,7 +175,7 @@ def _set_info_from_file(self, tier):
                     current_version = current_version_global_pip
             else:
                 # get versionnumber of octoprint plugin
-                pluginInfo = self._plugin_manager.get_plugin_info(module_id)
+                pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
                 if pluginInfo is not None:
                     current_version = pluginInfo.version
             _logger.info("%s current version: %s", module_id, current_version)
