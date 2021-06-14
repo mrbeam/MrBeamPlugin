@@ -31,8 +31,8 @@ $(function () {
             let channels = self.settings.settings.plugins.mrbeam.dev.software_tiers_available();
             for (let i = 0; i < channels.length; i++) {
                 let obj = {
-                    id: channels[i]["id"](),
-                    name: self.channel_display_names[channels[i]["id"]()],
+                    id: channels[i],
+                    name: self.channel_display_names[channels[i]],
                 };
                 self.available_channels.push(obj);
             }

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+  echo "Usage: $0 [new-hostname-id]"
+  echo "Set the machine hostname using\n
+  1. The provided hostname ID\n
+  2. Use the hostname written in /etc/mrbeam\n
+  3. auto generate the hostname as a signature of the RPi device."
+  echo "Must be run as root."
+  exit 0
+fi
+
+. /lib/lsb/init-functions
+
+# The hostname
+CONFIG_HOSTNAME="$(crudini --set /etc/mrbeam '' hostname 2>/dev/null )"
+
+if [ -n "$1" ]; then
+  new_hostname="MrBeam-$1"
+elif [ -n "$CONFIG_HOSTNAME" ]; then
+  new_hostname="$CONFIG_HOSTNAME"
+else
+  # rev allows to use cut for cutting out the last 4 characters.
+  # And thus making it more POSIX compliant and legacy compatible.
+  ID=$(
+    grep Serial /proc/cpuinfo | \
+    awk '{print toupper($3)}' | \
+    sha1sum | \
+    cut -d ' ' -f1 | \
+    rev | \
+    cut -c -4 | \
+    rev | \
+    awk '{print toupper($0)}'
+  )
+  [ -z "$ID" ] && log_failure_msg "Failed to generate ID." && exit 1
+  new_hostname="MrBeam-$ID"
+fi
+
+
+old_hostname="$(hostname)"
+# make sure we do have a valid hostname here (see RFC 952 and 1123, a-zA-Z0-9 only)
+sanitized_hostname=`echo "$new_hostname" | tr -cd '[[:alnum:]]-'`
+if [ "$new_hostname" = "$sanitized_hostname" ]; then
+  echo "$new_hostname" > /etc/hostname
+  sed -i -e "s/$old_hostname/$new_hostname/g" /etc/hosts
+  hostname "$new_hostname"
+  crudini --set /etc/mrbeam "" hostname $new_hostname
+  log_success_msg "Host name changed to $new_hostname , reboot to apply..."
+else
+  log_failure_msg "Hostname $new_hostname contains invalid characters (only a-zA-Z0-9 are allowed), refusing to change"
+  exit 2
+fi

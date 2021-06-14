@@ -16,7 +16,7 @@ def init_mrb_logger(printer):
     _printer = printer
 
 
-def mrb_logger(id, lvl=logging.DEBUG):
+def mrb_logger(id, lvl=None):
     return MrbLogger(id, lvl=lvl)
 
 
@@ -28,14 +28,15 @@ class MrbLogger(object):
 
     terminal_buffer = collections.deque(maxlen=100)
 
-    def __init__(self, id, ignorePrinter=False, lvl=logging.DEBUG):
+    def __init__(self, id, ignorePrinter=False, lvl=None):
         global _printer
         self.logger = logging.getLogger(id)
         self.id = id
         self.id_short = self._shorten_id(id)
         self.my_buffer = []
         # TODO: this line overrides logging.yaml!!!
-        self.logger.setLevel(lvl)
+        if lvl is not None:
+            self.logger.setLevel(lvl)
 
     def comm(self, msg, *args, **kwargs):
         kwargs["id"] = ""

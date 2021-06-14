@@ -18,14 +18,15 @@ $(function () {
         };
 
         self.onStartupComplete = function () {
-            if (window.mrbeam.isOctoPrintVersionMin("1.3.6")) {
-                /**
-                 * New in OP 1.3.6:
-                 * No longer triggers onUserLoggedOut() in boot sequence. Only onUserLoggedIn() -if user is logged in.
-                 * But self.loginState.loggedIn() shows correct loggedIn state in onStartupComplete()
-                 */
-                self.setLoginState(false);
-            }
+            // if (window.mrbeam.isOctoPrintVersionMin("1.3.6")) {
+            //     /**
+            //      * New in OP 1.3.6:
+            //      * No longer triggers onUserLoggedOut() in boot sequence. Only onUserLoggedIn() -if user is logged in.
+            //      * But self.loginState.loggedIn() shows correct loggedIn state in onStartupComplete()
+            //      */
+            //     self.setLoginState(false);
+            // }
+            self.setLoginState(false);
 
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             let header_elem = $("#mrb_settings_users_header").detach();

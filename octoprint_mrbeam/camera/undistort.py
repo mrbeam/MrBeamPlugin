@@ -350,7 +350,10 @@ def _getColoredMarkerPosition(
     roiBlurThresh = cv2.bitwise_and(
         roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask)
     )
-    debug_quad_path = debug_out_path.replace(".jpg", "{}.jpg".format(quadrant))
+    if debug_out_path:
+        debug_quad_path = debug_out_path.replace(".jpg", "{}.jpg".format(quadrant))
+    else:
+        debug_quad_path = None
     for spot, center, start, stop, count in _get_white_spots(
         cv2.bitwise_or(threshOtsuMask, gaussianMask), min_pix=min_pix
     ):
@@ -375,12 +378,16 @@ def _getColoredMarkerPosition(
                     cv2.MARKER_CROSS,
                     line_type=4,
                 )
-                differed_imwrite(
-                    debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100]
-                )
+                if debug_quad_path:
+                    differed_imwrite(
+                        debug_quad_path,
+                        debug_roi,
+                        params=[cv2.IMWRITE_JPEG_QUALITY, 100],
+                    )
                 return dict(pos=center, avg_hsv=avg_hsv, pix_size=count)
     # No marker found
-    differed_imwrite(debug_quad_path, roiBlurThresh)
+    if debug_quad_path:
+        differed_imwrite(debug_quad_path, roiBlurThresh)
     return None
 
 
