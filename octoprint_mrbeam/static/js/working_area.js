@@ -2058,6 +2058,9 @@ $(function () {
                     filename_hash: file.hash,
                 };
                 self._analyticsPlaceImage(analyticsData);
+
+                // remove Activity Spinner
+                $("body").removeClass("activitySpinnerActive");
             };
             img.src = url;
         };
