@@ -19,9 +19,7 @@ DEFAULT_REPO_BRANCH_ID = {
     SW_UPDATE_TIER_DEV: "develop",
 }
 
-SW_UPDATE_FILE = (
-    "update_info.json"  # TODO cahnge path to a better directory -> home/.octoprint
-)
+SW_UPDATE_FILE = "update_info.json"
 SW_UPDATE_CLOUD_PATH = "http://192.168.1.48/plugin/mrbeam/static/updates/update_info.json"  # TODO fix link to cloud config
 
 # add to the display name to modules that should be shown at the top of the list
@@ -39,9 +37,7 @@ GLOBAL_PIP_COMMAND = (
     "sudo {}".format(GLOBAL_PIP_BIN) if os.path.isfile(GLOBAL_PIP_BIN) else None
 )
 
-# GLOBAL_PIP_COMMAND = "sudo {} -m pip".format(GLOBAL_PY_BIN) if os.path.isfile(GLOBAL_PY_BIN) else None #  --disable-pip-version-check
-# VENV_PIP_COMMAND = ("%s -m pip --disable-pip-version-check" % VENV_PY_BIN).split(' ') if os.path.isfile(VENV_PY_BIN) else None
-BEAMOS_LEGACY_DATE = date(2021, 7, 12)
+BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
 
 def get_modules():
@@ -102,28 +98,49 @@ def switch_software_channel(plugin, channel):
             _logger.exception("Exception while switching software channel: ")
 
 
-def _set_octoprint_config(plugin, tier, config):
+def _set_octoprint_config(plugin, tier, config, beamos_date):
+    tierversion = get_tier_by_id(tier)
+    if tierversion in config:
+        module_tier = config[tierversion]
+        _set_update_config_from_dict(
+            config, module_tier
+        )  # set tier config from default settings
+
+    if "beamos_date" in config:
+        beamos_date_config = config["beamos_date"]
+        for date, beamos_config in beamos_date_config.items():
+            _logger.debug(
+                "date compare %s >= %s -> %s",
+                beamos_date,
+                datetime.strptime(date, "%Y-%m-%d").date(),
+                beamos_config,
+            )
+            if beamos_date >= datetime.strptime(date, "%Y-%m-%d").date():
+                _set_update_config_from_dict(config, beamos_config)
+        _logger.debug(
+            "beamosconfig %s %s",
+            beamos_config,
+            config,
+        )
     op_swu_keys = ["plugins", "softwareupdate", "checks", "octoprint"]
 
-    plugin._settings.global_set(
-        op_swu_keys + ["checkout_folder"], config["checkout_folder"]
-    )
-    plugin._settings.global_set(
-        op_swu_keys + ["pip"],
-        config["pip"],
-    )
+    plugin._settings.global_set(op_swu_keys + ["pip"], config["pip"])
     plugin._settings.global_set(op_swu_keys + ["user"], "mrbeam")
-    plugin._settings.global_set(
-        op_swu_keys + ["stable_branch", "branch"], config["branch"]
+
+    _logger.debug("prerelease %s", config["prerelease"])
+    plugin._settings.global_set_boolean(
+        op_swu_keys + ["prerelease"], config["prerelease"]
     )
 
-    if tier in [SW_UPDATE_TIER_DEV]:
-        plugin._settings.global_set_boolean(op_swu_keys + ["prerelease"], True)
-    else:
-        plugin._settings.global_set_boolean(op_swu_keys + ["prerelease"], False)
+    # plugin._settings.global_set_boolean(op_swu_keys + ["prerelease"], False)
 
 
 def _load_update_file_from_cloud(plugin):
+    """
+    overrides the local update config file if there is a newer one on the server
+    @param plugin: mrbeamplugin
+    @return:
+    """
     try:
         r = requests.get(
             SW_UPDATE_CLOUD_PATH,
@@ -154,9 +171,7 @@ def _load_update_file_from_cloud(plugin):
                         serverfile_info["version"],
                         update_info["version"],
                     )
-                    if (
-                        serverfile_info["version"] > update_info["version"]
-                    ):  # TODO change to int number
+                    if serverfile_info["version"] > update_info["version"]:
                         _logger.info(
                             "update local file from server - %s -> %s",
                             serverfile_info["version"],
@@ -205,7 +220,10 @@ def _set_info_from_file(plugin, tier, beamos_date):
     _logger.info("Software update file version: %s", fileversion)
     defaultsettings = update_info.pop("default")
 
-    # _set_octoprint_config(plugin, tier, update_info.pop("octoprint"))
+    try:
+        _set_octoprint_config(plugin, tier, update_info.pop("octoprint"), beamos_date)
+    except:
+        _logger.error("Error while setting octoprint update config")
 
     for module_id, module in update_info.items():
         try:
@@ -239,15 +257,15 @@ def _set_info_from_file(plugin, tier, beamos_date):
                 # have to be after the default config from file
                 if "beamos_date" in module:
                     beamos_date_config = module["beamos_date"]
-                    for date, config in beamos_date_config.items():
+                    for date, beamos_config in beamos_date_config.items():
                         _logger.debug(
                             "date compare %s >= %s -> %s",
                             beamos_date,
                             datetime.strptime(date, "%Y-%m-%d").date(),
-                            config,
+                            beamos_config,
                         )
                         if beamos_date >= datetime.strptime(date, "%Y-%m-%d").date():
-                            _set_update_config_from_dict(moduleconfig, config)
+                            _set_update_config_from_dict(moduleconfig, beamos_config)
 
                 # get version number
                 current_version = "-"
