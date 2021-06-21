@@ -18,13 +18,15 @@
     "restart": "environment"
   },
   "octoprint": {
-    "branch": "mrbeam2-stable",
-    "branch_default": "mrbeam2-stable",
-    "checkout_folder": "/home/pi/OctoPrint",
     "pip": "https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
     "prerelease": false,
     "develop":{
       "prerelease": true
+    },
+    "beamos_date": {
+      "2021-06-11": {
+        "prerelease": true
+      }
     }
   },
   "mrbeam": {
