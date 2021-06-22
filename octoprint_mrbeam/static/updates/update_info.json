@@ -4,16 +4,13 @@
     "type": "github_commit",
     "user": "mrbeam",
     "stable": {
-      "branch": "mrbeam2-stable",
-      "branch_default": "mrbeam2-stable"
+      "branch": "mrbeam2-stable"
     },
     "beta": {
-      "branch": "mrbeam2-beta",
-      "branch_default": "mrbeam2-beta"
+      "branch": "mrbeam2-beta"
     },
     "develop": {
-      "branch": "develop",
-      "branch_default": "develop"
+      "branch": "develop"
     },
     "restart": "environment"
   },
@@ -33,7 +30,15 @@
     "name": " MrBeam Plugin",
     "repo": "MrBeamPlugin",
     "restart": "octoprint",
-    "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
+    "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+    "beamos_date": {
+      "2021-06-11": {
+        "branch": "mrbeam2-{tier}-buster",
+        "develop": {
+          "branch": "develop"
+        }
+      }
+    }
   },
   "mrbeamdoc": {
     "name": "Mr Beam Documentation",
@@ -45,7 +50,15 @@
     "name": "OctoPrint-Netconnectd Plugin",
     "repo": "OctoPrint-Netconnectd",
     "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
-    "restart": "octoprint"
+    "restart": "octoprint",
+    "beamos_date": {
+      "2021-06-11": {
+        "branch": "mrbeam2-{tier}-buster",
+        "develop": {
+          "branch": "develop"
+        }
+      }
+    }
   },
   "findmymrbeam": {
     "name": "OctoPrint-FindMyMrBeam",
@@ -71,11 +84,9 @@
     "global_pip_command": true,
     "package_name": "netconnectd",
     "branch": "mrbeam2-stable",
-    "branch_default": "mrbeam2-stable",
     "beamos_date": {
       "2021-06-11": {
         "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip",
-        "branch_default": "master",
         "branch": "master"
       }
     }
