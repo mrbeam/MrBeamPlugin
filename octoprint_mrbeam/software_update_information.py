@@ -55,6 +55,9 @@ class MrBeamSoftwareupdateHandler:
         self._beamos_date = beamos_date
 
     def look_for_new_config_file(self):
+        """
+        starts a thread to look online for a new config file
+        """
         th = threading.Thread(target=self._load_update_file_from_cloud)
         th.setName("MrBeamSoftwareupdateHandler:_load_update_file_from_cloud")
         th.daemon = True
@@ -64,8 +67,6 @@ class MrBeamSoftwareupdateHandler:
     def _load_update_file_from_cloud(self):
         """
         overrides the local update config file if there is a newer one on the server
-        @param plugin: mrbeamplugin
-        @return: true if a new file is found
         """
         _logger.debug("load update file")
         newfile = False
@@ -144,6 +145,13 @@ class MrBeamSoftwareupdateHandler:
 
 @logme(False, True)
 def get_update_information(plugin):
+    """
+    Gets called from the octoprint.plugin.softwareupdate.check_config Hook from Octoprint
+    Starts a thread to look online for a new config file
+    sets the config for the Octoprint Softwareupdate Plugin with the data from the config file
+    @param plugin: calling plugin
+    @return: the config for the Octoprint embedded softwareupdate Plugin
+    """
     tier = plugin._settings.get(["dev", "software_tier"])
     beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
     _logger.info("SoftwareUpdate using tier: %s %s", tier, beamos_date)
@@ -162,6 +170,11 @@ def get_update_information(plugin):
 
 
 def software_channels_available(plugin):
+    """
+    Returns the avilable softwarechannels
+    @param plugin: the calling plugin
+    @return: the available softwarechannels
+    """
     res = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
     try:
         if plugin.is_dev_env():
@@ -172,6 +185,12 @@ def software_channels_available(plugin):
 
 
 def switch_software_channel(plugin, channel):
+    """
+    Switches the Softwarechannel and triggers the reload of the config
+    @param plugin: the calling plugin
+    @param channel: the channel where to switch to
+    @return:
+    """
     old_channel = plugin._settings.get(["dev", "software_tier"])
 
     if (
@@ -199,6 +218,13 @@ def switch_software_channel(plugin, channel):
 
 
 def _set_octoprint_config(plugin, tier, config, beamos_date):
+    """
+    handels the config for octoprint, it have to be set in the config.yaml, because a plugin is not allowed to update the information for octoprint
+    @param plugin: the calling plugin
+    @param tier: the software tier
+    @param config: the config from the config file
+    @param beamos_date: the image creation date of the running beamos
+    """
     tierversion = get_tier_by_id(tier)
     if tierversion in config:
         module_tier = config[tierversion]
@@ -238,20 +264,26 @@ def _set_octoprint_config(plugin, tier, config, beamos_date):
 def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
     """
     loads update info from the update_info.json file
+    the override order: default_settings->module_settings->tier_settings->beamos_settings
+    and if there are update_settings set in the config.yaml they will replace all of the module
     the json file should look like:
         {
+            "version": <version_of_file>
+            "default": {<default_settings>}
             <module_id>: {
                 <module_settings>,
-                <tier>:{<tier_settings>}
+                <tier>:{<tier_settings>},
+                "beamos_date": {
+                    <YYYY-MM-DD>: {<beamos_settings>}
+                }
             }
         }
 
+    @param plugin: the plugin from which it was started (mrbeam)
     @param tier: the software tier which should be used
+    @param beamos_date: the image creation date of the running beamos
+    @param _softwareupdate_handler: the handler class to look for a new config file online
     """
-
-    # ansible can use present to delete more
-    # _load_update_file_from_cloud(plugin)
-
     try:
         with open(join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)) as f:
             update_info = json.load(f)
@@ -405,10 +437,21 @@ def _get_display_name(plugin, name):
 
 
 def get_tier_by_id(tier):
+    """
+    returns the tier name with the given id
+    @param tier: id of the softwaretier
+    @return: softwaretier name
+    """
     return DEFAULT_REPO_BRANCH_ID.get(tier, tier)
 
 
 def _is_override_in_settings(plugin, module_id):
+    """
+    checks if there are softwareupdate settings in the config.yaml for the given module_id
+    @param plugin:
+    @param module_id:
+    @return:
+    """
     settings_path = ["plugins", "softwareupdate", "checks", module_id, "override"]
     is_override = plugin._settings.global_get(settings_path)
     if is_override:
