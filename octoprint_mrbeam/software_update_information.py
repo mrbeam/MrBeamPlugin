@@ -378,11 +378,17 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
 
                     # get version number
                     current_version = "-"
+                    _logger.debug(
+                        "pip command check %s %s - %s",
+                        module,
+                        moduleconfig,
+                        "pip_command" not in moduleconfig,
+                    )
                     if (
                         "global_pip_command" in module
                         and "pip_command" not in moduleconfig
                     ):
-                        moduleconfig.update({"pip_command": GLOBAL_PIP_COMMAND})
+                        moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
                     if "pip_command" in moduleconfig:
                         pip_command = moduleconfig["pip_command"]
                         # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
@@ -420,9 +426,6 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
                             "displayVersion": current_version,
                         }
                     )
-
-                    # if pip_command:
-                    #     moduleconfig.update({"pip_command": pip_command})
             except:
                 _logger.error("Error in module %s %s", module_id, sys.exc_info()[0])
         _logger.debug(sw_update_config)
