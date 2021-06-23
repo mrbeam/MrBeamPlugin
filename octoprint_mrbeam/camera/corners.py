@@ -30,14 +30,11 @@ def warpImgByCorners(image, corners, zoomed_out=False):
     Warps the region delimited by the corners in order to straighten it.
     :param image: takes an opencv image
     :param corners: as qd-dict
-    :param zoomed_out: wether to zoom out the pic to account for object height
+    :param zoomed_out: whether to zoom out the pic to account for object height
     :return: image with corners warped
     """
 
-    def f(qd):
-        return np.array(corners[qd])
-
-    nw, ne, sw, se = map(f, QD_KEYS)
+    nw, ne, sw, se = [np.array(corners[qd]) for qd in QD_KEYS]
 
     # calculate maximum width and height for destination points
     width1 = norm(se - sw)
@@ -69,8 +66,8 @@ def warpImgByCorners(image, corners, zoomed_out=False):
             [min_dst_x, min_dst_y],  # nw
             [max_dst_x, min_dst_y],  # ne
             [max_dst_x, max_dst_y],  # sw
-            [min_dst_x, max_dst_y],
-        ],  # se
+            [min_dst_x, max_dst_y],  # se
+        ],
         dtype="float32",
     )
 
@@ -144,7 +141,8 @@ def get_corner_calibration(pic_settings):
             return yaml.safe_load(yaml_file)
     except:
         _logger.info(
-            "Exception while loading '%s' > pic_settings file not readable", path
+            "Exception while loading '%s' > pic_settings file not readable",
+            pic_settings,
         )
         return None
 
@@ -152,7 +150,7 @@ def get_corner_calibration(pic_settings):
 def get_deltas_and_refs(
     settings,
     undistorted=False,
-    matrix=None,
+    mtx=None,
     dist=None,
     new_mtx=None,
     from_factory=False,
@@ -165,17 +163,14 @@ def get_deltas_and_refs(
     Otherwise, try to find the undistorted values written in the calibration file (Legacy mode).
     :param path_to_settings_file: either settings dict or path to pic_settings yaml
     :param undistorted: Get the delta for the undistorted version of the picture.
-    :param matrix: lens distortion matrix
+    :param mtx: lens distortion matrix
     :param dist: from the lens calibration
     :param path_to_last_markers_json: needed for overwriting file if updated
     :return: pic_settings as dict
     """
-    if type(settings) is str:
-        pic_settings = get_corner_calibration(settings)
-        if pic_settings is None:
-            return None
-    else:
-        pic_settings = settings
+    pic_settings = get_corner_calibration(settings)
+    if pic_settings is None:
+        return None
 
     # Values taken from the calibration file. Used as a reference to warp the image correctly.
     # Legacy devices only have the values for the lensCorrected position.
@@ -192,13 +187,9 @@ def get_deltas_and_refs(
             for k in priorityList:
                 # Prioritize converting positions from the raw values we have saved.
                 # (It is calibration-agnostic)
-                if (
-                    ref[k]["raw"] is not None
-                    and matrix is not None
-                    and dist is not None
-                ):
+                if ref[k]["raw"] is not None and mtx is not None and dist is not None:
                     # Distort reference points
-                    ref["result"] = lens.undist_dict(ref[k]["raw"])
+                    ref["result"] = lens.undist_dict(ref[k]["raw"], mtx, dist)
                     break  # no need to go further in the priority list
                 elif ref[k]["undistorted"]:
                     ref["result"] = dict_map(np.array, ref[k]["undistorted"])
@@ -234,23 +225,26 @@ def get_deltas(*args, **kwargs):
 
 
 def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
+    # NOTE: There is _bad_ duplication w/ regards to get_deltas_and_refs which
+    # already applies the correct delta for plain pictures.
+    # See ``OctoPrint-Camera.corners.add_deltas``
     # _logger.warning(markers)
-    deltas = get_deltas(pic_settings, False, *args, **kwargs)
+    from_factory = kwargs.pop("from_factory", False)
+    deltas = get_deltas(
+        pic_settings, undistorted, *args, from_factory=from_factory, **kwargs
+    )
+    if deltas is None:
+        return None
     # try getting raw deltas first
     if undistorted:
-        if deltas:
-            # raw deltas found, more precise
-            raw_res = {qd: markers[qd] + deltas[qd] for qd in QD_KEYS}
-            return lens.undist_dict(raw_res, *args, **kwargs)
-        else:
-            deltas = get_deltas(pic_settings, undistorted, *args, **kwargs)
-            if deltas is None:
-                return None
-            # Use the lens corrected deltas. not as good
-            _markers = lens.undist_dict(markers, *args, **kwargs)
-            return {qd: _markers[qd] + deltas[qd] for qd in QD_KEYS}
+        deltas = get_deltas(pic_settings, undistorted, *args, **kwargs)
+        # Use the lens corrected deltas. not as good
+        _markers = lens.undist_dict(markers, *args, **kwargs)
+        return {qd: _markers[qd] + deltas[qd] for qd in QD_KEYS}
     else:
         if deltas is None:
             return None
         else:
-            return {qd: markers[qd] + deltas[qd] for qd in QD_KEYS}
+            # logging.warning(markers)
+            # logging.warning(deltas)
+            return dict({qd: markers[qd] + deltas[qd] for qd in QD_KEYS})

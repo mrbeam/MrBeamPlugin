@@ -1,11 +1,4 @@
-import sys
-import threading
-from datetime import datetime
-import json
-import os
-import requests
-from datetime import date
-from os.path import join
+import os, sys
 
 from octoprint_mrbeam import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger

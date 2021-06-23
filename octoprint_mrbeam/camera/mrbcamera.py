@@ -98,8 +98,8 @@ class MrbCamera(CameraClass, BaseCamera):
         if output is None:
             output = self.worker
         if PICAMERA_AVAILABLE:
-            if self._busy.locked():
-                raise MrbCameraError("Camera already busy taking a picture")
+            # if self._busy.locked():
+            #     raise MrbCameraError("Camera already busy taking a picture")
             self._busy.acquire()
         try:
             CameraClass.capture(self, output, format=format, *args, **kwargs)
