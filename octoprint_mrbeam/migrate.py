@@ -3,6 +3,7 @@ import os
 import platform
 import re
 import shutil
+from datetime import datetime
 from distutils.version import LooseVersion, StrictVersion
 
 from octoprint_mrbeam import IS_X86
@@ -213,6 +214,19 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.hostname_helper_scripts()
+
+                beamos_tier, beamos_date = self.plugin._device_info.get_beamos_version()
+                if beamos_date <= datetime.strptime(
+                    "2021-06-25", "%Y-%m-%d"
+                ).date() and (
+                    self.version_previous is None
+                    or self._compare_versions(
+                        self.version_previous,
+                        "0.9.6.2",
+                        equal_ok=False,
+                    )
+                ):  # for images befor the 25.6.2021
+                    self.fix_s_series_mount_manager()
 
                 # migrations end
 
@@ -626,6 +640,21 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         # For all the old Mr Beams, we preset the value to False. Then we will ask the users if they want to change it.
         if not self.plugin.isFirstRun():
             self.plugin._settings.set_boolean(["gcodeAutoDeletion"], False)
+
+    def fix_s_series_mount_manager(self):
+        """
+        fixes a problem with the images before 25.6.2021
+        the rc.local file was missing the clear command for the mount_manager
+        this replaces the rc.local file with the one containing this row
+        """
+        self._logger.info("start fix_s_series_mount_manager")
+        src = os.path.join(
+            __package_path__, self.MIGRATE_FILES_FOLDER, "fix_s_series_mount_manager"
+        )
+        dst = "/etc/rc.local"
+        exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
+        self._logger.info("file copied to %s", dst)
+        self._logger.info("end fix_s_series_mount_manager")
 
     ##########################################################
     #####             lasercutterProfiles                #####
