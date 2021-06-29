@@ -6,7 +6,7 @@ import shutil
 from datetime import datetime
 from distutils.version import LooseVersion, StrictVersion
 
-from octoprint_mrbeam import IS_X86
+from octoprint_mrbeam import IS_X86, BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.util import logExceptions
@@ -216,16 +216,20 @@ class Migration(object):
                     self.hostname_helper_scripts()
 
                 beamos_tier, beamos_date = self.plugin._device_info.get_beamos_version()
-                if beamos_date <= datetime.strptime(
-                    "2021-06-25", "%Y-%m-%d"
-                ).date() and (
-                    self.version_previous is None
-                    or self._compare_versions(
-                        self.version_previous,
-                        "0.9.6.2",
-                        equal_ok=False,
+                if (
+                    beamos_date
+                    and beamos_date > BEAMOS_LEGACY_DATE
+                    and beamos_date
+                    <= datetime.strptime("2021-06-25", "%Y-%m-%d").date()
+                    and (
+                        self.version_previous is None
+                        or self._compare_versions(
+                            self.version_previous,
+                            "0.9.6.2",
+                            equal_ok=False,
+                        )
                     )
-                ):  # for images befor the 25.6.2021
+                ):  # for images before the 25.6.2021
                     self.fix_s_series_mount_manager()
 
                 # migrations end
