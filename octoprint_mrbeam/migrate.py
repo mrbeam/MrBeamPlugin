@@ -217,9 +217,9 @@ class Migration(object):
 
                 beamos_tier, beamos_date = self.plugin._device_info.get_beamos_version()
                 if (
-                    beamos_date
-                    and beamos_date > BEAMOS_LEGACY_DATE
-                    and beamos_date
+                    beamos_date is not None
+                    and BEAMOS_LEGACY_DATE
+                    < beamos_date
                     <= datetime.strptime("2021-06-25", "%Y-%m-%d").date()
                     and (
                         self.version_previous is None
