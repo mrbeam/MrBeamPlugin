@@ -24,7 +24,7 @@ DEFAULT_REPO_BRANCH_ID = {
 }
 
 SW_UPDATE_FILE = "update_info.json"
-SW_UPDATE_CLOUD_PATH = "http://192.168.1.48/plugin/mrbeam/static/updates/update_info.json"  # TODO fix link to cloud config
+SW_UPDATE_CLOUD_PATH = "https://mr-beam.org/beamos/config/sw-update-conf"
 
 # add to the display name to modules that should be shown at the top of the list
 SORT_UP_PREFIX = " "
@@ -146,7 +146,6 @@ class MrBeamSoftwareupdateHandler:
             sw_update_plugin._version_cache_dirty = True
 
 
-@logme(False, True)
 def get_update_information(plugin):
     """
     Gets called from the octoprint.plugin.softwareupdate.check_config Hook from Octoprint
