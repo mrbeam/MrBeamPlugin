@@ -1049,7 +1049,7 @@ $(function () {
 
             // remove other unnecessary or invisible ("display=none") elements
             let removeElements = fragment.selectAll(
-                'metadata, script, [display=none], [style*="display:none"]'
+                'metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
             );
             for (var i = 0; i < removeElements.length; i++) {
                 if (
@@ -2058,6 +2058,9 @@ $(function () {
                     filename_hash: file.hash,
                 };
                 self._analyticsPlaceImage(analyticsData);
+
+                // remove Activity Spinner
+                $("body").removeClass("activitySpinnerActive");
             };
             img.src = url;
         };

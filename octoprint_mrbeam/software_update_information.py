@@ -190,7 +190,7 @@ def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
 
 def _set_info_netconnectd_daemon(plugin, tier, beamos_date):
     if beamos_date > BEAMOS_LEGACY_DATE:
-        branch = "mrbeam-buster"
+        branch = "master"
         pip_command = "sudo /usr/local/netconnectd/venv/bin/pip"
     else:
         branch = "mrbeam2-stable"
