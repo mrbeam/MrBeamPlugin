@@ -5,10 +5,10 @@ $(function () {
 
         // // Don't write a "/" at the end!! //
         // prod
-        self.DESIGN_STORE_IFRAME_SRC = "https://designs.cloud.mr-beam.org";
+        self.DESIGN_STORE_IFRAME_SRC = // "https://designs.cloud.mr-beam.org";
         // staging:
         // 'https://1-0-0-staging-dot-design-store-269610.appspot.com'
-        // 'http://localhost:8080';
+        'http://localhost:8080';
 
         self.loginState = params[0];
         self.navigation = params[1];
@@ -43,6 +43,17 @@ $(function () {
             }
         };
 
+        self.getLastUploadedDate = function () {
+            if (self.loginState.currentUser()) {
+                return (
+                    self.loginState.currentUser().settings.mrbeam
+                        .design_store_last_uploaded
+                );
+            } else {
+                return undefined;
+            }
+        }
+
         self.prepareDesignStoreTab = function () {
             let design_store_iframe = $("#design_store_iframe");
             design_store_iframe.on("load", function () {
@@ -55,6 +66,9 @@ $(function () {
                                 break;
                             case "token":
                                 self.onTokenReceived(event.data.payload);
+                                break;
+                            case "lastUploadedDate":
+                                self.onLastUploadedDateReceived(event.data.payload);
                                 break;
                             case "svg":
                                 self.onSvgReceived(event.data.payload);
@@ -73,6 +87,7 @@ $(function () {
                         }
                     }
                 }
+
                 window.addEventListener(
                     "message",
                     receiveMessagesFromDesignStoreIframe,
@@ -105,6 +120,7 @@ $(function () {
                 user_token: self.getAuthToken(),
                 version: BEAMOS_VERSION,
                 language: MRBEAM_LANGUAGE,
+                last_uploaded: self.getLastUploadedDate()
             };
 
             self.sendMessageToDesignStoreIframe("userData", userData);
@@ -112,6 +128,10 @@ $(function () {
 
         self.onTokenReceived = function (payload) {
             self.saveTokenInUserSettings(payload.token);
+        };
+
+        self.onLastUploadedDateReceived = function (payload) {
+            self.saveLastUploadedInUserSettings(payload.last_uploaded);
         };
 
         self.onSvgReceived = function (payload) {
@@ -126,7 +146,26 @@ $(function () {
                 delete currentUserSettings["mrbeam"]["user_token"];
                 currentUserSettings["mrbeam"][
                     "design_store_auth_token"
-                ] = token;
+                    ] = token;
+                self.navigation.usersettings.updateSettings(
+                    self.loginState.currentUser().name,
+                    currentUserSettings
+                );
+            }
+        };
+
+        self.saveLastUploadedInUserSettings = function (lastUploaded) {
+            let oldLastUploaded = self.getLastUploadedDate();
+            if (lastUploaded !== "" && oldLastUploaded !== lastUploaded) {
+                // Notify user
+                $("#designstore_tab_btn").append('<span class="red-dot"></span>');
+
+                let currentUserSettings = self.loginState.currentUser()
+                    .settings;
+                delete currentUserSettings["mrbeam"]["design_store_last_uploaded"];
+                currentUserSettings["mrbeam"][
+                    "design_store_last_uploaded"
+                    ] = lastUploaded;
                 self.navigation.usersettings.updateSettings(
                     self.loginState.currentUser().name,
                     currentUserSettings
@@ -160,7 +199,7 @@ $(function () {
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.error(
                         "Store bought design saving failed with status " +
-                            jqXHR.status,
+                        jqXHR.status,
                         textStatus,
                         errorThrown
                     );
@@ -178,6 +217,7 @@ $(function () {
         };
 
         self.goToStore = function () {
+            $("#designstore_tab_btn > span.red-dot").remove();
             if ($("#designstore_tab_btn").parent().hasClass("active")) {
                 self.sendMessageToDesignStoreIframe("goToStore", {});
             }
