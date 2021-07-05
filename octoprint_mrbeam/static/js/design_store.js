@@ -15,6 +15,8 @@ $(function () {
         self.analytics = params[2];
         self.settings = params[3];
 
+        self.lastUploadedDate = ko.observable("");
+
         self.onUserLoggedIn = function () {
             self.prepareDesignStoreTab();
         };
@@ -131,7 +133,12 @@ $(function () {
         };
 
         self.onLastUploadedDateReceived = function (payload) {
-            self.saveLastUploadedInUserSettings(payload.last_uploaded);
+            let oldLastUploaded = self.getLastUploadedDate();
+            if (payload.last_uploaded !== "" && oldLastUploaded !== payload.last_uploaded) {
+                // Notify user
+                $("#designstore_tab_btn").append('<span class="red-dot"></span>');
+            }
+            self.lastUploadedDate(payload.last_uploaded);
         };
 
         self.onSvgReceived = function (payload) {
@@ -157,9 +164,6 @@ $(function () {
         self.saveLastUploadedInUserSettings = function (lastUploaded) {
             let oldLastUploaded = self.getLastUploadedDate();
             if (lastUploaded !== "" && oldLastUploaded !== lastUploaded) {
-                // Notify user
-                $("#designstore_tab_btn").append('<span class="red-dot"></span>');
-
                 let currentUserSettings = self.loginState.currentUser()
                     .settings;
                 delete currentUserSettings["mrbeam"]["design_store_last_uploaded"];
@@ -220,6 +224,10 @@ $(function () {
             $("#designstore_tab_btn > span.red-dot").remove();
             if ($("#designstore_tab_btn").parent().hasClass("active")) {
                 self.sendMessageToDesignStoreIframe("goToStore", {});
+            }
+            let oldLastUploaded = self.getLastUploadedDate();
+            if (self.lastUploadedDate() !== "" && oldLastUploaded !== self.lastUploadedDate()) {
+                self.saveLastUploadedInUserSettings(self.lastUploadedDate());
             }
         };
 
