@@ -5,10 +5,10 @@ $(function () {
 
         // // Don't write a "/" at the end!! //
         // prod
-        self.DESIGN_STORE_IFRAME_SRC = // "https://designs.cloud.mr-beam.org";
+        self.DESIGN_STORE_IFRAME_SRC = "https://designs.cloud.mr-beam.org";
         // staging:
         // 'https://1-0-0-staging-dot-design-store-269610.appspot.com'
-        'http://localhost:8080';
+        // 'http://localhost:8080';
 
         self.loginState = params[0];
         self.navigation = params[1];
