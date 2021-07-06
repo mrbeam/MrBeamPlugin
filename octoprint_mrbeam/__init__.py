@@ -67,6 +67,7 @@ from octoprint_mrbeam.software_update_information import (
     SW_UPDATE_TIER_PROD,
     SW_UPDATE_TIER_BETA,
     SW_UPDATE_TIER_DEV,
+    BEAMOS_LEGACY_DATE,
 )
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.cli import get_cli_commands
@@ -210,7 +211,10 @@ class MrBeamPlugin(
         self.start_time_ntp_timer()
 
         # do os health care
-        os_health_care(self)
+        beamos_tier, beamos_date = self._device_info.get_beamos_version()
+        if beamos_date < BEAMOS_LEGACY_DATE:
+            # Only Trigger for Jessie images
+            os_health_care(self)
         # do migration if needed
         if not IS_X86:
             migrate(self)
@@ -2681,34 +2685,41 @@ class MrBeamPlugin(
         :return: String hostname
         """
         if self._hostname is None:
-            hostname_dev_info = self._device_info.get_hostname()
+            hostname_device_info = self._device_info.get_hostname()
             hostname_socket = None
             try:
                 hostname_socket = socket.gethostname()
             except:
                 self._logger.exception("Exception while reading hostname from socket.")
-                pass
+                self._hostname = hostname_device_info
+            else:
+                # yes, let's go with the actual host name until changes have applied.
+                self._hostname = hostname_socket
 
-            # yes, let's go with the actual host name until changes have applied.
-            self._hostname = hostname_socket
-
-            if hostname_dev_info != hostname_socket and not IS_X86:
-                self._logger.warn(
-                    "getHostname() Hostname from device_info file does NOT match system hostname. device_info: {dev_info}, system hostname: {sys}. Setting system hostname to {dev_info}".format(
-                        dev_info=hostname_dev_info, sys=hostname_socket
+                if not hostname_device_info:
+                    self._logger.debug(
+                        "No hostname defined in /etc/mrbeam, ignoring..."
                     )
-                )
-                exec_cmd(
-                    "sudo /root/scripts/change_hostname {}".format(hostname_dev_info)
-                )
-                exec_cmd(
-                    "sudo /root/scripts/change_apname {}".format(hostname_dev_info)
-                )
-                self._logger.warn(
-                    "getHostname() system hostname got changed to: {}. Requires reboot to take effect!".format(
-                        hostname_dev_info
+                elif hostname_device_info != hostname_socket and not IS_X86:
+                    # TODO - The hostname should not be modified by the plugin itself.
+                    # To create a custom name, use `/usr/bin/beamos_hostname XXXX`
+                    # Or consider writing to /boot/octopi-hostname
+                    self._logger.warn(
+                        "Hostname in /etc/mrbeam file ({dev_info}) does NOT match current hostname ({sys})".format(
+                            dev_info=hostname_device_info, sys=hostname_socket
+                        )
                     )
-                )
+                    # Use octopi-hostname to set the hostname consistently between the images.
+                    exec_cmd(
+                        "echo {} | sudo tee /boot/octopi-hostname".format(
+                            hostname_device_info
+                        )
+                    )
+                    self._logger.warn(
+                        "getHostname() system hostname got changed to: {}. Requires reboot to take effect!".format(
+                            hostname_device_info
+                        )
+                    )
         return self._hostname
 
     def get_product_name(self):
@@ -2999,11 +3010,12 @@ def __plugin_load__():
     __plugin_settings_overlay__ = dict(
         plugins=dict(
             _disabled=[
+                "announcements",
                 "cura",
                 "pluginmanager",
-                "announcements",
                 "corewizard",
                 "octopi_support",
+                "virtual_printer",
             ]  # accepts dict | pfad.yml | callable
         ),
         terminalFilters=[

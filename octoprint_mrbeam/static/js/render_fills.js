@@ -449,7 +449,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     // var len = svgDataUri ? svgDataUri.length : -1;
                     var len = getDataUriSize(svgDataUri, "B");
                     var msg =
-                        "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length: " +
+                        "Error during conversion: Loading SVG dataUri into image element failed in renderPNG. (dataUri.length: " +
                         len +
                         ")";
                     console.error(msg, e);

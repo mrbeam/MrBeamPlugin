@@ -21,7 +21,7 @@ plugin_version = __version__
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
-plugin_description = """TODO"""
+plugin_description = """Use OctoPrint with your Mr Beam Laser Cutter."""
 
 # The plugin's author. Can be overwritten within OctoPrint's internal data via __plugin_author__ in the plugin module
 plugin_author = "Teja"
@@ -36,7 +36,20 @@ plugin_url = "https://github.com/mrbeam/MrBeamPlugin"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["webcolors", "pillow", "lxml", "numpy==1.11.2", "picamera"]
+import setuptools
+from distutils.version import LooseVersion
+
+if LooseVersion(setuptools.__version__) < LooseVersion("40.0"):
+    picamera = "picamera"
+else:
+    picamera = 'picamera; platform_machine=="armv7l"'
+plugin_requires = [
+    "webcolors",
+    "pillow",
+    "lxml",
+    "numpy",
+    picamera,
+]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
@@ -71,8 +84,7 @@ additional_setup_parameters = {
             "files/camera/*",
         ]
     },
-    "setup_requires": ["numpy==1.11.2"],
-}  # , 'picamera; platform_machine=="armv7l"']} # TODO upgrade to pip 18.0
+}
 
 ########################################################################################################################
 

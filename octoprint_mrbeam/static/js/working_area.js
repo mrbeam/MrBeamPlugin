@@ -621,6 +621,7 @@ $(function () {
         self.placeSVG = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
+            $("body").addClass("activitySpinnerActive");
             cb = function (fragment) {
                 var duration_load = Date.now() - start_ts;
                 start_ts = Date.now();
@@ -712,6 +713,7 @@ $(function () {
         self.placeDXF = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
+            $("body").addClass("activitySpinnerActive");
             cb = function (fragment, timestamps) {
                 var duration_load = timestamps.load_done
                     ? timestamps.load_done - start_ts
@@ -795,6 +797,8 @@ $(function () {
             fileObj = fileObj || {};
             origin = origin || "";
             start_ts = start_ts || Date.now();
+
+            $("body").addClass("activitySpinnerActive");
 
             if (!analyticsData._skip) {
                 // this is a flag used by quickShape
@@ -993,6 +997,9 @@ $(function () {
             } finally {
                 analyticsData.duration_processing = Date.now() - start_ts;
                 self._analyticsPrepareAndInsertSVG(analyticsData);
+                setTimeout(function () {
+                    $("body").removeClass("activitySpinnerActive");
+                }, 1);
             }
         };
 
@@ -1042,7 +1049,7 @@ $(function () {
 
             // remove other unnecessary or invisible ("display=none") elements
             let removeElements = fragment.selectAll(
-                'metadata, script, [display=none], [style*="display:none"]'
+                'metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
             );
             for (var i = 0; i < removeElements.length; i++) {
                 if (
@@ -1987,6 +1994,7 @@ $(function () {
         self.placeIMG = function (file, textMode) {
             var start_ts = Date.now();
             var url = self._getIMGserveUrl(file);
+            $("body").addClass("activitySpinnerActive");
             var img = new Image();
             textMode = textMode || false;
             img.onload = function () {
@@ -2049,6 +2057,9 @@ $(function () {
                     filename_hash: file.hash,
                 };
                 self._analyticsPlaceImage(analyticsData);
+
+                // remove Activity Spinner
+                $("body").removeClass("activitySpinnerActive");
             };
             img.src = url;
         };
@@ -2646,7 +2657,7 @@ $(function () {
                 svgStr = WorkingAreaHelper.fix_svg_string(svgStr);
                 return svgStr;
             } else {
-                return; // TODO raise exception
+                // TODO raise exception
             }
         };
 

@@ -787,6 +787,18 @@ class PhotoCreator(object):
                     )
                 )
             return
+        except exc.CameraException as e:
+            self._logger.exception(
+                "%s_%s",
+                e.__class__.__name__,
+                e,
+            )
+            self._plugin.user_notification_system.show_notifications(
+                self._plugin.user_notification_system.get_notification(
+                    "err_cam_conn_err",
+                    err_msg=[str(e)],
+                )
+            )
         except Exception as e:
             if e.__class__.__name__.startswith("PiCamera"):
                 self._logger.exception(

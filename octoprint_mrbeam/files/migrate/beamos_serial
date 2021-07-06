@@ -1,0 +1,19 @@
+#!/bin/sh
+if [ -n "$1" ]; then
+    echo "Generate the device serial number from the cpu"
+    echo "serial number and the device series; then"
+    echo "(over)write it into /etc/mrbeam"
+    echo "    Does not take any arguments."
+    exit 1
+fi
+
+SERIES="$(grep device_series /etc/mrbeam | cut -f2 -d '=')"
+CPU_SERIAL=$(grep Serial /proc/cpuinfo | awk '{print toupper($3)}')
+if [ -n "$SERIES" ]; then
+    SERIAL=$CPU_SERIAL-$SERIES
+else
+    SERIAL=$CPU_SERIAL
+fi
+echo "Setting device serial to $SERIAL"
+
+crudini --set /etc/mrbeam "" serial $SERIAL
