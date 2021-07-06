@@ -50,4 +50,20 @@ $(function () {
         const ratio = countWhite / (countNoneWhite + countWhite);
         return ratio;
     };
+
+    observableInt = function (owner, default_val) {
+        if (window.OBSERVER_COUNTER === undefined) window.OBSERVER_COUNTER = 0;
+        var shadow_observer = "observableInt_" + window.OBSERVER_COUNTER++;
+        owner[shadow_observer] = ko.observable(default_val);
+
+        return ko.pureComputed({
+            read: function () {
+                return owner[shadow_observer]();
+            },
+            write: function (value) {
+                owner[shadow_observer](parseInt(value));
+            },
+            owner: owner,
+        });
+    };
 });
