@@ -54,7 +54,7 @@ $(function () {
     observableInt = function (owner, default_val) {
         if (window.OBSERVER_COUNTER === undefined) window.OBSERVER_COUNTER = 0;
         var shadow_observer = "observableInt_" + window.OBSERVER_COUNTER++;
-        owner[shadow_observer] = ko.observable(default_val);
+        owner[shadow_observer] = ko.observable(parseInt(default_val));
 
         return ko.pureComputed({
             read: function () {
