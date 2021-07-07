@@ -297,9 +297,11 @@ class DustManager(object):
             elif value < 0:
                 value = 0
             self._send_fan_command(self.FAN_COMMAND_ON, int(value))
+        self._event_bus.fire(MrBeamEvents.START_COLLECT_PRESSURE_DATA)
 
     def _stop_dust_extraction(self):
         self._send_fan_command(self.FAN_COMMAND_OFF)
+        self._event_bus.fire(MrBeamEvents.STOP_COLLECT_PRESSURE_DATA)
 
     def _cancel_all_fan_timers(self):
         try:
