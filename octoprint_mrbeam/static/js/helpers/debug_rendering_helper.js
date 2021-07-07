@@ -6,12 +6,15 @@
  */
 
 function debugBase64(base64URL, target = "", data = null) {
-    var dbg_link =
-        "<a target='_blank' href='" +
-        base64URL +
-        "' onmouseover=' show_in_popup(\"" +
-        base64URL +
-        "\"); '>Hover | Right click -> Open in new tab</a>"; // debug message, no need to translate
+    if (Array.isArray(base64URL)) {
+        var dbg_links = base64URL.map(
+            (url, idx) =>
+                `<a target='_blank' href='${url}' onmouseover=' show_in_popup("${url}"); '>${idx}: Hover | Right click -> Open in new tab</a>`
+        ); // debug message, no need to translate
+        var dbg_link = dbg_links.join("<br/>");
+    } else {
+        var dbg_link = `<a target='_blank' href='${base64URL}' onmouseover=' show_in_popup("${base64URL}"); '>Hover | Right click -> Open in new tab</a>`; // debug message, no need to translate
+    }
     if (data) {
         dbg_link += "<br/>" + JSON.stringify(data);
     }

@@ -1,0 +1,21 @@
+Mr Beam Plugin Tests
+
+# General Information #
+
+Testing is done with pytest (pytest.org / pip install pytest).
+This test folder should organize its test files in a similar structure as the codebase in ../octoprint_mrbeam/
+(following best practices of https://blog.ionelmc.ro/2014/05/25/python-packaging/#the-structure "Tests outside packages").
+
+Test case files should follow the pytest naming scheme test_something.py.
+
+Run the tests with
+  > pytest
+  > pytest ./gcodegenerator
+
+
+# Test Resources #
+
+Test resources are located in the rsc folder.
+Until we don't use wheel for a better installation (where we can select what to install and what not) the test resources should not blow up our repository.
+As intermediate solution, the test resources are hosted on a public accessible cloud space. The test script itself downloadeds them on demand.
+Therefore a little helper can be found in testutils/

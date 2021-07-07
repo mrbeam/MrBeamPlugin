@@ -16,7 +16,7 @@ def init_mrb_logger(printer):
     _printer = printer
 
 
-def mrb_logger(id, lvl=logging.DEBUG):
+def mrb_logger(id, lvl=None):
     return MrbLogger(id, lvl=lvl)
 
 
@@ -28,14 +28,15 @@ class MrbLogger(object):
 
     terminal_buffer = collections.deque(maxlen=100)
 
-    def __init__(self, id, ignorePrinter=False, lvl=logging.DEBUG):
+    def __init__(self, id, ignorePrinter=False, lvl=None):
         global _printer
         self.logger = logging.getLogger(id)
         self.id = id
         self.id_short = self._shorten_id(id)
         self.my_buffer = []
         # TODO: this line overrides logging.yaml!!!
-        self.logger.setLevel(lvl)
+        if lvl is not None:
+            self.logger.setLevel(lvl)
 
     def comm(self, msg, *args, **kwargs):
         kwargs["id"] = ""
@@ -82,6 +83,12 @@ class MrbLogger(object):
         :param terminal_dump: Collect and log a terminal dump. Terminal dumps are also sent to analytics if analytics is not explicitly set to False.
         :type kwargs:
         """
+
+        try:
+            msg = unicode(msg, "utf-8")
+        except TypeError:
+            # If it's already unicode we get this TypeError
+            pass
         if kwargs.pop("terminal", True if level >= logging.WARN else False):
             self._terminal(level, msg, *args, **kwargs)
         if kwargs.pop("terminal_as_comm", False) or level == self.LEVEL_COMM:
@@ -130,7 +137,7 @@ class MrbLogger(object):
             exception = " (Exception: {type} - {value})".format(
                 type=(exctype.__name__ if exctype else None), value=value
             )
-        output = "{date} {level}{space}{id}: {msg}{exception}".format(
+        output = u"{date} {level}{space}{id}: {msg}{exception}".format(
             date=date,
             space=(" " if id else ""),
             id=id,

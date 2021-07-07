@@ -9,57 +9,58 @@ fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
 i2c_addr = 0x20
 i2c = smbus.SMBus(1)
-rst = 0x08ff  # P13=Prog_RESET_Ardu
-nom = 0x00ff
+rst = 0x08FF  # P13=Prog_RESET_Ardu
+nom = 0x00FF
 
-dtr = re.compile('.+TIOCM_DTR.+')
+dtr = re.compile(".+TIOCM_DTR.+")
 start = time.time()
 
 
 # do a reset several times to bring the reset line down.
 
-def reset():
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.0500)
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.0005)
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.0005)
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.100)
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.0005)
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.0005)
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.0500)
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.005)
-	i2c.write_byte_data(i2c_addr, nom & 0xff, (nom >> 8) & 0xff)
-	time.sleep(0.005)
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.005)
-	i2c.write_byte_data(i2c_addr, rst & 0xff, (rst >> 8) & 0xff)
-	time.sleep(0.005)
-	i2c.write_byte_data(i2c_addr, nom & 0xff, (nom >> 8) & 0xff)
-	time.sleep(0.005)
 
-	i2c.write_byte_data(i2c_addr, nom & 0xff, (nom >> 8) & 0xff)
+def reset():
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.0500)
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.0005)
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.0005)
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.100)
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.0005)
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.0005)
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.0500)
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.005)
+    i2c.write_byte_data(i2c_addr, nom & 0xFF, (nom >> 8) & 0xFF)
+    time.sleep(0.005)
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.005)
+    i2c.write_byte_data(i2c_addr, rst & 0xFF, (rst >> 8) & 0xFF)
+    time.sleep(0.005)
+    i2c.write_byte_data(i2c_addr, nom & 0xFF, (nom >> 8) & 0xFF)
+    time.sleep(0.005)
+
+    i2c.write_byte_data(i2c_addr, nom & 0xFF, (nom >> 8) & 0xFF)
 
 
 def process():
-	while True:
-		try:
-			duration = time.time() - start
-			input = sys.stdin.readline().strip()
-			if dtr.match(input):
-				reset()
-				return
-			elif duration > 5:
-				return
-		except:
-			continue
+    while True:
+        try:
+            duration = time.time() - start
+            input = sys.stdin.readline().strip()
+            if dtr.match(input):
+                reset()
+                return
+            elif duration > 5:
+                return
+        except:
+            continue
 
 
 process()
-print "done with autoreset"
+print("done with autoreset")

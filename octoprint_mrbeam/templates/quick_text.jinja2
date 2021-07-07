@@ -5,17 +5,36 @@
     </div>
     <div class="modal-body">
         <form role="form" class="form-search" data-bind="submit: function(){$('#quick_text_dialog').modal('hide');}" _lpchecked="1">
-            <input type="text" id="quick_text_dialog_text_input" class="input-block quicktext-input" data-bind="textInput: currentQuickText" placeholder="{{ _('QuickText...') }}" autocomplete="off">
-                <div class="row-fluid padding-top">
-                    {# Translators: Aa - the first alphabet letter capitalized and not #}
-                    <div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontPrev"><i class="icon-chevron-left" title="{{ _('Previous Font') }}"></i> {{ _('Aa') }} </div>
-                    <div class="span6 quicktext-fontname" id="quick_text_dialog_font_name"></div>
-                    <div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontNext"> {{ _('Aa') }} <i class="icon-chevron-right" title="{{ _('Next Font') }}"></i></div>
+            <input type="text" id="quick_text_dialog_text_input" class="input-block quicktext-input" data-bind="textInput: currentQuickText" placeholder="{{ _('QuickText...') }}" autocomplete="off"/>
+			<div class="row-fluid padding-top">
+				{# Translators: Aa - the first alphabet letter capitalized and not #}
+				<div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontPrev"><i class="icon-chevron-left" title="{{ _('Previous Font') }}"></i> {{ _('Aa') }} </div>
+				<div class="span6 quicktext-fontname" id="quick_text_dialog_font_name"></div>
+				<div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontNext"> {{ _('Aa') }} <i class="icon-chevron-right" title="{{ _('Next Font') }}"></i></div>
+			</div>
+			<input id="quick_text_dialog_intensity" class="mrb_slider grayscale quicktext-slider" type="range" min="0" max="255"/>
+            <div id="qt_round_text_section" class="straight">
+                <div  class="btn-group">
+                    <div id="quick_text_straight" class="btn active"><img src="/plugin/mrbeam/static/img/straight_text_paths.svg" alt="straight text"/></div>
+                    <div id="quick_text_cw" class="btn"><img src="/plugin/mrbeam/static/img/round_text_outside_paths.svg" alt="round text" class="round-text-icon clockwise pull-right"/></div>
+                    <div id="quick_text_ccw" class="btn"><img src="/plugin/mrbeam/static/img/round_text_inside_paths.svg" alt="round text" class="round-text-icon counterclockwise pull-right"/></div>
                 </div>
-                <input id="quick_text_dialog_intensity" class="precisionslider grayscale quicktext-slider padding-top" type="range" min="0" max="255"/>
+                <input id="quick_text_dialog_circle" class="mrb_slider" type="range" min="0" max="100" value="0" />
+            </div>
+<!--			<div id="qt_round_text_section" class="clockwise">
+				<img src="/plugin/mrbeam/static/img/straight_text.svg" alt="straight text"/>
+				<img src="/plugin/mrbeam/static/img/round_text_outside.svg" alt="round text" class="round-text-icon clockwise pull-right"/>
+				<img src="/plugin/mrbeam/static/img/round_text_inside.svg" alt="round text" class="round-text-icon counterclockwise pull-right"/>
+				<input id="quick_text_dialog_circle" class="precisionslider padding-top" type="range" min="0" max="100" value="0" />
+			</div>
+			<div id="quick_text_dialog_clockwise" class="mini_switch">
+				<span class="mini_switch_label">{{ _('outside') }}</span>
+				<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+				<span class="mini_switch_label">{{ _('inside') }}</span>
+			</div>-->
         </form>
     </div>
     <div class="modal-footer">
-        <a class="btn btn-primary" id="quick_text_text_done_btn" type="submit" data-dismiss="modal" aria-hidden="true">{{ _('OK') }}</a>
+        <a class="btn btn-primary" id="quick_text_text_done_btn" data-dismiss="modal" aria-hidden="true">{{ _('OK') }}</a>
     </div>
 </div>

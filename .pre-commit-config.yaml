@@ -6,12 +6,12 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
-  - repo: https://github.com/psf/black
-    rev: 20.8b1
-    hooks:
-      - id: black
-        language_version: /usr/bin/python3
-        args: [-t, py27,] # -l, "110"]
+  # - repo: https://github.com/psf/black
+  #   rev: 20.8b1
+  #   hooks:
+  #     - id: black
+  #       language_version: /usr/bin/python3
+  #       args: [-t, py27,] # -l, "110"]
   - repo: https://github.com/prettier/prettier
     rev: 2.0.5 # Use the sha or tag you want to point at
     hooks:

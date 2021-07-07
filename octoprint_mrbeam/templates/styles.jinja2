@@ -1,7 +1,8 @@
-{# some styles get broken when packed into one css file. As a hackaround, we put those thyles here #}
+{# some styles get broken when packed into one css file. As a hackaround, we put those styles here #}
 <style>
     .userText.designHighlight text,
     .userText.designHighlight tspan,
+    .userSVG.designHighlight .vector_outline:not([stroke]),
     .userIMG.designHighlight {
         filter: url(#designHighlight);
     }

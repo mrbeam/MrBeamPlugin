@@ -20,10 +20,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
      *
      * @param {integer} cols : as name says, defaults 0.
      * @param {integer} rows : as name says, defaults 0.
-     * @param {integer} dist : distance between grid items, defaults 0.
+     * @param {integer} distX : horizontal distance between grid items, defaults 0.
+     * @param {integer} distY : vertical distance between grid items, defaults 0.
      * @returns {undefined}
      */
-    Element.prototype.grid = function (cols, rows, dist) {
+    Element.prototype.grid = function (cols, rows, distX, distY) {
         var elem = this;
         if (elem.type !== "g") {
             console.info("only supported on groups");
@@ -33,7 +34,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         var clone_group = elem._get_clone_group();
         clone_group.clear();
 
-        var grid_elements = original_group.create_grid(cols, rows, dist);
+        var grid_elements = original_group.create_grid(
+            cols,
+            rows,
+            distX,
+            distY
+        );
         for (var i = 0; i < grid_elements.length; i++) {
             var item = grid_elements[i];
             clone_group.append(item);
@@ -67,17 +73,18 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         }
     };
 
-    Element.prototype.create_grid = function (cols, rows, dist) {
+    Element.prototype.create_grid = function (cols, rows, distX, distY) {
         var elem = this;
         cols = cols || 1;
         rows = rows || 1;
-        dist = dist || 0;
+        distX = distX || 0;
+        distY = distY || 0;
 
         var grid_elements = [];
 
         var bbox = elem.getBBox();
-        var dx = bbox.width + dist;
-        var dy = bbox.height + dist;
+        var dx = bbox.width + distX;
+        var dy = bbox.height + distY;
         for (var i = 0; i < cols; i++) {
             for (var j = 0; j < rows; j++) {
                 if (i !== 0 || j !== 0) {

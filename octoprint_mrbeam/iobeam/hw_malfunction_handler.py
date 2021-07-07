@@ -62,6 +62,7 @@ class HwMalfunctionHandler(object):
             data = data or {}
             msg = data.get("msg", malfunction_id)
             data["msg"] = msg
+            data["priority"] = data.get("priority", 0)
             self._messages_to_show[malfunction_id] = data
             self._plugin.fire_event(
                 MrBeamEvents.HARDWARE_MALFUNCTION,
@@ -85,7 +86,11 @@ class HwMalfunctionHandler(object):
     def show_hw_malfunction_notification(self):
         notifications = []
         general_malfunctions = []
-        for malfunction_id, data in self._messages_to_show.items():
+        messages_sorted = sorted(
+            self._messages_to_show.items(), key=lambda k: k[1]["priority"], reverse=True
+        )
+
+        for malfunction_id, data in messages_sorted:
             if malfunction_id == self.MALFUNCTION_ID_BOTTOM_OPEN:
                 notifications.append(
                     self._user_notification_system.get_notification(
@@ -113,3 +118,6 @@ class HwMalfunctionHandler(object):
             )
 
         self._user_notification_system.show_notifications(notifications)
+
+    def get_messages_to_show(self):
+        return self._messages_to_show

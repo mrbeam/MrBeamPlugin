@@ -1,14 +1,15 @@
-
-<h3>{{ _("SVG Split") }}</h3>
-
+<h3>{{ _("GCode auto-deletion") }}</h3>
 <div class="wizard-content">
-    <p><strong>{{ _('Split your SVG files in smaller pieces') }}</strong></p>
-    <p>{{ _('Sometimes a downloaded design does not fit on your material - but with realignment of the single parts it would. Therefore you can split it now.') }}</p>
-
-{#    <small class="muted">#}
-{#        {{ _('') }}#}
-{#    </small>#}
-
-    <img class="wizard-big-img wizard-shadowed-img" src="/plugin/mrbeam/static/img/whatsnew_dialog/svg_split.png">
-
+    <form class="form-horizontal">
+        <div class="control-group">
+            <div>
+                <p>{{ _('Every time you run a laser job, a GCode file is automatically created. We recommend to enable the auto-deletion of GCode files so that your Mr Beam doesn\'t get too loaded and it can work faster. With this enabled, only the last 25 GCode files will be stored.') }} </p>
+                <p>{{ _('You can alternativelly delete the GCode files manually in the Design Library.') }} </p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: gcodeAutoDeletion">
+                    <strong>{{ _('Delete GCode files automatically') }}</strong> ({{ _('recommended') }})
+                </label>
+            </div>
+        </div>
+    </form>
 </div>

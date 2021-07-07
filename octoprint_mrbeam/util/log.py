@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-
+from __future__ import absolute_import, print_function, unicode_literals, division
 import time
+from collections import Mapping
 import numpy as np
 import json
 import logging
@@ -37,18 +38,21 @@ def logExceptions(f):
 
 def json_serialisor(elm):
     """Attempts to return a serialisable element if the given one is not."""
-    if elm is None or type(elm) in [bool, int, float, str, list, tuple, dict]:
+    if elm is None or isinstance(elm, (bool, int, float, str, list, tuple, dict)):
         # These types are already supported
         return elm
     elif isinstance(elm, np.ndarray):
         # convert the array elements into serialisable stuff, and change the array to nested lists
         shape = elm.shape
-        if max(shape) < 10:
+        if not shape:
+            # Single element
+            return elm.tolist()
+        else:  # max(shape) < 10:
             _e = elm.reshape((np.prod(shape),))
             _e = np.asarray(map(json_serialisor, _e))
             return _e.reshape(shape).tolist()
-        else:
-            return "numpy array with shape %s and type %s " % (elm.shape, elm.dtype)
+        # else:
+        #     return "numpy array with shape %s and type %s " % (elm.shape, elm.dtype)
     else:
         try:
             json.dumps(elm)

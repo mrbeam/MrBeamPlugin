@@ -29,7 +29,6 @@ class WorkingAreaHelper {
             }
 
             if (v1parts[i] === v2parts[i]) {
-                continue;
             } else if (v1parts[i] > v2parts[i]) {
                 return 1;
             } else {
@@ -158,6 +157,25 @@ class WorkingAreaHelper {
                 return { generator: gen, version: version };
             }
 
+            // Affinity designer by Serif
+            // <svg ... xmlns:serif="http://www.serif.com/" ...>
+            if (
+                root_attrs["xmlns:serif"] &&
+                root_attrs["xmlns:serif"].value.search("serif.com") > 0
+            ) {
+                return { generator: "Serif Affinity", version: "unknown" };
+            }
+
+            // Vectornator (www.vectornator.io)
+            // <svg ... xmlns:vectornator="http://vectornator.io" ...>
+            if (
+                root_attrs["xmlns:vectornator"] &&
+                root_attrs["xmlns:vectornator"].value.search("vectornator.io") >
+                    0
+            ) {
+                return { generator: "Vectornator", version: "unknown" };
+            }
+
             // detect Corel Draw by comment
             // <!-- Creator: CorelDRAW X5 -->
             // or <!-- Creator: CorelDRAW -->
@@ -225,6 +243,10 @@ class WorkingAreaHelper {
         return fragment.node.querySelectorAll("svg > *").length <= 0;
     }
 
+    static parseFloatTolerant(str) {
+        return parseFloat(str.replace(",", "."));
+    }
+
     /**
      * Parses two number values (float or int) from given string.
      * Tries to accept any comma and any delimiter between the two numbers
@@ -241,8 +263,8 @@ class WorkingAreaHelper {
                 myString.match(/^(-?\d+)[^0-9-]*(-?\d+)$/) ||
                 myString.match(/(-?\d+[.,]?\d*)[^0-9-]*(-?\d+[.,]?\d*)/);
             if (m) {
-                let x = parseFloat(m[1]);
-                let y = parseFloat(m[2]);
+                let x = WorkingAreaHelper.parseFloatTolerant(m[1]);
+                let y = WorkingAreaHelper.parseFloatTolerant(m[2]);
                 if (!isNaN(x) && !isNaN(y)) {
                     res = [x, y];
                 }
@@ -250,7 +272,102 @@ class WorkingAreaHelper {
         }
         return res;
     }
+
+    /**
+     * Bound via keydown to an input field, this function increases or decreases the value with up/down arrow keys (and shift/alt combinations)
+     * @param {object} event
+     * @param {object} options - unit: string to attach after increment / decrement ('', 'mm', '%', '°', ...)
+     *                         - delimiter: for dual value input fields (e.g. "200.1, 33.2" => ', ' is the delimiter)
+     *                         - digits: for formatting output with toFixed(digits)
+     *                         - alt: increment / decrement factor when alt key is pressed
+     *                         - shift: increment / decrement factor when shift key is pressed
+     * @returns {Boolean} - false if up/down arrow was event.keyCode. Useful to control event bubbling / default prevention.
+     */
+    static arrowKeys(event, options = {}) {
+        options.unit = options.unit || "";
+        options.delimiter = options.delimiter || null;
+        options.digits =
+            !isNaN(options.digits) && options.digits >= 0 ? options.digits : 1;
+        options.alt = options.alt || 0.1;
+        options.shift = options.shift || 10;
+        if (
+            event.keyCode === 37 &&
+            event.altKey &&
+            event.target.nodeName === "INPUT"
+        ) {
+            event.cancelBubble = true;
+            event.returnValue = false;
+            event.preventDefault();
+            console.info("Catched Alt-LeftArrow and prevented 'browser back'.");
+        }
+
+        if (event.keyCode === 38 || event.keyCode === 40) {
+            // arrowUp, arrowDown
+            event.preventDefault();
+            // remember caret position
+            const selStart = event.target.selectionStart;
+            const selEnd = event.target.selectionEnd;
+            let cursorShift = 0;
+            let val = event.keyCode === 38 ? 1 : -1;
+            if (event.altKey) {
+                val = val * options.alt;
+            }
+            if (event.shiftKey) {
+                val = val * options.shift;
+            }
+            if (options.delimiter === null) {
+                const newVal =
+                    WorkingAreaHelper.parseFloatTolerant(event.target.value) +
+                    val;
+                event.target.value = `${newVal.toFixed(options.digits)} ${
+                    options.unit
+                }`;
+            } else {
+                const v = event.target.value;
+                let parts = this._getSubstringAtIndex(
+                    v,
+                    selStart,
+                    options.delimiter
+                );
+                const newV1 = (parseFloat(parts[1]) + val).toFixed(
+                    options.digits
+                );
+                event.target.value = `${parts[0]}${newV1}${parts[2]}`;
+                // maintain cursor position
+                if (selStart > parts[0].length) {
+                    cursorShift = newV1.length - parts[1].length;
+                }
+            }
+            // restore caret position
+            event.target.selectionStart = selStart + cursorShift;
+            event.target.selectionEnd = selEnd + cursorShift;
+            return false; // swallow the default action
+        }
+        return true;
+    }
+
+    static _getSubstringAtIndex(input, index, delimiter = "[^a-zA-Z0-9.,]+") {
+        const iter = input.matchAll(delimiter);
+        let idx1 = 0;
+        let idx2 = input.length;
+        let del;
+        while ((del = iter.next()) !== null) {
+            if (del.done) break;
+            if (del.value.index < index) {
+                idx1 = del.value.index + del.value[0].length;
+            } else {
+                idx2 = del.value.index;
+                break;
+            }
+        }
+        const strBefore = input.substring(0, idx1);
+        const v1 = input.substring(idx1, idx2);
+        const strAfter = input.substring(idx2);
+        //console.debug("idx, idx1 -> idx2", index, idx1, idx2);
+        return [strBefore, v1, strAfter];
+    }
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = "bcdfghjklmnpqrstvwxz";
 WorkingAreaHelper.HUMAN_READABLE_IDS_VOCALS = "aeiouy";
+window.WorkingAreaHelper = WorkingAreaHelper;

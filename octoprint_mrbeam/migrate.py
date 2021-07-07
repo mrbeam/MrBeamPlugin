@@ -8,8 +8,10 @@ from distutils.version import LooseVersion, StrictVersion
 from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
+from octoprint_mrbeam.util import logExceptions
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
+from octoprint_mrbeam.__version import __version__
 
 
 def migrate(plugin):
@@ -22,13 +24,13 @@ class Migration(object):
     VERSION_SYNC_GRBL_SETTINGS = "0.1.24"
     VERSION_FIX_SSH_KEY_PERMISSION = "0.1.28"
     VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS = "0.1.37"
-    VERSION_UPDATE_LOGROTATE_CONF = "0.1.45"
+    VERSION_UPDATE_LOGROTATE_CONF = "0.8.0.2"
     VERSION_INFLATE_FILE_SYSTEM = "0.1.51"
     VERSION_PREFILL_MRB_HW_INFO = "0.1.55"
     VERSION_AVRDUDE_AUTORESET_SCRIPT = "0.2.0"
     VERSION_USERNAME_LOWCASE = "0.2.0"
     VERSION_GRBL_AUTO_UPDATE = "0.2.1"
-    VERSION_MOUNT_MANAGER_171 = "0.6.14.3"
+    VERSION_MOUNT_MANAGER_172 = "0.7.13.1"
     VERSION_INITD_NETCONNECTD = "0.5.5"
     VERSION_DELETE_UPLOADED_STL_FILES = "0.6.1"
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
@@ -46,13 +48,13 @@ class Migration(object):
     GRBL_VERSIONS_NEED_UPDATE = ["0.9g_20190329_ec6a7c7-dirty"]
 
     # mount manager version
-    MOUNT_MANAGER_VERSION = StrictVersion("1.7.1")
+    MOUNT_MANAGER_VERSION = StrictVersion("1.7.2")
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
         self.plugin = plugin
 
-        self.version_previous = self.plugin._settings.get(["version"]) or "0.0.0"
+        self.version_previous = self.plugin._settings.get(["version"]) or __version__
         self.version_current = self.plugin.get_plugin_version()
         self.suppress_migrations = (
             self.plugin._settings.get(["dev", "suppress_migrations"]) or IS_X86
@@ -119,7 +121,7 @@ class Migration(object):
 
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
-                    self.VERSION_MOUNT_MANAGER_171,
+                    self.VERSION_MOUNT_MANAGER_172,
                     equal_ok=False,
                 ):
                     self.update_mount_manager()
@@ -199,6 +201,18 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.disable_gcode_auto_deletion()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    "0.9.0.2",
+                    equal_ok=False,
+                ):
+                    self.track_devpi()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    "0.9.4.0",
+                    equal_ok=False,
+                ):
+                    self.hostname_helper_scripts()
 
                 # migrations end
 
@@ -461,6 +475,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("update_logrotate_conf() ")
 
         logrotate_d_files = [
+            "analytics",
             "haproxy",
             "iobeam",
             "mount_manager",
@@ -816,3 +831,42 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             _set(path, data, settings().setBoolean)
         settings().save()
         self._logger.info("Done.")
+
+    @logExceptions
+    def track_devpi(self):
+        """Move pip.conf to track our devpi server. (removes it from the source files)"""
+        self._logger("Adding pip.conf to track MrBeam update server.")
+        src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, "pip.conf")
+        dst = "/home/pi/.pip/pip.conf"
+        os.renames(src, dst)
+
+    @logExceptions
+    def hostname_helper_scripts(self):
+        """
+        Add systemd files and scripts to auto change the hostname on boot and/or
+        change of name in /etc/mrbeam
+        """
+        self._logger.info("Removing previous first_boot_script...")
+        for rm_fname in [
+            "/root/scripts/change_hostname",
+            "/root/scripts/change_apname",
+            "/root/scripts/change_etc_mrbeam",
+            "/etc/init.d/first_boot_script",
+        ]:
+            # permission...
+            os.system("sudo rm '%s'" % rm_fname)
+            # os.remove(rm_fname)
+        self._logger.info("Adding hostname helper scripts...")
+        for fname in [
+            "/usr/bin/beamos_hostname",
+            "/usr/bin/beamos_serial",
+            "/etc/init.d/beamos_first_boot",
+        ]:
+            src = os.path.join(
+                os.path.dirname(__file__),
+                self.MIGRATE_FILES_FOLDER,
+                os.path.basename(fname),
+            )
+            # permission...
+            os.system("sudo mv '%s' '%s'" % (src, fname))
+            # os.renames(src, fname)

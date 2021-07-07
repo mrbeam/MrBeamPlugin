@@ -9,7 +9,12 @@ import sys
 import time
 import threading
 
-from .log import logExceptions, logtime
+from .log import logExceptions, logtime, logme
+
+if sys.version_info >= (3,):
+    _basestring = str
+else:
+    _basestring = basestring
 
 
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
@@ -61,6 +66,8 @@ def dict_get(mapping, path, default=None):
     Use a path to get an item from a deep map.
     ``path`` has to be Iterable.
     """
+    if mapping is None or path is None:
+        return None
     assert isinstance(mapping, Mapping)
     assert isinstance(path, Iterable)
     _mapping = mapping

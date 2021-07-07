@@ -341,6 +341,7 @@ class Converter:
                             extra_overshoot=rasterParams["extra_overshoot"],
                             eng_compressor=rasterParams["eng_compressor"],
                             material=self.options["material"],
+                            eng_passes=rasterParams["eng_passes"]
                         )
                         # material = rasterParams['material'] if 'material' in rasterParams else None)
                         data = imgNode.get("href")
@@ -787,7 +788,7 @@ class Converter:
         if color in self.colorParams.keys():
             return True
         else:
-            self._log.info("Skipping color: %s " % color)
+            self._log.debug("Skipping color: %s " % color)
             return False
 
     def _check_dir(self):

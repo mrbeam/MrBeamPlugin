@@ -1,4 +1,9 @@
 $(function () {
+    /**
+     * To debug the user review screen, set window.FORCE_REVIEW_SCREEN = true
+     * This will trigger the review screen to come up during all laser jobs for debugging.
+     * Review data is sent to the backend but will be marked with a 'debug' key set to true
+     */
     function ReviewViewModel(params) {
         let self = this;
         self.REVIEW_NUMBER = 1;
@@ -25,11 +30,13 @@ $(function () {
             ) {
                 let totalUsage = self.settings.settings.plugins.mrbeam.usage.totalUsage();
                 let shouldAsk = self.settings.settings.plugins.mrbeam.review.ask();
+                let doNotAskAgain = self.settings.settings.plugins.mrbeam.review.doNotAskAgain();
                 let reviewGiven = self.settings.settings.plugins.mrbeam.review.given();
 
                 return (
                     totalUsage >= self.SHOW_AFTER_USAGE_H &&
                     shouldAsk &&
+                    !doNotAskAgain &&
                     !reviewGiven &&
                     !self.justGaveReview()
                 );
@@ -62,8 +69,10 @@ $(function () {
             setTimeout(function () {
                 // The short jobs are always estimated 60s, so has to be more
                 if (
-                    self.shouldAskForReview() &&
-                    self.jobTimeEstimation() >= 61
+                    (self.shouldAskForReview() &&
+                        self.jobTimeEstimation() >= 61) ||
+                    (typeof FORCE_REVIEW_SCREEN !== "undefined" &&
+                        FORCE_REVIEW_SCREEN)
                 ) {
                     self.showReviewDialog(true);
                     self.reviewDialog.modal("show");
@@ -89,21 +98,20 @@ $(function () {
                 self.rating(val);
 
                 self.fillAndDisableRating(val);
+
                 $("#dont_ask_review_link").hide();
                 $("#review_question").hide();
+                $("#rating_block").hide();
 
-                if (val >= 7) {
-                    $("#review_thank_you").show();
-                } else if (val < 7) {
-                    $("#rating_block").hide();
-                    $("#review_how_can_we_improve").show();
-                }
+                $("#review_thank_you").show();
+                $("#review_how_can_we_improve").show();
+                $("#ask_user_details").show();
+                $("#change_review").show();
             });
         };
 
         self.fillAndDisableRating = function (userRating) {
             let allBtns = $(".rating button");
-            allBtns.off("click");
 
             allBtns.each(function (i, obj) {
                 $(this).prop("disabled", true);
@@ -127,35 +135,87 @@ $(function () {
             self.exitReview();
         };
 
+        self.changeReview = function () {
+            // "Back" button: Go back to the rating bar for the user to change their answer
+            $("#dont_ask_review_link").show();
+            $("#review_question").show();
+            $("#rating_block").show();
+            $("#review_thank_you").hide();
+            $("#review_how_can_we_improve").hide();
+            $("#ask_user_details").hide();
+            $("#change_review").hide();
+            self.unfillAndEnableRating();
+        };
+
+        self.unfillAndEnableRating = function () {
+            let allBtns = $(".rating button");
+
+            allBtns.each(function (i, obj) {
+                $(this).prop("disabled", false);
+                $(this).removeClass("rating-hover");
+            });
+        };
+
         self.exitXBtn = function () {
             // "x" button in the corner: we send the review but show it again in the next session
-            self.exitReview();
+            if(self.rating() !== 0 && self.ratingGiven) {
+                self.ratingGiven = false;
+                self.justGaveReview(true); // We show it only once per session
+                self.sendReviewToServer();
+            }
+            self.closeReview();
         };
 
         self.exitReview = function () {
-            self.ratingGiven = false;
-            self.reviewDialog.modal("hide");
-            self.justGaveReview(true); // We show it only once per session
-            self.sendReviewToServer();
+            if(self.rating() !== 0) {
+                self.ratingGiven = false;
+                self.justGaveReview(true); // We show it only once per session
+                self.sendReviewToServer();
+
+                $("#review_thank_you").hide();
+                $("#review_how_can_we_improve").hide();
+                $("#ask_user_details").hide();
+                $("#change_review").hide();
+                $("#review_done_btn").hide();
+
+                if (self.rating() >= 7) {
+                    $("#positive_review").show();
+                } else if (self.rating() < 7) {
+                    $("#negative_review").show();
+                }
+
+                $("#close_review_modal")
+                    .removeClass("review_hidden_part")
+                    .css("width", "20%");
+            }else{
+                self.sendReviewToServer();
+                self.closeReview();
+            }
         };
 
-        self.exitAndDontShowAgain = function () {
-            self.dontShowAgain(true);
-            self.exitReview();
+        self.closeReview = function () {
+            self.reviewDialog.modal("hide");
         };
 
         self.sendReviewToServer = function () {
             let review = $("#review_textarea").val();
+            let user_email_or_phone = $("#review_input_phone_email").val();
             let data = {
+                // more data is added by the backend
                 dontShowAgain: self.dontShowAgain(),
                 rating: self.rating(),
                 review: review,
+                userEmailOrPhone: user_email_or_phone,
                 ts: new Date().getTime(),
-                env: MRBEAM_ENV_LOCAL,
-                sw_tier: MRBEAM_SW_TIER,
-                snr: MRBEAM_SERIAL,
                 number: self.REVIEW_NUMBER,
             };
+
+            if (
+                typeof FORCE_REVIEW_SCREEN !== "undefined" &&
+                FORCE_REVIEW_SCREEN
+            ) {
+                data["debug"] = true;
+            }
 
             OctoPrint.simpleApiCommand("mrbeam", "review_data", data)
                 .done(function (response) {

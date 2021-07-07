@@ -14,11 +14,16 @@ $(function () {
                 " " +
                 settings.url;
             if (settings.data) {
-                msg +=
-                    ', body: "' +
-                    (settings.data.length > 200
-                        ? settings.data.substr(0, 200) + "&hellip;"
-                        : settings.data);
+                if (settings.url.includes("api/login")) {
+                    msg +=
+                        ", Login rejected. [body removed to avoid credentials from being logged.]";
+                } else {
+                    msg +=
+                        ', body: "' +
+                        (settings.data.length > 200
+                            ? settings.data.substr(0, 200) + "&hellip;"
+                            : settings.data);
+                }
             }
 
             let data = {
@@ -47,10 +52,22 @@ $(function () {
 
         self.window_load_ts = -1;
 
+        // can be changed in console for debugging
+        self.enableClickAnalytics = true;
+        self.enableClickLogs = false;
+
         // Do not use before onStartupComplete!
         self.analyticsEnabled = ko.observable(false);
         self.isStartupComplete = false;
         self.error_sqeuence = 0;
+
+        $(window).load(function () {
+            self.window_load_ts = new Date().getTime();
+        });
+
+        $(window).click(function (e) {
+            self._handleClick(e);
+        });
 
         self.send_fontend_event = function (event, payload) {
             if (self.isStartupComplete && !self.analyticsEnabled()) {
@@ -87,10 +104,6 @@ $(function () {
                 data: JSON.stringify(data),
             });
         };
-
-        $(window).on("load", function () {
-            self.window_load_ts = new Date().getTime();
-        });
 
         self.onAllBound = function () {
             self._updateAnalyticsEnabledValue();
@@ -139,6 +152,80 @@ $(function () {
             self.analyticsEnabled(
                 self.settings.settings.plugins.mrbeam.analyticsEnabled()
             );
+        };
+
+        self._handleClick = function (e) {
+            if (!self.enableClickAnalytics) {
+                return;
+            }
+            let id = null;
+            let clickableElem = null;
+            let currentElem = e.target;
+            let steps = 0;
+            while (!clickableElem) {
+                if (!currentElem) {
+                    break;
+                }
+                if (
+                    currentElem.tagName == "A" ||
+                    currentElem.tagName == "INPUT" ||
+                    currentElem.tagName == "BUTTON" ||
+                    currentElem.getAttribute("href") ||
+                    currentElem.getAttribute("data-toggle") ||
+                    currentElem.getAttribute("data-dismiss") ||
+                    currentElem.getAttribute("dropdown-toggle") ||
+                    // to catch divs and like which we just assigned some click handling
+                    (jQuery._data(currentElem, "events") &&
+                        ("click" in jQuery._data(currentElem, "events") ||
+                            "mousedown" in
+                                jQuery._data(currentElem, "events") ||
+                            "mouseup" in jQuery._data(currentElem, "events")))
+                ) {
+                    clickableElem = currentElem;
+                } else {
+                    steps++;
+                    currentElem = currentElem.parentElement;
+                }
+            }
+
+            if (!clickableElem || clickableElem.tagName == "BODY") {
+                // if we end up having body as the clicked element,
+                // go back to the original element
+                clickableElem = e.target;
+            }
+
+            id = clickableElem.id ? "#" + clickableElem.id : null;
+            if (!id) {
+                id = clickableElem.tagName;
+                if (id != "BODY") {
+                    if (clickableElem.getAttribute("href")) {
+                        id +=
+                            "[href=" + clickableElem.getAttribute("href") + "]";
+                    }
+                    if (clickableElem.getAttribute("src")) {
+                        id += "[src=" + clickableElem.getAttribute("src") + "]";
+                    }
+                    for (let i = 0; i < clickableElem.classList.length; i++) {
+                        id += "." + clickableElem.classList[i];
+                    }
+                }
+            }
+            // send
+            let payload = {
+                element: id,
+                classes: [...clickableElem.classList].join(" "),
+                disabled: clickableElem.disabled,
+                tagName: clickableElem.tagName,
+            };
+            // decouple
+            setTimeout(self.send_fontend_event, 100, "click", payload);
+
+            if (self.enableClickLogs) {
+                console.log(
+                    "Click: (" + steps + ") " + id + ", data: ",
+                    payload
+                );
+            }
         };
     }
 

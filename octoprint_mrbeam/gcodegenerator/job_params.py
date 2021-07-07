@@ -12,6 +12,7 @@ class JobParams:
         PIERCE_INTENSITY = 1000
         ENG_COMPRESSOR = 100
         PASSES = 1
+        ENG_PASSES = 1
 
     class Max:
         SPEED = 3000
@@ -20,6 +21,7 @@ class JobParams:
         PIERCE_TIME = 300
         LINE_DISTANCE = 1.0
         INTENSITY = 1300
+        ENG_PASSES = 4
 
     class Min:
         SPEED = 50
@@ -28,3 +30,4 @@ class JobParams:
         PIERCE_TIME = 0
         LINE_DISTANCE = 0.1
         INTENSITY = 0
+        ENG_PASSES = 1

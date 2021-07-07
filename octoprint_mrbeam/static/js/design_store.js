@@ -3,9 +3,12 @@ $(function () {
         let self = this;
         window.mrbeam.viewModels["designStoreViewModel"] = self;
 
-        self.DESIGN_STORE_IFRAME_SRC =
-            "https://design-store-269610.appspot.com"; // Don't write a "/" at the end!!
-        // self.DESIGN_STORE_IFRAME_SRC = 'http://localhost:8080';
+        // // Don't write a "/" at the end!! //
+        // prod
+        self.DESIGN_STORE_IFRAME_SRC = "https://designs.cloud.mr-beam.org";
+        // staging:
+        // 'https://1-0-0-staging-dot-design-store-269610.appspot.com'
+        // 'http://localhost:8080';
 
         self.loginState = params[0];
         self.navigation = params[1];
@@ -13,9 +16,7 @@ $(function () {
         self.settings = params[3];
 
         self.onUserLoggedIn = function () {
-            if (window.mrbeam.isDev() || window.mrbeam.isBeta()) {
-                self.prepareDesignStoreTab();
-            }
+            self.prepareDesignStoreTab();
         };
 
         self.getEmail = function () {

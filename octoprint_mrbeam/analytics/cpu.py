@@ -49,7 +49,10 @@ class Cpu(object):
         self._progress = progress
 
     def _add_cpu_temp_value(self, cpu_temp):
-        rounded = str(self._round_temp_down_to(cpu_temp))
+        if cpu_temp == None:
+            rounded = "None"
+        else:
+            rounded = str(self._round_temp_down_to(cpu_temp))
         if rounded in self._temp:
             self._temp[rounded] += 1
         else:
@@ -139,8 +142,8 @@ class Cpu(object):
             return res
 
         except:
-            self._logger.exception(
-                "Exception in _get_cpu_throttle_warnings while converting cpu get_throttled: %s",
+            self._logger.error(
+                "Exception in _get_cpu_throttle_warnings while converting cpu get_throttled: '%s'",
                 t_hex,
             )
             return []

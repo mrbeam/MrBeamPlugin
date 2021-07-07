@@ -24,19 +24,22 @@ $(function () {
                 pierceTime: 0,
                 engCompressor: 0, // This is the value of the slider, different from the backend value
                 cutCompressor: 3,
-                passes: 1,
+                engPasses: 1,
+                cutPasses: 1,
             },
             max: {
                 speed: 3000,
                 compressor: 3,
-                passes: 10,
+                engPasses: 4,
+                cutPasses: 10,
                 pierceTime: 2000,
                 lineDistance: 1.0,
             },
             min: {
                 speed: 50,
                 compressor: 0,
-                passes: 1,
+                engPasses: 1,
+                cutPasses: 1,
                 pierceTime: 0,
                 lineDistance: 0.1,
             },
@@ -91,7 +94,7 @@ $(function () {
             thicknessMM: -1,
             cut_i: "",
             cut_f: "",
-            cut_p: self.JOB_PARAMS.min.passes,
+            cut_p: self.JOB_PARAMS.min.cutPasses,
             cut_pierce: self.JOB_PARAMS.min.pierceTime,
             cut_compressor: 3, // @Andy why is this set to max?
             progressive: false,
@@ -99,6 +102,7 @@ $(function () {
         self.no_engraving = {
             eng_i: ["", ""],
             eng_f: ["", ""],
+            eng_p: self.JOB_PARAMS.default.engPasses,
             eng_pierce: self.JOB_PARAMS.default.pierceTime,
             eng_compressor: 3, // @Andy why is this set to max?
             dithering: self.JOB_PARAMS.default.dithering,
@@ -232,10 +236,13 @@ $(function () {
                 });
         };
 
+        // "Line color mapping", "Line distance", "Engraving time optimization mode" and "Prevent unwanted burn marks" engraving parameters are not saved for custom materials
         self.save_material_settings = function () {
             var name = self.save_custom_material_name();
             var key = self._replace_non_ascii(name).toLowerCase();
-            var thickness = parseFloat(self.save_custom_material_thickness());
+            var thickness = Math.max(
+                parseFloat(self.save_custom_material_thickness(), 38)
+            );
             var color = $("#custom_mat_col").val().substr(1, 6);
             var vectors = self.get_current_multicolor_settings();
             var strength = 0;
@@ -268,6 +275,7 @@ $(function () {
             var engrave_setting = {
                 eng_i: [e.intensity_white_user, e.intensity_black_user],
                 eng_f: [e.speed_white, e.speed_black],
+                eng_p: e.eng_passes,
                 eng_pierce: e.pierce_time,
                 dithering: e.dithering,
                 eng_compressor: parseInt(e.eng_compressor),
@@ -285,7 +293,8 @@ $(function () {
                     "Custom material setting! Use at your own risk."
                 );
                 new_material.model = MRBEAM_MODEL;
-                (new_material.custom = true), (new_material.v = BEAMOS_VERSION);
+                new_material.custom = true;
+                new_material.v = BEAMOS_VERSION;
             } else {
                 new_material = {
                     name: $("<div>").html(name).text(),
@@ -328,7 +337,7 @@ $(function () {
             }
             // sort before we store it.
             tmp.sort(self._thickness_sort_function);
-            new_material.colors[color] = { cut: tmp, engrave: engrave_setting };
+            new_material.colors[color] = {cut: tmp, engrave: engrave_setting};
 
             var data = {};
             data[key] = new_material;
@@ -369,7 +378,7 @@ $(function () {
                             gettext(
                                 "Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."
                             ),
-                            { br: "<br/>" }
+                            {br: "<br/>"}
                         ),
                         type: "error",
                         hide: true,
@@ -397,7 +406,7 @@ $(function () {
                             gettext(
                                 "Successfully restored %(number)d custom materials from file."
                             ),
-                            { number: Object.keys(materials).length }
+                            {number: Object.keys(materials).length}
                         ),
                         type: "info",
                         hide: true,
@@ -414,7 +423,7 @@ $(function () {
                             gettext(
                                 "Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."
                             ),
-                            { br: "<br/>" }
+                            {br: "<br/>"}
                         ),
                         type: "error",
                         hide: true,
@@ -505,7 +514,7 @@ $(function () {
                 //				console.log("closest color to " + hex, closest);
                 return material.colors[closest];
             } else {
-                return { engrave: self.no_engraving, cut: [] };
+                return {engrave: self.no_engraving, cut: []};
             }
         };
 
@@ -828,6 +837,7 @@ $(function () {
             self.imgIntensityBlack(p.eng_i[1]);
             self.imgFeedrateWhite(p.eng_f[0]);
             self.imgFeedrateBlack(p.eng_f[1]);
+            self.engravingPasses(p.eng_p || self.JOB_PARAMS.default.engPasses);
             self.imgDithering(p.dithering);
             self.engravingPiercetime(
                 p.eng_pierce || self.JOB_PARAMS.default.pierceTime
@@ -891,6 +901,10 @@ $(function () {
         self.imgFeedrateBlack = ko.observable(
             self.JOB_PARAMS.default.feedrateBlack
         );
+        self.engravingPasses = ko.observable(
+            self.JOB_PARAMS.default.engPasses
+        );
+
         self.imgDithering = ko.observable(self.JOB_PARAMS.default.dithering);
         self._extraOvershoot = {
             selected: ko.observable(self.JOB_PARAMS.default.extraOvershoot),
@@ -1037,12 +1051,12 @@ $(function () {
                 var intensity_user =
                     intensity_white_user +
                     initial_factor *
-                        (intensity_black_user - intensity_white_user);
+                    (intensity_black_user - intensity_white_user);
                 var intensity = Math.round(
                     intensity_user *
-                        self.profile
-                            .currentProfileData()
-                            .laser.intensity_factor()
+                    self.profile
+                        .currentProfileData()
+                        .laser.intensity_factor()
                 );
                 var feedrate = Math.round(
                     speed_white + initial_factor * (speed_black - speed_white)
@@ -1052,7 +1066,7 @@ $(function () {
                     self._isValidVectorSetting(
                         intensity_user,
                         feedrate,
-                        1,
+                        self.engravingPasses(),
                         self.engravingPiercetime()
                     )
                 ) {
@@ -1068,7 +1082,8 @@ $(function () {
                             intensity_user: intensity_user,
                             feedrate: feedrate,
                             pierce_time: self.engravingPiercetime(),
-                            passes: 1,
+                            passes: self.engravingPasses(),
+                            progressive: false,
                             engrave: true,
                             cut_compressor: self.mapCompressorValue(
                                 self.engravingCompressor()
@@ -1078,8 +1093,8 @@ $(function () {
                 } else {
                     console.log(
                         "Skipping line engrave job (" +
-                            hex +
-                            "), invalid parameters."
+                        hex +
+                        "), invalid parameters."
                     );
                 }
             });
@@ -1212,6 +1227,7 @@ $(function () {
                 line_distance: $("#svgtogcode_img_line_dist").val(),
                 eng_compressor: eng_compressor,
                 extra_overshoot: self.extraOvershoot(),
+                eng_passes: self.engravingPasses(),
             };
             return data;
         };
@@ -1365,7 +1381,7 @@ $(function () {
             if (
                 self.has_engraving_proposal() &&
                 $("#engrave_job .color_drop_zone").children(":visible").length >
-                    0
+                0
             ) {
                 validEng = true;
             }
@@ -1578,7 +1594,7 @@ $(function () {
             if (self.dontRemindMeAgainChecked() == self.showFocusReminder()) {
                 let focusReminder = !self.dontRemindMeAgainChecked();
                 self.showFocusReminder(focusReminder);
-                let data = { focusReminder: focusReminder };
+                let data = {focusReminder: focusReminder};
                 OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
                     .done(function (response) {
                         self.settings.requestData();
@@ -1600,7 +1616,7 @@ $(function () {
                                     gettext(
                                         "Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."
                                     ),
-                                    { br: "<br/>" }
+                                    {br: "<br/>"}
                                 ),
                                 type: "error",
                                 hide: true,
@@ -1668,7 +1684,7 @@ $(function () {
                     gettext(
                         "Sorry but the %(designType)s can only be %(laserJob)s, which is not supported for this material."
                     ),
-                    { designType: designType, laserJob: valid }
+                    {designType: designType, laserJob: valid}
                 );
 
                 $("#empty_job_support_link").show();
@@ -1685,7 +1701,7 @@ $(function () {
                         self.workingArea.gc_meta
                     ); // hack
                     self.workingArea.getCompositionSVG(
-                        self.do_engrave(),
+                        self.do_raster_engrave(),
                         pixPerMM,
                         self.engrave_outlines(),
                         function (composition) {
@@ -1708,7 +1724,7 @@ $(function () {
                             var design_files = self.get_design_files_info();
                             var data = {
                                 command: "convert",
-                                engrave: self.do_engrave(),
+                                engrave: self.do_raster_engrave(),
                                 vector: multicolor_data,
                                 raster: engraving_data,
                                 slicer: "svgtogcode",
@@ -1736,8 +1752,8 @@ $(function () {
                             var length = json.length;
                             console.log(
                                 "Conversion: " +
-                                    length +
-                                    " bytes have to be converted."
+                                length +
+                                " bytes have to be converted."
                             );
                             $.ajax({
                                 url: "plugin/mrbeam/convert",
@@ -1759,7 +1775,7 @@ $(function () {
                                     self.slicing_in_progress(false);
                                     console.error(
                                         "Conversion failed with status " +
-                                            jqXHR.status,
+                                        jqXHR.status,
                                         textStatus,
                                         errorThrown
                                     );
@@ -1767,8 +1783,8 @@ $(function () {
                                         if (length > 10000000) {
                                             console.error(
                                                 "JSON size " +
-                                                    length +
-                                                    "Bytes may be over the request maximum."
+                                                length +
+                                                "Bytes may be over the request maximum."
                                             );
                                         }
                                         new PNotify({
@@ -1777,7 +1793,7 @@ $(function () {
                                                 gettext(
                                                     "Unable to start the conversion in the backend. Please try reloading this page or restarting Mr Beam.%(br)s%(br)sContent length was %(length)s bytes."
                                                 ),
-                                                { length: length, br: "<br/>" }
+                                                {length: length, br: "<br/>"}
                                             ),
                                             type: "error",
                                             tag: "conversion_error",
@@ -1802,15 +1818,15 @@ $(function () {
             }
         };
 
-        self.do_engrave = function () {
+        self.do_raster_engrave = function () {
             const assigned_images = $(
-                "#engrave_job .assigned_colors"
-            ).children().length;
-            return (
+                "#engrave_job .assigned_colors #cd_engraving"
+            ).length;
+            const res =
                 assigned_images > 0 &&
                 self.show_image_parameters() &&
-                self.has_engraving_proposal()
-            );
+                self.has_engraving_proposal();
+            return res;
         };
 
         self._sanitize = function (name) {
@@ -1837,8 +1853,8 @@ $(function () {
             var b = parseInt(hex.substr(5, 2), 16);
             return Math.round(
                 r * self.BRIGHTNESS_VALUE_RED +
-                    g * self.BRIGHTNESS_VALUE_GREEN +
-                    b * self.BRIGHTNESS_VALUE_BLUE
+                g * self.BRIGHTNESS_VALUE_GREEN +
+                b * self.BRIGHTNESS_VALUE_BLUE
             );
         };
 
@@ -2105,10 +2121,16 @@ $(function () {
                 min: self.JOB_PARAMS.min.compressor,
             });
 
-            $(".passes_input").attr({
-                max: self.JOB_PARAMS.max.passes,
-                min: self.JOB_PARAMS.min.passes,
-                value: self.JOB_PARAMS.default.passes,
+            $(".passes_input.engrave_passes_input").attr({
+                max: self.JOB_PARAMS.max.engPasses,
+                min: self.JOB_PARAMS.min.engPasses,
+                value: self.JOB_PARAMS.default.engPasses,
+            });
+
+            $(".passes_input.cut_passes_input").attr({
+                max: self.JOB_PARAMS.max.cutPasses,
+                min: self.JOB_PARAMS.min.cutPasses,
+                value: self.JOB_PARAMS.default.cutPasses,
             });
 
             $(".pierce_time_input").attr({
@@ -2143,13 +2165,23 @@ $(function () {
                 }
             });
 
-            $(".passes_input").on("blur", function () {
+            $(".passes_input.engrave_passes_input").on("blur", function () {
                 let val = $(this).val();
 
-                if (val > self.JOB_PARAMS.max.passes) {
-                    $(this).val(self.JOB_PARAMS.max.passes);
-                } else if (val < self.JOB_PARAMS.min.passes || val === "") {
-                    $(this).val(self.JOB_PARAMS.min.passes);
+                if (val > self.JOB_PARAMS.max.engPasses) {
+                    $(this).val(self.JOB_PARAMS.max.engPasses);
+                } else if (val < self.JOB_PARAMS.min.engPasses || val === "") {
+                    $(this).val(self.JOB_PARAMS.min.engPasses);
+                }
+            });
+
+            $(".passes_input.cut_passes_input").on("blur", function () {
+                let val = $(this).val();
+
+                if (val > self.JOB_PARAMS.max.cutPasses) {
+                    $(this).val(self.JOB_PARAMS.max.cutPasses);
+                } else if (val < self.JOB_PARAMS.min.cutPasses || val === "") {
+                    $(this).val(self.JOB_PARAMS.min.cutPasses);
                 }
             });
 

@@ -18,5 +18,16 @@
                 <p id="settings-mrbeam-design-store-auth-token" data-bind="text: authToken" style="padding-top: 5px;"></p>
             </div>
         </div>
+        <div class="control-group">
+            <label class="control-label" for="settings-mrbeam-design-store-environment">Choose Environment</label>
+            <div class="controls">
+                <select id="settings-mrbeam-design-store-environment"
+                data-bind="value: selectedEnv, event:{ change: changeEnv}">
+                    <option value="dev">Development</option>
+                    <option value="staging">Staging</option>
+                    <option value="prod">Production</option>
+                </select>
+            </div>
+        </div>
     </form>
 </div>

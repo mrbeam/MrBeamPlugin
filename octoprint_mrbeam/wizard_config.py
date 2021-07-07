@@ -7,7 +7,8 @@ class WizardConfig:
         # Just a random number, but we can't go down anymore, just up.
         # If we want to release Beta, then WIZARD_VERSION_BETA should be a higher number than the old WIZARD_VERSION_STABLE
         self.WIZARD_VERSION_STABLE = (
-            19  # v0.7.0: camera, custom materials backup, SVG split, ...
+            22  # v0.9.0: Design Store, Toolset updated, Messaging system, New material settings, GCode deletion (
+            # just for the wizard), ...
         )
         self.WIZARD_VERSION_BETA = 21  # v0.7.11: GCode deletion, DXFlib update, ...
 
@@ -138,7 +139,7 @@ class WizardConfig:
         whatsnew_wizard_tabs = dict(
             wizard_whatsnew_0=dict(
                 type="wizard",
-                name=gettext("Improved camera"),
+                name=gettext("Design Store"),
                 required=True,
                 mandatory=False,
                 suffix="_whatsnew_0",
@@ -147,7 +148,7 @@ class WizardConfig:
             ),
             wizard_whatsnew_1=dict(
                 type="wizard",
-                name=gettext("Custom material backup"),
+                name=gettext("New Toolset Features"),
                 required=True,
                 mandatory=False,
                 suffix="_whatsnew_1",
@@ -156,12 +157,12 @@ class WizardConfig:
             ),
             wizard_whatsnew_2=dict(
                 type="wizard",
-                name=gettext("SVG split"),
+                name=gettext("GCode auto-deletion"),
                 required=True,
                 mandatory=False,
                 suffix="_whatsnew_2",
                 template="wizard/wizard_whatsnew_2.jinja2",
-                div="wizard_plugin_corewizard_whatsnew_2",
+                div="wizard_plugin_corewizard_news_gcode",
             ),
             wizard_whatsnew_3=dict(
                 type="wizard",
@@ -183,6 +184,10 @@ class WizardConfig:
             ),
         )
 
+        # remove gcode deletion screen if it is already enabled
+        if self._plugin._settings.get(["gcodeAutoDeletion"]):
+            del whatsnew_wizard_tabs["wizard_whatsnew_2"]
+
         return whatsnew_wizard_tabs
 
     @staticmethod
@@ -202,7 +207,7 @@ class WizardConfig:
                 mandatory=False,
                 suffix="_beta_news_0",
                 template="wizard/wizard_beta_news_0.jinja2",
-                div="wizard_plugin_corewizard_beta_news_0",
+                div="wizard_plugin_corewizard_news_gcode",
             ),
         )
 

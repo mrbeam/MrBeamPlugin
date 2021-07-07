@@ -418,7 +418,11 @@ class OneButtonHandler(object):
             self._hw_malfunction.hardware_malfunction
             and not self.hardware_malfunction_notified
         ):
-            self._logger.error("Hardware Malfunction: Not possible to start laser job.")
+            self._logger.error(
+                "Hardware Malfunction: Not possible to start laser job. %s",
+                self._hw_malfunction.get_messages_to_show(),
+                analytics="Hardware Malfunction: Not possible to start laser job",
+            )
             self._hw_malfunction.show_hw_malfunction_notification()
             self.hardware_malfunction_notified = True
 
@@ -552,7 +556,11 @@ class OneButtonHandler(object):
             self._hw_malfunction.hardware_malfunction
             and not self.hardware_malfunction_notified
         ):
-            self._logger.error("Hardware Malfunction: Not possible to start laser job.")
+            self._logger.error(
+                "Hardware Malfunction: Not possible to start laser job. %s",
+                self._hw_malfunction.get_messages_to_show(),
+                analytics="Hardware Malfunction: Not possible to start laser job",
+            )
             self._user_notification_system.replay_notifications()
             self.hardware_malfunction_notified = True
             raise Exception("Hardware Malfunction: Not possible to start laser job.")

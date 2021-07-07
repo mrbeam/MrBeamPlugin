@@ -57,7 +57,7 @@ $(function () {
         };
     }
 
-    var DOM_ELEMENT_TO_BIND_TO = "wizard_plugin_corewizard_beta_news_0";
+    var DOM_ELEMENT_TO_BIND_TO = "wizard_plugin_corewizard_news_gcode";
     OCTOPRINT_VIEWMODELS.push([
         WizardGcodeDeletionViewModel,
         ["wizardWhatsnewViewModel"],

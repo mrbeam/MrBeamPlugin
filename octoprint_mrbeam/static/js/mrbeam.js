@@ -116,6 +116,34 @@ mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
     }
 };
 
+mrbeam._isVersionOrLower = function (actualVersion, expectedVersion) {
+    var VPAT = /^\d+(\.\d+){0,2}$/;
+
+    if (
+        !actualVersion ||
+        !expectedVersion ||
+        actualVersion.length === 0 ||
+        expectedVersion.length === 0
+    )
+        return false;
+    if (actualVersion == expectedVersion) return true;
+    if (VPAT.test(actualVersion) && VPAT.test(expectedVersion)) {
+        var lparts = actualVersion.split(".");
+        while (lparts.length < 3) lparts.push("0");
+        var rparts = expectedVersion.split(".");
+        while (rparts.length < 3) rparts.push("0");
+        for (var i = 0; i < 3; i++) {
+            var l = parseInt(lparts[i], 10);
+            var r = parseInt(rparts[i], 10);
+            if (l === r) continue;
+            return l > r;
+        }
+        return true;
+    } else {
+        return actualVersion <= expectedVersion;
+    }
+};
+
 /**
  * Push a new PNotify notification.
  * If pn_obj contains attribute 'id',
@@ -236,6 +264,8 @@ $(function () {
         self.userTyped = ko.observable(false);
         self.invalidEmailHelp = gettext("Invalid e-mail address");
 
+        self.passiveLoginInProgress = false;
+
         // This extender forces the input value to lowercase. Used in loginsreen_viewmode.js and wizard_acl.js
         window.ko.extenders.lowercase = function (target, option) {
             target.subscribe(function (newValue) {
@@ -277,7 +307,7 @@ $(function () {
                 $("body").addClass("env_dev");
                 $("body").removeClass("env_beta");
                 $("body").removeClass("env_prod");
-            } else if (mrbeam.isBeta()) {
+            } else if (mrbeam.isBeta() || MRBEAM_ENV_SUPPORT_MODE) {
                 $("body").addClass("env_beta");
                 $("body").removeClass("env_prod");
             } else if (mrbeam.isProd()) {
@@ -414,6 +444,7 @@ $(function () {
             if (self.loginState && self.loginState.loggedIn()) {
                 if (
                     !triggerUrl.includes("api/logout") &&
+                    !triggerUrl.includes("/api/login") &&
                     !triggerUrl.includes("plugin/mrbeam/console")
                 ) {
                     console.error(
@@ -429,31 +460,43 @@ $(function () {
                     mrbeam.updatePNotify(pn_obj);
 
                     // try passive login
-                    self.loginState.requestData().always(function () {
-                        if (self.loginState.loggedIn()) {
-                            let pn_obj = {
-                                id: "session_expired",
-                                title: gettext("Session expired"),
-                                text: gettext(
-                                    "Re-login successful.<br/>Please repeat the last action."
-                                ),
-                                type: "warn",
-                                hide: true,
-                            };
-                            mrbeam.updatePNotify(pn_obj);
-                        } else {
-                            let pn_obj = {
-                                id: "session_expired",
-                                title: gettext("Session expired"),
-                                text: gettext("Please login again."),
-                                type: "warn",
-                                hide: true,
-                            };
-                            mrbeam.updatePNotify(pn_obj);
-                        }
-                        // Reconnect socket connection
-                        OctoPrint.socket.reconnect();
-                    });
+                    if (!self.passiveLoginInProgress) {
+                        self.passiveLoginInProgress = true;
+                        self.loginState.requestData().always(function () {
+                            if (self.loginState.loggedIn()) {
+                                let pn_obj = {
+                                    id: "session_expired",
+                                    title: gettext("Session expired"),
+                                    text: gettext(
+                                        "Re-login successful.<br/>Please repeat the last action."
+                                    ),
+                                    type: "warn",
+                                    hide: true,
+                                };
+                                mrbeam.updatePNotify(pn_obj);
+                            } else {
+                                let pn_obj = {
+                                    id: "session_expired",
+                                    title: gettext("Session expired"),
+                                    text: gettext("Please login again."),
+                                    type: "warn",
+                                    hide: true,
+                                };
+                                mrbeam.updatePNotify(pn_obj);
+                            }
+                            // Reconnect socket connection
+                            OctoPrint.socket.reconnect();
+
+                            // give it some time to settle before we acept another passive login or logout
+                            setTimeout(function () {
+                                self.passiveLoginInProgress = false;
+                            }, 2000);
+                        });
+                    } else {
+                        console.error(
+                            "Passive login blocked b/c another passive login is already in progress."
+                        );
+                    }
                 }
             } else {
                 console.log(

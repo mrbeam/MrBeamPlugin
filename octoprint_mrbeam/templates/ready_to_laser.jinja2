@@ -39,7 +39,10 @@
         </div>
         <div class="modal-body">
             <img src="/plugin/mrbeam/static/img/cooling.jpg">
-            <h5 >{{ _('Mr Beam needs a short break to cool down. We\'ll continue the laser job as soon as possible. There\'s nothing you need to do at the moment.') }}</h5>
+{#  Mr Beam macht eine Kühlpause. Der Laserjob wird so bald wie möglich fortgesetzt. Sollten die Kühlpausen häufiger auftreten, reinige bitte deinen Laserkopf. Falls du den Laserkopf gerade gereinigt haben, überprüfe, ob dieser wieder richtig zusammengebaut ist.          #}
+            <h5 >{{ _('Mr Beam is pausing for a cooling break. The laser job will resume as soon as possible.') }}</h5>
+            <small class="muted">{{ _('If cooling pauses occur regularly, please clean your laser head. If you have just cleaned the laser head, please check if it is reassembled correctly.') }}</small>
+            <br />
             <small class='muted show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scooling pauses%(closing_tag)s.",
                 opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000586688-laser-head-constantly-pauses-for-cooling" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}</small>
@@ -50,7 +53,7 @@
         <div class="modal-footer">
             <a class="btn pull-left" data-bind='click: cancel_btn' aria-hidden="true">{{ _('Cancel Laser Job') }}</a>
             <h4 class="pull-right" data-bind='visible: !state.interlocksClosed()'>{{ _('Close the lid') }}</h4>
-            <h4 class="pull-right" data-bind='visible: state.interlocksClosed'>{{ _('Just relax') }}</h4>
+            <h4 class="pull-right" data-bind='visible: state.interlocksClosed'>{{ _('Please wait') }}</h4>
         </div>
     </div>
 

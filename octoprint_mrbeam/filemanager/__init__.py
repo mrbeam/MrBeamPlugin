@@ -3,8 +3,9 @@ import os
 
 from octoprint.filemanager import FileManager
 from octoprint.filemanager.destinations import FileDestinations
-from octoprint.filemanager.storage import LocalFileStorage
+from octoprint.events import eventManager, Events
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.filemanager.file_storage import MrBeamFileStorage
 
 
 # singleton
@@ -41,7 +42,7 @@ class MrbFileManager(FileManager):
         self._settings = plugin._settings
 
         storage_managers = dict()
-        storage_managers[FileDestinations.LOCAL] = LocalFileStorage(
+        storage_managers[FileDestinations.LOCAL] = MrBeamFileStorage(
             self._plugin._settings.getBaseFolder("uploads")
         )
 
@@ -106,12 +107,22 @@ class MrbFileManager(FileManager):
                     f["path"],
                 )
                 removals.append(tpl)
-
             sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
 
-            # TODO each deletion causes a filemanager push update -> slow.
-            for f in sorted_by_age[:-num_files_to_keep]:
-                self.remove_file(FileDestinations.LOCAL, f[1])
+            files_to_delete = []
+            for _, path in sorted_by_age[:-num_files_to_keep]:
+                queue_entry = self._analysis_queue_entry(FileDestinations.LOCAL, path)
+                self._analysis_queue.dequeue(queue_entry)
+                files_to_delete.append(path)
+
+                # we do not send this event and hope it's fine
+                # eventManager().fire(Events.FILE_REMOVED, dict(storage=destination,
+                #                                               path=path,
+                #                                               name=name,
+                #                                               type=get_file_type(name)))
+
+            self._storage(FileDestinations.LOCAL).remove_multiple_files(files_to_delete)
+            eventManager().fire(Events.UPDATED_FILES, dict(type="printables"))
 
     @staticmethod
     def _is_history_file(entry):

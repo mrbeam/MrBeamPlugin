@@ -14,4 +14,40 @@ $(function () {
         }
         return hash;
     };
+
+    loadImagePromise = function (url) {
+        return new Promise((resolve, reject) => {
+            // do something asynchronous
+            var image = new Image();
+            image.crossOrigin = "Anonymous"; // allow external links together with server side header Access-Control-Allow-Origin "*"
+            image.onload = function () {
+                //                console.log("### img loaded", image);
+                resolve(image);
+            };
+            image.onerror = function (err) {
+                //                console.log("###", err, image);
+                reject(image, url, err);
+            };
+            image.src = url;
+        });
+    };
+
+    getWhitePixelRatio = function (canvas) {
+        // count ratio of white pixel
+        const pixelData = canvas
+            .getContext("2d")
+            .getImageData(0, 0, canvas.width, canvas.height).data;
+        let countWhite = 0;
+        let countNoneWhite = 0;
+        for (var p = 0; p < pixelData.length; p += 4) {
+            pixelData[p] === 255 &&
+            pixelData[p + 1] === 255 &&
+            pixelData[p + 2] === 255 &&
+            pixelData[p + 3] === 255
+                ? countWhite++
+                : countNoneWhite++;
+        }
+        const ratio = countWhite / (countNoneWhite + countWhite);
+        return ratio;
+    };
 });

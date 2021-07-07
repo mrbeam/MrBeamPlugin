@@ -41,14 +41,6 @@ a,
   width: 100%;
 }
 
-/*.calibration_step {*/
-/*	display: none;*/
-/*}*/
-
-/*.calibration_step.active {*/
-/*	display: block;*/
-/*}*/
-
 #gcode_reference .gcommand {
   font-weight: bold;
 }
@@ -82,70 +74,6 @@ a,
   width: 3.5em;
   -webkit-border-radius: 10px;
   border-radius: 10px;
-}
-
-svg text {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  cursor: default;
-  pointer-events: none;
-}
-
-svg circle.ft_handle {
-  fill-opacity: 0.7;
-  stroke: #ff0000;
-  stroke-width: 2.5px;
-  fill: #fff;
-  vector-effect: non-scaling-stroke;
-}
-svg rect.ft_bbox_transformed {
-  stroke: #ff0000;
-  stroke-width: 2.5px;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 5, 5;
-  fill-opacity: 0.3;
-  stroke-opacity: 1;
-  fill: #999;
-}
-
-svg .vector_outline {
-  vector-effect: non-scaling-stroke;
-  stroke-width: 0.8;
-}
-
-.img_slider {
-  margin-bottom: 24px;
-}
-
-.img_preprocessing_preview {
-  background-size: 150px;
-  display: inline-block;
-  width: 150px;
-  height: 150px;
-}
-
-.img_preprocessing_preview.after {
-  position: relative;
-}
-.img_preprocessing_preview.after > div {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.img_preprocessing_preview.after .contrast,
-.img_preprocessing_preview.after .sharpened,
-.img_preprocessing_preview.after .sharpened_contrast {
-  opacity: 0;
-}
-
-.photo_attribution {
-  margin-bottom: 1em;
-}
-.photo_attribution a {
-  color: #999;
-  font-size: x-small;
 }
 
 #dialog_vector_graphics_conversion .hint {
@@ -195,49 +123,9 @@ svg .vector_outline {
   padding-left: 0.6em;
 }
 
-.manual_position_input {
+/*.manual_position_input {
   padding-top: 12px;
-}
-
-input.decent_input {
-  border: 1px solid transparent;
-  box-shadow: none;
-}
-
-input.decent_input:focus,
-input.decent_input:hover {
-  border: 1px solid gray;
-}
-
-.img_adjust_ui {
-  width: 34%;
-}
-.img_crop_ui {
-  width: 60%;
-  display: grid;
-  grid-template-areas:
-    "tl tc tr"
-    "cl cc cr"
-    "bl bc br";
-  border: 1px solid gray;
-  margin: 0.8em 0.4em;
-  height: 6em;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-#wa_filelist .img_crop_ui input.decent_input {
-  width: 100%;
-}
-
-#manual_position {
-  max-width: 10em;
-}
-
-#manual_position.warning {
-  color: #e25303;
-}
+}*/
 
 #settings_svg_conversion input[type="number"] {
   max-width: 6em;
@@ -297,14 +185,6 @@ input.decent_input:hover {
 
 #beamcam_image.broken {
   visibility: hidden;
-}
-
-svg#area_preview {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -o-user-select: none;
-  -ms-user-select: none;
 }
 
 #dialog_vector_graphics_conversion {
@@ -496,31 +376,6 @@ body.colorDragInProgress #drop_overlay {
   display: none;
 }
 
-/* eye candy for gcode generation */
-#userContent path,
-#userContent circle,
-#userContent ellipse,
-#userContent line,
-#userContent polygon,
-#userContent polyline,
-#userContent rect {
-  transition-property: stroke-dashoffset;
-  transition-duration: 0.5s;
-  transition-timing-function: linear;
-}
-
-#crosshair path,
-#crosshair circle {
-  stroke: #e25303;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-miterlimit: 4;
-  stroke-dasharray: none;
-  stroke-dashoffset: 0;
-  stroke-opacity: 1;
-}
-
 .checkInput {
   border-color: red !important;
 }
@@ -528,105 +383,6 @@ body.colorDragInProgress #drop_overlay {
 .full-tab-height {
   height: calc(100vh - 140px);
   max-height: none;
-}
-
-.userSVG.designHighlight .vector_outline {
-  stroke-width: 2px !important;
-  filter: none;
-}
-
-/* moved to styles.jonja2 since it gets broken*/
-/*.userText.designHighlight text,*/
-/*.userText.designHighlight tspan,*/
-/*.userIMG.designHighlight {*/
-/*	filter: url(#designHighlight);*/
-/*}*/
-
-svg#area_preview path,
-svg#area_preview circle,
-svg#area_preview line,
-svg#area_preview polyline,
-svg#area_preview polygon,
-svg#area_preview ellipse,
-svg#area_preview rect {
-  vector-effect: non-scaling-stroke !important;
-}
-
-svg g#scaleGroup,
-svg g#crosshair {
-  stroke-width: 1px !important;
-}
-
-svg g#camera_markers circle {
-  opacity: 0;
-}
-
-circle#marker_preview_pane,
-g#camera_markers.markerNE circle#markerNE,
-g#camera_markers.markerSE circle#markerSE,
-g#camera_markers.markerNW circle#markerNW,
-g#camera_markers.markerSW circle#markerSW {
-  opacity: 1;
-  animation: blinker 2s linear infinite;
-}
-
-g#camera_markers.markerNE.gray circle#markerNE,
-g#camera_markers.markerSE.gray circle#markerSE,
-g#camera_markers.markerNW.gray circle#markerNW,
-g#camera_markers.markerSW.gray circle#markerSW {
-  opacity: 0.6;
-  animation: none;
-}
-
-@keyframes blinker {
-  50% {
-    opacity: 0;
-  }
-}
-
-#zoomFactor {
-  position: absolute;
-  left: 0.3em;
-  bottom: 0.4em;
-  color: #e25303;
-  z-index: 999;
-}
-
-#zoom_monitor_wrapper {
-  max-width: 20vh;
-  position: relative;
-  margin: auto;
-}
-#zoom_monitor {
-  width: 100%;
-  position: relative;
-  background-color: #f1f1f1;
-  border: 1px solid #ccc;
-}
-#zoom_monitor > div {
-  border: 1px solid #e25303;
-  background-color: #fff;
-  position: absolute;
-  box-sizing: border-box;
-}
-#zoom_monitor_hint {
-  pointer-events: none;
-  width: 90%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-}
-
-#wa_view_settings_body div.accordion-inner > div:nth-child(1n + 2) {
-  margin-top: 1em;
-}
-
-.freeTransformHandle {
-  fill: rgba(255, 255, 255, 0.3);
-  stroke: #e25303;
-  stroke-width: 1px;
 }
 
 .modal_dialog_headline h3 {
@@ -704,6 +460,29 @@ li.material_entry span {
     0 0 10px #fff;
   cursor: pointer;
 }
+
+.thickness_sample.overThick::after {
+  border: none;
+  width: 102%;
+  content: "";
+  display: block;
+  height: 0.5em;
+  background-color: white;
+  position: relative;
+  left: -1%;
+  top: -0.35em;
+  transform: rotate(-5deg);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 1) 35%,
+    rgba(255, 255, 255, 0) 36%,
+    rgba(255, 255, 255, 0) 64%,
+    rgba(255, 255, 255, 1) 65%,
+    rgba(255, 255, 255, 1) 100%
+  );
+}
+
 .thickness_sample:hover,
 .thickness_sample.active {
   font-weight: bold;

@@ -21,6 +21,8 @@ octoprint_mrbeam/gcodegenerator/simplestyle.pyc
 octoprint_mrbeam/gcodegenerator/simpletransform.pyc
 octoprint_mrbeam/printer.pyc
 octoprint_mrbeam/profile.pyc
+octoprint_mrbeam/.jshintrc
+octoprint_mrbeam/static/messages/test_messages.json
 *.pyc
 *.swp
 .idea

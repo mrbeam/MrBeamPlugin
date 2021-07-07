@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+from __future__ import absolute_import, print_function, unicode_literals, division
 from collections import Mapping
 import datetime
 from multiprocessing import Event, Process, Queue, Value
-from threading import Thread
+from threading import Thread, RLock
 import logging
 import cv2
 import signal, os
@@ -12,6 +13,7 @@ import queue
 from os import path
 import numpy as np
 from copy import copy
+import re
 
 from octoprint_mrbeam.camera.definitions import (
     LEGACY_STILL_RES,
@@ -33,11 +35,18 @@ from octoprint_mrbeam.camera.definitions import (
     TMP_PATH,
     TMP_RAW_FNAME,
     TMP_RAW_FNAME_RE,
+    TMP_RAW_FNAME_RE_NPZ,
 )
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.util import makedirs, get_thread
+from octoprint_mrbeam.util import (
+    makedirs,
+    get_thread,
+    dict_merge,
+    dict_map,
+    _basestring,
+)
 from octoprint_mrbeam.util.img import differed_imwrite
-from octoprint_mrbeam.util.log import logme, logtime, logExceptions
+from octoprint_mrbeam.util.log import logme, logtime, logExceptions, json_serialisor
 from octoprint_mrbeam.mrb_logger import mrb_logger
 import yaml
 from octoprint_mrbeam.support import check_calibration_tool_mode
@@ -104,6 +113,19 @@ def undist_dict(dict_pts, *a, **kw):
     return {keys[i]: np.array(pos) for i, pos in enumerate(res_iter)}
 
 
+def clean_unexpected_files(tmp_path):
+    """
+    Removes unexpected files in the directory path
+    - .npz files that do not have the corresponding image anymore
+    """
+    files = os.listdir(tmp_path)
+    for f in files:
+        _logger.info("File: {} - file[:-4] - {}".format(f, f[:-4]))
+        if re.match(TMP_RAW_FNAME_RE_NPZ, f) and not f[:-4] in files:
+            _logger.info("Match !")
+            os.remove(path.join(tmp_path, f))
+
+
 ### CAMERA LENS CALIBRATION
 
 
@@ -122,7 +144,7 @@ class BoardDetectorDaemon(Thread):
         state=None,
         factory=False,
     ):
-        self._logger = mrb_logger(__name__)
+        self._logger = mrb_logger(__name__, lvl=5)
         # runCalibrationAsap : run the lens calibration when we have enough pictures ready
         self.event_bus = event_bus
         self.rawImgLock = rawImgLock
@@ -165,12 +187,14 @@ class BoardDetectorDaemon(Thread):
         self._pause = Event()
         self._pause.clear()
         self._startWhenIdle = Event()
-        self._startWhenIdle.clear()
+        if not runCalibrationAsap:
+            self._startWhenIdle.clear()
+        else:
+            self._startWhenIdle.set()
         self.path_inc = 0
 
-        self.runningProcs = (
-            {}
-        )  # img_path: process - processes trying to detect a chessboard
+        # img_path: process - processes trying to detect a chessboard
+        self.runningProcs = {}
         Thread.__init__(self, name=self.__class__.__name__)
 
         # self.daemon = False
@@ -195,7 +219,7 @@ class BoardDetectorDaemon(Thread):
     def start(self):
         self._logger.debug("Starting board detector")
         self._started.set()
-        super(self.__class__, self).start()
+        Thread.start(self)
 
     @property
     def started(self):
@@ -215,8 +239,11 @@ class BoardDetectorDaemon(Thread):
         chessboardSize=(CB_ROWS, CB_COLS),
         state=STATE_PENDING_CAMERA,
         index=None,
+        **kw
     ):  # , rough_location=None, remote=None):
-        self.state.add(image, chessboardSize, state=state, index=index or self.path_inc)
+        self.state.add(
+            image, chessboardSize, state=state, index=index or self.path_inc, **kw
+        )
         self.path_inc += 1
 
     def load_dir(self, path, chessboardSize=(CB_ROWS, CB_COLS)):
@@ -236,7 +263,21 @@ class BoardDetectorDaemon(Thread):
 
     def remove(self, path):
         self._logger.info("Removing picture %s" % path)
-        self.stopQueue.put(path)
+        if path in self.runningProcs.keys():
+            self._logger.debug("Killing process for path %s" % path)
+            os.kill(self.runningProcs[path].pid, signal.SIGKILL)
+            # termination might cause the pipe to break if it is in use by the process
+            self._logger.debug("Sent kill command for path %s" % path)
+            self.runningProcs[path].join()
+            self._logger.debug("Joined process for path %s" % path)
+            try:
+                self.runningProcs.pop(path)
+            except KeyError:
+                self._logger.debug(
+                    "Unexpected KeyError %s not in runningProcs - %s",
+                    path,
+                    self.runningProcs.keys(),
+                )
         self.state.remove(path)
         if self.idle:
             self.fire_event(MrBeamEvents.LENS_CALIB_IDLE)
@@ -293,9 +334,11 @@ class BoardDetectorDaemon(Thread):
         if self.state.calibrationRunning():
             self._logger.warning("Won't start lens calibration - already processing")
             return False
-        self._logger.info("Start lens calibration.")
         self.state.calibrationBusy()
-        self.startCalibrationWhenIdle = False
+        self._logger.info("Start lens calibration.")
+        # self.startCalibrationWhenIdle = False
+        self.fire_event(MrBeamEvents.LENS_CALIB_RUNNING)
+        self._logger.info("EVENT LENS CALIBRATION RUNNING")
         availableResults = self.state.getSuccesses()
         objPoints = []
         imgPoints = []
@@ -306,12 +349,12 @@ class BoardDetectorDaemon(Thread):
         self._logger.debug(
             "len patterns : %i and %i " % (len(objPoints), len(imgPoints))
         )
-        self.fire_event(MrBeamEvents.LENS_CALIB_RUNNING)
-        self._logger.info("EVENT LENS CALIBRATION RUNNING")
 
         self.state.updateCalibration(
             *runLensCalibration(
-                np.asarray(objPoints), np.asarray(imgPoints), self.state.imageSize
+                objPoints,
+                imgPoints,
+                self.state.imageSize,
             )
         )
         self.fire_event(MrBeamEvents.LENS_CALIB_DONE)
@@ -324,15 +367,12 @@ class BoardDetectorDaemon(Thread):
         # state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):
         count = 0
         resultQueue = Queue()
-        # lensCalibrationProcQueue = Queue()
         self._logger.debug("Pool started - %i procs" % MAX_PROCS)
-        lensCalibrationProc = None
         loopcount = 0
-        stateIdleAndNotEnoughGoodBoard = False
         while not self.stopping:
             loopcount += 1
             # self._logger.info("loopcount %i \r", loopcount)
-            if loopcount % 20 == 0:
+            if loopcount % 100 == 0:
                 self._logger.debug(
                     "Running... %s procs running, stopsignal : %s"
                     % (len(self.runningProcs), self._stop.is_set())
@@ -347,30 +387,26 @@ class BoardDetectorDaemon(Thread):
                     imgFoundCallback=self.fire_event,
                     args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,),
                 )
-            # if self.idle:
-            # self._logger.debug("waiting to be restarted")
-            if (
-                self.state.lensCalibration["state"] == STATE_PENDING
-                and self.startCalibrationWhenIdle
-                and self.detectedBoards >= MIN_BOARDS_DETECTED
-            ):
-                # self.saveCalibration()
-                pass
-            elif (
-                len(self) >= 9
-                and self.idle
-                and self.detectedBoards < MIN_BOARDS_DETECTED
-            ):
-                if not stateIdleAndNotEnoughGoodBoard:
-                    stateIdleAndNotEnoughGoodBoard = True
-                    self.fire_event(MrBeamEvents.LENS_CALIB_FAIL)
-                if loopcount % 20 == 0:
+            if self.idle:
+                if loopcount % 100 == 0:
                     self._logger.debug(
-                        "Only %i boards detected yet, %i necessary"
-                        % (self.detectedBoards, MIN_BOARDS_DETECTED)
+                        "waiting to be restarted, lens calib : %s",
+                        self.state.lensCalibration["state"],
                     )
-            if not self.idle or self.detectedBoards > MIN_BOARDS_DETECTED:
-                stateIdleAndNotEnoughGoodBoard = False
+                if (
+                    self.state.lensCalibration["state"] == STATE_PENDING
+                    and self.startCalibrationWhenIdle
+                    and self.detectedBoards >= MIN_BOARDS_DETECTED
+                ):
+                    self.saveCalibration()
+                elif len(self) >= MIN_BOARDS_DETECTED > self.detectedBoards:
+                    if self.idle and self.detectedBoards < MIN_BOARDS_DETECTED:
+                        self.fire_event(MrBeamEvents.LENS_CALIB_FAIL)
+                    if loopcount % 20 == 0:
+                        self._logger.debug(
+                            "Only %i boards detected yet, %i necessary"
+                            % (self.detectedBoards, MIN_BOARDS_DETECTED)
+                        )
             # self.runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
             if (
                 len(self.runningProcs.keys()) < self.procs.value
@@ -392,22 +428,7 @@ class BoardDetectorDaemon(Thread):
                 board_size = self.state[path]["board_size"]
                 args = (path, count, board_size, resultQueue)
                 self.runningProcs[path] = Process(target=handleBoardPicture, args=args)
-                # self.runningProcs[path].daemon = True
                 self.runningProcs[path].start()
-            # if not lensCalibrationProcQueue.empty():
-            # 	self._logger.info("Lens calibration has given a result! ")
-            # 	res = lensCalibrationProcQueue.get()
-            # 	self.state.updateCalibration(**res)
-            # 	# self.state.updateCalibration(*tuple(map(lambda x: res[x],
-            # 	# 					['ret', 'mtx', 'dist', 'rvecs', 'tvecs'])
-            # 	lensCalibrationProc.join()
-            # 	self.fire_event(MrBeamEvents.LENS_CALIB_DONE)
-            # 	self._logger.info("EVENT LENS CALIBRATION DONE")
-            # if lensCalibrationProc and \
-            #    lensCalibrationProc.exitcode is not None and \
-            #    lensCalibrationProc.exitcode != 0 :
-            # 	self._logger.warning("Something went wrong with the lens calibration process")
-
             while not resultQueue.empty():
                 # Need to clean the queue before joining processes
                 self._logger.info("Getting result from board detection.")
@@ -437,15 +458,7 @@ class BoardDetectorDaemon(Thread):
                     else:
                         self._logger.debug("Process exited for path %s." % path)
                     self.runningProcs.pop(path)
-            while not self.stopQueue.empty() and not self.stopping:
-                path = self.stopQueue.get()
-                if path in self.runningProcs.keys():
-                    self._logger.warning("Killing process for path %s" % path)
-                    self.runningProcs[path].terminate()
-                    # termination might cause the pipe to break if it is in use by the process
-                    self.runningProcs[path].join()
-                    self.runningProcs.pop(path)
-            if self._stop.wait(0.02):
+            if self._stop.wait(0.1):
                 break
         self._logger.warning("Stop signal intercepted")
         resultQueue.close()
@@ -477,7 +490,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
     # logger = logging.getLogger()
     # if self._stop.is_set(): return
     # signal.signal(signal.SIGTERM, signal.SIG_DFL)
-    if isinstance(image, str):
+    if isinstance(image, _basestring):
         # self._logger.info("Detecting board in %s" % image)
         img = cv2.imread(image)
         if img is None:
@@ -488,7 +501,9 @@ def handleBoardPicture(image, count, board_size, q_out=None):
         img = image
         path = TMP_PATH.format(count)
     else:
-        raise ValueError("Expected an image or a path to an image in inputFiles.")
+        raise ValueError(
+            "Expected an image or a path to an image in inputFiles, not %s", repr(image)
+        )
 
     logging.info("Finding board")
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -580,7 +595,11 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
     """
     # signal.signal(signal.SIGTERM, signal.SIG_DFL)
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
-        objPoints, imgPoints, imgRes, None, None
+        np.asarray(objPoints, dtype=np.float32),
+        np.asarray(imgPoints, dtype=np.float32),
+        imgRes,
+        None,
+        None,
     )
     # if callback: callback()
     if q_out:
@@ -612,11 +631,12 @@ class CalibrationState(dict):
         self.output_file_ts = -1
         self.rawImgLock = rawImgLock
         self.setOutpuFileTimestamp()
-        if os.path.isfile(self.output_file):
+        self.lock = RLock()
+        if os.path.isfile(str(self.output_file)):
             self.loadCalibration()
         else:
             self.lensCalibration = dict(state=STATE_PENDING)
-        super(self.__class__, self).__init__(*args, **kw)
+        dict.__init__(self, *args, **kw)
 
     def onChange(self):
         returnState = dict(
@@ -630,82 +650,98 @@ class CalibrationState(dict):
             self.changeCallback(returnState)
 
     def add(
-        self, path, board_size=(CB_ROWS, CB_COLS), state=STATE_PENDING_CAMERA, index=-1
+        self,
+        path,
+        board_size=(CB_ROWS, CB_COLS),
+        state=STATE_PENDING_CAMERA,
+        index=-1,
+        extra_kw=None,
     ):
-        if path in self.keys():
-            # was already added
-            return
-        self[path] = dict(
-            tm_added=time.time(),  # when picture was taken
-            state=state,
-            tm_proc=None,  # when processing started
-            tm_end=None,  # when processing ended
-            board_size=board_size,
-            index=index,
-        )
-        dirlist = os.listdir(os.path.dirname(path))
-        self.lensCalibration["state"] = STATE_PENDING
-        if os.path.basename(path) + ".npz" in dirlist:
-            self._logger.debug("Found previous npz file for %s" % path)
-            self.load(path)  # Triggers self.onChange()
-        else:
-            self.onChange()
+        with self.lock:
+            self.lensCalibration["state"] = STATE_PENDING
+            if path in self.keys():
+                # was already added
+                return
+            if not isinstance(extra_kw, Mapping):
+                extra_kw = {}
+            default = dict(
+                tm_added=time.time(),  # when picture was taken
+                state=state,
+                tm_proc=None,  # when processing started
+                tm_end=None,  # when processing ended
+                board_size=board_size,
+                index=index,
+                **extra_kw
+            )
+            dirlist = os.listdir(os.path.dirname(path))
+            if os.path.basename(path) + ".npz" in dirlist:
+                self._logger.debug("Found previous npz file for %s" % path)
+                self[path] = dict_merge(default, CalibrationState._load(path))
+            else:
+                self[path] = default
+        self.onChange()
 
     def remove(self, path):
-        if self.pop(path, None):  # deletes without checking if the key exists
-            for f in [path, path + ".npz"]:
-                if os.path.isfile(f):
-                    try:
-                        os.remove(f)
-                    except OSError:
-                        pass
+        with self.lock:
+            if self.pop(path, None):  # deletes without checking if the key exists
+                for f in [path, path + ".npz"]:
+                    if os.path.isfile(f):
+                        try:
+                            os.remove(f)
+                        except OSError:
+                            pass
         self.onChange()
 
     def ignore(self, path):
-        self.update(path, STATE_IGNORED)
+        with self.lock:
+            self.update(path, STATE_IGNORED)
 
     def update(self, path, state, date=None, origin=USER, **kw):
-        date = date or datetime.datetime.now().strftime(DATE_FORMAT)
+        date = date or datetime.datetime.now()
         if state in STATES:
-            _data = dict(state=state, date=date, origin=origin, **kw)
-            _t = time.time()
-            if state == STATE_SUCCESS or state == STATE_FAIL:
-                _data["tm_end"] = _t
-            if state == STATE_PROCESSING:
-                _data["tm_proc"] = _t
-            self[path].update(_data)
-            if state == STATE_SUCCESS or state == STATE_FAIL:
-                self.save(path)
+            with self.lock:
+                _data = dict(state=state, date=date, origin=origin, **kw)
+                _t = time.time()
+                if state == STATE_SUCCESS or state == STATE_FAIL:
+                    _data["tm_end"] = _t
+                if state == STATE_PROCESSING:
+                    _data["tm_proc"] = _t
+                self[path].update(_data)
+                if state == STATE_SUCCESS or state == STATE_FAIL:
+                    self.save(path)
             self.onChange()
         else:
             raise ValueError("Not a valid state: {}", state)
 
     def updateCalibration(self, ret, mtx, dist, rvecs, tvecs):
         if ret != 0.0:
-            self.lensCalibration.update(
-                dict(
-                    state=STATE_SUCCESS,
-                    err=ret,
-                    mtx=mtx,
-                    dist=dist,
-                    rvecs=rvecs,
-                    tvecs=tvecs,
-                    date=datetime.datetime.now().strftime(DATE_FORMAT),
-                    # read with datetime.datetime.strptime(date, DATE_FORMAT)
-                    resolution=self.imageSize,
+            with self.lock:
+                self.lensCalibration.update(
+                    dict(
+                        state=STATE_SUCCESS,
+                        err=ret,
+                        mtx=mtx,
+                        dist=dist,
+                        rvecs=rvecs,
+                        tvecs=tvecs,
+                        date=datetime.datetime.now(),
+                        # read with datetime.datetime.strptime(date, DATE_FORMAT)
+                        resolution=self.imageSize,
+                    )
                 )
-            )
-            self.saveCalibration()
+                self.saveCalibration()
         # elif state in STATES:
         # 	self.lastLensCalibrationState = state
         # else:
         # 	raise ValueError("Not a valid state: {}", state)
         else:
-            self.lensCalibration.update(dict(state=STATE_FAIL))
+            with self.lock:
+                self.lensCalibration.update(dict(state=STATE_FAIL))
         self.onChange()
 
     def calibrationBusy(self):
-        self.lensCalibration.update(dict(state=STATE_PROCESSING))
+        with self.lock:
+            self.lensCalibration.update(dict(state=STATE_PROCESSING))
         self.onChange()
 
     def calibrationRunning(self):
@@ -718,25 +754,36 @@ class CalibrationState(dict):
         # self._logger.debug("### REFRESH ###")
         changed = False
         for path, elm in self.items():
-            if elm["state"] == STATE_PENDING_CAMERA and os.path.exists(path):
-                if self.rawImgLock is not None:
-                    self.rawImgLock.acquire()
-                    self.rawImgLock.release()
-                self.update(path, STATE_QUEUED)
-                changed = True
-                if imgFoundCallback is not None:
-                    imgFoundCallback(*args, **kwargs)
-                    self._logger.debug(
-                        "CALLBACK : %s (*%s, **%s)"
-                        % (imgFoundCallback.__name__, args, kwargs)
-                    )
+            with self.lock:
+                if elm["state"] == STATE_PENDING_CAMERA and os.path.exists(path):
+                    if self.rawImgLock is not None:
+                        self.rawImgLock.acquire()
+                        self.rawImgLock.release()
+                    self.update(path, STATE_QUEUED)
+                    changed = True
+                    if imgFoundCallback is not None:
+                        imgFoundCallback(*args, **kwargs)
+                        self._logger.debug(
+                            "CALLBACK : %s (*%s, **%s)"
+                            % (imgFoundCallback.__name__, args, kwargs)
+                        )
         if changed:
             self._logger.debug("something changed")
             self.onChange()
         return changed
 
     def getElmInState(self, state):
-        return dict(filter(lambda _s: _s[1]["state"] == state, self.items()))
+        with self.lock:
+            return dict(filter(lambda _s: _s[1]["state"] == state, self.items()))
+
+    def get_from_timestamp(self, timestamp):
+        with self.lock:
+            return dict(
+                filter(
+                    lambda _s: _s[1]["timestamp"].strftime(DATE_FORMAT) == timestamp,
+                    self.items(),
+                )
+            )
 
     def getSuccesses(self):
         return self.getElmInState(STATE_SUCCESS).values()
@@ -766,48 +813,60 @@ class CalibrationState(dict):
 
     def save(self, path):
         """Save the results of the detected chessboard in given path"""
-        np.savez(path + ".npz", **self[path])
+        with self.lock:
+            np.savez(path + ".npz", **self[path])
 
     def load(self, path):
         """Load the results of the detected chessboard in given path"""
-        self[path].update(dict(np.load(path + ".npz")))
+        with self.lock:
+            self[path].update(CalibrationState._load(path))
         self.onChange()
+
+    @staticmethod
+    # @logme(False, True)
+    def _load(path):
+        return dict(np.load(path + ".npz", allow_pickle=True))
 
     def saveCalibration(self, path=None):
         """Load the calibration to path"""
-        makedirs(path or self.output_file, parent=True)
-        np.savez(path or self.output_file, **self.lensCalibration)
+        with self.lock:
+            makedirs(path or self.output_file, parent=True)
+            np.savez(path or self.output_file, **self.lensCalibration)
         self.setOutpuFileTimestamp()
 
     def loadCalibration(self, path=None):
         """Load the calibration from path (defaults to self.lensCalibration default path)"""
-        self.lensCalibration = dict(np.load(path or self.output_file))
-        if (
-            "mtx" in self.lensCalibration.keys()
-            and self.lensCalibration["mtx"] is not None
-        ):
-            self.lensCalibration["state"] = STATE_SUCCESS
-        else:
-            self.lensCalibration["state"] = STATE_FAIL
-        if not "resolution" in self.lensCalibration.keys():
-            self.lensCalibration["resolution"] = LEGACY_STILL_RES
+        with self.lock:
+            self.lensCalibration = dict(
+                np.load(path or self.output_file, allow_pickle=True)
+            )
+            if (
+                "mtx" in self.lensCalibration.keys()
+                and self.lensCalibration["mtx"] is not None
+            ):
+                self.lensCalibration["state"] = STATE_SUCCESS
+            else:
+                self.lensCalibration["state"] = STATE_FAIL
+            if not "resolution" in self.lensCalibration.keys():
+                self.lensCalibration["resolution"] = LEGACY_STILL_RES
         self.onChange()
 
     def rm_unused_images(self):
         for path, item in self.items():
-            is_used = (
-                item["state"] == STATE_SUCCESS
-                and "date" in item
-                and "date" in self.lensCalibration
-                and datetime.datetime.strptime(
-                    str(item["date"]), DATE_FORMAT
-                )  # str convert from np array
-                < datetime.datetime.strptime(
-                    str(self.lensCalibration["date"]), DATE_FORMAT
+            with self.lock:
+                is_used = (
+                    item["state"] == STATE_SUCCESS
+                    and "date" in item
+                    and "date" in self.lensCalibration
+                    and datetime.datetime.strptime(
+                        str(item["date"]), DATE_FORMAT
+                    )  # str convert from np array
+                    < datetime.datetime.strptime(
+                        str(self.lensCalibration["date"]), DATE_FORMAT
+                    )
                 )
-            )
-            if not is_used:
-                self.remove(path)
+                if not is_used:
+                    self.remove(path)
         self.onChange()
 
     def rm_from_origin(self, origin=USER):
@@ -846,6 +905,8 @@ class CalibrationState(dict):
                     return list(elm.flat)
                 else:
                     return elm.tolist()
+            elif isinstance(elm, datetime.datetime):
+                return elm.strftime(DATE_FORMAT)
             else:
                 return None
 

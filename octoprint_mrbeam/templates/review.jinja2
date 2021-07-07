@@ -5,6 +5,7 @@
             <h3 id="review_question" class="review_title">{{ _('How likely are you to recommend Mr Beam to a friend or colleague?') }}</h3>
             <div id="rating_block">
                 <div class="rating">
+                    <span class="rating-label">{{ _('Not at all likely') }}</span>
                     <button value="1">1</button>
                     <button value="2">2</button>
                     <button value="3">3</button>
@@ -15,23 +16,44 @@
                     <button value="8">8</button>
                     <button value="9">9</button>
                     <button value="10">10</button>
+                    <span class="rating-label">{{ _('Extremely likely') }}</span>
                 </div>
             </div>
+            <div id="review_thank_you" class="review_hidden_part">
+                <h3 class="review_title">{{ _('Thank you for your response.') }}</h3>
+            </div>
             <div id="review_how_can_we_improve" class="form-group review_hidden_part">
-                <h3 class="review_title">{{ _('Thank you!') }}</h3>
-                <label for="review_textarea" class="review_explanation">{{ _('Thank you for the feedback, is there anything else you want to tell us? Please share your thoughts with us so we can keep improving:') }}</label>
+                <label for="review_textarea" class="review_explanation">{{ _('Help us by explaining your score...') }}</label>
                 <textarea class="form-control" id="review_textarea" rows="4"></textarea>
             </div>
-            <div id="review_thank_you" class="review_hidden_part">
-                <h3 class="review_title">{{ _('Wow, thank you!') }}</h3>
-                <p class="review_explanation">{{ _('We love getting feedback from our customers! Do you have three minutes to leave a review for us? We’d be so excited to read it!') }}
-                    <a id="give_review_link" target="_blank" href="https://store.mr-beam.org/products/mr-beam-ii-dreamcut-air-filter-ii-bundle?utm_source=beamos&utm_medium=beamos&utm_campaign=review_screen#shopify-product-reviews">{{ _('Give review') }}</a>
-                </p>
+            <div id="ask_user_details" class="review_hidden_part">
+                <label for="review_input_phone_email">{{ _('Phone or email: (optional)') }}
+                    <small>{{ _('If it\'s ok to contact you about your feedback.') }}</small>
+                </label>
+                <input type="text" class="form-control" id="review_input_phone_email">
+            </div>
+            <div id="positive_review" class="review_hidden_part">
+                <h3 class="review_title">{{ _('Thank you for your response.') }}</h3>
+                <p>{{ _('Positive reviews from awesome customers like you help others to feel confident about choosing Mr Beam too. <br />Could you take 60 seconds to go to the %(opening_tag)sMr Beam Store%(closing_tag)s and share your happy experiences?',
+                opening_tag='<a id="give_review_link" href="https://mr-beam.org/beamos/review" target="_blank">',
+                closing_tag='</a>') }}</p>
+                <p>{{ _('We will be forever grateful. Thank you in advance for helping us out!') }}</p>
+                <p>{{ _('Your Mr Beam team') }}</p>
+            </div>
+            <div id="negative_review" class="review_hidden_part">
+                <h3 class="review_title">{{ _('Thank you for your response.') }}</h3>
+                <p>{{ _('Did you know:') }}</p>
+                <p>{{ _('We have a great online support portal with lots of helpful articles to help out with common problems. There you can also find tips on what materials to use or how to create designs and more. And of course you can reach our friendly support team at any time by writing us a ticket.') }}</p>
+                <p><a id="give_support" target="_blank" href="https://support.mr-beam.org">{{ _('Go to the Mr Beam Support Portal') }}</a></p>
+                <br>
+                <p>{{ _('Your Mr Beam team') }}</p>
             </div>
         </div>
         <div class="modal-footer">
+            <a id="change_review" class="btn btn-link pull-left review_hidden_part" data-bind='click:changeReview' aria-hidden="true">{{ _('Back') }}</a>
             <a id="dont_ask_review_link" class="btn btn-link" data-bind="click:exitDontAskAgainLink">{{ _("Don't ask me again") }}</a>
-            <a id="review_done_btn" class="btn btn-primary" data-bind='click:exitOkBtn' aria-hidden="true">{{ _('OK') }}</a>
+            <a id="review_done_btn" class="btn btn-primary" data-bind='click:exitOkBtn' aria-hidden="true">{{ _('Send') }}</a>
+            <a id="close_review_modal" class="btn btn-primary review_hidden_part" data-bind='click:closeReview' aria-hidden="true">{{ _('OK') }}</a>
         </div>
     </div>
 </div>

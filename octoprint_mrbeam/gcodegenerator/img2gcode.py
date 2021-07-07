@@ -40,6 +40,9 @@ from job_params import JobParams
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
+EXTRA_OVERSHOOT_EXTRA_DURATION = 0.45
+EXTRA_OVERSHOOT_MIN_DIST = 1  # in mm
+
 
 class ImageProcessor:
 
@@ -48,6 +51,12 @@ class ImageProcessor:
     ENGRAVING_MODE_BASIC = "basic"
 
     ENGRAVING_MODE_DEFAULT = ENGRAVING_MODE_PRECISE
+
+    # Machine Profile Mock, TODO get proper machine profile
+    FEEDRATE_MIN = 30
+    FEEDRATE_MAX = 5000
+    INTENSITY_MIN = 0
+    INTENSITY_MAX = 1300
 
     def __init__(
         self,
@@ -71,6 +80,7 @@ class ImageProcessor:
         extra_overshoot=False,
         eng_compressor=JobParams.Default.ENG_COMPRESSOR,
         material=None,
+        eng_passes=JobParams.Default.ENG_PASSES,
     ):
 
         self.log = mrb_logger("octoprint.plugins.mrbeam.img2gcode")
@@ -98,7 +108,7 @@ class ImageProcessor:
             self.debugPreprocessing = _mrbeam_plugin_implementation._settings.get(
                 ["dev", "debug_gcode"]
             )
-        except NameError:
+        except (NameError, AttributeError):
             self.debug = True
             self.debugPreprocessing = True
             self.log.info(
@@ -130,9 +140,7 @@ class ImageProcessor:
         self.intensity_black_user = intensity_black_user
         self.intensity_white_user = intensity_white_user
         self.feedrate_white = float(speed_white) if speed_white else JobParams.Max.SPEED
-        self.feedrate_black = (
-            float(speed_black) if speed_black else 0.0
-        )  # TODO: should this be min speed?
+        self.feedrate_black = float(speed_black) if speed_black else self.FEEDRATE_MIN
         self.compressor = (
             eng_compressor  # This value might be None if there is no compressor
         )
@@ -146,6 +154,7 @@ class ImageProcessor:
         self.engraving_mode = engraving_mode or self.ENGRAVING_MODE_DEFAULT
         self.separation = self.engraving_mode == self.ENGRAVING_MODE_FAST
         self.line_by_line = self.engraving_mode == self.ENGRAVING_MODE_BASIC
+        self.eng_passes = int(eng_passes) if eng_passes else JobParams.Min.ENG_PASSES
 
         # overshoot settings
         # given an acceleration of 700mm/s², these are the ways necessary to reach target speed of
@@ -245,48 +254,62 @@ class ImageProcessor:
         self.profiler.stop("scale")
 
         left, upper, right, lower = (0, 0, dest_wpx, dest_hpx)
-        # 		bbox = img.getbbox()
-        # 		self.log.info("#####")
-        # 		self.log.info(bbox)
-        # 		self.log.info((0, 0, dest_wpx, dest_hpx))
-        #
-        # 		if(False):
-        # 			self.profiler.start('crop')
-        #
-        # 			# 1a. crop to bbox
-        # 			# TODO: this removes only transparent pixels, white pixels are still counted as content.
-        # 			bbox = img.getbbox()
-        # 			if bbox is None:
-        # 				self.log.debug("img_prepare() Empty bounding box, nothing to engrave. Returning")
-        # 				return []
-        #
-        # 			left, upper, right, lower = bbox # bbox is a tuple of four
-        # 			bb_w = right - left
-        # 			bb_h = lower - upper
-        # 			if bb_w != dest_wpx or bb_h != dest_hpx:
-        # 				img = img.crop(bbox)
-        # 				old_pixels = dest_wpx * dest_hpx
-        # 				bb_area = bb_w * bb_h
-        # 				ratio = bb_area / old_pixels
-        # 				self.log.debug("Cropped to bbox: Pixel reduction: %i -> %i (%f%%), bb_w: %s, bb_h: %s, left: %s, upper: %s, right: %s, lower: %s ", old_pixels, bb_area, ratio, bb_w, bb_h, left, upper, right, lower)
-        # 				if self.debugPreprocessing:
-        # 					img.save("/tmp/img2gcode_1a_cropped.png")
-        #
-        # 			else:
-        # 				self.log.debug("Cropping skipped. Not necessary.")
-        #
-        #
-        # 			self.profiler.stop('crop').start('remove_transparency')
-        #
-        # 			# 2. remove transparency
-        # 			if (not self.is_inverted) and (img.mode == 'RGBA'):
-        # 				whitebg = Image.new('RGBA', (bb_w, bb_h), "white")
-        # 				img = Image.alpha_composite(whitebg, img)
-        #
-        # 				if self.debugPreprocessing:
-        # 					img.save("/tmp/img2gcode_2_whitebg.png")
-        #
-        # 			self.profiler.stop('remove_transparency').start('contrast')
+        bbox = img.getbbox()
+        #        self.log.info("#####")
+        #        self.log.info(bbox)
+        #        self.log.info((0, 0, dest_wpx, dest_hpx))
+
+        # 1a. crop to bbox
+        if True:
+            self.profiler.start("crop")
+
+            # TODO: this removes only transparent pixels, white pixels are still counted as content.
+            bbox = img.getbbox()
+            if bbox is None:
+                self.log.debug(
+                    "img_prepare() Empty bounding box, nothing to engrave. Returning"
+                )
+                return []
+
+            left, upper, right, lower = bbox  # bbox is a tuple of four
+            bb_w = right - left
+            bb_h = lower - upper
+            if bb_w != dest_wpx or bb_h != dest_hpx:
+                img = img.crop(bbox)
+                old_pixels = dest_wpx * dest_hpx
+                bb_area = bb_w * bb_h
+                ratio = bb_area / old_pixels
+                self.log.debug(
+                    "Cropped to bbox: Pixel reduction: %i -> %i (%f%%), bb_w: %s, bb_h: %s, left: %s, upper: %s, right: %s, lower: %s ",
+                    old_pixels,
+                    bb_area,
+                    ratio,
+                    bb_w,
+                    bb_h,
+                    left,
+                    upper,
+                    right,
+                    lower,
+                )
+                if self.debugPreprocessing:
+                    img.save("/tmp/img2gcode_1a_cropped.png")
+                dest_wpx = bb_w
+                dest_hpx = bb_h
+
+            else:
+                self.log.debug("Cropping skipped. Not necessary.")
+
+            self.profiler.stop("crop").start("remove_transparency")
+
+        # 2. remove transparency
+        if (not self.is_inverted) and (img.mode == "RGBA"):
+            whitebg = Image.new("RGBA", (dest_wpx, dest_hpx), "white")
+            img = Image.alpha_composite(whitebg, img)
+
+            if self.debugPreprocessing:
+                img.save("/tmp/img2gcode_2_whitebg.png")
+
+        self.profiler.stop("remove_transparency").start("contrast")
 
         # 3. contrast
         if self.contrastFactor > 1.0:
@@ -448,129 +471,117 @@ class ImageProcessor:
 
         self.profiler.stop("sort_imgArray").start("write_img")
         # iterate through the image parts
-        for img_data in imgArray:
-            # img_data = {'i': px_data, 'x': offset_px_x, 'y':offset_px_y, 'id': id_str}
-            # note: offset_px_x and offset_px_y are offsets from top left of the unseparated original pixel image
-            img = img_data["i"]
-            size = img.size  # size of the img fraction in pixels
-            height_px = size[1]
+        for p in range(0, int(self.eng_passes)):
+            self._append_gcode("; pass:%i/%s ; Engraving\n" % (p + 1, int(self.eng_passes)))
+            for img_data in imgArray:
+                # img_data = {'i': px_data, 'x': offset_px_x, 'y':offset_px_y, 'id': id_str}
+                # note: offset_px_x and offset_px_y are offsets from top left of the unseparated original pixel image
+                img = img_data["i"]
+                size = img.size  # size of the img fraction in pixels
+                height_px = size[1]
 
-            # image part has its own pixel offset. Calc general absolute offset in MM
-            x_off = (
-                img_data["x"] * self.beam + xMM
-            )  # mm here, img_data['x'] is in pixels
-            y_off = (
-                hMM - img_data["y"] * self.beam + yMM
-            )  # mm here, but inverted for the y axis
-            # self.log.info("yPx: {}, yMM: {}, hMM: {} => y_final: {}".format(img_data['y'], yMM, hMM, y_off))
-            img_pos_mm = (x_off, y_off)  # lower left corner of partial image in mm
+                # image part has its own pixel offset. Calc general absolute offset in MM
+                x_off = (
+                    img_data["x"] * self.beam + xMM
+                )  # mm here, img_data['x'] is in pixels
+                y_off = (
+                    hMM - img_data["y"] * self.beam + yMM
+                )  # mm here, but inverted for the y axis
+                # self.log.info("yPx: {}, yMM: {}, hMM: {} => y_final: {}".format(img_data['y'], yMM, hMM, y_off))
+                img_pos_mm = (x_off, y_off)  # lower left corner of partial image in mm
 
-            self._append_gcode(
-                "; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(
-                    img_data["id"], img_data["x"], img_data["y"], size[0], size[1]
+                self._append_gcode(
+                    "; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(
+                        img_data["id"], img_data["x"], img_data["y"], size[0], size[1]
+                    )
                 )
-            )
-            gc = self._get_gcode_g0(
-                x=x_off, y=y_off, comment="; Move to start ({},{})".format(x_off, y_off)
-            )
-            self._append_gcode(gc)
-            self._append_gcode("M3S0\nG4P0")  # initialize laser
-            # iterate line by line
-            pix = img.load()
-            first_row = True
-            for row in range(height_px - 1, -1, -1):
 
-                line_info = self.get_pixelinfo_of_line(pix, size, row)
-                y = img_pos_mm[1] - (self.beam * line_info["row"])
+                # TODO improvement: find first non-white pixel from lower left
+                x_start = x_off
+                y_start = (
+                    y_off - height_px * self.beam
+                )  # lower left of the image, but with safety whitespace around the content
+                gc = self._get_gcode_g0(
+                    x=x_start,
+                    y=y_start,
+                    comment="; Move to start ({},{})".format(x_start, y_start),
+                )
+                self._append_gcode(gc)
+                self._append_gcode("M3S0\nG4P0")  # initialize laser
+                # iterate line by line
+                pix = img.load()
+                first_row = True
+                for row in range(height_px - 1, -1, -1):
+                    line_info = self.get_pixelinfo_of_line(pix, size, row)
+                    y = img_pos_mm[1] - (self.beam * line_info["row"])
 
-                if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
+                    if direction_positive:
+                        _minmax = min
+                        side = "left"
+                        k = -1
+                    else:
+                        _minmax = max
+                        side = "right"
+                        k = 1
+                    if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
 
-                    if not first_row and self.extra_overshoot:
-                        # This is messy and to be overwritten with streamlined logic
-                        # octogon_overshoot
-                        # /!\ direction_positive reverted at the end of loop
-                        if not direction_positive:
-                            _minmax = max
-                            side = "right"
-                            k = 1
-                        else:
-                            _minmax = min
-                            side = "left"
-                            k = -1
-
-                        _ov = self.overshoot_distance
-                        _bk = self.backlash_compensation_x
-                        extrema_x = _minmax(
-                            self.gc_ctx.x,
-                            img_pos_mm[0]
-                            + self.beam * line_info[side]
-                            + k * (2 * _ov + _bk),
-                        )
-                        start = np.array([extrema_x, self.gc_ctx.y])
-                        end = np.array([extrema_x, y])
-                        dy = end[1] - start[1]
-                        _vsp = _ov  # extra vertical_spacing in the overshoot
-                        _line1 = np.array([k, 0.0])
-                        _line2 = np.array([0.0, 1.0])
-                        _line3 = np.array([k, 1.0])
-                        _line4 = np.array([k, -1.0])
-                        # Extend the start and end point differently depending on
-                        # the line so there is no overlap between the overshoots
-                        shift = _ov * (row % (_vsp / dy)) / 2 * _line1
-                        start = start + shift
-                        end = end + shift
-                        # base size of the octogon (dictates length of sides)
-                        _size = 2 * _ov
-                        overshoot_gco = "".join(
-                            map(
-                                lambda v: self._get_gcode_g0(
-                                    x=v[0], y=v[1], comment="octogon"
-                                )
-                                + "\n",
-                                np.cumsum(
-                                    [
-                                        start + (_size + _vsp / 2) * _line4,
-                                        _size * _line1 / 2,
-                                        (_size + dy / 2) * _line3,
-                                        _vsp * _line2,
-                                        -(_size - dy / 2) * _line4,
-                                        -_size * _line1 / 2,
-                                    ],
-                                    axis=0,
-                                ),
+                        if not first_row and self.extra_overshoot:
+                            overshoot_gco = (
+                                "; EXTRA_TIME "
+                                + str(EXTRA_OVERSHOOT_EXTRA_DURATION)
+                                + "s\n"
                             )
+                            # Use the most extreme position of x from one line to an other
+                            # assumes that self.gc_ctx.x was previously set
+                            extrema_next_line = (
+                                img_pos_mm[0]
+                                + self.beam * line_info[side]
+                                + k
+                                * (
+                                    2 * self.overshoot_distance
+                                    + self.backlash_compensation_x
+                                )
+                            )
+                            extrema_x = _minmax(self.gc_ctx.x, extrema_next_line)
+                            # start and end are the positions the laserhead should be
+                            # before and after the overshoot.
+                            # Assumes that self.gc_ctx.y was previously set
+                            start = np.array([extrema_x, self.gc_ctx.y])
+                            end = np.array([extrema_x, y])
+                            # /!\ direction_positive reverted at the end of loop
+                            overshoot_gco += self.get_overshoot(
+                                start,
+                                end,
+                                k,
+                                self.overshoot_distance,
+                                offset_counter=row,
+                            )
+                            self._append_gcode(overshoot_gco)
+
+                        # prepare line start
+                        self.write_gcode_for_line_start(
+                            y,
+                            img_pos_mm,
+                            pix,
+                            line_info,
+                            direction_positive,
+                            debug=self.debug,
                         )
-                        # self.log.info(" Overshoot direction %s, side %s", k, side)
-                        # self.log.info("  start x %s, y %s" % tuple(start))
-                        # self.log.info("  end   x %s, y %s" % tuple(end))
-                        # self.log.info("  gcode \n%s" % overshoot_gco)
-                        self._append_gcode(overshoot_gco)
 
-                    # prepare line start
-                    self.write_gcode_for_line_start(
-                        y,
-                        img_pos_mm,
-                        pix,
-                        line_info,
-                        direction_positive,
-                        debug=self.debug,
-                    )
+                        # do line
+                        self.write_gcode_for_trimmed_line(
+                            img_pos_mm, pix, line_info, direction_positive, debug=self.debug
+                        )
 
-                    # do line
-                    self.write_gcode_for_trimmed_line(
-                        img_pos_mm, pix, line_info, direction_positive, debug=self.debug
-                    )
+                        # after line
+                        self.write_gcode_for_line_end(
+                            img_pos_mm, line_info, direction_positive, debug=self.debug
+                        )
 
-                    # after line
-                    self.write_gcode_for_line_end(
-                        img_pos_mm, line_info, direction_positive, debug=self.debug
-                    )
-
-                    # flip direction after each line to go back and forth
-                    direction_positive = not direction_positive
-                    first_row = False
-                else:
-                    if line_info["left"] != None:
+                        # flip direction after each line to go back and forth
+                        direction_positive = not direction_positive
+                        first_row = False
+                    elif line_info["left"] != None:
                         # skip line vertical out of working area
                         self._append_gcode(
                             "; ignoring line y={}, out of working area.".format(y)
@@ -857,39 +868,99 @@ class ImageProcessor:
         # self.is_first_pixel = False
         return target_x, None
 
+    # @staticmethod
+    def get_overshoot(self, start, end, direction, size, offset_counter=None):
+        """
+        Create the gcode for a diamond / octogon overshoot, the returned gcode does not contain the start and end positions.
+        This overshoot only goes from start and then "up" on the the y axis.
+        end : Actually only uses the y value of the end
+        size : base size of the octogon (dictates length of sides) - It's approximative
+        offset_counter : Sets a different offset as it increments which spreads any remaining burn marks
+
+        """
+        # only need self for the g0 code
+        # direction should be +- 1 and dictates whether to turn clockwise or anticlockwise
+
+        # This is messy and to be overwritten with streamlined logic
+        dy = float(end[1] - start[1])
+        # changed measurement so the final size of the overshoot matches expected size.
+        _size = float(max(EXTRA_OVERSHOOT_MIN_DIST, size)) / 4
+        # extra vertical_spacing in the overshoot
+        # necessary if dy < _size, it could otherwise still burn the material
+        # This allows all edges to be at least _size long
+        extra_vert = max(0, _size - dy)
+        k = direction
+        _line1 = np.array([k, 0.0])
+        _line2 = np.array([0.0, 1.0])
+        _line3 = np.array([k, 1.0])
+        _line4 = np.array([k, -1.0])
+        if isinstance(offset_counter, int):
+            # Extend the start and end point differently depending on
+            # the line so there is no overlap between the overshoots
+            shift = _size * (offset_counter % max(dy, 1)) / 2 * _line1
+            start = start + shift
+            end = end + shift
+        return "".join(
+            map(
+                lambda v: self._get_gcode_g0(x=v[0], y=v[1], comment="octogon") + "\n",
+                np.cumsum(
+                    [
+                        start + (extra_vert / 2 + _size) * _line4,
+                        _size * _line1,
+                        (_size + dy / 4) * _line3,
+                        (extra_vert + dy / 2) * _line2,
+                        -(_size + dy / 4) * _line4,
+                        -_size * _line1,
+                    ],
+                    axis=0,
+                ),
+            )
+        )
+
     def _get_gcode_g0(self, x=None, y=None, comment=None):
-        x, x_cmt = self._ensure_coordinate_in_range(x, self.workingAreaWidth, 0, "X")
-        y, y_cmt = self._ensure_coordinate_in_range(y, self.workingAreaHeight, 0, "Y")
+        x, x_cmt = self._ensure_value_in_range(x, self.workingAreaWidth, 0, "X")
+        y, y_cmt = self._ensure_value_in_range(y, self.workingAreaHeight, 0, "Y")
         x_gc = self._get_gcode_literal("X", x)
         y_gc = self._get_gcode_literal("Y", y)
         all_comments = self._join_gc_comments(comment, x_cmt, y_cmt)
         return "G0{}{}S0{}".format(x_gc, y_gc, all_comments)
 
     def _get_gcode_g1(self, x=None, y=None, s=None, f=None, comment=None):
-        x, x_cmt = self._ensure_coordinate_in_range(x, self.workingAreaWidth, 0)
-        y, y_cmt = self._ensure_coordinate_in_range(y, self.workingAreaHeight, 0)
+        if x == None and y == None and s == None and f == None:
+            raise ValueError("GCode 'G1' at least requires one literal.")
+        x, x_cmt = self._ensure_value_in_range(x, self.workingAreaWidth, 0, "X")
+        y, y_cmt = self._ensure_value_in_range(y, self.workingAreaHeight, 0, "Y")
+        s, s_cmt = self._ensure_value_in_range(
+            s, self.INTENSITY_MAX, self.INTENSITY_MIN, "S"
+        )
+        f, f_cmt = self._ensure_value_in_range(
+            f, self.FEEDRATE_MAX, self.FEEDRATE_MIN, "F"
+        )
         x_gc = self._get_gcode_literal("X", x)
         y_gc = self._get_gcode_literal("Y", y)
         s_gc = self._get_gcode_literal("S", s)
         f_gc = self._get_gcode_literal("F", f)
 
-        all_comments = self._join_gc_comments(comment, x_cmt, y_cmt)
+        all_comments = self._join_gc_comments(comment, x_cmt, y_cmt, s_cmt, f_cmt)
         return "G1{}{}{}{}{}".format(x_gc, y_gc, s_gc, f_gc, all_comments)
 
-    def _ensure_coordinate_in_range(self, value, maximum, minimum=0, prefix=""):
-        # returns (cropped?) value and comment if cropped.
+    def _ensure_value_in_range(self, value, maximum, minimum=0, prefix=""):
+        """
+        Returns a tuple :
+          - number closest to value in range of minimum and maximum
+          - comment if the input and output value don't match ; also logs it
+        """
         if value == None:
             return None, ""
-        elif value < minimum:
-            return (
-                max(value, minimum),
-                prefix + " set to {}, was {}".format(minimum, value),
-            )
-        elif value > maximum:
-            return (
-                min(value, maximum),
-                prefix + " set to {}, was {}".format(maximum, value),
-            )
+        elif isinstance(value, float) and math.isnan(value):
+            # math.isnan() fails on non-float types
+            raise ValueError("Coordinate is NaN")
+
+        val = max(min(value, maximum), minimum)
+        if val != value:
+            message = "{} set to {}, was {}".format(prefix, val, value)
+            self.log.debug(message)
+            return (val, message)
         else:
             return value, ""
 
@@ -910,6 +981,9 @@ class ImageProcessor:
             return ""
 
     def _get_gcode_literal(self, lit, value):
+        # TODO uncomment after fixing
+        #        if isinstance(value, float) and math.isnan(value):
+        #            raise ValueError("NaN Value in GCode Literal {}".format(lit))
         if value != None:
             if lit == "X" or lit == "Y":
                 return lit + self.twodigits(value)

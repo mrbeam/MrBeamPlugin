@@ -18,20 +18,6 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Snap.plugin(function (Snap, Element, Paper, global) {
-    // just a helper
-    var _merge_bbox = function (bb1, bb2) {
-        let r = _.clone(bb1);
-        r.x = Math.min(bb2.x, bb1.x);
-        r.y = Math.min(bb2.y, bb1.y);
-        r.x2 = Math.max(bb2.x2, bb1.x2);
-        r.y2 = Math.max(bb2.y2, bb1.y2);
-        r.w = r.x2 - r.x;
-        r.h = r.y2 - r.y;
-        r.width = r.w;
-        r.height = r.h;
-        return r;
-    };
-
     /**
      * Separates a fragment into n fragments.
      * Separation is determined by the parse order. Structure is preserved for each resulting fragment.
@@ -185,7 +171,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             bbs.push(e.bbox);
             let merged_bb = _.reduce(bbs, function (bb, bb2add) {
                 if (!bb) return bb2add;
-                return _merge_bbox(bb, bb2add);
+                return Snap.path.merge_bbox(bb, bb2add);
             });
 
             by_bbox.push({ bbox: merged_bb, ids: ids });

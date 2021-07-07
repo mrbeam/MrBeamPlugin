@@ -16,10 +16,10 @@ class TimerHandler:
 
     DISK_SPACE_TIMER = 3.0
     NUM_FILES_TIMER = 5.0
+    SW_VERSIONS_TIMER = 7.0
     IP_ADDRESSES_TIMER = 15.0
     SELF_CHECK_TIMER = 20.0
     INTERNET_CONNECTION_TIMER = 25.0
-    SW_AND_CHECKSUMS_TIMER = 40.0
     FILE_CROP_TIMER = 60.0
 
     SELF_CHECK_USER_AGENT = "MrBeamPlugin self check"
@@ -43,16 +43,7 @@ class TimerHandler:
             self._timers.append(
                 Timer(self.INTERNET_CONNECTION_TIMER, self._internet_connection)
             )
-            # if not (
-            #     self._plugin._settings.get(["dev", "support_mode"])
-            #     or self._plugin.calibration_tool_mode
-            # ):
-            #     self._timers.append(
-            #         Timer(
-            #             self.SW_AND_CHECKSUMS_TIMER,
-            #             self._software_versions_and_checksums,
-            #         )
-            #     )
+            self._timers.append(Timer(self.SW_VERSIONS_TIMER, self._software_versions))
             self._timers.append(
                 Timer(self.FILE_CROP_TIMER, self._crop_analytics_file_if_too_big)
             )
@@ -217,7 +208,23 @@ class TimerHandler:
                 "Exception during the _disk_space check: {}".format(e)
             )
 
+    def _software_versions(self):
+        """
+        TODO: Move this back to analytics handler.
+        I do not se any reason any more to run this as a timed and threaded task.
+        it made sens when we did a filesystem checksum calculation... _software_versions_and_checksums()
+        """
+        sw_versions = self._get_software_versions()
+        self._logger.debug("_software_versions: %s", sw_versions)
+        self._plugin.analytics_handler.add_software_versions(sw_versions)
+
     def _software_versions_and_checksums(self):
+        """
+        Deprecated
+        Checksum calculation significantly slows down the device.
+        Furthermore we never used these checksums for anything.
+        :return:
+        """
         try:
             # must end with /
             folders = {

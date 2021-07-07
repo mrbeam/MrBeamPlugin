@@ -1,0 +1,113 @@
+#messages{
+	--marginLeft: 40%;
+	--picWidth: 20%;
+	--textWidth: 42%;
+	--itemHeight: 6em;
+	--itemHeightExpanded: 50vh;
+	--unfoldAnimation: 0.3s ease;
+	margin-top: 20px;
+}
+#messages_nav_tab.has-unread-messages { color: #e25303; }
+#messages_nav_tab.has-unread-messages:hover { color: #a63e03; }
+.mrb-messages-container{
+	padding: 25px 20px;
+}
+h1.mrb-messages-title{
+	margin: 0;
+    font-weight: bold !important;
+}
+.mrb-message-element{
+	cursor: pointer;
+    padding: 10px 15px;
+	margin-bottom:10px;
+	border-radius: 4px;
+    border: 1px solid #e25303;
+    box-shadow: 2px 2px 4px 1px #e25303;
+}
+
+.mrb-message-element:hover{
+    background-color: transparent;
+    transform: scale(1.018);
+    transition: transform 0.3s ease;
+}
+.mrb-message-read .mrb-message-element{
+    background: #ddd;
+    border: none;
+    box-shadow: none;
+}
+.mrb-message-element.selected {
+    color: #ffffff;
+    background: #e25303;
+}
+h5.mrb-message-title{
+	margin: 0;
+}
+.mrb-message-content-title{
+	margin: 0;
+}
+.mrb-message-date{
+	font-size: 16px;
+    font-weight: bold;
+	margin-bottom: 10px;
+}
+.mrb-message-text-container{
+    height: calc(70vh);
+    padding: 20px;
+}
+.mrb-message-text-container.no-img{
+    height: auto;
+}
+.mrb-message-text{
+	font-size: 14px;
+	font-weight: bold;
+}
+
+/*Gallery from design store*/
+.mrb-message-content .single-design-img-gallery .inner-container {
+    padding: 20px 20px 20px 20px;
+}
+.mrb-message-content .single-design-img-gallery .inner-container .design-img-container {
+    height: calc(70vh);
+}
+.mrb-message-content .single-design-img-gallery .inner-container .design-img-container.single-img-gallery {
+    margin-bottom: 0;
+    height: calc(70vh - 20px);
+}
+.mrb-message-content .single-design-img-gallery .inner-container .design-img-container #design-img-preview {
+    transition: background-image 0.1s ease-in-out 0.1s;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 100%;
+    text-align: center;
+}
+.mrb-message-content .single-design-img-gallery .inner-container .design-img-container #design-img-preview img {
+    visibility: hidden;
+    height: 100%;
+}
+.mrb-message-content .thumbnail-list {
+    margin-top: 20px;
+}
+.mrb-message-content .single-design-img-gallery .inner-container .thumbnail-list.single-img-gallery {
+    height: 0;
+}
+.mrb-message-content .single-design-img-gallery .inner-container .thumbnail-list .thumbnails li{
+    margin-bottom: 0 !important;
+}
+.mrb-message-content .thumbnail-list .thumbnails li{
+    margin-left: 10px;
+}
+.mrb-message-content .thumbnail-list .thumbnails li:first-child{
+    margin-left: 0;
+}
+.mrb-message-content .thumbnail-list a {
+    text-align: center;
+}
+.mrb-message-content .thumbnail-list a .preview {
+    display: block;
+    height: 50px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+/*Gallery from design store*/

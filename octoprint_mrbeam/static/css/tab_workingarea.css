@@ -1,0 +1,800 @@
+/*
+    Created on : May 18, 2020, 9:07:36 PM
+    Author     : teja
+*/
+
+svg#area_preview {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  -ms-user-select: none;
+}
+
+.workingarea {
+  border: 1px solid black;
+  height: 80vh;
+  width: auto;
+  position: relative;
+}
+
+.workingarea .laserpos {
+  position: absolute;
+  right: 0.5em;
+  bottom: 0.3em;
+  color: #999;
+}
+
+.workingarea .laser_btn {
+  position: absolute;
+  right: 0.5em;
+  top: 0.3em;
+}
+
+svg text {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  cursor: default;
+  pointer-events: none;
+}
+
+svg circle.ft_handle {
+  fill-opacity: 0.7;
+  stroke: #ff0000;
+  stroke-width: 2.5px;
+  fill: #fff;
+  vector-effect: non-scaling-stroke;
+}
+svg rect.ft_bbox_transformed {
+  stroke: #ff0000;
+  stroke-width: 2.5px;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 5, 5;
+  fill-opacity: 0.3;
+  stroke-opacity: 1;
+  fill: #999;
+}
+
+svg .vector_outline {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 0.8;
+  cursor: pointer;
+}
+
+.userSVG.designHighlight .vector_outline {
+  stroke-width: 2px !important;
+  filter: none;
+}
+
+/* moved to styles.jinja2 since it gets broken*/
+/*.userText.designHighlight text,*/
+/*.userText.designHighlight tspan,*/
+/*.userIMG.designHighlight {*/
+/*	filter: url(#designHighlight);*/
+/*}*/
+
+svg#area_preview path,
+svg#area_preview circle,
+svg#area_preview line,
+svg#area_preview polyline,
+svg#area_preview polygon,
+svg#area_preview ellipse,
+svg#area_preview rect {
+  vector-effect: non-scaling-stroke !important;
+}
+
+svg g#scaleGroup,
+svg g#crosshair {
+  stroke-width: 1px !important;
+}
+
+svg g#camera_markers circle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+circle#marker_preview_pane,
+g#camera_markers.markerNE circle#markerNE,
+g#camera_markers.markerSE circle#markerSE,
+g#camera_markers.markerNW circle#markerNW,
+g#camera_markers.markerSW circle#markerSW {
+  opacity: 1;
+  animation: blinker 2s linear infinite;
+  pointer-events: auto;
+}
+
+g#camera_markers.markerNE.gray circle#markerNE,
+g#camera_markers.markerSE.gray circle#markerSE,
+g#camera_markers.markerNW.gray circle#markerNW,
+g#camera_markers.markerSW.gray circle#markerSW {
+  opacity: 0.6;
+  animation: none;
+  pointer-events: auto;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+#zoomFactor {
+  position: absolute;
+  left: 0.3em;
+  bottom: 0.4em;
+  color: #e25303;
+  z-index: 999;
+}
+
+#zoom_monitor_wrapper {
+  max-width: 20vh;
+  position: relative;
+  margin: auto;
+}
+#zoom_monitor {
+  width: 100%;
+  position: relative;
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
+}
+#zoom_monitor > div {
+  border: 1px solid #e25303;
+  background-color: #fff;
+  position: absolute;
+  box-sizing: border-box;
+}
+#zoom_monitor_hint {
+  pointer-events: none;
+  width: 90%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+#wa_view_settings_body div.accordion-inner > div:nth-child(1n + 2) {
+  margin-top: 1em;
+}
+
+/*.freeTransformHandle {
+  fill: rgba(255, 255, 255, 0.3);
+  stroke: #e25303;
+  stroke-width: 1px;
+}*/
+
+/* TODO ... don't use :hover ... tablets!
+.file_list_entry .action-buttons,
+.file_list_entry .uploaded,
+.file_list_entry .size {
+	display: none;
+}
+
+.file_list_entry:hover .action-buttons,
+.file_list_entry:hover .uploaded,
+.file_list_entry:hover .size  {
+	display: block;
+}
+*/
+
+#wa_filelist .file_list_entry {
+  border-bottom: 1px dotted lightgray;
+  margin-bottom: 1em;
+  user-select: none;
+}
+#wa_filelist .file_list_entry .title {
+  max-width: 80%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+}
+#wa_filelist .file_list_entry .detail_information {
+  clear: both;
+}
+#wa_filelist .file_list_entry .local_transformation span {
+  margin-left: 0em;
+  margin-right: 0.8em;
+}
+
+#wa_filelist .detail_information,
+#wa_filelist .detail_information input.decent_input {
+  font-size: 0.8rem;
+}
+#wa_filelist .detail_information input {
+  width: calc(30% - 1em);
+  box-sizing: border-box;
+  padding-left: 0.2em;
+  padding-top: 0;
+  padding-bottom: 0;
+  height: 1.3em;
+  margin-bottom: 0.2em;
+}
+#wa_filelist .detail_information input.wide {
+  width: calc(37% - 1em);
+}
+
+#wa_filelist .file_list_entry .dropdown {
+  display: inline-block;
+}
+#wa_filelist .file_list_entry .dropdown li {
+  padding: 0 0.7em;
+  color: #555;
+}
+#wa_filelist .file_list_entry .dropdown li i {
+  color: #e25303;
+}
+
+#wa_filelist .misfit_warning {
+  display: none;
+}
+#wa_filelist .misfit .misfit_warning {
+  display: block;
+}
+
+#wa_filelist .entry.mbtSelected .toggleTransformBtn {
+  border: 1px solid #383e4245;
+  background: #ececec;
+}
+
+#wa_filelist .entry:not(.isTransformed) .transformResetBtn {
+  display: none;
+}
+
+/* disabled. uses 100% cpu in the browser */
+/*#crosshair {
+    transition-property: transform;
+	transition-timing-function: linear;
+	transition-duration: 2s;
+	transition-delay: 0s;
+}*/
+
+/** units mm or % **/
+#working_area_files .entry.show_percent input.unit_mm,
+#working_area_files .entry input.unit_percent {
+  display: none;
+}
+#working_area_files .entry input.unit_mm,
+#working_area_files .entry.show_percent input.unit_percent {
+  display: inline-block;
+}
+#wa_filelist .entry.show_percent .unit_toggler .mini_switch_trigger > div {
+  right: 0.025em;
+}
+
+/** mirrored or not **/
+#wa_filelist .entry.isMirrored .mirror_toggler .mini_switch_trigger > div {
+  right: 0.025em;
+}
+/** Quicktext circle direction **/
+#quick_text_dialog_clockwise.counterclockwise .mini_switch_trigger > div {
+  right: 0.025em;
+}
+/*** mini switch (used for toggling mm/% units and mirroring designs) ***/
+.mini_switch {
+  cursor: pointer;
+  user-select: none;
+}
+span.mini_switch_label {
+  font-size: 0.75rem;
+  color: #555;
+  margin: 0;
+  display: inline-block;
+  width: 2.1em;
+  text-align: center;
+}
+span.mini_switch_label.mini_switch_trigger {
+  display: inline-block;
+  border-radius: 1em;
+  border: 1px solid #ccc;
+  width: 2em;
+  height: 1em;
+  background-color: #eee;
+  margin: 0em 0em 0em;
+  position: relative;
+  font-size: 10px;
+  top: 2px;
+}
+.mini_switch_trigger > div {
+  width: 1em;
+  background-color: #e25303;
+  border-radius: 50%;
+  display: inline-block;
+  height: 1em;
+  position: absolute;
+  bottom: 0%;
+  right: 1em;
+  transition: right 0.3s ease-in-out;
+}
+
+/** scale proportional **/
+#working_area_files .entry .scale_prop_btn > i {
+  pointer-events: none;
+}
+#working_area_files
+  .entry
+  .file_list_entry:not(.scale_proportional)
+  .scale_prop_btn
+  > i.icon-link,
+#working_area_files
+  .entry
+  .file_list_entry.scale_proportional
+  .scale_prop_btn
+  > i.icon-unlink {
+  display: none;
+}
+#working_area_files
+  .entry
+  .file_list_entry.scale_proportional
+  .scale_prop_btn
+  > i.icon-link,
+#working_area_files
+  .entry
+  .file_list_entry:not(.scale_proportional)
+  .scale_prop_btn
+  > i.icon-unlink {
+  display: inline;
+}
+#working_area_files .entry .btn-link.scale_prop_btn:hover {
+  text-decoration: none;
+  box-shadow: none;
+}
+#working_area_files .entry .scale_prop_btn:hover > i::before {
+  text-decoration: none;
+}
+#working_area_files .entry .scale_prop_btn > i::before {
+  transform: rotate(-45deg);
+}
+
+/* focus / hover both inputs as a hint for proportional scaling enabled */
+#working_area_files .file_list_entry .link_width_and_height {
+  display: inline;
+}
+#working_area_files
+  .file_list_entry.scale_proportional
+  .link_width_and_height:hover
+  input.decent_input {
+  border: 1px solid gray;
+}
+#working_area_files
+  .file_list_entry.scale_proportional
+  .link_width_and_height:focus-within
+  input.decent_input {
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
+    0 0 8px rgba(82, 168, 236, 0.6);
+  border: 1px solid gray;
+}
+
+#working_area_files .entry {
+  /*height: 30px;*/
+  margin-bottom: 0.3em;
+}
+
+/* hack to avoid that the burger menu is pushed out of the viewable area.*/
+#working_area_files .entry:last-of-type {
+  margin-bottom: 162px;
+}
+
+#working_area_files .entry.designHighlight .title {
+  font-weight: bold;
+}
+
+#wa_filelist > div {
+  height: 48vh;
+  overflow-y: auto;
+}
+
+/*
+* === IMAGE PREPROCESSING  ACCORDION ===
+*/
+.img_slider {
+  margin-bottom: 24px;
+}
+
+.img_preprocessing_preview {
+  background-size: 150px;
+  display: inline-block;
+  width: 150px;
+  height: 150px;
+}
+
+.img_preprocessing_preview.after {
+  position: relative;
+}
+.img_preprocessing_preview.after > div {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.img_preprocessing_preview.after .contrast,
+.img_preprocessing_preview.after .sharpened,
+.img_preprocessing_preview.after .sharpened_contrast {
+  opacity: 0;
+}
+.working_area_image_preprocessing {
+  margin-bottom: 0;
+}
+
+.working_area_image_preprocessing_heading {
+  padding: 0;
+  color: #999;
+}
+
+.working_area_image_preprocessing_sliders {
+  margin-left: 10px;
+}
+
+.working_area_image_preprocessing_link
+  > button.image-preprocessing-collapsible {
+  outline: transparent;
+  text-decoration: none;
+  color: #555;
+  padding: 0;
+  /*margin: 0;*/
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.working_area_image_preprocessing_link > button.collapsed:before {
+  padding: 0;
+  content: "\270f" !important;
+  color: #999;
+  display: inline-block;
+  transform: rotate(-45deg);
+}
+
+.working_area_image_preprocessing_link > button:before {
+  padding: 0;
+  content: "\270f" !important;
+  color: #999;
+  display: inline-block;
+  transform: rotate(45deg);
+}
+input.decent_input {
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+input.decent_input:focus,
+input.decent_input:hover {
+  border: 1px solid gray;
+}
+
+.img_adjust_ui {
+  width: 34%;
+}
+.img_crop_ui {
+  width: 60%;
+  display: grid;
+  grid-template-areas:
+    "tl tc tr"
+    "cl cc cr"
+    "bl bc br";
+  border: 1px solid gray;
+  margin: 0.8em 0.4em;
+  height: 7em;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+#wa_filelist .img_crop_ui input.decent_input {
+  width: 100%;
+}
+
+#manual_position {
+  max-width: 10em;
+}
+
+#manual_position.warning {
+  color: #e25303;
+}
+
+/*Laser button */
+
+#laser_button {
+  background-color: #e25303;
+  background-image: none;
+}
+
+/*Laser button */
+
+/* Quick text */
+#quick_text_dialog_intensity {
+  margin-top: 4em;
+  margin-bottom: 2em;
+  width: 100%;
+}
+
+#quick_text_dialog #qt_round_text_section img {
+  width: 3em;
+}
+
+#qt_round_text_section .btn-group .btn {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+#qt_round_text_section.straight #quick_text_dialog_circle {
+  display: none;
+}
+
+#quick_text_dialog_circle {
+  width: 60%;
+  margin: 1em;
+  float: right;
+}
+
+/*Sliders*/
+input#quick_shape_rect_radius,
+input#quick_shape_star_sharpness,
+input#quick_shape_heart_lr {
+  margin-top: 14px;
+}
+
+input#img-preprocess-contrast,
+input#img-preprocess-brightness,
+input#img-preprocess-sharpen,
+input#img-preprocess-gamma {
+  margin: 13px 5px;
+  width: 80% !important;
+  height: 2px !important;
+  float: right;
+}
+
+@media only screen and (max-width: 1248px) {
+  input#img-preprocess-contrast,
+  input#img-preprocess-brightness,
+  input#img-preprocess-sharpen,
+  input#img-preprocess-gamma {
+    width: 70% !important;
+  }
+}
+
+@media only screen and (max-width: 900px) {
+  input#img-preprocess-contrast,
+  input#img-preprocess-brightness,
+  input#img-preprocess-sharpen,
+  input#img-preprocess-gamma {
+    width: 60% !important;
+  }
+}
+
+.range_value_tooltip:before {
+  content: attr(data-value);
+  position: absolute;
+  top: 0;
+  transform: translateY(21%);
+  z-index: 99999;
+  font-size: 12px;
+  width: 3em;
+  padding: 0px;
+  border-radius: 10px;
+  background: #383e42;
+  color: #fff;
+  text-align: center;
+  display: none;
+  right: -3em;
+}
+
+.range_value_tooltip:hover:before {
+  display: block;
+}
+
+.img-preprocess-cont {
+  margin-bottom: 8px;
+  width: 100%;
+  position: relative;
+}
+
+.working_area_image_preprocessing_sliders {
+  margin-top: 4px;
+}
+
+#preview-brightness {
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+#wa_filelist .img-preprocess-cont i {
+  vertical-align: bottom;
+}
+
+/*Sliders*/
+
+/*
+* === WORKING AREA FOOTER ===
+*/
+.working_area_footer_text {
+  font-size: 10px;
+  color: darkgrey;
+  margin: 0 0 0 30px;
+}
+
+/*
+* === mbTransform styling ===
+*/
+body.mbtransform {
+  cursor: crosshair;
+}
+
+#translateHandle {
+  fill: #00000033;
+  stroke: #e25303;
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+}
+#translateHandle:active {
+  cursor: grabbing;
+  opacity: 0.3;
+}
+
+body.ctrlKey #translateHandle {
+  fill: none;
+}
+
+.scaleHandle,
+#rotHandle {
+  fill: #ffffff99;
+  stroke: #e25303;
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+#mbtransformHandleGroup {
+  display: none;
+}
+#mbtransformHandleGroup.active {
+  display: block;
+}
+
+/* hide scale and rotate handles while translating */
+#mbtransformHandleGroup.active.translate .scaleHandle,
+#mbtransformHandleGroup.active.translate #rotHandle {
+  display: none;
+}
+
+/* hide scale handles while rotating */
+#mbtransformHandleGroup.active.rotate .scaleHandle {
+  display: none;
+}
+#mbtransformHandleGroup.active.rotate #rotHandle {
+  display: none;
+}
+
+/* hide rotate handle while scaling */
+#mbtransformHandleGroup.active.scale .scaleHandle,
+#mbtransformHandleGroup.active.scale #rotHandle {
+  display: none;
+}
+
+/* hide non-used scale handles while scaling */
+#mbtransformHandleGroup.active.scale.scaleHandleNE #scaleHandleNE,
+#mbtransformHandleGroup.active.scale.scaleHandleNW #scaleHandleNW,
+#mbtransformHandleGroup.active.scale.scaleHandleSW #scaleHandleSW,
+#mbtransformHandleGroup.active.scale.scaleHandleSE #scaleHandleSE,
+#mbtransformHandleGroup.active.scale.scaleHandleNN #scaleHandleNN,
+#mbtransformHandleGroup.active.scale.scaleHandleEE #scaleHandleEE,
+#mbtransformHandleGroup.active.scale.scaleHandleSS #scaleHandleSS,
+#mbtransformHandleGroup.active.scale.scaleHandleWW #scaleHandleWW {
+  /*display: block;*/
+  display: none;
+}
+
+#translateVis,
+#rotateVis,
+#scaleVis {
+  display: none;
+}
+
+#mbtransformHandleGroup.visualize.translate #translateVis,
+#mbtransformHandleGroup.visualize.rotate #rotateVis,
+#mbtransformHandleGroup.visualize.scale #scaleVis {
+  display: block;
+}
+
+#scaleVis.showX #scaleXVis,
+#scaleVis.showX #scaleXText,
+#scaleVis.showY #scaleYVis,
+#scaleVis.showY #scaleYText {
+  display: block;
+}
+#scaleVis #scaleXVis,
+#scaleVis #scaleXText,
+#scaleVis #scaleYVis,
+#scaleVis #scaleYText {
+  display: none;
+}
+
+.transformGuideline {
+  fill: none;
+  stroke: #e25303;
+  stroke-width: 1;
+}
+
+#translateVis text,
+#rotateVis text,
+#scaleVis text {
+  font-family: DIN Pro, Roboto, Courier monospace;
+  font-size: 9px;
+  fill: #e25303;
+  stroke: none;
+}
+
+#mbtransformHandleGroup .isSelectedBBox {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+#mbtransformHandleGroup.active.translate .isSelectedBBox,
+#mbtransformHandleGroup.active.rotate .isSelectedBBox,
+#mbtransformHandleGroup.active.scale .isSelectedBBox {
+  display: none;
+}
+
+/* eye candy for gcode generation */
+#userContent path,
+#userContent circle,
+#userContent ellipse,
+#userContent line,
+#userContent polygon,
+#userContent polyline,
+#userContent rect {
+  transition-property: stroke-dashoffset;
+  transition-duration: 0.5s;
+  transition-timing-function: linear;
+}
+
+#crosshair path,
+#crosshair circle {
+  stroke: #e25303;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-miterlimit: 4;
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  stroke-opacity: 1;
+  pointer-events: none;
+}
+
+body.activitySpinnerActive #activitySpinnerOverlay {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity ease-out;
+  transition-duration: 0.5s;
+  transition-delay: 1s;
+}
+
+body.activitySpinnerActive #activitySpinnerOverlay i {
+  transform: scale(1);
+}
+
+#activitySpinnerOverlay {
+  opacity: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  user-select: none;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 99999;
+  transition: opacity ease-out;
+  transition-duration: 0.2s;
+  transition-delay: 0s;
+}
+
+#activitySpinnerOverlay i {
+  position: relative;
+  left: 50vw;
+  top: 50vh;
+  font-size: 4em;
+  transform: scale(0.1);
+  transition-property: transform;
+}
