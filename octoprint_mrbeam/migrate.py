@@ -5,6 +5,7 @@ import re
 import shutil
 from distutils.version import LooseVersion, StrictVersion
 
+from octoprint.settings import settings
 from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
@@ -213,6 +214,15 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.hostname_helper_scripts()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    "0.9.6.2",
+                    equal_ok=False,
+                ):
+                    # add the ignoreIncompleteStartup key to the settings
+                    # Prevents Safe Mode from triggering.
+                    settings().setBoolean(["server", "ignoreIncompleteStartup"], True)
+                    settings().save()
 
                 # migrations end
 
