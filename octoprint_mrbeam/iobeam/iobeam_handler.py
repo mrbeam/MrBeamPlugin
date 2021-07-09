@@ -597,7 +597,7 @@ class IoBeamHandler(object):
                         if "data" in json_dict:
                             _data = json_dict["data"]
                             if self.MESSAGE_ERROR not in _data:
-                                # Process all data setsR
+                                # Process all data sets
                                 if isinstance(_data, dict):
                                     # We have to process the iobeam dataset first, because we need the iobeam version for analytics
                                     if "iobeam" in _data.keys():
