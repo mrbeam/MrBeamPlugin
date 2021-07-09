@@ -975,11 +975,7 @@ class MachineCom(octocomm.MachineCom):
         self.sendCommand("M9")
 
     def _handle_status_report(self, line):
-        match = None
-        if self._grbl_version == self.GRBL_VERSION_20170919_22270fa:
-            match = self.pattern_grbl_status_legacy.match(line)
-        else:
-            match = self.pattern_grbl_status.match(line)
+        match = self.pattern_grbl_status.match(line)
         if not match:
             self._logger.warn(
                 "GRBL status string did not match pattern. GRBL version: %s, status string: %s",
@@ -1230,9 +1226,7 @@ class MachineCom(octocomm.MachineCom):
                 "Unable to parse GRBL version from startup message: %s", line
             )
 
-        self.grbl_feat_rescue_from_home = (
-            self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME
-        )
+        self.grbl_feat_rescue_from_home = True
         self.grbl_feat_checksums = (
             self._grbl_version not in self.GRBL_FEAT_BLOCK_CHECKSUMS
         )
@@ -1727,13 +1721,11 @@ class MachineCom(octocomm.MachineCom):
                 payload["error_msg"] = err_msg
             eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 
-    def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
+    def flash_grbl(self, grbl_file=None, verify_only=False):
         """
         Flashes the specified grbl file (.hex). This file must not contain a bootloader.
         :param grbl_file: (optional) if not provided the default grbl file is used.
         :param verify_only: If true, nothing is written, current grbl is verified only
-        :param is_connected: If True, serial connection to grbl is closed before flashing and reconnected afterwards.
-                Auto updates is executed before connection to grbl is established so in this case this param should be set to False.
         """
         log_verb = "verifying" if verify_only else "flashing"
 
@@ -1761,8 +1753,11 @@ class MachineCom(octocomm.MachineCom):
 
         self._logger.info("{} grbl: '%s'", log_verb.capitalize(), grbl_path)
 
-        if is_connected:
-            self.close(is_error=False, next_state=self.STATE_FLASHING)
+        reconnect_serial = self._serial is not None
+        if self._serial:
+            self.close()
+            if not self.isClosedOrError():
+                self._changeState(self.STATE_FLASHING)
             time.sleep(1)
 
         # FYI: Fuses can't be changed from over srial
@@ -1849,7 +1844,7 @@ class MachineCom(octocomm.MachineCom):
         time.sleep(1.0)
 
         # reconnect
-        if is_connected:
+        if reconnect_serial:
             timeout = 60
             self._logger.info(
                 "Waiting before reconnect. (max %s secs)",
@@ -1881,12 +1876,7 @@ class MachineCom(octocomm.MachineCom):
         :return: filename
         """
         grbl_version = grbl_version or MachineCom.GRBL_DEFAULT_VERSION
-        grbl_file = "grbl_{}.hex".format(grbl_version)
-        if (
-            grbl_version == MachineCom.GRBL_VERSION_20170919_22270fa
-        ):  # legacy version string
-            grbl_file = "grbl_0.9g_20170919_22270fa.hex"
-        return grbl_file
+        return "grbl_{}.hex".format(grbl_version)
 
     def reset_grbl_auto_update_config(self):
         """
@@ -2274,7 +2264,6 @@ class MachineCom(octocomm.MachineCom):
                     self._log("no feedrate given")
             elif specialcmd.startswith("/intensity"):
                 if len(tokens) > 1:
-                    data = specialcmd[8:]
                     self._set_intensity_override(int(tokens[1]))
                 else:
                     self._log("no intensity given")
@@ -2282,32 +2271,28 @@ class MachineCom(octocomm.MachineCom):
                 self._log("Reset initiated")
                 self._serial.write(list(bytearray("\x18")))
             elif specialcmd.startswith("/flash_grbl"):
-                # if no file given: flash default grbl version
-                file = self._get_grbl_file_name()
+                # if no filename given: flash default grbl version
+                filename = self._get_grbl_file_name()
                 if len(tokens) > 1:
-                    file = tokens[1]
-                if file in (None, "?", "-h", "--help"):
+                    filename = tokens[1]
+                if filename in (None, "?", "-h", "--help"):
+                    self._log("Available GRBL files:")
                     grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER)
-                    grbl_files = [
-                        f
-                        for f in os.listdir(grbl_path)
+                    for f in os.listdir(grbl_path):
                         if (
                             os.path.isfile(os.path.join(grbl_path, f))
                             and not f.startswith(".")
-                        )
-                    ]
-                    self._log("Available GRBL files:")
-                    for f in grbl_files:
-                        self._log("    %s" % f)
+                        ):
+                            self._log("    %s" % f)
                 else:
-                    self._log("Flashing GRBL '%s'..." % file)
-                    self.flash_grbl(file)
+                    self._log("Flashing GRBL '%s'..." % filename)
+                    self.flash_grbl(filename)
             elif specialcmd.startswith("/verify_grbl"):
                 # if no file given: verify to currently installed
-                file = self._get_grbl_file_name(self._grbl_version)
+                filename = self._get_grbl_file_name(self._grbl_version)
                 if len(tokens) > 1:
-                    file = tokens[1]
-                if file in (None, "?", "-h", "--help"):
+                    filename = tokens[1]
+                if filename in (None, "?", "-h", "--help"):
                     grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER)
                     grbl_files = [
                         f
@@ -2321,8 +2306,8 @@ class MachineCom(octocomm.MachineCom):
                     for f in grbl_files:
                         self._log("    %s" % f)
                 else:
-                    self._log("Verifying GRBL '%s'..." % file)
-                    self.flash_grbl(file, verify_only=True)
+                    self._log("Verifying GRBL '%s'..." % filename)
+                    self.flash_grbl(filename, verify_only=True)
             elif specialcmd.startswith("/correct_settings"):
                 self._log("Correcting GRBL settings...")
                 self.correct_grbl_settings()
@@ -2660,7 +2645,7 @@ class MachineCom(octocomm.MachineCom):
 
         return file_state
 
-    def close(self, is_error=False, next_state=None, *args, **kwargs):
+    def close(self, is_error=False, *args, **kwargs):
         """
         Closes the connection to the machine.
 
@@ -2672,27 +2657,15 @@ class MachineCom(octocomm.MachineCom):
         Arguments:
         is_error (bool): Whether the closing takes place due to an error (True)
             or not (False, default)
-        next_state (int): switch to this state if connection was open and no error occured
         wait (bool): Whether to wait for all messages in the send
             queue to be processed before closing (True, default) or not (False)
         """
-        self._monitoring_active = False
-        self._send_queue_active = False
         self._status_polling_interval = 0
 
         was_printing = self.isPrinting() or self.isPaused()
 
         octocomm.MachineCom.close(self, is_error, *args, **kwargs)
-        if is_error:
-            self._changeState(self.STATE_CLOSED_WITH_ERROR)
-        elif not self.isClosedOrError() and next_state:
-            self._changeState(next_state)
 
-        if was_printing:
-            payload = None
-            if self._currentFile is not None:
-                payload = self._get_printing_file_state()
-            eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
         eventManager().fire(OctoPrintEvents.DISCONNECTED)
 
     def _set_compressor(self, value):
