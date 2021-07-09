@@ -37,7 +37,7 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     ANALYTICS_LOG_VERSION = (
-        19  # bumped in 0.9.6.1 - log of the pressuresensor of the airfilter2
+        18  # bumped in 0.7.8 - Lens calibration state on : Save, Cancel
     )
 
     def __init__(self, plugin):
