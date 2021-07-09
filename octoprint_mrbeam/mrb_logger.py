@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
 import datetime
 import logging
@@ -84,11 +85,6 @@ class MrbLogger(object):
         :type kwargs:
         """
 
-        try:
-            msg = unicode(msg, "utf-8")
-        except TypeError:
-            # If it's already unicode we get this TypeError
-            pass
         if kwargs.pop("terminal", True if level >= logging.WARN else False):
             self._terminal(level, msg, *args, **kwargs)
         if kwargs.pop("terminal_as_comm", False) or level == self.LEVEL_COMM:

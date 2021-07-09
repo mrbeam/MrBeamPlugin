@@ -680,7 +680,7 @@ class AnalyticsHandler(object):
     def _event_print_failed(self, event, payload):
         details = {
             ak.Job.Duration.CURRENT: int(round(payload["time"])),
-            ak.Job.ERROR: payload.get(["error_msg"], "No error message"),
+            ak.Job.ERROR: payload.get("error_msg", "No error message"),
         }
         self._current_job_final_status = "Failed"
         self._add_job_event(ak.Job.Event.Print.FAILED, payload=details)
