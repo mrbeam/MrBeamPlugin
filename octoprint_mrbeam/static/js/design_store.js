@@ -134,7 +134,7 @@ $(function () {
 
         self.onLastUploadedDateReceived = function (payload) {
             let oldLastUploaded = self.getLastUploadedDate();
-            if (payload.last_uploaded !== "" && oldLastUploaded !== payload.last_uploaded) {
+            if (payload.last_uploaded && oldLastUploaded !== payload.last_uploaded) {
                 // Notify user
                 $("#designstore_tab_btn").append('<span class="red-dot"></span>');
             }
