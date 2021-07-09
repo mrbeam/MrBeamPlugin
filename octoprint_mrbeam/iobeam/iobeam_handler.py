@@ -1093,7 +1093,7 @@ class IoBeamHandler(object):
                 "version": dataset["version"],
             }
             self._rpm_value = None
-            self.send_iobeam_analytics("log_pressuredata", data)
+            self.send_iobeam_analytics("exhaust_pressure", data)
         return 0
 
     def _handle_link_quality(self, dataset):
