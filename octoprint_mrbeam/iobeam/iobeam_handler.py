@@ -170,6 +170,8 @@ class IoBeamHandler(object):
         self._unknown_datasets = []
         self._callbacks = dict()
         self._callbacks_lock = RWLock()
+        self._collect_pressure_data = False
+        self._rpm_value = None
 
         self._laserhead_handler = None
 
@@ -417,6 +419,20 @@ class IoBeamHandler(object):
             OctoPrintEvents.PRINT_CANCELLED, self.send_analytics_request
         )
         self._event_bus.subscribe(OctoPrintEvents.ERROR, self.send_analytics_request)
+        self._event_bus.subscribe(
+            MrBeamEvents.START_COLLECT_PRESSURE_DATA,
+            self._event_start_collect_pressure_data,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.STOP_COLLECT_PRESSURE_DATA,
+            self._event_stop_collect_pressure_data,
+        )
+
+    def _event_start_collect_pressure_data(self, *args, **kwargs):
+        self._collect_pressure_data = True
+
+    def _event_stop_collect_pressure_data(self, *args, **kwargs):
+        self._collect_pressure_data = False
 
     def _initWorker(self, socket_file=None):
         self._logger.debug("initializing worker thread")
@@ -729,6 +745,9 @@ class IoBeamHandler(object):
                     dataset[self.MESSAGE_ACTION_FAN_CONNECTED]
                 ),
             )
+            self._rpm_value = self._as_number(
+                dataset[self.MESSAGE_ACTION_FAN_RPM]
+            )  # saves rpm value for pressure logging
             # if token[4] == 'error':
             # 	self._logger.warn("Received fan connection error: %s", message)
             self._call_callback(IoBeamValueEvents.DYNAMIC_VALUE, dataset, vals)
@@ -1067,7 +1086,14 @@ class IoBeamHandler(object):
         :param dataset:
         :return: error count
         """
-        # self._logger.info("exhaust dataset: '%s'", dataset)
+        if "pressure" in dataset and self._collect_pressure_data:
+            data = {
+                "pressure": dataset["pressure"],
+                "rpm": self._rpm_value,
+                "version": dataset["version"],
+            }
+            self._rpm_value = None
+            self.send_iobeam_analytics("log_pressuredata", data)
         return 0
 
     def _handle_link_quality(self, dataset):
