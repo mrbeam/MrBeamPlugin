@@ -133,29 +133,23 @@ class LedEventListener(CommandTrigger):
         )
 
     def set_brightness(self, brightness):
-        if isinstance(brightness, int) and brightness > 0 and brightness <= 255:
-            command = self.COMMAND_SET_EDGEBRIGHTNESS.replace(
-                "{__brightness}", str(brightness)
+        if isinstance(brightness, int) and 0 < brightness <= 255:
+            command = self.COMMAND_SET_EDGEBRIGHTNESS.format(
+                __brightness=brightness
             )
-            commandType = "system"
-            debug = False
-            self._execute_command(command, commandType, debug)
+            self._executeSystemCommand(command)
 
     def set_inside_brightness(self, brightness):
-        if isinstance(brightness, int) and brightness > 0 and brightness <= 255:
-            command = self.COMMAND_SET_INSIDEBRIGHTNESS.replace(
-                "{__brightness}", str(brightness)
+        if isinstance(brightness, int) and 0 < brightness <= 255:
+            command = self.COMMAND_SET_INSIDEBRIGHTNESS.format(
+                __brightness=brightness
             )
-            commandType = "system"
-            debug = False
-            self._execute_command(command, commandType, debug)
+            self._executeSystemCommand(command)
 
     def set_fps(self, fps):
-        if isinstance(fps, int) and fps >= 15 and fps <= 45:
-            command = self.COMMAND_SET_FPS.replace("{__fps}", str(fps))
-            commandType = "system"
-            debug = False
-            self._execute_command(command, commandType, debug)
+        if isinstance(fps, int) and 15 <= fps <= 45:
+            command = self.COMMAND_SET_FPS.format(__fps=fps)
+            self._executeSystemCommand(command)
 
     def _on_mrbeam_plugin_initialized(self, event, payload):
         from octoprint_mrbeam import IS_X86
@@ -175,34 +169,6 @@ class LedEventListener(CommandTrigger):
             self._subscriptions[event].append((self.LED_EVENTS[event], "system", False))
 
         self.subscribe(self.LED_EVENTS.keys())
-
-    def eventCallback(self, event, payload=None):
-        # really, just copied this one from OctoPrint to add my debug log line.
-        GenericEventListener.eventCallback(self, event, payload)
-
-        if not event in self._subscriptions:
-            return
-
-        for command, commandType, debug in self._subscriptions[event]:
-            command = self._handleStartupCommand(command)
-            self._execute_command(command, commandType, debug, event, payload)
-
-    def _execute_command(self, command, commandType, debug, event=None, payload=None):
-        try:
-            if isinstance(command, (tuple, list, set)):
-                processedCommand = []
-                for c in command:
-                    processedCommand.append(self._processCommand(c, event, payload))
-            else:
-                processedCommand = self._processCommand(command, event, payload)
-
-            self._logger.debug("LED_EVENT %s: '%s'", event, processedCommand)
-            self.executeCommand(processedCommand, commandType, debug=debug)
-        except KeyError as e:
-            self._logger.warn(
-                "There was an error processing one or more placeholders in the following command: %s"
-                % command
-            )
 
     def _handleStartupCommand(self, command):
         if command in (
@@ -301,6 +267,5 @@ class LedEventListener(CommandTrigger):
         current_listening_state = self.get_listening_state()
         if current_listening_state != self._listening_state:
             self._listening_state = current_listening_state
-            command = self._get_listening_command()
-            self._execute_command(command, "system", False)
+            self._executeSystemCommand(self._get_listening_command())
         self._start_wifi_watcher(force=True)
