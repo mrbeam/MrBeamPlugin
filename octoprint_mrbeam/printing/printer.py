@@ -81,7 +81,6 @@ class Laser(Printer):
         super(Laser, self).cancel_print()
         time.sleep(0.5)
         self.home(axes="wtf")
-        eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
     @logExceptions
     def fail_print(self, error_msg=None, **kwargs):
@@ -92,11 +91,10 @@ class Laser(Printer):
             return
 
         # If we want the job to show as failed instead of cancelled, we have to mimic self._printer.cancel_print()
-        self._comm.cancelPrint(failed=True, error_msg=error_msg)
+        self._comm.cancelPrint(failed=True, firmware_error=error_msg)
 
         time.sleep(0.5)
         self.home(axes="wtf")
-        eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
     def position(self, x, y):
         printer_profile = self._printerProfileManager.get_current_or_default()

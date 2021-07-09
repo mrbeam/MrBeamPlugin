@@ -162,7 +162,7 @@ class OneButtonHandler(object):
             if (
                 self.print_started > 0
                 and time.time() - self.print_started > 1
-                and self._printer.get_state_id() in self.PRINTING_STATES
+                and self._printer._comm._state in self.PRINTING_STATES
             ):  # TODO replace with self._printer.is_printing() ?
                 self._logger.debug("onEvent() ONEBUTTON_PRESSED: self.pause_laser()")
                 self.pause_laser(
@@ -172,7 +172,7 @@ class OneButtonHandler(object):
             elif (
                 self.print_started > 0
                 and time.time() - self.print_started > 1
-                and self._printer.get_state_id() == self.PRINTER_STATE_PAUSED
+                and self._printer._comm._state == self.PRINTER_STATE_PAUSED
                 and self.behave_cooling_state
             ):
                 self._logger.debug(
@@ -246,7 +246,7 @@ class OneButtonHandler(object):
                 )
                 self._fireEvent(MrBeamEvents.BUTTON_PRESS_REJECT)
             # resume laser (or timeout block)
-            elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED:
+            elif self._printer._comm._state == self.PRINTER_STATE_PAUSED:
                 if self._is_during_pause_waiting_time():
                     self._logger.debug("onEvent() ONEBUTTON_RELEASED: timeout block")
                     self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_BLOCK)
@@ -273,11 +273,11 @@ class OneButtonHandler(object):
                     self.resume_laser_if_waitingtime_is_over()
 
         elif event == IoBeamEvents.INTERLOCK_OPEN:
-            if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
+            if self._printer._comm._state == self.PRINTER_STATE_PRINTING:
                 self._logger.debug("onEvent() INTERLOCK_OPEN: pausing laser")
                 self.pause_laser(need_to_release=False, trigger="INTERLOCK_OPEN")
             elif (
-                self._printer.get_state_id() == self.PRINTER_STATE_PAUSED
+                self._printer._comm._state == self.PRINTER_STATE_PAUSED
                 and self.behave_cooling_state
             ):
                 self._logger.debug(
@@ -297,12 +297,13 @@ class OneButtonHandler(object):
             self.hardware_malfunction_notified = False
 
         # OctoPrint 1.3.4 doesn't provide the file name in FILE_SELECTED anymore, so we need to get it here and save it for later.
+        # Why shouldn't it process event if the device is lasering? -> Should not have started slicing at all.
         elif event == OctoPrintEvents.SLICING_DONE:
             if (
                 not self.is_ready_to_laser()
-                and self._printer.is_operational()
-                and not self._printer.get_state_id()
-                in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED)
+                and self._printer.is_ready()
+                and not self._printer.is_paused()
+                and not self._printer.is_pausing()
             ):
                 self._logger.debug(
                     "onEvent() SLICING_DONE set_rtl_file filename: %s:",
@@ -317,8 +318,8 @@ class OneButtonHandler(object):
             if (
                 not self.is_ready_to_laser(False)
                 and self._printer.is_operational()
-                and not self._printer.get_state_id()
-                in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED)
+                and not self._printer.is_paused()
+                and not self._printer.is_pausing()
                 and ("filename" in payload or len(payload) == 0)
             ):
                 self._logger.debug(

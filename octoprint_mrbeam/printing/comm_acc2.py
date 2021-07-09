@@ -350,7 +350,6 @@ class MachineCom(octocomm.MachineCom):
                 )
                 self.flash_grbl(
                     grbl_file=self._laserCutterProfile["grbl"]["auto_update_file"],
-                    is_connected=False,
                 )
 
             # reset on connect
@@ -1185,10 +1184,6 @@ class MachineCom(octocomm.MachineCom):
         self._send_event.clear(completely=True)
         self._fire_print_failed()
         self._changeState(self.STATE_LOCKED)
-
-        # close and open serial port to reset arduino
-        self._serial.close()
-        self._openSerial()
 
     def _handle_feedback_message(self, line):
         if line[1:].startswith("Res"):  # [Reset to continue]
@@ -2215,7 +2210,10 @@ class MachineCom(octocomm.MachineCom):
     def sendCommand(self, cmd, cmd_type=None, processed=False, **kwargs):
         if cmd is None:
             return
-        if isinstance(cmd, str) and cmd.strip().startswith("/"):
+        elif isinstance(cmd, octocomm.SendQueueMarker):
+            cmd.run()
+            self._continue_sending()
+        elif isinstance(cmd, str) and cmd.strip().startswith("/"):
             self._handle_user_command(cmd)
         elif self._handle_rt_command(cmd):
             pass
@@ -2485,9 +2483,26 @@ class MachineCom(octocomm.MachineCom):
                 dict(error=self.getErrorString(), analytics=False),
             )
 
-    def cancelPrint(self, failed=False, error_msg=False):
+    def cancelPrint(self, firmware_error=None, disable_log_position=False, user=None, tags=None, external_sd=False):
+        """
+        See octoprint.util.comm.cancelPrint
+        Mostly copy pasta, except for the commands we send and the messages we receive.
+        """
+        # (self, failed=False, error_msg=False):
         if not self.isOperational():
             return
+
+        if not self.isBusy() or self._currentFile is None:
+            # we aren't even printing, nothing to cancel...
+            return
+
+        if self.isStreaming():
+            # we are streaming, we handle cancelling that differently...
+            self.cancelFileTransfer()
+            return
+
+        self._callback.on_comm_print_job_cancelling(firmware_error=firmware_error,
+                                                    user=user)
 
         # first pause (feed hold) before doing the soft reset in order to retain machine pos.
         with self._jobLock:
@@ -2507,16 +2522,20 @@ class MachineCom(octocomm.MachineCom):
 
             payload = self._get_printing_file_state()
 
-            if failed:
+            if firmware_error:
                 if not payload.get("error_msg", None):
-                    payload["error_msg"] = error_msg
+                    payload["error_msg"] = firmware_error
 
                 eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
             else:
                 eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
+            self._cancel_preparation_done(
+                check_timer=False,
+                user=user
+            )
 
     def setPause(
-        self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False
+            self, pause, user=None, send_cmd=True, pause_for_cooling=False, trigger=None, force=False, tags=None
     ):
         if not self._currentFile:
             return
@@ -2771,6 +2790,8 @@ class PrintingGcodeFileInformation(
         """
         Retrieves the next line for printing.
         Few changes on function overwritten function.
+        Only change:
+                self._read_lines_bak += 1
         """
         with self._handle_mutex:
             if self._handle is None:

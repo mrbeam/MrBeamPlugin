@@ -166,7 +166,7 @@ class LedEventListener(CommandTrigger):
 
         self._initSubscriptions()
         # We need to re-play the Startup Event for the LED system....
-        self.eventCallback(Events.STARTUP)
+        self.eventCallback(Events.STARTUP, {})
 
     def _initSubscriptions(self):
         for event in self.LED_EVENTS:
