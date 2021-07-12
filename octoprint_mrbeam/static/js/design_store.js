@@ -134,11 +134,9 @@ $(function () {
 
         self.onLastUploadedDateReceived = function (payload) {
             let oldLastUploaded = self.getLastUploadedDate();
-            if (payload.last_uploaded && oldLastUploaded !== payload.last_uploaded) {
+            if (payload.last_uploaded && oldLastUploaded !== payload.last_uploaded && $("#designstore_tab_btn span.red-dot").length === 0) {
                 // Notify user
-                if ($("#designstore_tab_btn span.red-dot").length === 0) {
-                    $("#designstore_tab_btn").append('<span class="red-dot"></span>');
-                }
+                $("#designstore_tab_btn").append('<span class="red-dot"></span>');
             }
             self.lastUploadedDate(payload.last_uploaded);
         };
