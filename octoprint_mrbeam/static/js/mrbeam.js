@@ -444,7 +444,8 @@ $(function () {
                 if (
                     !triggerUrl.includes("api/logout") &&
                     !triggerUrl.includes("/api/login") &&
-                    !triggerUrl.includes("plugin/mrbeam/console")
+                    !triggerUrl.includes("plugin/mrbeam/console") &&
+                    !triggerUrl.includes("plugin/mrbeam/analytics")
                 ) {
                     console.error(
                         "Server responded UNAUTHORIZED and loginStateViewModel is loggedIn. Error. Trying passive login..."
@@ -489,7 +490,7 @@ $(function () {
                             // give it some time to settle before we acept another passive login or logout
                             setTimeout(function () {
                                 self.passiveLoginInProgress = false;
-                            }, 2000);
+                            }, 10000);
                         });
                     } else {
                         console.error(
