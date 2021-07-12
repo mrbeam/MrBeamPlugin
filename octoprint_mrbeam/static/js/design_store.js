@@ -136,7 +136,9 @@ $(function () {
             let oldLastUploaded = self.getLastUploadedDate();
             if (payload.last_uploaded && oldLastUploaded !== payload.last_uploaded) {
                 // Notify user
-                $("#designstore_tab_btn").append('<span class="red-dot"></span>');
+                if ($("#designstore_tab_btn span.red-dot").length === 0) {
+                    $("#designstore_tab_btn").append('<span class="red-dot"></span>');
+                }
             }
             self.lastUploadedDate(payload.last_uploaded);
         };
@@ -226,7 +228,7 @@ $(function () {
                 self.sendMessageToDesignStoreIframe("goToStore", {});
             }
             let oldLastUploaded = self.getLastUploadedDate();
-            if (self.lastUploadedDate() !== "" && oldLastUploaded !== self.lastUploadedDate()) {
+            if (self.lastUploadedDate() && self.lastUploadedDate() !== "" && oldLastUploaded !== self.lastUploadedDate()) {
                 self.saveLastUploadedInUserSettings(self.lastUploadedDate());
             }
         };
