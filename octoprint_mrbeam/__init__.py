@@ -127,7 +127,8 @@ class MrBeamPlugin(
 
     LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.4"
 
-    LASERSAFETY_CONFIRMATION_STORAGE_URL = "https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec"
+    LASERSAFETY_CONFIRMATION_STORAGE_URL = "https://mr-beam.org/beamos/lasersafety_confirmation"  # rewrite rule in .htaccess
+    # LASERSAFETY_CONFIRMATION_STORAGE_URL = "https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec"
     USER_SETTINGS_KEY_MRBEAM = "mrbeam"
     USER_SETTINGS_KEY_TIMESTAMP = "ts"
     USER_SETTINGS_KEY_VERSION = "version"
