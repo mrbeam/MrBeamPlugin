@@ -34,6 +34,8 @@ class MrBeamEvents(object):
     LASER_COOLING_RESUME = "LaserCoolingResume"
 
     DUSTING_MODE_START = "DustingModeStart"
+    START_COLLECT_PRESSURE_DATA = "StartCollectingPressureData"
+    STOP_COLLECT_PRESSURE_DATA = "StopCollectingPressureData"
 
     ANALYTICS_DATA = "MrbAnalyticsData"
     MRB_PLUGIN_VERSION = "MrbPluginVersion"
