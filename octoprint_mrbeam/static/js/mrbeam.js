@@ -501,7 +501,7 @@ $(function () {
                                 OctoPrint.socket.reconnect();
                             }, 3000);
 
-                            // give it some time to settle before we accept another passive login or logout
+                            // give it some time to settle before we acept another passive login or logout
                             setTimeout(function () {
                                 self.passiveLoginInProgress = false;
                             }, 10000);
@@ -511,11 +511,11 @@ $(function () {
                             "Passive login blocked b/c another passive login is already in progress."
                         );
                     }
-                } else {
-                    console.error(
-                        "Max passive logins reached. No more trying to to passive logins."
-                    );
                 }
+            } else {
+                console.log(
+                    "Server responded UNAUTHORIZED and loginStateViewModel is loggedOut. Consistent."
+                );
             }
         };
 
