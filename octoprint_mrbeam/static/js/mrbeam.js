@@ -445,8 +445,8 @@ $(function () {
         self._handle_session_expired = function (triggerUrl) {
             // don't do this during boot time.
             if (
-                self.isCurtainOpened > 0 &&
-                self.isCurtainOpened + 10 * 1000 < Date.now()
+                self.isCurtainOpened <= 0 &&
+                self.isCurtainOpened + 10 * 1000 > Date.now()
             ) {
                 return;
             }
