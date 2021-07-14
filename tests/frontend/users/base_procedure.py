@@ -8,7 +8,6 @@ from frontend import webdriverUtils
 
 settings(init=True)
 base_folder = settings().getBaseFolder("base")
-config_file_path =  os.path.join(base_folder, 'config.yaml')
 user_file_path = os.path.join(base_folder, 'users.yaml')
 
 class BaseProcedure:
