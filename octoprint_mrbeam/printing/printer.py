@@ -91,7 +91,10 @@ class Laser(Printer):
         self.commands(["$H", command, "G90", "G21"])
 
     def is_homed(self):
-        return self._stateMonitor._machinePosition == self.HOMING_POSITION
+        return (
+            self._stateMonitor._machinePosition == self.HOMING_POSITION
+            and not self.is_locked()
+        )
 
     def cancel_print(self):
         """
