@@ -2,9 +2,11 @@ import json
 import os, sys
 import threading
 from datetime import date, datetime
-from os.path import join
+from os.path import join, dirname, realpath
+from shutil import copy
 
 import requests
+from requests import HTTPError
 
 from octoprint_mrbeam import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -53,93 +55,123 @@ class MrBeamSoftwareupdateHandler:
         self._tier = tier
         self._beamos_date = beamos_date
 
-    def look_for_new_config_file(self):
+    def look_for_new_config_file(self, localfilemissing=False):
         """
         starts a thread to look online for a new config file
         """
-        th = threading.Thread(target=self._load_update_file_from_cloud)
+        th = threading.Thread(
+            target=self._load_update_file_from_cloud,
+            kwargs={"localfilemissing": localfilemissing},
+        )
         th.setName("MrBeamSoftwareupdateHandler:_load_update_file_from_cloud")
         th.daemon = True
         th.start()
-        th.join()
 
-    def _load_update_file_from_cloud(self):
+    def _load_update_file_from_cloud(self, localfilemissing=False):
         """
         overrides the local update config file if there is a newer one on the server
         """
-        _logger.debug("load update file")
-        newfile = False
         try:
-            r = requests.get(
-                SW_UPDATE_CLOUD_PATH,
-                timeout=3,
-            )
-            if os.path.exists(
-                join(self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)
-            ):  # checks if the file is available otherwise it will be created
-                readwriteoption = "r+"
-            else:
-                readwriteoption = "w+"
-                newfile = True
-            with open(
-                join(self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE),
-                readwriteoption,
-            ) as f:
-                try:
-                    serverfile_info = json.loads(r.content)
-                except ValueError as e:
-                    newfile = False
-                    _logger.error(
-                        "there is a wrong configured config file on the server - cancel loading of new file"
-                    )
-                    _logger.debug("error %s - %s", e, r.content)
-                else:
+            _logger.debug("load update file")
+            newfile = False
+            servererror = False
+            try:
+                r = requests.get(
+                    SW_UPDATE_CLOUD_PATH,
+                    timeout=3,
+                )
+
+                if os.path.exists(
+                    join(self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)
+                ):  # checks if the file is available otherwise it will be created
+                    readwriteoption = "r+"
+                else:  # create new file
+                    readwriteoption = "w+"
+                    newfile = True
+                with open(
+                    join(self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE),
+                    readwriteoption,
+                ) as f:
                     try:
-                        update_info = json.load(f)
-                        _logger.debug("serverfile_info %s", serverfile_info)
-                        _logger.debug(
-                            "version compare %s - %s",
-                            serverfile_info["version"],
-                            update_info["version"],
+                        serverfile_info = json.loads(r.content)
+                    except ValueError as e:
+                        newfile = False
+                        servererror = True
+                        _logger.error(
+                            "there is a wrong configured config file on the server - cancel loading of new file"
                         )
-                        if serverfile_info["version"] > update_info["version"]:
-                            newfile = True
-                            _logger.info(
-                                "update local file from server - %s -> %s",
+                        _logger.debug("error %s - %s", e, r.content)
+                    else:
+                        try:
+                            update_info = json.load(f)
+                            _logger.debug("serverfile_info %s", serverfile_info)
+                            _logger.debug(
+                                "version compare %s - %s",
                                 serverfile_info["version"],
                                 update_info["version"],
                             )
+                            if serverfile_info["version"] > update_info["version"]:
+                                newfile = True
+                                _logger.info(
+                                    "update local file from server - %s -> %s",
+                                    serverfile_info["version"],
+                                    update_info["version"],
+                                )
 
-                    except ValueError:
-                        newfile = True
-                        _logger.error(
-                            "there is a wrong configured config local file - override local file with server file"
-                        )
-                    finally:
-                        # override local file
-                        f.seek(0)
-                        f.write(r.content)
-                        f.truncate()
+                        except ValueError:
+                            newfile = True
+                            _logger.error(
+                                "there is a wrong configured config local file - override local file with server file"
+                            )
+                        finally:
+                            _logger.debug("override local file")
+                            # override local file
+                            f.seek(0)
+                            f.write(r.content)
+                            f.truncate()
 
-        except requests.ReadTimeout:
-            _logger.error("timeout while trying to get the update_config file")
-        except IOError as e:
-            _logger.error(
-                "couldn't find/open the file %s %s",
-                join(self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE),
-                e,
-            )
+            except requests.ReadTimeout:
+                _logger.error("timeout while trying to get the update_config file")
+                servererror = True
+            except IOError as e:
+                servererror = True
+                _logger.error(
+                    "There was an error on the server - error:%s",
+                    e,
+                )
+            if servererror and localfilemissing:
+                _logger.info(
+                    "fallback use local default config file /files/software_update/update_info.json"
+                )
+                try:
+                    copy(
+                        join(
+                            dirname(realpath(__file__)),
+                            "files/software_update/update_info.json",
+                        ),
+                        join(
+                            self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE
+                        ),
+                    )
+                    newfile = True
+                except IOError as e:
+                    _logger.error(
+                        "not even fallback version available: %s",
+                        e,
+                    )
+            if newfile:
+                _logger.info("new file => set info")
 
-        if newfile:
-            _logger.info("new file => set info")
-
-            # inform SoftwareUpdate Pluging about new config
-            sw_update_plugin = self._plugin._plugin_manager.get_plugin_info(
-                "softwareupdate"
-            ).implementation
-            sw_update_plugin._refresh_configured_checks = True
-            sw_update_plugin._version_cache = dict()
-            sw_update_plugin._version_cache_dirty = True
+                # inform SoftwareUpdate Pluging about new config
+                sw_update_plugin = self._plugin._plugin_manager.get_plugin_info(
+                    "softwareupdate"
+                ).implementation
+                sw_update_plugin._refresh_configured_checks = True
+                sw_update_plugin._version_cache = dict()
+                sw_update_plugin._version_cache_dirty = True
+        except:
+            e = sys.exc_info()[0]
+            _logger.error("error in _load_update_file_from_cloud - %s", e)
 
 
 def get_update_information(plugin):
@@ -286,7 +318,7 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
         with open(join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)) as f:
             update_info = json.load(f)
     except IOError as e:
-        _softwareupdate_handler.look_for_new_config_file()
+        _softwareupdate_handler.look_for_new_config_file(localfilemissing=True)
         _logger.error(
             "could not find file %s - error: %s",
             join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE),
