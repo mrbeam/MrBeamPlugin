@@ -1,72 +1,68 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
+import logging
+
+import requests
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.by import By
+
+from tests.frontend import uiUtils, webdriverUtils
 
 
-import uiUtils
-import webdriverUtils
-import time
-
-
-class TestConvertSvg:
+class TestDevice:
     def setup_method(self, method):
-
-        self.resource_base = "https://mrbeam.github.io/test_rsc/critical_designs/"
-        self.critical_svgs = [
-            #            "Display-none.svg",
-            "Fillings-in-defs.svg",
-            "umlaut_in_arialabel.svg",
-            "Elements-without-id.svg",
-            "Namespace_references_to_ENTITYs_outside_the_xml.svg",
-            "Wichtel_neu.svg",
-        ]
-
-        # self.driver = webdriver.Chrome(service_log_path="/dev/null")
-        self.driver = webdriverUtils.get_chrome_driver()
-
-    def teardown_method(self, method):
-        # self.driver.quit()
         pass
 
-    def test_homing(self):
+    def teardown_method(self, method):
+        self.driver.quit()
+        pass
 
-        wait = WebDriverWait(self.driver, 10)
+    def test_homing(
+        self,
+        baseurl="http://mrbeam-5cf2.local",
+        apikey="A4A486E0184A4407961F4CC5780E2B4C",  # api key of useraccount uiapikey don't work
+    ):
+        self.baseurl = baseurl
 
-        # load ui
-        url = "localhost:5000"  # should be configurable or static resolved on each dev laptop to the current mr beam
-        uiUtils.load_webapp(self.driver, url)
+        logging.getLogger().info("baseurl %s", self.baseurl)
+        self.testEnvironment = {}
+        self.log = logging.getLogger()
+        self.driver = webdriverUtils.get_chrome_driver()
+        # try:
+        # baseurl = "http://mrbeam-5cf2.local"
+        self.testEnvironment = uiUtils.load_webapp(self.driver, self.baseurl)
+        # except:
+        #     self.log.error(
+        #         "Error: No beamOS at '{}'. (Please set --baseurl=http://mrbeam-7E57.local e.g.)".format(
+        #             baseurl
+        #         )
+        #     )
 
         # login
-        uiUtils.login(self.driver)
-
+        uiapikey = uiUtils.login(self.driver)
         # close notifications
         uiUtils.close_notifications(self.driver)
 
-        for svg in self.critical_svgs:
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": apikey
+            # the name may vary.  I got it from this doc: http://docs.octoprint.org/en/master/api/job.html
+        }
+        data = {"command": "reset"}  # notice i also removed the " inside the strings
 
-            # add a remote svg
-            svgUrl = self.resource_base + svg
-            uiUtils.add_svg_url(self.driver, svgUrl)
-            print("FETCHED: " + svgUrl)
+        response = requests.post(
+            self.baseurl + "/api/printer/command", headers=headers, json=data
+        )
+        # # if r.status_code not in (requests.codes.ok, requests.codes.no_content):
+        # # laser.commands(["G90", "G0 X%.3f Y%.3f F%d" % (x, y, movement_speed)])
+        # logging.getLogger().info("request {}".format(response))
+        assert response.status_code == requests.codes.no_content or requests.codes.ok
 
-            # start conversion
-            print("  CONVERTING: " + svg)
-            uiUtils.start_conversion(self.driver)
-
-            # check result
-            success_notification = wait.until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, uiUtils.SELECTOR_SUCCESS_NOTIFICATION)
-                )
-            )
-            print("  SUCCESS: " + svg)
-
-            uiUtils.cleanup_after_conversion(self.driver)
-
-            uiUtils.clear_working_area(self.driver)
-            # uiUtils.cancel_job(self.driver)
-
-            # self.driver.delete_all_cookies()
+        wait = WebDriverWait(self.driver, 20, poll_frequency=0.5)
+        el = wait.until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#mrb_state_header > span:nth-child(2) > span"),
+                "Locked",
+            ),
+            "Waiting reset...",
+        )
+        assert uiUtils.ensure_device_homed(self.driver), "device homed"

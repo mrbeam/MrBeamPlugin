@@ -12,7 +12,7 @@ import custom_expected_conditions as CEC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 
-from frontend import frontendTestUtils
+from tests.frontend import frontendTestUtils
 
 DEFAULT_ENV = {
     u"BEAMOS_VERSION": "?",
