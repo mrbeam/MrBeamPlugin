@@ -2,6 +2,7 @@ import os
 import pytest
 
 from octoprint.settings import settings
+from octoprint.users import FilebasedUserManager
 from frontend import uiUtils
 from frontend import webdriverUtils
 
@@ -22,12 +23,15 @@ class BaseProcedure:
         settings().setBoolean(["server", "firstrun"], False)
         settings().save()
 
+    def setup_class(self):
+        self.file_based_user_manager = FilebasedUserManager()
+
     def setup(self):
         self.driver = webdriverUtils.get_chrome_driver()
         uiUtils.load_webapp(self.driver, 'http://0.0.0.0:5000/')
 
 
     def teardown(self):
-        # if os.path.exists(user_file_path):
-        #     os.remove(user_file_path)
-        pass
+        self.driver.quit()
+        if os.path.exists(user_file_path):
+            os.remove(user_file_path)
