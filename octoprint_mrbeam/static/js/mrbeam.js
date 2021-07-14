@@ -257,6 +257,8 @@ $(function () {
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
 
+        self.isCurtainOpened = 0;
+
         self._online_check_last_state = null;
         self._online_check_interval = null;
         self._ajaxErrorRegistered = false;
@@ -336,6 +338,7 @@ $(function () {
             self.removeOpSafeModeOptionFromSystemMenu();
             self.showBrowserWarning();
             self.showBetaNotifications();
+            self.isCurtainOpened = Date.now();
         };
 
         self.onOrientationchange = function () {
@@ -440,10 +443,17 @@ $(function () {
         };
 
         self._handle_session_expired = function (triggerUrl) {
+            // don't do this during boot time.
+            if (
+                self.isCurtainOpened <= 0 &&
+                self.isCurtainOpened + 10 * 1000 > Date.now()
+            ) {
+                return;
+            }
             if (self.loginState && self.loginState.loggedIn()) {
                 if (
                     !triggerUrl.includes("api/logout") &&
-                    !triggerUrl.includes("/api/login") &&
+                    !triggerUrl.includes("api/login") &&
                     !triggerUrl.includes("plugin/mrbeam/console") &&
                     !triggerUrl.includes("plugin/mrbeam/analytics")
                 ) {
@@ -484,8 +494,12 @@ $(function () {
                                 };
                                 mrbeam.updatePNotify(pn_obj);
                             }
-                            // Reconnect socket connection
-                            OctoPrint.socket.reconnect();
+
+                            // Do passive login: Reconnect socket connection
+                            // give it some time to settle in an endless loop
+                            setTimeout(function () {
+                                OctoPrint.socket.reconnect();
+                            }, 3000);
 
                             // give it some time to settle before we acept another passive login or logout
                             setTimeout(function () {
