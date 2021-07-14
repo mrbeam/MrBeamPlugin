@@ -51,7 +51,7 @@ SELECTOR_CONVERSION_PROGRESS_HEADLINE = (
 )
 
 
-def load_webapp(driver, baseUrl):
+def load_webapp(driver, baseUrl='http://0.0.0.0:5000/'):
     # init
     wait = WebDriverWait(driver, 10, poll_frequency=0.5)
 

@@ -1,14 +1,19 @@
 # coding=utf-8
-
+from sys import platform
 from datetime import timedelta
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
 def get_uptime():
     try:
-        with open("/proc/uptime", "r") as f:
-            uptime = float(f.readline().split()[0])
-        return uptime
+        if platform == 'darwin':
+            raise NotImplementedError('uptime not implemented for darwin')
+        else:
+            with open("/proc/uptime", "r") as f:
+                uptime = float(f.readline().split()[0])
+            return uptime
+    except NotImplementedError:
+        return float('72295.42 312004.07'.split()[0])
     except Exception as e:
         mrb_logger("octoprint.plugins.mrbeam.util.uptime").exception(
             "Exception during get_uptime: {}".format(e), analytics=False
