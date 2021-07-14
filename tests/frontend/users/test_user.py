@@ -10,6 +10,7 @@ from frontend.users.base_procedure import BaseProcedure
 class TestUser(BaseProcedure):
 
     # only one user can be created
+    @pytest.mark.skip
     @pytest.mark.parametrize("username, password", [
         ('sherif@gmail.com', 'secret'),
     ])
@@ -26,5 +27,18 @@ class TestUser(BaseProcedure):
 
         self.file_based_user_manager._load()
         assert self.file_based_user_manager.findUser(userid=username) is not None
+
+
+    @pytest.mark.parametrize("username, password", [
+        ('sherif@gmail.com', 'secret'),
+    ])
+    @pytest.mark.usefixtures('disable_firstrun', as_attrs=False)
+    def test_login_user(self, username, password):
+
+        self.driver.find_element(By.ID, 'login_screen_email_address_in').send_keys(username)
+        self.driver.find_element(By.ID, 'login_screen_password_in').send_keys(password)
+
+        self.driver.find_element(By.ID, 'login_screen_login_btn').click()
+
 
 
