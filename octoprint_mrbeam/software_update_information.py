@@ -1,27 +1,36 @@
-from datetime import datetime, date
+import json
 import os, sys
+import threading
+from datetime import date, datetime
+from os.path import join, dirname, realpath
+from shutil import copy
 
-from octoprint.util import dict_merge
-from octoprint_mrbeam import IS_X86
+import requests
+from requests import HTTPError
+
+from octoprint_mrbeam import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.util import logExceptions
+from octoprint_mrbeam.util.log import logme
 from util.pip_util import get_version_of_pip_module
 
-
 SW_UPDATE_TIER_PROD = "PROD"
-SW_UPDATE_TIER_BETA = "BETA"
 SW_UPDATE_TIER_DEV = "DEV"
+SW_UPDATE_TIER_BETA = "BETA"
 DEFAULT_REPO_BRANCH_ID = {
     SW_UPDATE_TIER_PROD: "stable",
     SW_UPDATE_TIER_BETA: "beta",
     SW_UPDATE_TIER_DEV: "develop",
 }
 
+SW_UPDATE_FILE = "update_info.json"
+SW_UPDATE_CLOUD_PATH = "https://mr-beam.org/beamos/config/sw-update-conf"
+
 # add to the display name to modules that should be shown at the top of the list
 SORT_UP_PREFIX = " "
 
-
 _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
+
+sw_update_config = dict()
 
 # Commented constants are kept in case we update more packages from the virtualenv
 # GLOBAL_PY_BIN = "/usr/bin/python2.7"
@@ -30,40 +39,172 @@ GLOBAL_PIP_BIN = "/usr/local/bin/pip"
 GLOBAL_PIP_COMMAND = (
     "sudo {}".format(GLOBAL_PIP_BIN) if os.path.isfile(GLOBAL_PIP_BIN) else None
 )
-# GLOBAL_PIP_COMMAND = "sudo {} -m pip".format(GLOBAL_PY_BIN) if os.path.isfile(GLOBAL_PY_BIN) else None #  --disable-pip-version-check
-# VENV_PIP_COMMAND = ("%s -m pip --disable-pip-version-check" % VENV_PY_BIN).split(' ') if os.path.isfile(VENV_PY_BIN) else None
+
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)
+
+_softwareupdate_handler = None
+
+
+def get_modules():
+    return sw_update_config
+
+
+class MrBeamSoftwareupdateHandler:
+    def __init__(self, plugin, tier, beamos_date):
+        self._plugin = plugin
+        self._tier = tier
+        self._beamos_date = beamos_date
+
+    def look_for_new_config_file(self, localfilemissing=False):
+        """
+        starts a thread to look online for a new config file
+        """
+        th = threading.Thread(
+            target=self._load_update_file_from_cloud,
+            kwargs={"localfilemissing": localfilemissing},
+        )
+        th.setName("MrBeamSoftwareupdateHandler:_load_update_file_from_cloud")
+        th.daemon = True
+        th.start()
+
+    def _load_update_file_from_cloud(self, localfilemissing=False):
+        """
+        overrides the local update config file if there is a newer one on the server
+        """
+        try:
+            _logger.debug("load update file")
+            newfile = False
+            servererror = False
+            try:
+                r = requests.get(
+                    SW_UPDATE_CLOUD_PATH,
+                    timeout=3,
+                )
+
+                if os.path.exists(
+                    join(self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)
+                ):  # checks if the file is available otherwise it will be created
+                    readwriteoption = "r+"
+                else:  # create new file
+                    readwriteoption = "w+"
+                    newfile = True
+                with open(
+                    join(self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE),
+                    readwriteoption,
+                ) as f:
+                    try:
+                        serverfile_info = json.loads(r.content)
+                    except ValueError as e:
+                        newfile = False
+                        servererror = True
+                        _logger.error(
+                            "there is a wrong configured config file on the server - cancel loading of new file"
+                        )
+                        _logger.debug("error %s - %s", e, r.content)
+                    else:
+                        try:
+                            update_info = json.load(f)
+                            _logger.debug("serverfile_info %s", serverfile_info)
+                            _logger.debug(
+                                "version compare %s - %s",
+                                serverfile_info["version"],
+                                update_info["version"],
+                            )
+                            if serverfile_info["version"] > update_info["version"]:
+                                newfile = True
+                                _logger.info(
+                                    "update local file from server - %s -> %s",
+                                    serverfile_info["version"],
+                                    update_info["version"],
+                                )
+
+                        except ValueError:
+                            newfile = True
+                            _logger.error(
+                                "there is a wrong configured config local file - override local file with server file"
+                            )
+                        if newfile:
+                            _logger.debug("override local file")
+                            # override local file
+                            f.seek(0)
+                            f.write(r.content)
+                            f.truncate()
+
+            except requests.ReadTimeout:
+                _logger.error("timeout while trying to get the update_config file")
+                servererror = True
+            except IOError as e:
+                servererror = True
+                _logger.error(
+                    "There was an error on the server - error:%s",
+                    e,
+                )
+            if servererror and localfilemissing:
+                _logger.info(
+                    "fallback use local default config file /files/software_update/update_info.json"
+                )
+                try:
+                    copy(
+                        join(
+                            dirname(realpath(__file__)),
+                            "files/software_update/update_info.json",
+                        ),
+                        join(
+                            self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE
+                        ),
+                    )
+                    newfile = True
+                except IOError as e:
+                    _logger.error(
+                        "not even fallback version available: %s",
+                        e,
+                    )
+            if newfile:
+                _logger.info("new file => set info")
+
+                # inform SoftwareUpdate Pluging about new config
+                sw_update_plugin = self._plugin._plugin_manager.get_plugin_info(
+                    "softwareupdate"
+                ).implementation
+                sw_update_plugin._refresh_configured_checks = True
+                sw_update_plugin._version_cache = dict()
+                sw_update_plugin._version_cache_dirty = True
+        except:
+            e = sys.exc_info()[0]
+            _logger.error("error in _load_update_file_from_cloud - %s", e)
 
 
 def get_update_information(plugin):
-    result = dict()
-
+    """
+    Gets called from the octoprint.plugin.softwareupdate.check_config Hook from Octoprint
+    Starts a thread to look online for a new config file
+    sets the config for the Octoprint Softwareupdate Plugin with the data from the config file
+    @param plugin: calling plugin
+    @return: the config for the Octoprint embedded softwareupdate Plugin
+    """
     tier = plugin._settings.get(["dev", "software_tier"])
     beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
-    _logger.info("SoftwareUpdate using tier: %s", tier)
+    _logger.info("SoftwareUpdate using tier: %s %s", tier, beamos_date)
+    global _softwareupdate_handler
+    if _softwareupdate_handler is None:
+        _softwareupdate_handler = MrBeamSoftwareupdateHandler(plugin, tier, beamos_date)
+        _softwareupdate_handler.look_for_new_config_file()
 
-    # The increased number of separate virtualenv for iobeam, netconnectd, ledstrips
-    # will increase the "discovery time" to find those package versions.
-    # "map-reduce" method can decrease lookup time by processing them in parallel
-    return dict(
-        reduce(
-            dict_merge,
-            [
-                _set_info_mrbeam_plugin(plugin, tier, beamos_date),
-                _set_info_mrbeamdoc(plugin, tier),
-                _set_info_netconnectd_plugin(plugin, tier, beamos_date),
-                _set_info_findmymrbeam(plugin, tier),
-                _set_info_mrbeamledstrips(plugin, tier, beamos_date),
-                _set_info_netconnectd_daemon(plugin, tier, beamos_date),
-                _set_info_iobeam(plugin, tier, beamos_date),
-                _set_info_mrb_hw_info(plugin, tier, beamos_date),
-                # _config_octoprint(plugin, tier),
-            ],
-        )
-    )
+    _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler)
+
+    # _logger.debug(
+    #     "MrBeam Plugin provides this config (might be overridden by settings!):\n%s",
+    #     yaml.dump(sw_update_config, width=50000).strip(),
+    # )
+    return sw_update_config
 
 
 def software_channels_available(plugin):
+    """
+    Returns the avilable softwarechannels
+    @param plugin: the calling plugin
+    @return: the available softwarechannels
+    """
     res = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
     try:
         if plugin.is_dev_env():
@@ -74,6 +215,12 @@ def software_channels_available(plugin):
 
 
 def switch_software_channel(plugin, channel):
+    """
+    Switches the Softwarechannel and triggers the reload of the config
+    @param plugin: the calling plugin
+    @param channel: the channel where to switch to
+    @return:
+    """
     old_channel = plugin._settings.get(["dev", "software_tier"])
 
     if (
@@ -100,231 +247,244 @@ def switch_software_channel(plugin, channel):
             _logger.exception("Exception while switching software channel: ")
 
 
-# def _config_octoprint(plugin, tier):
-#     return dict(
-#         octoprint=dict(
-#             checkout_folder="/home/pi/OctoPrint",
-#             pip="https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
-#             user="mrbeam",
-#             branch="mrbeam2-stable",
-#             prerelease=(tier == SW_UPDATE_TIER_DEV),
-#         )
-#     )
+def _set_octoprint_config(plugin, tier, config, beamos_date):
+    """
+    handels the config for octoprint, it have to be set in the config.yaml, because a plugin is not allowed to update the information for octoprint
+    @param plugin: the calling plugin
+    @param tier: the software tier
+    @param config: the config from the config file
+    @param beamos_date: the image creation date of the running beamos
+    """
+    tierversion = get_tier_by_id(tier)
+    if tierversion in config:
+        module_tier = config[tierversion]
+        _set_update_config_from_dict(
+            config, module_tier
+        )  # set tier config from default settings
+
+    if "beamos_date" in config:
+        beamos_date_config = config["beamos_date"]
+        for date, beamos_config in beamos_date_config.items():
+            _logger.debug(
+                "date compare %s >= %s -> %s",
+                beamos_date,
+                datetime.strptime(date, "%Y-%m-%d").date(),
+                beamos_config,
+            )
+            if beamos_date >= datetime.strptime(date, "%Y-%m-%d").date():
+                _set_update_config_from_dict(config, beamos_config)
+        _logger.debug(
+            "beamosconfig %s %s",
+            beamos_config,
+            config,
+        )
+    op_swu_keys = ["plugins", "softwareupdate", "checks", "octoprint"]
+
+    plugin._settings.global_set(op_swu_keys + ["pip"], config["pip"])
+    plugin._settings.global_set(op_swu_keys + ["user"], "mrbeam")
+
+    _logger.debug("prerelease %s", config["prerelease"])
+    plugin._settings.global_set_boolean(
+        op_swu_keys + ["prerelease"], config["prerelease"]
+    )
+
+    # plugin._settings.global_set_boolean(op_swu_keys + ["prerelease"], False)
 
 
-def _set_info_mrbeam_plugin(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        branch = "mrbeam2-{tier}-buster"
+def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
+    """
+    loads update info from the update_info.json file
+    the override order: default_settings->module_settings->tier_settings->beamos_settings
+    and if there are update_settings set in the config.yaml they will replace all of the module
+    the json file should look like:
+        {
+            "version": <version_of_file>
+            "default": {<default_settings>}
+            <module_id>: {
+                <module_settings>,
+                <tier>:{<tier_settings>},
+                "beamos_date": {
+                    <YYYY-MM-DD>: {<beamos_settings>}
+                }
+            }
+        }
+
+    @param plugin: the plugin from which it was started (mrbeam)
+    @param tier: the software tier which should be used
+    @param beamos_date: the image creation date of the running beamos
+    @param _softwareupdate_handler: the handler class to look for a new config file online
+    """
+    try:
+        with open(join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)) as f:
+            update_info = json.load(f)
+    except IOError as e:
+        _softwareupdate_handler.look_for_new_config_file(localfilemissing=True)
+        _logger.error(
+            "could not find file %s - error: %s",
+            join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE),
+            e,
+        )
+    except ValueError as e:
+        _softwareupdate_handler.look_for_new_config_file()
+        _logger.error(
+            "there is a wrong configured config file local - try to load from server"
+        )
+        _logger.debug("error %s - %s", e, f)
     else:
-        branch = "mrbeam2-{tier}"
-    return _get_octo_plugin_description(
-        "mrbeam",
-        tier,
-        plugin,
-        displayName=SORT_UP_PREFIX + "MrBeam Plugin",
-        branch=branch,
-        branch_default=branch,
-        repo="MrBeamPlugin",
-        pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-        restart="octoprint",
-    )
+
+        fileversion = update_info.pop("version")
+        _logger.info("Software update file version: %s", fileversion)
+        defaultsettings = update_info.pop("default")
+
+        try:
+            _set_octoprint_config(
+                plugin, tier, update_info.pop("octoprint"), beamos_date
+            )
+        except:
+            _logger.error("Error while setting octoprint update config")
+
+        for module_id, module in update_info.items():
+            try:
+                if tier in [
+                    SW_UPDATE_TIER_BETA,
+                    SW_UPDATE_TIER_DEV,
+                    SW_UPDATE_TIER_PROD,
+                ]:
+                    if _is_override_in_settings(
+                        plugin, module_id
+                    ):  # check if update config gets overriden in the settings
+                        return
+                    sw_update_config[module_id] = {}
+                    moduleconfig = sw_update_config[module_id]
+                    moduleconfig.update(defaultsettings)
+
+                    # get update info for tier branch
+                    tierversion = get_tier_by_id(tier)
+
+                    if tierversion in moduleconfig:
+                        module_tier = moduleconfig[tierversion]
+                        _set_update_config_from_dict(
+                            moduleconfig, module_tier
+                        )  # set tier config from default settings
+                    if tierversion in module:
+                        module_tier = module[tierversion]
+                        _set_update_config_from_dict(
+                            moduleconfig, module_tier
+                        )  # override tier config from tiers set in config_file
+
+                    _set_update_config_from_dict(
+                        moduleconfig, module
+                    )  # set default config from file for module
+
+                    # have to be after the default config from file
+                    if "beamos_date" in module:
+                        beamos_date_config = module["beamos_date"]
+                        for date, beamos_config in beamos_date_config.items():
+                            _logger.debug(
+                                "date compare %s >= %s -> %s",
+                                beamos_date,
+                                datetime.strptime(date, "%Y-%m-%d").date(),
+                                beamos_config,
+                            )
+                            if (
+                                beamos_date
+                                >= datetime.strptime(date, "%Y-%m-%d").date()
+                            ):
+                                if tierversion in beamos_config:
+                                    beamos_config_module_tier = beamos_config[
+                                        tierversion
+                                    ]
+                                    _set_update_config_from_dict(
+                                        beamos_config, beamos_config_module_tier
+                                    )  # override tier config from tiers set in config_file
+                                _set_update_config_from_dict(
+                                    moduleconfig, beamos_config
+                                )
+
+                    if "{tier}" in moduleconfig["branch"]:
+                        moduleconfig["branch"] = moduleconfig["branch"].format(
+                            tier=get_tier_by_id(tier)
+                        )
+
+                    # get version number
+                    current_version = "-"
+                    _logger.debug(
+                        "pip command check %s %s - %s",
+                        module,
+                        moduleconfig,
+                        "pip_command" not in moduleconfig,
+                    )
+                    if (
+                        "global_pip_command" in module
+                        and "pip_command" not in moduleconfig
+                    ):
+                        moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
+                    if "pip_command" in moduleconfig:
+                        pip_command = moduleconfig["pip_command"]
+                        # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
+                        # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+                        # pip_command = GLOBAL_PIP_COMMAND
+                        package_name = (
+                            module["package_name"]
+                            if "package_name" in module
+                            else module_id
+                        )
+                        _logger.debug("get version %s %s", package_name, pip_command)
+                        try:
+                            current_version_global_pip = get_version_of_pip_module(
+                                package_name, pip_command
+                            )
+                            if current_version_global_pip is not None:
+                                current_version = current_version_global_pip
+                        except:
+                            current_version = "not found"
+                            _logger.error(
+                                "version check error %s",
+                                current_version,
+                            )
+
+                    else:
+                        # get versionnumber of octoprint plugin
+                        pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
+                        if pluginInfo is not None:
+                            current_version = pluginInfo.version
+
+                    _logger.debug("%s current version: %s", module_id, current_version)
+                    moduleconfig.update(
+                        {
+                            "displayName": module["name"],
+                            "displayVersion": current_version,
+                        }
+                    )
+            except:
+                _logger.error("Error in module %s %s", module_id, sys.exc_info()[0])
+        _logger.debug(sw_update_config)
 
 
-def _set_info_mrbeamdoc(plugin, tier):
-    return _get_octo_plugin_description(
-        "mrbeamdoc",
-        tier,
-        plugin,
-        displayName="Mr Beam Documentation",
-        repo="MrBeamDoc",
-        pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
-        restart="octoprint",
-    )
+def _set_update_config_from_dict(update_config, dict):
+    update_config.update(dict)
 
 
-def _set_info_netconnectd_plugin(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        branch = "mrbeam2-{tier}-buster"
-    else:
-        branch = "mrbeam2-{tier}"
-    return _get_octo_plugin_description(
-        "netconnectd",
-        tier,
-        plugin,
-        displayName="OctoPrint-Netconnectd Plugin",
-        branch=branch,
-        branch_default=branch,
-        repo="OctoPrint-Netconnectd",
-        pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
-        restart="octoprint",
-    )
-
-
-def _set_info_findmymrbeam(plugin, tier):
-    return _get_octo_plugin_description(
-        "findmymrbeam",
-        tier,
-        plugin,
-        displayName="OctoPrint-FindMyMrBeam",
-        repo="OctoPrint-FindMyMrBeam",
-        pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
-        restart="octoprint",
-    )
-
-
-def _set_info_mrbeamledstrips(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
-    else:
-        pip_command = GLOBAL_PIP_COMMAND
-    return _get_package_description_with_version(
-        "mrbeam-ledstrips",
-        tier,
-        package_name="mrbeam-ledstrips",
-        pip_command=pip_command,
-        displayName="MrBeam LED Strips",
-        repo="MrBeamLedStrips",
-        pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
-    )
-
-
-def _set_info_netconnectd_daemon(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        branch = "master"
-        pip_command = "sudo /usr/local/netconnectd/venv/bin/pip"
-    else:
-        branch = "mrbeam2-stable"
-        pip_command = GLOBAL_PIP_COMMAND
-    package_name = "netconnectd"
-    # get_package_description does not search for package version.
-    version = get_version_of_pip_module(package_name, pip_command)
-    # get_package_description does not force "develop" branch.
-    return _get_package_description(
-        module_id="netconnectd-daemon",
-        tier=tier,
-        package_name=package_name,
-        displayName="Netconnectd Daemon",
-        displayVersion=version,
-        repo="netconnectd_mrbeam",
-        branch=branch,
-        branch_default=branch,
-        pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
-        pip_command=pip_command,
-    )
-
-
-def _set_info_iobeam(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = "sudo /usr/local/iobeam/venv/bin/pip"
-    else:
-        pip_command = GLOBAL_PIP_COMMAND
-    return _get_package_description_with_version(
-        module_id="iobeam",
-        tier=tier,
-        package_name="iobeam",
-        pip_command=pip_command,
-        displayName="iobeam",
-        type="bitbucket_commit",
-        repo="iobeam",
-        api_user="MrBeamDev",
-        api_password="v2T5pFkmdgDqbFBJAqrt",
-        pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
-    )
-
-
-def _set_info_mrb_hw_info(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE:
-        pip_command = "sudo /usr/local/iobeam/venv/bin/pip"
-    else:
-        pip_command = GLOBAL_PIP_COMMAND
-    return _get_package_description_with_version(
-        module_id="mrb_hw_info",
-        tier=tier,
-        package_name="mrb-hw-info",
-        pip_command=pip_command,
-        displayName="mrb_hw_info",
-        type="bitbucket_commit",
-        repo="mrb_hw_info",
-        api_user="MrBeamDev",
-        api_password="v2T5pFkmdgDqbFBJAqrt",
-        pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
-    )
-
-
-@logExceptions
-def _get_octo_plugin_description(module_id, tier, plugin, **kwargs):
-    """Additionally get the version from plugin manager (doesn't it do that by default??)"""
-    # Commented pluginInfo -> If the module is not installed, then it Should be.
-    pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
-    # if pluginInfo is None:
-    #     return {}
-    if tier == SW_UPDATE_TIER_DEV:
-        # Fix: the develop branches are not formatted as "mrbeam2-{tier}"
-        _b = DEFAULT_REPO_BRANCH_ID[SW_UPDATE_TIER_DEV]
-        kwargs.update(branch=_b, branch_default=_b)
-    return _get_package_description(
-        module_id=module_id, tier=tier, displayVersion=pluginInfo.version, **kwargs
-    )
-
-
-@logExceptions
-def _get_package_description_with_version(
-    module_id, tier, package_name, pip_command, **kwargs
-):
-    """Additionally get the version diplayed through pip_command"""
-    if tier == SW_UPDATE_TIER_DEV:
-        # Fix: the develop branches are not formatted as "mrbeam2-{tier}"
-        _b = DEFAULT_REPO_BRANCH_ID[SW_UPDATE_TIER_DEV]
-        kwargs.update(branch=_b, branch_default=_b)
-
-    version = get_version_of_pip_module(package_name, pip_command)
-    if version:
-        kwargs.update(dict(displayVersion=version))
-
-    return _get_package_description(
-        module_id=module_id, tier=tier, pip_command=pip_command, **kwargs
-    )
-
-
-def _get_package_description(
-    module_id,
-    tier,
-    displayName=None,
-    displayVersion=None,
-    type="github_commit",
-    user="mrbeam",
-    repo=None,
-    branch="mrbeam2-{tier}",
-    branch_default="mrbeam2-{tier}",
-    restart="environment",
-    **kwargs
-):
-    """Shorthand to create repo details for octoprint software update plugin to handle."""
-    displayName = displayName or module_id
-    if "{tier}" in branch:
-        branch = branch.format(tier=get_tier_by_id(tier))
-    if "{tier}" in branch_default:
-        branch_default = branch_default.format(tier=get_tier_by_id(tier))
-    update_info = dict(
-        tier=tier,
-        displayName=displayName,
-        displayVersion=displayVersion,
-        user=user,
-        type=type,
-        repo=repo,
-        branch=branch,
-        branch_default=branch_default,
-        restart=restart,
-        **kwargs
-    )
-    return {module_id: update_info}
+def _get_display_name(plugin, name):
+    return name
 
 
 def get_tier_by_id(tier):
+    """
+    returns the tier name with the given id
+    @param tier: id of the softwaretier
+    @return: softwaretier name
+    """
     return DEFAULT_REPO_BRANCH_ID.get(tier, tier)
 
 
 def _is_override_in_settings(plugin, module_id):
+    """
+    checks if there are softwareupdate settings in the config.yaml for the given module_id
+    @param plugin:
+    @param module_id:
+    @return:
+    """
     settings_path = ["plugins", "softwareupdate", "checks", module_id, "override"]
     is_override = plugin._settings.global_get(settings_path)
     if is_override:
