@@ -130,7 +130,7 @@ class MrBeamSoftwareupdateHandler:
                             _logger.error(
                                 "there is a wrong configured config local file - override local file with server file"
                             )
-                        finally:
+                        if newfile:
                             _logger.debug("override local file")
                             # override local file
                             f.seek(0)
