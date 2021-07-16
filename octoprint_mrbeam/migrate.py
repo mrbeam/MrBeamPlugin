@@ -217,11 +217,10 @@ class Migration(object):
                 ):
                     self.hostname_helper_scripts()
 
-                beamos_tier, beamos_date = self.plugin._device_info.get_beamos_version()
                 if (
-                    beamos_date is not None
+                    self.beamos_date is not None
                     and BEAMOS_LEGACY_DATE
-                    < beamos_date
+                    < self.beamos_date
                     <= datetime.strptime("2021-06-25", "%Y-%m-%d").date()
                     and (self.plugin._settings.get(["version"]) is None)
                 ):  # for images before the 25.6.2021
