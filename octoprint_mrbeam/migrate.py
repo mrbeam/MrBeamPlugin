@@ -6,7 +6,7 @@ import shutil
 from datetime import datetime
 from distutils.version import LooseVersion, StrictVersion
 
-from octoprint_mrbeam import IS_X86, BEAMOS_LEGACY_DATE
+from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.util import logExceptions
