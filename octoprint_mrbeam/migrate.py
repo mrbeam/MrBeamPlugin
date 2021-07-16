@@ -7,6 +7,7 @@ from datetime import datetime
 from distutils.version import LooseVersion, StrictVersion
 
 from octoprint_mrbeam import IS_X86
+from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.util import logExceptions
@@ -60,6 +61,7 @@ class Migration(object):
         self.suppress_migrations = (
             self.plugin._settings.get(["dev", "suppress_migrations"]) or IS_X86
         )
+        beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
 
     def run(self):
         try:
@@ -243,6 +245,12 @@ class Migration(object):
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
     def is_migration_required(self):
+        if (
+            self.beamos_date is not None
+            and BEAMOS_LEGACY_DATE < self.beamos_date
+            and (self.plugin._settings.get(["version"]) is None)
+        ):  # fix migration won't run for s-series image
+            return True
         if self.version_previous is None:
             return True
         try:
