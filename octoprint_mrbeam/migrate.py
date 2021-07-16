@@ -221,14 +221,7 @@ class Migration(object):
                     and BEAMOS_LEGACY_DATE
                     < beamos_date
                     <= datetime.strptime("2021-06-25", "%Y-%m-%d").date()
-                    and (
-                        self.version_previous is None
-                        or self._compare_versions(
-                            self.version_previous,
-                            "0.9.6.2",
-                            equal_ok=False,
-                        )
-                    )
+                    and (self.plugin._settings.get(["version"]) is None)
                 ):  # for images before the 25.6.2021
                     self.fix_s_series_mount_manager()
 
