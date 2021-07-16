@@ -472,7 +472,9 @@ class ImageProcessor:
         self.profiler.stop("sort_imgArray").start("write_img")
         # iterate through the image parts
         for p in range(0, int(self.eng_passes)):
-            self._append_gcode("; pass:%i/%s ; Engraving\n" % (p + 1, int(self.eng_passes)))
+            self._append_gcode(
+                "; pass:%i/%s ; Engraving\n" % (p + 1, int(self.eng_passes))
+            )
             for img_data in imgArray:
                 # img_data = {'i': px_data, 'x': offset_px_x, 'y':offset_px_y, 'id': id_str}
                 # note: offset_px_x and offset_px_y are offsets from top left of the unseparated original pixel image
@@ -523,7 +525,11 @@ class ImageProcessor:
                         _minmax = max
                         side = "right"
                         k = 1
-                    if line_info["left"] != None and y >= 0 and y <= self.workingAreaHeight:
+                    if (
+                        line_info["left"] != None
+                        and y >= 0
+                        and y <= self.workingAreaHeight
+                    ):
 
                         if not first_row and self.extra_overshoot:
                             overshoot_gco = (
@@ -570,7 +576,11 @@ class ImageProcessor:
 
                         # do line
                         self.write_gcode_for_trimmed_line(
-                            img_pos_mm, pix, line_info, direction_positive, debug=self.debug
+                            img_pos_mm,
+                            pix,
+                            line_info,
+                            direction_positive,
+                            debug=self.debug,
                         )
 
                         # after line
