@@ -16,6 +16,7 @@ from octoprint_mrbeam import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.log import logme
 from util.pip_util import get_version_of_pip_module
+from octoprint_mrbeam.util import get_thread
 
 SW_UPDATE_TIER_PROD = "PROD"
 SW_UPDATE_TIER_BETA = "BETA"
@@ -59,22 +60,11 @@ def get_modules():
 class MrBeamSoftwareupdateHandler:
     def __init__(self, plugin, tier, beamos_date):
         self._plugin = plugin
-        self._tier = tier
-        self._beamos_date = beamos_date
+        # self._tier = tier
+        # self._beamos_date = beamos_date
 
-    def look_for_new_config_file(self, localfilemissing=False):
-        """
-        starts a thread to look online for a new config file
-        """
-        th = threading.Thread(
-            target=self._load_update_file_from_cloud,
-            kwargs={"localfilemissing": localfilemissing},
-        )
-        th.setName("MrBeamSoftwareupdateHandler:_load_update_file_from_cloud")
-        th.daemon = True
-        th.start()
-
-    def _load_update_file_from_cloud(self, localfilemissing=False):
+    @get_thread(daemon=False)
+    def load_update_file_from_cloud(self, localfilemissing=False):
         """
         overrides the local update config file if there is a newer one on the server
         """
@@ -89,14 +79,14 @@ class MrBeamSoftwareupdateHandler:
                 )
 
                 if os.path.exists(
-                    join(self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)
+                    get_sw_update_file_path(self._plugin)
                 ):  # checks if the file is available otherwise it will be created
                     readwriteoption = "r+"
                 else:  # create new file
                     readwriteoption = "w+"
                     newfile = True
                 with open(
-                    join(self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE),
+                    get_sw_update_file_path(self._plugin),
                     readwriteoption,
                 ) as f:
                     try:
@@ -156,9 +146,7 @@ class MrBeamSoftwareupdateHandler:
                             dirname(realpath(__file__)),
                             "files/software_update/update_info.json",
                         ),
-                        join(
-                            self._plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE
-                        ),
+                        get_sw_update_file_path(self._plugin),
                     )
                     newfile = True
                 except IOError as e:
@@ -178,7 +166,7 @@ class MrBeamSoftwareupdateHandler:
                 sw_update_plugin._version_cache_dirty = True
         except:
             e = sys.exc_info()[0]
-            _logger.error("error in _load_update_file_from_cloud - %s", e)
+            _logger.error("error in load_update_file_from_cloud - %s", e)
 
 
 def get_update_information(plugin):
@@ -195,7 +183,7 @@ def get_update_information(plugin):
     global _softwareupdate_handler
     if _softwareupdate_handler is None:
         _softwareupdate_handler = MrBeamSoftwareupdateHandler(plugin, tier, beamos_date)
-        _softwareupdate_handler.look_for_new_config_file()
+        _softwareupdate_handler.load_update_file_from_cloud()
 
     _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler)
 
@@ -233,6 +221,15 @@ def switch_software_channel(plugin, channel):
         sw_update_plugin._version_cache = dict()
         sw_update_plugin._version_cache_dirty = True
         plugin.analytics_handler.add_software_channel_switch_event(old_channel, channel)
+
+
+def get_sw_update_file_path(plugin):
+    """
+    returns the path to the sw update file
+    @param plugin:
+    @return: path to file
+    """
+    return join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)
 
 
 def _set_octoprint_config(plugin, tier, config, beamos_date):
@@ -302,36 +299,40 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
     @param beamos_date: the image creation date of the running beamos
     @param _softwareupdate_handler: the handler class to look for a new config file online
     """
+    sw_update_file_path = get_sw_update_file_path(plugin)
     try:
-        with open(join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)) as f:
+        with open(sw_update_file_path) as f:
             update_info = json.load(f)
     except IOError as e:
-        _softwareupdate_handler.look_for_new_config_file(localfilemissing=True)
         _logger.error(
             "could not find file %s - error: %s",
-            join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE),
+            sw_update_file_path,
             e,
         )
+        loadfilethread = _softwareupdate_handler.load_update_file_from_cloud(
+            localfilemissing=True
+        )
+        loadfilethread.join()
     except ValueError as e:
-        _softwareupdate_handler.look_for_new_config_file()
         _logger.error(
             "there is a wrong configured config file local - try to load from server"
         )
         _logger.debug("error %s - %s", e, f)
+        loadfilethread = _softwareupdate_handler.load_update_file_from_cloud()
+        loadfilethread.join()
     else:
 
         fileversion = update_info.pop("version")
         _logger.info("Software update file version: %s", fileversion)
         defaultsettings = update_info.pop("default")
+        modules = update_info.get("modules")
 
         try:
-            _set_octoprint_config(
-                plugin, tier, update_info.pop("octoprint"), beamos_date
-            )
+            _set_octoprint_config(plugin, tier, modules.pop("octoprint"), beamos_date)
         except:
             _logger.error("Error while setting octoprint update config")
-
-        for module_id, module in update_info.items():
+        # TODO maybe drop the higher levels of the config so the output will be more tidy
+        for module_id, module in modules.items():
             try:
                 if tier in [
                     SW_UPDATE_TIER_BETA,
