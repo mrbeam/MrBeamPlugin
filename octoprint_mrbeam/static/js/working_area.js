@@ -2681,12 +2681,24 @@ $(function () {
             bitmaps.forEach(function (b) {
                 const w = parseFloat(b.attr("mb:img_w"));
                 const h = parseFloat(b.attr("mb:img_h"));
-                const histogram = b.attr("mb:histogram");
+                const histogram = b
+                    .attr("mb:histogram")
+                    .split(",")
+                    .map((v) => parseInt(v));
                 const whitePixelRatio = parseFloat(
                     b.attr("mb:whitePixelRatio")
                 );
-                const brightnessChanges = parseFloat(
+                const innerWhitePixelRatio = parseFloat(
+                    b.attr("mb:innerWhitePixelRatio")
+                );
+                const whitePixelsOutside = parseInt(
+                    b.attr("mb:whitePixelsOutside")
+                );
+                const brightnessChanges = parseInt(
                     b.attr("mb:brightnessChanges")
+                );
+                const totalBrightnessChange = parseInt(
+                    b.attr("mb:totalBrightnessChange")
                 );
                 if (w && h && histogram) {
                     summary.bitmaps.push({
@@ -2694,7 +2706,10 @@ $(function () {
                         h: h,
                         histogram: histogram,
                         whitePixelRatio: whitePixelRatio,
+                        innerWhitePixelRatio: innerWhitePixelRatio,
+                        whitePixelsOutside: whitePixelsOutside,
                         brightnessChanges: brightnessChanges,
+                        totalBrightnessChange: totalBrightnessChange,
                     });
                 } else {
                     summary.no_info += 1;
@@ -3132,9 +3147,17 @@ $(function () {
                             id: `fillRendering${clusterIndex}`,
                             "mb:img_w": w, // for Job Time Estimation 2.0
                             "mb:img_h": h,
-                            "mb:histogram": rasterResult.histogram,
-                            "mb:whitePixelRatio": rasterResult.whitePixelRatio,
-                            "mb:changeRatio": rasterResult.changeRatio,
+                            "mb:histogram": rasterResult.analysis.histogram,
+                            "mb:whitePixelRatio":
+                                rasterResult.analysis.whitePixelRatio,
+                            "mb:innerWhitePixelRatio":
+                                rasterResult.analysis.innerWhitePixelRatio,
+                            "mb:whitePixelsOutside":
+                                rasterResult.analysis.whitePixelsAtTheOutside,
+                            "mb:brightnessChanges":
+                                rasterResult.analysis.brightnessChanges,
+                            "mb:totalBrightnessChange":
+                                rasterResult.analysis.totalBrightnessChange,
                             "mb:gc_length": gcLength,
                             class: "fillRendering",
                         });

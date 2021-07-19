@@ -151,13 +151,29 @@ $(function () {
                     )} seconds.`
                 );
                 console.info(dur);
+                const hrEngravingDurAvg = formatDurationHHMMSS(
+                    dur.totalRasterDurationAvg
+                );
+                const hrEngravingDurHist = formatDurationHHMMSS(
+                    dur.totalRasterDurationHist
+                );
+                const hrMovementDur = formatDurationHHMMSS(
+                    dur.positioningDuration
+                );
+                const hrVectorDur = Object.keys(dur.vectors).map(
+                    (col) =>
+                        `Color ${col}: ${formatDurationHHMMSS(
+                            dur.vectors[col].duration
+                        )},`
+                );
 
                 return {
                     val: dur,
                     humanReadable: formatDurationHHMMSS(dur.totalDuration),
+                    verbose: `Engraving Avg: ${hrEngravingDurAvg}, Engraving Hist: ${hrEngravingDurHist}, ${hrVectorDur} Positioning: ${hrMovementDur}`,
                 };
             } else {
-                return { val: -1, humanReadable: "-" };
+                return { val: -1, humanReadable: "-", verbose: "" };
             }
         });
 
@@ -1256,6 +1272,7 @@ $(function () {
             }
 
             var data = {
+                engraving_enabled: self.do_raster_engrave(),
                 intensity_black_user: parseInt(self.imgIntensityBlack()),
                 intensity_black:
                     self.imgIntensityBlack() *
@@ -1704,7 +1721,10 @@ $(function () {
                 enableRastering,
                 pixPerMM
             );
-            console.log("### renderOutput", renderOutput.jobTimeEstimationData);
+            console.info(
+                "### renderOutput",
+                renderOutput.jobTimeEstimationData
+            );
             self.svg = renderOutput.renderedSvg;
             self.gcode_length_summary(renderOutput.jobTimeEstimationData);
         };

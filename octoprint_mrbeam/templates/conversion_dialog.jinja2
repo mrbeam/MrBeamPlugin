@@ -611,7 +611,8 @@
                 <input type="checkbox" id="parameter_assignment_show_advanced_settings_cb"
                        data-bind="checked: showExpertSettings">{{ _('show advanced settings') }}
             </label>
-            <span>Estimated Job Time: <span data-bind="text: estimated_job_time().humanReadable"></span></span>
+            <span>Estimated Job Time: <span data-bind="text: estimated_job_time().humanReadable"></span></span><br/>
+            <span><span data-bind="text: estimated_job_time().verbose"></span></span>
         </div>
 
         <a href="#" class="btn" aria-hidden="true"

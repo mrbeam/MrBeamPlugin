@@ -372,6 +372,12 @@ class WorkingAreaHelper {
         vector_data,
         engraving_data
     ) {
+        // Positioning moves // TODO get from machine settings
+        const workingAreaWidth = 500;
+        const workingAreaHeight = 390;
+        const maxFeedrate = 3000; // mm/min
+        const maxAcceleration = 700; // mm/s²
+
         // Vectors
         let vector_lookup = {};
         vector_data.forEach(
@@ -385,7 +391,7 @@ class WorkingAreaHelper {
 
         // TODO: without material selected, vector_data is empty.
 
-        let total_vector_duration = 0;
+        let sumVectorDur = 0;
         Object.keys(gc_length_summary.vectors).forEach(function (col) {
             let duration = 0;
             const vd = vector_lookup[col];
@@ -398,67 +404,96 @@ class WorkingAreaHelper {
                 );
             }
             gc_length_summary.vectors[col].duration = duration;
-            total_vector_duration += duration;
+            sumVectorDur += duration;
         });
 
         // Rasters
-        const min_speed = Math.min(
+        const minSpeed = Math.min(
             engraving_data.speed_black,
             engraving_data.speed_white
         );
-        const max_speed = Math.max(
+        const maxSpeed = Math.max(
             engraving_data.speed_black,
             engraving_data.speed_white
         );
-        const avg_speed =
+        const avgSpeed =
             (engraving_data.speed_black + engraving_data.speed_white) / 2;
-        let total_bitmap_duration = 0;
-        gc_length_summary.bitmaps.forEach(function (b, idx) {
-            const lineCount = b.h / engraving_data.line_distance;
-            const lineWidth = engraving_data.extra_overshoot ? b.w + 3.5 : b.w; // assumption overshoot move is 3.5mm extra per line
-            let whitePxFactor = 1 - b.whitePixelRatio; // engraving_mode === "precise" (default)
-            if (engraving_data.engraving_mode === "basic") {
-                whitePxFactor = 1 - b.whitePixelRatio / 3; // assumption: 66% of white px are between two black pixels
-            }
-            if (engraving_data.engraving_mode === "fast") {
-                whitePxFactor = 1 - b.whitePixelRatio; // assumption: could be faster or worser
-            }
-            const brightnessChanges = b.brightnessChanges; // how often the speed changes and respectively piercetime is applied
-            const l = (lineWidth * lineCount + b.h) * whitePxFactor;
+        let sumBitmapDur = 0;
 
-            let histogramDuration = 0;
-            for (
-                let brightness = 0;
-                brightness < b.histogram.length;
-                brightness++
-            ) {
-                const pixelAmount = b.histogram[brightness];
-                const length = pixelAmount * engraving_data.beam_diameter;
-                const speed =
-                    (Math.abs(min_speed - max_speed) * brightness) / 255 +
-                    min_speed;
-                histogramDuration += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
-                    length,
-                    speed,
+        if (engraving_data.engraving_enabled) {
+            gc_length_summary.bitmaps.forEach(function (b, idx) {
+                // basics
+                const lineCount = b.h / engraving_data.line_distance;
+                const lineWidth = b.w;
+
+                // linefeed duration
+                const linefeedLength =
+                    b.h + engraving_data.extra_overshoot
+                        ? 2 * 2 * lineCount
+                        : 0; // assumption: overshoot move is 4mm per line
+                const linefeedPathDur = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    linefeedLength,
+                    maxFeedrate,
                     engraving_data.eng_passes,
-                    engraving_data.pierce_time
+                    0
                 );
-            }
-            const avgDuration = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
-                l,
-                avg_speed,
-                engraving_data.eng_passes,
-                engraving_data.pierce_time
-            );
-            gc_length_summary.bitmaps[idx].duration = avgDuration;
-            gc_length_summary.bitmaps[idx].lengthInMM = l;
-            total_bitmap_duration += avgDuration;
-        });
 
-        // Positioning moves // TODO get from machine settings
-        const workingAreaWidth = 500;
-        const workingAreaHeight = 390;
-        const maxFeedrate = 3000;
+                const linefeedAccelerationDur =
+                    lineCount *
+                    WorkingAreaHelper.get_acceleration_duration_in_seconds(
+                        engraving_data.speed_white,
+                        maxAcceleration
+                    );
+
+                const linefeedDur = Math.max(
+                    linefeedPathDur,
+                    linefeedAccelerationDur
+                );
+
+                // acceleration time
+                const deltaV =
+                    (b.totalBrightnessChange * Math.abs(maxSpeed - minSpeed)) /
+                    255; // feedrate difference of one brightness step
+                const accelerationDur = WorkingAreaHelper.get_acceleration_duration_in_seconds(
+                    deltaV,
+                    maxAcceleration
+                );
+
+                // calculation with brightness histogram
+                let histogramDur = 0;
+                let histogramLength = 0;
+                for (
+                    let brightness = 0;
+                    brightness < b.histogram.length;
+                    brightness++
+                ) {
+                    let pixelAmount = b.histogram[brightness];
+                    let speed =
+                        (Math.abs(minSpeed - maxSpeed) * brightness) / 255 +
+                        minSpeed;
+                    if (brightness === 255) {
+                        speed = maxFeedrate;
+                        pixelAmount -= b.whitePixelsOutside;
+                    }
+                    const length = pixelAmount * engraving_data.beam_diameter;
+                    histogramLength += length;
+                    histogramDur += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                        length,
+                        speed,
+                        engraving_data.eng_passes,
+                        engraving_data.pierce_time
+                    );
+                }
+
+                const bitmapDur = linefeedDur + accelerationDur + histogramDur;
+                sumBitmapDur += bitmapDur;
+                gc_length_summary.bitmaps[idx].bitmapDur = bitmapDur;
+                gc_length_summary.bitmaps[
+                    idx
+                ].histogramLengthInMM = histogramLength;
+            });
+        }
+
         const avgPositioningLength =
             Math.sqrt(
                 Math.pow(workingAreaWidth, 2) + Math.pow(workingAreaHeight, 2)
@@ -475,8 +510,10 @@ class WorkingAreaHelper {
             ) * itemsCount;
 
         gc_length_summary.positioningDuration = positioningDuration;
+        gc_length_summary.totalRasterDurationHist = sumBitmapDur;
+        gc_length_summary.totalVectorDuration = sumVectorDur;
         gc_length_summary.totalDuration =
-            total_vector_duration + total_bitmap_duration + positioningDuration;
+            sumVectorDur + sumBitmapDur + positioningDuration;
 
         return gc_length_summary;
     }
@@ -492,6 +529,14 @@ class WorkingAreaHelper {
         const p = parseInt(passes);
         const pt = parseInt(pierceTimeMS) / 1000;
         return (l / f) * p + pt; // seconds
+    }
+
+    static get_acceleration_duration_in_seconds(
+        deltaVinMMperMinute,
+        accelerationMMperS
+    ) {
+        const deltaV = deltaVinMMperMinute / 60;
+        return deltaV / accelerationMMperS;
     }
 }
 

@@ -284,12 +284,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
                 canvas.getContext("2d").drawImage(image, 0, 0);
 
-                const ratio = getWhitePixelRatio(canvas);
-                console.log(
-                    `embedImage() white pixel ratio: ${(ratio * 100).toFixed(
-                        2
-                    )}%, total white pixel: ${
-                        canvas.width * canvas.height * ratio
+                const canvasAnalysis = getCanvasAnalysis(canvas);
+                const histogram = canvasAnalysis.histogram;
+                const whitePxRatio = canvasAnalysis.whitePixelRatio;
+                console.info(
+                    `embedImage() white pixel ratio: ${(
+                        whitePxRatio * 100
+                    ).toFixed(2)}%, total white pixel: ${
+                        canvas.width * canvas.height * whitePxRatio
                     }, image:${image.src}`
                 );
 
@@ -428,9 +430,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
                     // place fill bitmap into svg
                     const fillBitmap = renderCanvas.toDataURL("image/png");
-                    const canvasAnalysis = getCanvasAnalysis(renderCanvas);
-                    const histogram = canvasAnalysis.histogram;
-                    const whitePxRatio = canvasAnalysis.whitePixelRatio;
+                    const analysis = getCanvasAnalysis(renderCanvas);
                     const size = getDataUriSize(fillBitmap);
                     //                    console.debug("renderPNG rendered dataurl has " + size);
 
@@ -440,8 +440,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                         size: size,
                         bbox: bbox,
                         clusterIndex: clusterIdx,
-                        histogram: histogram,
-                        whitePixelRatio: whitePxRatio,
+                        analysis: analysis,
                     };
                 },
                 // after onerror
