@@ -52,7 +52,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 if (evaluate_remove) {
                     var do_remove = remove_sources(s);
                     if (do_remove) s.remove();
-                } else {
+                } else if(s){
                     s.remove();
                 }
             }
