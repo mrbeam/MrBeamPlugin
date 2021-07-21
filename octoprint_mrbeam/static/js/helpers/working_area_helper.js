@@ -402,6 +402,12 @@ class WorkingAreaHelper {
                     vd.passes,
                     vd.pierce_time
                 );
+                duration += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    gc_length_summary.vectors[col].positioningInMM,
+                    maxFeedrate,
+                    1,
+                    0
+                );
             }
             gc_length_summary.vectors[col].duration = duration;
             sumVectorDur += duration;

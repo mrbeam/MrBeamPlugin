@@ -1049,7 +1049,7 @@ $(function () {
 
             // remove other unnecessary or invisible ("display=none") elements
             let removeElements = fragment.selectAll(
-                'metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
+                'title, metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
             );
             for (var i = 0; i < removeElements.length; i++) {
                 if (
@@ -2665,13 +2665,29 @@ $(function () {
             let summary = { vectors: {}, no_info: 0, bitmaps: [] };
 
             const vectors = self.getStrokedVectors(svg);
+            let lastEnd = null;
             vectors.forEach(function (e) {
                 const color = e.attr("mb:color");
                 const l = e.attr("mb:gc_length");
                 if (l) {
                     if (!summary.vectors[color])
-                        summary.vectors[color] = { lengthInMM: 0 };
+                        summary.vectors[color] = {
+                            lengthInMM: 0,
+                            positioningInMM: 0,
+                        };
                     summary.vectors[color].lengthInMM += parseFloat(l);
+                    if (lastEnd !== null) {
+                        let start = [
+                            parseFloat(e.attr("mb:start_x")),
+                            parseFloat(e.attr("mb:start_y")),
+                        ];
+                        const posLength = euclideanDistance(start, lastEnd);
+                        summary.vectors[color].positioningInMM += posLength;
+                    }
+                    lastEnd = [
+                        parseFloat(e.attr("mb:end_x")),
+                        parseFloat(e.attr("mb:end_y")),
+                    ];
                 } else {
                     summary.no_info += 1;
                 }

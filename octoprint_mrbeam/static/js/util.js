@@ -121,4 +121,13 @@ $(function () {
         }
         return hours + ":" + minutes + ":" + seconds;
     };
+
+    euclideanDistance = function (a, b) {
+        return (
+            a
+                .map((x, i) => Math.abs(x - b[i]) ** 2) // square the difference
+                .reduce((sum, now) => sum + now) ** // sum
+            (1 / 2)
+        ); // sqrt
+    };
 });

@@ -97,19 +97,27 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 }
             }
         } else {
+            // if(elem.getBBox().w === 0 || elem.getBBox().h === 0 ) return []; // filled elements need to have dimensions
             if (
                 elem.type === "image" ||
                 elem.type === "text" ||
                 elem.type === "#text"
             ) {
                 if (elem.type === "#text") {
-                    let parent = elem.parent();
-                    if (parent.type === "textPath") {
-                        parent = parent.parent();
+                    if (elem.node.nodeValue.trim() !== "") {
+                        let parent = elem.parent();
+                        if (parent.type === "textPath") {
+                            parent = parent.parent();
+                        }
+                        parent.addClass(className);
+                        selection.push(parent);
                     }
-                    parent.addClass(className);
-                    selection.push(parent);
-                } else {
+                } else if (elem.type === "text") {
+                    if (elem.node.nodeValue !== null) {
+                        elem.addClass(className);
+                        selection.push(elem);
+                    }
+                } else if (elem.type === "image") {
                     elem.addClass(className);
                     selection.push(elem);
                 }
