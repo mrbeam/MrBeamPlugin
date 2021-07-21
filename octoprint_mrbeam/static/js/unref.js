@@ -39,7 +39,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         for (var i = 0; i < elements_to_replace.length; i++) {
             var e = elements_to_replace[i];
             var src = e._replace_with_src(i);
-            // src might be undefined in some error cases.
+            // src might be undefined in some error cases, hence the condition below
             // I intentionally let it crash here to "fail fast" since the user gets an error message.
             if(src) used_source_elements.push(src);
         }
