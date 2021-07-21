@@ -41,7 +41,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             var src = e._replace_with_src(i);
             // src might be undefined in some error cases.
             // I intentionally let it crash here to "fail fast" since the user gets an error message.
-            used_source_elements.push(src);
+            if(src) used_source_elements.push(src);
         }
 
         // 3. remove the source elements
@@ -52,7 +52,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 if (evaluate_remove) {
                     var do_remove = remove_sources(s);
                     if (do_remove) s.remove();
-                } else if(s !== undefined){
+                } else {
                     s.remove();
                 }
             }
