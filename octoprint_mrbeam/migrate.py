@@ -221,9 +221,9 @@ class Migration(object):
                     self.beamos_date is not None
                     and BEAMOS_LEGACY_DATE
                     < self.beamos_date
-                    <= datetime.strptime("2021-06-25", "%Y-%m-%d").date()
+                    <= datetime.strptime("2021-07-19", "%Y-%m-%d").date()
                     and (self.plugin._settings.get(["version"]) is None)
-                ):  # for images before the 25.6.2021
+                ):  # for images before the 19.7.2021
                     self.fix_s_series_mount_manager()
 
                 # migrations end
@@ -244,6 +244,11 @@ class Migration(object):
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
     def is_migration_required(self):
+        self._logger.debug(
+            "beomosdate %s version %s",
+            self.beamos_date,
+            self.plugin._settings.get(["version"]),
+        )
         if (
             self.beamos_date is not None
             and BEAMOS_LEGACY_DATE < self.beamos_date
@@ -647,17 +652,34 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def fix_s_series_mount_manager(self):
         """
-        fixes a problem with the images before 25.6.2021
+        fixes a problem with the images before 19.7.2021
         the rc.local file was missing the clear command for the mount_manager
         this replaces the rc.local file with the one containing this row
         """
         self._logger.info("start fix_s_series_mount_manager")
-        src = os.path.join(
+        src_rc_local = os.path.join(
             __package_path__, self.MIGRATE_FILES_FOLDER, "fix_s_series_mount_manager"
         )
-        dst = "/etc/rc.local"
-        exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
-        self._logger.info("file copied to %s", dst)
+        dst_rc_local = "/etc/rc.local"
+        if exec_cmd("sudo cp {src} {dst}".format(src=src_rc_local, dst=dst_rc_local)):
+            self._logger.info("rc.local file copied to %s", dst_rc_local)
+
+        systemdfiles = (
+            "mount_manager_add.service",
+            "mount_manager_remove.service",
+        )
+        dst = "/etc/systemd/system"
+        success = False
+        self._logger.info("copy files")
+        for systemdfile in systemdfiles:
+            src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, systemdfile)
+            success = exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
+            if success:
+                self._logger.info("file copied to %s", dst)
+                self._logger.info("enable %s", systemdfile)
+                exec_cmd("sudo sytemctl daemon-reload")
+                exec_cmd("sudo sytemctl enable %s", systemdfile)
+
         self._logger.info("end fix_s_series_mount_manager")
 
     ##########################################################

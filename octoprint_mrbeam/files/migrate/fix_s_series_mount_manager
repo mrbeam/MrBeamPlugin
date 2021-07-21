@@ -22,8 +22,6 @@ fi
 
 echo "Disabling power management for wlan0"
 iw dev wlan0 set power_save off
-# clear mount_manager leftovers
-/usr/bin/mount_manager clear
 
 echo
 echo "------------------------------------------------------------"
