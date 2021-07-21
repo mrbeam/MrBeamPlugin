@@ -366,6 +366,184 @@ class WorkingAreaHelper {
         //console.debug("idx, idx1 -> idx2", index, idx1, idx2);
         return [strBefore, v1, strAfter];
     }
+
+    static get_estimated_gcode_duration(
+        gc_length_summary,
+        vector_data,
+        engraving_data
+    ) {
+        // Positioning moves // TODO get from machine settings
+        const workingAreaWidth = 500;
+        const workingAreaHeight = 390;
+        const maxFeedrate = 3000; // mm/min
+        const maxAcceleration = 700; // mm/s²
+
+        // Vectors
+        let vector_lookup = {};
+        vector_data.forEach(
+            (d) =>
+                (vector_lookup[d.color] = {
+                    feedrate: d.feedrate,
+                    passes: d.passes,
+                    pierce_time: d.pierce_time,
+                })
+        );
+
+        // TODO: without material selected, vector_data is empty.
+
+        let sumVectorDur = 0;
+        Object.keys(gc_length_summary.vectors).forEach(function (col) {
+            let duration = 0;
+            const vd = vector_lookup[col];
+            if (vd) {
+                duration = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    gc_length_summary.vectors[col].lengthInMM,
+                    vd.feedrate,
+                    vd.passes,
+                    vd.pierce_time
+                );
+                duration += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    gc_length_summary.vectors[col].positioningInMM,
+                    maxFeedrate,
+                    1,
+                    0
+                );
+            }
+            gc_length_summary.vectors[col].duration = duration;
+            sumVectorDur += duration;
+        });
+
+        // Rasters
+        const minSpeed = Math.min(
+            engraving_data.speed_black,
+            engraving_data.speed_white
+        );
+        const maxSpeed = Math.max(
+            engraving_data.speed_black,
+            engraving_data.speed_white
+        );
+        const avgSpeed =
+            (engraving_data.speed_black + engraving_data.speed_white) / 2;
+        let sumBitmapDur = 0;
+
+        if (engraving_data.engraving_enabled) {
+            gc_length_summary.bitmaps.forEach(function (b, idx) {
+                // basics
+                const lineCount = b.h / engraving_data.line_distance;
+                const lineWidth = b.w;
+
+                // linefeed duration
+                const linefeedLength =
+                    b.h + engraving_data.extra_overshoot
+                        ? 2 * 2 * lineCount
+                        : 0; // assumption: overshoot move is 4mm per line
+                const linefeedPathDur = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    linefeedLength,
+                    maxFeedrate,
+                    engraving_data.eng_passes,
+                    0
+                );
+
+                const linefeedAccelerationDur =
+                    lineCount *
+                    WorkingAreaHelper.get_acceleration_duration_in_seconds(
+                        engraving_data.speed_white,
+                        maxAcceleration
+                    );
+
+                const linefeedDur = Math.max(
+                    linefeedPathDur,
+                    linefeedAccelerationDur
+                );
+
+                // acceleration time
+                const deltaV =
+                    (b.totalBrightnessChange * Math.abs(maxSpeed - minSpeed)) /
+                    255; // feedrate difference of one brightness step
+                const accelerationDur = WorkingAreaHelper.get_acceleration_duration_in_seconds(
+                    deltaV,
+                    maxAcceleration
+                );
+
+                // calculation with brightness histogram
+                let histogramDur = 0;
+                let histogramLength = 0;
+                for (
+                    let brightness = 0;
+                    brightness < b.histogram.length;
+                    brightness++
+                ) {
+                    let pixelAmount = b.histogram[brightness];
+                    let speed =
+                        (Math.abs(minSpeed - maxSpeed) * brightness) / 255 +
+                        minSpeed;
+                    if (brightness === 255) {
+                        speed = maxFeedrate;
+                        pixelAmount -= b.whitePixelsOutside;
+                    }
+                    const length = pixelAmount * engraving_data.beam_diameter;
+                    histogramLength += length;
+                    histogramDur += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                        length,
+                        speed,
+                        engraving_data.eng_passes,
+                        engraving_data.pierce_time
+                    );
+                }
+
+                const bitmapDur = linefeedDur + accelerationDur + histogramDur;
+                sumBitmapDur += bitmapDur;
+                gc_length_summary.bitmaps[idx].bitmapDur = bitmapDur;
+                gc_length_summary.bitmaps[
+                    idx
+                ].histogramLengthInMM = histogramLength;
+            });
+        }
+
+        const avgPositioningLength =
+            Math.sqrt(
+                Math.pow(workingAreaWidth, 2) + Math.pow(workingAreaHeight, 2)
+            ) / 2; // assumption: average positioning move is half the diagonal of the working area
+        const itemsCount =
+            Object.keys(gc_length_summary.vectors).length +
+            gc_length_summary.bitmaps.length;
+        const positioningDuration =
+            WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                avgPositioningLength,
+                maxFeedrate,
+                1,
+                0
+            ) * itemsCount;
+
+        gc_length_summary.positioningDuration = positioningDuration;
+        gc_length_summary.totalRasterDurationHist = sumBitmapDur;
+        gc_length_summary.totalVectorDuration = sumVectorDur;
+        gc_length_summary.totalDuration =
+            sumVectorDur + sumBitmapDur + positioningDuration;
+
+        return gc_length_summary;
+    }
+
+    static get_gcode_path_duration_in_seconds(
+        lengthInMM,
+        feedrateInMMperMin,
+        passes,
+        pierceTimeMS
+    ) {
+        const l = parseFloat(lengthInMM);
+        const f = parseFloat(feedrateInMMperMin) / 60;
+        const p = parseInt(passes);
+        const pt = parseInt(pierceTimeMS) / 1000;
+        return (l / f) * p + pt; // seconds
+    }
+
+    static get_acceleration_duration_in_seconds(
+        deltaVinMMperMinute,
+        accelerationMMperS
+    ) {
+        const deltaV = deltaVinMMperMinute / 60;
+        return deltaV / accelerationMMperS;
+    }
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = "bcdfghjklmnpqrstvwxz";

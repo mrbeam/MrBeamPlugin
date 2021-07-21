@@ -401,12 +401,15 @@
                                              data-toggle="buttons-radio">
                                             <button type="button" value="precise"
                                                     id="parameter_assignment_engraving_mode_precise_btn"
+                                                    data-bind="event: {click: updateEngravingMode}"
                                                     class="btn btn-default active">{{ _('Recommended') }}</button>
                                             <button type="button" value="fast"
                                                     id="parameter_assignment_engraving_mode_fast_btn"
+                                                    data-bind="event: {click: updateEngravingMode}"
                                                     class="btn btn-default">{{ _('Fast') }}</button>
                                             <button type="button" value="basic"
                                                     id="parameter_assignment_engraving_mode_basic_btn"
+                                                    data-bind="event: {click: updateEngravingMode}"
                                                     class="btn btn-default">{{ _('Basic') }}</button>
                                         </div>
                                     </div>
@@ -513,7 +516,7 @@
 									    {{ _('The effect in general is dependent from the material and its color and surface.') }}">
                                     <label class="control-label">{{ _('Speed') }}</label>
                                     <div class="controls"><input class="param_feedrate speed_input" type="number"
-                                                                 data-bind="event: {change: flag_customized_material}"
+                                                                 data-bind="event: {change: function(){flag_customized_material(); estimated_job_time_trigger(Date.now());}}"
                                                                  onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;{{ _('mm/min') }}
                                     </div>
                                 </div>
@@ -548,12 +551,14 @@
                                             </li></ul>">
                                     <label class="control-label">{{ _('Passes') }}</label>
                                     <div class="controls">
-                                        <input data-bind="event: {change: flag_customized_material}"
-                                               class="param_passes passes_input cut_passes_input" type="number"/>&nbsp;&times;&nbsp;&nbsp;
+                                        <input
+                                            data-bind="event: {change: function(){flag_customized_material(); estimated_job_time_trigger(Date.now());}}"
+                                            class="param_passes passes_input cut_passes_input" type="number"/>&nbsp;&times;&nbsp;&nbsp;
                                         <span style="display: inline-block">
                                             <label data-bind="visible: showExpertSettings">
-                                                <input data-bind="event: {change: flag_customized_material}"
-                                                       type="checkbox" class="param_progressive"/>
+                                                <input
+                                                    data-bind="event: {change: function(){flag_customized_material(); estimated_job_time_trigger(Date.now());}}"
+                                                    type="checkbox" class="param_progressive"/>
                                                 {{ _('progressive') }}
                                             </label>
                                         </span>
@@ -568,9 +573,10 @@
                                          {{ _('If you experience that the laser does not cut or engrave first few millimeters of each new line or shape, try to set a pierce time.') }}
                                          <i>{{ _('Try 100ms and adjust if needed.') }}</i>">
                                     <label class="control-label">{{ _('Pierce time') }}</label>
-                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}"
-                                                                 class="param_piercetime pierce_time_input"
-                                                                 type="number"/>&nbsp;{{ _('ms') }}</div>
+                                    <div class="controls"><input
+                                                            data-bind="event: {change: function(){flag_customized_material(); estimated_job_time_trigger(Date.now());}}"
+                                                            class="param_piercetime pierce_time_input"
+                                                            type="number"/>&nbsp;{{ _('ms') }}</div>
                                 </div>
                             </div>
                         </form>
@@ -605,6 +611,8 @@
                 <input type="checkbox" id="parameter_assignment_show_advanced_settings_cb"
                        data-bind="checked: showExpertSettings">{{ _('show advanced settings') }}
             </label>
+            <span>Estimated Job Time: <span data-bind="text: estimated_job_time().humanReadable"></span></span><br/>
+            <span><span data-bind="text: estimated_job_time().verbose"></span></span>
         </div>
 
         <a href="#" class="btn" aria-hidden="true"

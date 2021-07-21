@@ -71,7 +71,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         var elem = this;
         var selection = [];
         var children = elem.children();
-        if (elem.type === "desc" || elem.type === "style") {
+        if (
+            elem.type === "desc" ||
+            elem.type === "title" ||
+            elem.type === "style"
+        ) {
             return [];
         }
 
@@ -93,16 +97,27 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 }
             }
         } else {
+            // if(elem.getBBox().w === 0 || elem.getBBox().h === 0 ) return []; // filled elements need to have dimensions
             if (
                 elem.type === "image" ||
                 elem.type === "text" ||
                 elem.type === "#text"
             ) {
                 if (elem.type === "#text") {
-                    let parent = elem.parent();
-                    parent.addClass(className);
-                    selection.push(parent);
-                } else {
+                    if (elem.node.nodeValue.trim() !== "") {
+                        let parent = elem.parent();
+                        if (parent.type === "textPath") {
+                            parent = parent.parent();
+                        }
+                        parent.addClass(className);
+                        selection.push(parent);
+                    }
+                } else if (elem.type === "text") {
+                    if (elem.node.nodeValue !== null) {
+                        elem.addClass(className);
+                        selection.push(elem);
+                    }
+                } else if (elem.type === "image") {
                     elem.addClass(className);
                     selection.push(elem);
                 }
@@ -225,7 +240,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             elem.type !== "tspan" &&
             elem.type !== "image"
         ) {
-            console.warn(`Element ${elem} is not a native type. Skip.`);
+            console.warn(`Element ${elem.type} is not a native type. Skip.`);
             return false;
         }
 
@@ -258,8 +273,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         } else if (elem.attr("href") !== null) {
             url = elem.attr("href");
         }
+        if (url.startsWith("data:")) {
+            console.info(
+                `embedImage: nothing do to. Already embedded in dataUrl.`
+            );
+            return Promise.resolve(elem);
+        }
         if (url === null || url.startsWith("data:")) {
-            console.info(`embedImage: nothing do to. Url was ${url}`);
+            console.info(`embedImage: nothing do to. Url was "${url}"`);
             return Promise.resolve(elem);
         }
 
@@ -271,17 +292,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
                 canvas.getContext("2d").drawImage(image, 0, 0);
 
-                const ratio = getWhitePixelRatio(canvas);
-                console.log(
-                    `embedImage() white pixel ratio: ${(ratio * 100).toFixed(
-                        2
-                    )}%, total white pixel: ${
-                        canvas.width * canvas.height * ratio
+                const canvasAnalysis = getCanvasAnalysis(canvas);
+                const histogram = canvasAnalysis.histogram;
+                const whitePxRatio = canvasAnalysis.whitePixelRatio;
+                console.info(
+                    `embedImage() white pixel ratio: ${(
+                        whitePxRatio * 100
+                    ).toFixed(2)}%, total white pixel: ${
+                        canvas.width * canvas.height * whitePxRatio
                     }, image:${image.src}`
                 );
 
                 const dataUrl = canvas.toDataURL("image/png");
-                elem.attr("href", dataUrl);
+                elem.attr({ href: dataUrl });
                 canvas.remove();
                 return elem;
             })
@@ -307,8 +330,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         console.debug(
             `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM}`
         );
-
-        let bboxFromElem = elem.getBBox();
 
         let bbox; // attention, this bbox uses viewBox coordinates (mm)
         if (renderBBoxMM === null) {
@@ -342,7 +363,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         //        );
 
         // get svg as dataUrl
-        var svgDataUri = elem.toDataURL(); // TODO remove comment. OK here
+        var svgDataUri = elem.toDataURL();
 
         // init render canvas and attach to page
         var renderCanvas = document.createElement("canvas");
@@ -417,6 +438,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
                     // place fill bitmap into svg
                     const fillBitmap = renderCanvas.toDataURL("image/png");
+                    const analysis = getCanvasAnalysis(renderCanvas);
                     const size = getDataUriSize(fillBitmap);
                     //                    console.debug("renderPNG rendered dataurl has " + size);
 
@@ -426,6 +448,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                         size: size,
                         bbox: bbox,
                         clusterIndex: clusterIdx,
+                        analysis: analysis,
                     };
                 },
                 // after onerror
@@ -449,6 +472,109 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     });
                     if (!MRBEAM_DEBUG_RENDERING) {
                         renderCanvas.remove();
+                    }
+                }
+            )
+            .catch(function (error) {
+                console.error(error);
+            });
+
+        return prom;
+    };
+
+    Element.prototype.renderJobTimeEstimationPNG = function (
+        wPT,
+        hPT,
+        wMM,
+        hMM
+    ) {
+        var elem = this;
+        console.debug(
+            `renderJobTimeEstimationPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm)`
+        );
+
+        // get svg as dataUrl
+        var svgDataUri = elem.toDataURL(); // TODO fix style="font-family:\"Allerta Stencil\"" quoting bug... needs to be 'Allerta Stencil'
+        // TODO fix href and src references. not copied from defs...
+        let bbox = elem.getBBox();
+        const pxPerMM = 1;
+
+        // init render canvas and attach to page
+        const canvas = document.createElement("canvas");
+        canvas.id = `renderCanvas_JobTimeEst`;
+        canvas.class = "renderCanvas";
+        canvas.width = bbox.w * pxPerMM;
+        canvas.height = bbox.h * pxPerMM;
+
+        if (MRBEAM_DEBUG_RENDERING) {
+            canvas.style =
+                "position: fixed; bottom: 0; left: 0; width: 95vw; border: 1px solid red;";
+            canvas.addEventListener("click", function () {
+                this.remove();
+            });
+        }
+        document.getElementsByTagName("body")[0].appendChild(canvas);
+        var renderCanvasContext = canvas.getContext("2d");
+        renderCanvasContext.fillStyle = "white"; // avoids one backend rendering step (has to be disabled in the backend)
+        renderCanvasContext.fillRect(0, 0, canvas.width, canvas.height);
+
+        let prom = loadImagePromise(svgDataUri)
+            .then(
+                function (imgTag) {
+                    let histogram = {};
+                    let whitePxRatio = 0;
+                    try {
+                        const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+                        const cx = bbox.x * srcScale;
+                        const cy = bbox.y * srcScale;
+                        const cw = bbox.w * srcScale;
+                        const ch = bbox.h * srcScale;
+
+                        renderCanvasContext.drawImage(
+                            imgTag,
+                            cx,
+                            cy,
+                            cw,
+                            ch,
+                            0,
+                            0,
+                            canvas.width,
+                            canvas.height
+                        );
+                        const canvasAnalysis = getCanvasAnalysis(canvas);
+                        histogram = canvasAnalysis.histogram;
+                        whitePxRatio = canvasAnalysis.whitePixelRatio;
+                    } catch (exception) {
+                        console.error(
+                            "renderCanvasContext.drawImage failed:",
+                            exception
+                        );
+                    }
+
+                    if (!MRBEAM_DEBUG_RENDERING) {
+                        canvas.remove();
+                    }
+                    return {
+                        bbox: bbox,
+                        histogram: histogram,
+                        whitePixelRatio: whitePxRatio,
+                    };
+                },
+                // after onerror
+                function (e) {
+                    // var len = svgDataUri ? svgDataUri.length : -1;
+                    var len = getDataUriSize(svgDataUri, "B");
+                    var msg =
+                        "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length: " +
+                        len +
+                        ")";
+                    console.error(msg, e);
+                    console.debug(
+                        "renderJobTimeEstimationPNG ERR: svgDataUri that failed to load: ",
+                        svgDataUri
+                    );
+                    if (!MRBEAM_DEBUG_RENDERING) {
+                        canvas.remove();
                     }
                 }
             )
