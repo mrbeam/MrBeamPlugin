@@ -298,6 +298,7 @@ class Migration(object):
 
     def save_current_version(self):
         self.plugin._settings.set(["version"], self.version_current, force=True)
+        self.plugin._settings.save()
 
     ##########################################################
     #####              general stuff                     #####
