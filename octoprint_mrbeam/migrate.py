@@ -515,10 +515,12 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         exec_cmd("sudo logrotate /etc/logrotate.conf")
         exec_cmd("sudo service cron restart")
 
-    def update_mount_manager(self):
+    def update_mount_manager(
+        self, mount_manager_path="/root/mount_manager/mount_manager"
+    ):
         self._logger.info("update_mount_manager() ")
         needs_update = True
-        out, code = exec_cmd_output(["/root/mount_manager/mount_manager", "version"])
+        out, code = exec_cmd_output([mount_manager_path, "version"])
         version = None
         if code == 0:
             try:
@@ -537,18 +539,11 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 __package_path__, self.MIGRATE_FILES_FOLDER, "mount_manager"
             )
             exec_cmd(
-                [
-                    "sudo",
-                    "cp",
-                    str(mount_manager_file),
-                    "/root/mount_manager/mount_manager",
-                ],
+                ["sudo", "cp", str(mount_manager_file), mount_manager_path],
                 shell=False,
             )
-            exec_cmd(["sudo", "chmod", "745", "/root/mount_manager/mount_manager"])
-            exec_cmd(
-                ["sudo", "chown", "root:root", "/root/mount_manager/mount_manager"]
-            )
+            exec_cmd(["sudo", "chmod", "745", mount_manager_path])
+            exec_cmd(["sudo", "chown", "root:root", mount_manager_path])
         else:
             self._logger.debug(
                 "update_mount_manager() NOT updating mount_manager, current version: v%s",
@@ -664,9 +659,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             self._logger.info("rc.local file copied to %s", dst_rc_local)
 
         systemdfiles = (
-            "mount_manager_add.service",
             "mount_manager_remove.service",
             "mount_manager_remove_before_octo.service",
+            "mount_manager_add.service",
         )
         dst = "/etc/systemd/system"
         self._logger.info("copy files")
@@ -684,7 +679,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 success = False
             if success:
                 self._logger.info("successfully created ", systemdfile)
-        self.update_mount_manager()
+        self.update_mount_manager("/usr/bin/mount_manager")
         src_rc_local = os.path.join(
             __package_path__, self.MIGRATE_FILES_FOLDER, "mount_manager.rules"
         )
