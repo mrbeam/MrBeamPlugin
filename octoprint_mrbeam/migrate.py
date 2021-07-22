@@ -21,7 +21,6 @@ def migrate(plugin):
 
 
 class Migration(object):
-
     VERSION_SETUP_IPTABLES = "0.1.19"
     VERSION_SYNC_GRBL_SETTINGS = "0.1.24"
     VERSION_FIX_SSH_KEY_PERMISSION = "0.1.28"
@@ -520,8 +519,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("update_mount_manager() ")
         needs_update = True
         out, code = exec_cmd_output(["/root/mount_manager/mount_manager", "version"])
+        version = None
         if code == 0:
-            version = None
             try:
                 version = StrictVersion(out)
                 needs_update = version < self.MOUNT_MANAGER_VERSION
@@ -670,16 +669,19 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             "mount_manager_remove_before_octo.service",
         )
         dst = "/etc/systemd/system"
-        success = False
         self._logger.info("copy files")
         for systemdfile in systemdfiles:
+            success = True
             src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, systemdfile)
-            success = exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
+            if not exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst)):
+                success = False
             self._logger.info("enable %s", systemdfile)
-            success = exec_cmd("sudo systemctl daemon-reload")
-            success = exec_cmd(
+            if not exec_cmd("sudo systemctl daemon-reload"):
+                success = False
+            if not exec_cmd(
                 "sudo systemctl enable {systemdfile}".format(systemdfile=systemdfile)
-            )
+            ):
+                success = False
             if success:
                 self._logger.info("successfully created ", systemdfile)
         self.update_mount_manager()
