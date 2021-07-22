@@ -61,6 +61,7 @@ class Migration(object):
             self.plugin._settings.get(["dev", "suppress_migrations"]) or IS_X86
         )
         beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
+        self.reboot_needed = False
 
     def run(self):
         try:
@@ -233,6 +234,10 @@ class Migration(object):
                         self.version_previous, self.version_current
                     )
                 )
+                if self.reboot_needed:
+                    self._logger.info("reboot needed, will reboot now")
+                    exec_cmd("sudo reboot now")
+
             elif self.suppress_migrations:
                 self._logger.warn(
                     "No migration done because 'suppress_migrations' is set to true in settings."
@@ -689,6 +694,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             exec_cmd("sudo rm /etc/systemd/system/usb_mount_manager_add.service")
             exec_cmd("sudo rm /etc/systemd/system/usb_mount_manager_remove.service")
         self._logger.info("end fix_s_series_mount_manager")
+        self.reboot_needed = True
 
     ##########################################################
     #####             lasercutterProfiles                #####
