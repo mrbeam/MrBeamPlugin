@@ -522,7 +522,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         exec_cmd("sudo service cron restart")
 
     def update_mount_manager(
-        self, mount_manager_path="/root/mount_manager/mount_manager"
+        self,
+        mount_manager_path="/root/mount_manager/mount_manager",
+        mount_manager_file="mount_manager",
     ):
         self._logger.info("update_mount_manager() ")
         needs_update = True
@@ -542,7 +544,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 self.MOUNT_MANAGER_VERSION,
             )
             mount_manager_file = os.path.join(
-                __package_path__, self.MIGRATE_FILES_FOLDER, "mount_manager"
+                __package_path__, self.MIGRATE_FILES_FOLDER, mount_manager_file
             )
             exec_cmd(
                 ["sudo", "cp", str(mount_manager_file), mount_manager_path],
@@ -685,7 +687,10 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 success = False
             if success:
                 self._logger.info("successfully created ", systemdfile)
-        self.update_mount_manager("/usr/bin/mount_manager")
+        self.update_mount_manager(
+            mount_manager_path="/usr/bin/mount_manager",
+            mount_manager_file="mount_manager_s_series",
+        )
         src_rc_local = os.path.join(
             __package_path__, self.MIGRATE_FILES_FOLDER, "mount_manager.rules"
         )

@@ -5,7 +5,7 @@
 # clear: if no usb stick plugged in, SELFCHECK_DIR will be deleted
 # if `df /` says that there is little space on disk left, mount_manager deletes all files in var/log and ~/.octoprint/logs
 
-VERSION="1.7.2"
+VERSION="1.7.1"
 APP_DIR=/root/mount_manager
 LOG_FILE="/var/log/mount_manager.log"
 SELFCHECK_MOUNT_TARGET=/media/
@@ -38,13 +38,13 @@ arr_plugged_in_label=()
 arr_plugged_in_type=()
 
 
-FLASH_PURPLE="color:128:0:128"
-FLASH_ORANGE="color:226:83:3"
+FLASH_PURPLE="flash_color:128:0:128:1"
+FLASH_ORANGE="flash_color:226:83:3:1"
 
 function signal_alert {
-	mrbeam_ledstrips_cli flash_$1:1
-	sleep 3
 	mrbeam_ledstrips_cli $1
+	sleep 3
+	mrbeam_ledstrips_cli rollback
 }
 
 function signal_busy {
@@ -303,25 +303,25 @@ if [ "$1" == "remove" ]; then
 	done
 
 
-#	### Cleanup designlib stuff ###
-#	# iterate over all /home/pi/.octoprint/uploads/USB-Stick_* Folders
-#	for designlibfile in ${DESIGNLIB_MOUNT_TARGET}_* ;
-#	do
-#		if isMounted ${designlibfile}; then # first unmount if necessary
-#			umount ${designlibfile}
-#			log_info "unmounted $designlibfile"
-#		fi
-#		if [ -z "$(ls -A ${designlibfile})" ]; then # then delete if empty
-#			sudo rmdir "${designlibfile}"
-#			log_info "deleted ${designlibfile}"
-#		else
-#			log_error "USB-Stick folder ${designlibfile} is not empty. Should never happen."
-#			# What to do here?
-#			# a) just delete all
-#			# b) copy to somewhere else before deleting
-#			# c) just ignore (Can the user delete a folder possibly owned by root:root?)
-#		fi
-#	done
+	### Cleanup designlib stuff ###
+	# iterate over all /home/pi/.octoprint/uploads/USB-Stick_* Folders
+	for designlibfile in ${DESIGNLIB_MOUNT_TARGET}_* ;
+	do
+		if isMounted ${designlibfile}; then # first unmount if necessary
+			umount ${designlibfile}
+			log_info "unmounted $designlibfile"
+		fi
+		if [ -z "$(ls -A ${designlibfile})" ]; then # then delete if empty
+			sudo rmdir "${designlibfile}"
+			log_info "deleted ${designlibfile}"
+		else
+			log_error "USB-Stick folder ${designlibfile} is not empty. Should never happen."
+			# What to do here?
+			# a) just delete all
+			# b) copy to somewhere else before deleting
+			# c) just ignore (Can the user delete a folder possibly owned by root:root?)
+		fi
+	done
 
 fi # if [ "$1" == "remove" ];
 
@@ -361,10 +361,10 @@ if [ "$1" == "add" ]; then
 				log_warn "Mounting of ${C_DEVICE} failed with error '${err}'. See logfile for details." "${OCTOPRINT_LOG}"
 
 				# TODO curl call to do an octoprint frontend notification
-				signal_alert "blue"
+				signal_alert "flash_blue"
 			else
 				C_MOUNT_POINT=$(getMountPath ${C_DEVICE})
-				log_info "$Mounted ${C_DEVICE} with label ${C_LABEL} in ${C_MOUNT_POINT}. Searching for ${SIG_FILE_PATTERN} file ..." "${OCTOPRINT_LOG}"
+				log_info "$Mounted {C_DEVICE} with label ${C_LABEL} in ${C_MOUNT_POINT}. Searching for *.sig file ..." "${OCTOPRINT_LOG}"
 				#### DO STUFF START #####
 
 				## Lookup .sig file ##
@@ -385,8 +385,7 @@ if [ "$1" == "add" ]; then
 				fi
 
 				SIG_FILE_EXTERNAL=$(realpath "${SIG_FILE_EXTERNAL}")
-				SIG_PATH_EXTERNAL=$(dirname "${SIG_FILE_EXTERNAL}")
-				SIG_FILE_INTERNAL="${SELFCHECK_DIR}"/$(basename "${SIG_FILE_EXTERNAL}")
+				SIG_FILE_INTERNAL="${SELFCHECK_DIR}/$(basename ${SIG_FILE_EXTERNAL})"
 
 				# Check if selfcheck zip file is on usb-stick
 				if [[ -e "${SIG_FILE_EXTERNAL}" ]]; then
@@ -412,7 +411,7 @@ if [ "$1" == "add" ]; then
 
 
 						log_info "Copying ${SIG_FILE_EXTERNAL} to ${SIG_FILE_INTERNAL}"
-						cp "${SIG_FILE_EXTERNAL}" "${SIG_FILE_INTERNAL}"
+						cp ${SIG_FILE_EXTERNAL} ${SIG_FILE_INTERNAL}
 
 
 						if gpg --verify "${SIG_FILE_INTERNAL}"; then
@@ -432,9 +431,9 @@ if [ "$1" == "add" ]; then
 							#/etc/systemd/system/usb_mount_manager_add.service
 							if [ -f "${SELFCHECK_FILE}" ]; then
 								# start selfcheck_start in new process
-								LAUNCH="${SELFCHECK_FILE} ${LOG_FILE} ${SELFCHECK_DIR} ${C_MOUNT_POINT} ${OCTOPRINT_LOG} ${SIG_PATH_EXTERNAL}"
+								LAUNCH="${SELFCHECK_FILE} ${LOG_FILE} ${SELFCHECK_DIR} ${C_MOUNT_POINT} ${OCTOPRINT_LOG}"
 
-								if [ -f "/etc/systemd/system/usb_mount_manager_add.service" ]; then
+								if [ -f "/etc/systemd/system/mount_manager_add.service" ]; then
 									log_info "Kicking off payload start script: '${LAUNCH}'"
 									CMD="/bin/bash ${LAUNCH}"
 									runuser -l pi -c "$CMD" &>> $LOG_FILE
@@ -446,12 +445,12 @@ if [ "$1" == "add" ]; then
 								fi
 							else
 								log_warn "Payload start script not found: '${SELFCHECK_FILE}'" "${OCTOPRINT_LOG}"
-								signal_alert "red"
+								signal_alert "flash_red"
 							fi
 
 						else
 							log_warn "GPG Signature INCORRECT after copying file to internal storage." "${OCTOPRINT_LOG}"
-							signal_alert "yellow"
+							signal_alert "flash_yellow"
 						fi
 					else
 						log_warn "GPG Signature INCORRECT! Not handling file." "${OCTOPRINT_LOG}"
@@ -462,31 +461,31 @@ if [ "$1" == "add" ]; then
 					log_warn "GPG Signature: No SIG_FILE found on USB Device." "${OCTOPRINT_LOG}"
 
 
-#					################# Mount in Design library ################
-#
-#					# OK the USB stick was not meant for self-check, updates, collecting data or any other code to run on the machine. So lets mount it in the design files folder
-#
-#					# unmount and remount into ~/.octoprint/uploads/
-#					log_info "Unmounting: sudo umount ${C_DEVICE}" "${OCTOPRINT_LOG}"
-#					sudo umount ${C_DEVICE}
-#
-#					SUFFIX=0
-#					UPLOADS_TARGET="${DESIGNLIB_MOUNT_TARGET}_${SUFFIX}"
-#					while [ -e ${UPLOADS_TARGET} ]; do
-#					((SUFFIX++))
-#					UPLOADS_TARGET="${DESIGNLIB_MOUNT_TARGET}_${SUFFIX}"
-#					done
-#					log_info "Remounting in ${UPLOADS_TARGET}" "${OCTOPRINT_LOG}"
-#
-#					err=$( mountStick "${C_DEVICE}" "${UPLOADS_TARGET}" ${C_TYPE} 2>&1 )
-#
-#					if [ $? -ne 0 ]; then
-#						log_warn "Mounting of ${C_DEVICE} failed: ${err}." "${OCTOPRINT_LOG}"
-#					else
-#						log_info "Mounted USB-Stick '${C_TYPE}' to ${DESIGNLIB_MOUNT_TARGET}_${SUFFIX}" "${OCTOPRINT_LOG}"
-#						# TODO curl call to do an octoprint notification
-#
-#					fi
+					################# Mount in Design library ################
+
+					# OK the USB stick was not meant for self-check, updates, collecting data or any other code to run on the machine. So lets mount it in the design files folder
+
+					# unmount and remount into ~/.octoprint/uploads/
+					log_info "Unmounting: sudo umount ${C_DEVICE}" "${OCTOPRINT_LOG}"
+					sudo umount ${C_DEVICE}
+
+					SUFFIX=0
+					UPLOADS_TARGET="${DESIGNLIB_MOUNT_TARGET}_${SUFFIX}"
+					while [ -e ${UPLOADS_TARGET} ]; do
+					((SUFFIX++))
+					UPLOADS_TARGET="${DESIGNLIB_MOUNT_TARGET}_${SUFFIX}"
+					done
+					log_info "Remounting in ${UPLOADS_TARGET}" "${OCTOPRINT_LOG}"
+
+					err=$( mountStick "${C_DEVICE}" "${UPLOADS_TARGET}" ${C_TYPE} 2>&1 )
+
+					if [ $? -ne 0 ]; then
+						log_warn "Mounting of ${C_DEVICE} failed: ${err}." "${OCTOPRINT_LOG}"
+					else
+						log_info "Mounted USB-Stick '${C_TYPE}' to ${DESIGNLIB_MOUNT_TARGET}_${SUFFIX}" "${OCTOPRINT_LOG}"
+						# TODO curl call to do an octoprint notification
+
+					fi
 
 
 				#### DO STUFF END #####
@@ -503,7 +502,7 @@ fi
 if [ "$1" == "add" ]; then
 	if [ $j -eq 0 ]; then
 		log_warn "Not processed USB stick" "${OCTOPRINT_LOG}"
-		signal_alert "blue"
+		signal_alert "flash_blue"
 	fi
 fi
 
