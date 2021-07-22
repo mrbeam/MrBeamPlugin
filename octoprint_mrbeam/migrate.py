@@ -667,6 +667,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         systemdfiles = (
             "mount_manager_add.service",
             "mount_manager_remove.service",
+            "mount_manager_remove_before_octo.service",
         )
         dst = "/etc/systemd/system"
         success = False
@@ -674,11 +675,13 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         for systemdfile in systemdfiles:
             src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, systemdfile)
             success = exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
+            self._logger.info("enable %s", systemdfile)
+            success = exec_cmd("sudo sytemctl daemon-reload")
+            success = exec_cmd(
+                "sudo sytemctl enable {systemdfile}".format(systemdfile=systemdfile)
+            )
             if success:
-                self._logger.info("file copied to %s", dst)
-                self._logger.info("enable %s", systemdfile)
-                exec_cmd("sudo sytemctl daemon-reload")
-                exec_cmd("sudo sytemctl enable %s", systemdfile)
+                self._logger.info("successfully created ", systemdfile)
 
         self._logger.info("end fix_s_series_mount_manager")
 
