@@ -676,13 +676,13 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, systemdfile)
             success = exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
             self._logger.info("enable %s", systemdfile)
-            success = exec_cmd("sudo sytemctl daemon-reload")
+            success = exec_cmd("sudo systemctl daemon-reload")
             success = exec_cmd(
-                "sudo sytemctl enable {systemdfile}".format(systemdfile=systemdfile)
+                "sudo systemctl enable {systemdfile}".format(systemdfile=systemdfile)
             )
             if success:
                 self._logger.info("successfully created ", systemdfile)
-
+        self.update_mount_manager()
         self._logger.info("end fix_s_series_mount_manager")
 
     ##########################################################
