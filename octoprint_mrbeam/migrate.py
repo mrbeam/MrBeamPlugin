@@ -691,6 +691,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         dst_rc_local = "/lib/udev/rules.d/00-mount_manager.rules"
         if exec_cmd("sudo cp {src} {dst}".format(src=src_rc_local, dst=dst_rc_local)):
             self._logger.info("updated mountmanager udev rules", dst_rc_local)
+            exec_cmd("sudo rm /etc/systemd/system/usb_mount_manager_add.service")
+            exec_cmd("sudo rm /etc/systemd/system/usb_mount_manager_remove.service")
         self._logger.info("end fix_s_series_mount_manager")
 
     ##########################################################
