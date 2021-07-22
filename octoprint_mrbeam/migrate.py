@@ -685,6 +685,12 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             if success:
                 self._logger.info("successfully created ", systemdfile)
         self.update_mount_manager()
+        src_rc_local = os.path.join(
+            __package_path__, self.MIGRATE_FILES_FOLDER, "mount_manager.rules"
+        )
+        dst_rc_local = "/lib/udev/rules.d/00-mount_manager.rules"
+        if exec_cmd("sudo cp {src} {dst}".format(src=src_rc_local, dst=dst_rc_local)):
+            self._logger.info("updated mountmanager udev rules", dst_rc_local)
         self._logger.info("end fix_s_series_mount_manager")
 
     ##########################################################
