@@ -660,7 +660,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         """
         self._logger.info("start fix_s_series_mount_manager")
         src_rc_local = os.path.join(
-            __package_path__, self.MIGRATE_FILES_FOLDER, "fix_s_series_mount_manager"
+            __package_path__, self.MIGRATE_FILES_FOLDER, "rc.local"
         )
         dst_rc_local = "/etc/rc.local"
         if exec_cmd("sudo cp {src} {dst}".format(src=src_rc_local, dst=dst_rc_local)):
