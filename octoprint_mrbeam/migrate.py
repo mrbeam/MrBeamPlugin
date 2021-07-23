@@ -233,9 +233,7 @@ class Migration(object):
                         self.version_previous, self.version_current
                     )
                 )
-                if self.reboot_needed:
-                    self._logger.info("reboot needed, will reboot now")
-                    exec_cmd("sudo reboot now")
+
             elif self.suppress_migrations:
                 self._logger.warn(
                     "No migration done because 'suppress_migrations' is set to true in settings."
@@ -244,6 +242,9 @@ class Migration(object):
                 self._logger.debug("No migration required.")
 
             self.save_current_version()
+            if self.reboot_needed:
+                self._logger.info("reboot needed, will reboot now")
+                exec_cmd("sudo reboot now")
         except Exception as e:
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
