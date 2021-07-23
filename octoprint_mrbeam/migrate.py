@@ -228,7 +228,6 @@ class Migration(object):
 
                 # migrations end
 
-                self.save_current_version()
                 self._logger.info(
                     "Finished migration from v{} to v{}.".format(
                         self.version_previous, self.version_current
@@ -237,13 +236,14 @@ class Migration(object):
                 if self.reboot_needed:
                     self._logger.info("reboot needed, will reboot now")
                     exec_cmd("sudo reboot now")
-
             elif self.suppress_migrations:
                 self._logger.warn(
                     "No migration done because 'suppress_migrations' is set to true in settings."
                 )
             else:
                 self._logger.debug("No migration required.")
+
+            self.save_current_version()
         except Exception as e:
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
@@ -297,7 +297,7 @@ class Migration(object):
         return LooseVersion(lower_vers) < LooseVersion(higher_vers)
 
     def save_current_version(self):
-        self.plugin._settings.set(["version"], self.version_current, force=True)
+        self.plugin._settings.set(["version"], self.version_current, force=False)
         self.plugin._settings.save()
 
     ##########################################################
