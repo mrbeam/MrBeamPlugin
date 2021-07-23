@@ -61,7 +61,6 @@ class Migration(object):
             self.plugin._settings.get(["dev", "suppress_migrations"]) or IS_X86
         )
         beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
-        self.reboot_needed = False
 
     def run(self):
         try:
@@ -242,9 +241,6 @@ class Migration(object):
                 self._logger.debug("No migration required.")
 
             self.save_current_version()
-            if self.reboot_needed:
-                self._logger.info("reboot needed, will reboot now")
-                exec_cmd("sudo reboot now")
         except Exception as e:
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
@@ -696,11 +692,11 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         )
         dst_rc_local = "/lib/udev/rules.d/00-mount_manager.rules"
         if exec_cmd("sudo cp {src} {dst}".format(src=src_rc_local, dst=dst_rc_local)):
+            exec_cmd("sudo systemctl restart udev")
             self._logger.info("updated mountmanager udev rules", dst_rc_local)
             exec_cmd("sudo rm /etc/systemd/system/usb_mount_manager_add.service")
             exec_cmd("sudo rm /etc/systemd/system/usb_mount_manager_remove.service")
         self._logger.info("end fix_s_series_mount_manager")
-        self.reboot_needed = True
 
     ##########################################################
     #####             lasercutterProfiles                #####
