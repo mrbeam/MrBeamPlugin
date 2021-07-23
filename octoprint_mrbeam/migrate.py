@@ -667,27 +667,26 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         if exec_cmd("sudo cp {src} {dst}".format(src=src_rc_local, dst=dst_rc_local)):
             self._logger.info("rc.local file copied to %s", dst_rc_local)
 
-        systemdfiles = (
-            "mount_manager_remove.service",
-            "mount_manager_remove_before_octo.service",
-            "mount_manager_add.service",
-        )
         dst = "/etc/systemd/system"
         self._logger.info("copy files")
-        for systemdfile in systemdfiles:
-            success = True
+
+        systemdfiles = (
+            (False, "mount_manager_remove.service"),
+            (True, "mount_manager_remove_before_octo.service"),
+            (False, "mount_manager_add.service"),
+        )
+        for enable, systemdfile in systemdfiles:
             src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, systemdfile)
-            if not exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst)):
-                success = False
-            self._logger.info("enable %s", systemdfile)
-            if not exec_cmd("sudo systemctl daemon-reload"):
-                success = False
-            if not exec_cmd(
-                "sudo systemctl enable {systemdfile}".format(systemdfile=systemdfile)
+            if (
+                exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
+                and exec_cmd("sudo systemctl daemon-reload")
+                and (
+                    not enable
+                    or exec_cmd("sudo systemctl enable {}".format(systemdfile))
+                )
             ):
-                success = False
-            if success:
                 self._logger.info("successfully created ", systemdfile)
+
         self.update_mount_manager(
             mount_manager_path="/usr/bin/mount_manager",
             mount_manager_file="mount_manager_s_series",
