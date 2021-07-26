@@ -1,0 +1,6 @@
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mount_manager add
+
+[Unit]
+After=mount_manager_remove.service

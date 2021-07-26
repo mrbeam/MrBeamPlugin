@@ -1,0 +1,48 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+
+/sbin/iptables -t mangle -I POSTROUTING 1 -o wlan0 -p udp --dport 123 -j TOS --set-tos 0x00
+
+echo "Disabling power management for wlan0"
+iw dev wlan0 set power_save off
+
+echo
+echo "------------------------------------------------------------"
+echo
+echo "You may now open a web browser on your local network and "
+echo "navigate to any of the following addresses to access "
+echo "OctoPrint:"
+echo
+for name in $_NAME;
+do
+    echo " http://$name.local"
+done
+
+for ip in $(hostname -I);
+do
+    echo "    http://$ip"
+done
+
+echo
+echo "https is also available, with a self-signed certificate."
+echo
+echo "------------------------------------------------------------"
+echo
+exit 0
