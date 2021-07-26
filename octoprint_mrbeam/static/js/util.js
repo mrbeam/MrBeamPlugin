@@ -101,25 +101,36 @@ $(function () {
         };
     };
 
-    formatDurationHHMMSS = function (duration) {
-        if (isNaN(duration) || duration < 0) {
+    formatDurationHHMMSS = function (durationInSeconds) {
+        if (isNaN(durationInSeconds) || durationInSeconds < 0) {
             return "--:--:--";
         }
-        var sec_num = parseInt(duration, 10); // don't forget the second param
-        var hours = Math.floor(sec_num / 3600);
-        var minutes = Math.floor((sec_num - hours * 3600) / 60);
-        var seconds = sec_num - hours * 3600 - minutes * 60;
 
-        if (hours < 10) {
-            hours = "0" + hours;
+        const d = getHoursMinutesSeconds(durationInSeconds);
+        return d.h + ":" + d.mm + ":" + d.ss;
+    };
+
+    getHoursMinutesSeconds = function (durationInSeconds) {
+        if (isNaN(durationInSeconds))
+            return { h: NaN, m: NaN, s: NaN, hh: "--", mm: "--", ss: "--" };
+        const sec_num = parseInt(durationInSeconds, 10); // don't forget the second param
+        const hours = Math.floor(sec_num / 3600);
+        const minutes = Math.floor((sec_num - hours * 3600) / 60);
+        const seconds = sec_num - hours * 3600 - minutes * 60;
+        const hh = hours < 10 ? "0" + hours : hours;
+        const mm = minutes < 10 ? "0" + minutes : minutes;
+        const ss = seconds < 10 ? "0" + seconds : seconds;
+        return { h: hours, m: minutes, s: seconds, hh: hh, mm: mm, ss: ss };
+    };
+
+    formatFuzzyHHMMSS = function (durMinMax) {
+        if (durMinMax.val < 120) {
+            return "~2 minutes";
+        } else {
+            const min = getHoursMinutesSeconds(durMinMax.min);
+            const max = getHoursMinutesSeconds(durMinMax.max);
+            return `${min.h}:${min.mm}:${min.ss} - ${max.h}:${max.mm}:${max.ss} `;
         }
-        if (minutes < 10) {
-            minutes = "0" + minutes;
-        }
-        if (seconds < 10) {
-            seconds = "0" + seconds;
-        }
-        return hours + ":" + minutes + ":" + seconds;
     };
 
     euclideanDistance = function (a, b) {

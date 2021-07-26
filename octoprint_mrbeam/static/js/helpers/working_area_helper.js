@@ -367,20 +367,35 @@ class WorkingAreaHelper {
         return [strBefore, v1, strAfter];
     }
 
+    /**
+     * Estimates the job run time based on path length, img histograms and job parameters
+     *
+     * @param {object} gcLengthSummary
+     * @param {object} vectorData
+     * @param {object} engravingData
+     * @param {object} machineData
+     * @returns {object} modified gcLengthSummary, durations are added
+     */
     static get_estimated_gcode_duration(
-        gc_length_summary,
-        vector_data,
-        engraving_data
+        gcLengthSummary,
+        vectorData,
+        engravingData,
+        machineData
     ) {
-        // Positioning moves // TODO get from machine settings
-        const workingAreaWidth = 500;
-        const workingAreaHeight = 390;
-        const maxFeedrate = 3000; // mm/min
-        const maxAcceleration = 700; // mm/s²
+        // mechanical gantry parameters
+        const workingAreaWidth = machineData.workingAreaWidth;
+        const workingAreaHeight = machineData.workingAreaHeight;
+        const maxFeedrate = machineData.maxFeedrateXY; // mm/min
+        const maxAcceleration = machineData.accelerationXY; // mm/s²
 
-        // Vectors
+        // 1. Vectors
+        // Principle:
+        // Iterate over each stroke color and sum up...
+        // time for moving along the path with the color's speed
+        // time for positioning moves with maximum machine speed.
+        // Acceleration is ignored in this estimation.
         let vector_lookup = {};
-        vector_data.forEach(
+        vectorData.forEach(
             (d) =>
                 (vector_lookup[d.color] = {
                     feedrate: d.feedrate,
@@ -389,65 +404,68 @@ class WorkingAreaHelper {
                 })
         );
 
-        // TODO: without material selected, vector_data is empty.
-
         let sumVectorDur = 0;
-        Object.keys(gc_length_summary.vectors).forEach(function (col) {
+        Object.keys(gcLengthSummary.vectors).forEach(function (color) {
             let duration = 0;
-            const vd = vector_lookup[col];
+            const vd = vector_lookup[color];
             if (vd) {
+                // Time for moving on the colored path
                 duration = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
-                    gc_length_summary.vectors[col].lengthInMM,
+                    gcLengthSummary.vectors[color].lengthInMM,
                     vd.feedrate,
                     vd.passes,
                     vd.pierce_time
                 );
+                // Time for positioning moves between paths of the same color
                 duration += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
-                    gc_length_summary.vectors[col].positioningInMM,
+                    gcLengthSummary.vectors[color].positioningInMM,
                     maxFeedrate,
                     1,
                     0
                 );
             }
-            gc_length_summary.vectors[col].duration = duration;
+            gcLengthSummary.vectors[color].duration = duration;
             sumVectorDur += duration;
         });
 
-        // Rasters
+        // 2. Rasters
+        // Principle:
+        // Iterate over each rastered bitmap cluster and sum up:
+        //   Linefeed durations incl. overshoot travel (max machine speed)
+        //   Acceleration duration: time for the total necessary acceleration, summed up across the whole bitmap
+        //   Histogram duration: time for the total travel of each pixel brightness 0-254, 255 will be skipped
+        // Assumptions:
+        //   White pixels on the outside of the image are skipped, inside they are traveled with maximum machine speed
         const minSpeed = Math.min(
-            engraving_data.speed_black,
-            engraving_data.speed_white
+            engravingData.speed_black,
+            engravingData.speed_white
         );
         const maxSpeed = Math.max(
-            engraving_data.speed_black,
-            engraving_data.speed_white
+            engravingData.speed_black,
+            engravingData.speed_white
         );
-        const avgSpeed =
-            (engraving_data.speed_black + engraving_data.speed_white) / 2;
-        let sumBitmapDur = 0;
 
-        if (engraving_data.engraving_enabled) {
-            gc_length_summary.bitmaps.forEach(function (b, idx) {
+        let sumBitmapDur = 0;
+        if (engravingData.engraving_enabled) {
+            gcLengthSummary.bitmaps.forEach(function (b, idx) {
                 // basics
-                const lineCount = b.h / engraving_data.line_distance;
+                const lineCount = b.h / engravingData.line_distance;
                 const lineWidth = b.w;
 
-                // linefeed duration
+                // Linefeed duration
                 const linefeedLength =
-                    b.h + engraving_data.extra_overshoot
-                        ? 2 * 2 * lineCount
-                        : 0; // assumption: overshoot move is 4mm per line
+                    b.h + engravingData.extra_overshoot ? 2 * 2 * lineCount : 0; // assumption: overshoot move is 4mm per line
                 const linefeedPathDur = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
                     linefeedLength,
                     maxFeedrate,
-                    engraving_data.eng_passes,
+                    engravingData.eng_passes,
                     0
                 );
 
                 const linefeedAccelerationDur =
                     lineCount *
                     WorkingAreaHelper.get_acceleration_duration_in_seconds(
-                        engraving_data.speed_white,
+                        engravingData.speed_white,
                         maxAcceleration
                     );
 
@@ -456,7 +474,7 @@ class WorkingAreaHelper {
                     linefeedAccelerationDur
                 );
 
-                // acceleration time
+                // acceleration duration
                 const deltaV =
                     (b.totalBrightnessChange * Math.abs(maxSpeed - minSpeed)) /
                     255; // feedrate difference of one brightness step
@@ -465,7 +483,7 @@ class WorkingAreaHelper {
                     maxAcceleration
                 );
 
-                // calculation with brightness histogram
+                // histogram duration
                 let histogramDur = 0;
                 let histogramLength = 0;
                 for (
@@ -479,51 +497,64 @@ class WorkingAreaHelper {
                         minSpeed;
                     if (brightness === 255) {
                         speed = maxFeedrate;
-                        pixelAmount -= b.whitePixelsOutside;
+                        pixelAmount -= b.whitePixelsOutside; // TODO only if white pixels are skipped
                     }
-                    const length = pixelAmount * engraving_data.beam_diameter;
+                    const length = pixelAmount * engravingData.beam_diameter;
                     histogramLength += length;
                     histogramDur += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
                         length,
                         speed,
-                        engraving_data.eng_passes,
-                        engraving_data.pierce_time
+                        engravingData.eng_passes,
+                        engravingData.pierce_time
                     );
                 }
 
                 const bitmapDur = linefeedDur + accelerationDur + histogramDur;
                 sumBitmapDur += bitmapDur;
-                gc_length_summary.bitmaps[idx].bitmapDur = bitmapDur;
-                gc_length_summary.bitmaps[
+                gcLengthSummary.bitmaps[idx].bitmapDur = bitmapDur;
+                gcLengthSummary.bitmaps[
                     idx
                 ].histogramLengthInMM = histogramLength;
             });
         }
 
+        // 3. Positioning moves
+        // assumption: an average positioning move is half the diagonal of the working area
+        // such an positioning move has to be done between each item (paths with same stroke color, bitmap)
+        // additionally at the beginning and the end
         const avgPositioningLength =
-            Math.sqrt(
-                Math.pow(workingAreaWidth, 2) + Math.pow(workingAreaHeight, 2)
-            ) / 2; // assumption: average positioning move is half the diagonal of the working area
+            euclideanDistance([0, 0], [workingAreaWidth, workingAreaHeight]) /
+            2;
         const itemsCount =
-            Object.keys(gc_length_summary.vectors).length +
-            gc_length_summary.bitmaps.length;
+            Object.keys(gcLengthSummary.vectors).length +
+            gcLengthSummary.bitmaps.length;
         const positioningDuration =
             WorkingAreaHelper.get_gcode_path_duration_in_seconds(
                 avgPositioningLength,
                 maxFeedrate,
                 1,
                 0
-            ) * itemsCount;
+            ) *
+            (itemsCount + 2); // +2 for begin and end of the job
 
-        gc_length_summary.positioningDuration = positioningDuration;
-        gc_length_summary.totalRasterDurationHist = sumBitmapDur;
-        gc_length_summary.totalVectorDuration = sumVectorDur;
-        gc_length_summary.totalDuration =
+        gcLengthSummary.positioningDuration = positioningDuration;
+        gcLengthSummary.totalRasterDurationHist = sumBitmapDur;
+        gcLengthSummary.totalVectorDuration = sumVectorDur;
+        gcLengthSummary.totalDuration =
             sumVectorDur + sumBitmapDur + positioningDuration;
 
-        return gc_length_summary;
+        return gcLengthSummary;
     }
 
+    /**
+     * Calculates the duration of one path based on length, speed, passes, piercetime
+     *
+     * @param {Number} lengthInMM
+     * @param {Number} feedrateInMMperMin
+     * @param {Integer} passes
+     * @param {Number} pierceTimeMS
+     * @returns {Number}
+     */
     static get_gcode_path_duration_in_seconds(
         lengthInMM,
         feedrateInMMperMin,
@@ -537,12 +568,46 @@ class WorkingAreaHelper {
         return (l / f) * p + pt; // seconds
     }
 
+    /**
+     * Calculates the time needed to accelerate from v to v + deltaV where accerlation a is given
+     *
+     * @param {Number} deltaVinMMperMinute
+     * @param {Number} accelerationMMperS
+     * @returns {Number} seconds
+     */
     static get_acceleration_duration_in_seconds(
         deltaVinMMperMinute,
         accelerationMMperS
     ) {
         const deltaV = deltaVinMMperMinute / 60;
         return deltaV / accelerationMMperS;
+    }
+
+    static get_jte_correction(durationInSeconds) {
+        // correction factors, figured out by testing on mrbeam-7055
+        const CORRECTION_FACTORS = {
+            lt1m: 1.3,
+            lt10m: 1.1,
+            lt60m: 1.07,
+            def: 1.04,
+        };
+        const VARIANCE = 0.07;
+        let factor = CORRECTION_FACTORS.def;
+
+        if (durationInSeconds < 60) {
+            factor = CORRECTION_FACTORS.lt1m;
+        } else if (durationInSeconds < 60 * 10) {
+            factor = CORRECTION_FACTORS.lt10m;
+        } else if (durationInSeconds < 60 * 60) {
+            factor = CORRECTION_FACTORS.lt60m;
+        }
+        const corrected = durationInSeconds * factor;
+
+        return {
+            val: corrected,
+            min: corrected * (1 - VARIANCE),
+            max: corrected * (1 + VARIANCE),
+        };
     }
 }
 

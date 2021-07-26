@@ -611,8 +611,20 @@
                 <input type="checkbox" id="parameter_assignment_show_advanced_settings_cb"
                        data-bind="checked: showExpertSettings">{{ _('show advanced settings') }}
             </label>
-            <span>Estimated Job Time: <span data-bind="text: estimated_job_time().humanReadable"></span></span><br/>
-            <span><span data-bind="text: estimated_job_time().verbose"></span></span>
+            <a href="#" class="dropdown collapsed" data-toggle="collapse" data-target="#job_time_estimation_detailed" data-bind="" style="">
+                <i class="icon-time"></i>
+                <span>{{ _('Estimation:') }} <span data-bind="text: estimated_job_time().humanReadable"></span></span>
+                <b class="caret"></b>
+            </a>
+            <br/>
+            <div id="job_time_estimation_detailed" class="collapse" >
+                <ul data-bind="foreach: estimated_job_time().detailed_list">
+                    <li>
+                        <div data-bind="style: {backgroundImage: 'url('+$data.img+')', backgroundColor: $data.bgr}"></div>
+                        <span data-bind="text: $data.label"></span> <span data-bind="text: $data.duration"></span>
+                    </li>
+                </ul>
+            </div>
         </div>
 
         <a href="#" class="btn" aria-hidden="true"

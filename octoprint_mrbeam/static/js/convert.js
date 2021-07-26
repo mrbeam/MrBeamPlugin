@@ -37,7 +37,7 @@ $(function () {
                 lineDistance: 1.0,
             },
             min: {
-                speed: 50,
+                speed: 30,
                 compressor: 0,
                 engPasses: 1,
                 cutPasses: 1,
@@ -135,42 +135,63 @@ $(function () {
         self.estimated_job_time_trigger = ko.observable(0);
         self.estimated_job_time = ko.computed(function () {
             const summary = self.gcode_length_summary();
-            console.log("triggered", self.estimated_job_time_trigger());
+            console.log(
+                "triggered",
+                self.estimated_job_time_trigger(),
+                self.selected_material_thickness()
+            );
             if (summary !== null) {
                 // TODO: how to update on color drag?
                 const multicolor_data = self.get_current_multicolor_settings();
                 const engraving_data = self.get_current_engraving_settings();
+                const machinePerformanceData = self.profile.getMechanicalPerformanceData();
                 const dur = WorkingAreaHelper.get_estimated_gcode_duration(
                     summary,
                     multicolor_data,
-                    engraving_data
+                    engraving_data,
+                    machinePerformanceData
                 );
-                console.log(
-                    `Job time estimation: ${dur.totalDuration.toFixed(
-                        1
-                    )} seconds.`
-                );
-                console.info(dur);
-                const hrEngravingDurAvg = formatDurationHHMMSS(
-                    dur.totalRasterDurationAvg
-                );
-                const hrEngravingDurHist = formatDurationHHMMSS(
+
+                const hrEngravingDur = formatDurationHHMMSS(
                     dur.totalRasterDurationHist
                 );
                 const hrMovementDur = formatDurationHHMMSS(
                     dur.positioningDuration
                 );
-                const hrVectorDur = Object.keys(dur.vectors).map(
-                    (col) =>
-                        `Color ${col}: ${formatDurationHHMMSS(
+                let list = [];
+                list.push({
+                    label: "Engraving",
+                    duration: hrEngravingDur,
+                    bgr: "#ffffff",
+                    img: "/plugin/mrbeam/static/img/img_and_fills2.svg",
+                });
+                const hrVectorDur = Object.keys(dur.vectors).forEach(function (
+                    col
+                ) {
+                    list.push({
+                        label: "Path ",
+                        duration: formatDurationHHMMSS(
                             dur.vectors[col].duration
-                        )},`
-                );
+                        ),
+                        bgr: col,
+                        img: "/plugin/mrbeam/static/img/line_overlay.svg",
+                    });
+                });
+                list.push({
+                    label: "Movement",
+                    duration: hrMovementDur,
+                    bgr: "#ffffff",
+                    img: "",
+                });
 
+                const corrected = WorkingAreaHelper.get_jte_correction(
+                    dur.totalDuration
+                );
+                const hrTotal = formatFuzzyHHMMSS(corrected);
                 return {
                     val: dur,
-                    humanReadable: formatDurationHHMMSS(dur.totalDuration),
-                    verbose: `Engraving Avg: ${hrEngravingDurAvg}, Engraving Hist: ${hrEngravingDurHist}, ${hrVectorDur} Positioning: ${hrMovementDur}`,
+                    humanReadable: hrTotal,
+                    detailed_list: list,
                 };
             } else {
                 return { val: -1, humanReadable: "-", verbose: "" };
@@ -864,7 +885,9 @@ $(function () {
                     .find(".param_cut_compressor")
                     .val(p.cut_compressor || 3); // Fall back to 100%
             }
+            self.estimated_job_time_trigger(Date.now());
         };
+
         self.apply_engraving_proposal = function () {
             var material = self.selected_material();
             var param_set = self.get_closest_color_params();
@@ -893,6 +916,7 @@ $(function () {
             self.engravingCompressor(
                 p.eng_compressor || self.JOB_PARAMS.default.engCompressor
             ); // Here we pass the value of the range (0), not the real one (10%)
+            self.estimated_job_time_trigger(Date.now());
         };
 
         self._find_closest_color_to = function (hex, available_colors) {
@@ -1123,7 +1147,7 @@ $(function () {
                 var colorkey = $(el).attr("id").substr(-6);
                 var hex = "#" + colorkey;
                 var slider_id = "#adjuster_cd_color_" + colorkey;
-                var brightness = $(slider_id).val();
+                var brightness = parseFloat($(slider_id).val());
                 var initial_factor = brightness / 255;
                 var intensity_user =
                     intensity_white_user +
@@ -1153,6 +1177,8 @@ $(function () {
                         ).length > 0
                     ) {
                         var hex = "#" + $(el).attr("id").substr(-6);
+                        console.info(`job_row_engr_vec: ${hex}`);
+
                         data.push({
                             color: hex,
                             intensity: intensity,
@@ -1177,16 +1203,20 @@ $(function () {
             });
 
             $(".job_row_vector").each(function (i, job) {
-                var intensity_user = $(job).find(".param_intensity").val();
+                var intensity_user = parseFloat(
+                    $(job).find(".param_intensity").val()
+                );
                 var intensity =
                     intensity_user *
                     self.profile.currentProfileData().laser.intensity_factor();
-                var feedrate = $(job).find(".param_feedrate").val();
-                var piercetime = $(job).find(".param_piercetime").val();
+                var feedrate = parseFloat($(job).find(".param_feedrate").val());
+                var piercetime = parseFloat(
+                    $(job).find(".param_piercetime").val()
+                );
                 var progressive = $(job)
                     .find(".param_progressive")
                     .prop("checked");
-                var passes = $(job).find(".param_passes").val();
+                var passes = parseInt($(job).find(".param_passes").val());
                 let cut_compressor = $(job).find(".param_cut_compressor").val();
 
                 if (prepareForBackend) {
@@ -1205,6 +1235,7 @@ $(function () {
                         .find(".used_color")
                         .each(function (j, col) {
                             var hex = "#" + $(col).attr("id").substr(-6);
+                            console.info(`job_row_vector ${i}: ${hex}`);
                             data.push({
                                 color: hex,
                                 intensity: intensity,
@@ -1219,34 +1250,10 @@ $(function () {
                         });
                 } else {
                     console.log(
-                        "Skipping vector job (" + i + "), invalid parameters."
+                        `Skipping vector job ${i}, invalid parameters.`
                     );
                 }
             });
-
-            // $('.job_row_vector').each(function(i, job){
-            // 	var intensity_user = $(job).find('.param_intensity').val();
-            // 	var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
-            // 	var feedrate = $(job).find('.param_feedrate').val();
-            // 	var piercetime = $(job).find('.param_piercetime').val();
-            // 	var passes = $(job).find('.param_passes').val();
-            // 	if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
-            // 		$(job).find('.used_color').each(function(j, col){
-            // 			var hex = '#' + $(col).attr('id').substr(-6);
-            // 			data.push({
-            // 				color: hex,
-            // 				intensity: intensity,
-            // 				intensity_user: intensity_user,
-            // 				feedrate: feedrate,
-            // 				pierce_time: piercetime,
-            // 				passes: passes,
-            //                 engrave: false
-            // 			});
-            // 		});
-            // 	} else {
-            // 		console.log("Skipping vector job ("+1+"), invalid parameters.");
-            // 	}
-            // });
 
             return data;
         };
@@ -1255,23 +1262,19 @@ $(function () {
             intensity,
             feedrate,
             passes,
-            pierce_time
+            pierceTime
         ) {
-            if (intensity === "" || intensity > 100 || intensity < 0)
-                return false;
-            if (
-                feedrate === "" ||
-                feedrate > self.JOB_PARAMS.max.speed ||
-                feedrate < self.JOB_PARAMS.min.speed
-            )
-                return false;
-            if (passes === "" || passes <= 0) return false;
-            if (
-                pierce_time === "" ||
-                pierce_time < self.JOB_PARAMS.min.pierceTime
-            )
-                return false;
-            return true;
+            const intensityValid =
+                !isNaN(intensity) && intensity <= 100 && intensity >= 0;
+            const feedrateValid =
+                !isNaN(feedrate) &&
+                feedrate <= self.JOB_PARAMS.max.speed &&
+                feedrate >= self.JOB_PARAMS.min.speed;
+            const passesValid = !isNaN(passes) && passes > 0;
+            const ptValid =
+                !isNaN(pierceTime) &&
+                pierceTime >= self.JOB_PARAMS.min.pierceTime;
+            return intensityValid && feedrateValid && passesValid && ptValid;
         };
 
         self.get_current_engraving_settings = function (
@@ -1724,19 +1727,19 @@ $(function () {
 
         self.doFrontendRendering = async function (forceRastering = false) {
             const pixPerMM = 1 / self.beamDiameter();
-            console.log(
-                "### renderInput: do_raster_engrave",
-                self.do_raster_engrave()
-            );
+            //            console.info(
+            //                "### renderInput: do_raster_engrave",
+            //                self.do_raster_engrave()
+            //            );
             const enableRastering = forceRastering || self.do_raster_engrave();
             const renderOutput = await self.workingArea.getCompositionSVG(
                 enableRastering,
                 pixPerMM
             );
-            console.info(
-                "### renderOutput",
-                renderOutput.jobTimeEstimationData
-            );
+            //            console.info(
+            //                "### renderOutput",
+            //                renderOutput.jobTimeEstimationData
+            //            );
             self.svg = renderOutput.renderedSvg;
             self.gcode_length_summary(renderOutput.jobTimeEstimationData);
         };
@@ -2166,6 +2169,11 @@ $(function () {
                         line_mapping_container.append(outer);
                         $("#" + slider_id + "_out").append(color_circle);
                         $("#" + slider_id + "_out").append(slider);
+                        $("#" + slider_id + "_out input#" + slider_id).change(
+                            function () {
+                                self.estimated_job_time_trigger(Date.now());
+                            }
+                        );
                     }
                 }
             }
@@ -2282,8 +2290,9 @@ $(function () {
 
         // quick hack
         self._update_job_summary = function () {
-            var jobs = self.get_current_multicolor_settings();
-            self.vectorJobs(jobs);
+            console.log(" #### update_job_summary");
+            //            var jobs = self.get_current_multicolor_settings();
+            //            self.vectorJobs(jobs);
         };
 
         self._thickness_sort_function = function (a, b) {

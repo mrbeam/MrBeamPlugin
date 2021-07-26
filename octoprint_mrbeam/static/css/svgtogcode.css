@@ -376,6 +376,19 @@ body.colorDragInProgress #drop_overlay {
   display: none;
 }
 
+#job_time_estimation_detailed ul li {
+  list-style: none;
+}
+#job_time_estimation_detailed ul li div {
+  height: 1em;
+  width: 1em;
+  display: inline-block;
+  box-shadow: 1px 1px 2px 2px #00000024;
+  border-radius: 0.15em;
+  background-position: center center;
+  background-size: contain;
+}
+
 .checkInput {
   border-color: red !important;
 }
