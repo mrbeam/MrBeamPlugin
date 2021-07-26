@@ -1,0 +1,511 @@
+#!/bin/bash
+
+# Usage:
+# call: sudo /root/mount_manager/mount_manager add|remove|clear|version
+# clear: if no usb stick plugged in, SELFCHECK_DIR will be deleted
+# if `df /` says that there is little space on disk left, mount_manager deletes all files in var/log and ~/.octoprint/logs
+
+VERSION="1.7.1"
+APP_DIR=/root/mount_manager
+LOG_FILE="/var/log/mount_manager.log"
+SELFCHECK_MOUNT_TARGET=/media/
+DESIGNLIB_MOUNT_TARGET="/home/pi/.octoprint/uploads/USB-Stick"
+
+OCTOPRINT_LOG="/home/pi/.octoprint/logs/octoprint.log"
+MRBEAM_PLUGIN_DIR="/home/pi/oprint/lib/python2.7/site-packages/octoprint_mrbeam"
+MRBEAM_PLUGIN_SHADOWED_DIR="/home/pi/oprint/lib/python2.7/site-packages/_octoprint_mrbeam_shadowed"
+
+SIG_DIR="/mrbeam" # optional. can be in / as well
+SIG_FILE_PATTERN="mrbeam*.sig"
+TAR_FILE_BASE="/mrbeam_usb_mount.tar.gz"
+
+SELFCHECK_DIR=/home/pi/usb_mount
+SELFCHECK_FILE="${SELFCHECK_DIR}/mrbeam_usb_mount_start"
+SELFCHECK_STOP="${SELFCHECK_DIR}/mrbeam_usb_mount_stop"
+
+MIN_FREE_SPACE_K=10000
+
+log_private=true
+log_syslog=false
+
+user=pi
+group=pi
+
+arr_media_mounted=()
+arr_media_unmounted=()
+arr_plugged_in_path=()
+arr_plugged_in_label=()
+arr_plugged_in_type=()
+
+
+FLASH_PURPLE="flash_color:128:0:128:1"
+FLASH_ORANGE="flash_color:226:83:3:1"
+
+function signal_alert {
+	mrbeam_ledstrips_cli $1
+	sleep 3
+	mrbeam_ledstrips_cli rollback
+}
+
+function signal_busy {
+mrbeam_ledstrips_cli flash_color:40:40:40:5
+}
+
+# useful - but not in use yet.
+# output:
+# /dev/mmcblk0p2 / ext4
+# /dev/mmcblk0p1 /boot vfat
+# /dev/sda1 /home/pi/.octoprint/uploads/USB-Stick_4 vfat
+getMountedDevices () { echo $( findmnt -t ext4,vfat,exfat,ext2,ext3,ntfs -rno SOURCE,TARGET,FSTYPE 2>/dev/null ); }
+
+# reliable checks if mounted with findmnt
+# where: -r = --raw, -n = --noheadings, -o = --output
+isMounted    () { findmnt -rno SOURCE,TARGET "$1" >/dev/null;} #path or device
+isDevMounted () { findmnt -rno SOURCE        "$1" >/dev/null;} #device only
+isPathMounted() { findmnt -rno        TARGET "$1" >/dev/null;} #path   only
+
+# convenience methods
+getMountPath () { echo $(findmnt -rno TARGET "$1"); } # param /dev/sda1 -> returns /media/foo
+getMountDev  () { echo $(findmnt -rno SOURCE "$1"); } # param /media/foo -> returns /dev/sda1
+
+
+# function for mounting different file systems
+# TODO user? root? umask=000?
+function mountStick {
+	USB_DEVICE="$1"      # e.g. /dev/sda , /dev/sdb1 , ...
+	TARGET_DIR="$2"    # e.g. /tmp/93ce-ad98e9ead6a3
+	FS_TYPE="$3"         # e.g. vfat, ext2, ext3, ext4, exfat, ntfs, ...
+
+	if [[ ! -e ${TARGET_DIR} ]] ; then
+		log_info "Target ${TARGET_DIR} does not exist. creating..."
+		mkdir -p "${TARGET_DIR}"
+	fi
+
+	log_info "mounting USB_DEVICE=${USB_DEVICE}, FS_TYPE=${FS_TYPE} to TARGET_DIR=${TARGET_DIR} ..."
+	cmd=""
+	# No support for:
+	# exfat: tested, no support in our raspbian image (apt-get install exfat-utils might solve it)
+	# ext2|3|4 : uid and gid mapping is a problem here. Maybe works with bindfs, but that's currently not installed.
+	# ntfs: works, but readonly. is this a problem?
+	case "$FS_TYPE" in
+	"vfat")
+		# hfsplus (not supported) not tested
+		cmd="mount -t vfat -o 'utf8,uid=${user},gid=${group}' ${USB_DEVICE} ${TARGET_DIR} >> $LOG_FILE 2>&1"
+		;;
+	"ntfs")
+		# switch to ntfs-3g if installed
+		WRITE_SUPPORTED=$(dpkg -l | grep ntfs-3g)
+		if [ -z "${WRITE_SUPPORTED}" ]; then
+			cmd="sudo mount -t ntfs-3g -o 'utf8,uid=${user},gid=${group},umask=000,rw' ${USB_DEVICE} ${TARGET_DIR} >> $LOG_FILE 2>&1"
+		else
+			cmd="sudo mount -t ntfs -o 'utf8,uid=${user},gid=${group},umask=000,ro' ${USB_DEVICE} ${TARGET_DIR} >> $LOG_FILE 2>&1"
+		fi
+		;;
+	"ext3" | "ext4")
+		# "ext2" permission problems (userid on stick totally different. chown can fix, but will modify the stick)
+		cmd="mount -t $FS_TYPE -o 'defaults' ${USB_DEVICE} ${TARGET_DIR} >> $LOG_FILE 2>&1"
+		;;
+	*)
+		log_warn "Unsupported filesystem type: ${FS_TYPE} . Nothing done." "${OCTOPRINT_LOG}"
+		return 1
+		;;
+	esac
+
+	# logging the exactly executed command
+	log_info "    ${cmd}"
+	eval ${cmd}
+
+}
+
+# functions for logging output
+function log {
+	if [ "$log_private" = true ] ; then
+		echo "$(date +"%Y.%m.%d %H:%M:%S") $1" >> $LOG_FILE
+	fi
+
+	if [ ! -z "$2" ]; then
+		echo "$(date +"%Y.%m.%d %H:%M:%S") mrbeam_usb_mount_manager> $1" >> $2
+	fi
+}
+function log_info {
+	log "INFO: $1" $2
+	if [ "$log_syslog" = true ] ; then
+		logger $1 -p info -t ${0#./}
+	fi
+}
+function log_warn {
+	log "WARNING: $1" $2
+	if [ "$log_syslog" = true ] ; then
+		logger $1 -p warning -t ${0#./}
+	fi
+}
+function log_err {
+	log "ERROR: $1" $2
+	if [ "$log_syslog" = true ] ; then
+		logger $1 -p error -t ${0#./}
+	fi
+}
+
+function fix_op_log {
+	# if we created octoprint log file here, we need to make sure it's writable for octoprint
+	log "Testing if OP log exists"
+	if [ -e "${OCTOPRINT_LOG}" ]; then
+		log "Testing if OP log exists: Exists -> fixing "
+		chown pi:pi "${OCTOPRINT_LOG}"
+		chmod 666 "${OCTOPRINT_LOG}"
+	fi
+}
+
+
+
+# print version
+if [ "$1" == "version" ]; then
+echo "${VERSION}"
+exit 0
+fi
+
+
+
+# free disk space before anything else.
+orig_log_syslog=$log_syslog
+log_syslog=true
+
+
+FREE_SPACE=`df -k --output=avail / | tail -n1`
+if ((FREE_SPACE < MIN_FREE_SPACE_K)); then
+	rm -f /var/log/*
+	rm -f /home/pi/.octoprint/logs/*
+	log_warn "DISK SPACE IS LOW!!! (Free space: ${FREE_SPACE}k): Deleted all files in /var/log and /home/pi/.octoprint/logs/"
+fi
+FREE_SPACE=`df -k --output=avail / | tail -n1`
+log_info "Free disk space is now: ${FREE_SPACE}k"
+
+
+
+
+
+######################################################
+#
+#       start main routine
+log_info "========== mount_manager v${VERSION} called by udev $1 =========="
+
+# check if run as root. does not make sense otherwise.
+if [[ $EUID -ne 0 ]]; then
+	log_err "Script mount_manager must be run as root" "${OCTOPRINT_LOG}"
+	echo "Script mount_manager must be run as root"
+	exit 1
+fi
+
+log_syslog=$orig_log_syslog
+
+# make log file writable for pi user
+sudo chmod 666 "${LOG_FILE}"
+
+
+
+# get directories in mounting directory $SELFCHECK_MOUNT_TARGET
+for dir in $(ls -d "${SELFCHECK_MOUNT_TARGET}"*); do
+	if mount | grep $dir > /dev/null; then
+		arr_media_mounted+=(${dir#$SELFCHECK_MOUNT_TARGET})
+	else
+		arr_media_unmounted+=(${dir#$SELFCHECK_MOUNT_TARGET})
+	fi
+done
+
+
+# clear
+if [ "$1" == "clear" ]; then
+	if [ ${#arr_media_mounted[@]} -eq 0 ]; then
+		log_info "Clear: Deleting SELFCHECK_DIR ${SELFCHECK_DIR}" "${OCTOPRINT_LOG}"
+		rm -rf $SELFCHECK_DIR
+
+		# clean up if we shadowed our Plugin with a version from usb stick
+        if [ -d ${MRBEAM_PLUGIN_SHADOWED_DIR} ]; then
+            log_info "Shadowed MrBeam Plugin: Cleaning up... Moving ${MRBEAM_PLUGIN_SHADOWED_DIR} to ${MRBEAM_PLUGIN_DIR}" "${OCTOPRINT_LOG}"
+            sudo systemctl stop octoprint.service
+            rm -rf "${MRBEAM_PLUGIN_DIR}"
+            mv ${MRBEAM_PLUGIN_SHADOWED_DIR} "${MRBEAM_PLUGIN_DIR}"
+            sudo systemctl restart octoprint.service
+        else
+            log_info "Shadowed MrBeam Plugin: nothing to do" "${OCTOPRINT_LOG}"
+        fi
+	fi
+fi
+
+
+# get plugged in devices
+# Heads up: /dev/sda without number can be a partition as well, PTTYPE & TYPE or UUID & PARTUUID were mixed up by former regex
+# examples to match (ntfs, ext?, vfat)
+# /dev/sda1: UUID="0E9C04D36A214D01" TYPE="ntfs" PTTYPE="dos" PARTUUID="0d03c13b-e0f2-2745-852d-dff84541f60e" ## here TYPE was wronly detected as 'dos'
+#
+# regex did not support /dev/sda (only /dev/sda1) => added * at first ()
+# regex did not detect TYPE correct if PTTYPE was set => added \b before uppercase labels (just spaces did not work).
+regex='(/dev/sd[a-z][0-9]*): (LABEL=\"([A-Za-z0-9_\-]+)\")?.*\bUUID=\"([a-zA-Z0-9\-]+)\".*\bTYPE=\"([a-zA-Z0-9]+)\"'
+while IFS= read -r line; do
+		if [[ $line =~ $regex ]];then
+				name="${BASH_REMATCH[1]}"
+				label="${BASH_REMATCH[3]}"
+				uuid="${BASH_REMATCH[4]}"
+				type="${BASH_REMATCH[5]}"
+				if [ -z "${label}" ];then
+						label=${uuid}
+				fi
+				arr_plugged_in_path+=($name)
+				arr_plugged_in_label+=($label)
+				arr_plugged_in_type+=($type)
+		fi
+done < <(blkid) # blkid lists all block devices
+
+# TODO persistent LEDs blinking until remove.
+
+if [ "$1" == "remove" ]; then
+	### Cleanup selfcheck stuff ###
+	# check directories in /media yet not plugged in devices
+	for mounted_item in ${arr_media_mounted[*]}
+	do
+		if ! [[ " ${arr_plugged_in_label[*]} " == *" ${mounted_item} "* ]]; then
+			log_info "Mounted yet unplugged directory '${mounted_item}' found."
+
+			if [ -f "${SELFCHECK_STOP}" ]; then
+				log_info "Executing stop script '${SELFCHECK_STOP}' before unmounting..."
+				source "${SELFCHECK_STOP}"
+			fi
+
+			# TODO unmountStickAndCleanup() function
+			umount $SELFCHECK_MOUNT_TARGET$mounted_item >> $LOG_FILE 2>&1
+			if ! [ "$(ls -A $SELFCHECK_MOUNT_TARGET$mounted_item)" ]; then
+				log_info " - Directory now unmounted and empty and will be deleted."
+				rm -rf $SELFCHECK_MOUNT_TARGET$mounted_item >> $LOG_FILE 2>&1
+				if [[ -d $SELFCHECK_DIR ]]; then
+					log_info " - SELFCHECK_DIR will be deleted."
+					rm -rf $SELFCHECK_DIR
+				fi
+			else
+				log_err " - Directory not empty. This should not happen after unmount. Please check '${$SELFCHECK_MOUNT_TARGET$mounted_item}'"
+			fi
+		fi
+	done
+	for unmounted_item in ${arr_media_unmounted[*]}
+	do
+			if ! [[ " ${arr_plugged_in_label[*]} " == *" ${unmounted_item} "* ]]; then
+					log_info "Unmounted and unplugged directory '${unmounted_item}' found."
+				if ! [ "$(ls -A $SELFCHECK_MOUNT_TARGET$unmounted_item)" ]; then
+					log_info " - Directory is empty and will be deleted."
+					rm -rf $SELFCHECK_MOUNT_TARGET$unmounted_item >> $LOG_FILE 2>&1
+					if [[ -d $SELFCHECK_DIR ]]; then
+						log_info " - SELFCHECK_DIR will be deleted."
+						rm -rf $SELFCHECK_DIR
+					fi
+				else
+					log_warn " - Directory not empty. No further action."
+				fi
+			fi
+	done
+
+
+	### Cleanup designlib stuff ###
+	# iterate over all /home/pi/.octoprint/uploads/USB-Stick_* Folders
+	for designlibfile in ${DESIGNLIB_MOUNT_TARGET}_* ;
+	do
+		if isMounted ${designlibfile}; then # first unmount if necessary
+			umount ${designlibfile}
+			log_info "unmounted $designlibfile"
+		fi
+		if [ -z "$(ls -A ${designlibfile})" ]; then # then delete if empty
+			sudo rmdir "${designlibfile}"
+			log_info "deleted ${designlibfile}"
+		else
+			log_error "USB-Stick folder ${designlibfile} is not empty. Should never happen."
+			# What to do here?
+			# a) just delete all
+			# b) copy to somewhere else before deleting
+			# c) just ignore (Can the user delete a folder possibly owned by root:root?)
+		fi
+	done
+
+fi # if [ "$1" == "remove" ];
+
+
+
+if [ "$1" == "add" ]; then
+	if [ ${#arr_plugged_in_label[@]} -eq 0 ]; then
+		log_warn "Did not recognize any USB device. Check the mount_manager regex if it should be detected."
+	fi
+
+	# check plugged in devices
+	i=0
+	j=0 # flag: decides if signalling error at the end of the script
+	for plugged_in_item in ${arr_plugged_in_label[*]}
+	do
+		# Clear names assigned.
+		C_LABEL="${plugged_in_item}"
+		C_DEVICE="${arr_plugged_in_path[i]}"
+		C_TYPE="${arr_plugged_in_type[i]}"
+
+		log_info "Checking device #${i}: ${C_DEVICE} with label ${C_LABEL} and type ${C_TYPE}"
+		# check if the stick is already mounted. Changed to isMounted()
+		#if [[ " ${arr_media_mounted[*]} " == *" ${C_LABEL} "* ]]; then
+		if isMounted ${C_DEVICE}; then
+			C_MOUNT_POINT=$(getMountPath ${C_DEVICE})
+			log_info " - Already mounted device ${C_DEVICE} with label ${C_LABEL} in ${C_MOUNT_POINT}. Great."
+			((++j)) # Avoids flashing blue at the end - as there is nothing to do.
+		else
+			((++j)) # just a flag to show that this if else path was used (triggers blue flashing at the end of the script if 0)
+
+
+			err=$( mountStick ${C_DEVICE} "${SELFCHECK_MOUNT_TARGET}${C_LABEL}" ${C_TYPE} 2>&1) # if this works - remove function mounter
+
+			# TODO replace with if isMounted ${C_DEVICE}; then
+			if [ $? -ne 0 ]; then # $? is a bashism for the error state of the last command.
+				# changed misleading error message. (filesystem type isn't the only reason: permissions, detection regex, folder creation...).
+				log_warn "Mounting of ${C_DEVICE} failed with error '${err}'. See logfile for details." "${OCTOPRINT_LOG}"
+
+				# TODO curl call to do an octoprint frontend notification
+				signal_alert "flash_blue"
+			else
+				C_MOUNT_POINT=$(getMountPath ${C_DEVICE})
+				log_info "$Mounted {C_DEVICE} with label ${C_LABEL} in ${C_MOUNT_POINT}. Searching for *.sig file ..." "${OCTOPRINT_LOG}"
+				#### DO STUFF START #####
+
+				## Lookup .sig file ##
+				SEARCH_PATH="${C_MOUNT_POINT}${SIG_DIR}"
+				unset -v SIG_FILE_EXTERNAL # unset value from loop over former device.
+
+				# find newest .sig file
+				# first look in /mrbeam
+				for sigfile in "${SEARCH_PATH}"/${SIG_FILE_PATTERN}; do
+					[[ $sigfile -nt ${SIG_FILE_EXTERNAL} ]] && SIG_FILE_EXTERNAL=$sigfile;
+				done
+
+				# then fallback and serch in /
+				if [[ ! -n "${SIG_FILE_EXTERNAL}" ]]; then
+                    for sigfile in "${C_MOUNT_POINT}"/${SIG_FILE_PATTERN}; do
+                        [[ $sigfile -nt ${SIG_FILE_EXTERNAL} ]] && SIG_FILE_EXTERNAL=$sigfile;
+                    done
+				fi
+
+				SIG_FILE_EXTERNAL=$(realpath "${SIG_FILE_EXTERNAL}")
+				SIG_FILE_INTERNAL="${SELFCHECK_DIR}/$(basename ${SIG_FILE_EXTERNAL})"
+
+				# Check if selfcheck zip file is on usb-stick
+				if [[ -e "${SIG_FILE_EXTERNAL}" ]]; then
+
+					################# Execute SelfCheck Code ################
+
+					SIG_FILE_SIZE_EXTERNAL=$(stat -c%s "${SIG_FILE_EXTERNAL}")
+					log_info "GPG Signature: SIG_FILE found on USB-Stick: ${SIG_FILE_EXTERNAL} of size: ${SIG_FILE_SIZE_EXTERNAL}" "${OCTOPRINT_LOG}"
+
+					if gpg --verify "${SIG_FILE_EXTERNAL}"; then
+						log_info "GPG Signature: SIG_FILE ${SIG_FILE_EXTERNAL}: GPG Signature OK, handling file..."
+
+						signal_busy
+
+						# create selfcheck_dir
+						if [[ -d $SELFCHECK_DIR ]]; then
+							log_warn "Director $SELFCHECK_DIR already exists. Deleting it..."
+							rm -rf $SELFCHECK_DIR
+						fi
+						log_info "Create $SELFCHECK_DIR Directory"
+						mkdir $SELFCHECK_DIR
+						chown pi:pi $SELFCHECK_DIR
+
+
+						log_info "Copying ${SIG_FILE_EXTERNAL} to ${SIG_FILE_INTERNAL}"
+						cp ${SIG_FILE_EXTERNAL} ${SIG_FILE_INTERNAL}
+
+
+						if gpg --verify "${SIG_FILE_INTERNAL}"; then
+							# Check with SHA256 if its the right thing
+							log_info "GPG Signature OK" "${OCTOPRINT_LOG}"
+
+							# decrypt sig file to tar file
+							TAR_FILE_PATH="$SELFCHECK_DIR${TAR_FILE_BASE}"
+							log_info "Unpack ${SIG_FILE_INTERNAL} to ${TAR_FILE_PATH}"
+							gpg --output "$TAR_FILE_PATH" --decrypt "${SIG_FILE_INTERNAL}"
+
+							# unpack tar file
+							log_info "Unpack $TAR_FILE_PATH"
+							CMD="tar -xzpf ${TAR_FILE_PATH} -C ${SELFCHECK_DIR}"
+							runuser -l pi -c "$CMD"
+
+							#/etc/systemd/system/usb_mount_manager_add.service
+							if [ -f "${SELFCHECK_FILE}" ]; then
+								# start selfcheck_start in new process
+								LAUNCH="${SELFCHECK_FILE} ${LOG_FILE} ${SELFCHECK_DIR} ${C_MOUNT_POINT} ${OCTOPRINT_LOG}"
+
+								if [ -f "/etc/systemd/system/mount_manager_add.service" ]; then
+									log_info "Kicking off payload start script: '${LAUNCH}'"
+									CMD="/bin/bash ${LAUNCH}"
+									runuser -l pi -c "$CMD" &>> $LOG_FILE
+								else
+									# legacy. first few Mr Beam 2 devices need this since mount_manager is not
+									log_info "Kicking off payload start script: '${LAUNCH}' using legacy 'at'"
+									CMD="echo '/bin/bash ${LAUNCH}' | at now"
+									runuser -l pi -c "$CMD"
+								fi
+							else
+								log_warn "Payload start script not found: '${SELFCHECK_FILE}'" "${OCTOPRINT_LOG}"
+								signal_alert "flash_red"
+							fi
+
+						else
+							log_warn "GPG Signature INCORRECT after copying file to internal storage." "${OCTOPRINT_LOG}"
+							signal_alert "flash_yellow"
+						fi
+					else
+						log_warn "GPG Signature INCORRECT! Not handling file." "${OCTOPRINT_LOG}"
+						signal_alert "flash_yellow"
+					fi # and first gpg-check
+				else #if [[ -e "${SIG_FILE_EXTERNAL}" ]];
+					signal_alert "${FLASH_PURPLE}"
+					log_warn "GPG Signature: No SIG_FILE found on USB Device." "${OCTOPRINT_LOG}"
+
+
+					################# Mount in Design library ################
+
+					# OK the USB stick was not meant for self-check, updates, collecting data or any other code to run on the machine. So lets mount it in the design files folder
+
+					# unmount and remount into ~/.octoprint/uploads/
+					log_info "Unmounting: sudo umount ${C_DEVICE}" "${OCTOPRINT_LOG}"
+					sudo umount ${C_DEVICE}
+
+					SUFFIX=0
+					UPLOADS_TARGET="${DESIGNLIB_MOUNT_TARGET}_${SUFFIX}"
+					while [ -e ${UPLOADS_TARGET} ]; do
+					((SUFFIX++))
+					UPLOADS_TARGET="${DESIGNLIB_MOUNT_TARGET}_${SUFFIX}"
+					done
+					log_info "Remounting in ${UPLOADS_TARGET}" "${OCTOPRINT_LOG}"
+
+					err=$( mountStick "${C_DEVICE}" "${UPLOADS_TARGET}" ${C_TYPE} 2>&1 )
+
+					if [ $? -ne 0 ]; then
+						log_warn "Mounting of ${C_DEVICE} failed: ${err}." "${OCTOPRINT_LOG}"
+					else
+						log_info "Mounted USB-Stick '${C_TYPE}' to ${DESIGNLIB_MOUNT_TARGET}_${SUFFIX}" "${OCTOPRINT_LOG}"
+						# TODO curl call to do an octoprint notification
+
+					fi
+
+
+				#### DO STUFF END #####
+
+				fi #if [[ -e "${SIG_FILE_EXTERNAL}" ]];
+			fi # if mountStick worked
+		fi # if isMounted()
+		log_info "Device #${i} ${C_DEVICE} processed."
+		(( ++i ))
+	done # for plugged_in_item in ${arr_plugged_in_label[*]}
+fi
+
+# flash blue, if the former loop was executed 0 times
+if [ "$1" == "add" ]; then
+	if [ $j -eq 0 ]; then
+		log_warn "Not processed USB stick" "${OCTOPRINT_LOG}"
+		signal_alert "flash_blue"
+	fi
+fi
+
+fix_op_log
+
+exit 0

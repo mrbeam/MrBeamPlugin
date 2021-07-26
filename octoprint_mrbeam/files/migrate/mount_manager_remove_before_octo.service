@@ -1,0 +1,10 @@
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mount_manager remove
+
+[Unit]
+Description=runs mount_manager remove as a tartup process before OctoPrint.
+Before=octoprint.service
+
+[Install]
+WantedBy=multi-user.target
