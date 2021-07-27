@@ -3216,6 +3216,17 @@ $(function () {
         ) {
             let clusters = svg.splitRasterClusters(fillAreas);
 
+            // only render clusters overlapping the working area
+            const waBB = snap.select("#coordGrid").getBBox();
+            clusters = clusters.filter(function (c, idx) {
+                const isInside = Snap.path.isBBoxIntersect(c.bbox, waBB);
+                if (!isInside)
+                    console.info(
+                        `Cluster ${idx} is outside workingArea. Skipping`
+                    );
+                return isInside;
+            });
+
             if (MRBEAM_DEBUG_RENDERING) {
                 debugBase64(
                     clusters.map((c) => c.svg.toDataURL()),

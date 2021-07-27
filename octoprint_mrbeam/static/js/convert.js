@@ -141,7 +141,6 @@ $(function () {
                 self.selected_material_thickness()
             );
             if (summary !== null) {
-                // TODO: how to update on color drag?
                 const multicolor_data = self.get_current_multicolor_settings();
                 const engraving_data = self.get_current_engraving_settings();
                 const machinePerformanceData = self.profile.getMechanicalPerformanceData();
@@ -152,12 +151,8 @@ $(function () {
                     machinePerformanceData
                 );
 
-                const hrEngravingDur = formatDurationHHMMSS(
-                    dur.totalRasterDurationHist
-                );
-                const hrMovementDur = formatDurationHHMMSS(
-                    dur.positioningDuration
-                );
+                const hrEngravingDur = dur.total.raster.hr;
+                const hrMovementDur = dur.total.positioning.hr;
                 let list = [];
                 list.push({
                     label: "Engraving",
@@ -170,9 +165,7 @@ $(function () {
                 ) {
                     list.push({
                         label: "Path ",
-                        duration: formatDurationHHMMSS(
-                            dur.vectors[col].duration
-                        ),
+                        duration: dur.vectors[col].duration.hr,
                         bgr: col,
                         img: "/plugin/mrbeam/static/img/line_overlay.svg",
                     });
@@ -184,10 +177,7 @@ $(function () {
                     img: "",
                 });
 
-                const corrected = WorkingAreaHelper.get_jte_correction(
-                    dur.totalDuration
-                );
-                const hrTotal = formatFuzzyHHMMSS(corrected);
+                const hrTotal = dur.total.sum.hr;
                 return {
                     val: dur,
                     humanReadable: hrTotal,
@@ -1074,10 +1064,9 @@ $(function () {
             self.text_placed(self.workingArea.hasTextItems());
             self.color_key_update();
 
-            self._update_job_summary();
-
             // Job Time Estimation 2.0
             self.doFrontendRendering(true); // initial rendering for job time estimation
+            self._update_job_summary();
 
             if (self.show_vector_parameters() || self.show_image_parameters()) {
                 self.dialog_state(self.get_dialog_state());
@@ -1235,7 +1224,7 @@ $(function () {
                         .find(".used_color")
                         .each(function (j, col) {
                             var hex = "#" + $(col).attr("id").substr(-6);
-                            console.info(`job_row_vector ${i}: ${hex}`);
+                            //                            console.info(`job_row_vector ${i}: ${hex}`);
                             data.push({
                                 color: hex,
                                 intensity: intensity,
@@ -1736,10 +1725,10 @@ $(function () {
                 enableRastering,
                 pixPerMM
             );
-            //            console.info(
-            //                "### renderOutput",
-            //                renderOutput.jobTimeEstimationData
-            //            );
+            console.info(
+                "### renderOutput",
+                renderOutput.jobTimeEstimationData
+            );
             self.svg = renderOutput.renderedSvg;
             self.gcode_length_summary(renderOutput.jobTimeEstimationData);
         };
@@ -2291,6 +2280,7 @@ $(function () {
         // quick hack
         self._update_job_summary = function () {
             console.log(" #### update_job_summary");
+            self.estimated_job_time_trigger(Date.now());
             //            var jobs = self.get_current_multicolor_settings();
             //            self.vectorJobs(jobs);
         };

@@ -387,6 +387,7 @@ class WorkingAreaHelper {
         const workingAreaHeight = machineData.workingAreaHeight;
         const maxFeedrate = machineData.maxFeedrateXY; // mm/min
         const maxAcceleration = machineData.accelerationXY; // mm/s²
+        const variance = 0.07;
 
         // 1. Vectors
         // Principle:
@@ -424,7 +425,7 @@ class WorkingAreaHelper {
                     0
                 );
             }
-            gcLengthSummary.vectors[color].duration = duration;
+            gcLengthSummary.vectors[color].duration = { raw: duration };
             sumVectorDur += duration;
         });
 
@@ -511,7 +512,7 @@ class WorkingAreaHelper {
 
                 const bitmapDur = linefeedDur + accelerationDur + histogramDur;
                 sumBitmapDur += bitmapDur;
-                gcLengthSummary.bitmaps[idx].bitmapDur = bitmapDur;
+                gcLengthSummary.bitmaps[idx].duration = { raw: bitmapDur };
                 gcLengthSummary.bitmaps[
                     idx
                 ].histogramLengthInMM = histogramLength;
@@ -528,7 +529,7 @@ class WorkingAreaHelper {
         const itemsCount =
             Object.keys(gcLengthSummary.vectors).length +
             gcLengthSummary.bitmaps.length;
-        const positioningDuration =
+        const sumPosDur =
             WorkingAreaHelper.get_gcode_path_duration_in_seconds(
                 avgPositioningLength,
                 maxFeedrate,
@@ -537,11 +538,40 @@ class WorkingAreaHelper {
             ) *
             (itemsCount + 2); // +2 for begin and end of the job
 
-        gcLengthSummary.positioningDuration = positioningDuration;
-        gcLengthSummary.totalRasterDurationHist = sumBitmapDur;
-        gcLengthSummary.totalVectorDuration = sumVectorDur;
-        gcLengthSummary.totalDuration =
-            sumVectorDur + sumBitmapDur + positioningDuration;
+        const sum = sumVectorDur + sumBitmapDur + sumPosDur;
+
+        // the correction factor is determined by some real experiments.
+        // It is chosen according to the total estimation length as longer estimations are more precise than shorter ones.
+        const c = WorkingAreaHelper.get_jte_correction(sum);
+        gcLengthSummary.estimationVariance = variance;
+        gcLengthSummary.estimationCorrection = c;
+
+        Object.keys(gcLengthSummary.vectors).forEach(function (color) {
+            const vec = gcLengthSummary.vectors[color];
+            WorkingAreaHelper.extend_duration_info(vec.duration, c, variance);
+        });
+
+        if (engravingData.engraving_enabled) {
+            gcLengthSummary.bitmaps.forEach(function (b, idx) {
+                const bmp = gcLengthSummary.bitmaps[idx];
+                WorkingAreaHelper.extend_duration_info(
+                    bmp.duration,
+                    c,
+                    variance
+                );
+            });
+        }
+
+        gcLengthSummary.total = {
+            vector: { raw: sumVectorDur },
+            raster: { raw: sumBitmapDur },
+            positioning: { raw: sumPosDur },
+            sum: { raw: sum },
+        };
+        Object.keys(gcLengthSummary.total).forEach(function (key) {
+            const obj = gcLengthSummary.total[key];
+            WorkingAreaHelper.extend_duration_info(obj, c, variance);
+        });
 
         return gcLengthSummary;
     }
@@ -591,7 +621,7 @@ class WorkingAreaHelper {
             lt60m: 1.07,
             def: 1.04,
         };
-        const VARIANCE = 0.07;
+
         let factor = CORRECTION_FACTORS.def;
 
         if (durationInSeconds < 60) {
@@ -601,13 +631,26 @@ class WorkingAreaHelper {
         } else if (durationInSeconds < 60 * 60) {
             factor = CORRECTION_FACTORS.lt60m;
         }
-        const corrected = durationInSeconds * factor;
 
+        return factor;
+    }
+
+    static apply_jte_variance(durationInSeconds, variance) {
         return {
-            val: corrected,
-            min: corrected * (1 - VARIANCE),
-            max: corrected * (1 + VARIANCE),
+            val: durationInSeconds,
+            min: durationInSeconds * (1 - variance),
+            max: durationInSeconds * (1 + variance),
+            abs: durationInSeconds * variance,
         };
+    }
+
+    static extend_duration_info(obj, factor, variance) {
+        const corrected = obj.raw * factor;
+        const range = WorkingAreaHelper.apply_jte_variance(corrected, variance);
+        obj.val = corrected;
+        obj.range = range;
+        obj.hr = formatFuzzyHHMM(range);
+        return obj;
     }
 }
 

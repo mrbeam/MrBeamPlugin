@@ -97,7 +97,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 }
             }
         } else {
-            // if(elem.getBBox().w === 0 || elem.getBBox().h === 0 ) return []; // filled elements need to have dimensions
+            if (elem.type === "g") return []; // means empty group
             if (
                 elem.type === "image" ||
                 elem.type === "text" ||
@@ -122,6 +122,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     selection.push(elem);
                 }
             } else {
+                // check for non-dimensional elements and out of working area elements
+                const bb = elem.getBBox();
+                if (bb.w === 0 || bb.h === 0) {
+                    console.warn(`Element did not have expanse: ${elem.type}`);
+                    return [];
+                }
+
                 if (fillPaths && elem.is_filled()) {
                     elem.addClass(className);
                     selection.push(elem);
@@ -347,9 +354,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
         const enlargement_x = 0.4; // percentage of the width added to each side
         const enlargement_y = 0.4; // percentage of the height added to each side
-        const x1 = Math.max(0, bbox.x - bbox.width * enlargement_x);
-        const x2 = Math.min(wMM, bbox.x2 + bbox.width * enlargement_x);
-        const w = x2 - x1;
+        const x1 = Math.max(0, bbox.x - bbox.width * enlargement_x); // clip to working area left bound
+        const x2 = Math.min(wMM, bbox.x2 + bbox.width * enlargement_x); // clip to working area right bound
+        const w = x2 - x1; // TODO: bug! result can be negative. -> adopt to clipping
         const y1 = Math.max(0, bbox.y - bbox.height * enlargement_y);
         const y2 = Math.min(wMM, bbox.y2 + bbox.height * enlargement_y);
         const h = y2 - y1;

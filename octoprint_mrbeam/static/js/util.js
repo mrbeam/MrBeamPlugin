@@ -123,13 +123,19 @@ $(function () {
         return { h: hours, m: minutes, s: seconds, hh: hh, mm: mm, ss: ss };
     };
 
-    formatFuzzyHHMMSS = function (durMinMax) {
+    formatFuzzyHHMM = function (durMinMax) {
         if (durMinMax.val < 120) {
-            return "~2 minutes";
+            return "~ 0h 2m ± 1m";
         } else {
-            const min = getHoursMinutesSeconds(durMinMax.min);
-            const max = getHoursMinutesSeconds(durMinMax.max);
-            return `${min.h}:${min.mm}:${min.ss} - ${max.h}:${max.mm}:${max.ss} `;
+            const diff = durMinMax.max - durMinMax.min;
+            if (diff < 60) {
+                const avg = getHoursMinutesSeconds(durMinMax.val);
+                return `~ ${avg.h}h ${avg.m}m ± 1m`;
+            } else {
+                const min = getHoursMinutesSeconds(durMinMax.min);
+                const max = getHoursMinutesSeconds(durMinMax.max);
+                return `${min.h}h ${min.m}m - ${max.h}h ${max.m}m `;
+            }
         }
     };
 

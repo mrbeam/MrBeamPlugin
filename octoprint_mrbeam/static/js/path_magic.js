@@ -735,6 +735,10 @@ var mrbeam = mrbeam || {};
     };
 
     module.gcode = function (paths, id, mb_meta) {
+        if (paths.length === 0) {
+            console.warn("No paths to generate gcode!");
+            //            return null;
+        }
         var commands = [];
         let first_point = null;
         let last_point = {};
