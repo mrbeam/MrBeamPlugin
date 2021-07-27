@@ -294,8 +294,11 @@ class Migration(object):
         return LooseVersion(lower_vers) < LooseVersion(higher_vers)
 
     def save_current_version(self):
-        self.plugin._settings.set(["version"], self.version_current, force=False)
-        self.plugin._settings.save()
+        if self.plugin._settings.get(["version"]) != self.version_current:
+            self.plugin._settings.set(
+                ["version"], self.version_current, force=True
+            )  # force needed to save it if it wasn't there
+            self.plugin._settings.save()
 
     ##########################################################
     #####              general stuff                     #####
