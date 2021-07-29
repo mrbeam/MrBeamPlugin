@@ -455,7 +455,8 @@ class WorkingAreaHelper {
 
                 // Linefeed duration
                 const linefeedLength =
-                    b.h + engravingData.extra_overshoot ? 2 * 2 * lineCount : 0; // assumption: overshoot move is 4mm per line
+                    b.h +
+                    lineCount * (engravingData.extra_overshoot ? 3 * 2 : 1); // assumption: extra overshoot move is 6mm per line, standard 1mm
                 const linefeedPathDur = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
                     linefeedLength,
                     maxFeedrate,
@@ -498,7 +499,7 @@ class WorkingAreaHelper {
                         minSpeed;
                     if (brightness === 255) {
                         speed = maxFeedrate;
-                        pixelAmount -= b.whitePixelsOutside; // TODO only if white pixels are skipped
+                        pixelAmount -= b.whitePixelsOutside; // White pixels (brightness===255) are always skipped (means not lasered)!
                     }
                     const length = pixelAmount * engravingData.beam_diameter;
                     histogramLength += length;
@@ -509,8 +510,18 @@ class WorkingAreaHelper {
                         engravingData.pierce_time
                     );
                 }
+                // engraving mode correction factor
+                let modeCorrection = 1; // default: engraving_mode === "precise"
+                if (engravingData.engraving_mode === "basic") {
+                    modeCorrection = 1 + b.innerWhitePixelRatio * 0.25; // assumption. useless moves over inner white pixel are 25% more than in precise mode
+                } else if (engravingData.engraving_mode === "fast") {
+                    modeCorrection = 1;
+                }
 
-                const bitmapDur = linefeedDur + accelerationDur + histogramDur;
+                const bitmapDur =
+                    linefeedDur +
+                    accelerationDur +
+                    histogramDur * modeCorrection;
                 sumBitmapDur += bitmapDur;
                 gcLengthSummary.bitmaps[idx].duration = { raw: bitmapDur };
                 gcLengthSummary.bitmaps[

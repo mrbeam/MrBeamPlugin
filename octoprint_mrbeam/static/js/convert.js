@@ -134,12 +134,11 @@ $(function () {
         self.gcode_length_summary = ko.observable(null);
         self.estimated_job_time_trigger = ko.observable(0);
         self.estimated_job_time = ko.computed(function () {
+            self.estimated_job_time_trigger(); // does nothing, but required to trigger the recalculation of the computed.
+            self.selected_material_thickness(); // same here
             const summary = self.gcode_length_summary();
-            console.log(
-                "triggered",
-                self.estimated_job_time_trigger(),
-                self.selected_material_thickness()
-            );
+
+            //            console.log("triggered");
             if (summary !== null) {
                 const multicolor_data = self.get_current_multicolor_settings();
                 const engraving_data = self.get_current_engraving_settings();
@@ -173,8 +172,8 @@ $(function () {
                 list.push({
                     label: "Movement",
                     duration: hrMovementDur,
-                    bgr: "#ffffff",
-                    img: "",
+                    bgr: "#383e42",
+                    img: "/plugin/mrbeam/static/img/position_movement.svg",
                 });
 
                 const hrTotal = dur.total.sum.hr;
@@ -187,6 +186,11 @@ $(function () {
                 return { val: -1, humanReadable: "-", verbose: "" };
             }
         });
+
+        self.recalcJobTime = function () {
+            console.info("recalc JTE", Date.now());
+            self.estimated_job_time_trigger(Date.now());
+        };
 
         self.expandMaterialSelector = ko.computed(function () {
             return (
@@ -875,7 +879,7 @@ $(function () {
                     .find(".param_cut_compressor")
                     .val(p.cut_compressor || 3); // Fall back to 100%
             }
-            self.estimated_job_time_trigger(Date.now());
+            self.recalcJobTime();
         };
 
         self.apply_engraving_proposal = function () {
@@ -906,7 +910,7 @@ $(function () {
             self.engravingCompressor(
                 p.eng_compressor || self.JOB_PARAMS.default.engCompressor
             ); // Here we pass the value of the range (0), not the real one (10%)
-            self.estimated_job_time_trigger(Date.now());
+            self.recalcJobTime();
         };
 
         self._find_closest_color_to = function (hex, available_colors) {
@@ -1192,6 +1196,9 @@ $(function () {
             });
 
             $(".job_row_vector").each(function (i, job) {
+                if ($(job).find(".used_color").length === 0) {
+                    return;
+                }
                 var intensity_user = parseFloat(
                     $(job).find(".param_intensity").val()
                 );
@@ -1238,8 +1245,13 @@ $(function () {
                             });
                         });
                 } else {
-                    console.log(
-                        `Skipping vector job ${i}, invalid parameters.`
+                    console.info(
+                        `Skipping vector job ${i}, invalid parameters (${[
+                            intensity_user,
+                            feedrate,
+                            passes,
+                            piercetime,
+                        ]}).`
                     );
                 }
             });
@@ -1725,10 +1737,10 @@ $(function () {
                 enableRastering,
                 pixPerMM
             );
-            console.info(
-                "### renderOutput",
-                renderOutput.jobTimeEstimationData
-            );
+            //            console.info(
+            //                "### renderOutput",
+            //                renderOutput.jobTimeEstimationData
+            //            );
             self.svg = renderOutput.renderedSvg;
             self.gcode_length_summary(renderOutput.jobTimeEstimationData);
         };
@@ -2160,7 +2172,7 @@ $(function () {
                         $("#" + slider_id + "_out").append(slider);
                         $("#" + slider_id + "_out input#" + slider_id).change(
                             function () {
-                                self.estimated_job_time_trigger(Date.now());
+                                self.recalcJobTime();
                             }
                         );
                     }
@@ -2169,8 +2181,7 @@ $(function () {
             // remove all slider still flagged
             $("#colored_line_mapping >." + classFlag).remove();
             self.show_line_color_mappings(show_line_mappings);
-            console.log("TRIGGER");
-            self.estimated_job_time_trigger(Date.now());
+            self.recalcJobTime();
         };
 
         self.setInputLimits = function () {
@@ -2279,8 +2290,8 @@ $(function () {
 
         // quick hack
         self._update_job_summary = function () {
-            console.log(" #### update_job_summary");
-            self.estimated_job_time_trigger(Date.now());
+            console.info(" #### update_job_summary");
+            self.recalcJobTime();
             //            var jobs = self.get_current_multicolor_settings();
             //            self.vectorJobs(jobs);
         };

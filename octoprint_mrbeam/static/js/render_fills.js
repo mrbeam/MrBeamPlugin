@@ -98,6 +98,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             }
         } else {
             if (elem.type === "g") return []; // means empty group
+            if (elem.type === "defs") return []; // means empty defs
             if (
                 elem.type === "image" ||
                 elem.type === "text" ||

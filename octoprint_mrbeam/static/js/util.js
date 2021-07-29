@@ -124,13 +124,17 @@ $(function () {
     };
 
     formatFuzzyHHMM = function (durMinMax) {
-        if (durMinMax.val < 120) {
-            return "~ 0h 2m ± 1m";
+        if (durMinMax.val === 0) {
+            return "0h 0m";
+        } else if (durMinMax.val < 60) {
+            return "~ 0h 1m";
+        } else if (durMinMax.val < 120) {
+            return "~ 0h 2m";
         } else {
             const diff = durMinMax.max - durMinMax.min;
             if (diff < 60) {
                 const avg = getHoursMinutesSeconds(durMinMax.val);
-                return `~ ${avg.h}h ${avg.m}m ± 1m`;
+                return `~ ${avg.h}h ${avg.m}m`;
             } else {
                 const min = getHoursMinutesSeconds(durMinMax.min);
                 const max = getHoursMinutesSeconds(durMinMax.max);
