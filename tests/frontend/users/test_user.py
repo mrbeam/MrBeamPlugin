@@ -10,7 +10,6 @@ from frontend.users.base_procedure import BaseProcedure
 class TestUser(BaseProcedure):
 
     # only one user can be created
-    @pytest.mark.skip
     @pytest.mark.parametrize("username, password", [
         ('sherif@gmail.com', 'secret'),
     ])
