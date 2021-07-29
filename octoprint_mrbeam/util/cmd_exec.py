@@ -12,7 +12,7 @@ def exec_cmd(cmd, log=True, shell=True, loglvl=DEBUG):
                      False if the command returned with an error,
                      None if there was an exception.
     """
-    _logger = mrb_logger(__name__ + "exec_cmd")
+    _logger = mrb_logger(__name__ + ".exec_cmd")
     code = None
     if log:
         _logger.log(loglvl, "cmd=%s", cmd)

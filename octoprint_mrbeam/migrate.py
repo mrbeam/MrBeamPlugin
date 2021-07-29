@@ -3,9 +3,11 @@ import os
 import platform
 import re
 import shutil
+from datetime import datetime
 from distutils.version import LooseVersion, StrictVersion
 
 from octoprint_mrbeam import IS_X86
+from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.util import logExceptions
@@ -19,7 +21,6 @@ def migrate(plugin):
 
 
 class Migration(object):
-
     VERSION_SETUP_IPTABLES = "0.1.19"
     VERSION_SYNC_GRBL_SETTINGS = "0.1.24"
     VERSION_FIX_SSH_KEY_PERMISSION = "0.1.28"
@@ -59,6 +60,7 @@ class Migration(object):
         self.suppress_migrations = (
             self.plugin._settings.get(["dev", "suppress_migrations"]) or IS_X86
         )
+        beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
 
     def run(self):
         try:
@@ -214,24 +216,46 @@ class Migration(object):
                 ):
                     self.hostname_helper_scripts()
 
+                if (
+                    self.beamos_date is not None
+                    and BEAMOS_LEGACY_DATE
+                    < self.beamos_date
+                    <= datetime.strptime("2021-07-19", "%Y-%m-%d").date()
+                    and (self.plugin._settings.get(["version"]) is None)
+                ):  # for images before the 19.7.2021
+                    self.fix_s_series_mount_manager()
+
                 # migrations end
 
-                self.save_current_version()
                 self._logger.info(
                     "Finished migration from v{} to v{}.".format(
                         self.version_previous, self.version_current
                     )
                 )
+
             elif self.suppress_migrations:
                 self._logger.warn(
                     "No migration done because 'suppress_migrations' is set to true in settings."
                 )
             else:
                 self._logger.debug("No migration required.")
+
+            self.save_current_version()
         except Exception as e:
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
     def is_migration_required(self):
+        self._logger.debug(
+            "beomosdate %s version %s",
+            self.beamos_date,
+            self.plugin._settings.get(["version"]),
+        )
+        if (
+            self.beamos_date is not None
+            and BEAMOS_LEGACY_DATE < self.beamos_date
+            and (self.plugin._settings.get(["version"]) is None)
+        ):  # fix migration won't run for s-series image
+            return True
         if self.version_previous is None:
             return True
         try:
@@ -270,7 +294,8 @@ class Migration(object):
         return LooseVersion(lower_vers) < LooseVersion(higher_vers)
 
     def save_current_version(self):
-        self.plugin._settings.set(["version"], self.version_current, force=True)
+        self.plugin._settings.set(["version"], self.version_current, force=False)
+        self.plugin._settings.save()
 
     ##########################################################
     #####              general stuff                     #####
@@ -493,12 +518,16 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         exec_cmd("sudo logrotate /etc/logrotate.conf")
         exec_cmd("sudo service cron restart")
 
-    def update_mount_manager(self):
+    def update_mount_manager(
+        self,
+        mount_manager_path="/root/mount_manager/mount_manager",
+        mount_manager_file="mount_manager",
+    ):
         self._logger.info("update_mount_manager() ")
         needs_update = True
-        out, code = exec_cmd_output(["/root/mount_manager/mount_manager", "version"])
+        out, code = exec_cmd_output([mount_manager_path, "version"])
+        version = None
         if code == 0:
-            version = None
             try:
                 version = StrictVersion(out)
                 needs_update = version < self.MOUNT_MANAGER_VERSION
@@ -512,21 +541,14 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 self.MOUNT_MANAGER_VERSION,
             )
             mount_manager_file = os.path.join(
-                __package_path__, self.MIGRATE_FILES_FOLDER, "mount_manager"
+                __package_path__, self.MIGRATE_FILES_FOLDER, mount_manager_file
             )
             exec_cmd(
-                [
-                    "sudo",
-                    "cp",
-                    str(mount_manager_file),
-                    "/root/mount_manager/mount_manager",
-                ],
+                ["sudo", "cp", str(mount_manager_file), mount_manager_path],
                 shell=False,
             )
-            exec_cmd(["sudo", "chmod", "745", "/root/mount_manager/mount_manager"])
-            exec_cmd(
-                ["sudo", "chown", "root:root", "/root/mount_manager/mount_manager"]
-            )
+            exec_cmd(["sudo", "chmod", "745", mount_manager_path])
+            exec_cmd(["sudo", "chown", "root:root", mount_manager_path])
         else:
             self._logger.debug(
                 "update_mount_manager() NOT updating mount_manager, current version: v%s",
@@ -626,6 +648,55 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         # For all the old Mr Beams, we preset the value to False. Then we will ask the users if they want to change it.
         if not self.plugin.isFirstRun():
             self.plugin._settings.set_boolean(["gcodeAutoDeletion"], False)
+
+    def fix_s_series_mount_manager(self):
+        """
+        fixes a problem with the images before 19.7.2021
+        the rc.local file was missing the clear command for the mount_manager
+        this replaces the rc.local file with the one containing this row
+        """
+        self._logger.info("start fix_s_series_mount_manager")
+        src_rc_local = os.path.join(
+            __package_path__, self.MIGRATE_FILES_FOLDER, "rc.local"
+        )
+        dst_rc_local = "/etc/rc.local"
+        if exec_cmd("sudo cp {src} {dst}".format(src=src_rc_local, dst=dst_rc_local)):
+            self._logger.info("rc.local file copied to %s", dst_rc_local)
+
+        dst = "/etc/systemd/system"
+        self._logger.info("copy files")
+
+        systemdfiles = (
+            (False, "mount_manager_remove.service"),
+            (True, "mount_manager_remove_before_octo.service"),
+            (False, "mount_manager_add.service"),
+        )
+        for enable, systemdfile in systemdfiles:
+            src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, systemdfile)
+            if (
+                exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
+                and exec_cmd("sudo systemctl daemon-reload")
+                and (
+                    not enable
+                    or exec_cmd("sudo systemctl enable {}".format(systemdfile))
+                )
+            ):
+                self._logger.info("successfully created ", systemdfile)
+
+        self.update_mount_manager(
+            mount_manager_path="/usr/bin/mount_manager",
+            mount_manager_file="mount_manager_s_series",
+        )
+        src_rc_local = os.path.join(
+            __package_path__, self.MIGRATE_FILES_FOLDER, "mount_manager.rules"
+        )
+        dst_rc_local = "/lib/udev/rules.d/00-mount_manager.rules"
+        if exec_cmd("sudo cp {src} {dst}".format(src=src_rc_local, dst=dst_rc_local)):
+            exec_cmd("sudo systemctl restart udev")
+            self._logger.info("updated mountmanager udev rules", dst_rc_local)
+            exec_cmd("sudo rm /etc/systemd/system/usb_mount_manager_add.service")
+            exec_cmd("sudo rm /etc/systemd/system/usb_mount_manager_remove.service")
+        self._logger.info("end fix_s_series_mount_manager")
 
     ##########################################################
     #####             lasercutterProfiles                #####

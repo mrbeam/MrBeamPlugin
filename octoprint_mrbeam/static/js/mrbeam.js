@@ -117,7 +117,8 @@ mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
 };
 
 mrbeam._isVersionOrLower = function (actualVersion, expectedVersion) {
-    var VPAT = /^\d+(\.\d+){0,2}$/;
+    var version_depth = 5;
+    var VPAT = /^\d+(\.\d+){0,4}$/;
 
     if (
         !actualVersion ||
@@ -129,14 +130,14 @@ mrbeam._isVersionOrLower = function (actualVersion, expectedVersion) {
     if (actualVersion == expectedVersion) return true;
     if (VPAT.test(actualVersion) && VPAT.test(expectedVersion)) {
         var lparts = actualVersion.split(".");
-        while (lparts.length < 3) lparts.push("0");
+        while (lparts.length < version_depth) lparts.push("0");
         var rparts = expectedVersion.split(".");
-        while (rparts.length < 3) rparts.push("0");
-        for (var i = 0; i < 3; i++) {
+        while (rparts.length < version_depth) rparts.push("0");
+        for (var i = 0; i < version_depth; i++) {
             var l = parseInt(lparts[i], 10);
             var r = parseInt(rparts[i], 10);
             if (l === r) continue;
-            return l > r;
+            return l < r;
         }
         return true;
     } else {

@@ -172,32 +172,32 @@ $(function () {
             }
             // version_and_newer
             if (restrictions.version_and_newer && restrictions.version_and_newer.length > 0 &&
-                !window.mrbeam._isVersionOrHigher(BEAMOS_VERSION, restrictions.version_and_newer)) {
+                window.mrbeam._isVersionOrHigher(BEAMOS_VERSION, restrictions.version_and_newer)) {
                 return false;
             }
             // version_and_older
             if (restrictions.version_and_older && restrictions.version_and_older.length > 0 &&
-                !window.mrbeam._isVersionOrLower(BEAMOS_VERSION, restrictions.version_and_older)) {
+                window.mrbeam._isVersionOrLower(BEAMOS_VERSION, restrictions.version_and_older)) {
                 return false;
             }
             // ts_after
             if (restrictions.ts_after) {
                 if (typeof (restrictions.ts_after) === 'number' &&
-                    Date.now() / 1000 < restrictions.ts_after) {
+                    Date.now() > restrictions.ts_after) {
                     return false;
                 } else if (typeof (restrictions.ts_after) === 'string' &&
                     // Date: '2011-10-10T14:48:00'
-                    Date.now() < Date.parse(restrictions.ts_after)) {
+                    Date.now() > Date.parse(restrictions.ts_after)) {
                     return false;
                 }
             }
             // ts_before
             if (restrictions.ts_before) {
                 if (typeof (restrictions.ts_before) === 'number' &&
-                    Date.now() / 1000 > restrictions.ts_before) {
+                    Date.now() < restrictions.ts_before) {
                     return false;
                 } else if (typeof (restrictions.ts_before) === 'string' &&
-                    Date.now() > Date.parse(restrictions.ts_before)) {
+                    Date.now() < Date.parse(restrictions.ts_before)) {
                     return false;
                 }
             }
