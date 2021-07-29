@@ -38,7 +38,11 @@ class TestUser(BaseProcedure):
         self.driver.find_element(By.ID, 'login_screen_email_address_in').send_keys(username)
         self.driver.find_element(By.ID, 'login_screen_password_in').send_keys(password)
 
+        js = 'return mrbeam.viewModels.loginScreenViewModel.loginState.loggedIn();'
+
+        assert self.driver.execute_script(js) == False
         self.driver.find_element(By.ID, 'login_screen_login_btn').click()
+        assert self.driver.execute_script(js) == True
 
 
 
