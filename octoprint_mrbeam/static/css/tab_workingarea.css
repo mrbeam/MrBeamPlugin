@@ -749,8 +749,10 @@ body.ctrlKey #translateHandle {
   transition-timing-function: linear;
 }
 
+#crosshairDummy path,
+#crosshairDummy circle.dot,
 #crosshair path,
-#crosshair circle {
+#crosshair circle.dot {
   stroke: #e25303;
   stroke-width: 2;
   stroke-linecap: round;
@@ -760,6 +762,22 @@ body.ctrlKey #translateHandle {
   stroke-dashoffset: 0;
   stroke-opacity: 1;
   pointer-events: none;
+}
+
+#crosshairDummy path,
+#crosshairDummy circle.dot {
+  stroke: #0000ff;
+  opacity: 0.5;
+}
+
+#crosshairDummy circle.dragger,
+#crosshair circle.dragger {
+  stroke: none;
+  fill: #000000;
+  opacity: 0;
+}
+#crosshair:hover circle.dragger {
+  opacity: 0.2;
 }
 
 body.activitySpinnerActive #activitySpinnerOverlay {

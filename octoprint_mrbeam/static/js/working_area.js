@@ -2894,6 +2894,8 @@ $(function () {
                     $("#wa_view_settings_body").collapse("toggle");
                 }
             });
+
+            self.initCrossHairDragging();
         };
 
         self.onTabChange = function (current, prev) {
@@ -3979,6 +3981,77 @@ $(function () {
         //  QUICKTEXT end
         // ***********************************************************
 
+        // ***********************************************************
+        //  move laserhead by crosshair dragging
+        // ***********************************************************
+        self.initCrossHairDragging = function () {
+            const crosshairHandle = snap.select("#crosshair");
+            const boundaries = [
+                0,
+                0,
+                self.workingAreaWidthMM(),
+                self.workingAreaHeightMM(),
+            ];
+
+            crosshairHandle.mousedown(function (event) {
+                // (1) prepare to moving: make absolute and on top by z-index
+                console.info("down", event);
+
+                // move it out of any current parents directly into body
+                // to make it positioned relative to the body
+                const clone = crosshairHandle.clone();
+                clone.attr("id", "crosshairDummy");
+                snap.append(clone);
+
+                // centers the ball at (pageX, pageY) coordinates
+                function setCrosshairPosMM(pageX, pageY) {
+                    clone.transform(Snap.matrix(1, 0, 0, 1, pageX, pageY));
+                }
+
+                // move our absolutely positioned ball under the pointer
+                const initialPos = self._get_pointer_event_position_MM_bboxed(
+                    event,
+                    snap.node,
+                    boundaries
+                );
+                setCrosshairPosMM(initialPos.x, initialPos.y);
+
+                function moveCrosshair(event) {
+                    if (event.which !== 1) {
+                        // Mouse button released outside target workingArea
+                        stopCrossHairDragging();
+                    } else {
+                        const pos = self._get_pointer_event_position_MM_bboxed(
+                            event,
+                            snap.node,
+                            boundaries
+                        );
+                        console.info(
+                            "move",
+                            pos.x,
+                            pos.y,
+                            event.which,
+                            event.button
+                        );
+                        setCrosshairPosMM(pos.x, pos.y);
+                    }
+                }
+
+                function stopCrossHairDragging() {
+                    console.info("### stop .... ");
+                    document.removeEventListener("mousemove", moveCrosshair);
+                    clone.unmouseup();
+                    clone.remove();
+                }
+
+                // (2) move the ball on mousemove
+                document.addEventListener("mousemove", moveCrosshair);
+
+                // (3) drop the ball, remove unneeded handlers
+                clone.mouseup(stopCrossHairDragging);
+            });
+        };
+
         // general modification keys
         // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_down = function (target, ev) {
@@ -4007,7 +4080,7 @@ $(function () {
         self.mouse_drag_wa = function (target, ev) {
             if (ev.originalEvent.shiftKey) {
                 var pos = self._get_pointer_event_position_MM(
-                    ev,
+                    ev.originalEvent,
                     ev.currentTarget
                 );
                 var newOffX = self.zoomOffX() - pos.dx;
@@ -4031,7 +4104,7 @@ $(function () {
         self.mouse_drag_monitor = function (target, ev) {
             if (ev.originalEvent.buttons === 1) {
                 var pos = self._get_pointer_event_position_MM(
-                    ev,
+                    ev.originalEvent,
                     ev.currentTarget
                 );
                 var newOffX = self.zoomOffX() + pos.dx;
@@ -4061,9 +4134,20 @@ $(function () {
             var targetBBox = target.getBoundingClientRect();
             var xPerc = (event.clientX - targetBBox.left) / targetBBox.width;
             var yPerc = (event.clientY - targetBBox.top) / targetBBox.height;
-            var dxPerc = event.originalEvent.movementX / targetBBox.width;
-            var dyPerc = event.originalEvent.movementY / targetBBox.height;
+            var dxPerc = event.movementX / targetBBox.width;
+            var dyPerc = event.movementY / targetBBox.height;
             return { x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc };
+        };
+
+        self._get_pointer_event_position_MM_bboxed = function (
+            event,
+            target,
+            bbox
+        ) {
+            const posMM = self._get_pointer_event_position_MM(event, target);
+            const x = Math.max(bbox[0], Math.min(bbox[2], posMM.x));
+            const y = Math.max(bbox[1], Math.min(bbox[3], posMM.y));
+            return { x: x, y: y };
         };
 
         /**
