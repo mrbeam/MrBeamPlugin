@@ -25,12 +25,14 @@ class BaseProcedure:
     def setup_class(self):
         self.file_based_user_manager = FilebasedUserManager()
 
+    def teardown_class(selfself):
+        if os.path.exists(user_file_path):
+            os.remove(user_file_path)
+
     def setup(self):
         self.driver = webdriverUtils.get_chrome_driver()
         uiUtils.load_webapp(self.driver, 'http://0.0.0.0:5000/')
 
-
     def teardown(self):
         self.driver.quit()
-        if os.path.exists(user_file_path):
-            os.remove(user_file_path)
+
