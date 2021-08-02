@@ -352,12 +352,7 @@ $(function () {
                 });
             } else {
                 console.warn(
-                    "Move Laser to " +
-                        x +
-                        "," +
-                        y +
-                        " command while machine state not idle: " +
-                        self.state.stateString()
+                    `Move Laser to ${x},${y} command while machine state not idle: ${self.state.stateString()}`
                 );
             }
         };
@@ -2181,6 +2176,11 @@ $(function () {
         };
 
         self.moveSelectedDesign = function (ifX, ifY) {
+            const selection = snap.mbtransform.getSelection();
+            if (selection.length === 0) {
+                console.info("No selection to move.");
+                return;
+            }
             var diff = 2;
             var globalScale = self.scaleMatrix().a;
             var nx = diff * ifX;
@@ -2188,7 +2188,6 @@ $(function () {
             var ntx = nx / globalScale;
             var nty = ny / globalScale;
 
-            const selection = snap.mbtransform.getSelection();
             snap.mbtransform.manualTransform(selection, {
                 tx_rel: ntx,
                 ty_rel: nty,
@@ -3209,6 +3208,7 @@ $(function () {
                     rect_w: w,
                     rect_h: h,
                     rect_radius: r,
+                    line_length: w,
                     circle_radius: w,
                     star_radius: w / 2,
                     star_corners: 5,
@@ -3267,6 +3267,7 @@ $(function () {
             $("#quick_shape_rect_w").val(params.rect_w).change();
             $("#quick_shape_rect_h").val(params.rect_h).change();
             $("#quick_shape_rect_radius").val(params.rect_radius).change();
+            $("#quick_shape_line_length").val(params.line_length).change();
             $("#quick_shape_circle_radius").val(params.circle_radius).change();
             $("#quick_shape_star_radius").val(params.star_radius).change();
             $("#quick_shape_star_corners").val(params.star_corners).change();
@@ -3337,6 +3338,9 @@ $(function () {
                     rect_radius: parseFloat(
                         $("#quick_shape_rect_radius").val()
                     ),
+                    line_length: parseFloat(
+                        $("#quick_shape_line_length").val()
+                    ),
                     circle_radius: parseFloat(
                         $("#quick_shape_circle_radius").val()
                     ),
@@ -3372,6 +3376,9 @@ $(function () {
                 var shape = g.select("path");
                 var d;
                 switch (qs_params.type) {
+                    case "#line":
+                        d = QuickShapeHelper.getLine(qs_params.line_length);
+                        break;
                     case "#circle":
                         d = QuickShapeHelper.getCircle(qs_params.circle_radius);
                         break;
@@ -3986,74 +3993,171 @@ $(function () {
         // ***********************************************************
         self.initCrossHairDragging = function () {
             const crosshairHandle = snap.select("#crosshair");
-            const boundaries = [
-                0,
-                0,
-                self.workingAreaWidthMM(),
-                self.workingAreaHeightMM(),
-            ];
+            window.mrbeam.draggableCrosshair = {};
 
             crosshairHandle.mousedown(function (event) {
-                // (1) prepare to moving: make absolute and on top by z-index
-                console.info("down", event);
+                self.abortFreeTransforms();
+                window.mrbeam.draggableCrosshair.origin = self.state.currentPos();
 
-                // move it out of any current parents directly into body
-                // to make it positioned relative to the body
-                const clone = crosshairHandle.clone();
-                clone.attr("id", "crosshairDummy");
-                snap.append(clone);
+                const boundaries = [
+                    0,
+                    0,
+                    self.workingAreaWidthMM(),
+                    self.workingAreaHeightMM(),
+                ];
 
-                // centers the ball at (pageX, pageY) coordinates
-                function setCrosshairPosMM(pageX, pageY) {
-                    clone.transform(Snap.matrix(1, 0, 0, 1, pageX, pageY));
-                }
+                // create a dummy crosshair attached to the pointer to visualize what this function does
+                const dummy = crosshairHandle.clone();
+                dummy.attr("id", "crosshairDummy");
+                snap.append(dummy);
 
                 // move our absolutely positioned ball under the pointer
-                const initialPos = self._get_pointer_event_position_MM_bboxed(
+                const handleBBox = crosshairHandle.getBBox();
+                const initialPos = self._get_pointer_event_position_MM(
                     event,
-                    snap.node,
-                    boundaries
+                    snap.node
                 );
-                setCrosshairPosMM(initialPos.x, initialPos.y);
+                const handleOffset = {
+                    x: initialPos.x - handleBBox.cx,
+                    y: initialPos.y - handleBBox.cy,
+                };
+                setCrosshairPosMM(initialPos);
 
-                function moveCrosshair(event) {
+                /* This adds the click-offset to the position,
+                 * asserts that the result it in the boundaries of the working area,
+                 * moves the dummy crosshair
+                 * and inverts the y axis for a mm coordinate in our gcode coords system.
+                 *
+                 * @param {object} pos from the event
+                 * @returns {object} corrected position {x: float, y: float}
+                 */
+                function setCrosshairPosMM(pos) {
+                    pos.x -= handleOffset.x;
+                    pos.y -= handleOffset.y;
+                    pos = self._assert_coords_in_boundaries(pos, boundaries);
+                    dummy.transform(Snap.matrix(1, 0, 0, 1, pos.x, pos.y));
+                    return { x: pos.x, y: boundaries[3] - pos.y };
+                }
+
+                function onMouseMove(event) {
                     if (event.which !== 1) {
-                        // Mouse button released outside target workingArea
-                        stopCrossHairDragging();
+                        // Mouse button released outside target workingArea or outside browser window
+                        stopCrossHairDragging(event);
+                        console.log("onMouseMove stopped", event.which);
                     } else {
-                        const pos = self._get_pointer_event_position_MM_bboxed(
+                        const pos = self._get_pointer_event_position_MM(
                             event,
-                            snap.node,
-                            boundaries
+                            snap.node
                         );
-                        console.info(
-                            "move",
-                            pos.x,
-                            pos.y,
-                            event.which,
-                            event.button
-                        );
-                        setCrosshairPosMM(pos.x, pos.y);
+                        const finalPos = setCrosshairPosMM(pos);
+                        window.mrbeam.draggableCrosshair.destination = finalPos;
+
+                        // DEBUG
+                        let debugC = snap.circle({
+                            cx: pos.x,
+                            cy: pos.y,
+                            r: 0.6,
+                            fill: "#000000",
+                        });
+                        setTimeout(function () {
+                            debugC.remove();
+                        }, 2000);
                     }
                 }
 
-                function stopCrossHairDragging() {
-                    console.info("### stop .... ");
-                    document.removeEventListener("mousemove", moveCrosshair);
-                    clone.unmouseup();
-                    clone.remove();
+                function updateCrossHairDragging() {
+                    let origin = window.mrbeam.draggableCrosshair.origin;
+                    let dest = window.mrbeam.draggableCrosshair.destination;
+
+                    if (dest === null) {
+                        // drag finished or cancelled
+                        clearInterval(
+                            window.mrbeam.draggableCrosshair.interval
+                        );
+                    } else {
+                        if (self._distance(origin, dest) < 0.01) {
+                            // otherwise setInterval triggers constant gcode sending
+                            return;
+                        }
+                        const intermediatePos = self._getPointOfLineMM(
+                            origin,
+                            dest,
+                            15
+                        );
+
+                        // DEBUG
+                        let debugC = snap.circle({
+                            cx: intermediatePos.x,
+                            cy: boundaries[3] - intermediatePos.y,
+                            r: 2,
+                            fill: "#ffff00",
+                        });
+                        setTimeout(function () {
+                            debugC.remove();
+                        }, 2000);
+
+                        // this limits the gcode commands sent to grbl to 1 cmd / 200ms
+                        self.move_laser_to_xy(
+                            intermediatePos.x,
+                            intermediatePos.y
+                        );
+                        window.mrbeam.draggableCrosshair.origin = intermediatePos;
+                    }
                 }
 
-                // (2) move the ball on mousemove
-                document.addEventListener("mousemove", moveCrosshair);
+                function stopCrossHairDragging(event) {
+                    clearInterval(window.mrbeam.draggableCrosshair.interval);
+                    window.mrbeam.draggableCrosshair.destination = null;
 
-                // (3) drop the ball, remove unneeded handlers
-                clone.mouseup(stopCrossHairDragging);
+                    const pos = self._get_pointer_event_position_MM(
+                        event,
+                        snap.node
+                    );
+                    const finalPos = setCrosshairPosMM(pos);
+                    self.move_laser_to_xy(finalPos.x, finalPos.y);
+                    console.info("Stop:", finalPos.x, finalPos.y);
+
+                    document.removeEventListener("mousemove", onMouseMove);
+                    document.removeEventListener(
+                        "mouseup",
+                        stopCrossHairDragging
+                    );
+                    setTimeout(function () {
+                        dummy.remove();
+                    }, 3000);
+                }
+
+                // start frequent gcode sending & update
+                window.mrbeam.draggableCrosshair.interval = setInterval(
+                    updateCrossHairDragging,
+                    300
+                );
+
+                // add listeners
+                document.addEventListener("mousemove", onMouseMove);
+                document.addEventListener("mouseup", stopCrossHairDragging);
             });
         };
 
+        self._distance = function (p1, p2) {
+            return Math.sqrt(
+                (p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y)
+            );
+        };
+
+        self._getPointOfLineMM = function (p1, p2, mm) {
+            const dist = self._distance(p1, p2);
+            const percent = Math.min(1, mm / dist);
+            return self._getPointOfLinePercent(p1, p2, percent);
+        };
+
+        self._getPointOfLinePercent = function (p1, p2, percent) {
+            const x = p1.x + percent * (p2.x - p1.x);
+            const y = p1.y + percent * (p2.y - p1.y);
+            return { x: x, y: y };
+        };
+
         // general modification keys
-        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_down = function (target, ev) {
             console.log("Keydown", target, ev);
             // ctrlKey for PC, metaKey for Mac command key
@@ -4061,7 +4165,6 @@ $(function () {
                 target.classList.add("ctrl");
             }
         };
-        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_up = function (target, ev) {
             // ctrlKey for PC, metaKey for Mac command key
             if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
@@ -4127,6 +4230,7 @@ $(function () {
                 self.zoomOffY();
             var dx = percPos.dx * self.workingAreaWidthMM() * self.zoom();
             var dy = percPos.dy * self.workingAreaHeightMM() * self.zoom();
+            //            console.info("scale", dx/event.movementX, dy/event.movementY);
             return { x: x, y: y, dx: dx, dy: dy };
         };
 
@@ -4139,15 +4243,10 @@ $(function () {
             return { x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc };
         };
 
-        self._get_pointer_event_position_MM_bboxed = function (
-            event,
-            target,
-            bbox
-        ) {
-            const posMM = self._get_pointer_event_position_MM(event, target);
-            const x = Math.max(bbox[0], Math.min(bbox[2], posMM.x));
-            const y = Math.max(bbox[1], Math.min(bbox[3], posMM.y));
-            return { x: x, y: y };
+        self._assert_coords_in_boundaries = function (p, boundaries) {
+            p.x = Math.max(boundaries[0], Math.min(boundaries[2], p.x));
+            p.y = Math.max(boundaries[1], Math.min(boundaries[3], p.y));
+            return p;
         };
 
         /**
