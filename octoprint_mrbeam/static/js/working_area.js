@@ -3993,11 +3993,19 @@ $(function () {
         // ***********************************************************
         self.initCrossHairDragging = function () {
             const crosshairHandle = snap.select("#crosshair");
-            window.mrbeam.draggableCrosshair = {};
+            window.mrbeam.draggableCrosshair = { debug: false };
+
+            // TODO get from https://github.com/mrbeam/MrBeamPlugin/blob/2682b7a2e97373478e6516a98c8ba766d26ff317/octoprint_mrbeam/static/js/lasercutterprofiles.js#L276
+            // once this branch feature/SW-244... is merged.
+            const fx = self.profile.currentProfileData().axes.x.speed();
+            const fy = self.profile.currentProfileData().axes.y.speed();
+            const maxSpeed = Math.min(fx, fy);
 
             crosshairHandle.mousedown(function (event) {
                 self.abortFreeTransforms();
                 window.mrbeam.draggableCrosshair.origin = self.state.currentPos();
+                window.mrbeam.draggableCrosshair.destination =
+                    window.mrbeam.draggableCrosshair.origin;
 
                 const boundaries = [
                     0,
@@ -4049,22 +4057,15 @@ $(function () {
                             event,
                             snap.node
                         );
-                        const finalPos = setCrosshairPosMM(pos);
-                        window.mrbeam.draggableCrosshair.destination = finalPos;
-
-                        // DEBUG
-                        let debugC = snap.circle({
-                            cx: pos.x,
-                            cy: pos.y,
-                            r: 0.6,
-                            fill: "#000000",
-                        });
-                        setTimeout(function () {
-                            debugC.remove();
-                        }, 2000);
+                        const dest = setCrosshairPosMM(pos);
+                        window.mrbeam.draggableCrosshair.destination = dest;
                     }
                 }
 
+                /*
+                 * moves the laserhead towards the destination.
+                 * maximum step 30mm
+                 */
                 function updateCrossHairDragging() {
                     let origin = window.mrbeam.draggableCrosshair.origin;
                     let dest = window.mrbeam.draggableCrosshair.destination;
@@ -4082,25 +4083,34 @@ $(function () {
                         const intermediatePos = self._getPointOfLineMM(
                             origin,
                             dest,
-                            15
+                            30
                         );
 
-                        // DEBUG
-                        let debugC = snap.circle({
-                            cx: intermediatePos.x,
-                            cy: boundaries[3] - intermediatePos.y,
-                            r: 2,
-                            fill: "#ffff00",
-                        });
-                        setTimeout(function () {
-                            debugC.remove();
-                        }, 2000);
-
-                        // this limits the gcode commands sent to grbl to 1 cmd / 200ms
                         self.move_laser_to_xy(
                             intermediatePos.x,
                             intermediatePos.y
                         );
+
+                        // draw position of the last gcode command sent
+                        if (window.mrbeam.draggableCrosshair.debug) {
+                            const estimatedMoveDurationMS =
+                                (intermediatePos.dist / (maxSpeed / 60)) * 1000; // milliseconds
+                            console.log(
+                                "estimatedMove",
+                                estimatedMoveDurationMS
+                            );
+                            let debugC = snap.circle({
+                                cx: intermediatePos.x,
+                                cy: boundaries[3] - intermediatePos.y,
+                                r: 2,
+                                fill: "#ffff00",
+                            });
+                            setTimeout(function () {
+                                debugC.remove();
+                            }, estimatedMoveDurationMS);
+                        }
+
+                        // reflect current movement for the calculation of the next step towards destination
                         window.mrbeam.draggableCrosshair.origin = intermediatePos;
                     }
                 }
@@ -4146,9 +4156,11 @@ $(function () {
         };
 
         self._getPointOfLineMM = function (p1, p2, mm) {
-            const dist = self._distance(p1, p2);
-            const percent = Math.min(1, mm / dist);
-            return self._getPointOfLinePercent(p1, p2, percent);
+            const totalDist = self._distance(p1, p2);
+            const percent = Math.min(1, mm / totalDist);
+            const p = self._getPointOfLinePercent(p1, p2, percent);
+            p.dist = totalDist * percent;
+            return p;
         };
 
         self._getPointOfLinePercent = function (p1, p2, percent) {
