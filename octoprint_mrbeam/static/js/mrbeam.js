@@ -39,7 +39,7 @@ browser.chrome_version = browser.chrome_version
 
 // supported browser
 browser.is_supported =
-    (browser.is_chrome && browser.chrome_version >= 60) || browser.is_ipad;
+    (browser.is_chrome && browser.chrome_version >= 80) || browser.is_ipad;
 mrbeam.browser = browser;
 
 // Mr Beam models
