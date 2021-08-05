@@ -84,9 +84,11 @@ $(function () {
                 .fail(function (response) {
                     console.log("Local Messages loading failed!");
                     console.log(response);
-                    // Load First Generic Message
-                    console.log("Loading First Message");
-                    self.loadRemoteMessages(FIRST_MESSAGE_LOCATION);
+                    if (self.loginState.loggedIn()) {
+                        // Load First Generic Message
+                        console.log("Loading First Message");
+                        self.loadRemoteMessages(FIRST_MESSAGE_LOCATION);
+                    }
                 });
         };
 
