@@ -19,6 +19,11 @@ $(function () {
         self.notificationsHandled = false;
         self.messagesLoaded = false;
 
+        self.onStartupComplete = function () {
+            // Hide Messaging icon
+            $("li a#messages_nav_tab").hide();
+        }
+
         self.onUserLoggedIn = function (user) {
             // get user messages details
             if (user.settings.mrbeam.messages) {
@@ -141,6 +146,7 @@ $(function () {
                         }
                         result.push(msgObj);
                         self.messagesLoaded = true;
+                        $("li a#messages_nav_tab").show();
                     }
                 });
                 result.sort(function (a, b) {
