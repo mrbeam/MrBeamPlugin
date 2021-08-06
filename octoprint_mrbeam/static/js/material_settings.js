@@ -57,6 +57,8 @@ $(function () {
                             self.MATERIAL_SETTINGS_RETRY_TIME / 1000 +
                             " seconds."
                         );
+                    }else{
+                        console.log("Unable to load material settings. Not retrying because user is not logged in.");
                     }
                 });
         };
