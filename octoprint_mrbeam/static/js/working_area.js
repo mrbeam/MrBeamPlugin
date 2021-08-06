@@ -3886,7 +3886,7 @@ $(function () {
                 style:
                     "white-space: pre; font-size: " +
                     size +
-                    "px; font-family: Ubuntu; text-anchor: middle",
+                    "px; font-family: Ubuntu; text-anchor: middle; font-variant-ligatures: none;",
                 textpath: path,
             });
             text.textPath.attr({ startOffset: "50%" });
