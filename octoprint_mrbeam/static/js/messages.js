@@ -19,7 +19,7 @@ $(function () {
         self.notificationsHandled = false;
         self.messagesLoaded = false;
 
-        self.onStartupComplete = function () {
+        self.onStartup = function () {
             // Hide Messaging icon
             $("li a#messages_nav_tab").hide();
         }
