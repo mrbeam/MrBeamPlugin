@@ -268,7 +268,7 @@ $(function () {
         self.invalidEmailHelp = gettext("Invalid e-mail address");
 
         self.passiveLoginInProgress = false;
-        self.triggerAnalytics = true;
+        self.error401Count = 0;
 
         // This extender forces the input value to lowercase. Used in loginsreen_viewmode.js and wizard_acl.js
         window.ko.extenders.lowercase = function (target, option) {
@@ -445,23 +445,21 @@ $(function () {
         };
 
         self._handle_session_expired = function (triggerUrl) {
-            if (self.isCurtainOpened > 0 && self.triggerAnalytics) {
-                // Add to analytics to check how often 401 errors happen
-                let payload = {
-                    triggerUrl: triggerUrl,
-                };
-                self.analytics.send_fontend_event(
-                    "expired_session",
-                    payload
-                );
-                // Queue events for only 1 second
-                setTimeout(function () {
-                    self.triggerAnalytics = false;
-                    // Re-enable queueing after 10 seconds of the initial trigger
-                    setTimeout(function () {
-                        self.triggerAnalytics = true;
-                    }, 9000);
-                }, 1000);
+            if (self.isCurtainOpened > 0) {
+                self.error401Count++;
+                if (self.error401Count === 1) {
+                    setTimeout(() => {
+                        let error401Count = self.error401Count;
+                        let payload = {
+                            error401Count: error401Count,
+                        };
+                        self.analytics.send_fontend_event(
+                            "expired_session",
+                            payload
+                        );
+                        self.error401Count = 0;
+                    }, 10000);
+                }
             }
             // don't do this during boot time.
             if (
