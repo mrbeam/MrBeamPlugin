@@ -37,7 +37,7 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     ANALYTICS_LOG_VERSION = (
-        18  # bumped in 0.7.8 - Lens calibration state on : Save, Cancel
+        19  # bumped in 0.9.8 - expired_session and passive_login events added
     )
 
     def __init__(self, plugin):
