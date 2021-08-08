@@ -23,8 +23,8 @@ $(function () {
 
         self.getEmail = function () {
             if (
-                self.loginState.currentUser() &&
-                self.loginState.currentUser().settings.mrbeam.design_store_email
+                self.loginState.currentUser?.().settings?.mrbeam
+                    ?.design_store_email
             ) {
                 return self.loginState.currentUser().settings.mrbeam
                     .design_store_email;
@@ -34,7 +34,10 @@ $(function () {
         };
 
         self.getAuthToken = function () {
-            if (self.loginState.currentUser()) {
+            if (self.loginState.currentUser?.().settings?.mrbeam
+                    ?.design_store_auth_token ||
+                self.loginState.currentUser?.().settings?.mrbeam
+                    ?.user_token) {
                 return (
                     self.loginState.currentUser().settings.mrbeam
                         .design_store_auth_token ||
@@ -46,7 +49,8 @@ $(function () {
         };
 
         self.getLastUploadedDate = function () {
-            if (self.loginState.currentUser()) {
+            if (self.loginState.currentUser?.().settings?.mrbeam
+                ?.design_store_last_uploaded) {
                 return (
                     self.loginState.currentUser().settings.mrbeam
                         .design_store_last_uploaded
@@ -147,7 +151,8 @@ $(function () {
 
         self.saveTokenInUserSettings = function (token) {
             let oldToken = self.getAuthToken();
-            if (token !== "" && oldToken !== token) {
+            if (token !== "" && oldToken !== token &&
+            self.loginState.currentUser?.().settings?.mrbeam?.user_token) {
                 let currentUserSettings = self.loginState.currentUser()
                     .settings;
                 delete currentUserSettings["mrbeam"]["user_token"];
@@ -163,7 +168,8 @@ $(function () {
 
         self.saveLastUploadedInUserSettings = function (lastUploaded) {
             let oldLastUploaded = self.getLastUploadedDate();
-            if (lastUploaded !== "" && oldLastUploaded !== lastUploaded) {
+            if (lastUploaded !== "" && oldLastUploaded !== lastUploaded &&
+            self.loginState.currentUser?.().settings?.mrbeam?.design_store_last_uploaded) {
                 let currentUserSettings = self.loginState.currentUser()
                     .settings;
                 delete currentUserSettings["mrbeam"]["design_store_last_uploaded"];

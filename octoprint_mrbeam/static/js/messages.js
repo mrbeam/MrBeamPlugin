@@ -21,7 +21,7 @@ $(function () {
 
         self.onUserLoggedIn = function (user) {
             // get user messages details
-            if (user.settings.mrbeam.messages) {
+            if (user?.settings?.mrbeam?.messages) {
                 self.lastMessageId = user.settings.mrbeam.messages.lastId;
                 self.oldUnreadMessageIds = user.settings.mrbeam.messages.unreadIds;
             }
