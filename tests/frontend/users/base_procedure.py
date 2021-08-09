@@ -17,11 +17,6 @@ class BaseProcedure:
         settings().setBoolean(["server", "firstrun"], True)
         settings().save()
 
-    @pytest.fixture()
-    def disable_firstrun(self):
-        settings().setBoolean(["server", "firstrun"], False)
-        settings().save()
-
     def setup_class(self):
         self.file_based_user_manager = FilebasedUserManager()
 

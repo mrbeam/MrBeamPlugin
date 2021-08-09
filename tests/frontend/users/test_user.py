@@ -34,7 +34,6 @@ class TestUser(BaseProcedure):
     @pytest.mark.parametrize("username, password", [
         ('sherif@gmail.com', 'secret'),
     ])
-    @pytest.mark.usefixtures('disable_firstrun', as_attrs=False)
     def test_login_user(self, username, password):
 
         js = 'return mrbeam.viewModels.loginScreenViewModel.loginState.loggedIn();'
@@ -67,7 +66,3 @@ class TestUser(BaseProcedure):
         WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//a[@id='logout_button']"))).click()
 
         assert self.driver.execute_script(js) == False
-
-
-
-
