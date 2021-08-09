@@ -14,7 +14,7 @@ class TestUser(BaseProcedure):
 
     # only one user can be created
     @pytest.mark.parametrize("username, password", [
-        ('dev@gmail.com', 'secret'),
+        ('dev@mr-beam.org', '1'),
     ])
     @pytest.mark.usefixtures('enable_firstrun', as_attrs=True)
     def test_add_user(self, username, password):
@@ -32,7 +32,7 @@ class TestUser(BaseProcedure):
 
 
     @pytest.mark.parametrize("username, password", [
-        ('dev@gmail.com', 'secret'),
+        ('dev@mr-beam.org', '1'),
     ])
     def test_login_user(self, username, password):
 
