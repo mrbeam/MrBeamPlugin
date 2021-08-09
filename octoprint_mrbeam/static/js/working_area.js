@@ -3643,70 +3643,48 @@ $(function () {
         self._qt_currentQuickTextUpdate = function () {
             if (self.currentQuickTextFile) {
                 self.currentQuickText(self.currentQuickTextFile.name);
-                var displayText =
+                const displayText =
                     self.currentQuickTextFile.name !== ""
                         ? self.currentQuickTextFile.name
                         : $("#quick_text_dialog_text_input").attr(
                               "placeholder"
                           );
 
-                // update svg object
-                var g = snap.select("#" + self.currentQuickTextFile.previewId);
-                setTimeout(function () {
-                    g.mbtOnTransform();
-                }, 200);
-                var text = g.select("text");
-                var ity = self.currentQuickTextFile.intensity;
-                text.attr({
-                    "font-family":
-                        self.fontMap[self.currentQuickTextFile.fontIndex],
-                    fill: "rgb(" + ity + "," + ity + "," + ity + ")",
-                    // stroke: 'rgb('+ity+','+ity+','+ity+')',
-                });
-
-                text.select("textPath").node.textContent = displayText;
-                var bb = text.getBBox();
-                g.select("rect").attr({
-                    x: bb.x,
-                    y: bb.y,
-                    width: bb.width,
-                    height: bb.height,
-                });
-
-                // update font of input field
-                var shadowIty = 0;
-                if (ity > 200) {
-                    shadowIty = (ity - 200) / 100;
-                }
-                $("#quick_text_dialog_text_input").css(
-                    "text-shadow",
-                    "rgba(226, 85, 3, " + shadowIty + ") 0px 0px 16px"
+                // get all parameters
+                const ity = self.currentQuickTextFile.intensity;
+                const font = self.fontMap[self.currentQuickTextFile.fontIndex];
+                const isStraightText = $("#quick_text_straight").hasClass(
+                    "active"
                 );
-                $("#quick_text_dialog_text_input").css(
-                    "color",
-                    "rgb(" + ity + "," + ity + "," + ity + ")"
-                );
-
-                $("#quick_text_dialog_text_input").css(
-                    "font-family",
-                    self.fontMap[self.currentQuickTextFile.fontIndex]
-                );
-                $("#quick_text_dialog_font_name").text(
-                    self.fontMap[self.currentQuickTextFile.fontIndex]
-                );
-
-                // curve path
-                //                const counterclockwise = $(
-                //                    "#quick_text_dialog_clockwise"
-                //                ).hasClass("counterclockwise");
                 const counterclockwise = $("#quick_text_ccw").hasClass(
                     "active"
                 );
-                const textPathAttr = text.select("textPath").attr();
+                const fill = `rgb(${ity},${ity},${ity})`;
+                const shadowIty = ity > 200 ? (ity - 200) / 100 : 0;
+                const shadow = `rgba(226, 85, 3, ${shadowIty}) 0px 0px 16px`;
+                const ligatures = isStraightText ? "initial" : "none";
+                const g = snap.select(
+                    "#" + self.currentQuickTextFile.previewId
+                );
+
+                // update straight text DOM node
+                const straightText = g.select(".straightText");
+                straightText.attr({
+                    "font-family": font,
+                    fill: fill,
+                });
+
+                // update curved text DOM nodes
+                const curvedText = g.select(".curvedText");
+                curvedText.attr({
+                    "font-family": font,
+                    fill: fill,
+                });
+                const textPathAttr = curvedText.select("textPath").attr();
                 const path = snap.select(textPathAttr.href);
                 const textLength = self._qt_currentQuicktextGetTextLength(
                     displayText,
-                    self.fontMap[self.currentQuickTextFile.fontIndex]
+                    font
                 );
                 const d = self._qt_currentQuicktextGetCirclePath(
                     self.currentQuickTextFile.circle,
@@ -3715,10 +3693,41 @@ $(function () {
                 );
                 path.attr({ d: d });
 
-                // update fileslist
+                // update text content and click handle bbox
+                let bb;
+                if (isStraightText) {
+                    curvedText.textPath.node.textContent = "";
+                    straightText.node.textContent = displayText;
+                    bb = straightText.getBBox();
+                } else {
+                    curvedText.textPath.node.textContent = displayText;
+                    straightText.node.textContent = "";
+                    bb = curvedText.getBBox();
+                }
+                g.select("rect").attr({
+                    x: bb.x,
+                    y: bb.y,
+                    width: bb.width,
+                    height: bb.height,
+                });
+
+                // update font of input field
+                $("#quick_text_dialog_text_input").css({
+                    "text-shadow": shadow,
+                    color: fill,
+                    "font-family": font,
+                    "font-variant-ligatures": ligatures,
+                });
+                $("#quick_text_dialog_font_name").text(font);
+
+                // update fileslist title
                 $("#" + self.currentQuickTextFile.id + " .title").text(
                     displayText
                 );
+                // update fileslist dimensions by triggering transform
+                setTimeout(function () {
+                    g.mbtOnTransform();
+                }, 200);
                 // update clones
                 let multiply_str = $(
                     "#" + self.currentQuickTextFile.id + " input.multiply"
@@ -3728,13 +3737,16 @@ $(function () {
                     multiply_str
                 );
 
+                // usage analytics
                 self.currentQuickTextAnalyticsData = {
                     id: self.currentQuickTextFile.id,
                     file_type: "quickText",
                     text_length: self.currentQuickTextFile.name.length,
-                    brightness: self.currentQuickTextFile.intensity,
-                    font: self.fontMap[self.currentQuickTextFile.fontIndex],
+                    brightness: ity,
+                    font: font,
                     font_index: self.currentQuickTextFile.fontIndex,
+                    is_straight: isStraightText,
+                    curved_ccw: counterclockwise,
                 };
             }
         };
@@ -3881,15 +3893,25 @@ $(function () {
                 })
                 .toDefs();
 
-            var text = uc.text(0, 0, placeholderText);
-            text.attr({
+            const curvedText = uc.text(0, 0, placeholderText);
+            curvedText.attr({
                 style:
                     "white-space: pre; font-size: " +
                     size +
                     "px; font-family: Ubuntu; text-anchor: middle; font-variant-ligatures: none;",
                 textpath: path,
             });
-            text.textPath.attr({ startOffset: "50%" });
+            curvedText.node.classList.add("curvedText");
+            curvedText.textPath.attr({ startOffset: "50%" });
+
+            const straightText = uc.text(0, 0, placeholderText);
+            straightText.attr({
+                style:
+                    "white-space: pre; font-size: " +
+                    size +
+                    "px; font-family: Ubuntu; text-anchor: middle;",
+                class: "straightText",
+            });
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({
@@ -3899,7 +3921,7 @@ $(function () {
                 class: "deleteBeforeRendering",
             });
 
-            var group = uc.group(text, box);
+            var group = uc.group(straightText, curvedText, box);
             group.attr({
                 id: file.previewId,
                 "mb:id": self._normalize_mb_id(file.previewId),
