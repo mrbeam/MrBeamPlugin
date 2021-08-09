@@ -14,7 +14,7 @@ class TestUser(BaseProcedure):
 
     # only one user can be created
     @pytest.mark.parametrize("username, password", [
-        ('sherif@gmail.com', 'secret'),
+        ('dev@gmail.com', 'secret'),
     ])
     @pytest.mark.usefixtures('enable_firstrun', as_attrs=True)
     def test_add_user(self, username, password):
@@ -32,7 +32,7 @@ class TestUser(BaseProcedure):
 
 
     @pytest.mark.parametrize("username, password", [
-        ('sherif@gmail.com', 'secret'),
+        ('dev@gmail.com', 'secret'),
     ])
     def test_login_user(self, username, password):
 
@@ -56,13 +56,13 @@ class TestUser(BaseProcedure):
         WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.NAME, 'finish'))).click()
 
         # hide all alerts
-        print(self.driver.find_elements(By.XPATH, "//div[@class='alert']"))
-
         for alert in self.driver.find_elements(By.XPATH, "//div[@role='alert']"):
             self.driver.execute_script("arguments[0].style.display = 'none';", alert)
 
         # logout
         WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//li[@id='navbar_login']/a"))).click()
-        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//a[@id='logout_button']"))).click()
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//a[@id='logout_button']"))).click()
+
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='loginscreen_dialog']")))
 
         assert self.driver.execute_script(js) == False
