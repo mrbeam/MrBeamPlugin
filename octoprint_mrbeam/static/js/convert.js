@@ -880,7 +880,6 @@ $(function () {
         self.images_placed = ko.observable(false);
         self.text_placed = ko.observable(false);
         self.filled_shapes_placed = ko.observable(false);
-        self.engrave_outlines = ko.observable(false);
 
         self.show_image_parameters = ko.computed(function () {
             return (
@@ -1217,7 +1216,6 @@ $(function () {
             }
 
             var data = {
-                // "engrave_outlines" : self.engrave_outlines(),
                 intensity_black_user: self.imgIntensityBlack(),
                 intensity_black:
                     self.imgIntensityBlack() *
@@ -1713,7 +1711,6 @@ $(function () {
                     self.workingArea.getCompositionSVG(
                         self.do_raster_engrave(),
                         pixPerMM,
-                        self.engrave_outlines(),
                         function (composition) {
                             self.svg = composition;
                             var filename = self.gcodeFilename();

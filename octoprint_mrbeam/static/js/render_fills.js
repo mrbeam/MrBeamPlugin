@@ -293,22 +293,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return prom;
     };
 
-    Element.prototype.renderPNG = function (
-        clusterIdx,
-        wPT,
-        hPT,
-        wMM,
-        hMM,
+    Element.prototype.renderPNG = async function (
+        canvasID,
+        viewboxScale,
         pxPerMM,
         renderBBoxMM = null
     ) {
         var elem = this;
-        //console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
         console.debug(
-            `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM}`
+            `renderPNG: SVG with viewboxScale ${viewboxScale}(svgdoc/viewbox), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM.w}*${renderBBoxMM.h} @ ${renderBBoxMM.x},${renderBBoxMM.y}`
         );
-
-        let bboxFromElem = elem.getBBox();
 
         let bbox; // attention, this bbox uses viewBox coordinates (mm)
         if (renderBBoxMM === null) {
@@ -324,35 +318,27 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
         // TODO only enlarge on images and fonts
         // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
-        const enlargement_x = 0.4; // percentage of the width added to each side
-        const enlargement_y = 0.4; // percentage of the height added to each side
-        const x1 = Math.max(0, bbox.x - bbox.width * enlargement_x);
-        const x2 = Math.min(wMM, bbox.x2 + bbox.width * enlargement_x);
-        const w = x2 - x1;
-        const y1 = Math.max(0, bbox.y - bbox.height * enlargement_y);
-        const y2 = Math.min(wMM, bbox.y2 + bbox.height * enlargement_y);
-        const h = y2 - y1;
-        bbox.x = x1;
-        bbox.y = y1;
-        bbox.w = w;
-        bbox.h = h;
+        const growX = 0.8; // percentage of the total width added (on both sides)
+        const growY = 0.8; // percentage of the total height added
 
-        //        console.debug(
-        //            `enlarged renderBBox (in mm): ${bbox.w}*${bbox.h} @ ${bbox.x},${bbox.y}`
-        //        );
+        const wMM = 500;
+        const hMM = 390;
+        const cropBB = { x: 0, y: 0, x2: wMM, y2: hMM };
+        const bboxMM = Snap.path.enlarge_bbox(bbox, growX, growY, cropBB);
 
         // get svg as dataUrl
+        //        var svgDataUri = elem.toDataURLfixed('xmlns:mb="http://www.mr-beam.org/mbns"');
         var svgDataUri = elem.toDataURL(); // TODO remove comment. OK here
 
         // init render canvas and attach to page
         var renderCanvas = document.createElement("canvas");
-        renderCanvas.id = `renderCanvas_${clusterIdx}`;
+        renderCanvas.id = `renderCanvas_${canvasID}`;
         renderCanvas.class = "renderCanvas";
-        renderCanvas.width = bbox.w * pxPerMM;
-        renderCanvas.height = bbox.h * pxPerMM;
+        renderCanvas.width = bboxMM.w * pxPerMM;
+        renderCanvas.height = bboxMM.h * pxPerMM;
         if (MRBEAM_DEBUG_RENDERING) {
             renderCanvas.style =
-                "position: fixed; bottom: 0; left: 0; width: 95vw; border: 1px solid red;";
+                "position: fixed; bottom: 1vw; left: 1vw; width: 35vw; border: 1px solid red; background-color:aqua";
             renderCanvas.addEventListener("click", function () {
                 this.remove();
             });
@@ -387,15 +373,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             .then(
                 function (imgTag) {
                     try {
-                        const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
-                        const cx = bbox.x * srcScale;
-                        const cy = bbox.y * srcScale;
-                        const cw = bbox.w * srcScale;
-                        const ch = bbox.h * srcScale;
+                        // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+                        //                        const viewboxScale = wPT / wMM;
+                        const cx = bboxMM.x * viewboxScale;
+                        const cy = bboxMM.y * viewboxScale;
+                        const cw = bboxMM.w * viewboxScale;
+                        const ch = bboxMM.h * viewboxScale;
 
-                        //                        console.debug(
-                        //                            `rasterizing: ${cw}*${ch} @ ${cx},${cy} (scale: ${srcScale})`
-                        //                        );
                         // drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
                         renderCanvasContext.drawImage(
                             imgTag,
@@ -424,8 +408,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     return {
                         dataUrl: fillBitmap,
                         size: size,
-                        bbox: bbox,
-                        clusterIndex: clusterIdx,
+                        bbox: bboxMM,
+                        clusterIndex: canvasID,
                     };
                 },
                 // after onerror

@@ -32,6 +32,7 @@ $(function () {
         self.availableHeight = ko.observable(undefined);
         self.availableWidth = ko.observable(undefined);
         self.px2mm_factor = 1; // initial value
+        self.workingAreaDPItoMM = 90 / 25.4;
         self.svgDPI = function () {
             return 90;
         }; // initial value, gets overwritten by settings in onAllBound()
@@ -2505,17 +2506,12 @@ $(function () {
             self._updateTransformationButtons();
         };
 
-        self.getCompositionSVG = function (
-            fillAreas,
-            pxPerMM,
-            engraveStroke,
-            callback
-        ) {
+        self.getCompositionSVG = function (fillAreas, pxPerMM, callback) {
             self.abortFreeTransforms();
             var wMM = self.workingAreaWidthMM();
             var hMM = self.workingAreaHeightMM();
-            var wPT = (wMM * 90) / 25.4; // TODO ... switch to 96dpi ?
-            var hPT = (hMM * 90) / 25.4;
+            var wPT = wMM * self.workingAreaDPItoMM;
+            var hPT = hMM * self.workingAreaDPItoMM;
             var compSvg = self.getNewSvg("compSvg", wPT, hPT);
             var namespaces = self._getDocumentNamespaceAttributes(snap);
             compSvg.attr(namespaces);
@@ -2573,8 +2569,6 @@ $(function () {
                 self.rasterInfill(
                     compSvg,
                     namespaces,
-                    wPT,
-                    hPT,
                     fillAreas,
                     wMM,
                     hMM,
@@ -2995,10 +2989,6 @@ $(function () {
         self._rasterAndEmbedResult = async function (
             targetSvg,
             rasterClusters,
-            wPT,
-            hPT,
-            wMM,
-            hMM,
             pxPerMM
         ) {
             let pAll = await Promise.all(
@@ -3006,10 +2996,7 @@ $(function () {
                     const renderBBoxMM = cluster.bbox;
                     const rasterResult = await cluster.svg.renderPNG(
                         clusterIndex,
-                        wPT,
-                        hPT,
-                        wMM,
-                        hMM,
+                        self.workingAreaDPItoMM,
                         pxPerMM,
                         renderBBoxMM
                     ); // returns { dataUrl: fillBitmap, size: size, bbox: bbox, clusterIndex:clusterIndex };
@@ -3046,8 +3033,6 @@ $(function () {
         self.rasterInfill = function (
             svg, // is compSvg reference
             namespaces,
-            svgWidthPT,
-            svgHeightPT,
             fillAreas,
             wMM,
             hMM,
@@ -3100,36 +3085,30 @@ $(function () {
             }
 
             if (fillAreas) {
-                self._rasterAndEmbedResult(
-                    svg,
-                    clusters,
-                    svgWidthPT,
-                    svgHeightPT,
-                    wMM,
-                    hMM,
-                    pxPerMM
-                ).then(function (rasterResults) {
-                    // remove filled elements / respectively fillings of elements after embedding raster result
-                    for (let i = 0; i < rasterResults.length; i++) {
-                        const result = rasterResults[i];
-                        const cluster = clusters[result.clusterIndex];
-                        for (let e = 0; e < cluster.elements.length; e++) {
-                            let elem = cluster.elements[e];
-                            elem.unfillOrRemove();
+                self._rasterAndEmbedResult(svg, clusters, pxPerMM).then(
+                    function (rasterResults) {
+                        // remove filled elements / respectively fillings of elements after embedding raster result
+                        for (let i = 0; i < rasterResults.length; i++) {
+                            const result = rasterResults[i];
+                            const cluster = clusters[result.clusterIndex];
+                            for (let e = 0; e < cluster.elements.length; e++) {
+                                let elem = cluster.elements[e];
+                                elem.unfillOrRemove();
+                            }
                         }
-                    }
-                    svg.selectAll(".deleteAfterRendering").remove();
-                    if (typeof callback === "function") {
-                        callback(svg);
-                        if (MRBEAM_DEBUG_RENDERING) {
-                            debugBase64(
-                                svg.toDataURL(),
-                                "Step 3: SVG with fill rendering"
-                            );
+                        svg.selectAll(".deleteAfterRendering").remove();
+                        if (typeof callback === "function") {
+                            callback(svg);
+                            if (MRBEAM_DEBUG_RENDERING) {
+                                debugBase64(
+                                    svg.toDataURL(),
+                                    "Step 3: SVG with fill rendering"
+                                );
+                            }
                         }
+                        self._cleanup_render_mess();
                     }
-                    self._cleanup_render_mess();
-                });
+                );
             } else {
                 callback(svg);
             }
@@ -3580,26 +3559,6 @@ $(function () {
             $("#qt_round_text_section").removeClass("straight");
             self._qt_setCirclePath(false, 30);
         });
-        //        /**
-        //         * callback/subscription for the circle direction toggler
-        //         */
-        //        $("#quick_text_dialog_clockwise").on("click", function (event) {
-        //            event.target
-        //                .closest(".mini_switch")
-        //                .classList.toggle("counterclockwise");
-        //            if (self.currentQuickTextFile) {
-        //                self.currentQuickTextFile.clockwise = !event.target
-        //                    .closest(".mini_switch")
-        //                    .classList.contains("counterclockwise");
-        //                $("#qt_round_text_section").toggleClass(
-        //                    "clockwise",
-        //                    self.currentQuickTextFile.clockwise
-        //                );
-        //                self.lastQuickTextClockwise =
-        //                    self.currentQuickTextFile.clockwise;
-        //                self._qt_currentQuickTextUpdate();
-        //            }
-        //        });
 
         /**
          * callback for the next font button
@@ -3710,6 +3669,15 @@ $(function () {
                     width: bb.width,
                     height: bb.height,
                 });
+
+                const renderBBox = Snap.path.getBox(0, 0, bb.width, bb.height);
+                //                g.renderPNG("QT", self.workingAreadPItoMM, 10, renderBBox).then(function(result){
+                //                    console.info("RES", result.dataUrl, result.bbox);
+                //                    const image = new Image();
+                //                    image.crossOrigin = "Anonymous"; // allow external links together with server side header Access-Control-Allow-Origin "*"
+                //                    image.src = result.dataUrl;
+                //                    document.getElementsByTagName("body")[0].appendChild(image);
+                //                });
 
                 // update font of input field
                 $("#quick_text_dialog_text_input").css({
@@ -3913,6 +3881,10 @@ $(function () {
                 class: "straightText",
             });
 
+            const textStroke = uc
+                .path()
+                .attr({ fill: "none", stroke: "none", "stroke-color": "none" });
+
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({
                 opacity: "0",
@@ -3921,7 +3893,7 @@ $(function () {
                 class: "deleteBeforeRendering",
             });
 
-            var group = uc.group(straightText, curvedText, box);
+            var group = uc.group(straightText, curvedText, textStroke, box);
             group.attr({
                 id: file.previewId,
                 "mb:id": self._normalize_mb_id(file.previewId),
@@ -3951,34 +3923,13 @@ $(function () {
          * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
          * AND their fontFamily name must be included in self.fontMap
          * @private
-         * @param DomElement to add the font definition into
+         * @param elem DomElement to add the font definition into
          */
         self._qt_copyFontsToSvg = function (elem) {
-            var styleSheets = document.styleSheets;
             self._qt_removeFontsFromSvg(elem);
-            for (var ss = 0; ss < styleSheets.length; ss++) {
-                if (
-                    styleSheets[ss].href &&
-                    (styleSheets[ss].href.includes("quicktext-fonts.css") ||
-                        styleSheets[ss].href.includes("packed_plugins.css"))
-                ) {
-                    var rules = styleSheets[ss].cssRules;
-                    for (var r = 0; r < rules.length; r++) {
-                        if (rules[r].constructor == CSSFontFaceRule) {
-                            // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
-                            if (rules[r].style) {
-                                var fontName = rules[r].style.getPropertyValue(
-                                    "font-family"
-                                );
-                                fontName = fontName.replace(/["']/g, "").trim();
-                                if (self.fontMap.indexOf(fontName) > -1) {
-                                    $(elem).append(rules[r].cssText);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            const usedFonts = WorkingAreaHelper.getUsedFontNames(snap);
+            const fontCSS = WorkingAreaHelper.getFontDeclarations(usedFonts);
+            $(elem).append(fontCSS.join("\n"));
         };
 
         /**
