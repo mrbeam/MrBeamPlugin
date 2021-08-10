@@ -366,6 +366,55 @@ class WorkingAreaHelper {
         //console.debug("idx, idx1 -> idx2", index, idx1, idx2);
         return [strBefore, v1, strAfter];
     }
+
+    /* Get CSS Declarations of Quicktext fonts for embedding in SVG before rasterization
+     *
+     * @param {Set} whitelist List used for filtering result
+     * @returns {Array} A list of css declarations
+     */
+    static getFontDeclarations = function (whitelist = null) {
+        const result = [];
+        const styleSheetArray = [...document.styleSheets];
+        const fontRules = styleSheetArray
+            .filter(
+                (s) =>
+                    s.href &&
+                    (s.href.includes("quicktext-fonts.css") ||
+                        s.href.includes("packed_plugins.css"))
+            )
+            .map((styleSheet) => {
+                try {
+                    return [...styleSheet.cssRules]
+                        .filter(
+                            (rule) =>
+                                rule.constructor === CSSFontFaceRule &&
+                                rule.style
+                        )
+                        .filter((rule) => {
+                            if (whitelist === null) return true;
+                            const fontname = rule.style
+                                .getPropertyValue("font-family")
+                                //                        .replace(/["']/g, "")
+                                .trim();
+                            return whitelist.has(fontname);
+                        })
+                        .forEach((rule) => result.push(rule.cssText));
+                } catch (e) {
+                    console.log(
+                        "Access to stylesheet %s is denied. Ignoring...",
+                        styleSheet.href
+                    );
+                }
+            });
+        return result;
+    };
+
+    static getUsedFontNames = function (paper) {
+        const fontnames = paper
+            .selectAll("#userContent .userText text")
+            .items.map((s) => s.node.style["font-family"].trim());
+        return new Set(fontnames); // unique
+    };
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = "bcdfghjklmnpqrstvwxz";
