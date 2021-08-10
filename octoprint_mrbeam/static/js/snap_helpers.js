@@ -3,33 +3,61 @@
 //    Little snapsvg.io plugin with lots of small helpers.
 //    Dependencies: Snap, lodash
 //    Copyright (C) 2021  Teja Philipp <osd@tejaphilipp.de>
-//
-//    This program is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU Affero General Public License as
-//    published by the Free Software Foundation, either version 3 of the
-//    License, or (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU Affero General Public License for more details.
-//
-//    You should have received a copy of the GNU Affero General Public License
-//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Snap.plugin(function (Snap, Element, Paper, global) {
+    // Making accessible
+    // https://github.com/adobe-webplatform/Snap.svg/blob/b365287722a72526000ac4bfcf0ce4cac2faa015/src/path.js#L44
+    Snap.path.getBox = function (x, y, width, height) {
+        return {
+            x: x,
+            y: y,
+            width: width,
+            w: width,
+            height: height,
+            h: height,
+            x2: x + width,
+            y2: y + height,
+            cx: x + width / 2,
+            cy: y + height / 2,
+            r1: Math.min(width, height) / 2,
+            r2: Math.max(width, height) / 2,
+            r0: Math.sqrt(width * width + height * height) / 2,
+            //            path: rectPath(x, y, width, height),
+            vb: [x, y, width, height].join(" "),
+        };
+    };
+
     // just a helper
     Snap.path.merge_bbox = function (bb1, bb2) {
-        let r = _.clone(bb1);
-        r.x = Math.min(bb2.x, bb1.x);
-        r.y = Math.min(bb2.y, bb1.y);
-        r.x2 = Math.max(bb2.x2, bb1.x2);
-        r.y2 = Math.max(bb2.y2, bb1.y2);
-        r.w = r.x2 - r.x;
-        r.h = r.y2 - r.y;
-        r.width = r.w;
-        r.height = r.h;
-        return r;
+        const x = Math.min(bb2.x, bb1.x);
+        const y = Math.min(bb2.y, bb1.y);
+        const x2 = Math.max(bb2.x2, bb1.x2);
+        const y2 = Math.max(bb2.y2, bb1.y2);
+        const w = x2 - x;
+        const h = y2 - y;
+        return Snap.path.getBox(x, y, w, h);
+    };
+
+    Snap.path.enlarge_bbox = function (bbox, factorX, factorY, cropBB = null) {
+        const enlargement_x = factorX / 2; // percentage of the width added to each side
+        const enlargement_y = factorY / 2; // percentage of the height added to each side
+        const deltaW = bbox.width * enlargement_x;
+        const deltaH = bbox.height * enlargement_y;
+        let x1 = bbox.x - deltaW;
+        let x2 = bbox.x2 + deltaW;
+        let y1 = bbox.y - deltaH;
+        let y2 = bbox.y2 + deltaH;
+
+        if (cropBB !== null) {
+            x1 = Math.max(cropBB.x, x1);
+            x2 = Math.min(cropBB.x2, x2);
+            y1 = Math.max(cropBB.y, y1);
+            y2 = Math.min(cropBB.y2, y2);
+        }
+        const w = x2 - x1;
+        const h = y2 - y1;
+
+        return Snap.path.getBox(x1, y1, w, h);
     };
 
     /**
@@ -39,7 +67,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
      * @returns {object} new BBox around the transformed element
      */
     Snap.path.getBBoxWithTransformation = function (bb, matrix) {
-        let r = _.clone(bb);
         const ax = matrix.x(bb.x, bb.y);
         const ay = matrix.y(bb.x, bb.y);
         const bx = matrix.x(bb.x2, bb.y);
@@ -48,16 +75,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         const cy = matrix.y(bb.x2, bb.y2);
         const dx = matrix.x(bb.x, bb.y2);
         const dy = matrix.y(bb.x, bb.y2);
-        r.x = Math.min(ax, bx, cx, dx);
-        r.x2 = Math.max(ax, bx, cx, dx);
-        r.y = Math.min(ay, by, cy, dy);
-        r.y2 = Math.max(ay, by, cy, dy);
 
-        r.w = Math.abs(r.x2 - r.x);
-        r.h = Math.abs(r.y2 - r.y);
-        r.width = r.w;
-        r.height = r.h;
-        return r;
+        const x = Math.min(ax, bx, cx, dx);
+        const x2 = Math.max(ax, bx, cx, dx);
+        const y = Math.min(ay, by, cy, dy);
+        const y2 = Math.max(ay, by, cy, dy);
+        const w = Math.abs(x2 - x);
+        const h = Math.abs(y2 - y);
+
+        return Snap.path.getBox(x, y, w, h);
     };
 
     Element.prototype.get_total_bbox = function () {
