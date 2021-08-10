@@ -360,7 +360,7 @@ class MrBeamPlugin(
             dxfScale=1,
             beta_label="",
             job_time=0.0,
-            terminal=self.is_dev_env(),
+            terminal=False,
             terminal_show_checksums=True,
             converter_min_required_disk_space=100 * 1024 * 1024,
             # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
@@ -800,7 +800,7 @@ class MrBeamPlugin(
                 software_tier=self._settings.get(["dev", "software_tier"]),
                 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
                 beta_label=self.get_beta_label(),
-                terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
+                terminalEnabled=self.is_dev_env() or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
             )
