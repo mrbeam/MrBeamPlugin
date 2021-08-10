@@ -458,7 +458,7 @@ $(function () {
                             payload
                         );
                         self.error401Count = 0;
-                    }, 10000);
+                    }, 2000);
                 }
             }
             // don't do this during boot time.
