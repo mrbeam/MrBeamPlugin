@@ -30,9 +30,9 @@
                 </div>
             </div>
 
-            {% if env == 'DEV' or env_support_mode %}
-
                 <h5>{{ _('Terminal') }}</h5>
+
+            {% if env == 'DEV' or terminalEnabled %}
 
                 <div class="control-group">
         {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
@@ -45,18 +45,19 @@
                     </div>
                 </div>
 
-                <div class="control-group">
-        {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
-                    <div class="controls">
-                        <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums">
-                            <strong>{{ _('Show checksums') }}</strong>
-                            <div>{{ _('Show gcode command checksums in terminal. Takes effect immediately.') }}</div>
-                        </label>
-                    </div>
-                </div>
-
             {% endif %}
+
+            <div class="control-group">
+    {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums">
+                        <strong>{{ _('Show checksums') }}</strong>
+                        <div>{{ _('Show gcode command checksums in terminal. Takes effect immediately.') }}</div>
+                    </label>
+                </div>
+            </div>
+
 
         <h5>{{ _('Device State') }}</h5>
             <div class="control-group">
