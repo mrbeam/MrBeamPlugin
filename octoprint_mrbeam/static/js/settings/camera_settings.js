@@ -235,7 +235,7 @@ $(function () {
                                         response.responseText
                                 ),
                                 type: "warning",
-                                hide: false,
+                                hide: true,
                             });
                         });
                 }

@@ -19,6 +19,11 @@ $(function () {
         self.notificationsHandled = false;
         self.messagesLoaded = false;
 
+        self.onStartup = function () {
+            // Hide Messaging icon
+            $("li a#messages_nav_tab").hide();
+        }
+
         self.onUserLoggedIn = function (user) {
             // get user messages details
             if (user.settings.mrbeam.messages) {
@@ -84,9 +89,11 @@ $(function () {
                 .fail(function (response) {
                     console.log("Local Messages loading failed!");
                     console.log(response);
-                    // Load First Generic Message
-                    console.log("Loading First Message");
-                    self.loadRemoteMessages(FIRST_MESSAGE_LOCATION);
+                    if (self.loginState.loggedIn()) {
+                        // Load First Generic Message
+                        console.log("Loading First Message");
+                        self.loadRemoteMessages(FIRST_MESSAGE_LOCATION);
+                    }
                 });
         };
 
@@ -139,6 +146,7 @@ $(function () {
                         }
                         result.push(msgObj);
                         self.messagesLoaded = true;
+                        $("li a#messages_nav_tab").show();
                     }
                 });
                 result.sort(function (a, b) {
