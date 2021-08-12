@@ -269,7 +269,7 @@ $(function () {
 
         self.passiveLoginInProgress = false;
         self.error401Count = 0;
-        self.triggeredUrls = ko.observable({});
+        self.triggerUrlCount = {};
 
         // This extender forces the input value to lowercase. Used in loginsreen_viewmode.js and wizard_acl.js
         window.ko.extenders.lowercase = function (target, option) {
@@ -448,25 +448,24 @@ $(function () {
         self._handle_session_expired = function (triggerUrl) {
             if (self.isCurtainOpened > 0) {
                 self.error401Count++;
-                if (self.triggeredUrls()[triggerUrl]) {
-                    self.triggeredUrls()[triggerUrl]++;
-                } else {
-                    self.triggeredUrls()[triggerUrl] = 1;
+                if (!(triggerUrl in self.triggerUrlCount)) {
+                    self.triggerUrlCount[triggerUrl] = 0;
                 }
+                self.triggerUrlCount[triggerUrl]++;
                 if (self.error401Count === 1) {
                     setTimeout(() => {
                         let error401Count = self.error401Count;
-                        let triggeredUrls = self.triggeredUrls();
+                        let triggerUrlCount = self.triggerUrlCount;
                         let payload = {
                             error401Count: error401Count,
-                            triggeredUrls: triggeredUrls,
+                            triggerUrlCount: triggerUrlCount,
                         };
                         self.analytics.send_fontend_event(
                             "expired_session",
                             payload
                         );
                         self.error401Count = 0;
-                        self.triggeredUrls({});
+                        self.triggerUrlCount = {};
                     }, 2000);
                 }
             }
