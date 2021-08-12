@@ -254,6 +254,7 @@ $(function () {
         self.users = parameters[2];
         self.loginState = parameters[3];
         self.system = parameters[4];
+        self.analytics = parameters[5];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
@@ -268,6 +269,8 @@ $(function () {
         self.invalidEmailHelp = gettext("Invalid e-mail address");
 
         self.passiveLoginInProgress = false;
+        self.error401Count = 0;
+        self.triggerUrlCount = {};
 
         // This extender forces the input value to lowercase. Used in loginsreen_viewmode.js and wizard_acl.js
         window.ko.extenders.lowercase = function (target, option) {
@@ -444,6 +447,29 @@ $(function () {
         };
 
         self._handle_session_expired = function (triggerUrl) {
+            if (self.isCurtainOpened > 0) {
+                self.error401Count++;
+                if (!(triggerUrl in self.triggerUrlCount)) {
+                    self.triggerUrlCount[triggerUrl] = 0;
+                }
+                self.triggerUrlCount[triggerUrl]++;
+                if (self.error401Count === 1) {
+                    setTimeout(() => {
+                        let error401Count = self.error401Count;
+                        let triggerUrlCount = self.triggerUrlCount;
+                        let payload = {
+                            error401Count: error401Count,
+                            triggerUrlCount: triggerUrlCount,
+                        };
+                        self.analytics.send_fontend_event(
+                            "expired_session",
+                            payload
+                        );
+                        self.error401Count = 0;
+                        self.triggerUrlCount = {};
+                    }, 2000);
+                }
+            }
             // don't do this during boot time.
             if (
                 self.isCurtainOpened <= 0 &&
@@ -500,9 +526,14 @@ $(function () {
                             // give it some time to settle in an endless loop
                             setTimeout(function () {
                                 OctoPrint.socket.reconnect();
+                                // Add to analytics to check how often passive logins are used after 401 errors
+                                self.analytics.send_fontend_event(
+                                    "passive_login",
+                                    {}
+                                );
                             }, 3000);
 
-                            // give it some time to settle before we acept another passive login or logout
+                            // give it some time to settle before we accept another passive login or logout
                             setTimeout(function () {
                                 self.passiveLoginInProgress = false;
                             }, 10000);
@@ -571,8 +602,8 @@ $(function () {
                     text: _.sprintf(
                         gettext(
                             "As you are currently in our Beta channel, you would help us " +
-                                "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
-                                "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"
+                            "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
+                            "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"
                         ),
                         {
                             open:
@@ -715,6 +746,7 @@ $(function () {
             "usersViewModel",
             "loginStateViewModel",
             "systemViewModel",
+            "analyticsViewModel",
         ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
