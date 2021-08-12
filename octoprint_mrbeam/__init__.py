@@ -800,7 +800,7 @@ class MrBeamPlugin(
                 software_tier=self._settings.get(["dev", "software_tier"]),
                 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
                 beta_label=self.get_beta_label(),
-                terminalEnabled=self.is_dev_env() or self.support_mode,
+                terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
             )
