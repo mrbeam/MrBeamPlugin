@@ -7,6 +7,7 @@
         <form class="form-horizontal" onkeydown="return event.key != 'Enter';">
 
             <h5>{{ _("Camera Marker Recognition") }}</h5>
+
             <div class="control-group">
                 <label class="control-label" for="settings_mrbeam_debug-marker-recognition-min-pixel">{{ _('Min requried pixel') }}</label>
                 <div class="controls">
@@ -19,6 +20,7 @@
 
 
             <h5>{{ _("Working Area") }}</h5>
+
             <div class="control-group">
                 <div class="controls">
                     <label class="checkbox">
@@ -30,12 +32,12 @@
                 </div>
             </div>
 
-                <h5>{{ _('Terminal') }}</h5>
 
             {% if env == 'DEV' or terminalEnabled %}
 
+                <h5>{{ _('Terminal') }}</h5>
+
                 <div class="control-group">
-        {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
                     <div class="controls">
                         <label class="checkbox">
                             <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal">
@@ -45,21 +47,22 @@
                     </div>
                 </div>
 
+                <div class="control-group">
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums">
+                            <strong>{{ _('Show checksums') }}</strong>
+                            <div>{{ _('Show gcode command checksums in terminal. Takes effect immediately.') }}</div>
+                        </label>
+                    </div>
+                </div>
+
             {% endif %}
 
-            <div class="control-group">
-    {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
-                <div class="controls">
-                    <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums">
-                        <strong>{{ _('Show checksums') }}</strong>
-                        <div>{{ _('Show gcode command checksums in terminal. Takes effect immediately.') }}</div>
-                    </label>
-                </div>
-            </div>
 
 
-        <h5>{{ _('Device State') }}</h5>
+            <h5>{{ _('Device State') }}</h5>
+
             <div class="control-group">
                 <div class="controls">
                     <textarea id="settings_mrbeam_debug_state" readonly style="width: 550px; height: 650px; margin: 0 0 10px 25px;"></textarea>
