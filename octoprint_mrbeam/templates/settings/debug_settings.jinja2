@@ -30,18 +30,22 @@
                 </div>
             </div>
 
-            <h5>{{ _('Terminal') }}</h5>
+                <h5>{{ _('Terminal') }}</h5>
 
-            <div class="control-group">
-    {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
-                <div class="controls">
-                    <label class="checkbox">
-                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal">
-                        <strong>{{ _('Enable terminal') }}</strong>
-                        <div>{{ _('Requires full page reload: <strong>Shift + F5</strong> (Windows and Linux) or <strong>Ctrl + Shift + r</strong> (Mac)') }}</div>
-                    </label>
+            {% if env == 'DEV' or terminalEnabled %}
+
+                <div class="control-group">
+        {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal">
+                            <strong>{{ _('Enable terminal') }}</strong>
+                            <div>{{ _('Requires full page reload: <strong>Shift + F5</strong> (Windows and Linux) or <strong>Ctrl + Shift + r</strong> (Mac)') }}</div>
+                        </label>
+                    </div>
                 </div>
-            </div>
+
+            {% endif %}
 
             <div class="control-group">
     {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
