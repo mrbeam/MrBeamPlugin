@@ -8,8 +8,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 def get_uptime():
     try:
         if platform == 'darwin':
-            p = os.popen("uptime")
-            return p.read()
+            return os.system("uptime")
         else:
             with open("/proc/uptime", "r") as f:
                 uptime = float(f.readline().split()[0])
