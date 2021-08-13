@@ -112,7 +112,7 @@ class LabelPrinter(object):
 			^CF0,20
 			^FO135,53^FDS/N: {serial}^FS
 			^FO135,80^FDProduction date: {prod_date}^FS
-			^FO22,15^BQN,2,4^FDMMA{serial}^FS
+			^FO22,15^BQN,2,4^FDMMA {serial}^FS
 			^XZ
 		""".format(
             name=self._device_info.get_hostname(),
@@ -145,7 +145,7 @@ class LabelPrinter(object):
 			^FO20,180^FDS/N: {serial}^FS
 			^CF0,35
 			^FO135,125^FD{prod_date}^FS
-			^FO22,60^BQN,2,4^FDMMA{serial}^FS
+			^FO22,60^BQN,2,4^FDMMA {serial}^FS
 			^XZ
 		""".format(
             name=self._device_info.get_hostname(),
