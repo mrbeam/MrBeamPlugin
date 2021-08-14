@@ -250,6 +250,13 @@ $(function () {
             return self.placedDesigns().length === 0;
         });
 
+        self.spinnerShow = function () {
+            $("body").addClass("activitySpinnerActive");
+        };
+        self.spinnerHide = function () {
+            $("body").removeClass("activitySpinnerActive");
+        };
+
         self.clear = function () {
             self.abortFreeTransforms();
             snap.selectAll("#userContent>*:not(defs)").remove();
@@ -622,7 +629,7 @@ $(function () {
         self.placeSVG = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
             cb = function (fragment) {
                 var duration_load = Date.now() - start_ts;
                 start_ts = Date.now();
@@ -714,7 +721,7 @@ $(function () {
         self.placeDXF = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
             cb = function (fragment, timestamps) {
                 var duration_load = timestamps.load_done
                     ? timestamps.load_done - start_ts
@@ -799,7 +806,7 @@ $(function () {
             origin = origin || "";
             start_ts = start_ts || Date.now();
 
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
 
             if (!analyticsData._skip) {
                 // this is a flag used by quickShape
@@ -1000,7 +1007,7 @@ $(function () {
                 analyticsData.duration_processing = Date.now() - start_ts;
                 self._analyticsPrepareAndInsertSVG(analyticsData);
                 setTimeout(function () {
-                    $("body").removeClass("activitySpinnerActive");
+                    self.spinnerHide();
                 }, 1);
             }
         };
@@ -1050,7 +1057,7 @@ $(function () {
 
             // remove other unnecessary or invisible ("display=none") elements
             let removeElements = fragment.selectAll(
-                'metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
+                'title, metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
             );
             for (var i = 0; i < removeElements.length; i++) {
                 if (
@@ -1101,7 +1108,6 @@ $(function () {
             self.showTransformHandles(file.previewId, true);
 
             var mb_meta = self._set_mb_attributes(svg);
-            // svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
         };
 
         /**
@@ -1996,7 +2002,7 @@ $(function () {
         self.placeIMG = function (file, textMode) {
             var start_ts = Date.now();
             var url = self._getIMGserveUrl(file);
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
             var img = new Image();
             textMode = textMode || false;
             img.onload = function () {
@@ -2061,7 +2067,7 @@ $(function () {
                 self._analyticsPlaceImage(analyticsData);
 
                 // remove Activity Spinner
-                $("body").removeClass("activitySpinnerActive");
+                self.spinnerHide();
             };
             img.src = url;
         };
@@ -2507,8 +2513,21 @@ $(function () {
             self._updateTransformationButtons();
         };
 
-        self.getCompositionSVG = function (fillAreas, pxPerMM, callback) {
+        /**
+         *
+         * @param {boolean} fillAreas: flag if rastering has to be done or not
+         * @param {number} pxPerMM: resolution used for rastering text, images and filled paths
+         * @returns {object}: {renderedSvg: result as string, jobTimeEstimationData: pathLengths & image summary, renderParams: params used for creation}
+         */
+        self.getCompositionSVG = async function (fillAreas, pxPerMM) {
+            // stop ongoing operations
             self.abortFreeTransforms();
+
+            self.spinnerShow();
+            const renderStart = Date.now();
+            console.log(`Frontend rendering started ...`);
+
+            // create svg to do the rendering within
             var wMM = self.workingAreaWidthMM();
             var hMM = self.workingAreaHeightMM();
             var wPT = wMM * self.workingAreaDPItoMM;
@@ -2520,6 +2539,14 @@ $(function () {
             var attrs = {};
             var content = compSvg.g(attrs);
 
+            // render paths and embed the resulting gcode
+            snap.select("#userContent").embed_gc(
+                self.flipYMatrix(),
+                self.gc_options(),
+                self.gc_meta
+            );
+
+            // copy all stuff placed by the user on the working area to the compSvg, cleanup afterwards and fill <defs> tag and fix references
             var userContent = snap.select("#userContent").clone();
             content.append(userContent);
             compSvg.selectAll(".deleteBeforeRendering").remove();
@@ -2535,7 +2562,6 @@ $(function () {
                     const original_id = tp.attr("id");
                     const clone = tp.clone();
                     const destTextPath = clone.appendTo(targetDefs);
-                    // restore id to keep references working
                     destTextPath.attr({
                         id: original_id,
                         "mb:id": original_id,
@@ -2543,31 +2569,56 @@ $(function () {
                 }
             }
 
-            // embed filters
+            // for bitmaps: embed filters
             // copy defs for filters (e.g. imgCropping, imgSharpening, etc...)
             var originalFilters = snap.selectAll("defs>filter");
             for (let i = 0; i < originalFilters.length; i++) {
                 const original_id = originalFilters[i].attr("id");
                 const clone = originalFilters[i].clone();
                 const destFilter = clone.appendTo(targetDefs);
-                // restore id to keep references working
                 destFilter.attr({ id: original_id, "mb:id": original_id });
             }
 
             // embed Images
-            content.embedAllImages().then(function (allEmbeddedImages) {
-                self.rasterInfill(compSvg, fillAreas, pxPerMM, function (
-                    svgWithRenderedInfill
-                ) {
-                    callback(
-                        self._finalizeBackendSVG(
-                            svgWithRenderedInfill,
-                            namespaces
-                        )
-                    );
-                    $("#compSvg").remove();
-                });
-            });
+            const allEmbeddedImages = await content.embedAllImages();
+            let svgWithRenderedInfill = await self.rasterInfill(
+                compSvg,
+                fillAreas,
+                pxPerMM
+            );
+            const svgStr = self._finalizeBackendSVG(
+                svgWithRenderedInfill,
+                namespaces
+            );
+            // console.log(`svgWithRenderedInfill ${svgWithRenderedInfill}}`);
+            const length_summary = self.get_gc_length_summary(compSvg);
+            console.log(length_summary);
+            $("#compSvg").remove();
+            // hide spinner
+            const renderEnd = Date.now();
+            console.log(
+                `Frontend rendering finished in ${
+                    renderEnd - renderStart
+                } millis`
+            );
+            self.spinnerHide();
+
+            const params = {
+                fillAreas: fillAreas,
+                pxPerMM: pxPerMM,
+                wMM: wMM,
+                hMM: hMM,
+                wPT: wPT,
+                hPT: hPT,
+                gcFlipMatrix: self.flipYMatrix(),
+                gcOptions: self.gc_options(),
+                gcMeta: self.gc_meta,
+            };
+            return {
+                renderedSvg: svgStr,
+                jobTimeEstimationData: length_summary,
+                renderParams: params,
+            };
         };
 
         self._finalizeBackendSVG = function (compSvg, namespaces) {
@@ -2603,6 +2654,82 @@ $(function () {
                     "Conversion error! _finalizeBackendSVG was called without content. Should never happen."
                 );
             }
+        };
+
+        self.get_gc_length_summary = function (svg) {
+            let summary = { vectors: {}, no_info: 0, bitmaps: [] };
+
+            const vectors = self.getStrokedVectors(svg);
+            let lastEnd = null;
+            vectors.forEach(function (e) {
+                const color = Snap.getRGB(e.attr("stroke")).hex;
+                const l = e.attr("mb:gc_length");
+                if (l) {
+                    if (!summary.vectors[color])
+                        summary.vectors[color] = {
+                            lengthInMM: 0,
+                            positioningInMM: 0,
+                        };
+                    summary.vectors[color].lengthInMM += parseFloat(l);
+                    if (lastEnd !== null) {
+                        let start = [
+                            parseFloat(e.attr("mb:start_x")),
+                            parseFloat(e.attr("mb:start_y")),
+                        ];
+                        const posLength = euclideanDistance(start, lastEnd);
+                        summary.vectors[color].positioningInMM += posLength;
+                    }
+                    lastEnd = [
+                        parseFloat(e.attr("mb:end_x")),
+                        parseFloat(e.attr("mb:end_y")),
+                    ];
+                } else {
+                    summary.no_info += 1;
+                }
+            });
+
+            const bitmaps = svg.selectAll("image.fillRendering");
+            bitmaps.forEach(function (b) {
+                const w = parseFloat(b.attr("mb:img_w"));
+                const h = parseFloat(b.attr("mb:img_h"));
+                const histogram = b
+                    .attr("mb:histogram")
+                    .split(",")
+                    .map((v) => parseInt(v));
+                const whitePixelRatio = parseFloat(
+                    b.attr("mb:whitePixelRatio")
+                );
+                const innerWhitePixelRatio = parseFloat(
+                    b.attr("mb:innerWhitePixelRatio")
+                );
+                const whitePixelsOutside = parseInt(
+                    b.attr("mb:whitePixelsOutside")
+                );
+                const brightnessChanges = parseInt(
+                    b.attr("mb:brightnessChanges")
+                );
+                const totalBrightnessChange = parseInt(
+                    b.attr("mb:totalBrightnessChange")
+                );
+                if (w && h && histogram) {
+                    summary.bitmaps.push({
+                        w: w,
+                        h: h,
+                        histogram: histogram,
+                        whitePixelRatio: whitePixelRatio,
+                        innerWhitePixelRatio: innerWhitePixelRatio,
+                        whitePixelsOutside: whitePixelsOutside,
+                        brightnessChanges: brightnessChanges,
+                        totalBrightnessChange: totalBrightnessChange,
+                    });
+                } else {
+                    summary.no_info += 1;
+                }
+            });
+
+            const items = vectors.length + bitmaps.length;
+            if (items > 0) summary.no_info = summary.no_info / items;
+            return summary;
         };
 
         self._normalize_mb_id = function (id) {
@@ -2769,6 +2896,21 @@ $(function () {
                 }
             }
             return false;
+        };
+
+        self.getStrokedVectors = function (paper) {
+            let elements = paper.selectAll(".vector_outline");
+            let out = [];
+            for (var i = 0; i < elements.length; i++) {
+                var e = elements[i];
+                // TODO use is_stroked() from render_fills
+                var stroke = e.attr("stroke");
+                var sw = e.attr("stroke-width");
+                if (stroke !== "none" && parseFloat(sw) > 0) {
+                    out.push(e);
+                }
+            }
+            return elements;
         };
 
         self.draw_gcode = function (points, intensity, target) {
@@ -2954,6 +3096,7 @@ $(function () {
         };
 
         // raster the infill and inject it as an image into the svg
+        // TODO use Promise instead of callback.
         self.rasterInfill = async function (
             svg, // is compSvg reference
             fillAreas,
@@ -2961,6 +3104,17 @@ $(function () {
             callback
         ) {
             let clusters = svg.splitRasterClusters(fillAreas);
+            // only render clusters overlapping the working area
+            const waBB = snap.select("#coordGrid").getBBox();
+            clusters = clusters.filter(function (c, idx) {
+                const isInside = Snap.path.isBBoxIntersect(c.bbox, waBB);
+                if (!isInside)
+                    console.info(
+                        `Cluster ${idx} is outside workingArea. Skipping`
+                    );
+                return isInside;
+            });
+
             const whitelist = svg.getUsedFonts();
             const fontDecl = WorkingAreaHelper.getFontDeclarations(whitelist);
             clusters = clusters.map((c) => {
@@ -2970,6 +3124,7 @@ $(function () {
                 );
                 return c;
             });
+
             if (MRBEAM_DEBUG_RENDERING) {
                 debugBase64(
                     clusters.map((c) => c.svgDataUrl),
@@ -2980,36 +3135,63 @@ $(function () {
                 let pngs = await Promise.all(
                     clusters.map((c) =>
                         url2png(c.svgDataUrl, pxPerMM, c.bbox).then(function (
-                            png
+                            rasterResult
                         ) {
-                            svg.image(
-                                png,
+                            const fillImage = svg.image(
+                                rasterResult.dataUrl,
                                 c.bbox.x,
                                 c.bbox.y,
                                 c.bbox.w,
                                 c.bbox.h
                             );
+
+                            // total path length of engraving line by line
+                            const gcLength =
+                                c.bbox.w * c.bbox.h * pxPerMM + c.bbox.h; // contains enlargement of bbox due to webfont loading bug.
+                            fillImage.attr({
+                                id: `fillRendering${c.idx}`,
+                                "mb:img_w": c.bbox.w, // for Job Time Estimation 2.0
+                                "mb:img_h": c.bbox.h,
+                                "mb:histogram": rasterResult.analysis.histogram,
+                                "mb:whitePixelRatio":
+                                    rasterResult.analysis.whitePixelRatio,
+                                "mb:innerWhitePixelRatio":
+                                    rasterResult.analysis.innerWhitePixelRatio,
+                                "mb:whitePixelsOutside":
+                                    rasterResult.analysis
+                                        .whitePixelsAtTheOutside,
+                                "mb:brightnessChanges":
+                                    rasterResult.analysis.brightnessChanges,
+                                "mb:totalBrightnessChange":
+                                    rasterResult.analysis.totalBrightnessChange,
+                                "mb:gc_length": gcLength,
+                                class: "fillRendering",
+                            });
+
                             c.elements.forEach((el) => el.remove());
-                            return png;
+                            return rasterResult;
                         })
                     )
                 );
+
                 if (MRBEAM_DEBUG_RENDERING) {
-                    debugBase64(pngs, `Step 2: PNG of cluster`);
+                    debugBase64(
+                        pngs.map((r) => r.dataUrl),
+                        `Step 2: PNG of cluster`
+                    );
                 }
 
                 svg.selectAll(".deleteAfterRendering").remove();
-                if (typeof callback === "function") {
-                    callback(svg);
-                    if (MRBEAM_DEBUG_RENDERING) {
-                        debugBase64(
-                            svg.toDataURL(),
-                            "Step 3: SVG with fill rendering"
-                        );
-                    }
+
+                if (MRBEAM_DEBUG_RENDERING) {
+                    debugBase64(
+                        svg.toDataURL(),
+                        "Step 3: SVG with fill rendering"
+                    );
                 }
+                return svg;
             } else {
-                callback(svg);
+                return Promise.resolve(svg);
             }
         };
 
