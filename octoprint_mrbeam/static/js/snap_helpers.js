@@ -92,4 +92,93 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         const bb = el.getBBox();
         return Snap.path.getBBoxWithTransformation(bb, mat);
     };
+
+    Element.prototype.toWorkingAreaSvgStr = function (
+        styles = "",
+        filter = null
+    ) {
+        const elem = this;
+        const paper = elem.paper;
+        const att = paper.attr();
+        const vb = att.viewBox.split(" ");
+        const width = vb[2];
+        const height = vb[3];
+        if (Array.isArray(styles)) {
+            styles = styles.join("\n");
+        }
+        const namespaces = new Set([
+            'xmlns="http://www.w3.org/2000/svg"',
+            'xmlns:xlink="http://www.w3.org/1999/xlink"',
+        ]);
+        Object.keys(att)
+            .filter((key) => key.startsWith("xmlns"))
+            .map((key) => `${key}="${att[key]}"`)
+            .forEach((ns) => namespaces.add(ns));
+        const defs = paper.select("defs").innerSVG();
+        let elements = [];
+        if (filter === null) {
+            elements.push(elem);
+        } else {
+            elem.selectAll(filter).forEach((e) => elements.push(e));
+        }
+        const cnt = elements
+            .map((e) => {
+                const transform = e.transform().totalMatrix.toString();
+                const clone = e.clone().attr("transform", transform);
+                const str = clone.outerSVG();
+                clone.remove();
+                return str;
+            })
+            .join("\n")
+            .replaceAll('\\"', "'"); // <text style="font-family: \"Allerta Stencil\"; "> => <text style="font-family: 'Allerta Stencil'; ">
+        const svg = `
+<svg version="1.1"
+    ${[...namespaces].join(" ")}
+    width="${width}" height="${height}"
+    viewBox="${att.viewBox}">
+    <defs>
+        ${defs}
+        <style>${styles}</style>
+    </defs>
+    ${cnt}
+</svg>
+`;
+
+        return svg;
+    };
+
+    Element.prototype.toWorkingAreaDataURL = function (
+        styles = "",
+        filter = null
+    ) {
+        if (window && window.btoa) {
+            const elem = this;
+            const svg = elem.toWorkingAreaSvgStr(styles, filter);
+            const dataurl =
+                "data:image/svg+xml;base64," +
+                btoa(unescape(encodeURIComponent(svg)));
+            return dataurl;
+        } else {
+            console.error("Browser not supported: (window.btoa not present).");
+            return "";
+        }
+    };
+
+    /*
+     * @returns {Set} set of font names in use
+     */
+    Element.prototype.getUsedFonts = function () {
+        const elem = this;
+        let result = new Set();
+        if (elem.type === "text") {
+            const fnt = window.getComputedStyle(elem.node)["font-family"];
+            result.add(fnt);
+        }
+
+        elem.selectAll("text").forEach((el) => {
+            const fnt = window.getComputedStyle(el.node)["font-family"];
+            result.add(fnt);
+        });
+        return result;
+    };
 });

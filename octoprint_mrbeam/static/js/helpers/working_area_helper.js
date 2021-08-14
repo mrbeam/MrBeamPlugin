@@ -408,13 +408,6 @@ class WorkingAreaHelper {
             });
         return result;
     };
-
-    static getUsedFontNames = function (paper) {
-        const fontnames = paper
-            .selectAll("#userContent .userText text")
-            .items.map((s) => s.node.style["font-family"].trim());
-        return new Set(fontnames); // unique
-    };
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = "bcdfghjklmnpqrstvwxz";

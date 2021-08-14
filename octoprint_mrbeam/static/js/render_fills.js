@@ -24,58 +24,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
      * @returns {set} set of elements to be rastered.
      */
 
-    Element.prototype.removeUnfilled = function (fillPaths) {
-        var elem = this;
-        var selection = [];
-        var children = elem.children();
-
-        var goRecursive =
-            elem.type !== "defs" && // ignore these tags
-            elem.type !== "clipPath" &&
-            elem.type !== "metadata" &&
-            elem.type !== "desc" &&
-            elem.type !== "text" &&
-            elem.type !== "rdf:rdf" &&
-            elem.type !== "cc:work" &&
-            elem.type !== "sodipodi:namedview" &&
-            children.length > 0;
-
-        if (goRecursive) {
-            for (var i = 0; i < children.length; i++) {
-                var child = children[i];
-                selection = selection.concat(child.removeUnfilled(fillPaths));
-            }
-        } else {
-            if (
-                elem.type === "image" ||
-                elem.type === "text" ||
-                elem.type === "textPath" //||
-                //                elem.type === "#text"
-            ) {
-                selection.push(elem);
-            } else {
-                if (fillPaths && elem.is_filled()) {
-                    //                    elem.attr("stroke", "none");
-                    selection.push(elem);
-                } else {
-                    if (elem.type !== "#text" && elem.type !== "defs") {
-                        elem.remove();
-                    }
-                }
-            }
-        }
-        return selection;
-    };
-
     Element.prototype.markFilled = function (className, fillPaths) {
         var elem = this;
         var selection = [];
         var children = elem.children();
-        if (elem.type === "desc" || elem.type === "style") {
+        if (
+            elem.type === "desc" ||
+            elem.type === "style" ||
+            elem.type === "title"
+        ) {
             return [];
         }
 
-        if (children.length > 0) {
+        if (children.length > 0 && elem.type !== "text") {
             var goRecursive =
                 elem.type !== "defs" && // ignore these tags
                 elem.type !== "clipPath" &&
@@ -93,23 +54,29 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 }
             }
         } else {
-            if (
-                elem.type === "image" ||
-                elem.type === "text" ||
-                elem.type === "#text"
-            ) {
-                if (elem.type === "#text") {
-                    let parent = elem.parent();
-                    parent.addClass(className);
-                    selection.push(parent);
+            if (elem.is_filled()) {
+                if (
+                    elem.type === "image" ||
+                    elem.type === "text" ||
+                    elem.type === "textPath" //||
+                ) {
+                    elem.addClass(className);
+                    selection.push(elem);
                 } else {
-                    elem.addClass(className);
-                    selection.push(elem);
-                }
-            } else {
-                if (fillPaths && elem.is_filled()) {
-                    elem.addClass(className);
-                    selection.push(elem);
+                    if (fillPaths) {
+                        if (elem.is_stroked()) {
+                            // duplicate element to separate stroke from fill
+                            const unstroked = elem.clone();
+                            elem.attr("fill", "none");
+                            unstroked.attr("stroke", "none");
+                            unstroked.addClass(className);
+                            unstroked.clean_gc(); // necessary?
+                            selection.push(unstroked);
+                        } else {
+                            elem.addClass(className);
+                            selection.push(elem);
+                        }
+                    }
                 }
             }
         }
@@ -154,89 +121,112 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             clusters = clusters.filter((c) => c !== null);
             if (lastOverlap === -1) {
                 // create new cluster
-                clusters.push({ bbox: bbox, elements: [rasterEl] });
+                clusters.push({
+                    bbox: bbox,
+                    elements: [rasterEl],
+                    idx: clusterCount,
+                });
                 clusterCount++;
             }
         }
 
-        for (let c = 0; c < clusters.length; c++) {
-            let cluster = clusters[c];
+        clusters.forEach((cluster) => {
             cluster.elements.forEach((rasterEl) =>
-                rasterEl.addClass(`rasterCluster${c}`)
+                rasterEl.addClass(`rasterCluster${cluster.idx}`)
             );
-            let tmpSvg = svg.clone();
-            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
-            // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
-            tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
-            // DON'T fix IDs of textPath references, they're cloned correct.
-            //tmpSvg.fixIds("defs .quicktext_curve_path", "[mb\\:id]");
-            cluster.svg = tmpSvg;
-        }
-        //console.log("Clusters", clusters);
+        });
         return clusters;
     };
 
     Element.prototype.is_filled = function () {
         var elem = this;
 
-        // TODO text support
-        // TODO opacity support
-        if (
-            elem.type !== "circle" &&
-            elem.type !== "rect" &&
-            elem.type !== "ellipse" &&
-            elem.type !== "line" &&
-            elem.type !== "polygon" &&
-            elem.type !== "polyline" &&
-            elem.type !== "path"
-        ) {
-            return false;
-        }
-
-        var fill = elem.attr("fill");
-        var opacity = elem.attr("fill-opacity");
-
-        if (fill !== "none") {
-            if (opacity === null || opacity > 0) {
-                return true;
+        if (elem.type === "text") {
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                return false;
             }
+            const fill = window.getComputedStyle(elem.node)["fill"];
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["fill-opacity"]
+            );
+            if (fill === "none" || opacity === 0) {
+                return false;
+            }
+            return true;
         }
+
+        if (elem.type === "image") {
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                return false;
+            }
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["opacity"]
+            );
+            if (opacity === 0) {
+                return false;
+            }
+            return true;
+        }
+
+        if (
+            elem.type === "circle" ||
+            elem.type === "rect" ||
+            elem.type === "ellipse" ||
+            elem.type === "line" ||
+            elem.type === "polygon" ||
+            elem.type === "polyline" ||
+            elem.type === "path"
+        ) {
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                return false;
+            }
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["fill-opacity"]
+            );
+            const fill = window.getComputedStyle(elem.node)["fill"];
+            if (fill === "none" || opacity === 0) {
+                return false;
+            }
+            return true;
+        }
+
         return false;
     };
 
-    /**
-     * Removes fill of element. In case element was a filled shape without stroke, element will be removed.
-     * @returns {Boolean} if element was removed completely.
-     */
-    Element.prototype.unfillOrRemove = function () {
-        let elem = this;
+    Element.prototype.is_stroked = function () {
+        var elem = this;
 
-        // TODO opacity support
         if (
-            elem.type !== "circle" &&
-            elem.type !== "rect" &&
-            elem.type !== "ellipse" &&
-            elem.type !== "line" &&
-            elem.type !== "polygon" &&
-            elem.type !== "polyline" &&
-            elem.type !== "path" &&
-            elem.type !== "textPath" &&
-            elem.type !== "text" &&
-            elem.type !== "tspan" &&
-            elem.type !== "image"
+            elem.type === "circle" ||
+            elem.type === "rect" ||
+            elem.type === "ellipse" ||
+            elem.type === "line" ||
+            elem.type === "polygon" ||
+            elem.type === "polyline" ||
+            elem.type === "path"
         ) {
-            console.warn(`Element ${elem} is not a native type. Skip.`);
-            return false;
-        }
-
-        const stroke = elem.attr("stroke");
-        if (stroke !== "none") {
-            elem.attr({ fill: "none" });
-            return false;
-        } else {
-            elem.remove();
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["stroke-opacity"]
+            );
+            const stroke = window.getComputedStyle(elem.node)["stroke"];
+            const width = parseFloat(
+                window.getComputedStyle(elem.node)["stroke-width"]
+            );
+            if (
+                stroke === "none" ||
+                opacity === 0 ||
+                isNaN(width) ||
+                width <= 0
+            ) {
+                return false;
+            }
             return true;
         }
+
+        return false;
     };
 
     /**
@@ -258,189 +248,111 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         } else if (elem.attr("href") !== null) {
             url = elem.attr("href");
         }
-        if (url === null || url.startsWith("data:")) {
-            console.info(`embedImage: nothing do to. Url was ${url}`);
+        if (url === null) {
+            console.info(`embedImage, found empty url: ${url}`);
+            return Promise.resolve(elem);
+        }
+        if (url.startsWith("data:")) {
+            console.info(
+                `embedImage: nothing do to. Url started with ${url.substr(
+                    0,
+                    50
+                )}`
+            );
             return Promise.resolve(elem);
         }
 
-        let prom = loadImagePromise(url)
-            .then(function (image) {
-                let canvas = document.createElement("canvas");
-                canvas.width = image.naturalWidth; // or 'width' if you want a special/scaled size
-                canvas.height = image.naturalHeight; // or 'height' if you want a special/scaled size
-
-                canvas.getContext("2d").drawImage(image, 0, 0);
-
-                const ratio = getWhitePixelRatio(canvas);
-                console.log(
-                    `embedImage() white pixel ratio: ${(ratio * 100).toFixed(
-                        2
-                    )}%, total white pixel: ${
-                        canvas.width * canvas.height * ratio
-                    }, image:${image.src}`
-                );
-
-                const dataUrl = canvas.toDataURL("image/png");
-                elem.attr("href", dataUrl);
-                canvas.remove();
-                return elem;
-            })
-            .catch(function (error) {
-                console.error(
-                    `Slicing Error - embedImage: error while loading image: ${error}`
-                );
-            });
+        let prom = url2png(url).then((dataUrl) => {
+            elem.attr("href", dataUrl);
+            return elem;
+        });
         return prom;
     };
 
-    Element.prototype.renderPNG = async function (
-        canvasID,
-        viewboxScale,
-        pxPerMM,
-        renderBBoxMM = null
-    ) {
-        var elem = this;
-        console.debug(
-            `renderPNG: SVG with viewboxScale ${viewboxScale}(svgdoc/viewbox), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM.w}*${renderBBoxMM.h} @ ${renderBBoxMM.x},${renderBBoxMM.y}`
+    Element.prototype.embedAllImages = async function () {
+        const elem = this;
+        const allImages = elem.selectAll("image").items;
+        if (elem.type === "image") {
+            allImages.push(elem);
+        }
+        console.log(`embedding Images 0/${allImages.length}}`);
+
+        let pAll = await Promise.all(
+            allImages.map(async (elem, idx) => {
+                const embedded = await elem.embedImage();
+                console.log(`embedding Image ${idx + 1}/${allImages.length}}`);
+                return embedded;
+            })
         );
 
-        let bbox; // attention, this bbox uses viewBox coordinates (mm)
-        if (renderBBoxMM === null) {
-            // warning: correct result depends upon all resources (img, fonts, ...) have to be fully loaded already.
-            bbox = elem.getBBox();
-            //console.log(`renderPNG(): fetched render bbox from element: ${bbox}`);
-        } else {
-            bbox = renderBBoxMM;
-            //            console.log(
-            //                `renderPNG(): got render bbox from caller: ${bbox}, (elem bbox is ${bboxFromElem})`
-            //            );
-        }
+        return pAll;
+    };
 
-        // TODO only enlarge on images and fonts
-        // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
-        const growX = 0.8; // percentage of the total width added (on both sides)
-        const growY = 0.8; // percentage of the total height added
+    Element.prototype.renderPNG2 = async function (pxPerMM, margin) {
+        var elem = this;
+
+        elem.embedAllImages();
+        const fontSet = elem.getUsedFonts();
+        const fontDeclarations = WorkingAreaHelper.getFontDeclarations(fontSet);
 
         const wMM = 500;
         const hMM = 390;
         const cropBB = { x: 0, y: 0, x2: wMM, y2: hMM };
-        const bboxMM = Snap.path.enlarge_bbox(bbox, growX, growY, cropBB);
-
-        // get svg as dataUrl
-        //        var svgDataUri = elem.toDataURLfixed('xmlns:mb="http://www.mr-beam.org/mbns"');
-        var svgDataUri = elem.toDataURL(); // TODO remove comment. OK here
-
-        // init render canvas and attach to page
-        var renderCanvas = document.createElement("canvas");
-        renderCanvas.id = `renderCanvas_${canvasID}`;
-        renderCanvas.class = "renderCanvas";
-        renderCanvas.width = bboxMM.w * pxPerMM;
-        renderCanvas.height = bboxMM.h * pxPerMM;
-        if (MRBEAM_DEBUG_RENDERING) {
-            renderCanvas.style =
-                "position: fixed; bottom: 1vw; left: 1vw; width: 35vw; border: 1px solid red; background-color:aqua";
-            renderCanvas.addEventListener("click", function () {
-                this.remove();
-            });
+        let bbox = elem.getBBox();
+        let bboxMargin = 0;
+        if (margin === null) {
+            bboxMargin = fontSet.size > 0 ? 0.8 : 0;
+        } else {
+            bboxMargin = margin;
         }
-        document.getElementsByTagName("body")[0].appendChild(renderCanvas);
-        var renderCanvasContext = renderCanvas.getContext("2d");
-        //        renderCanvasContext.fillStyle = "white"; // avoids one backend rendering step (has to be disabled in the backend)
-        //        renderCanvasContext.fillRect(
-        //            0,
-        //            0,
-        //            renderCanvas.width,
-        //            renderCanvas.height
-        //        );
 
-        // TODO "preload" the quicktext fonts - otherwise async loading leads to unpredicted results.
-        //        var link = document.createElement('link');
-        //        link.rel = 'stylesheet';
-        //        link.type = 'text/css';
-        //        link.href = 'http://fonts.googleapis.com/css?family=Vast+Shadow';
-        //        document.getElementsByTagName('head')[0].appendChild(link);
-        //
-        //        // Trick from https://stackoverflow.com/questions/2635814/
-        //        var image = new Image();
-        //        image.src = link.href;
-        //        image.onerror = function () {
-        //            ctx.font = '50px "Vast Shadow"';
-        //            ctx.textBaseline = 'top';
-        //            ctx.fillText('Hello!', 20, 10);
-        //        };
+        const bboxMM = Snap.path.enlarge_bbox(
+            bbox,
+            bboxMargin,
+            bboxMargin,
+            cropBB
+        );
 
-        let prom = loadImagePromise(svgDataUri)
-            .then(
-                function (imgTag) {
-                    try {
-                        // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
-                        //                        const viewboxScale = wPT / wMM;
-                        const cx = bboxMM.x * viewboxScale;
-                        const cy = bboxMM.y * viewboxScale;
-                        const cw = bboxMM.w * viewboxScale;
-                        const ch = bboxMM.h * viewboxScale;
+        // get svg as dataUrl including namespaces, fonts, more
+        const svgDataUrl = elem.toWorkingAreaDataURL(fontDeclarations);
+        const fillBitmap = await url2png(svgDataUrl, pxPerMM, bboxMM);
+        const size = getDataUriSize(fillBitmap);
 
-                        // drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
-                        renderCanvasContext.drawImage(
-                            imgTag,
-                            cx,
-                            cy,
-                            cw,
-                            ch,
-                            0,
-                            0,
-                            renderCanvas.width,
-                            renderCanvas.height
-                        );
-                    } catch (exception) {
-                        console.error(
-                            "renderCanvasContext.drawImage failed:",
-                            exception
-                        );
-                    }
+        return {
+            dataUrl: fillBitmap,
+            size: size,
+            bbox: bboxMM,
+        };
+    };
 
-                    // place fill bitmap into svg
-                    const fillBitmap = renderCanvas.toDataURL("image/png");
-                    const size = getDataUriSize(fillBitmap);
-                    //                    console.debug("renderPNG rendered dataurl has " + size);
-
-                    renderCanvas.remove();
-                    return {
-                        dataUrl: fillBitmap,
-                        size: size,
-                        bbox: bboxMM,
-                        clusterIndex: canvasID,
-                    };
-                },
-                // after onerror
-                function (e) {
-                    // var len = svgDataUri ? svgDataUri.length : -1;
-                    var len = getDataUriSize(svgDataUri, "B");
-                    var msg =
-                        "Error during conversion: Loading SVG dataUri into image element failed in renderPNG. (dataUri.length: " +
-                        len +
-                        ")";
-                    console.error(msg, e);
-                    console.debug(
-                        "renderPNG ERR: svgDataUri that failed to load: ",
-                        svgDataUri
+    // check if still in use -> keep as debug method.
+    Element.prototype.raster = function (pxPerMM = 10, margin = null) {
+        const elem = this;
+        const bb = elem.getBBox();
+        const promise = elem
+            .renderPNG2(pxPerMM, margin)
+            .then(function (result) {
+                if (MRBEAM_DEBUG_RENDERING) {
+                    console.info(
+                        "MRBEAM_DEBUG_RENDERING",
+                        result.dataUrl,
+                        result.bbox
                     );
-                    new PNotify({
-                        title: gettext("Conversion failed"),
-                        text: msg,
-                        type: "error",
-                        hide: false,
+                    const img = elem.paper.image(
+                        result.dataUrl,
+                        result.bbox.x,
+                        result.bbox.y,
+                        result.bbox.w,
+                        result.bbox.h
+                    );
+                    img.attr("opacity", 0.6);
+                    img.click(function () {
+                        img.remove();
                     });
-                    if (!MRBEAM_DEBUG_RENDERING) {
-                        renderCanvas.remove();
-                    }
                 }
-            )
-            .catch(function (error) {
-                console.error(error);
+                return result;
             });
-
-        return prom;
+        return promise;
     };
 
     Element.prototype.fixIds = function (selector, srcIdAttr) {

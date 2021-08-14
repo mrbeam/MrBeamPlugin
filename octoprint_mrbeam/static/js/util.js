@@ -32,6 +32,46 @@ $(function () {
         });
     };
 
+    url2png = async function (url, pxPerMM = 1, bbox = null) {
+        let prom = loadImagePromise(url)
+            .then(function (image) {
+                let x = 0;
+                let y = 0;
+                let w = image.naturalWidth; // or 'width' if you want a special/scaled size
+                let h = image.naturalHeight; // or 'height' if you want a special/scaled size
+                if (bbox !== null) {
+                    x = bbox.x;
+                    y = bbox.y;
+                    w = bbox.w;
+                    h = bbox.h;
+                }
+                let canvas = document.createElement("canvas");
+                canvas.id = "RasterCanvas_url2png";
+                canvas.width = w * pxPerMM;
+                canvas.height = h * pxPerMM;
+                canvas
+                    .getContext("2d")
+                    .drawImage(
+                        image,
+                        x,
+                        y,
+                        w,
+                        h,
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
+                const png = canvas.toDataURL("image/png");
+                canvas.remove();
+                return png;
+            })
+            .catch(function (error) {
+                console.error(`url2png: error loading image: ${error}`);
+            });
+        return prom;
+    };
+
     getWhitePixelRatio = function (canvas) {
         // count ratio of white pixel
         const pixelData = canvas

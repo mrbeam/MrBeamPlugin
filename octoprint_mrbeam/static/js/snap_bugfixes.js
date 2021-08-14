@@ -34,39 +34,4 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             );
         }
     };
-
-    elproto.toWorkingAreaSvgStr = function (styles = "") {
-        if (window && window.btoa) {
-            const elem = this;
-            const paper = elem.paper;
-            const att = paper.attr();
-            const namespaces = Object.keys(att)
-                .filter((key) => key.startsWith("xmlns"))
-                .map((key) => `${key}="${att[key]}"`)
-                .join(" ");
-            const defs = paper.select("defs").innerSVG();
-            const cnt = elem.outerSVG().replaceAll('\\"', "'"); // <text style="font-family: \"Allerta Stencil\"; "> => <text style="font-family: 'Allerta Stencil'; ">
-            const svg = `
-<svg version="1.1"
-     xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
-     ${namespaces}
-     viewBox="${att.viewBox}">
-     <defs>
-         ${defs}
-         <style>
-            ${styles}
-         </style>
-     </defs>
-       ${cnt}
-</svg>
-`;
-            //     width="${att.width}" height="${att.height}"
-            const dataurl =
-                "data:image/svg+xml;base64," +
-                btoa(unescape(encodeURIComponent(svg)));
-
-            return svg;
-        }
-    };
 });

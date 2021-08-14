@@ -857,7 +857,7 @@ $(function () {
             }
 
             try {
-                // bake() kills gradients because gradient coordinates are not transformed.
+                // bug: bake() kills gradients because gradient coordinates are not transformed.
                 var switches = $.extend(
                     {
                         showTransformHandles: true,
@@ -988,7 +988,8 @@ $(function () {
                 });
 
                 snap.select("#userContent").append(newSvg);
-                self._addClickAndHoverHandlers(snap.select("#" + id), fileObj); // after placement ids have changed => select freshly placed fragment via id.
+                // after placement ids have changed => select freshly placed fragment via id.
+                self._addClickAndHoverHandlers(snap.select("#" + id), fileObj);
 
                 return id;
             } catch (e) {
@@ -1028,8 +1029,7 @@ $(function () {
                 "switch",
                 "#adobe_illustrator_pgf",
             ];
-            //			var unsupportedElems = ['flowRoot', 'switch', '#adobe_illustrator_pgf'];
-            //
+
             for (var i = 0; i < unsupportedElems.length; i++) {
                 var myElem = fragment.selectAll(unsupportedElems[i]);
                 if (myElem.length !== 0) {
@@ -1201,10 +1201,10 @@ $(function () {
                     // like this: xmlns:x="&ns_extend;"
                     // We replace it to xmlns:x="ENTITYREF_ns_extend"
                     if (attr.value.match(/^&.+;$/)) {
-                        if (attr.name == "xmlns") {
+                        if (attr.name === "xmlns") {
                             namespaces[attr.name] =
                                 "http://www.w3.org/2000/svg";
-                        } else if (attr.name == "xmlns:xlink") {
+                        } else if (attr.name === "xmlns:xlink") {
                             // not sure if this is important
                             namespaces[attr.name] =
                                 "http://www.w3.org/1999/xlink";
@@ -2513,30 +2513,19 @@ $(function () {
             var wPT = wMM * self.workingAreaDPItoMM;
             var hPT = hMM * self.workingAreaDPItoMM;
             var compSvg = self.getNewSvg("compSvg", wPT, hPT);
+            compSvg.attr("viewBox", `0 0 ${wMM} ${hMM}`);
             var namespaces = self._getDocumentNamespaceAttributes(snap);
             compSvg.attr(namespaces);
             var attrs = {};
             var content = compSvg.g(attrs);
 
-            // TODO: here getBBox() should be reliably sized, but contains a lot of non renderable stuff.
-            let contentBBox = snap.select("#userContent").getBBox();
-            console.log("contentBBox", contentBBox);
             var userContent = snap.select("#userContent").clone();
             content.append(userContent);
             compSvg.selectAll(".deleteBeforeRendering").remove();
             const targetDefs = compSvg.select("svg>defs");
 
-            // if text in document
+            // embed textPaths
             if (userContent.selectAll(".userText").length > 0) {
-                // embed the fonts as dataUris
-                $("#compSvg defs").append(
-                    '<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>'
-                );
-                self._qt_copyFontsToSvg(
-                    compSvg.select(".quickTextFontPlaceholder").node
-                );
-
-                // copy curved textPaths to defs
                 const allTextPaths = snap.selectAll(
                     "defs>.quicktext_curve_path"
                 );
@@ -2565,24 +2554,18 @@ $(function () {
             }
 
             // embed Images
-            self._embedAllImages(content).then(function (allEmbeddedImages) {
-                self.rasterInfill(
-                    compSvg,
-                    namespaces,
-                    fillAreas,
-                    wMM,
-                    hMM,
-                    pxPerMM,
-                    function (svgWithRenderedInfill) {
-                        callback(
-                            self._finalizeBackendSVG(
-                                svgWithRenderedInfill,
-                                namespaces
-                            )
-                        );
-                        $("#compSvg").remove();
-                    }
-                );
+            content.embedAllImages().then(function (allEmbeddedImages) {
+                self.rasterInfill(compSvg, fillAreas, pxPerMM, function (
+                    svgWithRenderedInfill
+                ) {
+                    callback(
+                        self._finalizeBackendSVG(
+                            svgWithRenderedInfill,
+                            namespaces
+                        )
+                    );
+                    $("#compSvg").remove();
+                });
             });
         };
 
@@ -2967,156 +2950,64 @@ $(function () {
             }
         };
 
-        self._embedAllImages = async function (svg) {
-            // TODO... improve selector to catch href & xlink:href (https://stackoverflow.com/questions/23034283/is-it-possible-to-use-htmls-queryselector-to-select-by-xlink-attribute-in-an)
-            // var allImages snap.selectAll("#userContent image[*|href]");
-            var allImages = svg.selectAll("image");
-            console.log(`embedding Images 0/${allImages.length}}`);
-
-            let pAll = await Promise.all(
-                allImages.items.map(async (elem, idx) => {
-                    const embedded = await elem.embedImage();
-                    console.log(
-                        `embedding Image ${idx + 1}/${allImages.length}}`
-                    );
-                    return embedded;
-                })
-            );
-
-            return pAll;
-        };
-
-        self._rasterAndEmbedResult = async function (
-            targetSvg,
-            rasterClusters,
-            pxPerMM
-        ) {
-            let pAll = await Promise.all(
-                rasterClusters.map(async (cluster, clusterIndex) => {
-                    const renderBBoxMM = cluster.bbox;
-                    const rasterResult = await cluster.svg.renderPNG(
-                        clusterIndex,
-                        self.workingAreaDPItoMM,
-                        pxPerMM,
-                        renderBBoxMM
-                    ); // returns { dataUrl: fillBitmap, size: size, bbox: bbox, clusterIndex:clusterIndex };
-                    if (rasterResult.dataUrl !== null) {
-                        const x = rasterResult.bbox.x;
-                        const y = rasterResult.bbox.y;
-                        const w = rasterResult.bbox.w;
-                        const h = rasterResult.bbox.h;
-                        var fillImage = targetSvg.image(
-                            rasterResult.dataUrl,
-                            x,
-                            y,
-                            w,
-                            h
-                        );
-                        fillImage.attr("id", `fillRendering${clusterIndex}`);
-                    }
-                    return rasterResult;
-                })
-            );
-
-            if (MRBEAM_DEBUG_RENDERING) {
-                debugBase64(
-                    pAll.map((r) => r.dataUrl),
-                    `Step 2: PNG`
-                );
-            }
-
-            console.log("_rasterAndEmbedResult promise all");
-            return pAll;
-        };
-
         // raster the infill and inject it as an image into the svg
-        self.rasterInfill = function (
+        self.rasterInfill = async function (
             svg, // is compSvg reference
-            namespaces,
             fillAreas,
-            wMM,
-            hMM,
             pxPerMM,
             callback
         ) {
             let clusters = svg.splitRasterClusters(fillAreas);
-
+            const whitelist = svg.getUsedFonts();
+            const fontDecl = WorkingAreaHelper.getFontDeclarations(whitelist);
+            clusters = clusters.map((c) => {
+                c.svgDataUrl = svg.toWorkingAreaDataURL(
+                    fontDecl,
+                    `.toRaster.rasterCluster${c.idx}`
+                );
+                return c;
+            });
             if (MRBEAM_DEBUG_RENDERING) {
                 debugBase64(
-                    clusters.map((c) => c.svg.toDataURL()),
+                    clusters.map((c) => c.svgDataUrl),
                     `Step 1: Raster Cluster SVGs`
                 );
             }
+            if (fillAreas) {
+                let pngs = await Promise.all(
+                    clusters.map((c) =>
+                        url2png(c.svgDataUrl, pxPerMM, c.bbox).then(function (
+                            png
+                        ) {
+                            svg.image(
+                                png,
+                                c.bbox.x,
+                                c.bbox.y,
+                                c.bbox.w,
+                                c.bbox.h
+                            );
+                            c.elements.forEach((el) => el.remove());
+                            return png;
+                        })
+                    )
+                );
+                if (MRBEAM_DEBUG_RENDERING) {
+                    debugBase64(pngs, `Step 2: PNG of cluster`);
+                }
 
-            // get only filled items and embed the images
-            // loop over non overlapping clusters to-raster elements.
-            for (var c = 0; c < clusters.length; c++) {
-                var rasterCluster = clusters[c];
-                var rasterContentSvg = rasterCluster.svg; // Avoids wrapping svg in svg.
-                rasterContentSvg.attr("id", "rasterCluster_" + c);
-                rasterContentSvg.addClass("tmpSvg");
-
-                //console.log("Rastering cluster " + c);
-                var attrs = {};
-                _.merge(attrs, namespaces);
-                attrs.viewBox = "0 0 " + wMM + " " + hMM;
-                rasterContentSvg.attr(attrs);
-
-                var fillings = rasterContentSvg.removeUnfilled(fillAreas);
-                for (var i = 0; i < fillings.length; i++) {
-                    // TODO what is done here?
-                    var item = fillings[i];
-
-                    if (
-                        item.type !== "image" &&
-                        item.type !== "text" &&
-                        item.type !== "#text"
-                    ) {
-                        var style = item.attr("style");
-                        // remove stroke from other elements
-                        var styleNoStroke = "stroke: none;";
-                        if (style !== null) {
-                            styleNoStroke += style.replace(/stroke.+?;/g, "");
-                        }
-                        item.attr("stroke", "none");
-                        item.attr("style", styleNoStroke);
+                svg.selectAll(".deleteAfterRendering").remove();
+                if (typeof callback === "function") {
+                    callback(svg);
+                    if (MRBEAM_DEBUG_RENDERING) {
+                        debugBase64(
+                            svg.toDataURL(),
+                            "Step 3: SVG with fill rendering"
+                        );
                     }
                 }
-            }
-
-            if (fillAreas) {
-                self._rasterAndEmbedResult(svg, clusters, pxPerMM).then(
-                    function (rasterResults) {
-                        // remove filled elements / respectively fillings of elements after embedding raster result
-                        for (let i = 0; i < rasterResults.length; i++) {
-                            const result = rasterResults[i];
-                            const cluster = clusters[result.clusterIndex];
-                            for (let e = 0; e < cluster.elements.length; e++) {
-                                let elem = cluster.elements[e];
-                                elem.unfillOrRemove();
-                            }
-                        }
-                        svg.selectAll(".deleteAfterRendering").remove();
-                        if (typeof callback === "function") {
-                            callback(svg);
-                            if (MRBEAM_DEBUG_RENDERING) {
-                                debugBase64(
-                                    svg.toDataURL(),
-                                    "Step 3: SVG with fill rendering"
-                                );
-                            }
-                        }
-                        self._cleanup_render_mess();
-                    }
-                );
             } else {
                 callback(svg);
             }
-        };
-
-        self._cleanup_render_mess = function () {
-            $("#rasterContentSvg").remove();
-            $(".tmpSvg").remove();
         };
 
         self.onBeforeBinding = function () {
@@ -3671,7 +3562,7 @@ $(function () {
                 });
 
                 const renderBBox = Snap.path.getBox(0, 0, bb.width, bb.height);
-                //                g.renderPNG("QT", self.workingAreadPItoMM, 10, renderBBox).then(function(result){
+                //                g.renderPNG2("QT", self.workingAreadPItoMM, 10, renderBBox).then(function (result) {
                 //                    console.info("RES", result.dataUrl, result.bbox);
                 //                    const image = new Image();
                 //                    image.crossOrigin = "Anonymous"; // allow external links together with server side header Access-Control-Allow-Origin "*"
@@ -3929,7 +3820,7 @@ $(function () {
             self._qt_removeFontsFromSvg(elem);
             const usedFonts = WorkingAreaHelper.getUsedFontNames(snap);
             const fontCSS = WorkingAreaHelper.getFontDeclarations(usedFonts);
-            $(elem).append(fontCSS.join("\n"));
+            $(elem).append(fontCSS.join(""));
         };
 
         /**

@@ -149,8 +149,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     };
 
     Element.prototype.clean_gc = function () {
-        // TODO The selector only selects children elements of 'this'. It should work on the element itself as well.
-        var elements = this.selectAll("path");
+        this.attr("mb:gc", "");
+        const elements = this.selectAll("path");
 
         elements.forEach((element) => element.attr("mb:gc", ""));
     };
