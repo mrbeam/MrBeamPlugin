@@ -32,7 +32,7 @@ $(function () {
         });
     };
 
-    url2png = async function (url, pxPerMM = 1, bbox = null) {
+    url2png = async function (url, pxPerMM = 1, bbox = null, whiteBG = false) {
         let prom = loadImagePromise(url)
             .then(function (image) {
                 let x = 0;
@@ -49,19 +49,23 @@ $(function () {
                 canvas.id = "RasterCanvas_url2png";
                 canvas.width = w * pxPerMM;
                 canvas.height = h * pxPerMM;
-                canvas
-                    .getContext("2d")
-                    .drawImage(
-                        image,
-                        x,
-                        y,
-                        w,
-                        h,
-                        0,
-                        0,
-                        canvas.width,
-                        canvas.height
-                    );
+                const ctx = canvas.getContext("2d");
+                if (whiteBG) {
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+
+                ctx.drawImage(
+                    image,
+                    x,
+                    y,
+                    w,
+                    h,
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
                 const png = canvas.toDataURL("image/png");
                 canvas.remove();
                 return png;

@@ -288,17 +288,18 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return pAll;
     };
 
-    Element.prototype.renderPNG2 = async function (pxPerMM, margin) {
+    Element.prototype._renderPNG2 = async function (pxPerMM, margin) {
         var elem = this;
 
         elem.embedAllImages();
         const fontSet = elem.getUsedFonts();
         const fontDeclarations = WorkingAreaHelper.getFontDeclarations(fontSet);
 
-        const wMM = 500;
+        const wMM = 500; // TODO... should not be here. get from Param?
         const hMM = 390;
         const cropBB = { x: 0, y: 0, x2: wMM, y2: hMM };
-        let bbox = elem.getBBox();
+        //        let bbox = elem.getBBox();
+        let bbox = elem.get_total_bbox();
         let bboxMargin = 0;
         if (margin === null) {
             bboxMargin = fontSet.size > 0 ? 0.8 : 0;
@@ -315,7 +316,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
         // get svg as dataUrl including namespaces, fonts, more
         const svgDataUrl = elem.toWorkingAreaDataURL(fontDeclarations);
-        const fillBitmap = await url2png(svgDataUrl, pxPerMM, bboxMM);
+        const fillBitmap = await url2png(svgDataUrl, pxPerMM, bboxMM, true);
         const size = getDataUriSize(fillBitmap);
 
         return {
@@ -325,12 +326,20 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         };
     };
 
-    // check if still in use -> keep as debug method.
+    /*
+     * rasters an snap svg element into a png bitmap.
+     * if MRBEAM_DEBUG_RENDERING === true, result will be embedded in the elements paper
+     *
+     * @param {Number} pxPerMM rastering resolution (default 10)
+     * @param {Number} margin will be added around elements bbox. (default null (auto), 0 -> bbox will be rendered. 1 -> 0.5*bbox width will be added left and right)
+     *
+     * @returns {Object} keys: dataUrl (encoded png), bbox (real size of the rastered png incl. margin)
+     */
     Element.prototype.raster = function (pxPerMM = 10, margin = null) {
         const elem = this;
         const bb = elem.getBBox();
         const promise = elem
-            .renderPNG2(pxPerMM, margin)
+            ._renderPNG2(pxPerMM, margin)
             .then(function (result) {
                 if (MRBEAM_DEBUG_RENDERING) {
                     console.info(
@@ -353,6 +362,18 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 return result;
             });
         return promise;
+    };
+
+    Element.prototype.trace = async function (callback) {
+        const pxPerMM = 20;
+        const elem = this;
+        const mat = elem.transform().localMatrix;
+        const rasterResult = await elem.raster(pxPerMM);
+        Potrace.loadImageFromUrl(rasterResult.dataUrl);
+        Potrace.process(function () {
+            const pathData = Potrace.getSVGPathArray(1 / pxPerMM);
+            callback(pathData);
+        });
     };
 
     Element.prototype.fixIds = function (selector, srcIdAttr) {

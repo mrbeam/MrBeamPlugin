@@ -2243,6 +2243,7 @@ $(function () {
             return [destWidthMM, destHeightMM];
         };
 
+        // TODO not used? Check removal
         self.getDocumentDimensionsInPt = function (
             doc_width,
             doc_height,
@@ -2598,7 +2599,9 @@ $(function () {
                 svgStr = WorkingAreaHelper.fix_svg_string(svgStr);
                 return svgStr;
             } else {
-                // TODO raise exception
+                console.error(
+                    "Conversion error! _finalizeBackendSVG was called without content. Should never happen."
+                );
             }
         };
 
@@ -3561,15 +3564,6 @@ $(function () {
                     height: bb.height,
                 });
 
-                const renderBBox = Snap.path.getBox(0, 0, bb.width, bb.height);
-                //                g.renderPNG2("QT", self.workingAreadPItoMM, 10, renderBBox).then(function (result) {
-                //                    console.info("RES", result.dataUrl, result.bbox);
-                //                    const image = new Image();
-                //                    image.crossOrigin = "Anonymous"; // allow external links together with server side header Access-Control-Allow-Origin "*"
-                //                    image.src = result.dataUrl;
-                //                    document.getElementsByTagName("body")[0].appendChild(image);
-                //                });
-
                 // update font of input field
                 $("#quick_text_dialog_text_input").css({
                     "text-shadow": shadow,
@@ -3774,7 +3768,7 @@ $(function () {
 
             const textStroke = uc
                 .path()
-                .attr({ fill: "none", stroke: "none", "stroke-color": "none" });
+                .attr({ class: "qtOutline", fill: "none", stroke: "#0000FF" });
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({

@@ -159,6 +159,10 @@ var Potrace = (function () {
         imgCanvas.width = imgElement.width;
         imgCanvas.height = imgElement.height;
         var ctx = imgCanvas.getContext("2d");
+        // to support transparent pngs (like from svg rastering)
+        // the canvas needs to have a white background.
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, imgCanvas.width, imgCanvas.height);
         ctx.drawImage(imgElement, 0, 0);
     }
 
@@ -1520,12 +1524,74 @@ var Potrace = (function () {
         return svg;
     }
 
+    function getSVGPathArray(size) {
+        function path(curve) {
+            function bezier(i) {
+                var b =
+                    "C " +
+                    (curve.c[i * 3 + 0].x * size).toFixed(3) +
+                    " " +
+                    (curve.c[i * 3 + 0].y * size).toFixed(3) +
+                    ",";
+                b +=
+                    (curve.c[i * 3 + 1].x * size).toFixed(3) +
+                    " " +
+                    (curve.c[i * 3 + 1].y * size).toFixed(3) +
+                    ",";
+                b +=
+                    (curve.c[i * 3 + 2].x * size).toFixed(3) +
+                    " " +
+                    (curve.c[i * 3 + 2].y * size).toFixed(3) +
+                    " ";
+                return b;
+            }
+
+            function segment(i) {
+                var s =
+                    "L " +
+                    (curve.c[i * 3 + 1].x * size).toFixed(3) +
+                    " " +
+                    (curve.c[i * 3 + 1].y * size).toFixed(3) +
+                    " ";
+                s +=
+                    (curve.c[i * 3 + 2].x * size).toFixed(3) +
+                    " " +
+                    (curve.c[i * 3 + 2].y * size).toFixed(3) +
+                    " ";
+                return s;
+            }
+
+            var n = curve.n,
+                i;
+            var p =
+                "M" +
+                (curve.c[(n - 1) * 3 + 2].x * size).toFixed(3) +
+                " " +
+                (curve.c[(n - 1) * 3 + 2].y * size).toFixed(3) +
+                " ";
+            for (i = 0; i < n; i++) {
+                if (curve.tag[i] === "CURVE") {
+                    p += bezier(i);
+                } else if (curve.tag[i] === "CORNER") {
+                    p += segment(i);
+                }
+            }
+            //p +=
+            return p;
+        }
+
+        const paths = pathlist.map((p) => path(p.curve));
+
+        return paths;
+    }
+
     return {
         loadImageFromFile: loadImageFromFile,
         loadImageFromUrl: loadImageFromUrl,
         setParameter: setParameter,
         process: process,
         getSVG: getSVG,
+        getSVGPathArray: getSVGPathArray,
         img: imgElement,
     };
 })();
