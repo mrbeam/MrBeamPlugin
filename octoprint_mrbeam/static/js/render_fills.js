@@ -262,8 +262,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             return Promise.resolve(elem);
         }
 
-        let prom = url2png(url).then((dataUrl) => {
-            elem.attr("href", dataUrl);
+        let prom = url2png(url).then((result) => {
+            elem.attr("href", result.dataUrl);
             return elem;
         });
         return prom;
@@ -316,15 +316,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
         // get svg as dataUrl including namespaces, fonts, more
         const svgDataUrl = elem.toWorkingAreaDataURL(fontDeclarations);
-        const fillBitmap = await url2png(svgDataUrl, pxPerMM, bboxMM, true);
-        const size = getDataUriSize(fillBitmap);
-        const analysis = getCanvasAnalysis(renderCanvas);
+        const result = await url2png(svgDataUrl, pxPerMM, bboxMM, true);
+        const size = getDataUriSize(result.dataUrl);
 
         return {
-            dataUrl: fillBitmap,
+            dataUrl: result.dataUrl,
             size: size,
             bbox: bboxMM,
-            analysis: analysis,
+            analysis: result.analysis,
         };
     };
 
