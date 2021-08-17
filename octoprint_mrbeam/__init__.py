@@ -120,11 +120,6 @@ class MrBeamPlugin(
     ENV_LASER_SAFETY = "laser_safety"
     ENV_ANALYTICS = "analytics"
 
-    MODEL_MRBEAM2 = "MRBEAM2"
-    MODEL_MRBEAM2_DC_R1 = "MRBEAM2_DC_R1"
-    MODEL_MRBEAM2_DC_R2 = "MRBEAM2_DC_R2"
-    MODEL_MRBEAM2_DC = "MRBEAM2_DC"
-
     LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.4"
 
     LASERSAFETY_CONFIRMATION_STORAGE_URL = "https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec"
@@ -793,7 +788,7 @@ class MrBeamPlugin(
                 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
                 env_analytics=self.get_env(self.ENV_ANALYTICS),
                 env_support_mode=self.support_mode,
-                product_name=self.get_product_name(),
+                product_name=self._device_info.get_product_name(),
                 hostname=self.getHostname(),
                 serial=self._serial_num,
                 model=self.get_model_id(),
@@ -1319,7 +1314,7 @@ class MrBeamPlugin(
             env_analytics=self.get_env(self.ENV_ANALYTICS),
             env_support_mode=self.support_mode,
             #
-            product_name=self.get_product_name(),
+            product_name=self._device_info.get_product_name(),
             hostname=self.getHostname(),
             serial=self._serial_num,
             beta_label=self.get_beta_label(),
@@ -2722,16 +2717,6 @@ class MrBeamPlugin(
                     )
         return self._hostname
 
-    def get_product_name(self):
-        if self.is_mrbeam2():
-            return "Mr Beam II"
-        elif self.is_mrbeam2_dreamcut():
-            return "Mr Beam II dreamcut"
-        elif self.is_mrbeam2_dreamcut_ready1() or self.is_mrbeam2_dreamcut_ready2():
-            return "Mr Beam II dreamcut ready"
-        else:
-            return "Mr Beam"
-
     def getSerialNum(self):
         """
         Gives you the device's Mr Beam serieal number eg "00000000E79B0313-2C"
@@ -2746,15 +2731,13 @@ class MrBeamPlugin(
 
     def get_model_id(self):
         """
-        Gives you the device's model id liek MRBEAM2 or MRBEAM2-DC
+        Gives you the device's model id like MRBEAM2 or MRBEAM2_DC
         The value is soley read from device_info file (/etc/mrbeam)
         and it's cached once read.
         :return: model id
         :rtype: String
         """
-        if self._model_id is None:
-            self._model_id = self._device_info.get_model()
-        return self._model_id
+        return self._device_info.get_model()
 
     def get_production_date(self):
         """
@@ -2943,18 +2926,6 @@ class MrBeamPlugin(
 
     def is_develop_channel(self):
         return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_DEV
-
-    def is_mrbeam2(self):
-        return self._model_id == self.MODEL_MRBEAM2
-
-    def is_mrbeam2_dreamcut_ready1(self):
-        return self._model_id == self.MODEL_MRBEAM2_DC_R1
-
-    def is_mrbeam2_dreamcut_ready2(self):
-        return self._model_id == self.MODEL_MRBEAM2_DC_R2
-
-    def is_mrbeam2_dreamcut(self):
-        return self._model_id == self.MODEL_MRBEAM2_DC
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:
