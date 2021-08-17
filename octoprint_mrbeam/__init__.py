@@ -299,6 +299,9 @@ class MrBeamPlugin(
         msg += ", laserhead-serial:{}".format(
             self.laserhead_handler.get_current_used_lh_data()["serial"]
         )
+        msg += ", laserhead-model:{}".format(
+            self.laserhead_handler.get_current_used_lh_data()["model"]
+        )
         self._logger.info(msg, terminal=True)
 
         msg = (
@@ -324,9 +327,10 @@ class MrBeamPlugin(
             env=self.get_env(),
             beamOS_image=self._octopi_info,
             grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-            laserhead_serial=self.laserhead_handler.get_current_used_lh_data()[
-                "serial"
-            ],
+            laserhead=dict(
+                serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
+                model=self.laserhead_handler.get_current_used_lh_data()["model"],
+            ),
             _state=dict(
                 calibration_tool_mode=self.calibration_tool_mode,
                 support_mode=self.support_mode,
@@ -484,7 +488,10 @@ class MrBeamPlugin(
             ),
             focusReminder=self._settings.get(["focusReminder"]),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
-            laserHeadSerial=self.laserhead_handler.get_current_used_lh_data()["serial"],
+            laserhead=dict(
+                serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
+                model=self.laserhead_handler.get_current_used_lh_data()["model"],
+            ),
             usage=dict(
                 totalUsage=self.usage_handler.get_total_usage(),
                 prefilterUsage=self.usage_handler.get_prefilter_usage(),
@@ -786,6 +793,9 @@ class MrBeamPlugin(
                 grbl_version=self._grbl_version,
                 laserhead_serial=self.laserhead_handler.get_current_used_lh_data()[
                     "serial"
+                ],
+                laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
+                    "model"
                 ],
                 env=self.get_env(),
                 mac_addrs=self._get_mac_addresses(),
