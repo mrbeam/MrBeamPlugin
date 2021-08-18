@@ -105,10 +105,10 @@ class LaserheadHandler(object):
                     )
                 else:
                     self._logger.exception(
-                        "Received invalid laser head data from iobeam - invalid power calibrations data: {}".format(
-                            lh_data.get("power_calibrations", [])
+                        "Received invalid laser head data from iobeam {}".format(
+                            lh_data
                         ),
-                        analytics="invalid-power-calibration",
+                        analytics="received-invalid-lh-data",
                     )
         except Exception as e:
             self._logger.exception(
@@ -120,7 +120,7 @@ class LaserheadHandler(object):
             if (
                 lh_data.get("main", None)
                 and lh_data["main"].get("serial", None)
-                and lh_data["head"].get("model", None)
+                and lh_data["head"].get("model", None) is not None
                 and lh_data.get("power_calibrations", None)
                 and len(lh_data["power_calibrations"]) > 0
                 and lh_data["power_calibrations"][-1].get("power_65", None)
