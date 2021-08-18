@@ -71,6 +71,14 @@ class LaserheadHandler(object):
                 self._logger.info("Laserhead: %s", lh_data)
                 self._current_used_lh_serial = lh_data["main"]["serial"]
                 self._current_used_lh_model = self._get_lh_model(lh_data)
+                if self._current_used_lh_serial != self._last_used_lh_serial:
+                    self._logger.info(
+                        "Laserhead changed: s/n:%s model:%s -> s/n:%s model:%s",
+                        self._last_used_lh_serial,
+                        self._last_used_lh_model,
+                        self._current_used_lh_serial,
+                        self._current_used_lh_model,
+                    )
                 self._write_lh_data_to_cache(lh_data)
 
                 self._calculate_and_write_correction_factor()
@@ -103,12 +111,25 @@ class LaserheadHandler(object):
                         ),
                         analytics="received-no-lh-data",
                     )
-                else:
+                elif (
+                    not lh_data.get("power_calibrations", None)
+                    or not len(lh_data["power_calibrations"]) > 0
+                    or not lh_data["power_calibrations"][-1].get("power_65", None)
+                    or not lh_data["power_calibrations"][-1].get("power_75", None)
+                    or not lh_data["power_calibrations"][-1].get("power_85", None)
+                ):
                     self._logger.exception(
                         "Received invalid laser head data from iobeam - invalid power calibrations data: {}".format(
                             lh_data.get("power_calibrations", [])
                         ),
                         analytics="invalid-power-calibration",
+                    )
+                else:
+                    self._logger.exception(
+                        "Received invalid laser head data from iobeam {}".format(
+                            lh_data
+                        ),
+                        analytics="received-invalid-lh-data",
                     )
         except Exception as e:
             self._logger.exception(
@@ -120,7 +141,7 @@ class LaserheadHandler(object):
             if (
                 lh_data.get("main", None)
                 and lh_data["main"].get("serial", None)
-                and lh_data["head"].get("model", None)
+                and lh_data["head"].get("model", None) is not None
                 and lh_data.get("power_calibrations", None)
                 and len(lh_data["power_calibrations"]) > 0
                 and lh_data["power_calibrations"][-1].get("power_65", None)
