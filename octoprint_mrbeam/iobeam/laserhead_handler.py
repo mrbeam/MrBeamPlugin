@@ -71,6 +71,14 @@ class LaserheadHandler(object):
                 self._logger.info("Laserhead: %s", lh_data)
                 self._current_used_lh_serial = lh_data["main"]["serial"]
                 self._current_used_lh_model = self._get_lh_model(lh_data)
+                if self._current_used_lh_serial != self._last_used_lh_serial:
+                    self._logger.info(
+                        "Laserhead changed: s/n:%s model:%s -> s/n:%s model:%s",
+                        self._last_used_lh_serial,
+                        self._last_used_lh_model,
+                        self._current_used_lh_serial,
+                        self._current_used_lh_model,
+                    )
                 self._write_lh_data_to_cache(lh_data)
 
                 self._calculate_and_write_correction_factor()
@@ -102,6 +110,19 @@ class LaserheadHandler(object):
                             lh_data
                         ),
                         analytics="received-no-lh-data",
+                    )
+                elif (
+                    not lh_data.get("power_calibrations", None)
+                    or not len(lh_data["power_calibrations"]) > 0
+                    or not lh_data["power_calibrations"][-1].get("power_65", None)
+                    or not lh_data["power_calibrations"][-1].get("power_75", None)
+                    or not lh_data["power_calibrations"][-1].get("power_85", None)
+                ):
+                    self._logger.exception(
+                        "Received invalid laser head data from iobeam - invalid power calibrations data: {}".format(
+                            lh_data.get("power_calibrations", [])
+                        ),
+                        analytics="invalid-power-calibration",
                     )
                 else:
                     self._logger.exception(
