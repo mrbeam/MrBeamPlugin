@@ -241,8 +241,28 @@ class LaserheadHandler(object):
                 "target_power", self.LASER_POWER_GOAL_DEFAULT
             )
 
-            if target_power < 0 or target_power >= self.LASER_POWER_GOAL_MAX:
-                target_power = self.LASER_POWER_GOAL_DEFAULT
+            # laserhead model S fix for correction factor
+            # TODO fix this GOAL_MAX problem for all laser heads in a separate issue SW-394
+            if self._current_used_lh_model == "S":
+                if target_power < 0 or target_power >= p_85:
+                    self._logger.warn(
+                        "Laserhead target_power ({target}) over p_85 ({p_85}) => target_power will be set to GOAL_DEFAULT ({default}) for the calculation of the correction factor".format(
+                            target=target_power,
+                            p_85=p_85,
+                            default=self.LASER_POWER_GOAL_DEFAULT,
+                        )
+                    )
+                    target_power = self.LASER_POWER_GOAL_DEFAULT
+            else:
+                if target_power < 0 or target_power >= self.LASER_POWER_GOAL_MAX:
+                    self._logger.warn(
+                        "Laserhead target_power ({target}) over LASER_POWER_MAX ({max}) => target_power will be set to GOAL_DEFAULT ({default}) for the calculation of the correction factor".format(
+                            target=target_power,
+                            max=self.LASER_POWER_GOAL_MAX,
+                            default=self.LASER_POWER_GOAL_DEFAULT,
+                        )
+                    )
+                    target_power = self.LASER_POWER_GOAL_DEFAULT
 
         correction_factor = 1
 
@@ -258,6 +278,10 @@ class LaserheadHandler(object):
                 goal_difference = target_power - p_75
                 new_intensity = goal_difference * (85 - 75) / step_difference + 75
                 correction_factor = new_intensity / 65.0
+            else:
+                self._logger.warn(
+                    "Laserhead target power not in valid range => correction_factor will be set to 1"
+                )
 
         else:
             self._logger.info(
