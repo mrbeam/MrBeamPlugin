@@ -296,10 +296,10 @@ class MrBeamPlugin(
         msg += ", grbl_version_lastknown:{}".format(
             self._settings.get(["grbl_version_lastknown"])
         )
-        msg += ", laserhead-serial:{}".format(
+        msg += ", laserhead-serial-lastknown:{}".format(
             self.laserhead_handler.get_current_used_lh_data()["serial"]
         )
-        msg += ", laserhead-model:{}".format(
+        msg += ", laserhead-model-lastknown:{}".format(
             self.laserhead_handler.get_current_used_lh_data()["model"]
         )
         self._logger.info(msg, terminal=True)
@@ -327,7 +327,7 @@ class MrBeamPlugin(
             env=self.get_env(),
             beamOS_image=self._octopi_info,
             grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-            laserhead=dict(
+            laserhead_lastknown=dict(
                 serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
                 model=self.laserhead_handler.get_current_used_lh_data()["model"],
             ),
