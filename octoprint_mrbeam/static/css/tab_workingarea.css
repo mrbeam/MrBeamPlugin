@@ -203,7 +203,7 @@ g#camera_markers.markerSW.gray circle#markerSW {
   font-size: 0.8rem;
 }
 #wa_filelist .detail_information input {
-  width: calc(30% - 1em);
+  width: calc(30% - 1.5em);
   box-sizing: border-box;
   padding-left: 0.2em;
   padding-top: 0;

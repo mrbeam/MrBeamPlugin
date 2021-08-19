@@ -94,15 +94,18 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     };
 
     Element.prototype.toWorkingAreaSvgStr = function (
+        w,
+        h,
         styles = "",
         filter = null
     ) {
         const elem = this;
         const paper = elem.paper;
         const att = paper.attr();
-        const vb = att.viewBox.split(" ");
-        const width = vb[2];
-        const height = vb[3];
+        // TODO Bug! viewbox is wrong when zoom / pan was used.
+        const vb = ""; //att.viewBox.split(" ");
+        const width = w; //vb[2];
+        const height = h; // vb[3];
         if (Array.isArray(styles)) {
             styles = styles.join("\n");
         }
@@ -135,7 +138,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 <svg version="1.1"
     ${[...namespaces].join(" ")}
     width="${width}" height="${height}"
-    viewBox="${att.viewBox}">
+    xxviewBox="${att.viewBox}">
     <defs>
         ${defs}
         <style>${styles}</style>
@@ -148,12 +151,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     };
 
     Element.prototype.toWorkingAreaDataURL = function (
+        w,
+        h,
         styles = "",
         filter = null
     ) {
         if (window && window.btoa) {
             const elem = this;
-            const svg = elem.toWorkingAreaSvgStr(styles, filter);
+            const svg = elem.toWorkingAreaSvgStr(w, h, styles, filter);
             const dataurl =
                 "data:image/svg+xml;base64," +
                 btoa(unescape(encodeURIComponent(svg)));
@@ -180,5 +185,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             result.add(fnt);
         });
         return result;
+    };
+
+    /**
+     * Selects upstream in the DOM like https://developer.mozilla.org/en-US/docs/Web/API/Element/closest
+     *
+     * @param {String} selector : a css selector
+     * @returns {Object} : a Snap Element or Snap Paper
+     */
+    Element.prototype.closest = function (selector) {
+        const elem = this;
+        const node = elem.node.closest(selector);
+        return Snap._.wrap(node);
     };
 });

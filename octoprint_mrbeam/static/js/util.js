@@ -33,47 +33,48 @@ $(function () {
     };
 
     url2png = async function (url, pxPerMM = 1, bbox = null, whiteBG = false) {
-        let prom = loadImagePromise(url)
-            .then(function (image) {
-                let x = 0;
-                let y = 0;
-                let w = image.naturalWidth; // or 'width' if you want a special/scaled size
-                let h = image.naturalHeight; // or 'height' if you want a special/scaled size
-                if (bbox !== null) {
-                    x = bbox.x;
-                    y = bbox.y;
-                    w = bbox.w;
-                    h = bbox.h;
-                }
-                let canvas = document.createElement("canvas");
-                canvas.id = "RasterCanvas_url2png";
-                canvas.width = w * pxPerMM;
-                canvas.height = h * pxPerMM;
-                const ctx = canvas.getContext("2d");
-                if (whiteBG) {
-                    ctx.fillStyle = "white";
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                }
+        let prom = loadImagePromise(url).then(function (image) {
+            let x = 0;
+            let y = 0;
+            let w = image.naturalWidth; // or 'width' if you want a special/scaled size
+            let h = image.naturalHeight; // or 'height' if you want a special/scaled size
+            if (w === 0 || h === 0) {
+                const msg = `url2png: Image has no dimension!`;
+                console.error(msg, image);
+                throw new Error(msg);
+            }
+            if (bbox !== null) {
+                x = bbox.x;
+                y = bbox.y;
+                w = bbox.w;
+                h = bbox.h;
+            }
+            if (w === 0 || h === 0) {
+                const msg = `url2png: Source bbox has no dimension!`;
+                console.error(msg, image);
+                throw new Error(msg);
+            }
+            let canvas = document.createElement("canvas");
+            canvas.id = "RasterCanvas_url2png";
+            canvas.width = w * pxPerMM;
+            canvas.height = h * pxPerMM;
+            const ctx = canvas.getContext("2d");
+            if (whiteBG) {
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
 
-                ctx.drawImage(
-                    image,
-                    x,
-                    y,
-                    w,
-                    h,
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                );
-                const png = canvas.toDataURL("image/png");
-                const analysis = getCanvasAnalysis(canvas);
-                canvas.remove();
-                return { dataUrl: png, analysis: analysis };
-            })
-            .catch(function (error) {
-                console.error(`url2png: error loading image: ${error}`);
-            });
+            console.info(`c.drawImage ${x}, ${y}, ${w}, ${h}`);
+
+            ctx.drawImage(image, x, y, w, h, 0, 0, canvas.width, canvas.height);
+            const png = canvas.toDataURL("image/png");
+            const analysis = getCanvasAnalysis(canvas);
+            canvas.remove();
+            return { dataUrl: png, bbox: bbox, analysis: analysis };
+        });
+        //            .catch(function (error) {
+        //                console.error(`url2png: error loading image: ${error}`);
+        //            });
         return prom;
     };
 

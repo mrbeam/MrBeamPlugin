@@ -2552,8 +2552,9 @@ $(function () {
             compSvg.selectAll(".deleteBeforeRendering").remove();
             const targetDefs = compSvg.select("svg>defs");
 
-            // embed textPaths
+            // if quicktext was used
             if (userContent.selectAll(".userText").length > 0) {
+                // embed textPaths
                 const allTextPaths = snap.selectAll(
                     "defs>.quicktext_curve_path"
                 );
@@ -2567,6 +2568,13 @@ $(function () {
                         "mb:id": original_id,
                     });
                 }
+
+                const strokedText = userContent.selectAll(
+                    '.userText text[stroke^="#"]'
+                );
+                strokedText.forEach((t) => {
+                    const x = t.trace();
+                });
             }
 
             // for bitmaps: embed filters
@@ -2590,11 +2598,11 @@ $(function () {
                 svgWithRenderedInfill,
                 namespaces
             );
-            // console.log(`svgWithRenderedInfill ${svgWithRenderedInfill}}`);
+
             const length_summary = self.get_gc_length_summary(compSvg);
-            console.log(length_summary);
+            //            console.log(length_summary);
             $("#compSvg").remove();
-            // hide spinner
+
             const renderEnd = Date.now();
             console.log(
                 `Frontend rendering finished in ${
@@ -2622,6 +2630,7 @@ $(function () {
         };
 
         self._finalizeBackendSVG = function (compSvg, namespaces) {
+            // TODO check if viewbox, naespaces are already handled by getCompositionSVG()
             // set viewBox
             const wMM = self.workingAreaWidthMM();
             const hMM = self.workingAreaHeightMM();
@@ -3096,23 +3105,21 @@ $(function () {
         };
 
         // raster the infill and inject it as an image into the svg
-        // TODO use Promise instead of callback.
         self.rasterInfill = async function (
             svg, // is compSvg reference
             fillAreas,
-            pxPerMM,
-            callback
+            pxPerMM
         ) {
             let clusters = svg.splitRasterClusters(fillAreas);
             // only render clusters overlapping the working area
             const waBB = snap.select("#coordGrid").getBBox();
             clusters = clusters.filter(function (c, idx) {
-                const isInside = Snap.path.isBBoxIntersect(c.bbox, waBB);
-                if (!isInside)
+                const intersects = Snap.path.isBBoxIntersect(c.bbox, waBB);
+                if (!intersects)
                     console.info(
                         `Cluster ${idx} is outside workingArea. Skipping`
                     );
-                return isInside;
+                return intersects;
             });
 
             const whitelist = svg.getUsedFonts();
@@ -3651,6 +3658,7 @@ $(function () {
                     self.currentQuickTextFile.fontIndex;
                 self._qt_currentQuickTextUpdate();
             }
+            //            $("#quick_text_dialog_text_input").focus();
         };
 
         /**
@@ -3667,6 +3675,7 @@ $(function () {
                     self.currentQuickTextFile.fontIndex;
                 self._qt_currentQuickTextUpdate();
             }
+            //            $("#quick_text_dialog_text_input").focus();
         };
 
         /**
@@ -3702,19 +3711,19 @@ $(function () {
                     "#" + self.currentQuickTextFile.previewId
                 );
 
-                // update straight text DOM node
-                const straightText = g.select(".straightText");
-                straightText.attr({
+                const textAttrs = {
                     "font-family": font,
                     fill: fill,
-                });
+                    //                    stroke: "#00aaaa",
+                };
+
+                // update straight text DOM node
+                const straightText = g.select(".straightText");
+                straightText.attr(textAttrs);
 
                 // update curved text DOM nodes
                 const curvedText = g.select(".curvedText");
-                curvedText.attr({
-                    "font-family": font,
-                    fill: fill,
-                });
+                curvedText.attr(textAttrs);
                 const textPathAttr = curvedText.select("textPath").attr();
                 const path = snap.select(textPathAttr.href);
                 const textLength = self._qt_currentQuicktextGetTextLength(

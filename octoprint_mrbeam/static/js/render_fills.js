@@ -206,6 +206,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             elem.type === "line" ||
             elem.type === "polygon" ||
             elem.type === "polyline" ||
+            elem.type === "text" ||
             elem.type === "path"
         ) {
             const opacity = parseFloat(
@@ -252,6 +253,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             console.info(`embedImage, found empty url: ${url}`);
             return Promise.resolve(elem);
         }
+        const bb = elem.getBBox();
+        if (bb.w === 0 || bb.h === 0) {
+            console.info(`embedImage, image has no dimensions: ${bb}`);
+            return Promise.resolve(elem);
+        }
         if (url.startsWith("data:")) {
             console.info(
                 `embedImage: nothing do to. Url started with ${url.substr(
@@ -288,60 +294,53 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return pAll;
     };
 
-    Element.prototype._renderPNG2 = async function (pxPerMM, margin) {
-        var elem = this;
+    Element.prototype._renderPNG2 = async function (
+        pxPerMM,
+        margin = 0,
+        cropBB = null
+    ) {
+        const prom = new Promise((resolve, reject) => {
+            // TODO ... get dynamic from workingArea
+            const w = 500;
+            const h = 390;
 
-        elem.embedAllImages();
-        const fontSet = elem.getUsedFonts();
-        const fontDeclarations = WorkingAreaHelper.getFontDeclarations(fontSet);
+            const elem = this;
+            const bbox = elem.get_total_bbox();
+            if (bbox.w === 0 || bbox.h === 0) {
+                const msg = `_renderPNG2: nothing to render. ${elem} has no dimensions.`;
+                console.warn(msg);
+                reject(msg);
+            }
 
-        const wMM = 500; // TODO... should not be here. get from Param?
-        const hMM = 390;
-        const cropBB = { x: 0, y: 0, x2: wMM, y2: hMM };
-        //        let bbox = elem.getBBox();
-        let bbox = elem.get_total_bbox();
-        let bboxMargin = 0;
-        if (margin === null) {
-            bboxMargin = fontSet.size > 0 ? 0.8 : 0;
-        } else {
-            bboxMargin = margin;
-        }
+            elem.embedAllImages();
+            const fontSet = elem.getUsedFonts();
+            const fontDeclarations = WorkingAreaHelper.getFontDeclarations(
+                fontSet
+            );
 
-        const bboxMM = Snap.path.enlarge_bbox(
-            bbox,
-            bboxMargin,
-            bboxMargin,
-            cropBB
-        );
+            let bboxMargin = 0;
+            if (margin === null) {
+                bboxMargin = fontSet.size > 0 ? 0.8 : 0;
+            } else {
+                bboxMargin = margin;
+            }
 
-        // get svg as dataUrl including namespaces, fonts, more
-        const svgDataUrl = elem.toWorkingAreaDataURL(fontDeclarations);
-        const result = await url2png(svgDataUrl, pxPerMM, bboxMM, true);
-        const size = getDataUriSize(result.dataUrl);
+            const bboxMM = Snap.path.enlarge_bbox(
+                bbox,
+                bboxMargin,
+                bboxMargin,
+                cropBB
+            );
 
-        return {
-            dataUrl: result.dataUrl,
-            size: size,
-            bbox: bboxMM,
-            analysis: result.analysis,
-        };
-    };
+            // get svg as dataUrl including namespaces, fonts, more
+            const svgDataUrl = elem.toWorkingAreaDataURL(
+                w,
+                h,
+                fontDeclarations
+            );
+            url2png(svgDataUrl, pxPerMM, bboxMM, true).then((result) => {
+                const size = getDataUriSize(result.dataUrl);
 
-    /*
-     * rasters an snap svg element into a png bitmap.
-     * if MRBEAM_DEBUG_RENDERING === true, result will be embedded in the elements paper
-     *
-     * @param {Number} pxPerMM rastering resolution (default 10)
-     * @param {Number} margin will be added around elements bbox. (default null (auto), 0 -> bbox will be rendered. 1 -> 0.5*bbox width will be added left and right)
-     *
-     * @returns {Object} keys: dataUrl (encoded png), bbox (real size of the rastered png incl. margin)
-     */
-    Element.prototype.raster = function (pxPerMM = 10, margin = null) {
-        const elem = this;
-        const bb = elem.getBBox();
-        const promise = elem
-            ._renderPNG2(pxPerMM, margin)
-            .then(function (result) {
                 if (MRBEAM_DEBUG_RENDERING) {
                     console.info(
                         "MRBEAM_DEBUG_RENDERING",
@@ -359,23 +358,175 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     img.click(function () {
                         img.remove();
                     });
+                    const r = elem.paper.rect(result.bbox).attr({
+                        fill: "none",
+                        stroke: "#aa00aa",
+                        strokeWidth: 2,
+                    });
+                    setTimeout(() => r.remove(), 5000);
                 }
-                return result;
+
+                resolve({
+                    dataUrl: result.dataUrl,
+                    size: size,
+                    bbox: bboxMM,
+                    analysis: result.analysis,
+                });
             });
-        return promise;
+        });
+        return prom;
     };
 
-    Element.prototype.trace = async function (callback) {
+    Element.prototype.trace = async function (margin) {
         const pxPerMM = 20;
         const elem = this;
-        const mat = elem.transform().localMatrix;
-        const rasterResult = await elem.raster(pxPerMM);
-        Potrace.loadImageFromUrl(rasterResult.dataUrl);
-        Potrace.process(function () {
-            const pathData = Potrace.getSVGPathArray(1 / pxPerMM);
-            callback(pathData);
-        });
+        const prom = elem
+            ._renderPNG2(pxPerMM, margin)
+            .then((rasterResult) => {
+                Potrace.loadImageFromUrl(rasterResult.dataUrl);
+                return new Promise((resolve, reject) => {
+                    Potrace.process(function () {
+                        const pathData = Potrace.getSVGPathArray(1 / pxPerMM);
+                        resolve({ paths: pathData, bbox: rasterResult.bbox });
+                    });
+                });
+            })
+            .catch((error) => {
+                console.warn(`Element ${elem.type}.trace() error: ${error}`);
+            });
+
+        const paths = await prom;
+        return paths;
     };
+
+    Element.prototype.setQuicktextOutline = function (offset = 0, margin = 0) {
+        const elem = this;
+        if (elem.type !== "g" || !elem.hasClass("userText")) {
+            console.warn(
+                "setQuicktextOutline needs to be called on Quicktext group element."
+            );
+        } else {
+            const group = elem.closest(".userText");
+            const target = group.select(".qtOutline");
+            const texts = elem.selectAll("text");
+            texts.forEach((t) => {
+                const bb = t.getBBox();
+                if (bb.w > 0 && bb.h > 0) {
+                    t.getFontOutline(target, offset, margin);
+                    // TODO: one target <path> for multiple <text> elems... bad idea. will be overwritten.
+                    return;
+                }
+            });
+        }
+    };
+
+    Element.prototype.getFontOutline = async function (
+        target,
+        offset = 0,
+        margin
+    ) {
+        const elem = this;
+        const bb = elem.getBBox();
+        if (bb.w === 0 || bb.h === 0) {
+            console.warn(`No expansion of ${elem}. Skip.`);
+            return;
+        }
+        if (elem.type === "text") {
+            //        if(elem.type === 'text' && elem.is_stroked()){
+            //            const colorStr = window.getComputedStyle(elem.node)["stroke"];
+            const colorStr = "#ff0000";
+            //            const hex = WorkingAreaHelper.getHexColorStr(colorStr);
+            const hex = "#aa0000";
+
+            //  before potrace'ing ...
+            // 1. clone the <text> and set it to black
+            // 2. unapply transform of the QT group to match the origins (centered on baseline)
+            // 3. move it into working area again if 2. has moved it outside
+            // 4. trace it, place the path in the QT group again and unapply the shift of 3.
+            // Due to the same origins, the same transforms are applied on text and outline path.
+            const tr = elem.transform();
+            const invertM = tr.totalMatrix.invert();
+            const invertT = invertM.split();
+
+            // to potrace the font outline, the element has to be black!
+            const rasterElem = elem
+                .clone()
+                .attr({ fill: "#000000", strokeWidth: offset });
+
+            // the potrace'ed raster element needs to have the same origin as elem. Otherwise current transforms are applied twice
+            rasterElem.transform(invertM);
+
+            // just get the offset outside the working area
+            const tmpBB = rasterElem.getBBox(true);
+            const topLeft = { x: tmpBB.x, y: tmpBB.y };
+
+            const mat2 = rasterElem
+                .transform()
+                .localMatrix.translate(-topLeft.x, -topLeft.y);
+            rasterElem.transform(mat2);
+            const result = await rasterElem.trace(margin);
+            rasterElem.remove(); // original is still with stroke? should be removed
+
+            if (result && result.paths) {
+                const d = result.paths.join(" ");
+                const mat = Snap.matrix().translate(topLeft.x, topLeft.y);
+
+                target
+                    .attr({
+                        d: `M-5,0h5v-5 ${d}`, // mark the origin for debugging
+                        stroke: hex,
+                        fill: "none",
+                        class: "qtOutline",
+                    })
+                    .transform(mat);
+            } else {
+                console.error("getFontOutline(): failed.");
+            }
+        } else {
+            console.warn(
+                `getFontOutline(): Not supporting element "${
+                    elem.type
+                }" with stroke: "${elem.is_stroked()}".`
+            );
+        }
+    };
+
+    /*
+     * rasters an snap svg element into a png bitmap.
+     * if MRBEAM_DEBUG_RENDERING === true, result will be embedded in the elements paper
+     *
+     * @param {Number} pxPerMM rastering resolution (default 10)
+     * @param {Number} margin will be added around elements bbox. (default null (auto), 0 -> bbox will be rendered. 1 -> 0.5*bbox width will be added left and right)
+     *
+     * @returns {Object} keys: dataUrl (encoded png), bbox (real size of the rastered png incl. margin)
+     */
+    //    Element.prototype.raster = function (pxPerMM = 10, margin = null) {
+    //        const elem = this;
+    //        const promise = elem
+    //            ._renderPNG2(pxPerMM, margin)
+    //            .then(function (result) {
+    //                if (MRBEAM_DEBUG_RENDERING) {
+    //                    console.info(
+    //                        "MRBEAM_DEBUG_RENDERING",
+    //                        result.dataUrl,
+    //                        result.bbox
+    //                    );
+    //                    const img = elem.paper.image(
+    //                        result.dataUrl,
+    //                        result.bbox.x,
+    //                        result.bbox.y,
+    //                        result.bbox.w,
+    //                        result.bbox.h
+    //                    );
+    //                    img.attr("opacity", 0.6);
+    //                    img.click(function () {
+    //                        img.remove();
+    //                    });
+    //                }
+    //                return result;
+    //            });
+    //        return promise;
+    //    };
 
     // TODO use url2png, simplify, check if necessary
     Element.prototype.renderJobTimeEstimationPNG = function (
