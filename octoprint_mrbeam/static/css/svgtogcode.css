@@ -669,6 +669,7 @@ li.material_entry span {
 #quick_shape_stroke_and_fill input[type="color"] {
   width: 120px;
 }
+#quick_text_stroke_and_fill input[type="checkbox"],
 #quick_shape_stroke_and_fill input[type="checkbox"] {
   width: 20px;
   height: 20px;

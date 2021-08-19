@@ -300,11 +300,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         cropBB = null
     ) {
         const prom = new Promise((resolve, reject) => {
-            // TODO ... get dynamic from workingArea
-            const w = 500;
-            const h = 390;
-
             const elem = this;
+
+            const vb = elem.paper.attr("viewBox");
+            const w = vb.w;
+            const h = vb.h;
+
             const bbox = elem.get_total_bbox();
             if (bbox.w === 0 || bbox.h === 0) {
                 const msg = `_renderPNG2: nothing to render. ${elem} has no dimensions.`;
@@ -431,12 +432,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             console.warn(`No expansion of ${elem}. Skip.`);
             return;
         }
-        if (elem.type === "text") {
-            //        if(elem.type === 'text' && elem.is_stroked()){
-            //            const colorStr = window.getComputedStyle(elem.node)["stroke"];
-            const colorStr = "#ff0000";
-            //            const hex = WorkingAreaHelper.getHexColorStr(colorStr);
-            const hex = "#aa0000";
+        if (elem.type === "text" && elem.is_stroked()) {
+            const colorStr = window.getComputedStyle(elem.node)["stroke"];
+            const hex = WorkingAreaHelper.getHexColorStr(colorStr);
 
             //  before potrace'ing ...
             // 1. clone the <text> and set it to black
@@ -473,7 +471,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
                 target
                     .attr({
-                        d: `M-5,0h5v-5 ${d}`, // mark the origin for debugging
+                        d: d,
+                        //                        d: `M-5,0h5v-5 ${d}`, // mark the origin for debugging
                         stroke: hex,
                         fill: "none",
                         class: "qtOutline",
@@ -483,8 +482,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 console.error("getFontOutline(): failed.");
             }
         } else {
-            console.warn(
-                `getFontOutline(): Not supporting element "${
+            console.log(
+                `getFontOutline(): Skip element "${
                     elem.type
                 }" with stroke: "${elem.is_stroked()}".`
             );

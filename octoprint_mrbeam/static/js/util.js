@@ -64,8 +64,6 @@ $(function () {
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            console.info(`c.drawImage ${x}, ${y}, ${w}, ${h}`);
-
             ctx.drawImage(image, x, y, w, h, 0, 0, canvas.width, canvas.height);
             const png = canvas.toDataURL("image/png");
             const analysis = getCanvasAnalysis(canvas);
@@ -212,5 +210,16 @@ $(function () {
             },
             owner: owner,
         });
+    };
+
+    throttle = function (func, interval) {
+        var lastCall = 0;
+        return function () {
+            var now = Date.now();
+            if (lastCall + interval < now) {
+                lastCall = now;
+                return func.apply(this, arguments);
+            }
+        };
     };
 });

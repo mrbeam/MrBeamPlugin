@@ -111,7 +111,7 @@ $(function () {
         ];
         self.currentQuickTextFile = undefined;
         self.currentQuickTextAnalyticsData = undefined;
-        self.currentQuickText = ko.observable();
+        self.currentQuickText = ko.observable(); // TODO check removal
         self.quickShapeNames = new Map([
             ["rect", gettext("Rectangle")],
             ["circle", gettext("Circle")],
@@ -122,7 +122,11 @@ $(function () {
         self.currentQuickShapeAnalyticsData = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
-        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
+        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 255=white
+        self.lastQuickTextStroke = false;
+        self.lastQuickTextFill = true;
+        self.lastQuickTextStrokeColor = "#e25303";
+        self.lastQuickTextFillColor = "#000000";
         self.lastQuickTextCircle = 0;
         self.lastQuickTextClockwise = true;
 
@@ -2977,6 +2981,16 @@ $(function () {
                 "change",
                 self._qs_currentQuickShapeUpdate
             );
+            $("#qt_colorPicker_stroke").tinycolorpicker();
+            $("#qt_colorPicker_stroke").bind(
+                "change",
+                throttle((event) => self._qt_currentQuickTextUpdate(event), 200)
+            );
+            $("#qt_colorPicker_fill").tinycolorpicker();
+            $("#qt_colorPicker_fill").bind(
+                "change",
+                throttle((event) => self._qt_currentQuickTextUpdate(event), 200)
+            );
         };
 
         self.onAllBound = function (allViewModels) {
@@ -3575,6 +3589,24 @@ $(function () {
             $("#quick_text_dialog_intensity").val(
                 self.currentQuickTextFile.intensity
             );
+            $("#quick_text_stroke").prop(
+                "checked",
+                self.currentQuickTextFile.stroke
+            );
+            const strokeColor =
+                self.currentQuickTextFile.strokeColor || "#e25303";
+            $("#qt_colorPicker_stroke")
+                .data("plugin_tinycolorpicker")
+                .setColor(strokeColor);
+            $("#quick_text_fill").prop(
+                "checked",
+                self.currentQuickTextFile.fill
+            );
+            const fillColor = self.currentQuickTextFile.fillColor || "#000000";
+            $("#qt_colorPicker_fill")
+                .data("plugin_tinycolorpicker")
+                .setColor(fillColor);
+
             // round text radio buttons & slider
             $("#qt_round_text_section div.btn").removeClass("active");
             const cw = self.currentQuickTextFile.clockwise;
@@ -3597,16 +3629,31 @@ $(function () {
             self._qt_currentQuickTextUpdate();
         });
 
-        /**
-         * callback/subscription for the intensity slider
-         */
-        $("#quick_text_dialog_intensity").on("input change", function (e) {
+        //        /**
+        //         * callback/subscription for the intensity slider
+        //         */
+        //        $("#quick_text_dialog_intensity").on("input change", function (e) {
+        //            if (self.currentQuickTextFile) {
+        //                self.currentQuickTextFile.intensity = e.currentTarget.value;
+        //                self.lastQuickTextIntensity =
+        //                    self.currentQuickTextFile.intensity;
+        //                self._qt_currentQuickTextUpdate();
+        //            }
+        //        });
+
+        $("#quick_text_stroke").on("click", function (e) {
             if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.intensity = e.currentTarget.value;
-                self.lastQuickTextIntensity =
-                    self.currentQuickTextFile.intensity;
-                self._qt_currentQuickTextUpdate();
+                self.currentQuickTextFile.stroke = e.currentTarget.checked;
+                self.lastQuickTextStroke = self.currentQuickTextFile.stroke;
             }
+            self._qt_currentQuickTextUpdate();
+        });
+        $("#quick_text_fill").on("click", function (e) {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.fill = e.currentTarget.checked;
+                self.lastQuickTextFill = self.currentQuickTextFile.fill;
+            }
+            self._qt_currentQuickTextUpdate();
         });
 
         /**
@@ -3695,7 +3742,6 @@ $(function () {
                           );
 
                 // get all parameters
-                const ity = self.currentQuickTextFile.intensity;
                 const font = self.fontMap[self.currentQuickTextFile.fontIndex];
                 const isStraightText = $("#quick_text_straight").hasClass(
                     "active"
@@ -3703,9 +3749,24 @@ $(function () {
                 const counterclockwise = $("#quick_text_ccw").hasClass(
                     "active"
                 );
-                const fill = `rgb(${ity},${ity},${ity})`;
+
+                const isFilled = self.currentQuickTextFile.fill;
+                const fillColor = (self.currentQuickTextFile.fillColor = $(
+                    "#quick_text_fill_brightness"
+                ).val());
+                const ity = rgb_from_hex(fillColor).x;
+                const fill = isFilled ? fillColor : "none";
+                const previewFill = isFilled ? fillColor : "#ffffff";
+                const isStroked = self.currentQuickTextFile.stroke;
+                const strokeColor = (self.currentQuickTextFile.strokeColor = $(
+                    "#quick_text_stroke_color"
+                ).val());
+                const stroke = isStroked ? strokeColor : "none";
+                const fakeStroke = `${strokeColor} 0px 0px 1px,${strokeColor} 0px 0px 1px,${strokeColor} 0px 0px 1px`;
                 const shadowIty = ity > 200 ? (ity - 200) / 100 : 0;
-                const shadow = `rgba(226, 85, 3, ${shadowIty}) 0px 0px 16px`;
+                const shadow = isStroked
+                    ? fakeStroke
+                    : `rgba(226, 85, 3, ${shadowIty}) 0px 0px 16px`;
                 const ligatures = isStraightText ? "initial" : "none";
                 const g = snap.select(
                     "#" + self.currentQuickTextFile.previewId
@@ -3714,7 +3775,7 @@ $(function () {
                 const textAttrs = {
                     "font-family": font,
                     fill: fill,
-                    //                    stroke: "#00aaaa",
+                    stroke: stroke,
                 };
 
                 // update straight text DOM node
@@ -3758,7 +3819,7 @@ $(function () {
                 // update font of input field
                 $("#quick_text_dialog_text_input").css({
                     "text-shadow": shadow,
-                    color: fill,
+                    color: previewFill,
                     "font-family": font,
                     "font-variant-ligatures": ligatures,
                 });
@@ -3787,6 +3848,8 @@ $(function () {
                     file_type: "quickText",
                     text_length: self.currentQuickTextFile.name.length,
                     brightness: ity,
+                    fill: fill,
+                    stroke: stroke,
                     font: font,
                     font_index: self.currentQuickTextFile.fontIndex,
                     is_straight: isStraightText,
@@ -3908,6 +3971,10 @@ $(function () {
                 typePath: ["quicktext"],
                 fontIndex: self.lastQuickTextFontIndex,
                 intensity: self.lastQuickTextIntensity,
+                stroke: self.lastQuickTextStroke,
+                fill: self.lastQuickTextFill,
+                strokeColor: self.lastQuickTextStrokeColor,
+                fillColor: self.lastQuickTextFillColor,
                 circle: self.lastQuickTextCircle,
                 clockwise: self.lastQuickTextClockwise,
             };
@@ -3937,23 +4004,24 @@ $(function () {
                 })
                 .toDefs();
 
+            const style = [
+                `white-space: pre`,
+                `font-size: ${size}px`,
+                `text-anchor: middle`,
+                `vector-effect: non-scaling-stroke`,
+                `stroke-width: 2px`,
+            ].join("; ");
             const curvedText = uc.text(0, 0, placeholderText);
             curvedText.attr({
-                style:
-                    "white-space: pre; font-size: " +
-                    size +
-                    "px; font-family: Ubuntu; text-anchor: middle; font-variant-ligatures: none;",
+                style: style + "font-variant-ligatures: none;",
                 textpath: path,
             });
             curvedText.node.classList.add("curvedText");
-            curvedText.textPath.attr({ startOffset: "50%" });
+            curvedText.textPath.attr({ startOffset: "50%", style: style });
 
             const straightText = uc.text(0, 0, placeholderText);
             straightText.attr({
-                style:
-                    "white-space: pre; font-size: " +
-                    size +
-                    "px; font-family: Ubuntu; text-anchor: middle;",
+                style: style,
                 class: "straightText",
             });
 
@@ -4002,6 +4070,7 @@ $(function () {
          * @param elem DomElement to add the font definition into
          */
         self._qt_copyFontsToSvg = function (elem) {
+            // TODO check removal
             self._qt_removeFontsFromSvg(elem);
             const usedFonts = WorkingAreaHelper.getUsedFontNames(snap);
             const fontCSS = WorkingAreaHelper.getFontDeclarations(usedFonts);
@@ -4013,6 +4082,7 @@ $(function () {
          * @private
          */
         self._qt_removeFontsFromSvg = function (elem) {
+            // TODO check removal
             $(elem).empty();
         };
 
