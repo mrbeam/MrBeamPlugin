@@ -447,9 +447,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             const invertT = invertM.split();
 
             // to potrace the font outline, the element has to be black!
-            const rasterElem = elem
-                .clone()
-                .attr({ fill: "#000000", strokeWidth: offset });
+            const rasterElem = elem.clone();
+            const rasterAttr = {
+                fill: "#000000",
+                stroke: "#000000",
+                strokeWidth: offset,
+                class: "hideWhileRastering",
+            };
+            rasterElem.attr(rasterAttr);
+            rasterElem.selectAll("text,textPath").attr(rasterAttr);
 
             // the potrace'ed raster element needs to have the same origin as elem. Otherwise current transforms are applied twice
             rasterElem.transform(invertM);
@@ -472,10 +478,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 target
                     .attr({
                         d: d,
-                        //                        d: `M-5,0h5v-5 ${d}`, // mark the origin for debugging
+                        // d: `M-5,0h5v-5 ${d}`, // mark the origin for debugging
                         stroke: hex,
                         fill: "none",
-                        class: "qtOutline",
                     })
                     .transform(mat);
             } else {

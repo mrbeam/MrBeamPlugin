@@ -122,7 +122,6 @@ $(function () {
         self.currentQuickShapeAnalyticsData = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
-        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 255=white
         self.lastQuickTextStroke = false;
         self.lastQuickTextFill = true;
         self.lastQuickTextStrokeColor = "#e25303";
@@ -3140,6 +3139,8 @@ $(function () {
             const fontDecl = WorkingAreaHelper.getFontDeclarations(whitelist);
             clusters = clusters.map((c) => {
                 c.svgDataUrl = svg.toWorkingAreaDataURL(
+                    self.workingAreaWidthMM(),
+                    self.workingAreaHeightMM(),
                     fontDecl,
                     `.toRaster.rasterCluster${c.idx}`
                 );
@@ -3568,6 +3569,9 @@ $(function () {
          */
         self.editQuickText = function (file) {
             self.currentQuickTextFile = file;
+            const strokeColor =
+                self.currentQuickTextFile.strokeColor || "#e25303";
+            const fillColor = self.currentQuickTextFile.fillColor || "#000000";
             self._qt_currentQuickTextUpdate();
             $("#quick_text_dialog").one(
                 "hide",
@@ -3582,19 +3586,18 @@ $(function () {
                 $("#quick_text_dialog_text_input").focus();
             });
             $("#quick_text_dialog").modal({ keyboard: true });
+            // hide path during quick text editing. will be rendered on dialog close
+            snap.select(
+                `#${self.currentQuickTextFile.previewId} .qtOutline`
+            ).attr({ d: "" });
             self.showTransformHandles(
                 self.currentQuickTextFile.previewId,
                 false
-            );
-            $("#quick_text_dialog_intensity").val(
-                self.currentQuickTextFile.intensity
             );
             $("#quick_text_stroke").prop(
                 "checked",
                 self.currentQuickTextFile.stroke
             );
-            const strokeColor =
-                self.currentQuickTextFile.strokeColor || "#e25303";
             $("#qt_colorPicker_stroke")
                 .data("plugin_tinycolorpicker")
                 .setColor(strokeColor);
@@ -3602,7 +3605,6 @@ $(function () {
                 "checked",
                 self.currentQuickTextFile.fill
             );
-            const fillColor = self.currentQuickTextFile.fillColor || "#000000";
             $("#qt_colorPicker_fill")
                 .data("plugin_tinycolorpicker")
                 .setColor(fillColor);
@@ -3628,19 +3630,6 @@ $(function () {
             }
             self._qt_currentQuickTextUpdate();
         });
-
-        //        /**
-        //         * callback/subscription for the intensity slider
-        //         */
-        //        $("#quick_text_dialog_intensity").on("input change", function (e) {
-        //            if (self.currentQuickTextFile) {
-        //                self.currentQuickTextFile.intensity = e.currentTarget.value;
-        //                self.lastQuickTextIntensity =
-        //                    self.currentQuickTextFile.intensity;
-        //                self._qt_currentQuickTextUpdate();
-        //            }
-        //        });
-
         $("#quick_text_stroke").on("click", function (e) {
             if (self.currentQuickTextFile) {
                 self.currentQuickTextFile.stroke = e.currentTarget.checked;
@@ -3824,11 +3813,22 @@ $(function () {
                     "font-variant-ligatures": ligatures,
                 });
                 $("#quick_text_dialog_font_name").text(font);
+                //                $("#quick_text_fill_brightness").val(fillColor);
+                //                $("#quick_text_stroke_color").val(strokeColor);
 
                 // update fileslist title
                 $("#" + self.currentQuickTextFile.id + " .title").text(
                     displayText
                 );
+                // update engrave component color
+                $(`#${self.currentQuickTextFile.id} .engrave_component`).css({
+                    display: isFilled ? "inherit" : "none",
+                });
+                // update stroke component color
+                $(`#${self.currentQuickTextFile.id} .stroke_color`).css({
+                    "background-color": strokeColor,
+                    display: isStroked ? "inherit" : "none",
+                });
                 // update fileslist dimensions by triggering transform
                 setTimeout(function () {
                     g.mbtOnTransform();
@@ -3970,7 +3970,6 @@ $(function () {
                 type: "quicktext",
                 typePath: ["quicktext"],
                 fontIndex: self.lastQuickTextFontIndex,
-                intensity: self.lastQuickTextIntensity,
                 stroke: self.lastQuickTextStroke,
                 fill: self.lastQuickTextFill,
                 strokeColor: self.lastQuickTextStrokeColor,
@@ -4010,6 +4009,8 @@ $(function () {
                 `text-anchor: middle`,
                 `vector-effect: non-scaling-stroke`,
                 `stroke-width: 2px`,
+                `stroke-linejoin: round`,
+                `stroke-linecap: round`,
             ].join("; ");
             const curvedText = uc.text(0, 0, placeholderText);
             curvedText.attr({
@@ -4025,9 +4026,11 @@ $(function () {
                 class: "straightText",
             });
 
-            const textStroke = uc
-                .path()
-                .attr({ class: "qtOutline", fill: "none", stroke: "#0000FF" });
+            const textStroke = uc.path().attr({
+                class: "qtOutline vector_outline",
+                fill: "none",
+                stroke: file.strokeColor,
+            });
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({
@@ -4087,6 +4090,11 @@ $(function () {
         };
 
         self._qt_dialogClose = function () {
+            // render outline once the dialog is closed
+            const id = self.currentQuickTextFile.previewId;
+            const qtElem = snap.select("#" + id);
+            if (qtElem) qtElem.setQuicktextOutline(0.0, 0); // TODO Margin Bug
+
             if (self.currentQuickTextAnalyticsData.text_length !== 0) {
                 self._analyticsQuickTextUpdate(
                     self.currentQuickTextAnalyticsData
