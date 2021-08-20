@@ -2759,8 +2759,8 @@ class MrBeamPlugin(
 
     def get_model_id(self):
         """
-        Gives you the device's model id liek MRBEAM2 or MRBEAM2-DC
-        The value is soley read from device_info file (/etc/mrbeam)
+        Gives you the device's model id like MRBEAM2 or MRBEAM2-DC
+        The value is solely read from device_info file (/etc/mrbeam)
         and it's cached once read.
         :return: model id
         :rtype: String
