@@ -15,6 +15,9 @@
                     {% if laserhead_serial %}
                         <div><strong>{{ _('Laser head') }}:</strong> {{ laserhead_serial }}</div>
                     {% endif %}
+                    {% if laserhead_model == 'S' %}
+                        <div><strong>{{ _('Laser model') }}:</strong> {{ laserhead_model }}</div>
+                    {% endif %}
                     {% if mac_addrs %}
                     <div><strong>{{ _('Network interfaces') }}:</strong>
 						<ul style="list-style-type: none;">
