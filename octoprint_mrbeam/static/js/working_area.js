@@ -271,6 +271,7 @@ $(function () {
         };
 
         self.getUsedColors = function (elem) {
+            // TODO rewrite as snap plugin
             elem = !elem
                 ? snap.select("#userContent")
                 : typeof elem === "string"
@@ -287,11 +288,12 @@ $(function () {
                 : elem;
             return (
                 elem.selectAll("image").length > 0 ||
-                self.hasFilledVectors(elem)
+                self.hasFilledVectors(elem) // TODO use is_filled()
             );
         };
 
         self._getColorsOfSelector = function (
+            // TODO rewrite as snap plugin using is_stroked()
             selector,
             color_attr = "stroke",
             elem = null
@@ -302,7 +304,10 @@ $(function () {
             let items = root.selectAll(selector + "[" + color_attr + "]");
             for (var i = 0; i < items.length; i++) {
                 let col = items[i].attr()[color_attr];
+                const bb = items[i].getBBox();
                 if (
+                    bb.w > 0 &&
+                    bb.h > 0 && // filters elements without dimension, e.g. <path> without d attrib.
                     col !== "undefined" &&
                     col !== "none" &&
                     col !== null &&
@@ -4046,7 +4051,7 @@ $(function () {
                 "mb:id": self._normalize_mb_id(file.previewId),
                 class: "userText",
                 transform: `translate(${x},${y})`,
-                "mb:origin": origin, // TODO ??? wtf?
+                "mb:origin": `beamos://quicktext`,
             });
 
             self._addClickAndHoverHandlers(group, file);
@@ -4059,34 +4064,6 @@ $(function () {
             // self._analyticsQuickTextUpdate()
 
             return file;
-        };
-
-        /**
-         * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
-         * installed on the system which we can't assume.)
-         * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
-         * contains @font-face entries with wff2 files as dataUrls. Eg:
-         * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
-         * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
-         * AND their fontFamily name must be included in self.fontMap
-         * @private
-         * @param elem DomElement to add the font definition into
-         */
-        self._qt_copyFontsToSvg = function (elem) {
-            // TODO check removal
-            self._qt_removeFontsFromSvg(elem);
-            const usedFonts = WorkingAreaHelper.getUsedFontNames(snap);
-            const fontCSS = WorkingAreaHelper.getFontDeclarations(usedFonts);
-            $(elem).append(fontCSS.join(""));
-        };
-
-        /**
-         * removes the fonts added by _qt_copyFontsToSvg()
-         * @private
-         */
-        self._qt_removeFontsFromSvg = function (elem) {
-            // TODO check removal
-            $(elem).empty();
         };
 
         self._qt_dialogClose = function () {

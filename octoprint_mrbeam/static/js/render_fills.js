@@ -424,7 +424,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     Element.prototype.getFontOutline = async function (
         target,
         offset = 0,
-        margin
+        margin = 0
     ) {
         const elem = this;
         const bb = elem.getBBox();

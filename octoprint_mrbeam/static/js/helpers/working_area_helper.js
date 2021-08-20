@@ -369,6 +369,14 @@ class WorkingAreaHelper {
 
     /* Get CSS Declarations of Quicktext fonts for embedding in SVG before rasterization
      *
+     * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
+     * installed on the system which we can't assume.)
+     * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
+     * contains @font-face entries with woff2 files as dataUrls. Eg:
+     * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
+     * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
+     * AND their fontFamily name must be included in self.fontMap
+     *
      * @param {Set} whitelist List used for filtering result
      * @returns {Array} A list of css declarations
      */
