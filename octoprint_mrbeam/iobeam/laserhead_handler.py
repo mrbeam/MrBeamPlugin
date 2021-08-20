@@ -39,6 +39,7 @@ class LaserheadHandler(object):
 
         self._current_used_lh_serial = self._last_used_lh_serial
         self._current_used_lh_model = self._last_used_lh_model
+        self._current_used_lh_model_id = None
 
         self._event_bus.subscribe(
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
@@ -50,6 +51,7 @@ class LaserheadHandler(object):
     def _get_lh_model(self, lh_data):
         try:
             read_model = lh_data["head"]["model"]
+            self._current_used_lh_model_id = read_model
             if read_model == 1:
                 model = "S"
             elif read_model == 0:
@@ -207,6 +209,9 @@ class LaserheadHandler(object):
             settings["correction_enabled"] = True
 
         return self._correction_settings
+
+    def get_current_used_lh_model_id(self):
+        return self._current_used_lh_model_id
 
     def _validate_lh_serial(self, serial):
         try:
