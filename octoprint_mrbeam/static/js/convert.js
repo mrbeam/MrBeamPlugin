@@ -1253,14 +1253,20 @@ $(function () {
                             });
                         });
                 } else {
-                    console.info(
-                        `Skipping vector job ${i}, invalid parameters (${[
-                            intensity_user,
-                            feedrate,
-                            passes,
-                            piercetime,
-                        ]}).`
-                    );
+                    if (
+                        self.selected_material() !== null &&
+                        self.selected_material_color() !== null &&
+                        self.selected_material_thickness() !== null
+                    ) {
+                        console.info(
+                            `Skipping vector job ${i}, invalid parameters (${[
+                                intensity_user,
+                                feedrate,
+                                passes,
+                                piercetime,
+                            ]}).`
+                        );
+                    }
                 }
             });
 
@@ -1736,18 +1742,10 @@ $(function () {
 
         self.doFrontendRendering = async function (forceRastering = false) {
             const pixPerMM = 1 / self.beamDiameter();
-            //            console.info(
-            //                "### renderInput: do_raster_engrave",
-            //                self.do_raster_engrave()
-            //            );
             const enableRastering = forceRastering || self.do_raster_engrave();
             const renderOutput = await self.workingArea.getCompositionSVG(
                 enableRastering,
                 pixPerMM
-            );
-            console.info(
-                "### renderOutput",
-                renderOutput.jobTimeEstimationData
             );
             self.svg = renderOutput.renderedSvg;
             self.gcode_length_summary(renderOutput.jobTimeEstimationData);
