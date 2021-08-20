@@ -124,6 +124,7 @@ class MrBeamPlugin(
     MODEL_MRBEAM2_DC_R1 = "MRBEAM2_DC_R1"
     MODEL_MRBEAM2_DC_R2 = "MRBEAM2_DC_R2"
     MODEL_MRBEAM2_DC = "MRBEAM2_DC"
+    MODEL_MRBEAM2_DC_S = "MRBEAM2_DC_S"
 
     LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.4"
 
@@ -2737,6 +2738,8 @@ class MrBeamPlugin(
             return "Mr Beam II"
         elif self.is_mrbeam2_dreamcut():
             return "Mr Beam II dreamcut"
+        elif self.is_mrbeam2_dreamcut_s():
+            return "Mr Beam II dreamcut s"
         elif self.is_mrbeam2_dreamcut_ready1() or self.is_mrbeam2_dreamcut_ready2():
             return "Mr Beam II dreamcut ready"
         else:
@@ -2965,6 +2968,9 @@ class MrBeamPlugin(
 
     def is_mrbeam2_dreamcut(self):
         return self._model_id == self.MODEL_MRBEAM2_DC
+
+    def is_mrbeam2_dreamcut_s(self):
+        return self._model_id == self.MODEL_MRBEAM2_DC_S
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:
