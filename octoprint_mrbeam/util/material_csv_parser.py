@@ -48,14 +48,15 @@ def dict_merge(dct, merge_dct):
             dct[k] = merge_dct[k]
 
 
-def parse_csv(path=None, laserhead=MRBEAM):
+def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0"):
     """
 
     Assumes following column order:
     mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, pierce_time, dithering
 
     :param path: path to csv file
-    :param laserhead: the type of laserhead to use. Will return the material settings to use for that laserhead.
+    :param device_model: the model of the device to use. Will return the material settings to use for that model.
+    :param laserhead_model: the type of laserhead to use. Will return the material settings to use for that laserhead.
     :return:
     """
     path = path or os.path.join(
@@ -95,7 +96,7 @@ def parse_csv(path=None, laserhead=MRBEAM):
             if colorcode:
                 current_color = colorcode
 
-            if not mrbeamversion in [MRBEAM, MRB_DREAMCUT, MRB_READY]:
+            if not mrbeamversion in [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY]:
                 # Either a comment line, unused setting or experimental settings
                 continue
 
@@ -221,12 +222,15 @@ def parse_csv(path=None, laserhead=MRBEAM):
                 pierce_time,
                 dithering,
             ]  # update current row values for next loop
-    converted_laserhead = model_id_to_csv_name(laserhead)
-    if converted_laserhead:
-        laserhead = converted_laserhead
-    if laserhead not in dictionary:
-        laserhead = DEFAULT_LASER
-    res = dict(materials=dictionary.get(laserhead, {}), laser_source=laserhead)
+    device_model_name = model_id_to_csv_name(device_model)
+    lh_to_device_mapping = ""
+    if device_model_name and device_model_name is MRB_DREAMCUT and laserhead_model == "S":
+        lh_to_device_mapping = MRB_DREAMCUT_S
+    elif device_model_name:
+        lh_to_device_mapping = device_model_name
+    if lh_to_device_mapping not in dictionary:
+        lh_to_device_mapping = DEFAULT_LASER
+    res = dict(materials=dictionary.get(lh_to_device_mapping, {}), laser_source=laserhead_model)
     return res
 
 
