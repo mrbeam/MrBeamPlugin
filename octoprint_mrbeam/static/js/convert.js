@@ -306,8 +306,8 @@ $(function () {
                     safety_notes: gettext(
                         "Custom material setting! Use at your own risk."
                     ),
-                    laser_type: "MrBeamII-1.0",
-                    model: MRBEAM_MODEL,
+                    laser_model: MRBEAM_LASER_HEAD_MODEL,
+                    device_model: MRBEAM_MODEL,
                     custom: true,
                     v: BEAMOS_VERSION,
                     colors: {},
