@@ -461,8 +461,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             rasterElem.transform(invertM);
 
             // just get the offset outside the working area
-            const tmpBB = rasterElem.getBBox(true);
-            const topLeft = { x: tmpBB.x, y: tmpBB.y };
+            let tmpBB = rasterElem.getBBox(true); // does not contain the stroke (offset)
+
+            const topLeft = { x: tmpBB.x - offset, y: tmpBB.y - offset };
 
             const mat2 = rasterElem
                 .transform()
@@ -473,7 +474,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
             if (result && result.paths) {
                 const d = result.paths.join(" ");
-                const mat = Snap.matrix().translate(topLeft.x, topLeft.y);
+                const dx = result.bbox.x;
+                const dy = result.bbox.y;
+                const mat = Snap.matrix().translate(
+                    topLeft.x + dx,
+                    topLeft.y + dy
+                );
 
                 target
                     .attr({
