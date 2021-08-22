@@ -400,7 +400,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return paths;
     };
 
-    Element.prototype.setQuicktextOutline = function (offset = 0, margin = 0) {
+    Element.prototype.setQuicktextOutline = function (
+        color,
+        offset = 0,
+        margin = null
+    ) {
         const elem = this;
         if (elem.type !== "g" || !elem.hasClass("userText")) {
             console.warn(
@@ -411,17 +415,22 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             const target = group.select(".qtOutline");
             const texts = elem.selectAll("text");
             texts.forEach((t) => {
-                const bb = t.getBBox();
-                if (bb.w > 0 && bb.h > 0) {
-                    t.getFontOutline(target, offset, margin);
-                    // TODO: one target <path> for multiple <text> elems... bad idea. will be overwritten.
-                    return;
+                if (color !== null) {
+                    const bb = t.getBBox();
+                    if (bb.w > 0 && bb.h > 0) {
+                        t.getFontOutline(color, target, offset, margin);
+                        // TODO: one target <path> for multiple <text> elems... bad idea. will be overwritten.
+                        return;
+                    }
+                } else {
+                    target.attr({ d: "" }); // remove outline
                 }
             });
         }
     };
 
     Element.prototype.getFontOutline = async function (
+        color,
         target,
         offset = 0,
         margin = 0
@@ -432,9 +441,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             console.warn(`No expansion of ${elem}. Skip.`);
             return;
         }
-        if (elem.type === "text" && elem.is_stroked()) {
-            const colorStr = window.getComputedStyle(elem.node)["stroke"];
-            const hex = WorkingAreaHelper.getHexColorStr(colorStr);
+        if (elem.type === "text") {
+            const hex = color;
 
             //  before potrace'ing ...
             // 1. clone the <text> and set it to black
@@ -489,6 +497,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                         fill: "none",
                     })
                     .transform(mat);
+                elem.attr("stroke", "none");
             } else {
                 console.error("getFontOutline(): failed.");
             }

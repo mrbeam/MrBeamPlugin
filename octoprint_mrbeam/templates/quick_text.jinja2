@@ -6,7 +6,13 @@
     <div class="modal-body">
         <form role="form" class="form-search" data-bind="submit: function(){$('#quick_text_dialog').modal('hide');}" _lpchecked="1">
             <input type="text" id="quick_text_dialog_text_input" class="input-block quicktext-input" data-bind="textInput: currentQuickText" placeholder="{{ _('QuickText...') }}" autocomplete="off"/>
-			<div class="row-fluid padding-top">
+            <div id="qt_dialog_preview">
+                <svg id="qt_dialog_preview_svg" width="300" height="28" style="width: 50%; height:20px; overflow:visible;">
+                    <use href="" transform="" style="pointer-events: none" />
+                </svg>
+            </div>
+
+            <div class="row-fluid padding-top">
 				{# Translators: Aa - the first alphabet letter capitalized and not #}
 				<div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontPrev"><i class="icon-chevron-left" title="{{ _('Previous Font') }}"></i> {{ _('Aa') }} </div>
 				<div class="span6 quicktext-fontname" id="quick_text_dialog_font_name"></div>
@@ -14,18 +20,6 @@
 			</div>
 
             <div id="quick_text_stroke_and_fill" class="form-horizontal">
-                <div class="control-group">
-                    <label class="control-label">{{ _('Line Color') }}</label>
-                    <div class="controls">
-                        <input type="checkbox" value="stroke" id="quick_text_stroke" checked data-bind="click: _qt_currentQuickTextUpdate()" />
-                        <div id="qt_colorPicker_stroke" class="tinyColorPicker">
-                            <a class="tcp_color"><div class="colorInner"></div></a>
-                            <div class="track"></div>
-                            <ul class="dropdown"><li></li></ul>
-                            <input type="hidden" class="colorInput" id="quick_text_stroke_color" >
-                        </div>
-                    </div>
-                </div>
 
                 <div class="control-group">
                     <label class="control-label">{{ _('Fill Color') }}</label>
@@ -41,6 +35,29 @@
                 </div>
 
                 <div class="control-group">
+                    <label class="control-label">{{ _('Line Color') }}</label>
+                    <div class="controls">
+                        <input type="checkbox" value="stroke" id="quick_text_stroke" checked data-bind="click: _qt_currentQuickTextUpdate()" />
+                        <div id="qt_colorPicker_stroke" class="tinyColorPicker">
+                            <a class="tcp_color"><div class="colorInner"></div></a>
+                            <div class="track"></div>
+                            <ul class="dropdown"><li></li></ul>
+                            <input type="hidden" class="colorInput" id="quick_text_stroke_color" >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">{{ _('Line Offset') }}</label>
+                    <div class="controls">
+                        <input id="quick_text_stroke_offset" type="range" max="15" min="0" value="0" step="1"
+                                data-bind="event : {input: _qt_currentQuickTextUpdate()}"
+                                style="width: 5em"
+                                class="mrb_slider"/>
+                    </div>
+                </div>
+
+                <div class="control-group">
                     <label class="control-label">{{ _('Baseline') }}</label>
                     <div class="controls">
                         <div id="qt_round_text_section" class="straight">
@@ -51,17 +68,6 @@
                             </div>
                             <input id="quick_text_dialog_circle" class="mrb_slider" type="range" min="0" max="100" value="0" />
                         </div>
-            <!--			<div id="qt_round_text_section" class="clockwise">
-                            <img src="/plugin/mrbeam/static/img/straight_text.svg" alt="straight text"/>
-                            <img src="/plugin/mrbeam/static/img/round_text_outside.svg" alt="round text" class="round-text-icon clockwise pull-right"/>
-                            <img src="/plugin/mrbeam/static/img/round_text_inside.svg" alt="round text" class="round-text-icon counterclockwise pull-right"/>
-                            <input id="quick_text_dialog_circle" class="precisionslider padding-top" type="range" min="0" max="100" value="0" />
-                        </div>
-                        <div id="quick_text_dialog_clockwise" class="mini_switch">
-                            <span class="mini_switch_label">{{ _('outside') }}</span>
-                            <span class="mini_switch_label mini_switch_trigger"><div></div></span>
-                            <span class="mini_switch_label">{{ _('inside') }}</span>
-                        </div>-->
 
                     </div>
                 </div>

@@ -198,4 +198,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         const node = elem.node.closest(selector);
         return Snap._.wrap(node);
     };
+
+    Element.prototype.empty = function () {
+        const elem = this;
+        elem.children().forEach((c) => c.remove());
+    };
 });

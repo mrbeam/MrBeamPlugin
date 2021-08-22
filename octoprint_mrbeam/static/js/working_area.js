@@ -125,6 +125,7 @@ $(function () {
         self.lastQuickTextStroke = false;
         self.lastQuickTextFill = true;
         self.lastQuickTextStrokeColor = "#e25303";
+        self.lastQuickTextStrokeOffset = 0;
         self.lastQuickTextFillColor = "#000000";
         self.lastQuickTextCircle = 0;
         self.lastQuickTextClockwise = true;
@@ -3576,6 +3577,7 @@ $(function () {
             self.currentQuickTextFile = file;
             const strokeColor =
                 self.currentQuickTextFile.strokeColor || "#e25303";
+            const strokeOffset = self.currentQuickTextFile.strokeOffset || 0;
             const fillColor = self.currentQuickTextFile.fillColor || "#000000";
             self._qt_currentQuickTextUpdate();
             $("#quick_text_dialog").one(
@@ -3591,10 +3593,12 @@ $(function () {
                 $("#quick_text_dialog_text_input").focus();
             });
             $("#quick_text_dialog").modal({ keyboard: true });
+
             // hide path during quick text editing. will be rendered on dialog close
             snap.select(
                 `#${self.currentQuickTextFile.previewId} .qtOutline`
             ).attr({ d: "" });
+
             self.showTransformHandles(
                 self.currentQuickTextFile.previewId,
                 false
@@ -3623,6 +3627,21 @@ $(function () {
             $(btn).addClass("active");
             $("#qt_round_text_section").toggleClass("straight", straight);
             self._qt_setCirclePath(cw, self.currentQuickTextFile.circle);
+
+            // TODO set stroke offset slider
+            $("#quick_text_stroke_offset").val(
+                self.currentQuickTextFile.strokeOffset
+            );
+
+            const t = snap
+                .select(`#${self.currentQuickTextFile.previewId}`)
+                .transform().totalMatrix;
+            $("#qt_dialog_preview_svg use").attr({
+                href: `#${self.currentQuickTextFile.previewId}`,
+                transform: t.invert().translate(25, 27),
+            });
+
+            // ready to type, once dialog is open
             $("#quick_text_dialog_text_input").focus();
         };
 
@@ -3737,9 +3756,9 @@ $(function () {
 
                 // get all parameters
                 const font = self.fontMap[self.currentQuickTextFile.fontIndex];
-                const isStraightText = $("#quick_text_straight").hasClass(
-                    "active"
-                );
+                const isStraightText = (self.currentQuickTextFile.isStraightText = $(
+                    "#quick_text_straight"
+                ).hasClass("active"));
                 const counterclockwise = $("#quick_text_ccw").hasClass(
                     "active"
                 );
@@ -3755,6 +3774,9 @@ $(function () {
                 const strokeColor = (self.currentQuickTextFile.strokeColor = $(
                     "#quick_text_stroke_color"
                 ).val());
+                const strokeOffset = (self.currentQuickTextFile.strokeOffset = $(
+                    "#quick_text_stroke_offset"
+                ).val());
                 const stroke = isStroked ? strokeColor : "none";
                 const fakeStroke = `${strokeColor} 0px 0px 1px,${strokeColor} 0px 0px 1px,${strokeColor} 0px 0px 1px`;
                 const shadowIty = ity > 200 ? (ity - 200) / 100 : 0;
@@ -3769,7 +3791,7 @@ $(function () {
                 const textAttrs = {
                     "font-family": font,
                     fill: fill,
-                    stroke: stroke,
+                    //                    stroke: stroke,
                 };
 
                 // update straight text DOM node
@@ -3792,17 +3814,18 @@ $(function () {
                 );
                 path.attr({ d: d });
 
-                // update text content and click handle bbox
+                // update text content
+                self._qt_previewUpdate(displayText, isStraightText);
+
+                // TODO enlarge by strokeOffset
                 let bb;
                 if (isStraightText) {
-                    curvedText.textPath.node.textContent = "";
-                    straightText.node.textContent = displayText;
                     bb = straightText.getBBox();
                 } else {
-                    curvedText.textPath.node.textContent = displayText;
-                    straightText.node.textContent = "";
                     bb = curvedText.getBBox();
                 }
+
+                // finally update click handle bbox
                 g.select("rect").attr({
                     x: bb.x,
                     y: bb.y,
@@ -3818,8 +3841,6 @@ $(function () {
                     "font-variant-ligatures": ligatures,
                 });
                 $("#quick_text_dialog_font_name").text(font);
-                //                $("#quick_text_fill_brightness").val(fillColor);
-                //                $("#quick_text_stroke_color").val(strokeColor);
 
                 // update fileslist title
                 $("#" + self.currentQuickTextFile.id + " .title").text(
@@ -3871,7 +3892,7 @@ $(function () {
             $("#quick_text_dialog_circle").val(
                 self.currentQuickTextFile.circle
             );
-            self._qt_currentQuickTextUpdate();
+            self._qt_currentQuickTextUpdate(); // TODO why ?
         };
 
         /**
@@ -3978,6 +3999,7 @@ $(function () {
                 stroke: self.lastQuickTextStroke,
                 fill: self.lastQuickTextFill,
                 strokeColor: self.lastQuickTextStrokeColor,
+                strokeOffset: self.lastQuickTextStrokeOffset,
                 fillColor: self.lastQuickTextFillColor,
                 circle: self.lastQuickTextCircle,
                 clockwise: self.lastQuickTextClockwise,
@@ -3995,8 +4017,36 @@ $(function () {
             // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
             // replaces all code below.
 
+            /**
+             * The final svg structure is this (styles mostly left out):
+             * <g id="qt_zoxy-0" class="userText">
+             *   <g class="gridify_original">
+             *     <g class="straightText">
+             *       <g class="previewStroke">
+             *         <text class="fakeStroke"></text>
+             *         <text class="gap"></text>
+             *       </g>
+             *       <text x="0" y="0" style="font-family: &quot;Allerta Stencil&quot;;" class="straightText" fill="#000000"></text>
+             *     </g>
+             *     <g class="curvedText">
+             *       <g class="previewStroke">
+             *         <text class="fakeStroke"><textPath xlink:href="#qt_zoxy-0_baselinepath" startOffset="50%">23456</textPath></text>
+             *         <text class="gap"><textPath xlink:href="#qt_zoxy-0_baselinepath" startOffset="50%">23456</textPath></text>
+             *       </g>
+             *       <text x="0" y="0" style="font-family: &quot;Allerta Stencil&quot;;" class="curvedText" fill="#000000" stroke="none">
+             *         <textPath xlink:href="#qt_zoxy-0_baselinepath" startOffset="50%">23456</textPath>
+             *       </text>
+             *     </g>
+             *     <path fill="none" stroke="#e25303" class="qtOutline vector_outline" d="M70.525 13.052 C 69.316 13.107,..." transform="matrix(1,0,0,1,-70.6125,-34.5813)"></path>
+             *     <rect class="deleteBeforeRendering" x="-39.25" y="-19.96875" width="78.40625" height="36.53125" style="opacity: 0;"></rect>
+             *   </g>
+             *   <g class="gridify_clones"></g>
+             * </g>
+             *
+             */
+
             // path for curved text
-            const path = snap
+            const baselinePath = snap
                 .path()
                 .attr({
                     id: file.previewId + "_baselinepath",
@@ -4017,19 +4067,30 @@ $(function () {
                 `stroke-linejoin: round`,
                 `stroke-linecap: round`,
             ].join("; ");
+
             const curvedText = uc.text(0, 0, placeholderText);
             curvedText.attr({
                 style: style + "font-variant-ligatures: none;",
-                textpath: path,
+                textpath: baselinePath,
             });
             curvedText.node.classList.add("curvedText");
             curvedText.textPath.attr({ startOffset: "50%", style: style });
+            const curvedTextStroke = curvedText
+                .clone()
+                .attr({ class: "fakeStroke" });
+            const curvedTextGap = curvedText.clone().attr({ class: "fakeGap" });
 
             const straightText = uc.text(0, 0, placeholderText);
             straightText.attr({
                 style: style,
                 class: "straightText",
             });
+            const straightTextStroke = straightText
+                .clone()
+                .attr({ class: "fakeStroke" });
+            const straightTextGap = straightText
+                .clone()
+                .attr({ class: "fakeGap" });
 
             const textStroke = uc.path().attr({
                 class: "qtOutline vector_outline",
@@ -4045,7 +4106,20 @@ $(function () {
                 class: "deleteBeforeRendering",
             });
 
-            var group = uc.group(straightText, curvedText, textStroke, box);
+            const previewStrokeStraight = uc
+                .group(straightTextStroke, straightTextGap)
+                .attr({ class: "previewStroke" });
+            const previewStrokeCurved = uc
+                .group(curvedTextStroke, curvedTextGap)
+                .attr({ class: "previewStroke" });
+            const straightTextG = uc
+                .group(previewStrokeStraight, straightText)
+                .attr({ class: "straightText" });
+            const curvedTextG = uc
+                .group(previewStrokeCurved, curvedText)
+                .attr({ class: "curvedText" });
+
+            var group = uc.group(straightTextG, curvedTextG, textStroke, box);
             group.attr({
                 id: file.previewId,
                 "mb:id": self._normalize_mb_id(file.previewId),
@@ -4066,11 +4140,81 @@ $(function () {
             return file;
         };
 
+        self._qt_previewUpdate = function (displayText, isStraightText) {
+            const showPreview = self.currentQuickTextFile.stroke;
+            const isFilled = self.currentQuickTextFile.fill;
+            const fillColor = self.currentQuickTextFile.fillColor;
+            const strokeColor = self.currentQuickTextFile.strokeColor;
+            const strokeOffset = parseFloat(
+                self.currentQuickTextFile.strokeOffset
+            );
+
+            // update dialog
+            $("#qt_dialog_preview").css({
+                visibility: showPreview ? "" : "hidden",
+            });
+
+            // update preview on workingArea
+            const g = snap.select(`#${self.currentQuickTextFile.previewId}`);
+            const straightTextG = g.select(`.straightText`);
+            const curvedTextG = g.select(`.curvedText`);
+            const previewStroke = g.select(`.previewStroke`);
+            if (isStraightText) {
+                curvedTextG
+                    .selectAll("textPath")
+                    .forEach((t) => (t.node.textContent = ""));
+                straightTextG
+                    .selectAll("text")
+                    .forEach((t) => (t.node.textContent = displayText));
+            } else {
+                curvedTextG
+                    .selectAll("textPath")
+                    .forEach((t) => (t.node.textContent = displayText));
+                straightTextG
+                    .selectAll("text")
+                    .forEach((t) => (t.node.textContent = ""));
+            }
+
+            //            const el2Clone = isStraightText ? straightText : curvedText;
+            //            let strokeEl = previewStroke.select('.fakeStroke');
+            //            if(strokeEl === null) {
+            //                strokeEl = el2Clone.clone().attr({class: 'fakeStroke', 'vector-effect': 'none'});
+            //                previewStroke.append(strokeEl);
+            //            }
+            //            let gapEl = previewStroke.select('.fakeGap');
+            //            if(gapEl === null) {
+            //                gapEl = el2Clone.clone().attr({class: 'fakeGap', 'vector-effect': 'none'})
+            //                previewStroke.append(gapEl);
+            //            }
+
+            const t = g.transform().localMatrix.split();
+            const scale = (t.scalex + t.scaley) / 2;
+            const strW = strokeOffset * scale + 1 * scale;
+            const gapW = strokeOffset * scale;
+            const strCol = showPreview ? strokeColor : "none";
+            const gapCol = showPreview ? "#ffffff" : "none";
+
+            g.selectAll(".fakeStroke").forEach((s) =>
+                s.attr({ stroke: strCol, "stroke-width": strW })
+            );
+            g.selectAll(".fakeGap").forEach((s) =>
+                s.attr({ stroke: gapCol, "stroke-width": gapW })
+            );
+        };
+
         self._qt_dialogClose = function () {
             // render outline once the dialog is closed
             const id = self.currentQuickTextFile.previewId;
             const qtElem = snap.select("#" + id);
-            if (qtElem) qtElem.setQuicktextOutline(0.0, 0); // TODO Margin Bug
+            const isStroked = self.currentQuickTextFile.stroke;
+            const color = isStroked
+                ? self.currentQuickTextFile.strokeColor
+                : null;
+            const offset = self.currentQuickTextFile.strokeOffset;
+            if (qtElem) {
+                qtElem.setQuicktextOutline(color, offset);
+                qtElem.select(".previewStroke").empty();
+            }
 
             if (self.currentQuickTextAnalyticsData.text_length !== 0) {
                 self._analyticsQuickTextUpdate(
