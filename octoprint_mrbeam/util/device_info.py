@@ -68,7 +68,7 @@ class DeviceInfo(object):
     def get_model(self, refresh=False):
         """
         Gives you the device's model id like MRBEAM2 or MRBEAM2_DC
-        The value is soley read from device_info file (/etc/mrbeam)
+        The value is solely read from device_info file (/etc/mrbeam)
         and it's cached once read.
         :return: model
         :rtype: String
