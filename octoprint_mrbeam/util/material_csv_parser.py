@@ -11,10 +11,10 @@ DEFAULT_LASER = MRBEAM
 
 def model_id_to_csv_name(id):
     convert = {
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2: MRBEAM,
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC: MRB_DREAMCUT,
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R1: MRBEAM,
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R2: MRBEAM,
+        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2: MRBEAM,
+        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC: MRB_DREAMCUT,
+        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R1: MRBEAM,
+        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R2: MRBEAM,
     }
     if id in convert.keys():
         return convert[id]
