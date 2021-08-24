@@ -6,6 +6,7 @@ MRB_DREAMCUT = "MrB II Dreamcut"
 MRB_DREAMCUT_S = "MrB II Dreamcut S"
 MRB_READY = "MrB II Dreamcut Ready"  # not used yet
 MRB_DREAMCUT_NOT_VALIDATED = "Dreamcut (not validated)"
+MRB_DREAMCUT_S_NOT_VALIDATED = "Dreamcut S (not validated)"
 
 DEFAULT_LASER = MRBEAM
 
