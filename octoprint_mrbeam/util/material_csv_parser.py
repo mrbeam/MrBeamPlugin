@@ -3,6 +3,7 @@ import octoprint_mrbeam
 
 MRBEAM = "Mr Beam II"
 MRB_DREAMCUT = "MrB II Dreamcut"
+MRB_DREAMCUT_S = "MrB II Dreamcut S"
 MRB_READY = "MrB II Dreamcut Ready"  # not used yet
 MRB_DREAMCUT_NOT_VALIDATED = "Dreamcut (not validated)"
 
@@ -13,6 +14,7 @@ def model_id_to_csv_name(id):
     convert = {
         octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2: MRBEAM,
         octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC: MRB_DREAMCUT,
+        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_S: MRB_DREAMCUT_S,
         octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R1: MRBEAM,
         octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R2: MRBEAM,
     }

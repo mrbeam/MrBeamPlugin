@@ -48,6 +48,7 @@ mrbeam.model = {
     MRBEAM2_DC_R1: "MRBEAM2_DC_R1",
     MRBEAM2_DC_R2: "MRBEAM2_DC_R2",
     MRBEAM2_DC: "MRBEAM2_DC",
+    MRBEAM2_DC_S: "MRBEAM2_DC_S",
     is_mrbeam2: function () {
         return window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2;
     },
@@ -59,6 +60,9 @@ mrbeam.model = {
     },
     is_mrbeam2_dreamcut: function () {
         return window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DC;
+    },
+    is_mrbeam2_dreamcut_s: function () {
+        return window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DC_S;
     },
 };
 
