@@ -4,23 +4,45 @@ import octoprint_mrbeam
 MRBEAM = "Mr Beam II"
 MRB_DREAMCUT = "MrB II Dreamcut"
 MRB_DREAMCUT_S = "MrB II Dreamcut S"
+
 MRB_READY = "MrB II Dreamcut Ready"  # not used yet
-MRB_DREAMCUT_NOT_VALIDATED = "Dreamcut (not validated)"
-MRB_DREAMCUT_S_NOT_VALIDATED = "Dreamcut S (not validated)"
+MRB_DREAMCUT_NOT_VALIDATED = "Dreamcut (not validated)"  # not used yet
+MRB_DREAMCUT_S_NOT_VALIDATED = "Dreamcut S (not validated)"  # not used yet
 
-DEFAULT_LASER = MRBEAM
+DEFAULT_LASER_MODEL = "0"
+LASER_MODEL_S = "S"
 
 
-def model_id_to_csv_name(id):
+def model_ids_to_csv_name(device_model_id, laser_model_id):
     convert = {
-        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2: MRBEAM,
-        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC: MRB_DREAMCUT,
-        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_S: MRB_DREAMCUT_S,
-        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R1: MRBEAM,
-        octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R2: MRBEAM,
+        (octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2, DEFAULT_LASER_MODEL): MRBEAM,
+        (
+            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC,
+            DEFAULT_LASER_MODEL,
+        ): MRB_DREAMCUT,
+        (
+            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC,
+            LASER_MODEL_S,
+        ): MRB_DREAMCUT_S,
+        (
+            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_S,
+            DEFAULT_LASER_MODEL,
+        ): MRB_DREAMCUT,
+        (
+            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_S,
+            LASER_MODEL_S,
+        ): MRB_DREAMCUT_S,
+        (
+            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R1,
+            DEFAULT_LASER_MODEL,
+        ): MRBEAM,
+        (
+            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R2,
+            DEFAULT_LASER_MODEL,
+        ): MRBEAM,
     }
-    if id in convert.keys():
-        return convert[id]
+    if (device_model_id, laser_model_id) in convert.keys():
+        return convert[(device_model_id, laser_model_id)]
     else:
         return False
 
@@ -223,15 +245,12 @@ def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0"):
                 pierce_time,
                 dithering,
             ]  # update current row values for next loop
-    device_model_name = model_id_to_csv_name(device_model)
-    lh_to_device_mapping = ""
-    if device_model_name and device_model_name is MRB_DREAMCUT and laserhead_model == "S":
-        lh_to_device_mapping = MRB_DREAMCUT_S
-    elif device_model_name:
-        lh_to_device_mapping = device_model_name
-    if lh_to_device_mapping not in dictionary:
-        lh_to_device_mapping = DEFAULT_LASER
-    res = dict(materials=dictionary.get(lh_to_device_mapping, {}), laser_source=laserhead_model)
+    csv_name = model_ids_to_csv_name(device_model, str(laserhead_model))
+    if csv_name not in dictionary:
+        csv_name = MRBEAM
+    res = dict(
+        materials=dictionary.get(csv_name, {}), laser_source=str(laserhead_model)
+    )
     return res
 
 
