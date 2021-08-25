@@ -1,5 +1,5 @@
+from . import device_info
 import sys, os, csv, json, collections
-import octoprint_mrbeam
 
 MRBEAM = "Mr Beam II"
 MRB_DREAMCUT = "MrB II Dreamcut"
@@ -15,29 +15,29 @@ LASER_MODEL_S = "S"
 
 def model_ids_to_csv_name(device_model_id, laser_model_id):
     convert = {
-        (octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2, DEFAULT_LASER_MODEL): MRBEAM,
+        (device_info.MODEL_MRBEAM_2, DEFAULT_LASER_MODEL): MRBEAM,
         (
-            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC,
+            device_info.MODEL_MRBEAM_2_DC,
             DEFAULT_LASER_MODEL,
         ): MRB_DREAMCUT,
         (
-            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC,
+            device_info.MODEL_MRBEAM_2_DC,
             LASER_MODEL_S,
         ): MRB_DREAMCUT_S,
         (
-            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_S,
+            device_info.MODEL_MRBEAM_2_DC_S,
             DEFAULT_LASER_MODEL,
         ): MRB_DREAMCUT,
         (
-            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_S,
+            device_info.MODEL_MRBEAM_2_DC_S,
             LASER_MODEL_S,
         ): MRB_DREAMCUT_S,
         (
-            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R1,
+            device_info.MODEL_MRBEAM_2_DC_R1,
             DEFAULT_LASER_MODEL,
         ): MRBEAM,
         (
-            octoprint_mrbeam.util.device_info.MODEL_MRBEAM_2_DC_R2,
+            device_info.MODEL_MRBEAM_2_DC_R2,
             DEFAULT_LASER_MODEL,
         ): MRBEAM,
     }
