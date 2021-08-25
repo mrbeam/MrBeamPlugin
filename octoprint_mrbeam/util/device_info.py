@@ -77,7 +77,7 @@ class DeviceInfo(object):
             self._model = self._device_data.get(self.KEY_MODEL, MODEL_DEFAULT)
         return self._model
 
-    def is_mrbeam2_dreamcut(self):
+    def is_mrbeam2_dc_or_dc_s(self):
         return self.get_model() in (MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S)
 
     def get_production_date(self):

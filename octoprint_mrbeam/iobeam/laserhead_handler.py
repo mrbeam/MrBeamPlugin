@@ -64,7 +64,7 @@ class LaserheadHandler(object):
             return model
         except:
             self._logger.error(
-                "Error for Laserheadmodel, no model found in laserhead data"
+                "Error for Laserhead model, no model found in laserhead data"
             )
 
     def set_current_used_lh_data(self, lh_data):

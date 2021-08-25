@@ -1936,7 +1936,15 @@ class MrBeamPlugin(
             # TODO ANDY Load materials when the user logs in as well
             try:
                 return make_response(
-                    jsonify(parse_csv(laserhead=self.get_model_id())), 200
+                    jsonify(
+                        parse_csv(
+                            device_model=self.get_model_id(),
+                            laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
+                                "model"
+                            ],
+                        )
+                    ),
+                    200,
                 )  # TODO : Give parse_csv the right laserhead type
             except Exception as err:
                 self._logger.exception(err.message)
@@ -2729,8 +2737,8 @@ class MrBeamPlugin(
 
     def getSerialNum(self):
         """
-        Gives you the device's Mr Beam serieal number eg "00000000E79B0313-2C"
-        The value is soley read from device_info file (/etc/mrbeam)
+        Gives you the device's Mr Beam serial number eg "00000000E79B0313-2C"
+        The value is solely read from device_info file (/etc/mrbeam)
         and it's cached once read.
         :return: serial number
         :rtype: String
@@ -2742,7 +2750,7 @@ class MrBeamPlugin(
     def get_model_id(self):
         """
         Gives you the device's model id like MRBEAM2 or MRBEAM2_DC
-        The value is soley read from device_info file (/etc/mrbeam)
+        The value is solely read from device_info file (/etc/mrbeam)
         and it's cached once read.
         :return: model id
         :rtype: String
@@ -2752,7 +2760,7 @@ class MrBeamPlugin(
     def get_production_date(self):
         """
         Gives you the device's production date as string
-        The value is soley read from device_info file (/etc/mrbeam)
+        The value is solely read from device_info file (/etc/mrbeam)
         and it's cached once read.
         :return: production date
         :rtype: String
