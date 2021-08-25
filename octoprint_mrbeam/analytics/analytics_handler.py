@@ -37,7 +37,7 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     ANALYTICS_LOG_VERSION = (
-        19  # bumped in 0.9.8 - expired_session and passive_login events added
+        20  # bumped in 0.9.9 - added target_power and head_model_id to laserhead_info
     )
 
     def __init__(self, plugin):
@@ -330,6 +330,10 @@ class AnalyticsHandler(object):
                 ak.Device.LaserHead.POWER_65: power_calibration.get("power_65", None),
                 ak.Device.LaserHead.POWER_75: power_calibration.get("power_75", None),
                 ak.Device.LaserHead.POWER_85: power_calibration.get("power_85", None),
+                ak.Device.LaserHead.TARGET_POWER: power_calibration.get(
+                    "target_power", None
+                ),
+                ak.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
                 ak.Device.LaserHead.CORRECTION_FACTOR: lh["info"]["correction_factor"],
                 ak.Device.LaserHead.CORRECTION_ENABLED: settings["correction_enabled"],
                 ak.Device.LaserHead.CORRECTION_OVERRIDE: settings[

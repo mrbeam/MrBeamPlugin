@@ -22,7 +22,9 @@ profile = dict(
         hysteresis_temperature=48.0,
         cooling_duration=25,  # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
         intensity_factor=13,  # to get from 100% intesity to GCODE-intensity of 1300
-        intensity_limit=1300,  # Limits intensity of ALL G-Code commands
+        intensity_limit=1300,  # Limits intensity of ALL incomming G-Code commands (a correction factor is multiplied on top of this)
+        intensity_upper_bound=1500,  # Limits intensity of ALL G-Code commands even with correction factor to this upper bound
+        max_correction_factor=1.15,  # max value of the correction factor
     ),
     dust=dict(extraction_limit=0.70, auto_mode_time=60),
     volume=dict(
