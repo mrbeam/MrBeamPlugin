@@ -39,10 +39,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         for (var i = 0; i < elements_to_replace.length; i++) {
             var e = elements_to_replace[i];
             var src = e._replace_with_src(i);
-            if(src){
+            if (src) {
                 used_source_elements.push(src);
             } else {
-               console.log("The source of the use tag is not present");
+                console.log("The source of the use tag is not present");
             }
         }
 
@@ -82,13 +82,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             console.log("Unable to find referenced element of ", elem);
             return;
         }
+
+        // TODO: The lookup of the src elements could/should be cached
         var src_elem = elem.paper.select(src_elem_url);
-        if (src_elem === null)
+        if (src_elem === null) {
             console.log(
                 "fallback selecting via snap.select instead paper.select:",
                 src_elem_url
             );
-        src_elem = snap.select(src_elem_url);
+            src_elem = snap.select(src_elem_url);
+        }
 
         if (src_elem) {
             // copy attributes
