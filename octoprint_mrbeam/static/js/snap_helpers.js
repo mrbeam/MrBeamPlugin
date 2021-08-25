@@ -175,12 +175,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     Element.prototype.getUsedFonts = function () {
         const elem = this;
         let result = new Set();
-        if (elem.type === "text") {
+        if (elem.type === "text" || elem.type === "textPath") {
             const fnt = window.getComputedStyle(elem.node)["font-family"];
             result.add(fnt);
         }
 
-        elem.selectAll("text").forEach((el) => {
+        elem.selectAll("text, textPath").forEach((el) => {
             const fnt = window.getComputedStyle(el.node)["font-family"];
             result.add(fnt);
         });
