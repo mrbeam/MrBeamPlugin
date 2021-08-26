@@ -584,6 +584,16 @@ li.material_entry span {
   /*min-height: 65vh;*/
 }
 
+#dialog_vector_graphics_conversion .modal-header h3{
+  display: flex;
+}
+#dialog_vector_graphics_conversion .laserhead-model {
+  color: #e25303;
+  font-size: 15px;
+  font-weight: bold;
+  justify-content: center;
+  margin-left: 15px;
+}
 .modal.modal-left-side {
   top: 50%;
   left: -52%;
