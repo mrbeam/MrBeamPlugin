@@ -337,7 +337,7 @@ $(function () {
             }
             // sort before we store it.
             tmp.sort(self._thickness_sort_function);
-            new_material.colors[color] = { cut: tmp, engrave: engrave_setting };
+            new_material.colors[color] = {cut: tmp, engrave: engrave_setting};
 
             var data = {};
             data[key] = new_material;
@@ -378,7 +378,7 @@ $(function () {
                             gettext(
                                 "Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."
                             ),
-                            { br: "<br/>" }
+                            {br: "<br/>"}
                         ),
                         type: "error",
                         hide: true,
@@ -406,7 +406,7 @@ $(function () {
                             gettext(
                                 "Successfully restored %(number)d custom materials from file."
                             ),
-                            { number: Object.keys(materials).length }
+                            {number: Object.keys(materials).length}
                         ),
                         type: "info",
                         hide: true,
@@ -423,7 +423,7 @@ $(function () {
                             gettext(
                                 "Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."
                             ),
-                            { br: "<br/>" }
+                            {br: "<br/>"}
                         ),
                         type: "error",
                         hide: true,
@@ -514,7 +514,7 @@ $(function () {
                 //				console.log("closest color to " + hex, closest);
                 return material.colors[closest];
             } else {
-                return { engrave: self.no_engraving, cut: [] };
+                return {engrave: self.no_engraving, cut: []};
             }
         };
 
@@ -1096,12 +1096,12 @@ $(function () {
                 var intensity_user =
                     intensity_white_user +
                     initial_factor *
-                        (intensity_black_user - intensity_white_user);
+                    (intensity_black_user - intensity_white_user);
                 var intensity = Math.round(
                     intensity_user *
-                        self.profile
-                            .currentProfileData()
-                            .laser.intensity_factor()
+                    self.profile
+                        .currentProfileData()
+                        .laser.intensity_factor()
                 );
                 var feedrate = Math.round(
                     speed_white + initial_factor * (speed_black - speed_white)
@@ -1138,8 +1138,8 @@ $(function () {
                 } else {
                     console.log(
                         "Skipping line engrave job (" +
-                            hex +
-                            "), invalid parameters."
+                        hex +
+                        "), invalid parameters."
                     );
                 }
             });
@@ -1426,7 +1426,7 @@ $(function () {
             if (
                 self.has_engraving_proposal() &&
                 $("#engrave_job .color_drop_zone").children(":visible").length >
-                    0
+                0
             ) {
                 validEng = true;
             }
@@ -1639,7 +1639,7 @@ $(function () {
             if (self.dontRemindMeAgainChecked() == self.showFocusReminder()) {
                 let focusReminder = !self.dontRemindMeAgainChecked();
                 self.showFocusReminder(focusReminder);
-                let data = { focusReminder: focusReminder };
+                let data = {focusReminder: focusReminder};
                 OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
                     .done(function (response) {
                         self.settings.requestData();
@@ -1661,7 +1661,7 @@ $(function () {
                                     gettext(
                                         "Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."
                                     ),
-                                    { br: "<br/>" }
+                                    {br: "<br/>"}
                                 ),
                                 type: "error",
                                 hide: true,
@@ -1729,7 +1729,7 @@ $(function () {
                     gettext(
                         "Sorry but the %(designType)s can only be %(laserJob)s, which is not supported for this material."
                     ),
-                    { designType: designType, laserJob: valid }
+                    {designType: designType, laserJob: valid}
                 );
 
                 $("#empty_job_support_link").show();
@@ -1797,8 +1797,8 @@ $(function () {
                             var length = json.length;
                             console.log(
                                 "Conversion: " +
-                                    length +
-                                    " bytes have to be converted."
+                                length +
+                                " bytes have to be converted."
                             );
                             $.ajax({
                                 url: "plugin/mrbeam/convert",
@@ -1820,7 +1820,7 @@ $(function () {
                                     self.slicing_in_progress(false);
                                     console.error(
                                         "Conversion failed with status " +
-                                            jqXHR.status,
+                                        jqXHR.status,
                                         textStatus,
                                         errorThrown
                                     );
@@ -1828,8 +1828,8 @@ $(function () {
                                         if (length > 10000000) {
                                             console.error(
                                                 "JSON size " +
-                                                    length +
-                                                    "Bytes may be over the request maximum."
+                                                length +
+                                                "Bytes may be over the request maximum."
                                             );
                                         }
                                         new PNotify({
@@ -1838,7 +1838,7 @@ $(function () {
                                                 gettext(
                                                     "Unable to start the conversion in the backend. Please try reloading this page or restarting Mr Beam.%(br)s%(br)sContent length was %(length)s bytes."
                                                 ),
-                                                { length: length, br: "<br/>" }
+                                                {length: length, br: "<br/>"}
                                             ),
                                             type: "error",
                                             tag: "conversion_error",
@@ -1898,8 +1898,8 @@ $(function () {
             var b = parseInt(hex.substr(5, 2), 16);
             return Math.round(
                 r * self.BRIGHTNESS_VALUE_RED +
-                    g * self.BRIGHTNESS_VALUE_GREEN +
-                    b * self.BRIGHTNESS_VALUE_BLUE
+                g * self.BRIGHTNESS_VALUE_GREEN +
+                b * self.BRIGHTNESS_VALUE_BLUE
             );
         };
 
@@ -2288,7 +2288,8 @@ $(function () {
         ],
         document.getElementById("dialog_vector_graphics_conversion"),
     ]);
-});
+})
+;
 
 window.mrbeam.colorDragging = {
     // Drag functions outside the viewmodel are way less complicated
