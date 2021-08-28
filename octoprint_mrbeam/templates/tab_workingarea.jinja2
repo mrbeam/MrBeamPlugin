@@ -5,7 +5,7 @@
                                 <div id="workingarea_left">
 								<div id="state_accordion">
 									<div class="accordion-heading" id="mrb_state_header">
-                                        {% if laserhead_model == 'S' %}<div class="laserhead-model">[S]</div>{% endif %}
+                                        {% if laserhead_model == 'S' %}<span class="laserhead-model-icon">[S]</span>{% endif %}
 										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div>
                                         <span title="{{ _("Mr Beam's current state") }}">
                                             <i class="icon-inbox"></i> <span data-bind="text: state.stateString"></span>
