@@ -616,6 +616,29 @@ $(function () {
             self._update_job_summary();
         });
 
+        self.materialCompatibilityDisplay = ko.observable(false);
+        self.showMaterialCompatibility = function () {
+            let customMaterialsLaserModels = [];
+            let customMaterials = self.custom_materials();
+            // Get all laser models used while saving custom materials
+            for (let materialKey in customMaterials) {
+                if (customMaterials.hasOwnProperty(materialKey)) {
+                    let m = customMaterials[materialKey];
+                    if (('laser_model' in m) && !customMaterialsLaserModels.includes(m.laser_model)) {
+                        customMaterialsLaserModels.push(m.laser_model);
+                    } else if (!('laser_model' in m) &&
+                        ('laser_type' in m) &&
+                        m.laser_type === 'MrBeamII-1.0' &&
+                        !customMaterialsLaserModels.includes('0')) {
+                        customMaterialsLaserModels.push('0');
+                    }
+                }
+            }
+            self.materialCompatibilityDisplay(customMaterialsLaserModels.length > 1 ||
+                (customMaterialsLaserModels.length === 1 &&
+                    customMaterialsLaserModels[0] !== MRBEAM_LASER_HEAD_MODEL));
+        }
+
         self.filterQuery = ko.observable("");
         self.filteredMaterials = ko.computed(function () {
             // just to subscribe to this obserable!
