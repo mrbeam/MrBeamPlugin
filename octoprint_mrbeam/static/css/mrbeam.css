@@ -1170,9 +1170,8 @@ body {
     cursor: default;
 }
 
-.octoprint-container .accordion-heading div.laserhead-model {
-    display: inline-block;
-    padding: 8px 0 8px 15px;
+.octoprint-container .accordion-heading .laserhead-model-icon {
+    padding-left: 15px;
     color: #e25303;
 }
 
