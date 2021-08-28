@@ -56,8 +56,8 @@
                                 <li class='material_entry hover_shadow'
                                     data-bind="click: function(vm, event){$root.set_material($data, event); $root.moveJobsToEngravingDefaultOption($data)},
 												style: { backgroundImage: 'url(\'' + ($data.img || '/plugin/mrbeam/static/img/materials/custommaterial.png') + '\')' },
-												css: {selected: $root.selected_material() === $data, custom: $data.custom === true },
-												attr: {mrb_name: $data.img}
+												css: {selected: $root.selected_material() === $data, custom: $data.custom === true, compatible_material: $data.compatible === true, incompatible_material: $data.compatible === false },
+												attr: {mrb_name: $data.img, data_content: $data.customBeforeElementContent}
 									">
                                     <span data-bind="text: $data.name"></span>
                                     <span class="delete_me"

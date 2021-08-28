@@ -644,19 +644,28 @@ $(function () {
             // just to subscribe to this obserable!
             self.material_settings2_updated_trigger();
 
-            var q = self.filterQuery();
-            var out = [];
+            let q = self.filterQuery();
+            let out = [];
             // List custom materials first
             // filter custom materials
-            var customs = self.custom_materials();
-            for (var materialKey in customs) {
-                var m = customs[materialKey];
+            let customs = self.custom_materials();
+            // Show material compatibility when different laserhead models are detected
+            self.showMaterialCompatibility();
+            for (let materialKey in customs) {
+                let m = customs[materialKey];
                 if (m !== null) {
                     //					m.name = materialKey; // TODO i18n
                     if (m.name.toLowerCase().indexOf(q) >= 0) {
                         m.key = materialKey;
                         m.custom = true;
                         out.push(m);
+                    }
+                    if (self.materialCompatibilityDisplay()) {
+                        m.compatible = m.laser_model === MRBEAM_LASER_HEAD_MODEL ||
+                            (!('laser_model' in m) && MRBEAM_LASER_HEAD_MODEL === '0');
+                        if (m.laser_model === 'S') {
+                            m.customBeforeElementContent = '[S]';
+                        }
                     }
                 }
             }
