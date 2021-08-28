@@ -405,6 +405,12 @@ body.colorDragInProgress #drop_overlay {
   max-height: 55vh;
   overflow: visible;
 }
+
+#incompatible-custom-material-message{
+    color: #808080;
+    margin-bottom: 20px;
+}
+
 .material_entry {
   display: none;
   width: 200px;
