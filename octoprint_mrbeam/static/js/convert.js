@@ -686,6 +686,9 @@ $(function () {
                 // custom material first
                 if (a.custom && !b.custom) return -1;
                 if (!a.custom && b.custom) return 1;
+                if ('compatible' in a) {
+                    return a.compatible < b.compatible ? -1 : 1;
+                }
                 // then sort by name
                 if (a.name == b.name) return 0;
                 return a.name < b.name ? -1 : 1;
