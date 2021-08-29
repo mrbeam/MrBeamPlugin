@@ -51,7 +51,7 @@
                                        placeholder="{{ _('Search...') }}">
                             </form>
                             <div id="incompatible-custom-material-message"
-                                 data-bind="visible: $root.materialCompatibilityDisplay()">{{ _('The following Pre-Settins are only a starting point. You might need to adjust them to your personal Materials.') }}</div>
+                                 data-bind="visible: $root.materialCompatibilityDisplay() && selected_material() === null">{{ _('The following Pre-Settins are only a starting point. You might need to adjust them to your personal Materials.') }}</div>
                             <ul id="material_list" data-bind="foreach: filteredMaterials">
                                 <li class='material_entry hover_shadow'
                                     data-bind="click: function(vm, event){$root.set_material($data, event); $root.moveJobsToEngravingDefaultOption($data)},
