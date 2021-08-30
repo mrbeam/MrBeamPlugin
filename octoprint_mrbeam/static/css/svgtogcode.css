@@ -575,6 +575,10 @@ li.material_entry.custom.incompatible_material::after {
     font-weight: bold;
 }
 
+#safety_notes.incompatible_safety_warning {
+    color: #e25303;
+}
+
 #material_info p,
 #material_info a {
     color: #777;

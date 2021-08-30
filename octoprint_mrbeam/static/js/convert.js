@@ -111,6 +111,7 @@ $(function () {
         self.material_colors = ko.observableArray([]);
         self.material_thicknesses = ko.observableArray([]);
         self.selected_material = ko.observable(null);
+        self.selected_material_compatibility = ko.observable(true);
         self.selected_material_color = ko.observable(null);
         self.selected_material_thickness = ko.observable(null);
         self.material_safety_notes = ko.observable("");
@@ -145,6 +146,13 @@ $(function () {
         self.selected_material_img = ko.computed(function () {
             var mat = self.selected_material();
             if (mat !== null) return mat === null ? "" : mat.img;
+        });
+        self.selected_material_compatibility = ko.computed(function () {
+            if (self.selected_material() !== null &&
+                'compatible' in self.selected_material() &&
+                !self.selected_material().compatible) {
+                return false;
+            }
         });
 
         self.load_standard_materials = function () {
@@ -664,6 +672,11 @@ $(function () {
                             (!('laser_model' in m) && MRBEAM_LASER_HEAD_MODEL === '0');
                         if (m.laser_model === 'S') {
                             m.customBeforeElementContent = '[S]';
+                        }
+                        if (!m.compatible) {
+                            m.safety_notes = gettext(
+                                "We recommend adjusting your saved custom material settings to your new laserhead. This will add a duplicate of your setting specific for the current laserhead model, your original ones will stay as they are in case you want to keep them."
+                            );
                         }
                     }
                 }
