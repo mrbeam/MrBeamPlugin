@@ -308,7 +308,8 @@ $(function () {
                 new_material.safety_notes = gettext(
                     "Custom material setting! Use at your own risk."
                 );
-                new_material.model = MRBEAM_MODEL;
+                new_material.laser_model = MRBEAM_LASER_HEAD_MODEL;
+                new_material.device_model = MRBEAM_MODEL;
                 new_material.custom = true;
                 new_material.v = BEAMOS_VERSION;
             } else {
