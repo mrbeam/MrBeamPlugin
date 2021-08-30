@@ -190,9 +190,17 @@ $(function () {
                     self.save_custom_material_image(null);
                     self.save_custom_material_description("");
                 } else {
-                    self.save_custom_material_name(
-                        self.selected_material().name
-                    );
+                    if ('compatible' in self.selected_material() &&
+                        !self.selected_material().compatible) {
+                        self.save_custom_material_name(
+                            gettext("Compatible") + " - " + self.selected_material().name
+                        );
+                    } else {
+                        self.save_custom_material_name(
+                            self.selected_material().name
+                        );
+                    }
+
                     self.save_custom_material_image(
                         self.selected_material().img
                     );
