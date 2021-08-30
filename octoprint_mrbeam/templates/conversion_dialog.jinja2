@@ -1,7 +1,8 @@
 <div id="dialog_vector_graphics_conversion" class="modal hide fade">
     <div class="modal-header">
-        <h3 data-bind="visible:!slicing_in_progress()">{{ _('Material') }} <span
-                data-bind="visible:customized_material()">{{ _('(customized)') }}</span></h3>
+        <h3 data-bind="visible:!slicing_in_progress()">{{ _('Material') }}
+            <span data-bind="visible:customized_material()">{{ _('(customized)') }}</span>
+            {% if laserhead_model == 'S' %}<span class="laserhead-model-icon">[S]</span>{% endif %}</h3>
         <h3 data-bind="visible:slicing_in_progress()">{{ _('Preparing...') }}</h3>
     </div>
     <div class="modal-body scrollable" style="box-sizing: border-box">
