@@ -616,7 +616,6 @@ $(function () {
             self._update_job_summary();
         });
 
-        self.materialCompatibilityDisplay = ko.observable(false);
         self.showMaterialCompatibility = function () {
             let customMaterialsLaserModels = [];
             let customMaterials = self.custom_materials();
@@ -634,9 +633,9 @@ $(function () {
                     }
                 }
             }
-            self.materialCompatibilityDisplay(customMaterialsLaserModels.length > 1 ||
+            return customMaterialsLaserModels.length > 1 ||
                 (customMaterialsLaserModels.length === 1 &&
-                    customMaterialsLaserModels[0] !== MRBEAM_LASER_HEAD_MODEL));
+                    customMaterialsLaserModels[0] !== MRBEAM_LASER_HEAD_MODEL);
         }
 
         self.filterQuery = ko.observable("");
@@ -650,7 +649,7 @@ $(function () {
             // filter custom materials
             let customs = self.custom_materials();
             // Show material compatibility when different laserhead models are detected
-            self.showMaterialCompatibility();
+            let materialCompatibilityDisplay = self.showMaterialCompatibility();
             for (let materialKey in customs) {
                 let m = customs[materialKey];
                 if (m !== null) {
@@ -660,7 +659,7 @@ $(function () {
                         m.custom = true;
                         out.push(m);
                     }
-                    if (self.materialCompatibilityDisplay()) {
+                    if (materialCompatibilityDisplay) {
                         m.compatible = m.laser_model === MRBEAM_LASER_HEAD_MODEL ||
                             (!('laser_model' in m) && MRBEAM_LASER_HEAD_MODEL === '0');
                         if (m.laser_model === 'S') {
