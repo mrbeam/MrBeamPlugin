@@ -633,9 +633,7 @@ $(function () {
                     }
                 }
             }
-            return customMaterialsLaserModels.length > 1 ||
-                (customMaterialsLaserModels.length === 1 &&
-                    customMaterialsLaserModels[0] !== MRBEAM_LASER_HEAD_MODEL);
+            return customMaterialsLaserModels.some(item => item !== MRBEAM_LASER_HEAD_MODEL);
         }
 
         self.filterQuery = ko.observable("");
