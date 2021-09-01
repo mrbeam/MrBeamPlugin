@@ -146,6 +146,10 @@ $(function () {
             var mat = self.selected_material();
             if (mat !== null) return mat === null ? "" : mat.img;
         });
+        self.selected_material_compatibility = ko.computed(function () {
+            return !(self.selected_material() !== null &&
+                !self.selected_material()?.compatible);
+        });
 
         self.load_standard_materials = function () {
             self.materialSettings.loadMaterialSettings(function (res) {
@@ -182,9 +186,17 @@ $(function () {
                     self.save_custom_material_image(null);
                     self.save_custom_material_description("");
                 } else {
-                    self.save_custom_material_name(
-                        self.selected_material().name
-                    );
+                    if (!self.selected_material()?.compatible) {
+                        self.save_custom_material_name(
+                            gettext("Laser Model") + " "
+                            + MRBEAM_LASER_HEAD_MODEL + " - " + self.selected_material().name
+                        );
+                    } else {
+                        self.save_custom_material_name(
+                            self.selected_material().name
+                        );
+                    }
+
                     self.save_custom_material_image(
                         self.selected_material().img
                     );
@@ -292,7 +304,8 @@ $(function () {
                 new_material.safety_notes = gettext(
                     "Custom material setting! Use at your own risk."
                 );
-                new_material.model = MRBEAM_MODEL;
+                new_material.laser_model = MRBEAM_LASER_HEAD_MODEL;
+                new_material.device_model = MRBEAM_MODEL;
                 new_material.custom = true;
                 new_material.v = BEAMOS_VERSION;
             } else {
@@ -627,7 +640,7 @@ $(function () {
             // filter custom materials
             let customs = self.custom_materials();
             // Show material compatibility when different laserhead models are detected
-            let materialCompatibilityDisplay = customs.some(item => item?.laser_model !== MRBEAM_LASER_HEAD_MODEL);
+            let materialCompatibilityDisplay = Object.values(customs).some(item => item?.laser_model !== MRBEAM_LASER_HEAD_MODEL);
             for (let materialKey in customs) {
                 let m = customs[materialKey];
                 if (m !== null) {
@@ -641,6 +654,11 @@ $(function () {
                         m.compatible = m.laser_model === MRBEAM_LASER_HEAD_MODEL;
                         if (m.laser_model === 'S') {
                             m.customBeforeElementContent = '[S]';
+                        }
+                        if (!m.compatible) {
+                            m.safety_notes = gettext(
+                                "This is a custom setting you made for another laserhead.\n We recommend adjusting your saved custom material settings to your new laserhead. This will add a duplicate of your setting specific for the current laserhead model, your original ones will stay as they are in case you want to keep them."
+                            );
                         }
                     }
                 }
