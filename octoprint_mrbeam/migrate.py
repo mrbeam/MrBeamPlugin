@@ -971,7 +971,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 "laser_type" in material_settings
                 and material_settings["laser_type"] == "MrBeamII-1.0"
             ):
-                material_settings["laser_type"] = 0
+                material_settings["laser_type"] = '0'
                 material_settings["laser_model"] = material_settings.pop("laser_type")
             if "model" in material_settings:
                 material_settings["device_model"] = material_settings.pop("model")

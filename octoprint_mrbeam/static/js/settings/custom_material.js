@@ -24,7 +24,7 @@ $(function () {
                         for (let [material_id, material_settings] of Object.entries(data.custom_materials)) {
                             if ('laser_type' in material_settings &&
                                 material_settings['laser_type'] === "MrBeamII-1.0") {
-                                material_settings['laser_type'] = 0;
+                                material_settings['laser_type'] = '0';
                                 material_settings['laser_model'] = material_settings['laser_type'];
                                 delete material_settings['laser_type'];
                             }
