@@ -111,7 +111,6 @@ $(function () {
         self.material_colors = ko.observableArray([]);
         self.material_thicknesses = ko.observableArray([]);
         self.selected_material = ko.observable(null);
-        self.selected_material_compatibility = ko.observable(true);
         self.selected_material_color = ko.observable(null);
         self.selected_material_thickness = ko.observable(null);
         self.material_safety_notes = ko.observable("");
