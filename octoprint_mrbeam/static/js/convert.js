@@ -148,11 +148,8 @@ $(function () {
             if (mat !== null) return mat === null ? "" : mat.img;
         });
         self.selected_material_compatibility = ko.computed(function () {
-            if (self.selected_material() !== null &&
-                'compatible' in self.selected_material() &&
-                !self.selected_material().compatible) {
-                return false;
-            }
+            return !(self.selected_material() !== null &&
+                !self.selected_material()?.compatible);
         });
 
         self.load_standard_materials = function () {
@@ -190,8 +187,7 @@ $(function () {
                     self.save_custom_material_image(null);
                     self.save_custom_material_description("");
                 } else {
-                    if ('compatible' in self.selected_material() &&
-                        !self.selected_material().compatible) {
+                    if (!self.selected_material()?.compatible) {
                         self.save_custom_material_name(
                             gettext("Laser Model") + " "
                             + MRBEAM_LASER_HEAD_MODEL + " - " + self.selected_material().name
