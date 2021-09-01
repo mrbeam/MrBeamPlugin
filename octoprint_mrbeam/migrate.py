@@ -205,12 +205,14 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.disable_gcode_auto_deletion()
+
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
                     "0.9.0.2",
                     equal_ok=False,
                 ):
                     self.track_devpi()
+
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
                     "0.9.4.0",
@@ -283,7 +285,7 @@ class Migration(object):
         Compares two versions and returns true if lower_vers < higher_vers
         :param lower_vers: needs to be inferior to higher_vers to be True
         :param lower_vers: needs to be superior to lower_vers to be True
-        :param equal_ok: returned value if lower_vers and lower_vers are equal.
+        :param equal_ok: returned value if lower_vers and higher_vers are equal.
         :return: True or False. None if one of the version was not a valid version number
         """
         if lower_vers is None or higher_vers is None:
