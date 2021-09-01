@@ -193,7 +193,7 @@
                     <p>
                         <i class="icon-warning-sign" style="color:red;"
                            data-bind="visible: material_safety_notes()"></i>
-                        <span id="safety_notes" class="" data-bind="text: material_safety_notes, css:{ incompatible_safety_warning: $root.selected_material_compatibility() === false }"></span>
+                        <span id="safety_notes" class="" data-bind="text: material_safety_notes, css:{ incompatible_safety_warning: !$root.selected_material_compatibility() }"></span>
                     </p>
                     <a href="#" class="dropdown" data-toggle="collapse" data-target="#more_material_info"
                        data-bind="visible: material_description() !== '' || material_hints() !== ''">
