@@ -10,7 +10,7 @@ from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
-from octoprint_mrbeam.util import logExceptions
+from octoprint_mrbeam.util import logExceptions, dict_get
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 from octoprint_mrbeam.__version import __version__
@@ -965,14 +965,6 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         It also replaces 'model' key with 'device_model'
         """
         self._logger.info("start update_custom_material_settings")
-        custom_materials = materials(self.plugin).get_custom_materials()
-        for material_id, material_settings in custom_materials.items():
-            if (
-                "laser_type" in material_settings
-                and material_settings["laser_type"] == "MrBeamII-1.0"
-            ):
-                material_settings["laser_type"] = '0'
-                material_settings["laser_model"] = material_settings.pop("laser_type")
-            if "model" in material_settings:
-                material_settings["device_model"] = material_settings.pop("model")
-            materials(self).put_custom_material(material_id, material_settings)
+        my_materials = materials(self.plugin)
+        for k, v in my_materials.get_custom_materials().items():
+            my_materials.put_custom_material(k, v)
