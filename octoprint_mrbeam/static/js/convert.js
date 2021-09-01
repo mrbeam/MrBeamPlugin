@@ -641,7 +641,7 @@ $(function () {
             // filter custom materials
             let customs = self.custom_materials();
             // Show material compatibility when different laserhead models are detected
-            let materialCompatibilityDisplay = customs.some(item => item?.laser_model !== MRBEAM_LASER_HEAD_MODEL);
+            let materialCompatibilityDisplay = Object.values(customs).some(item => item?.laser_model !== MRBEAM_LASER_HEAD_MODEL);
             for (let materialKey in customs) {
                 let m = customs[materialKey];
                 if (m !== null) {
