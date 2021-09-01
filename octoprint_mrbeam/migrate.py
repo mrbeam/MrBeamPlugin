@@ -14,6 +14,7 @@ from octoprint_mrbeam.util import logExceptions
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 from octoprint_mrbeam.__version import __version__
+from octoprint_mrbeam.materials import materials
 
 
 def migrate(plugin):
@@ -36,6 +37,7 @@ class Migration(object):
     VERSION_DELETE_UPLOADED_STL_FILES = "0.6.1"
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
     VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.10.2"
+    VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS = "0.9.8"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
@@ -224,6 +226,13 @@ class Migration(object):
                     and (self.plugin._settings.get(["version"]) is None)
                 ):  # for images before the 19.7.2021
                     self.fix_s_series_mount_manager()
+
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    self.VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS,
+                    equal_ok=True,
+                ):
+                    self.update_custom_material_settings()
 
                 # migrations end
 
@@ -944,3 +953,24 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             # permission...
             os.system("sudo mv '%s' '%s'" % (src, fname))
             # os.renames(src, fname)
+
+    def update_custom_material_settings(self):
+        """
+        Updates custom material settings keys and values
+        It replaces 'laser_type 'key with 'laser_model' and
+        it sets the value according to the latest laserhead
+        model updates
+        It also replaces 'model' key with 'device_model'
+        """
+        self._logger.info("start update_custom_material_settings")
+        custom_materials = materials(self.plugin).get_custom_materials()
+        for material_id, material_settings in custom_materials.items():
+            if (
+                "laser_type" in material_settings
+                and material_settings["laser_type"] == "MrBeamII-1.0"
+            ):
+                material_settings["laser_type"] = 0
+                material_settings["laser_model"] = material_settings.pop("laser_type")
+            if "model" in material_settings:
+                material_settings["device_model"] = material_settings.pop("model")
+            materials(self).put_custom_material(material_id, material_settings)
