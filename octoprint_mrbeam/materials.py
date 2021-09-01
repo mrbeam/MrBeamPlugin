@@ -1,6 +1,7 @@
 import os
 import yaml
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util import dict_get
 
 
 # singleton
@@ -38,7 +39,7 @@ class Materials(object):
 
     def put_custom_material(self, key, material):
         """
-        Put material. If key exists, material will be overwritten
+        Sanitize and put material. If key exists, material will be overwritten
         :param key: String unique material key
         :param material: Dict of material data
         :return: Boolean success
@@ -47,6 +48,12 @@ class Materials(object):
         res = None
 
         try:
+            if dict_get(material, ['laser_type']) == "MrBeamII-1.0":
+                material["laser_model"] = '0'
+                del material["laser_type"]
+            if "model" in material:
+                material["device_model"] = material.pop("model")
+
             self.custom_materials[key.strip()] = material
             res = True
         except:

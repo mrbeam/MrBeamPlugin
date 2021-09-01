@@ -967,9 +967,4 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("start update_custom_material_settings")
         my_materials = materials(self.plugin)
         for material_id, material_settings in my_materials.get_custom_materials().items():
-            if dict_get(material_settings, ['laser_type']) == "MrBeamII-1.0":
-                material_settings["laser_model"] = '0'
-                del material_settings["laser_type"]
-            if "model" in material_settings:
-                material_settings["device_model"] = material_settings.pop("model")
             my_materials.put_custom_material(material_id, material_settings)
