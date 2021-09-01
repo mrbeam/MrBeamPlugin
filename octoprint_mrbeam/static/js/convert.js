@@ -677,7 +677,7 @@ $(function () {
                         }
                         if (!m.compatible) {
                             m.safety_notes = gettext(
-                                "We recommend adjusting your saved custom material settings to your new laserhead. This will add a duplicate of your setting specific for the current laserhead model, your original ones will stay as they are in case you want to keep them."
+                                "This is a custom setting you made for another laserhead.\n We recommend adjusting your saved custom material settings to your new laserhead. This will add a duplicate of your setting specific for the current laserhead model, your original ones will stay as they are in case you want to keep them."
                             );
                         }
                     }

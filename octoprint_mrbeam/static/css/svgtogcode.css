@@ -577,6 +577,7 @@ li.material_entry.custom.incompatible_material::after {
 
 #safety_notes.incompatible_safety_warning {
     color: #e25303;
+    white-space: pre-wrap;
 }
 
 #material_info p,
