@@ -966,5 +966,5 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         """
         self._logger.info("start update_custom_material_settings")
         my_materials = materials(self.plugin)
-        for material_id, material_settings in my_materials.get_custom_materials().items():
-            my_materials.put_custom_material(material_id, material_settings)
+        for k, v in my_materials.get_custom_materials().items():
+            my_materials.put_custom_material(k, v)
