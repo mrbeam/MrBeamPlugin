@@ -616,21 +616,6 @@ $(function () {
             self._update_job_summary();
         });
 
-        self.showMaterialCompatibility = function () {
-            let customMaterialsLaserModels = [];
-            let customMaterials = self.custom_materials();
-            // Get all laser models used while saving custom materials
-            for (let materialKey in customMaterials) {
-                if (customMaterials.hasOwnProperty(materialKey)) {
-                    let m = customMaterials[materialKey];
-                    if (('laser_model' in m) && !customMaterialsLaserModels.includes(m.laser_model)) {
-                        customMaterialsLaserModels.push(m.laser_model);
-                    }
-                }
-            }
-            return customMaterialsLaserModels.some(item => item !== MRBEAM_LASER_HEAD_MODEL);
-        }
-
         self.filterQuery = ko.observable("");
         self.filteredMaterials = ko.computed(function () {
             // just to subscribe to this obserable!
@@ -642,7 +627,7 @@ $(function () {
             // filter custom materials
             let customs = self.custom_materials();
             // Show material compatibility when different laserhead models are detected
-            let materialCompatibilityDisplay = self.showMaterialCompatibility();
+            let materialCompatibilityDisplay = customs.some(item => item?.laser_model !== MRBEAM_LASER_HEAD_MODEL);
             for (let materialKey in customs) {
                 let m = customs[materialKey];
                 if (m !== null) {
