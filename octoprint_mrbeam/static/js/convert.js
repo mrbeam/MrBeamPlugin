@@ -625,11 +625,6 @@ $(function () {
                     let m = customMaterials[materialKey];
                     if (('laser_model' in m) && !customMaterialsLaserModels.includes(m.laser_model)) {
                         customMaterialsLaserModels.push(m.laser_model);
-                    } else if (!('laser_model' in m) &&
-                        ('laser_type' in m) &&
-                        m.laser_type === 'MrBeamII-1.0' &&
-                        !customMaterialsLaserModels.includes('0')) {
-                        customMaterialsLaserModels.push('0');
                     }
                 }
             }
@@ -658,8 +653,7 @@ $(function () {
                         out.push(m);
                     }
                     if (materialCompatibilityDisplay) {
-                        m.compatible = m.laser_model === MRBEAM_LASER_HEAD_MODEL ||
-                            (!('laser_model' in m) && MRBEAM_LASER_HEAD_MODEL === '0');
+                        m.compatible = m.laser_model === MRBEAM_LASER_HEAD_MODEL;
                         if (m.laser_model === 'S') {
                             m.customBeforeElementContent = '[S]';
                         }
