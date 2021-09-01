@@ -193,7 +193,8 @@ $(function () {
                     if ('compatible' in self.selected_material() &&
                         !self.selected_material().compatible) {
                         self.save_custom_material_name(
-                            gettext("Compatible") + " - " + self.selected_material().name
+                            gettext("Laser Model") + " "
+                            + MRBEAM_LASER_HEAD_MODEL + " - " + self.selected_material().name
                         );
                     } else {
                         self.save_custom_material_name(
