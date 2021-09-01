@@ -20,6 +20,19 @@ $(function () {
                 self.readLocalFile(ev, function (data) {
                     if (data && "custom_materials" in data) {
                         console.log("Loaded material settings: ", data);
+                        //  Update custom material settings exported with new keys and laser model value
+                        for (let [material_id, material_settings] of Object.entries(data.custom_materials)) {
+                            if ('laser_type' in material_settings &&
+                                material_settings['laser_type'] === "MrBeamII-1.0") {
+                                material_settings['laser_type'] = '0';
+                                material_settings['laser_model'] = material_settings['laser_type'];
+                                delete material_settings['laser_type'];
+                            }
+                            if ('model' in material_settings) {
+                                material_settings['device_model'] = material_settings['model'];
+                                delete material_settings['model'];
+                            }
+                        }
                         // TODO: add more sanity checks here
                         self.conversion.restore_material_settings(
                             data.custom_materials
@@ -70,7 +83,8 @@ $(function () {
                 var contents = null;
                 try {
                     contents = JSON.parse(e.target.result);
-                } catch (e) {}
+                } catch (e) {
+                }
                 if (callback) {
                     callback(contents);
                 }
