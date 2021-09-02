@@ -279,7 +279,7 @@ $(function () {
         };
 
         self.onAllBound = function (allViewModels) {
-            self._force_reload_on_inconsitent_version_or_laserhead_model();
+            self.force_reload_if_required();
 
             var tabs = $('#mrbeam-main-tabs a[data-toggle="tab"]');
             tabs.on("show", function (e) {
@@ -329,10 +329,10 @@ $(function () {
         self.onEventMrbPluginVersion = function (payload) {
             if (payload?.version || payload?.is_first_run ||
                 payload?.mrb_state?.laser_model) {
-                self._force_reload_on_inconsitent_version_or_laserhead_model(
+                self.force_reload_if_required(
                     payload["version"],
                     payload["is_first_run"],
-                    payload["mrb_state"]["laser_model"]
+                    payload["mrb_state"]["laser_model"].toString()
                 );
             }
         };
@@ -371,24 +371,21 @@ $(function () {
          * @param isFirstRun (optional) If no firstRun flag is given the function reads it from self.settings
          * @param laserHeadModel (optional) If no laserHeadModel flag is given the function reads it from self.settings
          */
-        self._force_reload_on_inconsitent_version_or_laserhead_model = function (
+        self.force_reload_if_required = function (
             backend_version,
             isFirstRun,
             laserHeadModel
         ) {
-            backend_version =
-                backend_version ||
-                self.settings.settings.plugins.mrbeam._version();
-            if (isFirstRun === undefined) {
-                isFirstRun = self.settings.settings.plugins.mrbeam.isFirstRun();
-            }
-            if (laserHeadModel === undefined) {
-                laserHeadModel = self.settings.settings.plugins.mrbeam.laserhead.model();
+            if (self.settings.settings?.plugins?.mrbeam) {
+                let mrb_settings = self.settings.settings.plugins.mrbeam;
+                backend_version = backend_version ? backend_version : mrb_settings._version();
+                isFirstRun = isFirstRun ? isFirstRun : mrb_settings.isFirstRun();
+                laserHeadModel = laserHeadModel ? laserHeadModel : mrb_settings.laserhead.model().toString();
             }
             if (
                 backend_version !== BEAMOS_VERSION ||
                 isFirstRun !== CONFIG_FIRST_RUN ||
-                laserHeadModel.toString() !== MRBEAM_LASER_HEAD_MODEL
+                laserHeadModel !== MRBEAM_LASER_HEAD_MODEL
             ) {
                 console.log(
                     "Frontend reload check: RELOAD! (version: frontend=" +
@@ -402,7 +399,7 @@ $(function () {
                     ", laserheadModel: frontend=" +
                     MRBEAM_LASER_HEAD_MODEL +
                     ", backend=" +
-                    laserHeadModel.toString() +
+                    laserHeadModel +
                     ")"
                 );
                 console.log("Reloading frontend...");
