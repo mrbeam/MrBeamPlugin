@@ -279,7 +279,7 @@ $(function () {
         };
 
         self.onAllBound = function (allViewModels) {
-            self._force_reload_on_inconsitent_version();
+            self._force_reload_on_inconsitent_version_or_laserhead_model();
 
             var tabs = $('#mrbeam-main-tabs a[data-toggle="tab"]');
             tabs.on("show", function (e) {
@@ -327,10 +327,12 @@ $(function () {
         };
 
         self.onEventMrbPluginVersion = function (payload) {
-            if ("version" in payload || "is_first_run" in payload) {
-                self._force_reload_on_inconsitent_version(
+            if (payload?.version || payload?.is_first_run ||
+                payload?.mrb_state?.laser_model) {
+                self._force_reload_on_inconsitent_version_or_laserhead_model(
                     payload["version"],
-                    payload["is_first_run"]
+                    payload["is_first_run"],
+                    payload["mrb_state"]["laser_model"]
                 );
             }
         };
@@ -367,10 +369,12 @@ $(function () {
          * @private
          * @param backend_version (optional) If no version is given the function reads it from self.settings
          * @param isFirstRun (optional) If no firstRun flag is given the function reads it from self.settings
+         * @param laserHeadModel (optional) If no laserHeadModel flag is given the function reads it from self.settings
          */
-        self._force_reload_on_inconsitent_version = function (
+        self._force_reload_on_inconsitent_version_or_laserhead_model = function (
             backend_version,
-            isFirstRun
+            isFirstRun,
+            laserHeadModel
         ) {
             backend_version =
                 backend_version ||
@@ -378,30 +382,40 @@ $(function () {
             if (isFirstRun === undefined) {
                 isFirstRun = self.settings.settings.plugins.mrbeam.isFirstRun();
             }
+            if (laserHeadModel === undefined) {
+                laserHeadModel = self.settings.settings.plugins.mrbeam.laserhead.model();
+            }
             if (
-                backend_version != BEAMOS_VERSION ||
-                isFirstRun != CONFIG_FIRST_RUN
+                backend_version !== BEAMOS_VERSION ||
+                isFirstRun !== CONFIG_FIRST_RUN ||
+                laserHeadModel.toString() !== MRBEAM_LASER_HEAD_MODEL
             ) {
                 console.log(
                     "Frontend reload check: RELOAD! (version: frontend=" +
-                        BEAMOS_VERSION +
-                        ", backend=" +
-                        backend_version +
-                        ", isFirstRun: frontend=" +
-                        CONFIG_FIRST_RUN +
-                        ", backend=" +
-                        isFirstRun +
-                        ")"
+                    BEAMOS_VERSION +
+                    ", backend=" +
+                    backend_version +
+                    ", isFirstRun: frontend=" +
+                    CONFIG_FIRST_RUN +
+                    ", backend=" +
+                    isFirstRun +
+                    ", laserheadModel: frontend=" +
+                    MRBEAM_LASER_HEAD_MODEL +
+                    ", backend=" +
+                    laserHeadModel.toString() +
+                    ")"
                 );
                 console.log("Reloading frontend...");
                 window.location.href = "/?ts=" + Date.now();
             } else {
                 console.log(
                     "Frontend reload check: OK (version: " +
-                        BEAMOS_VERSION +
-                        ", isFirstRun: " +
-                        CONFIG_FIRST_RUN +
-                        ")"
+                    BEAMOS_VERSION +
+                    ", isFirstRun: " +
+                    CONFIG_FIRST_RUN +
+                    ", laserheadModel: " +
+                    MRBEAM_LASER_HEAD_MODEL +
+                    ")"
                 );
             }
         };
