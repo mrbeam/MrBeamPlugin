@@ -236,8 +236,8 @@ $(function () {
 
             self.state.intensityOverride = ko.observable(100);
             self.state.feedrateOverride = ko.observable(100);
-            self.state.intensityOverride.extend({ rateLimit: 500 });
-            self.state.feedrateOverride.extend({ rateLimit: 500 });
+            self.state.intensityOverride.extend({rateLimit: 500});
+            self.state.feedrateOverride.extend({rateLimit: 500});
             self.state.numberOfPasses = ko.observable(1);
             self.state.isConnecting = ko.observable(undefined);
 
@@ -315,7 +315,8 @@ $(function () {
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display
-            self.state._processProgressData = function () {};
+            self.state._processProgressData = function () {
+            };
         };
 
         self.onStartupComplete = function () {
@@ -506,7 +507,7 @@ $(function () {
             if (self.storedSocketData.length > 0) {
                 console.log(
                     "Handling stored socked data: " +
-                        self.storedSocketData.length
+                    self.storedSocketData.length
                 );
                 for (var i = 0; i < self.storedSocketData.length; i++) {
                     self._fromData(
@@ -524,7 +525,7 @@ $(function () {
             self.state.isFlashing(data.flags.flashing);
             self.state.isConnecting(
                 data.text === "Connecting" ||
-                    data.text === "Opening serial port"
+                data.text === "Opening serial port"
             );
         };
 
@@ -537,9 +538,9 @@ $(function () {
                 isNaN(data[0]) ||
                 isNaN(data[1])
             ) {
-                self.state.currentPos({ x: 0, y: 0 });
+                self.state.currentPos({x: 0, y: 0});
             } else {
-                self.state.currentPos({ x: data[0], y: data[1] });
+                self.state.currentPos({x: data[0], y: data[1]});
             }
         };
 
@@ -706,7 +707,7 @@ $(function () {
                 "/" +
                 payload.gcode;
             var data = {
-                refs: { resource: url },
+                refs: {resource: url},
                 origin: payload.gcode_location,
                 path: payload.gcode,
             };
