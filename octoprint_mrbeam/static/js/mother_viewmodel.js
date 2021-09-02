@@ -236,8 +236,8 @@ $(function () {
 
             self.state.intensityOverride = ko.observable(100);
             self.state.feedrateOverride = ko.observable(100);
-            self.state.intensityOverride.extend({ rateLimit: 500 });
-            self.state.feedrateOverride.extend({ rateLimit: 500 });
+            self.state.intensityOverride.extend({rateLimit: 500});
+            self.state.feedrateOverride.extend({rateLimit: 500});
             self.state.numberOfPasses = ko.observable(1);
             self.state.isConnecting = ko.observable(undefined);
 
@@ -279,7 +279,7 @@ $(function () {
         };
 
         self.onAllBound = function (allViewModels) {
-            self._force_reload_on_inconsitent_version();
+            self.force_reload_if_required();
 
             var tabs = $('#mrbeam-main-tabs a[data-toggle="tab"]');
             tabs.on("show", function (e) {
@@ -315,7 +315,8 @@ $(function () {
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display
-            self.state._processProgressData = function () {};
+            self.state._processProgressData = function () {
+            };
         };
 
         self.onStartupComplete = function () {
@@ -326,10 +327,12 @@ $(function () {
         };
 
         self.onEventMrbPluginVersion = function (payload) {
-            if ("version" in payload || "is_first_run" in payload) {
-                self._force_reload_on_inconsitent_version(
+            if (payload?.version || payload?.is_first_run ||
+                payload?.mrb_state?.laser_model) {
+                self.force_reload_if_required(
                     payload["version"],
-                    payload["is_first_run"]
+                    payload["is_first_run"],
+                    payload["mrb_state"]["laser_model"].toString()
                 );
             }
         };
@@ -366,41 +369,50 @@ $(function () {
          * @private
          * @param backend_version (optional) If no version is given the function reads it from self.settings
          * @param isFirstRun (optional) If no firstRun flag is given the function reads it from self.settings
+         * @param laserHeadModel (optional) If no laserHeadModel flag is given the function reads it from self.settings
          */
-        self._force_reload_on_inconsitent_version = function (
+        self.force_reload_if_required = function (
             backend_version,
-            isFirstRun
+            isFirstRun,
+            laserHeadModel
         ) {
-            backend_version =
-                backend_version ||
-                self.settings.settings.plugins.mrbeam._version();
-            if (isFirstRun === undefined) {
-                isFirstRun = self.settings.settings.plugins.mrbeam.isFirstRun();
+            if (self.settings.settings?.plugins?.mrbeam) {
+                let mrb_settings = self.settings.settings.plugins.mrbeam;
+                backend_version = backend_version ? backend_version : mrb_settings._version();
+                isFirstRun = isFirstRun ? isFirstRun : mrb_settings.isFirstRun();
+                laserHeadModel = laserHeadModel ? laserHeadModel : mrb_settings.laserhead.model().toString();
             }
             if (
-                backend_version != BEAMOS_VERSION ||
-                isFirstRun != CONFIG_FIRST_RUN
+                backend_version !== BEAMOS_VERSION ||
+                isFirstRun !== CONFIG_FIRST_RUN ||
+                laserHeadModel !== MRBEAM_LASER_HEAD_MODEL
             ) {
                 console.log(
                     "Frontend reload check: RELOAD! (version: frontend=" +
-                        BEAMOS_VERSION +
-                        ", backend=" +
-                        backend_version +
-                        ", isFirstRun: frontend=" +
-                        CONFIG_FIRST_RUN +
-                        ", backend=" +
-                        isFirstRun +
-                        ")"
+                    BEAMOS_VERSION +
+                    ", backend=" +
+                    backend_version +
+                    ", isFirstRun: frontend=" +
+                    CONFIG_FIRST_RUN +
+                    ", backend=" +
+                    isFirstRun +
+                    ", laserheadModel: frontend=" +
+                    MRBEAM_LASER_HEAD_MODEL +
+                    ", backend=" +
+                    laserHeadModel +
+                    ")"
                 );
                 console.log("Reloading frontend...");
                 window.location.href = "/?ts=" + Date.now();
             } else {
                 console.log(
                     "Frontend reload check: OK (version: " +
-                        BEAMOS_VERSION +
-                        ", isFirstRun: " +
-                        CONFIG_FIRST_RUN +
-                        ")"
+                    BEAMOS_VERSION +
+                    ", isFirstRun: " +
+                    CONFIG_FIRST_RUN +
+                    ", laserheadModel: " +
+                    MRBEAM_LASER_HEAD_MODEL +
+                    ")"
                 );
             }
         };
@@ -506,7 +518,7 @@ $(function () {
             if (self.storedSocketData.length > 0) {
                 console.log(
                     "Handling stored socked data: " +
-                        self.storedSocketData.length
+                    self.storedSocketData.length
                 );
                 for (var i = 0; i < self.storedSocketData.length; i++) {
                     self._fromData(
@@ -524,7 +536,7 @@ $(function () {
             self.state.isFlashing(data.flags.flashing);
             self.state.isConnecting(
                 data.text === "Connecting" ||
-                    data.text === "Opening serial port"
+                data.text === "Opening serial port"
             );
         };
 
@@ -537,9 +549,9 @@ $(function () {
                 isNaN(data[0]) ||
                 isNaN(data[1])
             ) {
-                self.state.currentPos({ x: 0, y: 0 });
+                self.state.currentPos({x: 0, y: 0});
             } else {
-                self.state.currentPos({ x: data[0], y: data[1] });
+                self.state.currentPos({x: data[0], y: data[1]});
             }
         };
 
@@ -706,7 +718,7 @@ $(function () {
                 "/" +
                 payload.gcode;
             var data = {
-                refs: { resource: url },
+                refs: {resource: url},
                 origin: payload.gcode_location,
                 path: payload.gcode,
             };
