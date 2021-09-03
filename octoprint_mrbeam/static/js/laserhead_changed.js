@@ -22,7 +22,6 @@ $(function () {
             };
             OctoPrint.simpleApiCommand("mrbeam", "laserhead_changed", data)
                 .done(function (response) {
-                    self.settings.requestData();
                     console.log(
                         "simpleApiCall response for saving laserhead change detection: ",
                         response
