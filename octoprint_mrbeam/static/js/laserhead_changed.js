@@ -10,14 +10,13 @@ $(function () {
             if (
                 self.loginState.currentUser?.()?.active
             ) {
-                let laserheadChanged = self.settings.settings.plugins.mrbeam.laserheadChanged();
-                if (laserheadChanged) {
+                if (self.settings.settings.plugins.mrbeam.laserheadChanged()) {
                     $("#laserhead_changed").modal("show");
                 }
             }
         };
 
-        self.laserheadChangedDetected = function (){
+        self.laserheadChangeAcknowledged = function (){
             let data = {
                 laserheadChanged: false,
             };
