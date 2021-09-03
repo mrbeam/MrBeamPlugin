@@ -355,6 +355,13 @@ $(function () {
                 hints: "",
                 safety_notes: "",
             },
+            "Wood Sticker": {
+                name: gettext("Wood Sticker"),
+                img: "Wood-Sticker.jpg",
+                description: "",
+                hints: "",
+                safety_notes: "",
+            },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
     }
