@@ -74,6 +74,9 @@ class LaserheadHandler(object):
                 self._current_used_lh_serial = lh_data["main"]["serial"]
                 self._current_used_lh_model = self._get_lh_model(lh_data)
                 if self._current_used_lh_serial != self._last_used_lh_serial:
+                    if self._current_used_lh_model == 'S':
+                        self._settings.set_boolean(["laserheadChanged"], True)
+                        self._settings.save()
                     self._logger.info(
                         "Laserhead changed: s/n:%s model:%s -> s/n:%s model:%s",
                         self._last_used_lh_serial,
