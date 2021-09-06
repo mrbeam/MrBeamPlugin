@@ -17,15 +17,9 @@ $(function () {
         };
 
         self.laserheadChangeAcknowledged = function (){
-            let data = {
-                laserheadChanged: false,
-            };
-            OctoPrint.simpleApiCommand("mrbeam", "laserhead_changed", data)
-                .done(function (response) {
-                    console.log(
-                        "simpleApiCall response for saving laserhead change detection: ",
-                        response
-                    );
+            OctoPrint.simpleApiCommand("mrbeam", "laserhead_change_acknowledged", {})
+                .done(function () {
+                    console.log("simpleApiCall response for saving laserhead change detection: ");
                 })
                 .fail(function () {
                     self.settings.requestData();

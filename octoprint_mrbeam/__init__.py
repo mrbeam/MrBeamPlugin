@@ -1863,7 +1863,7 @@ class MrBeamPlugin(
             take_undistorted_picture=[],
             # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
             focus_reminder=[],
-            laserhead_changed=[],
+            laserhead_change_acknowledged=[],
             remember_markers_across_sessions=[],
             review_data=[],
             reset_prefilter_usage=[],
@@ -1926,8 +1926,9 @@ class MrBeamPlugin(
             return NO_CONTENT
         elif command == "focus_reminder":
             return self.focus_reminder(data)
-        elif command == "laserhead_changed":
-            return self.laserhead_changed(data)
+        elif command == "laserhead_change_acknowledged":
+            self._settings.set_boolean(["laserheadChanged"], False)
+            self._settings.save()
         elif command == "remember_markers_across_sessions":
             return self.remember_markers_across_sessions(data)
         elif command == "review_data":
@@ -2118,12 +2119,6 @@ class MrBeamPlugin(
     def focus_reminder(self, data):
         if "focusReminder" in data:
             self._settings.set_boolean(["focusReminder"], data["focusReminder"])
-            self._settings.save()  # This is necessary because without it the value is not saved
-        return NO_CONTENT
-
-    def laserhead_changed(self, data):
-        if "laserheadChanged" in data:
-            self._settings.set_boolean(["laserheadChanged"], data["laserheadChanged"])
             self._settings.save()  # This is necessary because without it the value is not saved
         return NO_CONTENT
 
