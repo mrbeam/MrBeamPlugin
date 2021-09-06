@@ -386,6 +386,7 @@ class MrBeamPlugin(
                 doNotAskAgain=False,
             ),
             focusReminder=True,
+            laserheadChanged=False,
             analyticsEnabled=None,
             gcodeAutoDeletion=True,
             analytics=dict(
@@ -482,6 +483,7 @@ class MrBeamPlugin(
                 doNotAskAgain=self._settings.get(["review", "doNotAskAgain"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
+            laserheadChanged=self._settings.get(["laserheadChanged"]),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
             laserhead=dict(
                 serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
@@ -561,6 +563,10 @@ class MrBeamPlugin(
                 )
             if "focusReminder" in data:
                 self._settings.set_boolean(["focusReminder"], data["focusReminder"])
+            if "laserheadChanged" in data:
+                self._settings.set_boolean(
+                    ["laserheadChanged"], data["laserheadChanged"]
+                )
             if "gcodeAutoDeletion" in data:
                 self.set_gcode_deletion(data["gcodeAutoDeletion"])
             if "dev" in data and "software_tier" in data["dev"]:
@@ -653,6 +659,7 @@ class MrBeamPlugin(
                 "js/lib/hopscotch.js",
                 "js/tour_viewmodel.js",
                 "js/feedback_widget.js",
+                "js/laserhead_changed.js",
                 "js/material_settings.js",
                 "js/analytics.js",
                 "js/maintenance.js",
@@ -1856,6 +1863,7 @@ class MrBeamPlugin(
             take_undistorted_picture=[],
             # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
             focus_reminder=[],
+            laserhead_change_acknowledged=[],
             remember_markers_across_sessions=[],
             review_data=[],
             reset_prefilter_usage=[],
@@ -1918,6 +1926,9 @@ class MrBeamPlugin(
             return NO_CONTENT
         elif command == "focus_reminder":
             return self.focus_reminder(data)
+        elif command == "laserhead_change_acknowledged":
+            self._settings.set_boolean(["laserheadChanged"], False)
+            self._settings.save()
         elif command == "remember_markers_across_sessions":
             return self.remember_markers_across_sessions(data)
         elif command == "review_data":
