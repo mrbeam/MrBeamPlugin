@@ -246,8 +246,15 @@ $(function () {
         self.save_material_settings = function () {
             var name = self.save_custom_material_name();
             var key = self._replace_non_ascii(name).toLowerCase();
-            if(self.incompatible_custom_materials_keys().includes(key)){
-                key = self._replace_non_ascii(MRBEAM_LASER_HEAD_SERIAL).toLowerCase() + " " + key;
+            // Change key if it overrides incompatible custom materials
+            if (self.incompatible_custom_materials_keys().includes(key)) {
+                let targetSavingMaterial = Object.values(self.custom_materials())
+                    .find(element => element.name === name && element.compatible);
+                if (targetSavingMaterial) {
+                    key = targetSavingMaterial.key;
+                } else {
+                    key = self._replace_non_ascii(MRBEAM_LASER_HEAD_SERIAL).toLowerCase() + " " + key;
+                }
             }
             var thickness = Math.max(
                 parseFloat(self.save_custom_material_thickness(), 38)
@@ -370,7 +377,7 @@ $(function () {
                     var fm = self.filteredMaterials();
                     for (var i = 0; i < fm.length; i++) {
                         var my_material = fm[i];
-                        if (my_material.key === new_material.key) {
+                        if (my_material.name === new_material.name && my_material.laser_model === MRBEAM_LASER_HEAD_MODEL) {
                             self.selected_material(my_material);
                             self.selected_material_color(color);
                             self._set_available_material_thicknesses(
