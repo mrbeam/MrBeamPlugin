@@ -370,7 +370,7 @@ $(function () {
                     var fm = self.filteredMaterials();
                     for (var i = 0; i < fm.length; i++) {
                         var my_material = fm[i];
-                        if (my_material.name === new_material.name) {
+                        if (my_material.key === new_material.key) {
                             self.selected_material(my_material);
                             self.selected_material_color(color);
                             self._set_available_material_thicknesses(
