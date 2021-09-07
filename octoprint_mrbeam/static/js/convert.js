@@ -312,9 +312,6 @@ $(function () {
                 new_material.device_model = MRBEAM_MODEL;
                 new_material.custom = true;
                 new_material.v = BEAMOS_VERSION;
-                // Remove compatibility keys
-                delete new_material.compatible;
-                delete new_material.customBeforeElementContent;
             } else {
                 new_material = {
                     name: $("<div>").html(name).text(),

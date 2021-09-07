@@ -53,6 +53,10 @@ class Materials(object):
                 del material["laser_type"]
             if "model" in material:
                 material["device_model"] = material.pop("model")
+            if "compatible" in material:
+                material.pop("compatible")
+            if "customBeforeElementContent" in material:
+                material.pop("customBeforeElementContent")
 
             self.custom_materials[key.strip()] = material
             res = True
