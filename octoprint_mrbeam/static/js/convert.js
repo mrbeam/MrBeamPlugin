@@ -119,6 +119,7 @@ $(function () {
         self.has_engraving_proposal = ko.observable(false);
         self.has_cutting_proposal = ko.observable(false);
         self.custom_materials = ko.observable({});
+        self.incompatible_custom_materials_keys = ko.observableArray([]);
 
         self.customized_material = ko.observable(false);
         self.save_custom_material_image = ko.observable("");
@@ -186,16 +187,9 @@ $(function () {
                     self.save_custom_material_image(null);
                     self.save_custom_material_description("");
                 } else {
-                    if (!self.selected_material()?.compatible) {
-                        self.save_custom_material_name(
-                            gettext("Laser Model") + " "
-                            + MRBEAM_LASER_HEAD_MODEL + " - " + self.selected_material().name
-                        );
-                    } else {
-                        self.save_custom_material_name(
-                            self.selected_material().name
-                        );
-                    }
+                    self.save_custom_material_name(
+                        self.selected_material().name
+                    );
 
                     self.save_custom_material_image(
                         self.selected_material().img
@@ -252,6 +246,9 @@ $(function () {
         self.save_material_settings = function () {
             var name = self.save_custom_material_name();
             var key = self._replace_non_ascii(name).toLowerCase();
+            if(self.incompatible_custom_materials_keys().includes(key)){
+                key = self._replace_non_ascii(MRBEAM_LASER_HEAD_SERIAL).toLowerCase() + " " + key;
+            }
             var thickness = Math.max(
                 parseFloat(self.save_custom_material_thickness(), 38)
             );
@@ -656,6 +653,7 @@ $(function () {
                             m.customBeforeElementContent = '[S]';
                         }
                         if (!m.compatible) {
+                            self.incompatible_custom_materials_keys.push(materialKey);
                             m.safety_notes = gettext(
                                 "This is a custom setting you made for another laserhead.\n We recommend adjusting your saved custom material settings to your current laserhead.\n This will add a duplicate of your setting specific for the current laserhead model, your\n original ones will stay as they are in case you want to keep them."
                             );
