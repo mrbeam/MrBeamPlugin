@@ -15,6 +15,7 @@ SW_UPDATE_TIER_DEV = "DEV"
 DEFAULT_REPO_BRANCH_ID = {
     SW_UPDATE_TIER_PROD: "stable",
     SW_UPDATE_TIER_BETA: "beta",
+    SW_UPDATE_TIER_ALPHA: "alpha",
     SW_UPDATE_TIER_DEV: "develop",
 }
 
@@ -244,14 +245,16 @@ def _get_octo_plugin_description(module_id, tier, plugin, **kwargs):
     """Additionally get the version from plugin manager (doesn't it do that by default??)"""
     # Commented pluginInfo -> If the module is not installed, then it Should be.
     pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
-    # if pluginInfo is None:
-    #     return {}
+    if pluginInfo is None:
+        display_version = None
+    else:
+        display_version = pluginInfo.version
     if tier == SW_UPDATE_TIER_DEV:
         # Fix: the develop branches are not formatted as "mrbeam2-{tier}"
         _b = DEFAULT_REPO_BRANCH_ID[SW_UPDATE_TIER_DEV]
         kwargs.update(branch=_b, branch_default=_b)
     return _get_package_description(
-        module_id=module_id, tier=tier, displayVersion=pluginInfo.version, **kwargs
+        module_id=module_id, tier=tier, displayVersion=display_version, **kwargs
     )
 
 
