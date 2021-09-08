@@ -10,6 +10,7 @@ from util.pip_util import get_version_of_pip_module
 
 SW_UPDATE_TIER_PROD = "PROD"
 SW_UPDATE_TIER_BETA = "BETA"
+SW_UPDATE_TIER_ALPHA = "ALPHA"
 SW_UPDATE_TIER_DEV = "DEV"
 DEFAULT_REPO_BRANCH_ID = {
     SW_UPDATE_TIER_PROD: "stable",
@@ -64,40 +65,27 @@ def get_update_information(plugin):
 
 
 def software_channels_available(plugin):
-    res = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
-    try:
-        if plugin.is_dev_env():
-            res.append(SW_UPDATE_TIER_DEV)
-    except:
-        pass
-    return res
+    ret = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
+    if plugin.is_dev_env():
+        # fmt: off
+        ret.extend([SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_DEV,])
+        # fmt: on
+    return ret
 
 
+@logExceptions
 def switch_software_channel(plugin, channel):
     old_channel = plugin._settings.get(["dev", "software_tier"])
-
-    if (
-        channel in software_channels_available(plugin)
-        or (plugin.is_dev_env() and channel == SW_UPDATE_TIER_DEV)
-    ) and not channel == old_channel:
+    if channel in software_channels_available(plugin) and channel != old_channel:
         _logger.info("Switching software channel to: %s", channel)
         plugin._settings.set(["dev", "software_tier"], channel)
-
-        try:
-            sw_update_plugin = plugin._plugin_manager.get_plugin_info(
-                "softwareupdate"
-            ).implementation
-            sw_update_plugin._refresh_configured_checks = True
-
-            sw_update_plugin._version_cache = dict()
-
-            sw_update_plugin._version_cache_dirty = True
-
-            plugin.analytics_handler.add_software_channel_switch_event(
-                old_channel, channel
-            )
-        except:
-            _logger.exception("Exception while switching software channel: ")
+        # fmt: off
+        sw_update_plugin = plugin._plugin_manager.get_plugin_info("softwareupdate").implementation
+        # fmt: on
+        sw_update_plugin._refresh_configured_checks = True
+        sw_update_plugin._version_cache = dict()
+        sw_update_plugin._version_cache_dirty = True
+        plugin.analytics_handler.add_software_channel_switch_event(old_channel, channel)
 
 
 # def _config_octoprint(plugin, tier):
