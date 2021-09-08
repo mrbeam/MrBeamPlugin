@@ -296,7 +296,7 @@ def _get_package_description(
         branch = branch.format(tier=get_tier_by_id(tier))
     if "{tier}" in branch_default:
         branch_default = branch_default.format(tier=get_tier_by_id(tier))
-    if tier == SW_UPDATE_TIER_DEV:
+    if tier in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ALPHA):
         # adds pip upgrade flag in the develop tier so it will do a upgrade even without a version bump
         kwargs.update(pip_upgrade_flag=True)
     update_info = dict(
