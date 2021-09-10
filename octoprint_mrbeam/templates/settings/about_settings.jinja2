@@ -12,11 +12,17 @@
                 <ul>
                     <div><strong>{{ _('Name') }}:</strong> {{ hostname }}</div>
                     <div><strong>{{ _('Serial number') }}:</strong> {{ serial }}</div>
-                    {% if laserhead_serial %}
-                        <div><strong>{{ _('Laser head') }}:</strong> {{ laserhead_serial }}</div>
-                    {% endif %}
-                    {% if laserhead_model == 'S' %}
-                        <div><strong>{{ _('Laser model') }}:</strong> {{ laserhead_model }}</div>
+                    {% if laserhead_serial or laserhead_model == 'S' %}
+                        <div><strong>{{ _('Laser head') }}:</strong>
+                        <ul style="list-style-type: none;">
+                        {% if laserhead_serial %}
+                            <li><strong>{{ _('Serial number') }}:</strong> {{ laserhead_serial }}</li>
+                        {% endif %}
+                        {% if laserhead_model == 'S' %}
+                            <li><strong>{{ _('Model') }}:</strong> {{ laserhead_model }}</li>
+                        {% endif %}
+                        </ul>
+                        </div>
                     {% endif %}
                     {% if mac_addrs %}
                     <div><strong>{{ _('Network interfaces') }}:</strong>
