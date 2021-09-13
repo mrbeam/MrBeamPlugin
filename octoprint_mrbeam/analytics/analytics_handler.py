@@ -401,11 +401,9 @@ class AnalyticsHandler(object):
 
     def add_cutting_parameters(self, cut_details):
         try:
-            cut_details.update(
-                {
-                    ak.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
-                }
-            )
+            # fmt: off
+            cut_details[ak.Device.LaserHead.HEAD_MODEL_ID] = self._laserhead_handler.get_current_used_lh_model_id()
+            # fmt: on
             self._add_job_event(ak.Job.Event.Slicing.CONV_CUT, payload=cut_details)
         except Exception as e:
             self._logger.exception(
@@ -913,11 +911,11 @@ class AnalyticsHandler(object):
     def _init_new_job(self):
         self._cleanup_job()
         self._current_job_id = "j_{}_{}".format(self._snr, time.time())
+        # fmt: off
         payload = {
-            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()[
-                "model"
-            ],
+            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()["model"],
         }
+        # fmt: on
         self._add_job_event(ak.Job.Event.LASERJOB_STARTED, payload=payload)
 
     # -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
