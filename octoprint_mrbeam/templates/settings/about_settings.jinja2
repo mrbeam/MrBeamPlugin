@@ -4,7 +4,7 @@
     {#    Download link is language specific  #}
     {% set mrbeamorg_downloads = _('https://mr-beam.org/en/downloads/') %}
 
-    <div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
+    <div class="scrollable">
 
         <div class="control-group">
             <h5>{{ product_name }}</h5>
@@ -14,7 +14,7 @@
                     <div><strong>{{ _('Serial number') }}:</strong> {{ serial }}</div>
                     {% if laserhead_serial or laserhead_model == 'S' %}
                         <div><strong>{{ _('Laser head') }}:</strong>
-                        <ul style="list-style-type: none;">
+                        <ul class="list-unstyled">
                         {% if laserhead_serial %}
                             <li><strong>{{ _('Serial number') }}:</strong> {{ laserhead_serial }}</li>
                         {% endif %}
@@ -26,7 +26,7 @@
                     {% endif %}
                     {% if mac_addrs %}
                     <div><strong>{{ _('Network interfaces') }}:</strong>
-						<ul style="list-style-type: none;">
+						<ul class="list-unstyled">
 							{% for ifc, mac in mac_addrs.iteritems() %}
 							<li>{{ ifc }} (MAC: {{ mac }})</li>
 							{% endfor %}
