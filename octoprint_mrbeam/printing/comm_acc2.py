@@ -65,6 +65,10 @@ class MachineCom(object):
     #
     # adds checksums
     GRBL_VERSION_2019_MRB_CHECKSUM = "0.9g_20190327_d2868b9"
+    #
+    # fixes burn marks
+    GRBL_VERSION_20210714_d5e31ee = "0.9g_20210714_d5e31ee"
+
     GRBL_FEAT_BLOCK_CHECKSUMS = (
         GRBL_VERSION_20170919_22270fa,
         GRBL_VERSION_20180223_61638c5,
@@ -73,7 +77,7 @@ class MachineCom(object):
     )
     #
     #
-    GRBL_DEFAULT_VERSION = GRBL_VERSION_2019_MRB_CHECKSUM
+    GRBL_DEFAULT_VERSION = GRBL_VERSION_20210714_d5e31ee
     ##########################################################
 
     GRBL_SETTINGS_READ_WINDOW = 10.0
