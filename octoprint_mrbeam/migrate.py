@@ -38,6 +38,7 @@ class Migration(object):
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
     VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.10.2"
     VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS = "0.9.8"
+    VERSION_UPDATE_FORCE_FOCUS_REMINDER = "0.10.0"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
@@ -235,6 +236,13 @@ class Migration(object):
                     equal_ok=True,
                 ):
                     self.update_custom_material_settings()
+
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    self.VERSION_UPDATE_FORCE_FOCUS_REMINDER,
+                    equal_ok=False,
+                ):
+                    self.plugin._settings.set_boolean(["focusReminder"], True).save()
 
                 # migrations end
 
