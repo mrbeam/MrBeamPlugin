@@ -2238,6 +2238,16 @@ input.search-query,
     animation: spin 2s infinite linear;
 }
 
+#settings_mrbeam_about .list-unstyled{
+    list-style-type: none;
+}
+
+#settings_mrbeam_about .scrollable{
+    padding-bottom:2em;
+    overflow-y: auto;
+    height: calc(100vh - 150px);
+}
+
 @-webkit-keyframes pulse {
     0% {
         -webkit-transform: scale(1);
