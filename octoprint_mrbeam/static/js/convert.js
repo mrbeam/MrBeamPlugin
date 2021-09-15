@@ -148,8 +148,10 @@ $(function () {
             if (mat !== null) return mat === null ? "" : mat.img;
         });
         self.selected_material_compatibility = ko.computed(function () {
-            return !(self.selected_material() !== null &&
-                !self.selected_material()?.compatible);
+            console.log("---> ", self.selected_material()?.compatible);
+                return !(self.selected_material() !== null &&
+                    'compatible' in self.selected_material() &&
+                    !self.selected_material().compatible);
         });
 
         self.load_standard_materials = function () {
