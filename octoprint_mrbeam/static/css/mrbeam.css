@@ -2606,6 +2606,18 @@ input.search-query,
 
 #laserhead_focus_reminder_alert {
     clear: both;
+    color: #e25303;
+    font-weight: bold;
+}
+
+#laserhead_focus_reminder_alert i {
+    float: left;
+    font-size: 30px;
+}
+
+#laserhead_focus_reminder_alert span {
+    display: flex;
+    margin-left: 40px;
 }
 
 /*
