@@ -342,6 +342,10 @@ class MachineCom(object):
                 and _mrbeam_plugin_implementation._settings.get(
                     ["grbl", "auto_update_file"]
                 )
+                and self._grbl_version
+                != mrbeam_plugin_implementation._settings.get(
+                    ["grbl", "auto_update_version"]
+                )
             ):
                 self._logger.info(
                     "GRBL auto updating to version: %s, file: %s",
