@@ -586,6 +586,11 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 self.plugin._settings.get(["grbl_version_lastknown"]),
                 force=True,
             )
+            self.plugin._settings.set(
+                ["grbl_version_lastknown"],
+                None,
+                force=True,
+            )
         self.plugin._settings.set(
             ["grbl", "auto_update_version"], self.GRBL_AUTO_UPDATE_VERSION, force=True
         )
