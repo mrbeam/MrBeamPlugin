@@ -148,7 +148,6 @@ $(function () {
             if (mat !== null) return mat === null ? "" : mat.img;
         });
         self.selected_material_compatibility = ko.computed(function () {
-            console.log("---> ", self.selected_material()?.compatible);
                 return !(self.selected_material() !== null &&
                     'compatible' in self.selected_material() &&
                     !self.selected_material().compatible);
