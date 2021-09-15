@@ -339,15 +339,23 @@ class MachineCom(object):
 
             if (
                 self.grbl_auto_update_enabled
-                and self._laserCutterProfile["grbl"]["auto_update_file"]
+                and _mrbeam_plugin_implementation._settings.get(
+                    ["grbl", "auto_update_file"]
+                )
             ):
                 self._logger.info(
                     "GRBL auto updating to version: %s, file: %s",
-                    self._laserCutterProfile["grbl"]["auto_update_version"],
-                    self._laserCutterProfile["grbl"]["auto_update_file"],
+                    _mrbeam_plugin_implementation._settings.get(
+                        ["grbl", "auto_update_version"]
+                    ),
+                    _mrbeam_plugin_implementation._settings.get(
+                        ["grbl", "auto_update_file"]
+                    ),
                 )
                 self.flash_grbl(
-                    grbl_file=self._laserCutterProfile["grbl"]["auto_update_file"],
+                    grbl_file=_mrbeam_plugin_implementation._settings.get(
+                        ["grbl", "auto_update_file"]
+                    ),
                     is_connected=False,
                 )
 
@@ -1894,37 +1902,45 @@ class MachineCom(object):
 
     def reset_grbl_auto_update_config(self):
         """
-        Resets grbl auto update configuration in lasercutterProfile if current grbl version is expected version.
+        Resets grbl auto update configuration in octoprint settings if current grbl version is expected version.
         This makes sure that once the auto update got executed sucessfully it's not done again and again.
         Only has effect IF:
          - grbl_auto_update_enabled in config.yaml is True (default)
         """
         if (
             self.grbl_auto_update_enabled
-            and self._laserCutterProfile["grbl"]["auto_update_version"] is not None
+            and _mrbeam_plugin_implementation._settings.get(
+                ["grbl", "auto_update_version"]
+            )
+            is not None
         ):
-            if (
-                self._grbl_version
-                == self._laserCutterProfile["grbl"]["auto_update_version"]
+            if self._grbl_version == _mrbeam_plugin_implementation._settings.get(
+                ["grbl", "auto_update_version"]
             ):
                 self._logger.info(
-                    "Removing grbl auto update flags from lasercutterprofile..."
+                    "Removing grbl auto update flags from octoprint settings..."
                 )
                 try:
-                    self._laserCutterProfile["grbl"]["auto_update_file"] = None
-                    self._laserCutterProfile["grbl"]["auto_update_version"] = None
-                    laserCutterProfileManager().save(
-                        self._laserCutterProfile, allow_overwrite=True
+                    _mrbeam_plugin_implementation._settings.set(
+                        ["grbl", "auto_update_version"], None, force=True
                     )
+                    _mrbeam_plugin_implementation._settings.set(
+                        ["grbl", "auto_update_file"], None, force=True
+                    )
+                    _mrbeam_plugin_implementation._settings.save()
                 except:
                     self._logger.exception(
-                        "Exception while saving lasercutterProfile changes to auto update controls: "
+                        "Exception while saving Mr Beam settings changes for auto update controls"
                     )
             else:
                 self._logger.warn(
                     "GRBL auto update still set: auto_update_file: %s, auto_update_version: %s, current grbl version: %s",
-                    self._laserCutterProfile["grbl"]["auto_update_file"],
-                    self._laserCutterProfile["grbl"]["auto_update_version"],
+                    _mrbeam_plugin_implementation._settings.get(
+                        ["grbl", "auto_update_file"]
+                    ),
+                    _mrbeam_plugin_implementation._settings.get(
+                        ["grbl", "auto_update_version"]
+                    ),
                     self._grbl_version,
                 )
 

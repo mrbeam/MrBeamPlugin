@@ -51,10 +51,6 @@ profile = dict(
         resetOnConnect=True,
         # legacy ?
         homing_debounce=1,
-        # GRBL auto update configuration
-        auto_update_file=None,
-        auto_update_version=None,
-        # versions=['0.9g_22270fa', '0.9g_20180223_61638c5'],
         # GRBL settings that will get synced to GRBL
         settings_count=33,
         settings={

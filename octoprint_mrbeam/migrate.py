@@ -137,7 +137,7 @@ class Migration(object):
                 ):
                     self.auto_update_grbl()
                 if (
-                    self.plugin._settings.get(["grbl_version_lastknown"])
+                    self.plugin._settings.get(["grbl", "version_lastknown"])
                     in self.GRBL_VERSIONS_NEED_UPDATE
                 ):
                     self.auto_update_grbl()
@@ -579,10 +579,20 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def auto_update_grbl(self):
         self._logger.info("auto_update_grbl() ")
-        default_profile = laserCutterProfileManager().get_default()
-        default_profile["grbl"]["auto_update_version"] = self.GRBL_AUTO_UPDATE_VERSION
-        default_profile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
-        laserCutterProfileManager().save(default_profile, allow_overwrite=True)
+        # migrate version last_known
+        if self.plugin._settings.get(["grbl_version_lastknown"]):
+            self.plugin._settings.set(
+                ["grbl", "version_lastknown"],
+                self.plugin._settings.get(["grbl_version_lastknown"]),
+                force=True,
+            )
+        self.plugin._settings.set(
+            ["grbl", "auto_update_version"], self.GRBL_AUTO_UPDATE_VERSION, force=True
+        )
+        self.plugin._settings.set(
+            ["grbl", "auto_update_file"], self.GRBL_AUTO_UPDATE_FILE, force=True
+        )
+        self.plugin._settings.save()
 
     def inflate_file_system(self):
         self._logger.info("inflate_file_system() ")
