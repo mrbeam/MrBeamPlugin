@@ -336,14 +336,15 @@ class MachineCom(object):
                 terminal_as_comm=True,
             )
             self._changeState(self.STATE_CONNECTING)
-
             if (
                 self.grbl_auto_update_enabled
                 and _mrbeam_plugin_implementation._settings.get(
                     ["grbl", "auto_update_file"]
                 )
-                and self._grbl_version
-                != mrbeam_plugin_implementation._settings.get(
+                and _mrbeam_plugin_implementation._settings.get(
+                    ["grbl", "version_lastknown"]
+                )
+                != _mrbeam_plugin_implementation._settings.get(
                     ["grbl", "auto_update_version"]
                 )
             ):
