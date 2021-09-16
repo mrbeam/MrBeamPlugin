@@ -29,7 +29,8 @@ class LaserheadHandler(object):
 
         self._lh_cache = {}
         self._last_used_lh_serial = None
-        self._last_used_lh_model = None
+        self._last_used_lh_model_string = None
+        self._last_used_lh_model_id = None
         self._correction_settings = {}
         self._laser_heads_file = os.path.join(
             self._settings.getBaseFolder("base"),
@@ -38,8 +39,8 @@ class LaserheadHandler(object):
         self._load_laser_heads_file()  # Loads correction_settings, last_used_lh_serial and lh_cache
 
         self._current_used_lh_serial = self._last_used_lh_serial
-        self._current_used_lh_model = self._last_used_lh_model
-        self._current_used_lh_model_id = None
+        self._current_used_lh_model_string = self._last_used_lh_model_string
+        self._current_used_lh_model_id = self._last_used_lh_model_id
 
         self._event_bus.subscribe(
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
@@ -72,17 +73,17 @@ class LaserheadHandler(object):
             if self._valid_lh_data(lh_data):
                 self._logger.info("Laserhead: %s", lh_data)
                 self._current_used_lh_serial = lh_data["main"]["serial"]
-                self._current_used_lh_model = self._get_lh_model(lh_data)
+                self._current_used_lh_model_string = self._get_lh_model(lh_data)
                 if self._current_used_lh_serial != self._last_used_lh_serial:
-                    if self._current_used_lh_model == 'S':
+                    if self._current_used_lh_model_string == "S":
                         self._settings.set_boolean(["laserheadChanged"], True)
                         self._settings.save()
                     self._logger.info(
                         "Laserhead changed: s/n:%s model:%s -> s/n:%s model:%s",
                         self._last_used_lh_serial,
-                        self._last_used_lh_model,
+                        self._last_used_lh_model_string,
                         self._current_used_lh_serial,
-                        self._current_used_lh_model,
+                        self._current_used_lh_model_string,
                     )
                 self._write_lh_data_to_cache(lh_data)
 
@@ -94,7 +95,7 @@ class LaserheadHandler(object):
                     MrBeamEvents.LASER_HEAD_READ,
                     dict(
                         serial=self._current_used_lh_serial,
-                        model=self._current_used_lh_model,
+                        model=self._current_used_lh_model_string,
                     ),
                 )
 
@@ -184,7 +185,7 @@ class LaserheadHandler(object):
         if self._current_used_lh_serial:
             data = dict(
                 serial=self._current_used_lh_serial,
-                model=self._current_used_lh_model,
+                model=self._current_used_lh_model_string,
                 info=self._lh_cache[self._current_used_lh_serial],
             )
         else:
@@ -251,7 +252,7 @@ class LaserheadHandler(object):
 
             # laserhead model S fix for correction factor
             # TODO fix this GOAL_MAX problem for all laser heads in a separate issue SW-394
-            if self._current_used_lh_model == "S":
+            if self._current_used_lh_model_string == "S":
                 if target_power < 0 or target_power >= p_85:
                     self._logger.warn(
                         "Laserhead target_power ({target}) over p_85 ({p_85}) => target_power will be set to GOAL_DEFAULT ({default}) for the calculation of the correction factor".format(
@@ -325,8 +326,13 @@ class LaserheadHandler(object):
                     if "last_used_lh_serial" in data:
                         self._last_used_lh_serial = data["last_used_lh_serial"]
 
-                    if "last_used_lh_model" in data:
-                        self._last_used_lh_model = data["last_used_lh_model"]
+                    if "last_used_lh_model_string" in data:
+                        self._last_used_lh_model_string = data[
+                            "last_used_lh_model_string"
+                        ]
+
+                    if "last_used_lh_model_id" in data:
+                        self._last_used_lh_model_id = data["last_used_lh_model_id"]
 
                     if "correction_settings" in data:
                         self._correction_settings = data["correction_settings"]
@@ -342,7 +348,8 @@ class LaserheadHandler(object):
             laser_heads=self._lh_cache,
             correction_settings=self._correction_settings,
             last_used_lh_serial=self._current_used_lh_serial,
-            last_used_lh_model=self._current_used_lh_model,
+            last_used_lh_model_string=self._current_used_lh_model_string,
+            last_used_lh_model_id=self._current_used_lh_model_id,
         )
         file = self._laser_heads_file if file is None else file
         try:
