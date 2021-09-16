@@ -558,12 +558,10 @@ class AnalyticsHandler(object):
     def _event_startup(self, event, payload):
         # Here the MrBeamPlugin is not fully initialized yet, so we have to access this data direct from the plugin
         payload = {
-            ak.Device.LaserHead.SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()[
+            ak.Device.LaserHead.LAST_USED_SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()[
                 "serial"
             ],
-            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()[
-                "model"
-            ],
+            ak.Device.LaserHead.LAST_USED_HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
             ak.Device.Usage.USERS: len(self._plugin._user_manager._users),
         }
         self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
