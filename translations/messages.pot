@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-09-17 13:14+0200\n"
+"POT-Creation-Date: 2021-09-17 14:20+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2183,8 +2183,8 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:12
 msgid ""
-"Read about what changes you can expect with a new and improved Laserhead "
-"Mr Beam II dreamcut [S]."
+"Read about the changes you can expect with the new and improved MrBeam II"
+" dreamcut [S] Laserhead."
 msgstr ""
 
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:12
