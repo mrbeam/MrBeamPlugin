@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-09-07 15:29+0200\n"
-"PO-Revision-Date: 2021-09-07 15:30+0200\n"
+"POT-Creation-Date: 2021-09-17 14:20+0200\n"
+"PO-Revision-Date: 2021-09-17 14:21+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -50,27 +50,27 @@ msgstr ""
 "Bitte kalibriere die Kamera unter Einstellungen -> Kamera -> "
 "Eckenkalibrierung."
 
-#: octoprint_mrbeam/static/js/convert.js:185
+#: octoprint_mrbeam/static/js/convert.js:186
 msgid "My"
 msgstr "Mein"
 
-#: octoprint_mrbeam/static/js/convert.js:308
-#: octoprint_mrbeam/static/js/convert.js:326
+#: octoprint_mrbeam/static/js/convert.js:309
+#: octoprint_mrbeam/static/js/convert.js:327
 msgid "Custom material setting! Use at your own risk."
 msgstr ""
 "Die Nutzung benutzerdefinierten Materialeinstellungen erfolgt auf eigene "
 "Gefahr."
 
-#: octoprint_mrbeam/static/js/convert.js:396
-#: octoprint_mrbeam/static/js/convert.js:441
-#: octoprint_mrbeam/static/js/convert.js:1661
+#: octoprint_mrbeam/static/js/convert.js:397
+#: octoprint_mrbeam/static/js/convert.js:442
+#: octoprint_mrbeam/static/js/convert.js:1662
 #: octoprint_mrbeam/static/js/wizard_analytics.js:79
 #: octoprint_mrbeam/static/js/wizard_gcode_deletion.js:41
 msgid "Error while saving settings!"
 msgstr "Fehler beim Speichern der Einstellungen!"
 
-#: octoprint_mrbeam/static/js/convert.js:398
-#: octoprint_mrbeam/static/js/convert.js:443
+#: octoprint_mrbeam/static/js/convert.js:399
+#: octoprint_mrbeam/static/js/convert.js:444
 #, python-format
 msgid ""
 "Unable to save your custom material settings at the moment.%(br)sCheck "
@@ -80,23 +80,23 @@ msgstr ""
 "gespeichert werden. %(br)sPrüfe die Verbindung zu Mr Beam und versuche es "
 "erneut."
 
-#: octoprint_mrbeam/static/js/convert.js:424
+#: octoprint_mrbeam/static/js/convert.js:425
 msgid "Custom Material Settings restored."
 msgstr "Wiederhergestellt."
 
-#: octoprint_mrbeam/static/js/convert.js:426
+#: octoprint_mrbeam/static/js/convert.js:427
 #, python-format
 msgid "Successfully restored %(number)d custom materials from file."
 msgstr ""
 "%(number)d benutzerdefinierten Materialeinstellungen wurden aus der Datei "
 "wiederhergestellt."
 
-#: octoprint_mrbeam/static/js/convert.js:542
+#: octoprint_mrbeam/static/js/convert.js:543
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:160
 msgid "engrave only"
 msgstr "nur Gravur"
 
-#: octoprint_mrbeam/static/js/convert.js:544
+#: octoprint_mrbeam/static/js/convert.js:545
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:159
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:377
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:131
@@ -108,7 +108,7 @@ msgstr "nur Gravur"
 msgid "mm"
 msgstr "mm"
 
-#: octoprint_mrbeam/static/js/convert.js:667
+#: octoprint_mrbeam/static/js/convert.js:668
 msgid ""
 "This is a custom setting you made for another laserhead.\n"
 " We recommend adjusting your saved custom material settings to your current "
@@ -126,7 +126,7 @@ msgstr ""
 "ursprünglichen Einstellungen bleiben erhalten, falls du sie behalten "
 "möchtest."
 
-#: octoprint_mrbeam/static/js/convert.js:733
+#: octoprint_mrbeam/static/js/convert.js:734
 msgid ""
 "Drag and drop this box in the Skip area if you want to skip cutting this "
 "color. Drop it in Engrave area if you just want to engrave it, or "
@@ -139,7 +139,7 @@ msgstr ""
 "neuen Schneideauftrag mit anderen Parametern, indem du es im unteren "
 "Abschnitt platzierst."
 
-#: octoprint_mrbeam/static/js/convert.js:1663
+#: octoprint_mrbeam/static/js/convert.js:1664
 #, python-format
 msgid ""
 "Unable to save your focus reminder state at the moment.%(br)sCheck "
@@ -148,32 +148,32 @@ msgstr ""
 "Deine Erinnerungs-Einstellungen können im Moment nicht gespeichert werden. "
 "%(br)sPrüfe die Verbindung zu Mr Beam und versuche es erneut."
 
-#: octoprint_mrbeam/static/js/convert.js:1706
+#: octoprint_mrbeam/static/js/convert.js:1707
 msgid "There is nothing to laser, all jobs are set to be skipped."
 msgstr ""
 "Es gibt nichts zum Lasern, alle Aufträge sind so eingestellt, dass sie "
 "übersprungen werden."
 
 # Sorry but the %(designType)s can only be %(laserJob)s, which is not supported for this material.
-#: octoprint_mrbeam/static/js/convert.js:1717
+#: octoprint_mrbeam/static/js/convert.js:1718
 msgid "engraved"
 msgstr "graviert"
 
 # Sorry but the %(designType)s can only be %(laserJob)s, which is not supported for this material.
-#: octoprint_mrbeam/static/js/convert.js:1720
+#: octoprint_mrbeam/static/js/convert.js:1721
 msgid "cut"
 msgstr "geschnitten"
 
-#: octoprint_mrbeam/static/js/convert.js:1724
+#: octoprint_mrbeam/static/js/convert.js:1725
 #: octoprint_mrbeam/templates/quick_text.jinja2:4
 msgid "Quick Text"
 msgstr "Quick Text"
 
-#: octoprint_mrbeam/static/js/convert.js:1726
+#: octoprint_mrbeam/static/js/convert.js:1727
 msgid "selected design"
 msgstr "ausgewähltes Design"
 
-#: octoprint_mrbeam/static/js/convert.js:1731
+#: octoprint_mrbeam/static/js/convert.js:1732
 #, python-format
 msgid ""
 "Sorry but the %(designType)s can only be %(laserJob)s, which is not "
@@ -182,12 +182,12 @@ msgstr ""
 "Sorry, die %(designType)s können nur %(laserJob)s werden. Das wird jedoch "
 "für dieses Material nicht unterstützt."
 
-#: octoprint_mrbeam/static/js/convert.js:1838
+#: octoprint_mrbeam/static/js/convert.js:1839
 #: octoprint_mrbeam/static/js/render_fills.js:445
 msgid "Conversion failed"
 msgstr "Konvertierung fehlgeschlagen"
 
-#: octoprint_mrbeam/static/js/convert.js:1840
+#: octoprint_mrbeam/static/js/convert.js:1841
 #, python-format
 msgid ""
 "Unable to start the conversion in the backend. Please try reloading this "
@@ -197,16 +197,16 @@ msgstr ""
 "diese Seite neu zu laden oder Mr Beam neu zu starten.%(br)s%(br)sContent "
 "length was %(length)s bytes."
 
-#: octoprint_mrbeam/static/js/convert.js:1857
+#: octoprint_mrbeam/static/js/convert.js:1858
 msgid "Parameter missing"
 msgstr "Parameter fehlt"
 
-#: octoprint_mrbeam/static/js/convert.js:1858
+#: octoprint_mrbeam/static/js/convert.js:1859
 msgid "Unable to start conversion because a parameter is missing."
 msgstr ""
 "Die Konvertierung konnte nicht gestartet werden, da ein Parameter fehlt."
 
-#: octoprint_mrbeam/static/js/convert.js:2055
+#: octoprint_mrbeam/static/js/convert.js:2056
 msgid ""
 "To free up some disk space you may want to perform one or all of the "
 "following suggestions:"
@@ -214,7 +214,7 @@ msgstr ""
 "Um etwas Speicherplatz freizugeben, könntest Du einen oder alle der "
 "folgenden Vorschläge ausführen:"
 
-#: octoprint_mrbeam/static/js/convert.js:2061
+#: octoprint_mrbeam/static/js/convert.js:2062
 msgid ""
 "Delete GCode files: Go to design library and click 'Only show GCode files' "
 "on the left. Here you can delete files from the according context menu."
@@ -223,7 +223,7 @@ msgstr ""
 "„Nur GCode-Dateien anzeigen“. Hier kannst Du Dateien über das entsprechende "
 "Kontextmenü löschen."
 
-#: octoprint_mrbeam/static/js/convert.js:2067
+#: octoprint_mrbeam/static/js/convert.js:2068
 msgid ""
 "Delete design files: Go to design library and click 'Only show design files' "
 "on the left. Here you can delete files from the according context menu."
@@ -232,7 +232,7 @@ msgstr ""
 "\"Nur Designdateien anzeigen'. Hier kannst Du Dateien aus dem entsprechenden "
 "Kontextmenü löschen."
 
-#: octoprint_mrbeam/static/js/convert.js:2073
+#: octoprint_mrbeam/static/js/convert.js:2074
 msgid ""
 "Delete log files: Go to Settings -> logs and delete old log files per click "
 "on the trash bin icon."
@@ -240,16 +240,16 @@ msgstr ""
 "Löschen von log-Dateien: Gehe zu Einstellungen -> logs und lösche alte log-"
 "Dateien, indem Du auf das Papierkorbsymbol klickst."
 
-#: octoprint_mrbeam/static/js/convert.js:2079
+#: octoprint_mrbeam/static/js/convert.js:2080
 #, python-format
 msgid "Find more details %(open)sonline%(close)s."
 msgstr "Mehr Details findest Du %(open)sonline%(close)s."
 
-#: octoprint_mrbeam/static/js/convert.js:2087
+#: octoprint_mrbeam/static/js/convert.js:2088
 msgid "Get more free disk space"
 msgstr "Mehr Disk-Speicherplatz frei machen"
 
-#: octoprint_mrbeam/static/js/convert.js:2354
+#: octoprint_mrbeam/static/js/convert.js:2355
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:492
 msgid "Cut "
 msgstr "Schneiden "
@@ -916,6 +916,10 @@ msgid "Beta"
 msgstr "Beta"
 
 #: octoprint_mrbeam/static/js/software_channel_selector.js:17
+msgid "Alpha"
+msgstr "Alpha"
+
+#: octoprint_mrbeam/static/js/software_channel_selector.js:18
 msgid "Develop"
 msgstr "Develop"
 
@@ -2529,7 +2533,24 @@ msgstr ""
 "benutzerdefinierten Material-Einstellungen, diese von dir selbst testen und "
 "abstimmen."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:16
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:12
+msgid ""
+"Read about the changes you can expect with the new and improved MrBeam II "
+"dreamcut [S] Laserhead."
+msgstr ""
+"Erfahre alles über die Änderungen, die du mit dem noch\n"
+"schnelleren Mr Beam II dreamcut [S] Laserkopf erwarten\n"
+"kannst."
+
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:12
+msgid "https://support.mr-beam.org/en/support/solutions/articles/43000640531"
+msgstr "https://support.mr-beam.org/de/support/solutions/articles/43000640531"
+
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:12
+msgid "Read more"
+msgstr "Mehr Informationen"
+
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:17
 #: octoprint_mrbeam/templates/quick_shape.jinja2:142
 #: octoprint_mrbeam/templates/quick_text.jinja2:38
 #: octoprint_mrbeam/templates/review.jinja2:56
@@ -3016,7 +3037,7 @@ msgstr "QuickstartGuide_de.pdf"
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:102
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:105
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:64
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:70
 msgid "Quickstart Guide"
 msgstr "Quickstart Guide"
 
@@ -3027,7 +3048,7 @@ msgstr "UserManual_de.pdf"
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:103
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:106
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:74
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:80
 msgid "User Manual"
 msgstr "Betriebsanleitung"
 
@@ -3841,7 +3862,7 @@ msgstr ""
 "Mr Beam Lasers wird das Bild weder veröffentlichen noch an Dritte verkaufen."
 
 # URL - do not translate/modify
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:98
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:104
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:10
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:215
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:9
@@ -4496,6 +4517,7 @@ msgid "About This Mr Beam"
 msgstr "Über diesen Mr Beam"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:14
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:19
 msgid "Serial number"
 msgstr "Seriennummer"
 
@@ -4504,132 +4526,132 @@ msgstr "Seriennummer"
 msgid "Laser head"
 msgstr "Laserkopf"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:19
-msgid "Laser model"
-msgstr "Laserkopf-Modell"
-
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:22
+msgid "Model"
+msgstr "Modell"
+
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:28
 msgid "Network interfaces"
 msgstr "Netzwerk-Schnittstellen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:38
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:44
 msgid "Mr Beam Plugin"
 msgstr "Mr Beam Plugin"
 
 # do not translate
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:40
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:46
 msgid "Image fingerprint"
 msgstr "Image-Fingerprint"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:41
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:47
 msgid "Software channel"
 msgstr "Software-Channel"
 
 # do not translate
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:42
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:48
 msgid "Environment"
 msgstr "Environment"
 
 # do not translate
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:43
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:49
 msgid "grbl"
 msgstr "grbl"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:61
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:67
 msgid "Documentation, Support and Privacy"
 msgstr "Dokumentation, Support und Datenschutz"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:72
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:91
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:78
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
 msgid "get the latest versions"
 msgstr "Bekomme die neuesten Versionen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:72
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:91
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:78
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
 msgid "online"
 msgstr "online"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:94
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:100
 msgid "Online Support Portal"
 msgstr "Online Support Portal"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:95
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:101
 msgid "Privacy Policies"
 msgstr "Datenschutzbestimmungen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:96
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:102
 msgid "Mr Beam Web Site"
 msgstr "Mr Beam Website"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:120
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:103
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:126
 msgid "find.mr-beam service"
 msgstr "find.mr-beam Service"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:98
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:104
 msgid "Mr Beam Analytics"
 msgstr "Mr Beam Analytics"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:106
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:112
 msgid "Links"
 msgstr "Links"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:109
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:115
 msgid "Website"
 msgstr "Webseite"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:110
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:116
 msgid "Social media"
 msgstr "Soziale Medien"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:119
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:125
 msgid "Official user group"
 msgstr "Offizielle User-Group"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:119
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:125
 msgid "on Facebook"
 msgstr "auf Facebook"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:119
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:125
 msgid "German"
 msgstr "Deutsch"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:121
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:127
 msgid "Online resources"
 msgstr "Online-Ressourcen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:121
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:127
 msgid "Mr Beam Downloads"
 msgstr "Mr Beam Downloads"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:122
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:128
 msgid "Source code"
 msgstr "Quellcode"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:123
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:129
 msgid "Recommend Mr Beam"
 msgstr "Mr Beam weiterempfehlen"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:123
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:129
 msgid "and earn cashback"
 msgstr "und Cashback verdienen"
 
@@ -5645,6 +5667,9 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
+
+#~ msgid "Laser model"
+#~ msgstr "Laserkopf-Modell"
 
 #~ msgid ""
 #~ "Mr Beam needs a short break to cool down. We'll continue the laser job as "
