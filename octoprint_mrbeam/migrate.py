@@ -235,7 +235,7 @@ class Migration(object):
                     self.VERSION_UPDATE_FORCE_FOCUS_REMINDER,
                     equal_ok=False,
                 ):
-                    self.plugin._settings.set_boolean(["focusReminder"], True).save()
+                    self.update_focus_reminder_setting()
 
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
@@ -982,4 +982,14 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             False,
             force=True,
         )
+        self.plugin._settings.save()
+
+    def update_focus_reminder_setting(self):
+        """
+        Updates the 'focusReminder' flag in settings
+        Enforce the flag to True so the user can see
+        the laser head removal warning at least once
+        """
+        self._logger.info("start update_focus_reminder_setting")
+        self.plugin._settings.set_boolean(["focusReminder"], True)
         self.plugin._settings.save()
