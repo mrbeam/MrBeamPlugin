@@ -332,7 +332,7 @@ $(function () {
                 self.force_reload_if_required(
                     payload["version"],
                     payload["is_first_run"],
-                    payload["mrb_state"]["laser_model"].toString()
+                    payload["mrb_state"]["laser_model"]
                 );
             }
         };
@@ -376,16 +376,22 @@ $(function () {
             isFirstRun,
             laserHeadModel
         ) {
+            if(laserHeadModel === 0){
+                laserHeadModel = laserHeadModel.toString();
+            }
             if (self.settings.settings?.plugins?.mrbeam) {
                 let mrb_settings = self.settings.settings.plugins.mrbeam;
                 backend_version = backend_version ? backend_version : mrb_settings._version();
                 isFirstRun = isFirstRun ? isFirstRun : mrb_settings.isFirstRun();
-                laserHeadModel = laserHeadModel ? laserHeadModel : mrb_settings.laserhead.model().toString();
+                if(mrb_settings?.laserhead?.model()){
+                    laserHeadModel = laserHeadModel ? laserHeadModel : mrb_settings.laserhead.model().toString();
+                }
             }
             if (
                 backend_version !== BEAMOS_VERSION ||
                 isFirstRun !== CONFIG_FIRST_RUN ||
-                laserHeadModel !== MRBEAM_LASER_HEAD_MODEL
+                (laserHeadModel !== null && laserHeadModel !== undefined &&
+                    laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
             ) {
                 console.log(
                     "Frontend reload check: RELOAD! (version: frontend=" +
