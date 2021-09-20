@@ -376,9 +376,7 @@ $(function () {
             isFirstRun,
             laserHeadModel
         ) {
-            if(laserHeadModel === 0){
-                laserHeadModel = laserHeadModel.toString();
-            }
+            laserHeadModel = laserHeadModel?.toString();
             if (self.settings.settings?.plugins?.mrbeam) {
                 let mrb_settings = self.settings.settings.plugins.mrbeam;
                 backend_version = backend_version ? backend_version : mrb_settings._version();
@@ -390,8 +388,7 @@ $(function () {
             if (
                 backend_version !== BEAMOS_VERSION ||
                 isFirstRun !== CONFIG_FIRST_RUN ||
-                (laserHeadModel !== null && laserHeadModel !== undefined &&
-                    laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
+                (laserHeadModel !== undefined && laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
             ) {
                 console.log(
                     "Frontend reload check: RELOAD! (version: frontend=" +
