@@ -59,7 +59,7 @@ def get_update_information(plugin):
                 _set_info_netconnectd_daemon(plugin, tier, beamos_date),
                 _set_info_iobeam(plugin, tier, beamos_date),
                 _set_info_mrb_hw_info(plugin, tier, beamos_date),
-                # _config_octoprint(plugin, tier),
+                _config_octoprint(plugin, tier),
             ],
         )
     )
@@ -89,16 +89,21 @@ def switch_software_channel(plugin, channel):
         plugin.analytics_handler.add_software_channel_switch_event(old_channel, channel)
 
 
-# def _config_octoprint(plugin, tier):
-#     return dict(
-#         octoprint=dict(
-#             checkout_folder="/home/pi/OctoPrint",
-#             pip="https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
-#             user="mrbeam",
-#             branch="mrbeam2-stable",
-#             prerelease=(tier == SW_UPDATE_TIER_DEV),
-#         )
-#     )
+def _config_octoprint(plugin, tier):
+    prerelease_channel = None
+    if tier in [SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_BETA]:
+        prerelease_channel = "mrbeam2-{tier}"
+
+    return _get_octo_plugin_description(
+        "octoprint",
+        tier,
+        plugin,
+        displayName="OctoPrint",
+        prerelease=(tier in [SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_BETA]),
+        prerelease_channel=prerelease_channel,
+        restart="octoprint",
+        pip="https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
+    )
 
 
 def _set_info_mrbeam_plugin(plugin, tier, beamos_date):
@@ -288,6 +293,7 @@ def _get_package_description(
     branch="mrbeam2-{tier}",
     branch_default="mrbeam2-{tier}",
     restart="environment",
+    prerelease_channel=None,
     **kwargs
 ):
     """Shorthand to create repo details for octoprint software update plugin to handle."""
@@ -296,6 +302,8 @@ def _get_package_description(
         branch = branch.format(tier=get_tier_by_id(tier))
     if "{tier}" in branch_default:
         branch_default = branch_default.format(tier=get_tier_by_id(tier))
+    if prerelease_channel and "{tier}" in prerelease_channel:
+        prerelease_channel = prerelease_channel.format(tier=get_tier_by_id(tier))
     if tier in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ALPHA):
         # adds pip upgrade flag in the develop tier so it will do a upgrade even without a version bump
         kwargs.update(pip_upgrade_flag=True)
@@ -309,6 +317,7 @@ def _get_package_description(
         branch=branch,
         branch_default=branch_default,
         restart=restart,
+        prerelease_channel=prerelease_channel,
         **kwargs
     )
     return {module_id: update_info}
