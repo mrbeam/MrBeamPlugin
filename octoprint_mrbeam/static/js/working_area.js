@@ -1050,7 +1050,7 @@ $(function () {
 
             // remove other unnecessary or invisible ("display=none") elements
             let removeElements = fragment.selectAll(
-                'metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
+                'title', 'metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
             );
             for (var i = 0; i < removeElements.length; i++) {
                 if (
