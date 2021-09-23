@@ -38,6 +38,7 @@ class Migration(object):
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
     VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.10.2"
     VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS = "0.9.9"
+    VERSION_UPDATE_OCTOPRINT_PRERELEASE_FIX = "0.9.10"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
@@ -236,6 +237,12 @@ class Migration(object):
                 ):
                     self.update_custom_material_settings()
 
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    self.VERSION_UPDATE_OCTOPRINT_PRERELEASE_FIX,
+                    equal_ok=False,
+                ):
+                    self.fix_octoprint_prerelease_setting()
                 # migrations end
 
                 self._logger.info(
@@ -968,3 +975,19 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         my_materials = materials(self.plugin)
         for k, v in my_materials.get_custom_materials().items():
             my_materials.put_custom_material(k, v)
+
+    def fix_octoprint_prerelease_setting(self):
+        """
+        Updates custom material settings keys and values
+        It replaces 'laser_type 'key with 'laser_model' and
+        it sets the value according to the latest laserhead
+        model updates
+        It also replaces 'model' key with 'device_model'
+        """
+        self._logger.info("start fix_octoprint_prerelease_setting")
+        self.plugin._settings.global_set(
+            ["plugins", "softwareupdate", "checks", "octoprint", "prerelease"],
+            False,
+            force=True,
+        )
+        self.plugin._settings.save()
