@@ -1065,7 +1065,7 @@ $(function () {
                     removeElements[i].type
                     ]++;
                 console.warn(
-                    "Warning: removed unsupported '" +
+                    "Removed unsupported '" +
                     removeElements[i].type +
                     "' element in SVG"
                 );
