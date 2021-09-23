@@ -1063,7 +1063,12 @@ $(function () {
                     ] = 0;
                 analyticsData.removed_unnecessary_elements[
                     removeElements[i].type
-                ]++;
+                    ]++;
+                console.warn(
+                    "Warning: removed unsupported '" +
+                    removeElements[i].type +
+                    "' element in SVG"
+                );
             }
             removeElements.remove();
             return fragment;
