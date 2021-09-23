@@ -1026,7 +1026,6 @@ $(function () {
                 "flowRoot",
                 "switch",
                 "#adobe_illustrator_pgf",
-                "title"
             ];
             //			var unsupportedElems = ['flowRoot', 'switch', '#adobe_illustrator_pgf'];
             //
