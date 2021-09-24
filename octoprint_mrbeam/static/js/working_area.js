@@ -1049,7 +1049,7 @@ $(function () {
 
             // remove other unnecessary or invisible ("display=none") elements
             let removeElements = fragment.selectAll(
-                'metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
+                'title, metadata, script, [display=none], [style*="display:none"], inkscape\\:path-effect, sodipodi\\:namedview'
             );
             for (var i = 0; i < removeElements.length; i++) {
                 if (
@@ -1063,7 +1063,12 @@ $(function () {
                     ] = 0;
                 analyticsData.removed_unnecessary_elements[
                     removeElements[i].type
-                ]++;
+                    ]++;
+                console.warn(
+                    "Unsupported '" +
+                    removeElements[i].type +
+                    "' element in SVG is removed"
+                );
             }
             removeElements.remove();
             return fragment;
