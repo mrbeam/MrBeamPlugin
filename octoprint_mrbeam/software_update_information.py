@@ -47,7 +47,7 @@ def get_update_information(plugin):
     # The increased number of separate virtualenv for iobeam, netconnectd, ledstrips
     # will increase the "discovery time" to find those package versions.
     # "map-reduce" method can decrease lookup time by processing them in parallel
-    return dict(
+    res = dict(
         reduce(
             dict_merge,
             [
@@ -63,6 +63,15 @@ def get_update_information(plugin):
             ],
         )
     )
+    for pack, updt_info in res.items():
+        _logger.debug(
+            "{} targets branch {} using pip {}".format(
+                pack,
+                updt_info.get("branch"),
+                updt_info.get("pip_command", "~/oprint/bin/pip"),
+            )
+        )
+    return res
 
 
 def software_channels_available(plugin):
