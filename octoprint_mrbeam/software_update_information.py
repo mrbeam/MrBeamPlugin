@@ -102,10 +102,7 @@ def switch_software_channel(plugin, channel):
 
 
 def _set_info_mrbeam_plugin(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE and tier == SW_UPDATE_TIER_PROD:
-        branch = "mrbeam2-{tier}-buster"
-    else:
-        branch = "mrbeam2-{tier}"
+    branch = "mrbeam2-{tier}"
     return _get_octo_plugin_description(
         "mrbeam",
         tier,
@@ -132,10 +129,7 @@ def _set_info_mrbeamdoc(plugin, tier):
 
 
 def _set_info_netconnectd_plugin(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE and tier == SW_UPDATE_TIER_PROD:
-        branch = "mrbeam2-{tier}-buster"
-    else:
-        branch = "mrbeam2-{tier}"
+    branch = "mrbeam2-{tier}"
     return _get_octo_plugin_description(
         "netconnectd",
         tier,
