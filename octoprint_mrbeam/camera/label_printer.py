@@ -215,7 +215,7 @@ class LabelPrinter(object):
         elif self._device_info.get_model() in (self.MRBEAM_2_DC):
             model = "DC"
         elif self._device_info.get_model() == self.MRBEAM_2_DC_S:
-            model = "DCS"
+            model = "DC [S]"
         return model
 
     def _get_production_date_formatted(self):
