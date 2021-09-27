@@ -182,7 +182,7 @@ class LabelPrinter(object):
 			^CF0,30
 			^FO10,180^FDMr Beam II {model}^FS
 			^CF0,45
-			^FO220,168^FD{prod_string}^FS
+			^FO240,168^FD{prod_string}^FS
 			^XZ
 		""".format(
             prod_string=prod_string, model=self._get_model_abbrev(), ean_num=ean_num
