@@ -385,6 +385,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             ._renderPNG2(pxPerMM, margin)
             .then((rasterResult) => {
                 Potrace.loadImageFromUrl(rasterResult.dataUrl);
+                const potraceOpts = {
+                    turnpolicy: "minority", // "black" / "white" / "left" / "right" / "minority" / "majority" (default: minority)
+                    turdsize: 2000, // suppress speckles of up to this size (default: 2)
+                    optcurve: true, // turn on/off curve optimization (default: true)
+                    alphamax: 1, // corner threshold parameter (default: 1)
+                    opttolerance: 0.2, // curve optimization tolerance (default: 0.2)
+                };
+
+                Potrace.setParameter(potraceOpts);
                 return new Promise((resolve, reject) => {
                     Potrace.process(function () {
                         const pathData = Potrace.getSVGPathArray(1 / pxPerMM);
@@ -413,8 +422,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         } else {
             const group = elem.closest(".userText");
             const target = group.select(".qtOutline");
-            const texts = elem.selectAll("text");
-            texts.forEach((t) => {
+            const gaps = elem.selectAll(".fakeGap");
+            const strokes = elem.selectAll(".fakeStroke");
+            strokes.forEach((t) => {
                 if (color !== null) {
                     const bb = t.getBBox();
                     if (bb.w > 0 && bb.h > 0) {
@@ -426,6 +436,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     target.attr({ d: "" }); // remove outline
                 }
             });
+            // hide fake preview after rendering.
+            strokes.forEach((t) => t.attr({ stroke: "none" }));
+            gaps.forEach((t) => t.attr({ stroke: "none" }));
         }
     };
 

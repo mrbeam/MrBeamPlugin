@@ -3788,19 +3788,15 @@ $(function () {
                     "#" + self.currentQuickTextFile.previewId
                 );
 
-                const textAttrs = {
+                // update font-family & fill
+                g.selectAll("g.straightText text, g.curvedText textPath").attr({
                     "font-family": font,
-                    fill: fill,
-                    //                    stroke: stroke,
-                };
+                });
+                g.selectAll(".fill").attr({ fill: fill });
 
-                // update straight text DOM node
-                const straightText = g.select(".straightText");
-                straightText.attr(textAttrs);
-
+                const straightText = g.select("g.straightText");
                 // update curved text DOM nodes
-                const curvedText = g.select(".curvedText");
-                curvedText.attr(textAttrs);
+                const curvedText = g.select("g.curvedText");
                 const textPathAttr = curvedText.select("textPath").attr();
                 const path = snap.select(textPathAttr.href);
                 const textLength = self._qt_currentQuicktextGetTextLength(
@@ -3817,7 +3813,6 @@ $(function () {
                 // update text content
                 self._qt_previewUpdate(displayText, isStraightText);
 
-                // TODO enlarge by strokeOffset
                 let bb;
                 if (isStraightText) {
                     bb = straightText.getBBox();
@@ -3827,11 +3822,21 @@ $(function () {
 
                 // finally update click handle bbox
                 g.select("rect").attr({
+                    // TODO rect is still a bit unprecise on stroked elements. Maybe the stroke itself can take over the role of this clickable rect
                     x: bb.x,
                     y: bb.y,
                     width: bb.width,
                     height: bb.height,
                 });
+
+                const pvX = bb.width * 0.1;
+                const pvY = bb.height * 0.1;
+                const pvW = bb.width + 2 * pvX;
+                const pvH = bb.height + 2 * pvY;
+                document
+                    .getElementById("qt_dialog_preview_svg")
+                    .setAttribute("viewBox", `${-pvX} ${-pvY} ${pvW} ${pvH}`);
+                //                $('#qt_dialog_preview_svg').attr({'viewBox': `0 0 ${bb.width} ${bb.height}`}); // jquery bug. viewBox -> viewbox
 
                 // update font of input field
                 $("#quick_text_dialog_text_input").css({
@@ -4059,11 +4064,10 @@ $(function () {
                 .toDefs();
 
             const style = [
+                // TODO default font
                 `white-space: pre`,
                 `font-size: ${size}px`,
                 `text-anchor: middle`,
-                `vector-effect: non-scaling-stroke`,
-                `stroke-width: 2px`,
                 `stroke-linejoin: round`,
                 `stroke-linecap: round`,
             ].join("; ");
@@ -4073,7 +4077,6 @@ $(function () {
                 style: style + "font-variant-ligatures: none;",
                 textpath: baselinePath,
             });
-            curvedText.node.classList.add("curvedText");
             curvedText.textPath.attr({ startOffset: "50%", style: style });
             const curvedTextStroke = curvedText
                 .clone()
@@ -4083,7 +4086,6 @@ $(function () {
             const straightText = uc.text(0, 0, placeholderText);
             straightText.attr({
                 style: style,
-                class: "straightText",
             });
             const straightTextStroke = straightText
                 .clone()
@@ -4097,6 +4099,8 @@ $(function () {
                 fill: "none",
                 stroke: file.strokeColor,
             });
+            straightText.node.classList.add("fill");
+            curvedText.node.classList.add("fill");
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({
@@ -4175,22 +4179,10 @@ $(function () {
                     .forEach((t) => (t.node.textContent = ""));
             }
 
-            //            const el2Clone = isStraightText ? straightText : curvedText;
-            //            let strokeEl = previewStroke.select('.fakeStroke');
-            //            if(strokeEl === null) {
-            //                strokeEl = el2Clone.clone().attr({class: 'fakeStroke', 'vector-effect': 'none'});
-            //                previewStroke.append(strokeEl);
-            //            }
-            //            let gapEl = previewStroke.select('.fakeGap');
-            //            if(gapEl === null) {
-            //                gapEl = el2Clone.clone().attr({class: 'fakeGap', 'vector-effect': 'none'})
-            //                previewStroke.append(gapEl);
-            //            }
-
             const t = g.transform().localMatrix.split();
             const scale = (t.scalex + t.scaley) / 2;
-            const strW = strokeOffset * scale + 1 * scale;
-            const gapW = strokeOffset * scale;
+            const strW = strokeOffset + 1 / scale;
+            const gapW = strW - 1 / scale;
             const strCol = showPreview ? strokeColor : "none";
             const gapCol = showPreview ? "#ffffff" : "none";
 
@@ -4213,7 +4205,13 @@ $(function () {
             const offset = self.currentQuickTextFile.strokeOffset;
             if (qtElem) {
                 qtElem.setQuicktextOutline(color, offset);
-                qtElem.select(".previewStroke").empty();
+                qtElem
+                    .selectAll(
+                        ".straightText .previewStroke text, .curvedText .previewStroke text.textPath"
+                    )
+                    .forEach((t) => {
+                        t.node.textContent = "";
+                    });
             }
 
             if (self.currentQuickTextAnalyticsData.text_length !== 0) {
