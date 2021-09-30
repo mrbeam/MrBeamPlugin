@@ -1,23 +1,48 @@
+from . import device_info
 import sys, os, csv, json, collections
-import octoprint_mrbeam
 
 MRBEAM = "Mr Beam II"
 MRB_DREAMCUT = "MrB II Dreamcut"
+MRB_DREAMCUT_S = "MrB II Dreamcut S"
+
 MRB_READY = "MrB II Dreamcut Ready"  # not used yet
-MRB_DREAMCUT_NOT_VALIDATED = "Dreamcut (not validated)"
+MRB_DREAMCUT_NOT_VALIDATED = "Dreamcut (not validated)"  # not used yet
+MRB_DREAMCUT_S_NOT_VALIDATED = "Dreamcut S (not validated)"  # not used yet
 
-DEFAULT_LASER = MRBEAM
+DEFAULT_LASER_MODEL = "0"
+LASER_MODEL_S = "S"
 
 
-def model_id_to_csv_name(id):
+def model_ids_to_csv_name(device_model_id, laser_model_id):
     convert = {
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2: MRBEAM,
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC: MRB_DREAMCUT,
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R1: MRBEAM,
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R2: MRBEAM,
+        (device_info.MODEL_MRBEAM_2, DEFAULT_LASER_MODEL): MRBEAM,
+        (
+            device_info.MODEL_MRBEAM_2_DC,
+            DEFAULT_LASER_MODEL,
+        ): MRB_DREAMCUT,
+        (
+            device_info.MODEL_MRBEAM_2_DC,
+            LASER_MODEL_S,
+        ): MRB_DREAMCUT_S,
+        (
+            device_info.MODEL_MRBEAM_2_DC_S,
+            DEFAULT_LASER_MODEL,
+        ): MRB_DREAMCUT,
+        (
+            device_info.MODEL_MRBEAM_2_DC_S,
+            LASER_MODEL_S,
+        ): MRB_DREAMCUT_S,
+        (
+            device_info.MODEL_MRBEAM_2_DC_R1,
+            DEFAULT_LASER_MODEL,
+        ): MRBEAM,
+        (
+            device_info.MODEL_MRBEAM_2_DC_R2,
+            DEFAULT_LASER_MODEL,
+        ): MRBEAM,
     }
-    if id in convert.keys():
-        return convert[id]
+    if (device_model_id, laser_model_id) in convert.keys():
+        return convert[(device_model_id, laser_model_id)]
     else:
         return False
 
@@ -46,14 +71,15 @@ def dict_merge(dct, merge_dct):
             dct[k] = merge_dct[k]
 
 
-def parse_csv(path=None, laserhead=MRBEAM):
+def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0"):
     """
 
     Assumes following column order:
     mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, pierce_time, dithering
 
     :param path: path to csv file
-    :param laserhead: the type of laserhead to use. Will return the material settings to use for that laserhead.
+    :param device_model: the model of the device to use. Will return the material settings to use for that model.
+    :param laserhead_model: the type of laserhead to use. Will return the material settings to use for that laserhead.
     :return:
     """
     path = path or os.path.join(
@@ -93,7 +119,7 @@ def parse_csv(path=None, laserhead=MRBEAM):
             if colorcode:
                 current_color = colorcode
 
-            if not mrbeamversion in [MRBEAM, MRB_DREAMCUT, MRB_READY]:
+            if not mrbeamversion in [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY]:
                 # Either a comment line, unused setting or experimental settings
                 continue
 
@@ -219,12 +245,12 @@ def parse_csv(path=None, laserhead=MRBEAM):
                 pierce_time,
                 dithering,
             ]  # update current row values for next loop
-    converted_laserhead = model_id_to_csv_name(laserhead)
-    if converted_laserhead:
-        laserhead = converted_laserhead
-    if laserhead not in dictionary:
-        laserhead = DEFAULT_LASER
-    res = dict(materials=dictionary.get(laserhead, {}), laser_source=laserhead)
+    csv_name = model_ids_to_csv_name(device_model, str(laserhead_model))
+    if csv_name not in dictionary:
+        csv_name = MRBEAM
+    res = dict(
+        materials=dictionary.get(csv_name, {}), laser_source=str(laserhead_model)
+    )
     return res
 
 

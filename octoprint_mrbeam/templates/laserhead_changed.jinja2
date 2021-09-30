@@ -1,0 +1,19 @@
+<div id="laserhead_changed" class="modal hide fade" data-backdrop="static">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3>{{ _('A new Laserhead has been detected') }}</h3>
+    </div>
+    <div class="modal-body">
+        <div>
+            <img src="/plugin/mrbeam/static/img/welcome_dialog/start.png">
+            <h4> {{ _("Your new Mr Beam dreamcut [S] Laserhead has been successfully installed.") }}</h4>
+            <p> {{ _("With this Laserhead you can work now even faster.") }}</p>
+            <p> {{ _("This means that we also update the default material settings to the new laserhead as long it is installed to provide you the best possible support. However, we do not update your custom materials, this will need your personal testing and finetuning.") }}</p>
+            <p> {{ _("Read about the changes you can expect with the new and improved MrBeam II dreamcut [S] Laserhead.") }} <a target="_blank" href="{{ _("https://support.mr-beam.org/en/support/solutions/articles/43000640531") }}"> » {{ _("Read more") }} </a></p>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" id="laserhead_changed_detected" data-dismiss="modal" aria-hidden="true"
+                data-bind="click: $root.laserheadChangeAcknowledged">{{ _('OK') }}</button>
+    </div>
+</div>

@@ -29,6 +29,7 @@ class LaserheadHandler(object):
 
         self._lh_cache = {}
         self._last_used_lh_serial = None
+        self._last_used_lh_model = None
         self._correction_settings = {}
         self._laser_heads_file = os.path.join(
             self._settings.getBaseFolder("base"),
@@ -37,6 +38,8 @@ class LaserheadHandler(object):
         self._load_laser_heads_file()  # Loads correction_settings, last_used_lh_serial and lh_cache
 
         self._current_used_lh_serial = self._last_used_lh_serial
+        self._current_used_lh_model = self._last_used_lh_model
+        self._current_used_lh_model_id = None
 
         self._event_bus.subscribe(
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
@@ -45,11 +48,44 @@ class LaserheadHandler(object):
     def _on_mrbeam_plugin_initialized(self, event, payload):
         self._analytics_handler = self._plugin.analytics_handler
 
+    def _get_lh_model(self, lh_data):
+        try:
+            read_model = lh_data["head"]["model"]
+            self._current_used_lh_model_id = read_model
+            if read_model == 1:
+                model = "S"
+            elif read_model == 0:
+                model = 0
+            else:
+                model = 0
+                self._logger.warn(
+                    "No valid Laserhead model found, assume it is model 0"
+                )
+            return model
+        except:
+            self._logger.error(
+                "Error for Laserhead model, no model found in laserhead data"
+            )
+
     def set_current_used_lh_data(self, lh_data):
         try:
             if self._valid_lh_data(lh_data):
                 self._logger.info("Laserhead: %s", lh_data)
                 self._current_used_lh_serial = lh_data["main"]["serial"]
+                self._current_used_lh_model = self._get_lh_model(lh_data)
+                # fmt: off
+                if (self._current_used_lh_serial != self._last_used_lh_serial) and self._last_used_lh_model is not None:
+                    # fmt: on
+                    if self._current_used_lh_model == "S":
+                        self._settings.set_boolean(["laserheadChanged"], True)
+                        self._settings.save()
+                    self._logger.info(
+                        "Laserhead changed: s/n:%s model:%s -> s/n:%s model:%s",
+                        self._last_used_lh_serial,
+                        self._last_used_lh_model,
+                        self._current_used_lh_serial,
+                        self._current_used_lh_model,
+                    )
                 self._write_lh_data_to_cache(lh_data)
 
                 self._calculate_and_write_correction_factor()
@@ -57,7 +93,11 @@ class LaserheadHandler(object):
                 self._analytics_handler.add_laserhead_info()
                 self._write_laser_heads_file()
                 self._plugin.fire_event(
-                    MrBeamEvents.LASER_HEAD_READ, dict(serial=lh_data["main"]["serial"])
+                    MrBeamEvents.LASER_HEAD_READ,
+                    dict(
+                        serial=self._current_used_lh_serial,
+                        model=self._current_used_lh_model,
+                    ),
                 )
 
             # BACKWARD_COMPATIBILITY: This is for detecting mrb_hw_info v0.0.20
@@ -78,12 +118,25 @@ class LaserheadHandler(object):
                         ),
                         analytics="received-no-lh-data",
                     )
-                else:
+                elif (
+                    not lh_data.get("power_calibrations", None)
+                    or not len(lh_data["power_calibrations"]) > 0
+                    or not lh_data["power_calibrations"][-1].get("power_65", None)
+                    or not lh_data["power_calibrations"][-1].get("power_75", None)
+                    or not lh_data["power_calibrations"][-1].get("power_85", None)
+                ):
                     self._logger.exception(
                         "Received invalid laser head data from iobeam - invalid power calibrations data: {}".format(
                             lh_data.get("power_calibrations", [])
                         ),
                         analytics="invalid-power-calibration",
+                    )
+                else:
+                    self._logger.exception(
+                        "Received invalid laser head data from iobeam {}".format(
+                            lh_data
+                        ),
+                        analytics="received-invalid-lh-data",
                     )
         except Exception as e:
             self._logger.exception(
@@ -95,6 +148,7 @@ class LaserheadHandler(object):
             if (
                 lh_data.get("main", None)
                 and lh_data["main"].get("serial", None)
+                and lh_data["head"].get("model", None) is not None
                 and lh_data.get("power_calibrations", None)
                 and len(lh_data["power_calibrations"]) > 0
                 and lh_data["power_calibrations"][-1].get("power_65", None)
@@ -132,11 +186,13 @@ class LaserheadHandler(object):
         if self._current_used_lh_serial:
             data = dict(
                 serial=self._current_used_lh_serial,
+                model=self._current_used_lh_model,
                 info=self._lh_cache[self._current_used_lh_serial],
             )
         else:
             data = dict(
                 serial=None,
+                model=None,
                 info=dict(
                     correction_factor=1,
                 ),
@@ -158,6 +214,9 @@ class LaserheadHandler(object):
             settings["correction_enabled"] = True
 
         return self._correction_settings
+
+    def get_current_used_lh_model_id(self):
+        return self._current_used_lh_model_id
 
     def _validate_lh_serial(self, serial):
         try:
@@ -192,8 +251,28 @@ class LaserheadHandler(object):
                 "target_power", self.LASER_POWER_GOAL_DEFAULT
             )
 
-            if target_power < 0 or target_power >= self.LASER_POWER_GOAL_MAX:
-                target_power = self.LASER_POWER_GOAL_DEFAULT
+            # laserhead model S fix for correction factor
+            # TODO fix this GOAL_MAX problem for all laser heads in a separate issue SW-394
+            if self._current_used_lh_model == "S":
+                if target_power < 0 or target_power >= p_85:
+                    self._logger.warn(
+                        "Laserhead target_power ({target}) over p_85 ({p_85}) => target_power will be set to GOAL_DEFAULT ({default}) for the calculation of the correction factor".format(
+                            target=target_power,
+                            p_85=p_85,
+                            default=self.LASER_POWER_GOAL_DEFAULT,
+                        )
+                    )
+                    target_power = self.LASER_POWER_GOAL_DEFAULT
+            else:
+                if target_power < 0 or target_power >= self.LASER_POWER_GOAL_MAX:
+                    self._logger.warn(
+                        "Laserhead target_power ({target}) over LASER_POWER_MAX ({max}) => target_power will be set to GOAL_DEFAULT ({default}) for the calculation of the correction factor".format(
+                            target=target_power,
+                            max=self.LASER_POWER_GOAL_MAX,
+                            default=self.LASER_POWER_GOAL_DEFAULT,
+                        )
+                    )
+                    target_power = self.LASER_POWER_GOAL_DEFAULT
 
         correction_factor = 1
 
@@ -209,6 +288,10 @@ class LaserheadHandler(object):
                 goal_difference = target_power - p_75
                 new_intensity = goal_difference * (85 - 75) / step_difference + 75
                 correction_factor = new_intensity / 65.0
+            else:
+                self._logger.warn(
+                    "Laserhead target power not in valid range => correction_factor will be set to 1"
+                )
 
         else:
             self._logger.info(
@@ -244,6 +327,9 @@ class LaserheadHandler(object):
                     if "last_used_lh_serial" in data:
                         self._last_used_lh_serial = data["last_used_lh_serial"]
 
+                    if "last_used_lh_model" in data:
+                        self._last_used_lh_model = data["last_used_lh_model"]
+
                     if "correction_settings" in data:
                         self._correction_settings = data["correction_settings"]
             except:
@@ -258,6 +344,7 @@ class LaserheadHandler(object):
             laser_heads=self._lh_cache,
             correction_settings=self._correction_settings,
             last_used_lh_serial=self._current_used_lh_serial,
+            last_used_lh_model=self._current_used_lh_model,
         )
         file = self._laser_heads_file if file is None else file
         try:

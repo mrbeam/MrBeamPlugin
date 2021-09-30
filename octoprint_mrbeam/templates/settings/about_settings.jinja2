@@ -4,7 +4,7 @@
     {#    Download link is language specific  #}
     {% set mrbeamorg_downloads = _('https://mr-beam.org/en/downloads/') %}
 
-    <div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
+    <div class="scrollable">
 
         <div class="control-group">
             <h5>{{ product_name }}</h5>
@@ -12,12 +12,21 @@
                 <ul>
                     <div><strong>{{ _('Name') }}:</strong> {{ hostname }}</div>
                     <div><strong>{{ _('Serial number') }}:</strong> {{ serial }}</div>
-                    {% if laserhead_serial %}
-                        <div><strong>{{ _('Laser head') }}:</strong> {{ laserhead_serial }}</div>
+                    {% if laserhead_serial or laserhead_model == 'S' %}
+                        <div><strong>{{ _('Laser head') }}:</strong>
+                        <ul class="list-unstyled">
+                        {% if laserhead_serial %}
+                            <li><strong>{{ _('Serial number') }}:</strong> {{ laserhead_serial }}</li>
+                        {% endif %}
+                        {% if laserhead_model == 'S' %}
+                            <li><strong>{{ _('Model') }}:</strong> {{ laserhead_model }}</li>
+                        {% endif %}
+                        </ul>
+                        </div>
                     {% endif %}
                     {% if mac_addrs %}
                     <div><strong>{{ _('Network interfaces') }}:</strong>
-						<ul style="list-style-type: none;">
+						<ul class="list-unstyled">
 							{% for ifc, mac in mac_addrs.iteritems() %}
 							<li>{{ ifc }} (MAC: {{ mac }})</li>
 							{% endfor %}
@@ -29,7 +38,7 @@
         </div>
 
         <div class="control-group">
-            <h5>beamOS & grbl</h5>
+            <h5>BeamOS & grbl</h5>
             <div class="controls">
                 <ul>
                     <div><strong>{{ _('Mr Beam Plugin') }}:</strong> v{{ beamosVersionNumber }}</div>
@@ -110,7 +119,7 @@
                         <a href="https://twitter.com/MrBeamLasers" target="_blank">Twitter</a> |
                         <a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank">YouTube</a> |
                         <a href="https://www.pinterest.com/mrbeamlasers" target="_blank">Pinterest</a> |
-                        <a href="https://www.linkedin.com/company/mr-beam-lasers-llc" target="_blank">LinkedIn</a> |
+                        <a href="https://www.linkedin.com/company/mrbeamlasers" target="_blank">LinkedIn</a> |
                         <a href="https://www.tiktok.com/@mrbeamlasers" target="_blank">TikTok</a>
                     </div>
                     <div><strong>{{ _('Official user group') }}</strong> {{ _('on Facebook') }} ({{ _('German') }}): <a href="https://www.facebook.com/groups/officialmrbeamusers/" target="_blank"> Official Mr Beam Lasers User Group</a></div>

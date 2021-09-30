@@ -304,7 +304,7 @@ $(function () {
                 self.settings.settings.plugins.mrbeam.usage.laserHeadUsage()
             );
             self.laserHeadSerial(
-                self.settings.settings.plugins.mrbeam.laserHeadSerial()
+                self.settings.settings.plugins.mrbeam.laserhead.serial()
             );
         };
 

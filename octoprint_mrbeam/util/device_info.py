@@ -18,6 +18,21 @@ def deviceInfo(use_dummy_values=False):
     return _instance
 
 
+MODEL_MRBEAM_2 = "MRBEAM2"
+MODEL_MRBEAM_2_DC_R1 = "MRBEAM2_DC_R1"
+MODEL_MRBEAM_2_DC_R2 = "MRBEAM2_DC_R2"
+MODEL_MRBEAM_2_DC = "MRBEAM2_DC"
+MODEL_MRBEAM_2_DC_S = "MRBEAM2_DC_S"
+MODELS = {
+    MODEL_MRBEAM_2: "Mr Beam II",
+    MODEL_MRBEAM_2_DC_R1: "Mr Beam II dreamcut ready",
+    MODEL_MRBEAM_2_DC_R2: "Mr Beam II dreamcut ready",
+    MODEL_MRBEAM_2_DC: "Mr Beam II dreamcut",
+    MODEL_MRBEAM_2_DC_S: "Mr Beam II dreamcut [S]",
+}
+MODEL_DEFAULT = MODEL_MRBEAM_2
+
+
 class DeviceInfo(object):
 
     DEVICE_INFO_FILE = "/etc/mrbeam"
@@ -31,16 +46,12 @@ class DeviceInfo(object):
     KEY_PRODUCTION_DATE = "production_date"
     KEY_MODEL = "model"
 
-    MODEL_MRBEAM_2 = "MRBEAM2"
-    MODEL_MRBEAM_2_DC_R1 = "MRBEAM2_DC_R1"
-    MODEL_MRBEAM_2_DC_R2 = "MRBEAM2_DC_R2"
-    MODEL_MRBEAM_2_DC = "MRBEAM2_DC"
-
     def __init__(self, use_dummy_values=False):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.util.device_info")
         self._device_data = (
             self._read_file() if not use_dummy_values else self._get_dummy_values()
         )
+        self._model = None
 
     def get(self, key, default=None):
         return self._device_data.get(key, default)
@@ -54,8 +65,20 @@ class DeviceInfo(object):
     def get_hostname(self):
         return self._device_data.get(self.KEY_HOSTNAME)
 
-    def get_model(self):
-        return self._device_data.get(self.KEY_MODEL, self.MODEL_MRBEAM_2)
+    def get_model(self, refresh=False):
+        """
+        Gives you the device's model id like MRBEAM2 or MRBEAM2_DC
+        The value is solely read from device_info file (/etc/mrbeam)
+        and it's cached once read.
+        :return: model
+        :rtype: String
+        """
+        if refresh or self._model is None:
+            self._model = self._device_data.get(self.KEY_MODEL, MODEL_DEFAULT)
+        return self._model
+
+    def is_mrbeam2_dc_or_dc_s(self):
+        return self.get_model() in (MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S)
 
     def get_production_date(self):
         return self._device_data.get(self.KEY_PRODUCTION_DATE, None)
@@ -102,3 +125,6 @@ class DeviceInfo(object):
             model="MRBEAM2_DC",
             production_date="2014-06-11",
         )
+
+    def get_product_name(self):
+        return MODELS.get(self._model, MODELS[MODEL_DEFAULT])

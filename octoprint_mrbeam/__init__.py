@@ -120,11 +120,6 @@ class MrBeamPlugin(
     ENV_LASER_SAFETY = "laser_safety"
     ENV_ANALYTICS = "analytics"
 
-    MODEL_MRBEAM2 = "MRBEAM2"
-    MODEL_MRBEAM2_DC_R1 = "MRBEAM2_DC_R1"
-    MODEL_MRBEAM2_DC_R2 = "MRBEAM2_DC_R2"
-    MODEL_MRBEAM2_DC = "MRBEAM2_DC"
-
     LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.4"
 
     LASERSAFETY_CONFIRMATION_STORAGE_URL = "https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec"
@@ -296,8 +291,11 @@ class MrBeamPlugin(
         msg += ", grbl_version_lastknown:{}".format(
             self._settings.get(["grbl_version_lastknown"])
         )
-        msg += ", laserhead-serial:{}".format(
+        msg += ", laserhead-serial-lastknown:{}".format(
             self.laserhead_handler.get_current_used_lh_data()["serial"]
+        )
+        msg += ", laserhead-model-lastknown:{}".format(
+            self.laserhead_handler.get_current_used_lh_data()["model"]
         )
         self._logger.info(msg, terminal=True)
 
@@ -324,9 +322,10 @@ class MrBeamPlugin(
             env=self.get_env(),
             beamOS_image=self._octopi_info,
             grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-            laserhead_serial=self.laserhead_handler.get_current_used_lh_data()[
-                "serial"
-            ],
+            laserhead_lastknown=dict(
+                serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
+                model=self.laserhead_handler.get_current_used_lh_data()["model"],
+            ),
             _state=dict(
                 calibration_tool_mode=self.calibration_tool_mode,
                 support_mode=self.support_mode,
@@ -387,6 +386,7 @@ class MrBeamPlugin(
                 doNotAskAgain=False,
             ),
             focusReminder=True,
+            laserheadChanged=False,
             analyticsEnabled=None,
             gcodeAutoDeletion=True,
             analytics=dict(
@@ -483,8 +483,12 @@ class MrBeamPlugin(
                 doNotAskAgain=self._settings.get(["review", "doNotAskAgain"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
+            laserheadChanged=self._settings.get(["laserheadChanged"]),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
-            laserHeadSerial=self.laserhead_handler.get_current_used_lh_data()["serial"],
+            laserhead=dict(
+                serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
+                model=self.laserhead_handler.get_current_used_lh_data()["model"],
+            ),
             usage=dict(
                 totalUsage=self.usage_handler.get_total_usage(),
                 prefilterUsage=self.usage_handler.get_prefilter_usage(),
@@ -559,6 +563,10 @@ class MrBeamPlugin(
                 )
             if "focusReminder" in data:
                 self._settings.set_boolean(["focusReminder"], data["focusReminder"])
+            if "laserheadChanged" in data:
+                self._settings.set_boolean(
+                    ["laserheadChanged"], data["laserheadChanged"]
+                )
             if "gcodeAutoDeletion" in data:
                 self.set_gcode_deletion(data["gcodeAutoDeletion"])
             if "dev" in data and "software_tier" in data["dev"]:
@@ -651,6 +659,7 @@ class MrBeamPlugin(
                 "js/lib/hopscotch.js",
                 "js/tour_viewmodel.js",
                 "js/feedback_widget.js",
+                "js/laserhead_changed.js",
                 "js/material_settings.js",
                 "js/analytics.js",
                 "js/maintenance.js",
@@ -787,13 +796,16 @@ class MrBeamPlugin(
                 laserhead_serial=self.laserhead_handler.get_current_used_lh_data()[
                     "serial"
                 ],
+                laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
+                    "model"
+                ],
                 env=self.get_env(),
                 mac_addrs=self._get_mac_addresses(),
                 env_local=self.get_env(self.ENV_LOCAL),
                 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
                 env_analytics=self.get_env(self.ENV_ANALYTICS),
                 env_support_mode=self.support_mode,
-                product_name=self.get_product_name(),
+                product_name=self._device_info.get_product_name(),
                 hostname=self.getHostname(),
                 serial=self._serial_num,
                 model=self.get_model_id(),
@@ -1319,7 +1331,7 @@ class MrBeamPlugin(
             env_analytics=self.get_env(self.ENV_ANALYTICS),
             env_support_mode=self.support_mode,
             #
-            product_name=self.get_product_name(),
+            product_name=self._device_info.get_product_name(),
             hostname=self.getHostname(),
             serial=self._serial_num,
             beta_label=self.get_beta_label(),
@@ -1851,6 +1863,7 @@ class MrBeamPlugin(
             take_undistorted_picture=[],
             # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
             focus_reminder=[],
+            laserhead_change_acknowledged=[],
             remember_markers_across_sessions=[],
             review_data=[],
             reset_prefilter_usage=[],
@@ -1913,6 +1926,9 @@ class MrBeamPlugin(
             return NO_CONTENT
         elif command == "focus_reminder":
             return self.focus_reminder(data)
+        elif command == "laserhead_change_acknowledged":
+            self._settings.set_boolean(["laserheadChanged"], False)
+            self._settings.save()
         elif command == "remember_markers_across_sessions":
             return self.remember_markers_across_sessions(data)
         elif command == "review_data":
@@ -1931,7 +1947,15 @@ class MrBeamPlugin(
             # TODO ANDY Load materials when the user logs in as well
             try:
                 return make_response(
-                    jsonify(parse_csv(laserhead=self.get_model_id())), 200
+                    jsonify(
+                        parse_csv(
+                            device_model=self.get_model_id(),
+                            laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
+                                "model"
+                            ],
+                        )
+                    ),
+                    200,
                 )  # TODO : Give parse_csv the right laserhead type
             except Exception as err:
                 self._logger.exception(err.message)
@@ -2650,6 +2674,7 @@ class MrBeamPlugin(
                     dusting_mode=self.dust_manager.is_final_extraction_mode,
                     state=self._printer.get_state_string(),
                     is_homed=self._printer.is_homed(),
+                    laser_model = self.laserhead_handler.get_current_used_lh_data()["model"],
                 )
             except:
                 self._logger.exception("Exception while collecting mrb_state data.")
@@ -2722,20 +2747,10 @@ class MrBeamPlugin(
                     )
         return self._hostname
 
-    def get_product_name(self):
-        if self.is_mrbeam2():
-            return "Mr Beam II"
-        elif self.is_mrbeam2_dreamcut():
-            return "Mr Beam II dreamcut"
-        elif self.is_mrbeam2_dreamcut_ready1() or self.is_mrbeam2_dreamcut_ready2():
-            return "Mr Beam II dreamcut ready"
-        else:
-            return "Mr Beam"
-
     def getSerialNum(self):
         """
-        Gives you the device's Mr Beam serieal number eg "00000000E79B0313-2C"
-        The value is soley read from device_info file (/etc/mrbeam)
+        Gives you the device's Mr Beam serial number eg "00000000E79B0313-2C"
+        The value is solely read from device_info file (/etc/mrbeam)
         and it's cached once read.
         :return: serial number
         :rtype: String
@@ -2746,20 +2761,18 @@ class MrBeamPlugin(
 
     def get_model_id(self):
         """
-        Gives you the device's model id liek MRBEAM2 or MRBEAM2-DC
-        The value is soley read from device_info file (/etc/mrbeam)
+        Gives you the device's model id like MRBEAM2 or MRBEAM2_DC
+        The value is solely read from device_info file (/etc/mrbeam)
         and it's cached once read.
         :return: model id
         :rtype: String
         """
-        if self._model_id is None:
-            self._model_id = self._device_info.get_model()
-        return self._model_id
+        return self._device_info.get_model()
 
     def get_production_date(self):
         """
         Gives you the device's production date as string
-        The value is soley read from device_info file (/etc/mrbeam)
+        The value is solely read from device_info file (/etc/mrbeam)
         and it's cached once read.
         :return: production date
         :rtype: String
@@ -2943,18 +2956,6 @@ class MrBeamPlugin(
 
     def is_develop_channel(self):
         return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_DEV
-
-    def is_mrbeam2(self):
-        return self._model_id == self.MODEL_MRBEAM2
-
-    def is_mrbeam2_dreamcut_ready1(self):
-        return self._model_id == self.MODEL_MRBEAM2_DC_R1
-
-    def is_mrbeam2_dreamcut_ready2(self):
-        return self._model_id == self.MODEL_MRBEAM2_DC_R2
-
-    def is_mrbeam2_dreamcut(self):
-        return self._model_id == self.MODEL_MRBEAM2_DC
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:

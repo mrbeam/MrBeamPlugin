@@ -85,7 +85,7 @@ class CompressorHandler(object):
         )
 
     def has_compressor(self):
-        return self._plugin.is_mrbeam2_dreamcut()
+        return self._plugin._device_info.is_mrbeam2_dc_or_dc_s()
 
     def get_current_state(self):
         if self.has_compressor():

@@ -37,7 +37,7 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     ANALYTICS_LOG_VERSION = (
-        18  # bumped in 0.7.8 - Lens calibration state on : Save, Cancel
+        21  # bumped in 0.10.0 - added the laser head model to analytics
     )
 
     def __init__(self, plugin):
@@ -330,6 +330,10 @@ class AnalyticsHandler(object):
                 ak.Device.LaserHead.POWER_65: power_calibration.get("power_65", None),
                 ak.Device.LaserHead.POWER_75: power_calibration.get("power_75", None),
                 ak.Device.LaserHead.POWER_85: power_calibration.get("power_85", None),
+                ak.Device.LaserHead.TARGET_POWER: power_calibration.get(
+                    "target_power", None
+                ),
+                ak.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
                 ak.Device.LaserHead.CORRECTION_FACTOR: lh["info"]["correction_factor"],
                 ak.Device.LaserHead.CORRECTION_ENABLED: settings["correction_enabled"],
                 ak.Device.LaserHead.CORRECTION_OVERRIDE: settings[
@@ -384,6 +388,11 @@ class AnalyticsHandler(object):
 
     def add_engraving_parameters(self, eng_params):
         try:
+            eng_params.update(
+                {
+                    ak.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
+                }
+            )
             self._add_job_event(ak.Job.Event.Slicing.CONV_ENGRAVE, payload=eng_params)
         except Exception as e:
             self._logger.exception(
@@ -392,6 +401,9 @@ class AnalyticsHandler(object):
 
     def add_cutting_parameters(self, cut_details):
         try:
+            # fmt: off
+            cut_details[ak.Device.LaserHead.HEAD_MODEL_ID] = self._laserhead_handler.get_current_used_lh_model_id()
+            # fmt: on
             self._add_job_event(ak.Job.Event.Slicing.CONV_CUT, payload=cut_details)
         except Exception as e:
             self._logger.exception(
@@ -548,6 +560,9 @@ class AnalyticsHandler(object):
         payload = {
             ak.Device.LaserHead.SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()[
                 "serial"
+            ],
+            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()[
+                "model"
             ],
             ak.Device.Usage.USERS: len(self._plugin._user_manager._users),
         }
@@ -860,10 +875,14 @@ class AnalyticsHandler(object):
             ak.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()[
                 "serial"
             ],
+            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()[
+                "model"
+            ],
         }
 
         if self._current_dust_collector:
             dust_summary = self._current_dust_collector.getSummary()
+            dust_summary.update(lh_info)
             self._add_job_event(ak.Job.Event.Summary.DUST, payload=dust_summary)
         if self._current_intensity_collector:
             intensity_summary = self._current_intensity_collector.getSummary()
@@ -892,7 +911,12 @@ class AnalyticsHandler(object):
     def _init_new_job(self):
         self._cleanup_job()
         self._current_job_id = "j_{}_{}".format(self._snr, time.time())
-        self._add_job_event(ak.Job.Event.LASERJOB_STARTED)
+        # fmt: off
+        payload = {
+            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()["model"],
+        }
+        # fmt: on
+        self._add_job_event(ak.Job.Event.LASERJOB_STARTED, payload=payload)
 
     # -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
     def _write_queue_to_analytics_file(self):

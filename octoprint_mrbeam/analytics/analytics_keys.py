@@ -131,6 +131,8 @@ class AnalyticsKeys:
             POWER_65 = "p_65"
             POWER_75 = "p_75"
             POWER_85 = "p_85"
+            TARGET_POWER = "target_power"
+            HEAD_MODEL_ID = "head_model_id"
             CORRECTION_FACTOR = "correction_factor"
             CORRECTION_ENABLED = "correction_enabled"
             CORRECTION_OVERRIDE = "correction_override"
