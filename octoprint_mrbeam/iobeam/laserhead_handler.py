@@ -48,15 +48,6 @@ class LaserheadHandler(object):
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
         )
 
-    @property
-    def _current_used_lh_model_string(self):
-        if str(self._current_used_lh_model_id) in self._LASERHEAD_MODEL_STRING_MAP:
-            return self._LASERHEAD_MODEL_STRING_MAP.get(str(self._current_used_lh_model_id))
-        else:
-            raise ValueError("Unknown laserhead model ID {!r}".format(self._current_used_lh_model_id))
-
-
-
     def _on_mrbeam_plugin_initialized(self, event, payload):
         self._analytics_handler = self._plugin.analytics_handler
 
