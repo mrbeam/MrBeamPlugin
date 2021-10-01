@@ -209,13 +209,6 @@ class Migration(object):
 
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
-                    "0.9.0.2",
-                    equal_ok=False,
-                ):
-                    self.track_devpi()
-
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
                     "0.9.4.0",
                     equal_ok=False,
                 ):
@@ -923,14 +916,6 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             _set(path, data, settings().setBoolean)
         settings().save()
         self._logger.info("Done.")
-
-    @logExceptions
-    def track_devpi(self):
-        """Move pip.conf to track our devpi server. (removes it from the source files)"""
-        self._logger.info("Adding pip.conf to track MrBeam update server.")
-        src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, "pip.conf")
-        dst = "/home/pi/.pip/pip.conf"
-        os.renames(src, dst)
 
     @logExceptions
     def hostname_helper_scripts(self):
