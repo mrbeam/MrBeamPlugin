@@ -873,9 +873,7 @@ class AnalyticsHandler(object):
             ak.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()[
                 "serial"
             ],
-            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()[
-                "model"
-            ],
+            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
         }
 
         if self._current_dust_collector:
@@ -911,7 +909,7 @@ class AnalyticsHandler(object):
         self._current_job_id = "j_{}_{}".format(self._snr, time.time())
         # fmt: off
         payload = {
-            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()["model"],
+            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
         }
         # fmt: on
         self._add_job_event(ak.Job.Event.LASERJOB_STARTED, payload=payload)
