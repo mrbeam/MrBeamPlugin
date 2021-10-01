@@ -558,12 +558,10 @@ class AnalyticsHandler(object):
     def _event_startup(self, event, payload):
         # Here the MrBeamPlugin is not fully initialized yet, so we have to access this data direct from the plugin
         payload = {
-            ak.Device.LaserHead.SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()[
+            ak.Device.LaserHead.LAST_USED_SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()[
                 "serial"
             ],
-            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()[
-                "model"
-            ],
+            ak.Device.LaserHead.LAST_USED_HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
             ak.Device.Usage.USERS: len(self._plugin._user_manager._users),
         }
         self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
@@ -875,9 +873,7 @@ class AnalyticsHandler(object):
             ak.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()[
                 "serial"
             ],
-            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()[
-                "model"
-            ],
+            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
         }
 
         if self._current_dust_collector:
@@ -913,7 +909,7 @@ class AnalyticsHandler(object):
         self._current_job_id = "j_{}_{}".format(self._snr, time.time())
         # fmt: off
         payload = {
-            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_data()["model"],
+            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
         }
         # fmt: on
         self._add_job_event(ak.Job.Event.LASERJOB_STARTED, payload=payload)
