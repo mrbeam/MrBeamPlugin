@@ -91,13 +91,18 @@ def switch_software_channel(plugin, channel):
 
 def _config_octoprint(plugin, tier):
     prerelease_channel = None
+    type = "github_release"
     if tier in [SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_BETA]:
         prerelease_channel = "mrbeam2-{tier}"
+
+    if tier in [SW_UPDATE_TIER_DEV]:
+        type = "github_commit"
 
     return _get_octo_plugin_description(
         "octoprint",
         tier,
         plugin,
+        type=type,
         displayName="OctoPrint",
         prerelease=(tier in [SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_BETA]),
         prerelease_channel=prerelease_channel,
