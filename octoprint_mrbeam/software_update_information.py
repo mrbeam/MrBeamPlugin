@@ -95,7 +95,7 @@ def _config_octoprint(plugin, tier):
     if tier in [SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_BETA]:
         prerelease_channel = "mrbeam2-{tier}"
 
-    if tier in [SW_UPDATE_TIER_DEV]:
+    elif tier in [SW_UPDATE_TIER_DEV]:
         type = "github_commit"
 
     return _get_octo_plugin_description(
