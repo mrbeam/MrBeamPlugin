@@ -206,6 +206,7 @@ $(function () {
                 if (event.which === 18) document.body.classList.add("altKey");
             };
             self.removeClassesForModifierKeys = function (event) {
+                // TODO bug: should not check for shiftkey/ctrlkey ... should just check if they are still down on any keyup
                 if (event.which === 16)
                     document.body.classList.remove("shiftKey");
                 if (
@@ -236,8 +237,8 @@ $(function () {
 
             self.state.intensityOverride = ko.observable(100);
             self.state.feedrateOverride = ko.observable(100);
-            self.state.intensityOverride.extend({rateLimit: 500});
-            self.state.feedrateOverride.extend({rateLimit: 500});
+            self.state.intensityOverride.extend({ rateLimit: 500 });
+            self.state.feedrateOverride.extend({ rateLimit: 500 });
             self.state.numberOfPasses = ko.observable(1);
             self.state.isConnecting = ko.observable(undefined);
 
@@ -301,6 +302,7 @@ $(function () {
                     previous,
                 ]);
             });
+            OctoPrint.coreui.selectedTab = "#workingarea";
 
             // terminal stuff
             terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
@@ -315,8 +317,184 @@ $(function () {
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display
-            self.state._processProgressData = function () {
+            self.state._processProgressData = function () {};
+
+            const pasteEl = document.getElementById("pasteOverlay");
+            pasteEl.contentEditable = "true";
+            document.addEventListener("keydown", (event) => {
+                if (
+                    (event.keyCode == 86 || event.which == 86) &&
+                    event.ctrlKey
+                ) {
+                    // ctrl-V TODO... check for mac
+                    pasteEl.focus();
+                }
+            });
+            pasteEl.onpaste = function (pasteEvent) {
+                function isValidHttpUrl(string) {
+                    // TODO move this to helper
+                    let url;
+                    try {
+                        url = new URL(string);
+                    } catch (_) {
+                        return false;
+                    }
+                    return (
+                        url.protocol === "http:" || url.protocol === "https:"
+                    );
+                }
+
+                const items = (
+                    pasteEvent.clipboardData ||
+                    pasteEvent.originalEvent.clipboardData
+                ).items;
+
+                // find pasted image among pasted items
+                let blob = null;
+                for (var i = 0; i < items.length; i++) {
+                    const mime = items[i].type;
+                    if (
+                        items[i].kind === "file" &&
+                        mime.indexOf("image/svg") === 0
+                    ) {
+                        blob = items[i].getAsFile();
+
+                        // load svg text if there is a pasted svg
+                        if (blob !== null) {
+                            let reader = new FileReader();
+                            reader.onload = function (fileReaderEvent) {
+                                const svgStr = fileReaderEvent.target.result;
+                                self.handlePastedSvg(svgStr, mime, event);
+                            };
+                            reader.readAsText(blob);
+                            break;
+                        }
+                    } else if (
+                        items[i].kind === "file" &&
+                        mime.indexOf("image") === 0
+                    ) {
+                        blob = items[i].getAsFile();
+
+                        // load image if there is a pasted image
+                        if (blob !== null) {
+                            let reader = new FileReader();
+                            reader.onload = function (fileReaderEvent) {
+                                const imgDataUrl =
+                                    fileReaderEvent.target.result;
+                                self.handlePastedImage(imgDataUrl, pasteEvent);
+                            };
+                            reader.readAsDataURL(blob);
+                            break;
+                        }
+                    } else if (
+                        items[i].kind === "string" &&
+                        items[i].type.indexOf("text") === 0
+                    ) {
+                        items[i].getAsString(function (raw) {
+                            const content = raw.trim();
+                            if (content.length > 0) {
+                                if (isValidHttpUrl(content)) {
+                                    self.handlePastedUrl(
+                                        content,
+                                        mime,
+                                        pasteEvent
+                                    );
+                                } else {
+                                    self.handlePastedText(
+                                        content,
+                                        mime,
+                                        pasteEvent
+                                    );
+                                }
+                            }
+                        });
+                    } else if (items[i].kind === "file") {
+                        console.warn(
+                            `No handler for pasted file type ${items[i].type}.`
+                        );
+                    }
+                }
+                //                pasteEvent.preventDefault();
+                //                document.body.classList.remove("ctrlKey");
+                pasteEl.innerText = "";
             };
+        };
+
+        self.handlePastedImage = function (dataUrl, mime, event) {
+            // if tab == working area -> upload & place
+            const doPlace = OctoPrint.coreui.selectedTab === "#workingarea";
+            // if tab == design lib -> upload
+            const doUpload =
+                OctoPrint.coreui.selectedTab === "#workingarea" ||
+                OctoPrint.coreui.selectedTab === "#designlib";
+            // if tab == design store -> publish? tbd.
+
+            if (doPlace) {
+                self.workingArea.placeImgUrl(dataUrl);
+            }
+            if (doUpload) {
+                const data = { dataUrl: dataUrl };
+                OctoPrint.simpleApiCommand(
+                    "mrbeam",
+                    "upload_pasted_image",
+                    data
+                ).then(function (resp) {
+                    console.info("upload done", resp);
+                });
+            }
+        };
+
+        self.handlePastedSvg = function (svgStr, mime, event) {
+            // if tab == working area -> upload & place
+            const doPlace = OctoPrint.coreui.selectedTab === "#workingarea";
+            // if tab == design lib -> upload
+            const doUpload =
+                OctoPrint.coreui.selectedTab === "#workingarea" ||
+                OctoPrint.coreui.selectedTab === "#designlib";
+            // if tab == design store -> publish? tbd.
+
+            if (doUpload) {
+                const dataUrl = `data:image/svg+xml;base64,${btoa(svgStr)}`;
+                const data = { dataUrl: dataUrl };
+                OctoPrint.simpleApiCommand(
+                    "mrbeam",
+                    "upload_pasted_image",
+                    data
+                ).then(function (resp) {
+                    console.info("upload done", resp);
+                });
+            }
+            if (doPlace) {
+                const origin = `Clipboard_SVG`;
+                self.workingArea.placeSVGStr(svgStr, origin);
+            }
+        };
+
+        self.handlePastedText = function (text, mime, event) {
+            function isHTML(str) {
+                // TODO move to helper file
+                var doc = new DOMParser().parseFromString(str, "text/html");
+                return Array.from(doc.body.childNodes).some(
+                    (node) => node.nodeType === 1
+                );
+            }
+
+            if (isHTML(text)) {
+                text = text.replaceAll(/(<([^>]+)>)/gi, "");
+            }
+            // limit length of pasted text
+            text = text.substr(0, 500); // TODO magic number: 500 characters with shortest QT font at 3mm text height are ~ 500mm wide.
+
+            // TODO improvements:
+            // handle multiline text, tbd. with placing one QuickText each line
+            self.workingArea.newQuickText(text);
+        };
+
+        self.handlePastedUrl = function (url, mime, event) {
+            console.warn(
+                "handlePastedUrl not implemented yet. Falling back to handlePastedText()."
+            );
+            self.handlePastedText(url, mime, event);
         };
 
         self.onStartupComplete = function () {
@@ -327,8 +505,11 @@ $(function () {
         };
 
         self.onEventMrbPluginVersion = function (payload) {
-            if (payload?.version || payload?.is_first_run ||
-                payload?.mrb_state?.laser_model) {
+            if (
+                payload?.version ||
+                payload?.is_first_run ||
+                payload?.mrb_state?.laser_model
+            ) {
                 self.force_reload_if_required(
                     payload["version"],
                     payload["is_first_run"],
@@ -379,43 +560,50 @@ $(function () {
             laserHeadModel = laserHeadModel?.toString();
             if (self.settings.settings?.plugins?.mrbeam) {
                 let mrb_settings = self.settings.settings.plugins.mrbeam;
-                backend_version = backend_version ? backend_version : mrb_settings._version();
-                isFirstRun = isFirstRun ? isFirstRun : mrb_settings.isFirstRun();
-                if(mrb_settings?.laserhead?.model()){
-                    laserHeadModel = laserHeadModel ? laserHeadModel : mrb_settings.laserhead.model().toString();
+                backend_version = backend_version
+                    ? backend_version
+                    : mrb_settings._version();
+                isFirstRun = isFirstRun
+                    ? isFirstRun
+                    : mrb_settings.isFirstRun();
+                if (mrb_settings?.laserhead?.model()) {
+                    laserHeadModel = laserHeadModel
+                        ? laserHeadModel
+                        : mrb_settings.laserhead.model().toString();
                 }
             }
             if (
                 backend_version !== BEAMOS_VERSION ||
                 isFirstRun !== CONFIG_FIRST_RUN ||
-                (laserHeadModel !== undefined && laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
+                (laserHeadModel !== undefined &&
+                    laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
             ) {
                 console.log(
                     "Frontend reload check: RELOAD! (version: frontend=" +
-                    BEAMOS_VERSION +
-                    ", backend=" +
-                    backend_version +
-                    ", isFirstRun: frontend=" +
-                    CONFIG_FIRST_RUN +
-                    ", backend=" +
-                    isFirstRun +
-                    ", laserheadModel: frontend=" +
-                    MRBEAM_LASER_HEAD_MODEL +
-                    ", backend=" +
-                    laserHeadModel +
-                    ")"
+                        BEAMOS_VERSION +
+                        ", backend=" +
+                        backend_version +
+                        ", isFirstRun: frontend=" +
+                        CONFIG_FIRST_RUN +
+                        ", backend=" +
+                        isFirstRun +
+                        ", laserheadModel: frontend=" +
+                        MRBEAM_LASER_HEAD_MODEL +
+                        ", backend=" +
+                        laserHeadModel +
+                        ")"
                 );
                 console.log("Reloading frontend...");
                 window.location.href = "/?ts=" + Date.now();
             } else {
                 console.log(
                     "Frontend reload check: OK (version: " +
-                    BEAMOS_VERSION +
-                    ", isFirstRun: " +
-                    CONFIG_FIRST_RUN +
-                    ", laserheadModel: " +
-                    MRBEAM_LASER_HEAD_MODEL +
-                    ")"
+                        BEAMOS_VERSION +
+                        ", isFirstRun: " +
+                        CONFIG_FIRST_RUN +
+                        ", laserheadModel: " +
+                        MRBEAM_LASER_HEAD_MODEL +
+                        ")"
                 );
             }
         };
@@ -521,7 +709,7 @@ $(function () {
             if (self.storedSocketData.length > 0) {
                 console.log(
                     "Handling stored socked data: " +
-                    self.storedSocketData.length
+                        self.storedSocketData.length
                 );
                 for (var i = 0; i < self.storedSocketData.length; i++) {
                     self._fromData(
@@ -539,7 +727,7 @@ $(function () {
             self.state.isFlashing(data.flags.flashing);
             self.state.isConnecting(
                 data.text === "Connecting" ||
-                data.text === "Opening serial port"
+                    data.text === "Opening serial port"
             );
         };
 
@@ -552,9 +740,9 @@ $(function () {
                 isNaN(data[0]) ||
                 isNaN(data[1])
             ) {
-                self.state.currentPos({x: 0, y: 0});
+                self.state.currentPos({ x: 0, y: 0 });
             } else {
-                self.state.currentPos({x: data[0], y: data[1]});
+                self.state.currentPos({ x: data[0], y: data[1] });
             }
         };
 
@@ -721,7 +909,7 @@ $(function () {
                 "/" +
                 payload.gcode;
             var data = {
-                refs: {resource: url},
+                refs: { resource: url },
                 origin: payload.gcode_location,
                 path: payload.gcode,
             };

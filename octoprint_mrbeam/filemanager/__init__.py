@@ -28,13 +28,16 @@ class MrbFileManager(FileManager):
     FILE_EXTENSIONS_GCODE = ["g", "gc", "gco", "gcode", "nc"]
 
     class File:
-        def __init__(self, file_name, content):
+        def __init__(self, file_name, content, binary=False):
             self.filename = file_name
-            self.content = content
+            if binary == True:
+                self.content = content
+            else:
+                self.content = content.encode("UTF-8")
 
         def save(self, absolute_dest_path):
             with open(absolute_dest_path, "wb") as d:
-                d.write(self.content.encode("UTF-8"))
+                d.write(self.content)
 
     def __init__(self, plugin):
         self._plugin = plugin
@@ -54,13 +57,15 @@ class MrbFileManager(FileManager):
             initial_storage_managers=storage_managers,
         )
 
-    def add_file_to_design_library(self, file_name, content, sanitize_name=False):
+    def add_file_to_design_library(
+        self, file_name, content, sanitize_name=False, binary=False
+    ):
         try:
             if sanitize_name:
                 file_name = self._sanitize_file_name(file_name)
             content = self._sanitize_content(file_name, content)
 
-            file_obj = self.File(file_name, content)
+            file_obj = self.File(file_name, content, binary)
             self.add_file(
                 FileDestinations.LOCAL,
                 file_name,
@@ -70,7 +75,7 @@ class MrbFileManager(FileManager):
             )
         except Exception as e:
             self._logger_mrb.exception(
-                "Exception in MrbFileManager.add_file_to_design_library() ", test=True
+                "Exception in MrbFileManager.add_file_to_design_library() "
             )
             raise e
 

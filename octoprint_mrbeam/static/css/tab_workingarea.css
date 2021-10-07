@@ -788,6 +788,7 @@ body.activitySpinnerActive #activitySpinnerOverlay i {
   transition: opacity ease-out;
   transition-duration: 0.2s;
   transition-delay: 0s;
+  caret-color: transparent;
 }
 
 #activitySpinnerOverlay i {

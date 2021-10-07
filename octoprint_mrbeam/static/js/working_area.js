@@ -505,13 +505,45 @@ $(function () {
 
         self.countPlacements = function (file) {
             // quicktexts can't get duplicated and don't have ["refs"]["download"]
-            if (file["type"] === "quicktext" || file["type"] === "quickshape") {
+            if (
+                file["type"] === "quicktext" ||
+                file["type"] === "quickshape" ||
+                !file["refs"] ||
+                !file["refs"]["download"]
+            ) {
                 return 1;
             }
             var label = file["refs"]["download"];
             var p = snap.selectAll("g[mb\\:origin='" + label + "']");
             return p.length;
         };
+
+        /**
+         * About the structure of placing content to the working area.
+         * (like handled by functions named place[SVG, IMG, ImgUrl, DXF, Gcode, QuickText, QuickShape, SVGStr, etc])
+         * The normal workflow should be like this:
+         *
+         * 1. Stage                2. Stage                  3. Stage                  4.Stage
+         *
+         * placeSVG()           -> _placeSVGFragment() ----> _prepareAndInsertSVG() -> _listPlacedItem()
+         * placeSVGStr()        -> _placeSVGFragment() ------^
+         *                         _qt_placeQuicktext() -----^       // TODO: currently broken, does not use _prepareAndInsertSVG()!
+         *                         _qs_placeQuickShape() ----^       // TODO: currently broken, does not use _prepareAndInsertSVG()!
+         * placeDXF() -----------> _placeSVGFragment() ------^       // TODO: currently broken, does not use _placeSVGFragment()!
+         * placeIMG() ---------------------------------------^       // TODO: currently broken, does not use _prepareAndInsertSVG()!
+         *      ^---------,
+         * placeImgUrl() -´
+         *
+         * placeGcode()  // special case. TODO: rewrite that GCode can be unlocked and is converted to SVG, then -> _placeSVGFragment()
+         *
+         * State explanations:
+         * 1. Input is url. Load, take care about fetching issues, get raw content and generate a SVG fragment
+         * 2. Input may be a SVG fragment or info to generate one. Handle dimensions, scaling and analysis of the content. Output: SVG fragment
+         * 3. Input is a SVG fragment. Sanitize, analyse, normalize and append to the working area. Take care about click handlers. Output: id of the inserted element
+         * 4. Input is element Id. Take care about updating the list of designs.
+         *
+         * This structure is a first draft and still work in progress.
+         */
 
         self.placeGcode = function (file) {
             var start_ts = Date.now();
@@ -619,90 +651,137 @@ $(function () {
          * @param callback
          */
         self.placeSVG = function (file, callback) {
-            var start_ts = Date.now();
-            var url = self._getSVGserveUrl(file);
+            const start_ts = Date.now();
+            const url = self._getSVGserveUrl(file);
+            file.url = url;
+            const origin = url;
             $("body").addClass("activitySpinnerActive");
-            cb = function (fragment) {
-                var duration_load = Date.now() - start_ts;
-                start_ts = Date.now();
-                if (WorkingAreaHelper.isBinaryData(fragment.node.textContent)) {
-                    // workaround: only catching one loading error
-                    self.file_not_readable();
-                    return;
-                }
-                if (WorkingAreaHelper.isEmptyFile(fragment)) {
-                    // empty svg files
-                    self.empty_svg();
-                    return;
-                }
-                var id = self.getEntryId();
-                var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
-                var origin = file["refs"]["download"];
-                file.id = id; // list entry id
-                file.previewId = previewId;
-                file.url = url;
-                file.misfit = false;
-
-                // get scale matrix
-                var generator_info = WorkingAreaHelper.getGeneratorInfo(
-                    fragment
-                );
-                var doc_dimensions = self._getDocumentDimensionAttributes(
-                    fragment
-                );
-                var unitScaleX = self._getDocumentScaleToMM(
-                    doc_dimensions.units_x,
-                    generator_info
-                );
-                var unitScaleY = self._getDocumentScaleToMM(
-                    doc_dimensions.units_y,
-                    generator_info
-                );
-                var mat = self.getDocumentViewBoxMatrix(
-                    doc_dimensions,
-                    doc_dimensions.viewbox
-                );
-                var scaleMatrixStr = new Snap.Matrix(
-                    mat[0][0] * unitScaleX,
-                    mat[0][1],
-                    mat[1][0],
-                    mat[1][1] * unitScaleY,
-                    -mat[2][0] * unitScaleX,
-                    -mat[2][1] * unitScaleY
-                ).toTransformString();
-
-                var analyticsData = {};
-                analyticsData.file_type = "svg";
-                analyticsData.svg_generator_info = generator_info;
-                analyticsData.svg_generator_info.generator =
-                    analyticsData.svg_generator_info.generator === "unknown"
-                        ? null
-                        : analyticsData.svg_generator_info.generator;
-                analyticsData.svg_generator_info.version =
-                    analyticsData.svg_generator_info.version === "unknown"
-                        ? null
-                        : analyticsData.svg_generator_info.version;
-                analyticsData.duration_load = duration_load;
-                analyticsData.duration_preprocessing = Date.now() - start_ts;
-                var insertedId = self._prepareAndInsertSVG(
-                    fragment,
-                    previewId,
-                    origin,
-                    scaleMatrixStr,
-                    {},
-                    analyticsData,
-                    file
-                );
-                self._listPlacedItem(file);
-                if (typeof callback === "function") callback(insertedId);
-            };
             try {
                 // TODO Figure out why the loading exception is not caught.
-                self.loadSVG(url, cb);
+                self.loadSVG(url, function (fragment) {
+                    const duration_load = Date.now() - start_ts;
+                    self._placeSVGFragment(
+                        fragment,
+                        origin,
+                        file,
+                        duration_load,
+                        callback
+                    );
+                });
             } catch (e) {
                 console.error(e);
                 self.file_not_readable();
             }
+        };
+
+        /**
+         * Call to place (add) a SVG file to working area
+         * @param svgStr
+         * @param callback
+         */
+        self.placeSVGStr = function (svgStr, origin, callback) {
+            $("body").addClass("activitySpinnerActive");
+            try {
+                let file = { type: "svgString", name: origin };
+                const ts = Date.now();
+                let start_ts = Date.now();
+                let fragment = Snap.parse(svgStr);
+                const duration_load = Date.now() - start_ts;
+                self._placeSVGFragment(
+                    fragment,
+                    origin,
+                    file,
+                    duration_load,
+                    callback
+                );
+            } catch (e) {
+                console.error(e);
+                self.file_not_readable();
+            }
+        };
+
+        /**
+         * Call to place (add) an parsed SVG Fragment to the working area
+         * @param fragment object, the output of Snap.parse(...)
+         * @param origin String, where does this fragment come from
+         * @param file object, our file object for representing the design file in the list of placed items
+         * @param duration_load number, how much time the loading took. for analytics
+         * @param callback function optional
+         */
+        self._placeSVGFragment = function (
+            fragment,
+            origin,
+            file,
+            duration_load,
+            callback
+        ) {
+            let start_ts = Date.now();
+
+            if (WorkingAreaHelper.isBinaryData(fragment.node.textContent)) {
+                // workaround: only catching one loading error
+                self.file_not_readable();
+                return;
+            }
+            if (WorkingAreaHelper.isEmptyFile(fragment)) {
+                // empty svg files
+                self.empty_svg();
+                return;
+            }
+            var id = self.getEntryId();
+            var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
+
+            file.id = id; // list entry id
+            file.previewId = previewId;
+            file.misfit = false;
+
+            // get scale matrix
+            var generator_info = WorkingAreaHelper.getGeneratorInfo(fragment);
+            var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
+            var unitScaleX = self._getDocumentScaleToMM(
+                doc_dimensions.units_x,
+                generator_info
+            );
+            var unitScaleY = self._getDocumentScaleToMM(
+                doc_dimensions.units_y,
+                generator_info
+            );
+            var mat = self.getDocumentViewBoxMatrix(
+                doc_dimensions,
+                doc_dimensions.viewbox
+            );
+            var scaleMatrixStr = new Snap.Matrix(
+                mat[0][0] * unitScaleX,
+                mat[0][1],
+                mat[1][0],
+                mat[1][1] * unitScaleY,
+                -mat[2][0] * unitScaleX,
+                -mat[2][1] * unitScaleY
+            ).toTransformString();
+
+            var analyticsData = {};
+            analyticsData.file_type = "svg";
+            analyticsData.svg_generator_info = generator_info;
+            analyticsData.svg_generator_info.generator =
+                analyticsData.svg_generator_info.generator === "unknown"
+                    ? null
+                    : analyticsData.svg_generator_info.generator;
+            analyticsData.svg_generator_info.version =
+                analyticsData.svg_generator_info.version === "unknown"
+                    ? null
+                    : analyticsData.svg_generator_info.version;
+            analyticsData.duration_load = duration_load;
+            analyticsData.duration_preprocessing = Date.now() - start_ts;
+            var insertedId = self._prepareAndInsertSVG(
+                fragment,
+                previewId,
+                origin,
+                scaleMatrixStr,
+                {},
+                analyticsData,
+                file
+            );
+            self._listPlacedItem(file);
+            if (typeof callback === "function") callback(insertedId);
         };
 
         /**
@@ -714,6 +793,7 @@ $(function () {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
             $("body").addClass("activitySpinnerActive");
+            // TODO: duplicate code. replace this callback with self._placeSVGFragment() considering the self.dxfScale().
             cb = function (fragment, timestamps) {
                 var duration_load = timestamps.load_done
                     ? timestamps.load_done - start_ts
@@ -1063,11 +1143,11 @@ $(function () {
                     ] = 0;
                 analyticsData.removed_unnecessary_elements[
                     removeElements[i].type
-                    ]++;
+                ]++;
                 console.warn(
                     "Unsupported '" +
-                    removeElements[i].type +
-                    "' element in SVG is removed"
+                        removeElements[i].type +
+                        "' element in SVG is removed"
                 );
             }
             removeElements.remove();
@@ -2394,7 +2474,11 @@ $(function () {
                 } else {
                     return "wa_template_" + data.type;
                 }
-            } else if (data.type === "recentjob" || data.type === "split") {
+            } else if (
+                data.type === "recentjob" ||
+                data.type === "split" ||
+                data.type === "svgString"
+            ) {
                 return "wa_template_model_svg";
             } else if (data.type === "quicktext") {
                 return "wa_template_quicktext";
@@ -3486,8 +3570,8 @@ $(function () {
          * Opens QuickText window and places a new quickText Object
          * to the working_area and file list.
          */
-        self.newQuickText = function () {
-            var file = self._qt_placeQuicktext();
+        self.newQuickText = function (text) {
+            var file = self._qt_placeQuicktext(text);
             self.editQuickText(file);
         };
 
@@ -3850,15 +3934,16 @@ $(function () {
          * Equivalent to self.placeSVG for QuickText
          * @returns file object
          */
-        self._qt_placeQuicktext = function () {
+        self._qt_placeQuicktext = function (text) {
             var start_ts = Date.now();
-            var placeholderText = $("#quick_text_dialog_text_input").attr(
+            const placeholderText = $("#quick_text_dialog_text_input").attr(
                 "placeholder"
             );
+            const initialText = text || placeholderText;
 
             var file = {
                 date: Date.now(),
-                name: "",
+                name: initialText,
                 id: null,
                 previewId: null,
                 url: null,
@@ -3898,7 +3983,7 @@ $(function () {
                 })
                 .toDefs();
 
-            const curvedText = uc.text(0, 0, placeholderText);
+            const curvedText = uc.text(0, 0, initialText);
             curvedText.attr({
                 style:
                     "white-space: pre; font-size: " +
@@ -3909,7 +3994,7 @@ $(function () {
             curvedText.node.classList.add("curvedText");
             curvedText.textPath.attr({ startOffset: "50%" });
 
-            const straightText = uc.text(0, 0, placeholderText);
+            const straightText = uc.text(0, 0, initialText);
             straightText.attr({
                 style:
                     "white-space: pre; font-size: " +

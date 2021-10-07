@@ -1254,6 +1254,44 @@ class MrBeamPlugin(
             res = dict(calibration_pattern=destFile, target=FileDestinations.LOCAL)
             return jsonify(res)
 
+    # simpleApiCommand: upload_pasted_image
+    def upload_pasted_image(self, data):
+        import re
+        from binascii import a2b_base64
+
+        dataUrl = data.get("dataUrl", "")
+
+        regex = ur"^data:(?P<mimetype>[-\w.]+/[-\w.+]+);.*base64,(?P<b64>[a-zA-Z0-9+/]+={,2})$"
+        match = re.match(regex, dataUrl, re.MULTILINE)
+
+        if match:
+            mimetype = match.group("mimetype")
+            b64 = match.group("b64")
+            suffix = "png"
+            binaryFlag = False
+            if mimetype == "image/png":
+                suffix = "png"
+                binaryFlag = True
+            if mimetype == "image/jpg" or mimetype == "image/jpeg":
+                suffix = "jpg"
+                binaryFlag = True
+            if mimetype in ["image/svg", "image/svg+xml", "application/svg+xml"]:
+                suffix = "svg"
+                binaryFlag = False
+
+            binaryData = a2b_base64(b64)
+            ts = time.gmtime()
+            destFile = time.strftime("clipboard_%Y-%m-%d_%H.%M.%S." + suffix, ts)
+            self.mrb_file_manager.add_file_to_design_library(
+                file_name=destFile, content=binaryData, binary=binaryFlag
+            )
+
+            res = dict(pastedImage=destFile, target=FileDestinations.LOCAL)
+            return res
+
+        else:
+            return False
+
     # ~~ helpers
 
     # helper method to write data to user settings
@@ -1886,6 +1924,7 @@ class MrBeamPlugin(
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
+            upload_pasted_image=["dataUrl"],
         )
 
     def on_api_command(self, command, data):
@@ -2013,7 +2052,12 @@ class MrBeamPlugin(
             )  # TODO move this func to other file
         elif command == "cancel_final_extraction":
             self.dust_manager.set_user_abort_final_extraction()
-
+        elif command == "upload_pasted_image":
+            result = self.upload_pasted_image(data)
+            if result != False:
+                return make_response(jsonify(result), 200)
+            else:
+                return make_response("Not a valid dataurl", 400)
         return NO_CONTENT
 
     def analytics_init(self, data):
@@ -2674,7 +2718,9 @@ class MrBeamPlugin(
                     dusting_mode=self.dust_manager.is_final_extraction_mode,
                     state=self._printer.get_state_string(),
                     is_homed=self._printer.is_homed(),
-                    laser_model = self.laserhead_handler.get_current_used_lh_data()["model"],
+                    laser_model=self.laserhead_handler.get_current_used_lh_data()[
+                        "model"
+                    ],
                 )
             except:
                 self._logger.exception("Exception while collecting mrb_state data.")
