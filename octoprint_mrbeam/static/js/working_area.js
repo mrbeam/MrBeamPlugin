@@ -523,13 +523,13 @@ $(function () {
          * (like handled by functions named place[SVG, IMG, ImgUrl, DXF, Gcode, QuickText, QuickShape, SVGStr, etc])
          * The normal workflow should be like this:
          *
-         * 1. Stage                2. Stage                  3. Stage                  4.Stage
+         * 1. Stage: Load          2. Stage: Generate Svg    3. Stage: Sanitize, UI    4.Stage: represent
          *
-         * placeSVG()           -> _placeSVGFragment() ----> _prepareAndInsertSVG() -> _listPlacedItem()
-         * placeSVGStr()        -> _placeSVGFragment() ------^
+         * placeSVG() -----------> _placeSVGFragment() ----> _prepareAndInsertSVG() -> _listPlacedItem()
+         * placeSVGStr() --------> _placeSVGFragment() ------^
+         * placeDXF() -----------> _placeSVGFragment() ------^       // TODO: currently broken, does not use _placeSVGFragment()!
          *                         _qt_placeQuicktext() -----^       // TODO: currently broken, does not use _prepareAndInsertSVG()!
          *                         _qs_placeQuickShape() ----^       // TODO: currently broken, does not use _prepareAndInsertSVG()!
-         * placeDXF() -----------> _placeSVGFragment() ------^       // TODO: currently broken, does not use _placeSVGFragment()!
          * placeIMG() ---------------------------------------^       // TODO: currently broken, does not use _prepareAndInsertSVG()!
          *      ^---------,
          * placeImgUrl() -´
