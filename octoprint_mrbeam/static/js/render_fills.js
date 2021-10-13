@@ -125,7 +125,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         let clusters = [];
         for (let i = 0; i < marked.length; i++) {
             let rasterEl = marked[i];
-            const bbox = rasterEl.get_total_bbox();
+            let bbox;
+            try {
+              bbox = rasterEl.get_total_bbox();
+            }
+            catch(err) {
+                console.warn(err);
+                continue;
+            }
             // find overlaps
             let lastOverlap = -1;
             for (var j = 0; j < clusters.length; j++) {
