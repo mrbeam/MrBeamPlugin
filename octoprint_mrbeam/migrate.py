@@ -46,7 +46,7 @@ class Migration(object):
     MIGRATE_LOGROTATE_FOLDER = "files/migrate_logrotate/"
 
     # grbl auto update conf
-    GRBL_AUTO_UPDATE_FILE = MachineCom._get_grbl_file_name()
+    GRBL_AUTO_UPDATE_FILE = MachineCom.get_grbl_file_name()
     GRBL_AUTO_UPDATE_VERSION = MachineCom.GRBL_DEFAULT_VERSION
 
     # GRBL version that should be updated, regardless...

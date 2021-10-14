@@ -19,11 +19,12 @@ from octoprint.printer.profile import PrinterProfileManager
 from octoprint.util import dict_merge, dict_clean, dict_contains_keys
 from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.util import dict_get
+from octoprint_mrbeam.util import dict_get, device_info
 from octoprint_mrbeam.util.log import logme
 
 
 # singleton
+
 _instance = None
 
 
@@ -123,7 +124,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
             os.makedirs(_laser_cutter_profile_folder)
         PrinterProfileManager.__init__(self)
         self._folder = _laser_cutter_profile_folder
-        self._logger = mrb_logger(__name__)
+        self._logger = mrb_logger("octoprint.plugins.mrbeam." + __name__)
         # HACK - select the default profile.
         # See self.select() - waiting for upstream fix
         self.select(profile_id or settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID))
@@ -191,6 +192,11 @@ class LaserCutterProfileManager(PrinterProfileManager):
                 hard_coded = dict_merge(default, LASER_PROFILE_MAP[identifier])
                 return dict_merge(hard_coded, file_based_result)
             else:
+                if identifier is None:
+                    identifier = device_info.deviceInfo().get_type()
+                else:
+                    default["id"] = identifier
+                    default["model"] = identifier[-1]
                 return dict_merge(default, PrinterProfileManager.get(self, identifier))
         except InvalidProfileError:
             return None
@@ -234,7 +240,8 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return PrinterProfileManager.get_current_or_default(self)
 
     def exists(self, identifier):
-        if identifier in LASER_PROFILE_IDENTIFIERS:
+        if re.match(r"MrBeam+(\d){1}[A-Z]", identifier):
+            # if identifier in LASER_PROFILE_IDENTIFIERS:
             return True
         else:
             return PrinterProfileManager.exists(self, identifier)
