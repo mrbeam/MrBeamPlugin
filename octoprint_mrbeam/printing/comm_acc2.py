@@ -1901,13 +1901,11 @@ class MachineCom(object):
         """
         if (
             self.grbl_auto_update_enabled
-            and _mrbeam_plugin_implementation._settings.get(
-                ["grbl", "auto_update_version"]
-            )
-            is not None
+            and self._laserCutterProfile["grbl"]["auto_update_version"] is not None
         ):
-            if self._grbl_version == _mrbeam_plugin_implementation._settings.get(
-                ["grbl", "auto_update_version"]
+            if (
+                self._grbl_version
+                == self._laserCutterProfile["grbl"]["auto_update_version"]
             ):
                 self._logger.info(
                     "Removing grbl auto update flags from octoprint settings..."
@@ -1925,12 +1923,8 @@ class MachineCom(object):
             else:
                 self._logger.warn(
                     "GRBL auto update still set: auto_update_file: %s, auto_update_version: %s, current grbl version: %s",
-                    _mrbeam_plugin_implementation._settings.get(
-                        ["grbl", "auto_update_file"]
-                    ),
-                    _mrbeam_plugin_implementation._settings.get(
-                        ["grbl", "auto_update_version"]
-                    ),
+                    self._laserCutterProfile["grbl"]["auto_update_file"],
+                    self._laserCutterProfile["grbl"]["auto_update_version"],
                     self._grbl_version,
                 )
 
