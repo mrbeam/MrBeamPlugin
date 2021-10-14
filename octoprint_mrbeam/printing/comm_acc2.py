@@ -336,31 +336,18 @@ class MachineCom(object):
                 terminal_as_comm=True,
             )
             self._changeState(self.STATE_CONNECTING)
+
             if (
                 self.grbl_auto_update_enabled
-                and _mrbeam_plugin_implementation._settings.get(
-                    ["grbl", "auto_update_file"]
-                )
-                and _mrbeam_plugin_implementation._settings.get(
-                    ["grbl", "version_lastknown"]
-                )
-                != _mrbeam_plugin_implementation._settings.get(
-                    ["grbl", "auto_update_version"]
-                )
+                and self._laserCutterProfile["grbl"]["auto_update_file"]
             ):
                 self._logger.info(
                     "GRBL auto updating to version: %s, file: %s",
-                    _mrbeam_plugin_implementation._settings.get(
-                        ["grbl", "auto_update_version"]
-                    ),
-                    _mrbeam_plugin_implementation._settings.get(
-                        ["grbl", "auto_update_file"]
-                    ),
+                    self._laserCutterProfile["grbl"]["auto_update_version"],
+                    self._laserCutterProfile["grbl"]["auto_update_file"],
                 )
                 self.flash_grbl(
-                    grbl_file=_mrbeam_plugin_implementation._settings.get(
-                        ["grbl", "auto_update_file"]
-                    ),
+                    grbl_file=self._laserCutterProfile["grbl"]["auto_update_file"],
                     is_connected=False,
                 )
 
@@ -1761,7 +1748,7 @@ class MachineCom(object):
             self._logger.warn(msg, terminal_as_comm=True)
             return
 
-        grbl_file = grbl_file or self._get_grbl_file_name()
+        grbl_file = grbl_file or self.get_grbl_file_name()
 
         if grbl_file.startswith("..") or grbl_file.startswith("/"):
             msg = "ERROR {} GRBL '{}': Invalid filename.".format(log_verb, grbl_file)
@@ -1839,7 +1826,7 @@ class MachineCom(object):
                         title="GRBL Update failed", text=msg, is_err=True
                     )
                 )
-            except:
+            except Exception:
                 self._logger.exception(
                     "Exception while notifying frontend after failed flash_grbl: "
                 )
@@ -1891,7 +1878,7 @@ class MachineCom(object):
                 )
 
     @staticmethod
-    def _get_grbl_file_name(grbl_version=None):
+    def get_grbl_file_name(grbl_version=None):
         """
         Gets you the filename according to the given grbl version.
         :param grbl_version: (optional) grbl version - If no grbl version is provided it returns you the filename of the default version for this release.
@@ -1926,14 +1913,12 @@ class MachineCom(object):
                     "Removing grbl auto update flags from octoprint settings..."
                 )
                 try:
-                    _mrbeam_plugin_implementation._settings.set(
-                        ["grbl", "auto_update_version"], None, force=True
+                    self._laserCutterProfile["grbl"]["auto_update_file"] = None
+                    self._laserCutterProfile["grbl"]["auto_update_version"] = None
+                    laserCutterProfileManager().save(
+                        self._laserCutterProfile, allow_overwrite=True
                     )
-                    _mrbeam_plugin_implementation._settings.set(
-                        ["grbl", "auto_update_file"], None, force=True
-                    )
-                    _mrbeam_plugin_implementation._settings.save()
-                except:
+                except Exception:
                     self._logger.exception(
                         "Exception while saving Mr Beam settings changes for auto update controls"
                     )
@@ -2354,7 +2339,7 @@ class MachineCom(object):
                 self._serial.write(list(bytearray("\x18")))
             elif specialcmd.startswith("/flash_grbl"):
                 # if no file given: flash default grbl version
-                file = self._get_grbl_file_name()
+                file = self.get_grbl_file_name()
                 if len(tokens) > 1:
                     file = tokens[1]
                 if file in (None, "?", "-h", "--help"):
@@ -2375,7 +2360,7 @@ class MachineCom(object):
                     self.flash_grbl(file)
             elif specialcmd.startswith("/verify_grbl"):
                 # if no file given: verify to currently installed
-                file = self._get_grbl_file_name(self._grbl_version)
+                file = self.get_grbl_file_name(self._grbl_version)
                 if len(tokens) > 1:
                     file = tokens[1]
                 if file in (None, "?", "-h", "--help"):

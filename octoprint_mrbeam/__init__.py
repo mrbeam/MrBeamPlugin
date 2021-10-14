@@ -289,7 +289,7 @@ class MrBeamPlugin(
         msg += ", env:{}".format(self.get_env())
         msg += ", beamOS-image:{}".format(self._octopi_info)
         msg += ", grbl_version_lastknown:{}".format(
-            self._settings.get(["grbl", "version_lastknown"])
+            self._settings.get(["grbl_version_lastknown"])
         )
         msg += ", laserhead-serial-lastknown:{}".format(
             self.laserhead_handler.get_current_used_lh_data()["serial"]
@@ -321,7 +321,7 @@ class MrBeamPlugin(
             software_tier=self._settings.get(["dev", "software_tier"]),
             env=self.get_env(),
             beamOS_image=self._octopi_info,
-            grbl_version_lastknown=self._settings.get(["grbl", "version_lastknown"]),
+            grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
             laserhead_lastknown=dict(
                 serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
                 model=self.laserhead_handler.get_current_used_lh_data()["model"],
@@ -2496,9 +2496,9 @@ class MrBeamPlugin(
 
         if event == OctoPrintEvents.CONNECTED and "grbl_version" in payload:
             self._grbl_version = payload["grbl_version"]
-            if self._grbl_version != self._settings.get(["grbl", "version_lastknown"]):
+            if self._grbl_version != self._settings.get(["grbl_version_lastknown"]):
                 self._settings.set(
-                    ["grbl", "version_lastknown"], self._grbl_version, force=True
+                    ["grbl_version_lastknown"], self._grbl_version, force=True
                 )
                 self._logger.info(
                     "grbl_version_lastknown updated to: %s", self._grbl_version

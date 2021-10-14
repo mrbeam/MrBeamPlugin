@@ -580,24 +580,13 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
     def auto_update_grbl(self):
         self._logger.info("auto_update_grbl() ")
         # migrate version last_known
-        if self.plugin._settings.get(["grbl_version_lastknown"]):
-            self.plugin._settings.set(
-                ["grbl", "version_lastknown"],
-                self.plugin._settings.get(["grbl_version_lastknown"]),
-                force=True,
-            )
-            self.plugin._settings.set(
-                ["grbl_version_lastknown"],
-                None,
-                force=True,
-            )
-        self.plugin._settings.set(
-            ["grbl", "auto_update_version"], self.GRBL_AUTO_UPDATE_VERSION, force=True
-        )
-        self.plugin._settings.set(
-            ["grbl", "auto_update_file"], self.GRBL_AUTO_UPDATE_FILE, force=True
-        )
-        self.plugin._settings.save()
+        laserCutterProfile = laserCutterProfileManager().get_current_or_default()
+        self._logger.debug("profile: %s", laserCutterProfile)
+        laserCutterProfile["grbl"][
+            "auto_update_version"
+        ] = self.GRBL_AUTO_UPDATE_VERSION
+        laserCutterProfile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
+        laserCutterProfileManager().save(laserCutterProfile, allow_overwrite=True)
 
     def inflate_file_system(self):
         self._logger.info("inflate_file_system() ")
