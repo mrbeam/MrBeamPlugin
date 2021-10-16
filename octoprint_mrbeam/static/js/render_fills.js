@@ -71,11 +71,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         var elem = this;
         var selection = [];
         var children = elem.children();
-        if (elem.type === "desc" || elem.type === "style") {
+        if (
+            elem.type === "desc" ||
+            elem.type === "style" ||
+            elem.type === "title"
+        ) {
             return [];
         }
 
-        if (children.length > 0) {
+        if (children.length > 0 && elem.type !== "text") {
             var goRecursive =
                 elem.type !== "defs" && // ignore these tags
                 elem.type !== "clipPath" &&
@@ -93,23 +97,29 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 }
             }
         } else {
-            if (
-                elem.type === "image" ||
-                elem.type === "text" ||
-                elem.type === "#text"
-            ) {
-                if (elem.type === "#text") {
-                    let parent = elem.parent();
-                    parent.addClass(className);
-                    selection.push(parent);
+            if (elem.is_filled()) {
+                if (
+                    elem.type === "image" ||
+                    elem.type === "text" ||
+                    elem.type === "textPath" //||
+                ) {
+                    elem.addClass(className);
+                    selection.push(elem);
                 } else {
-                    elem.addClass(className);
-                    selection.push(elem);
-                }
-            } else {
-                if (fillPaths && elem.is_filled()) {
-                    elem.addClass(className);
-                    selection.push(elem);
+                    if (fillPaths) {
+                        if (elem.is_stroked()) {
+                            // duplicate element to separate stroke from fill
+                            const unstroked = elem.clone();
+                            elem.attr("fill", "none");
+                            unstroked.attr("stroke", "none");
+                            unstroked.addClass(className);
+                            unstroked.clean_gc(); // necessary?
+                            selection.push(unstroked);
+                        } else {
+                            elem.addClass(className);
+                            selection.push(elem);
+                        }
+                    }
                 }
             }
         }
@@ -186,28 +196,92 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     Element.prototype.is_filled = function () {
         var elem = this;
 
-        // TODO text support
-        // TODO opacity support
-        if (
-            elem.type !== "circle" &&
-            elem.type !== "rect" &&
-            elem.type !== "ellipse" &&
-            elem.type !== "line" &&
-            elem.type !== "polygon" &&
-            elem.type !== "polyline" &&
-            elem.type !== "path"
-        ) {
-            return false;
-        }
-
-        var fill = elem.attr("fill");
-        var opacity = elem.attr("fill-opacity");
-
-        if (fill !== "none") {
-            if (opacity === null || opacity > 0) {
-                return true;
+        if (elem.type === "text") {
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                return false;
             }
+            const fill = window.getComputedStyle(elem.node)["fill"];
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["fill-opacity"]
+            );
+            if (fill === "none" || opacity === 0) {
+                return false;
+            }
+            return true;
         }
+
+        if (elem.type === "image") {
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                return false;
+            }
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["opacity"]
+            );
+            if (opacity === 0) {
+                return false;
+            }
+            return true;
+        }
+
+        if (
+            elem.type === "circle" ||
+            elem.type === "rect" ||
+            elem.type === "ellipse" ||
+            elem.type === "line" ||
+            elem.type === "polygon" ||
+            elem.type === "polyline" ||
+            elem.type === "path"
+        ) {
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                return false;
+            }
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["fill-opacity"]
+            );
+            const fill = window.getComputedStyle(elem.node)["fill"];
+            if (fill === "none" || opacity === 0) {
+                return false;
+            }
+            return true;
+        }
+
+        return false;
+    };
+
+    Element.prototype.is_stroked = function () {
+        var elem = this;
+
+        if (
+            elem.type === "circle" ||
+            elem.type === "rect" ||
+            elem.type === "ellipse" ||
+            elem.type === "line" ||
+            elem.type === "polygon" ||
+            elem.type === "polyline" ||
+            elem.type === "text" ||
+            elem.type === "path"
+        ) {
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["stroke-opacity"]
+            );
+            const stroke = window.getComputedStyle(elem.node)["stroke"];
+            const width = parseFloat(
+                window.getComputedStyle(elem.node)["stroke-width"]
+            );
+            if (
+                stroke === "none" ||
+                opacity === 0 ||
+                isNaN(width) ||
+                width <= 0
+            ) {
+                return false;
+            }
+            return true;
+        }
+
         return false;
     };
 
