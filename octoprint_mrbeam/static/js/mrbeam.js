@@ -689,7 +689,7 @@ $(function () {
                                     ) {
                                         $("body").removeClass("modal-open");
                                         backDrop.remove();
-                                        $(this)[0].remove();
+                                        $(this).removeClass("modal-scrollable");
                                         console.warn(
                                             "mutationCallback: removed incomplete modal after 500ms"
                                         );
