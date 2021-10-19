@@ -129,8 +129,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             try {
               bbox = rasterEl.get_total_bbox();
             }
-            catch(err) {
-                console.warn(err);
+            catch(error) {
+                console.warn(`Getting bounding box for ${rasterEl} failed.`, error);
                 continue;
             }
             // find overlaps
@@ -174,8 +174,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             let tmpSvg = svg.clone();
             tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).forEach((element) => {
                 let elementToBeRemoved = tmpSvg.select('#' + element.attr('id'));
-                if (elementToBeRemoved && elementToBeRemoved.type !== "text" &&
-                    elementToBeRemoved.type !== "tspan") {
+                let elementsToBeExcluded = ["text", "tspan"]
+                if (elementToBeRemoved && !elementsToBeExcluded.includes(elementToBeRemoved.type)) {
                     elementToBeRemoved.remove();
                 }
             });
