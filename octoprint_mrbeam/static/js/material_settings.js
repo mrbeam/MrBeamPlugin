@@ -362,6 +362,13 @@ $(function () {
                 hints: "",
                 safety_notes: "",
             },
+            "Solid Wood": {
+                name: gettext("Solid Wood"),
+                img: "Solid-Wood.jpg",
+                description: "",
+                hints: "",
+                safety_notes: "",
+            },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
     }

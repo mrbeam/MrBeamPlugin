@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-10-20 08:42+0200\n"
-"PO-Revision-Date: 2021-10-20 09:14+0200\n"
+"POT-Creation-Date: 2021-10-20 10:09+0200\n"
+"PO-Revision-Date: 2021-10-20 10:11+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -183,7 +183,7 @@ msgstr ""
 "für dieses Material nicht unterstützt."
 
 #: octoprint_mrbeam/static/js/convert.js:1839
-#: octoprint_mrbeam/static/js/render_fills.js:445
+#: octoprint_mrbeam/static/js/render_fills.js:458
 msgid "Conversion failed"
 msgstr "Konvertierung fehlgeschlagen"
 
@@ -742,6 +742,10 @@ msgstr "Zirbelkiefer"
 #: octoprint_mrbeam/static/js/material_settings.js:359
 msgid "Wood Sticker"
 msgstr "Edelholzsticker"
+
+#: octoprint_mrbeam/static/js/material_settings.js:366
+msgid "Solid Wood"
+msgstr "Vollholz"
 
 #: octoprint_mrbeam/static/js/mother_viewmodel.js:51
 msgid "Starts the laser job"
