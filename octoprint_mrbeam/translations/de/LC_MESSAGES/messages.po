@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-09-17 14:20+0200\n"
-"PO-Revision-Date: 2021-10-14 11:34+0200\n"
+"POT-Creation-Date: 2021-10-20 08:42+0200\n"
+"PO-Revision-Date: 2021-10-20 08:45+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -747,38 +747,38 @@ msgstr "Edelholzsticker"
 msgid "Starts the laser job"
 msgstr "Startet den Laserjob"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:604
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:615
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:607
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:618
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:2
 msgid "Files"
 msgstr "Dateien"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:614
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:617
 msgid "1 File"
 msgstr "1 Datei"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:624
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:627
 msgid "recent job"
 msgstr "letzter Job"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:626
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:629
 msgid "image"
 msgstr "Bild"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:742
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:745
 msgid "Preparation done"
 msgstr "Vorbereitung abgeschlossen"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:744
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:747
 #, python-format
 msgid "Converted %(stl)s to %(gcode)s, took %(time).2f seconds"
 msgstr "Datei %(stl)s nach %(gcode)s konvertiert. Dauer: %(time).2f Sekunden"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:841
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:844
 msgid "Ready to laser?"
 msgstr "Bereit zum Lasern?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:844
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:847
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:501
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:125
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:118
@@ -790,11 +790,11 @@ msgstr "Bereit zum Lasern?"
 msgid "Cancel"
 msgstr "Abbruch"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:845
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:848
 msgid "Proceed"
 msgstr "Fortfahren"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:846
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:849
 msgid ""
 "The laser will now start. Protect yourself and everybody in the room "
 "appropriately before proceeding!"
@@ -802,16 +802,16 @@ msgstr ""
 "Der Laser wird nun gestartet. Schütze Dich und alle anderen im Raum "
 "angemessen, bevor Du fortfährst!"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:849
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:852
 msgid "Are you sure you want to proceed?"
 msgstr "Möchtest Du wirklich fortfahren?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:853
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:856
 msgid "The laser will now start. Please make sure the lid is closed."
 msgstr ""
 "Der Laser wird nun gestartet. Achte darauf, dass der Deckel geschlossen ist."
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:856
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:859
 msgid "Please confirm to proceed."
 msgstr "Bitte bestätige, um fortzufahren."
 
@@ -1434,11 +1434,11 @@ msgstr "Stern"
 msgid "Heart"
 msgstr "Herz"
 
-#: octoprint_mrbeam/static/js/working_area.js:1303
+#: octoprint_mrbeam/static/js/working_area.js:1308
 msgid "Limited split result."
 msgstr "Nur teilweise zerteiltes Ergebnis."
 
-#: octoprint_mrbeam/static/js/working_area.js:1304
+#: octoprint_mrbeam/static/js/working_area.js:1309
 msgid ""
 "Splitting this design would result in too many parts. Here are "
 "${split_result.length} parts. You can split the last one again if necessary."
@@ -1447,27 +1447,27 @@ msgstr ""
 "${split_result.length} Teile. Du kannst den letzten Teil bei Bedarf noch "
 "einmal zerteilen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1315
+#: octoprint_mrbeam/static/js/working_area.js:1320
 msgid "No different line colors found."
 msgstr "Keine unterschiedlichen Linienfarben gefunden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1318
+#: octoprint_mrbeam/static/js/working_area.js:1323
 msgid "No non-intersecting shapes found."
 msgstr "Keine nicht-überlappenden Formen gefunden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1325
+#: octoprint_mrbeam/static/js/working_area.js:1330
 msgid "Looks like a single path."
 msgstr "Sieht nach einem einzigen Pfad aus."
 
-#: octoprint_mrbeam/static/js/working_area.js:1328
+#: octoprint_mrbeam/static/js/working_area.js:1333
 msgid "Element not splittable with this method."
 msgstr "Element is nicht zerteilbar mit dieser Methode."
 
-#: octoprint_mrbeam/static/js/working_area.js:1330
+#: octoprint_mrbeam/static/js/working_area.js:1335
 msgid "Can't split this design."
 msgstr "Dieses Design kann nicht zerteilt werden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1865
+#: octoprint_mrbeam/static/js/working_area.js:1870
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements "
@@ -1476,12 +1476,12 @@ msgstr ""
 "Die SVG-Datei enthält nicht unterstützte Elemente: %(elemName)s' Diese "
 "Elemente wurden entfernt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1873
+#: octoprint_mrbeam/static/js/working_area.js:1878
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr "Nicht unterstützte Elemente in SVG: '%(elemName)s'"
 
-#: octoprint_mrbeam/static/js/working_area.js:1886
+#: octoprint_mrbeam/static/js/working_area.js:1891
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their "
@@ -1492,11 +1492,11 @@ msgstr ""
 "willst,%(br)skonvertiere sie in Pfade.%(br)sAnsonsten werden sie mit Füllung "
 "graviert."
 
-#: octoprint_mrbeam/static/js/working_area.js:1893
+#: octoprint_mrbeam/static/js/working_area.js:1898
 msgid "Text elements found"
 msgstr "Textelemente gefunden"
 
-#: octoprint_mrbeam/static/js/working_area.js:1906
+#: octoprint_mrbeam/static/js/working_area.js:1911
 msgid ""
 "The SVG file contained style elements with online references. Since online "
 "references are not supported, we removed them. The image might look a bit "
@@ -1506,11 +1506,11 @@ msgstr ""
 "Referenzen nicht unterstützt werden, haben wir sie entfernt. Das Bild könnte "
 "jetzt etwas anders aussehen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1911
+#: octoprint_mrbeam/static/js/working_area.js:1916
 msgid "Style elements removed"
 msgstr "Style-Elemente entfernt"
 
-#: octoprint_mrbeam/static/js/working_area.js:1925
+#: octoprint_mrbeam/static/js/working_area.js:1930
 msgid ""
 "The selected design file can not be handled. Please make sure it is a valid "
 "design file."
@@ -1518,25 +1518,25 @@ msgstr ""
 "Die ausgewählte Design-Datei kann nicht bearbeitet werden. Bitte stelle "
 "sicher, dass es sich um eine gültige Design-Datei handelt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1931
+#: octoprint_mrbeam/static/js/working_area.js:1936
 msgid "File error."
 msgstr "Dateifehler."
 
-#: octoprint_mrbeam/static/js/working_area.js:1945
+#: octoprint_mrbeam/static/js/working_area.js:1950
 msgid "The selected design file does not have any content."
 msgstr "Die ausgewählte Design-Datei hat keinen Inhalt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1951
+#: octoprint_mrbeam/static/js/working_area.js:1956
 msgid "Empty File."
 msgstr "Leere Datei."
 
-#: octoprint_mrbeam/static/js/working_area.js:1965
+#: octoprint_mrbeam/static/js/working_area.js:1970
 msgid "An unknown error occurred while processing this design file."
 msgstr ""
 "Ein bekannter Fehler ist während der Verarbeitung dieser Designdatei "
 "aufgetreten."
 
-#: octoprint_mrbeam/static/js/working_area.js:1973
+#: octoprint_mrbeam/static/js/working_area.js:1978
 msgid ""
 "Please try reloading this browser window and try again. If this error "
 "remains, contact the Mr Beam Support Team. Make sure you provide the error "
@@ -1550,8 +1550,8 @@ msgstr ""
 #: octoprint_mrbeam/static/js/calibration/calibration.js:120
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:124
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:367
-#: octoprint_mrbeam/static/js/working_area.js:1980
 #: octoprint_mrbeam/static/js/working_area.js:1985
+#: octoprint_mrbeam/static/js/working_area.js:1990
 msgid "Error"
 msgstr "Fehler"
 
@@ -3315,10 +3315,9 @@ msgid "OctoPrint Settings"
 msgstr "OctoPrint Einstellungen"
 
 # don’t change the link
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:5
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:2
-msgid "https://mr-beam.org/en/downloads/"
-msgstr "https://mr-beam.org/downloads/"
+msgid "https://mr-beam.org/software-update-stick/"
+msgstr "https://mr-beam.org/software-update-stick/"
 
 # Settings > About Screen
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:5
@@ -3341,12 +3340,13 @@ msgstr ""
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:11
 #, python-format
 msgid ""
-"You can also download the latest STABLE software update at %(opening_tag)smr-"
-"beam.org/downloads%(closing_tag)s and update your Mr&nbsp;Beam per USB stick."
+"You can also download the latest STABLE software update via "
+"%(opening_tag)sthis link%(closing_tag)s and update your Mr&nbsp;Beam per USB "
+"stick."
 msgstr ""
 "Du kannst auch das neueste STABLE-Software-Update unter %(opening_tag)smr-"
-"beam.org/downloads%(closing_tag)s herunterladen und Deinen Mr&nbsp;Beam per "
-"USB-Stick aktualisieren."
+"beam.org/software-update-stick%(closing_tag)s herunterladen und Deinen "
+"Mr&nbsp;Beam per USB-Stick aktualisieren."
 
 # Settings > About Screen
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:17
@@ -4514,6 +4514,11 @@ msgstr "Keine schwarzen Pixel befinden sich im grünen Rechteck"
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
 msgid "About This Mr Beam"
 msgstr "Über diesen Mr Beam"
+
+# don’t change the link
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:5
+msgid "https://mr-beam.org/en/downloads/"
+msgstr "https://mr-beam.org/downloads/"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:14
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:19
