@@ -456,7 +456,7 @@ $(function () {
             if (self.isCurtainOpened > 0) {
                 self.error401Count++;
                 if (!(triggerUrl in self.triggerUrl)) {
-                    self.triggerUrl[triggerUrl] = {'count': 0, 'data': [requestData]};
+                    self.triggerUrl[triggerUrl] = {'count': 0, 'data': []};
                 }
                 self.triggerUrl[triggerUrl]['count']++;
                 self.triggerUrl[triggerUrl]['data'].push(requestData);
