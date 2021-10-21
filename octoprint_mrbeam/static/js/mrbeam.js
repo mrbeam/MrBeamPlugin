@@ -391,7 +391,8 @@ $(function () {
                     settings,
                     thrownError
                 ) {
-                    if (jqXHR.status == 401) {
+                    if (jqXHR.status === 401) {
+                        // "self.loginState.loggedIn()" sometimes returns true when the user is actually logged out
                         console.log("401 error - data:", settings.data, " reponse:", jqXHR.responseText, " loggedin:", self.loginState.loggedIn(), " loginrember:", self.loginState.loginRemember())
                         self._handle_session_expired(settings.url, settings.data);
                     }
