@@ -388,11 +388,6 @@ class AnalyticsHandler(object):
 
     def add_engraving_parameters(self, eng_params):
         try:
-            eng_params.update(
-                {
-                    ak.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
-                }
-            )
             self._add_job_event(ak.Job.Event.Slicing.CONV_ENGRAVE, payload=eng_params)
         except Exception as e:
             self._logger.exception(
@@ -401,9 +396,6 @@ class AnalyticsHandler(object):
 
     def add_cutting_parameters(self, cut_details):
         try:
-            # fmt: off
-            cut_details[ak.Device.LaserHead.HEAD_MODEL_ID] = self._laserhead_handler.get_current_used_lh_model_id()
-            # fmt: on
             self._add_job_event(ak.Job.Event.Slicing.CONV_CUT, payload=cut_details)
         except Exception as e:
             self._logger.exception(
@@ -558,10 +550,9 @@ class AnalyticsHandler(object):
     def _event_startup(self, event, payload):
         # Here the MrBeamPlugin is not fully initialized yet, so we have to access this data direct from the plugin
         payload = {
-            ak.Device.LaserHead.LAST_USED_SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()[
+            ak.Device.LaserHead.SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()[
                 "serial"
             ],
-            ak.Device.LaserHead.LAST_USED_HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
             ak.Device.Usage.USERS: len(self._plugin._user_manager._users),
         }
         self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
@@ -873,12 +864,10 @@ class AnalyticsHandler(object):
             ak.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()[
                 "serial"
             ],
-            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
         }
 
         if self._current_dust_collector:
             dust_summary = self._current_dust_collector.getSummary()
-            dust_summary.update(lh_info)
             self._add_job_event(ak.Job.Event.Summary.DUST, payload=dust_summary)
         if self._current_intensity_collector:
             intensity_summary = self._current_intensity_collector.getSummary()
@@ -907,12 +896,7 @@ class AnalyticsHandler(object):
     def _init_new_job(self):
         self._cleanup_job()
         self._current_job_id = "j_{}_{}".format(self._snr, time.time())
-        # fmt: off
-        payload = {
-            ak.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
-        }
-        # fmt: on
-        self._add_job_event(ak.Job.Event.LASERJOB_STARTED, payload=payload)
+        self._add_job_event(ak.Job.Event.LASERJOB_STARTED)
 
     # -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
     def _write_queue_to_analytics_file(self):
