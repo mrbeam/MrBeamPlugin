@@ -392,9 +392,9 @@ $(function () {
                     thrownError
                 ) {
                     if (jqXHR.status === 401) {
-                        // "self.loginState.loggedIn()" sometimes returns true when the user is actually logged out
-                        console.log("401 error - data:", settings.data, " reponse:", jqXHR.responseText, " loggedin:", self.loginState.loggedIn(), " loginrember:", self.loginState.loginRemember())
                         self._handle_session_expired(settings.url, settings.data);
+                        // "self.loginState.loggedIn()" sometimes returns true when the user is actually logged out
+                        console.log("401 error - data:", settings.data, ", reponse:", jqXHR.responseText, ", loggedin:", self.loginState.loggedIn(), ", loginrember:", self.loginState.loginRemember(), ", api-key:", settings.headers["X-Api-Key"], ", settings:", settings)
                     }
                 });
             }
@@ -453,13 +453,19 @@ $(function () {
             }
         };
 
-        self._handle_session_expired = function (triggerUrl) {
+        self._handle_session_expired = function (triggerUrl, requestData) {
             if (self.isCurtainOpened > 0) {
                 self.error401Count++;
                 if (!(triggerUrl in self.triggerUrlCount)) {
                     self.triggerUrlCount[triggerUrl] = 0;
                 }
                 self.triggerUrlCount[triggerUrl]++;
+
+                if (!(triggerUrl in self.triggerData)) {
+                    self.triggerData[triggerUrl] = [requestData];
+                }
+                self.triggerData[triggerUrl].push(requestData);
+
                 if (self.error401Count === 1) {
                     setTimeout(() => {
                         let error401Count = self.error401Count;
