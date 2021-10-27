@@ -971,11 +971,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def fix_octoprint_prerelease_setting(self):
         """
-        Updates custom material settings keys and values
-        It replaces 'laser_type 'key with 'laser_model' and
-        it sets the value according to the latest laserhead
-        model updates
-        It also replaces 'model' key with 'device_model'
+        Removes the prerelease flag from the OctoPrint update
+        config so it will only use releases of OctoPrint
         """
         self._logger.info("start fix_octoprint_prerelease_setting")
         self.plugin._settings.global_set(
