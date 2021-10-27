@@ -137,7 +137,7 @@ class Migration(object):
                 ):
                     self.auto_update_grbl()
                 if (
-                    self.plugin._settings.get(["grbl", "version_lastknown"])
+                    self.plugin._settings.get(["grbl_version_lastknown"])
                     in self.GRBL_VERSIONS_NEED_UPDATE
                 ):
                     self.auto_update_grbl()
