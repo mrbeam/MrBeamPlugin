@@ -1894,7 +1894,7 @@ class MachineCom(object):
 
     def reset_grbl_auto_update_config(self):
         """
-        Resets grbl auto update configuration in octoprint settings if current grbl version is expected version.
+        Resets grbl auto update configuration in lasercutterProfile if current grbl version is expected version.
         This makes sure that once the auto update got executed sucessfully it's not done again and again.
         Only has effect IF:
          - grbl_auto_update_enabled in config.yaml is True (default)
@@ -1908,7 +1908,7 @@ class MachineCom(object):
                 == self._laserCutterProfile["grbl"]["auto_update_version"]
             ):
                 self._logger.info(
-                    "Removing grbl auto update flags from octoprint settings..."
+                    "Removing grbl auto update flags from lasercutterProfile..."
                 )
                 try:
                     self._laserCutterProfile["grbl"]["auto_update_file"] = None
@@ -1918,7 +1918,7 @@ class MachineCom(object):
                     )
                 except Exception:
                     self._logger.exception(
-                        "Exception while saving Mr Beam settings changes for auto update controls"
+                        "Exception while saving lasercutterProfile changes for auto update controls"
                     )
             else:
                 self._logger.warn(
