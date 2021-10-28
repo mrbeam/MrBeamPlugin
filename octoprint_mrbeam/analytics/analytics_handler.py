@@ -36,9 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
-    ANALYTICS_LOG_VERSION = (
-        21  # bumped in 0.10.0 - added the laser head model to analytics
-    )
+    ANALYTICS_LOG_VERSION = 21  # bumped in 0.10.0 - added the laser head model to analytics and added triggerData to session_expired event
 
     def __init__(self, plugin):
         self._plugin = plugin

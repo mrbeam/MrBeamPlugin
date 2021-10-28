@@ -274,7 +274,7 @@ $(function () {
 
         self.passiveLoginInProgress = false;
         self.error401Count = 0;
-        self.triggerUrlCount = {};
+        self.triggerUrl = {};
 
         // This extender forces the input value to lowercase. Used in loginsreen_viewmode.js and wizard_acl.js
         window.ko.extenders.lowercase = function (target, option) {
@@ -390,8 +390,10 @@ $(function () {
                     settings,
                     thrownError
                 ) {
-                    if (jqXHR.status == 401) {
-                        self._handle_session_expired(settings.url);
+                    if (jqXHR.status === 401) {
+                        self._handle_session_expired(settings.url, settings.data);
+                        // "self.loginState.loggedIn()" sometimes returns true when the user is actually logged out
+                        console.log("401 error - data:", settings.data, ", response:", jqXHR.responseText, ", loggedIn:", self.loginState.loggedIn(), ", loginRemember:", self.loginState.loginRemember(), ", api-key:", settings.headers["X-Api-Key"], ", settings:", settings)
                     }
                 });
             }
@@ -450,27 +452,29 @@ $(function () {
             }
         };
 
-        self._handle_session_expired = function (triggerUrl) {
+        self._handle_session_expired = function (triggerUrl, requestData) {
             if (self.isCurtainOpened > 0) {
                 self.error401Count++;
-                if (!(triggerUrl in self.triggerUrlCount)) {
-                    self.triggerUrlCount[triggerUrl] = 0;
+                if (!(triggerUrl in self.triggerUrl)) {
+                    self.triggerUrl[triggerUrl] = {'count': 0, 'data': []};
                 }
-                self.triggerUrlCount[triggerUrl]++;
+                self.triggerUrl[triggerUrl]['count']++;
+                self.triggerUrl[triggerUrl]['data'].push(requestData);
+
                 if (self.error401Count === 1) {
                     setTimeout(() => {
                         let error401Count = self.error401Count;
-                        let triggerUrlCount = self.triggerUrlCount;
+                        let triggerUrl = self.triggerUrl;
                         let payload = {
                             error401Count: error401Count,
-                            triggerUrlCount: triggerUrlCount,
+                            triggerUrl: triggerUrl,
                         };
                         self.analytics.send_fontend_event(
                             "expired_session",
                             payload
                         );
                         self.error401Count = 0;
-                        self.triggerUrlCount = {};
+                        self.triggerUrl = {};
                     }, 2000);
                 }
             }
