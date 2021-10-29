@@ -240,8 +240,10 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return PrinterProfileManager.get_current_or_default(self)
 
     def exists(self, identifier):
-        if re.match(r"MrBeam+(\d){1}[A-Z]", identifier):
-            # if identifier in LASER_PROFILE_IDENTIFIERS:
+        # if the regex matches and there is no profile it will use the default and change the id and model
+        if identifier in LASER_PROFILE_IDENTIFIERS or re.match(
+            r"MrBeam+(\d){1}[A-Z]", identifier
+        ):
             return True
         else:
             return PrinterProfileManager.exists(self, identifier)

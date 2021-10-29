@@ -21,6 +21,10 @@ def migrate(plugin):
     Migration(plugin).run()
 
 
+class MigrationError(Exception):
+    pass
+
+
 class Migration(object):
     VERSION_SETUP_IPTABLES = "0.1.19"
     VERSION_SYNC_GRBL_SETTINGS = "0.1.24"
@@ -260,6 +264,8 @@ class Migration(object):
                 self._logger.debug("No migration required.")
 
             self.save_current_version()
+        except MigrationError as e:
+            self._logger.error("Error while migration: {}".format(e))
         except Exception as e:
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
@@ -579,14 +585,17 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def auto_update_grbl(self):
         self._logger.info("auto_update_grbl() ")
-        # migrate version last_known
         laserCutterProfile = laserCutterProfileManager().get_current_or_default()
-        self._logger.debug("profile: %s", laserCutterProfile)
-        laserCutterProfile["grbl"][
-            "auto_update_version"
-        ] = self.GRBL_AUTO_UPDATE_VERSION
-        laserCutterProfile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
-        laserCutterProfileManager().save(laserCutterProfile, allow_overwrite=True)
+        if laserCutterProfile:
+            laserCutterProfile["grbl"][
+                "auto_update_version"
+            ] = self.GRBL_AUTO_UPDATE_VERSION
+            laserCutterProfile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
+            laserCutterProfileManager().save(laserCutterProfile, allow_overwrite=True)
+        else:
+            raise MigrationError(
+                "Error while configuring grbl update - no lasercutterProfile"
+            )
 
     def inflate_file_system(self):
         self._logger.info("inflate_file_system() ")
@@ -885,7 +894,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 val = 0.0
                 try:
                     val = float(_val)
-                except:
+                except ValueError:
                     self._logger.warning(
                         "Failed to convert %s to a float for backlash", _val
                     )
