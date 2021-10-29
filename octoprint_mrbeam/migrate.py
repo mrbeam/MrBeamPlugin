@@ -1,3 +1,4 @@
+import sys
 from collections import Iterable, Sized, Mapping
 import os
 import platform
@@ -21,7 +22,7 @@ def migrate(plugin):
     Migration(plugin).run()
 
 
-class MigrationError(Exception):
+class MigrationException(Exception):
     pass
 
 
@@ -264,8 +265,8 @@ class Migration(object):
                 self._logger.debug("No migration required.")
 
             self.save_current_version()
-        except MigrationError as e:
-            self._logger.error("Error while migration: {}".format(e))
+        except MigrationException as e:
+            self._logger.exception("Error while migration: {}".format(e))
         except Exception as e:
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
@@ -593,8 +594,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             laserCutterProfile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
             laserCutterProfileManager().save(laserCutterProfile, allow_overwrite=True)
         else:
-            raise MigrationError(
-                "Error while configuring grbl update - no lasercutterProfile"
+            raise MigrationException(
+                "Error while configuring grbl update - no lasercutterProfile",
             )
 
     def inflate_file_system(self):
