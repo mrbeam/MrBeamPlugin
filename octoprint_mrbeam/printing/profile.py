@@ -16,7 +16,12 @@ from itertools import chain
 from . import profiles
 
 from octoprint.printer.profile import PrinterProfileManager
-from octoprint.util import dict_merge, dict_clean, dict_contains_keys
+from octoprint.util import (
+    dict_merge,
+    dict_clean,
+    dict_contains_keys,
+    dict_minimal_mergediff,
+)
 from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_get, device_info
@@ -263,14 +268,51 @@ class LaserCutterProfileManager(PrinterProfileManager):
             raise InvalidProfileError()
         return profile
 
+    def _save_to_path(self, path, profile, allow_overwrite=False):
+        validated_profile = self._ensure_valid_profile(profile)
+
+        if not validated_profile:
+            raise InvalidProfileError()
+
+        default = self._load_default()
+        validated_profile = dict_minimal_mergediff(default, validated_profile)
+
+        if os.path.exists(path) and not allow_overwrite:
+            raise SaveError(
+                "Profile %s already exists and not allowed to overwrite" % profile["id"]
+            )
+
+        import yaml
+
+        from octoprint.util import atomic_write
+
+        try:
+            with atomic_write(path, mode="wt", max_permissions=0o666) as f:
+                yaml.safe_dump(
+                    validated_profile,
+                    f,
+                    default_flow_style=False,
+                    indent=2,
+                    allow_unicode=True,
+                )
+        except Exception as e:
+            self._logger.exception(
+                "Error while trying to save profile %s" % validated_profile["id"]
+            )
+            raise SaveError(
+                "Cannot save profile %s: %s" % (validated_profile["id"], str(e))
+            )
+
     def _ensure_valid_profile(self, profile):
         # Ensuring that all keys are present is the default behaviour of the OP ``PrinterProfileManager``
         # This ``LaserCutterProfileManager`` can use partially declared profiles, as they are
         # completed using the default profile.
 
+        # will merge with default config so the minimal save won't fail
+        profile = dict_merge(copy.deepcopy(LASER_PROFILE_DEFAULT), profile)
+
         # conversion helper
-        def convert_value(profile, path, converter):
-            value = profile
+        def convert_value(value, path, converter):
             for part in path[:-1]:
                 if not isinstance(value, dict) or not part in value:
                     raise RuntimeError(
