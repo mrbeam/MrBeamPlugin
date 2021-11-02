@@ -44,7 +44,7 @@ class Migration(object):
     VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.10.2"
     VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS = "0.9.9"
     VERSION_UPDATE_OCTOPRINT_PRERELEASE_FIX = "0.9.10"
-    VERSION_UPDATE_FORCE_FOCUS_REMINDER = "0.10.0"
+    VERSION_UPDATE_FORCE_FOCUS_REMINDER = "0.9.17"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
