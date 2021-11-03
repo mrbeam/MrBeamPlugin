@@ -2674,7 +2674,9 @@ class MrBeamPlugin(
                     dusting_mode=self.dust_manager.is_final_extraction_mode,
                     state=self._printer.get_state_string(),
                     is_homed=self._printer.is_homed(),
-                    laser_model = self.laserhead_handler.get_current_used_lh_data()["model"],
+                    laser_model=self.laserhead_handler.get_current_used_lh_data()[
+                        "model"
+                    ],
                 )
             except:
                 self._logger.exception("Exception while collecting mrb_state data.")

@@ -1,3 +1,4 @@
+import sys
 from collections import Iterable, Sized, Mapping
 import os
 import platform
@@ -19,6 +20,10 @@ from octoprint_mrbeam.materials import materials
 
 def migrate(plugin):
     Migration(plugin).run()
+
+
+class MigrationException(Exception):
+    pass
 
 
 class Migration(object):
@@ -46,7 +51,7 @@ class Migration(object):
     MIGRATE_LOGROTATE_FOLDER = "files/migrate_logrotate/"
 
     # grbl auto update conf
-    GRBL_AUTO_UPDATE_FILE = MachineCom._get_grbl_file_name()
+    GRBL_AUTO_UPDATE_FILE = MachineCom.get_grbl_file_name()
     GRBL_AUTO_UPDATE_VERSION = MachineCom.GRBL_DEFAULT_VERSION
 
     # GRBL version that should be updated, regardless...
@@ -260,6 +265,8 @@ class Migration(object):
                 self._logger.debug("No migration required.")
 
             self.save_current_version()
+        except MigrationException as e:
+            self._logger.exception("Error while migration: {}".format(e))
         except Exception as e:
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
@@ -579,10 +586,17 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def auto_update_grbl(self):
         self._logger.info("auto_update_grbl() ")
-        default_profile = laserCutterProfileManager().get_default()
-        default_profile["grbl"]["auto_update_version"] = self.GRBL_AUTO_UPDATE_VERSION
-        default_profile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
-        laserCutterProfileManager().save(default_profile, allow_overwrite=True)
+        laserCutterProfile = laserCutterProfileManager().get_current_or_default()
+        if laserCutterProfile:
+            laserCutterProfile["grbl"][
+                "auto_update_version"
+            ] = self.GRBL_AUTO_UPDATE_VERSION
+            laserCutterProfile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
+            laserCutterProfileManager().save(laserCutterProfile, allow_overwrite=True)
+        else:
+            raise MigrationException(
+                "Error while configuring grbl update - no lasercutterProfile",
+            )
 
     def inflate_file_system(self):
         self._logger.info("inflate_file_system() ")
@@ -881,7 +895,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 val = 0.0
                 try:
                     val = float(_val)
-                except:
+                except ValueError:
                     self._logger.warning(
                         "Failed to convert %s to a float for backlash", _val
                     )

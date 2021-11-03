@@ -1748,7 +1748,7 @@ class MachineCom(object):
             self._logger.warn(msg, terminal_as_comm=True)
             return
 
-        grbl_file = grbl_file or self._get_grbl_file_name()
+        grbl_file = grbl_file or self.get_grbl_file_name()
 
         if grbl_file.startswith("..") or grbl_file.startswith("/"):
             msg = "ERROR {} GRBL '{}': Invalid filename.".format(log_verb, grbl_file)
@@ -1826,7 +1826,7 @@ class MachineCom(object):
                         title="GRBL Update failed", text=msg, is_err=True
                     )
                 )
-            except:
+            except Exception:
                 self._logger.exception(
                     "Exception while notifying frontend after failed flash_grbl: "
                 )
@@ -1878,7 +1878,7 @@ class MachineCom(object):
                 )
 
     @staticmethod
-    def _get_grbl_file_name(grbl_version=None):
+    def get_grbl_file_name(grbl_version=None):
         """
         Gets you the filename according to the given grbl version.
         :param grbl_version: (optional) grbl version - If no grbl version is provided it returns you the filename of the default version for this release.
@@ -1908,7 +1908,7 @@ class MachineCom(object):
                 == self._laserCutterProfile["grbl"]["auto_update_version"]
             ):
                 self._logger.info(
-                    "Removing grbl auto update flags from lasercutterprofile..."
+                    "Removing grbl auto update flags from lasercutterProfile..."
                 )
                 try:
                     self._laserCutterProfile["grbl"]["auto_update_file"] = None
@@ -1916,9 +1916,9 @@ class MachineCom(object):
                     laserCutterProfileManager().save(
                         self._laserCutterProfile, allow_overwrite=True
                     )
-                except:
+                except Exception:
                     self._logger.exception(
-                        "Exception while saving lasercutterProfile changes to auto update controls: "
+                        "Exception while saving lasercutterProfile changes for auto update controls"
                     )
             else:
                 self._logger.warn(
@@ -2333,7 +2333,7 @@ class MachineCom(object):
                 self._serial.write(list(bytearray("\x18")))
             elif specialcmd.startswith("/flash_grbl"):
                 # if no file given: flash default grbl version
-                file = self._get_grbl_file_name()
+                file = self.get_grbl_file_name()
                 if len(tokens) > 1:
                     file = tokens[1]
                 if file in (None, "?", "-h", "--help"):
@@ -2354,7 +2354,7 @@ class MachineCom(object):
                     self.flash_grbl(file)
             elif specialcmd.startswith("/verify_grbl"):
                 # if no file given: verify to currently installed
-                file = self._get_grbl_file_name(self._grbl_version)
+                file = self.get_grbl_file_name(self._grbl_version)
                 if len(tokens) > 1:
                     file = tokens[1]
                 if file in (None, "?", "-h", "--help"):
