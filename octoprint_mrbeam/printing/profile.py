@@ -269,6 +269,10 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return profile
 
     def _save_to_path(self, path, profile, allow_overwrite=False):
+        """
+        Changes the file base PrinterProfileManager._save_to_path
+        so only the diff between the profile and the default profile will be saved
+        """
         validated_profile = self._ensure_valid_profile(profile)
 
         if not validated_profile:
@@ -308,7 +312,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
         # This ``LaserCutterProfileManager`` can use partially declared profiles, as they are
         # completed using the default profile.
 
-        # will merge with default config so the minimal save won't fail
+        # will merge with default config so the minimal saved one won't fail
         profile = dict_merge(copy.deepcopy(LASER_PROFILE_DEFAULT), profile)
 
         # conversion helper
