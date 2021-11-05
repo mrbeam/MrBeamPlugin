@@ -48,7 +48,6 @@ plugin_requires = [
     "pillow",
     "lxml",
     "numpy",
-    "iobeam @ git+https://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@github.com/mrbeam/iobeam.git",
     picamera,
 ]
 

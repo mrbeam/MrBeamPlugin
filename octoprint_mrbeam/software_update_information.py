@@ -122,6 +122,8 @@ def _set_info_mrbeam_plugin(plugin, tier, beamos_date):
         repo="MrBeamPlugin",
         pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
         restart="octoprint",
+        update_script='{python} "/home/pi/site-packages/octoprint_mrbeam/scripts/update_script.py" --python="{python}" "{folder}" "{target}"',
+        checkout_folder="/home/pi/test",
     )
 
 
