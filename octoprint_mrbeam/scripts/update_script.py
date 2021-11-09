@@ -114,7 +114,15 @@ def main():
     # update_result = updater.perform_update(target, populated_check, target_version, log_cb=self._log, online=online)
     # git+https://{token}@gitprovider.com/user/project.git@{version}
 
-    get_tag_of_bitbucket_repo("iobeam")
+    # curl "https://api.github.com/repos/mrbeam/OctoPrint/releases/latest" | yq ".tag_name" -
+    # wget https://github.com/{username}/{projectname}/archive/{sha}.zip
+    # pip    wheel[project1].zip[project2].zip
+    # my/venv/bin/pip install [project1].whl
+
+    # TODO GET LATEST TAG OF ALL MODULES
+    # TODO WGET ZIP OF ALL MODULES
+    # TODO CREATE WHEEL OF ALL MODULES
+    # TODO INSTALL ALL WHEELS
 
     subprocess.check_call(
         [
