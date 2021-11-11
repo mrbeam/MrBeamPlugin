@@ -291,10 +291,8 @@ def _get_package_description(
     module_id,
     tier,
     displayName=None,
-    displayVersion=None,
     type="github_commit",
     user="mrbeam",
-    repo=None,
     branch="mrbeam2-{tier}",
     branch_default="mrbeam2-{tier}",
     restart="environment",
@@ -309,20 +307,18 @@ def _get_package_description(
         branch_default = branch_default.format(tier=get_tier_by_id(tier))
     if prerelease_channel and "{tier}" in prerelease_channel:
         prerelease_channel = prerelease_channel.format(tier=get_tier_by_id(tier))
+        kwargs.update(prerelease_channel=prerelease_channel)
     if tier in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ALPHA):
         # adds pip upgrade flag in the develop tier so it will do a upgrade even without a version bump
         kwargs.update(pip_upgrade_flag=True)
     update_info = dict(
         tier=tier,
         displayName=displayName,
-        displayVersion=displayVersion,
         user=user,
         type=type,
-        repo=repo,
         branch=branch,
         branch_default=branch_default,
         restart=restart,
-        prerelease_channel=prerelease_channel,
         **kwargs
     )
     return {module_id: update_info}
