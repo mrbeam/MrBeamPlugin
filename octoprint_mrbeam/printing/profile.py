@@ -29,6 +29,7 @@ from octoprint_mrbeam.util.log import logme
 
 
 # singleton
+from octoprint_mrbeam.util.device_info import deviceInfo
 
 _instance = None
 
@@ -257,7 +258,10 @@ class LaserCutterProfileManager(PrinterProfileManager):
     def _load_all(self):
         """Extend the file based ``PrinterProfileManager._load_all`` with the few hardcoded ones we have."""
         file_based_profiles = PrinterProfileManager._load_all(self)
-        return dict_merge(LASER_PROFILE_MAP, file_based_profiles)
+        device_type = deviceInfo().get_type()
+        mrbeam_generated_profiles = {device_type: self.get(device_type)}
+        mrbeam_profiles = dict_merge(LASER_PROFILE_MAP, mrbeam_generated_profiles)
+        return dict_merge(mrbeam_profiles, file_based_profiles)
 
     def _load_default(self, defaultModel=None):
         # Overloaded because of settings path

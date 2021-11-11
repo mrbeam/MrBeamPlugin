@@ -171,7 +171,7 @@ class MrBeamPlugin(
         # Create the ``laserCutterProfileManager`` early to inject into the ``Laser``
         # See ``laser_factory``
         self.laserCutterProfileManager = laserCutterProfileManager(
-            profile_id="MrBeam" + self._device_series
+            profile_id=self._device_info.get_type()
         )
 
         self._boot_grace_period_counter = 0
