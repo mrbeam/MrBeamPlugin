@@ -445,22 +445,25 @@
                                                     {{ _('This can cause burnmarks on the left and right side of the engraving for sensitive material.') }}
                                             </li>
                                         </ul>">
-                                    <label class="control-label">{{ _('Prevent unwanted burn marks') }}</label>
+                                    <label class="control-label">
+                                        <span>{{ _('Prevent unwanted burn marks') }}</span>
+                                        <span class="text-success"><strong>({{ _('This feature has been disabled as the burn marks issue has been resolved in our Software') }})</strong></span>
+                                    </label>
                                     <div class="controls">
                                         <div class="btn-group" data-toggle="buttons-radio">
-                                            <label class="btn btn-default">
+                                            <label class="btn btn-default" disabled>
                                                 <input type="radio" name="overshoot_type" value="auto"
                                                        autocomplete="off"
                                                        data-bind="checked: _extraOvershoot.selected"></input>
                                                 {{ _('Auto') }}
                                             </label>
-                                            <label class="btn btn-default">
+                                            <label class="btn btn-default" disabled>
                                                 <input type="radio" name="overshoot_type" value="careful"
                                                        autocomplete="off"
                                                        data-bind="checked: _extraOvershoot.selected"></input>
                                                 {{ _('Careful') }}
                                             </label>
-                                            <label class="btn btn-default active">
+                                            <label class="btn btn-default active" disabled>
                                                 <input type="radio" name="overshoot_type" value="fast"
                                                        autocomplete="off"
                                                        data-bind="checked: _extraOvershoot.selected"></input>
