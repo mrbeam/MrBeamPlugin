@@ -448,19 +448,19 @@
                                     <label class="control-label">{{ _('Prevent unwanted burn marks') }}</label>
                                     <div class="controls">
                                         <div class="btn-group" data-toggle="buttons-radio">
-                                            <label class="btn btn-default">
+                                            <label class="btn btn-default" disabled>
                                                 <input type="radio" name="overshoot_type" value="auto"
                                                        autocomplete="off"
                                                        data-bind="checked: _extraOvershoot.selected"></input>
                                                 {{ _('Auto') }}
                                             </label>
-                                            <label class="btn btn-default">
+                                            <label class="btn btn-default" disabled>
                                                 <input type="radio" name="overshoot_type" value="careful"
                                                        autocomplete="off"
                                                        data-bind="checked: _extraOvershoot.selected"></input>
                                                 {{ _('Careful') }}
                                             </label>
-                                            <label class="btn btn-default active">
+                                            <label class="btn btn-default active" disabled>
                                                 <input type="radio" name="overshoot_type" value="fast"
                                                        autocomplete="off"
                                                        data-bind="checked: _extraOvershoot.selected"></input>
