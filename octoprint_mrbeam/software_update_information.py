@@ -1,22 +1,17 @@
-import sys
-import threading
-from datetime import datetime
 import json
 import os
-from datetime import date, datetime
-from os.path import join, dirname, realpath
+from datetime import date
+from datetime import datetime
+from os.path import dirname, realpath
+from os.path import join
 from shutil import copy
 
 import requests
-from datetime import date
-from os.path import join
-from requests import HTTPError
+import yaml
 
-from octoprint_mrbeam import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.util.log import logme
+from octoprint_mrbeam.util import get_thread, dict_merge, logme, logExceptions
 from util.pip_util import get_version_of_pip_module
-from octoprint_mrbeam.util import get_thread
 
 SW_UPDATE_TIER_PROD = "PROD"
 SW_UPDATE_TIER_BETA = "BETA"
@@ -32,13 +27,9 @@ DEFAULT_REPO_BRANCH_ID = {
 SW_UPDATE_FILE = "update_info.json"
 SW_UPDATE_CLOUD_PATH = "https://mr-beam.org/beamos/config/sw-update-conf"
 
-# add to the display name to modules that should be shown at the top of the list
-SORT_UP_PREFIX = " "
-
-
 _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
 
-sw_update_config = dict()
+# sw_update_config = dict()
 
 # Commented constants are kept in case we update more packages from the virtualenv
 # GLOBAL_PY_BIN = "/usr/bin/python2.7"
@@ -52,123 +43,143 @@ BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
 _softwareupdate_handler = None
 
-
-def get_modules():
-    return sw_update_config
-
-
 class MrBeamSoftwareupdateHandler:
-    def __init__(self, plugin, tier, beamos_date):
+    CLOUD_FILE = 1
+    LOCAL_FILE = 2
+    REPO_FILE = 3
+    def __init__(self, plugin):
         self._plugin = plugin
-        # self._tier = tier
-        # self._beamos_date = beamos_date
 
-    @get_thread(daemon=False)
+    # @get_thread(daemon=False)
+    @logExceptions
     def load_update_file_from_cloud(self, localfilemissing=False):
         """
         overrides the local update config file if there is a newer one on the server
         """
+        newfile = False
+        servererror = False
+        serverfile_request = None
+        returncode = 0
+
+        #load file from server
         try:
-            _logger.debug("load update file")
-            newfile = False
-            servererror = False
+            serverfile_request = requests.get(
+                SW_UPDATE_CLOUD_PATH,
+                timeout=3,
+            )
+        except requests.ReadTimeout:
+            _logger.error("timeout while trying to get the update_config file")
+            servererror = True
+        except IOError as e:
+            servererror = True
+            _logger.error(
+                "There was an error on the server - error:%s",
+                e,
+            )
+
+        #check if valid
+        if serverfile_request:
             try:
-                r = requests.get(
-                    SW_UPDATE_CLOUD_PATH,
-                    timeout=3,
-                )
-
-                if os.path.exists(
-                    get_sw_update_file_path(self._plugin)
-                ):  # checks if the file is available otherwise it will be created
-                    readwriteoption = "r+"
-                else:  # create new file
-                    readwriteoption = "w+"
-                    newfile = True
-                with open(
-                    get_sw_update_file_path(self._plugin),
-                    readwriteoption,
-                ) as f:
-                    try:
-                        serverfile_info = json.loads(r.content)
-                    except ValueError as e:
-                        newfile = False
-                        servererror = True
-                        _logger.error(
-                            "there is a wrong configured config file on the server - cancel loading of new file"
-                        )
-                        _logger.debug("error %s - %s", e, r.content)
-                    else:
-                        try:
-                            update_info = json.load(f)
-                            _logger.debug("serverfile_info %s", serverfile_info)
-                            _logger.debug(
-                                "version compare %s - %s",
-                                serverfile_info["version"],
-                                update_info["version"],
-                            )
-                            if serverfile_info["version"] > update_info["version"]:
-                                newfile = True
-                                _logger.info(
-                                    "update local file from server - %s -> %s",
-                                    serverfile_info["version"],
-                                    update_info["version"],
-                                )
-
-                        except ValueError:
-                            newfile = True
-                            _logger.error(
-                                "there is a wrong configured config local file - override local file with server file"
-                            )
-                        if newfile:
-                            _logger.debug("override local file")
-                            # override local file
-                            f.seek(0)
-                            f.write(r.content)
-                            f.truncate()
-
-            except requests.ReadTimeout:
-                _logger.error("timeout while trying to get the update_config file")
-                servererror = True
-            except IOError as e:
+                serverfile_info = json.loads(serverfile_request.content)
+                serverfile_verson = serverfile_info["version"]
+            except ValueError as e:
                 servererror = True
                 _logger.error(
-                    "There was an error on the server - error:%s",
+                    "there is a wrong configured config file on the server - cancel loading of new file"
+                )
+                _logger.debug("error %s - %s", e, serverfile_request.content)
+
+        #check if local file exists valid
+        if not os.path.exists(
+                get_sw_update_file_path(self._plugin)
+        ):
+            localfilemissing = True
+
+        #if both valid compare and override
+        if not servererror and serverfile_request:
+            if localfilemissing:   # create new file
+                readwriteoption = "w+"
+                newfile = True
+            else: # checks if the file is available otherwise it will be created
+                readwriteoption = "r+"
+            with open(
+                    get_sw_update_file_path(self._plugin),
+                    readwriteoption,
+            ) as f:
+                try:
+                    update_info = json.load(f)
+                    _logger.debug("serverfile_info %s", serverfile_info)
+                    _logger.debug(
+                        "version compare %s - %s",
+                        serverfile_verson,
+                        update_info["version"],
+                    )
+                    if serverfile_verson > update_info["version"]:
+                        newfile = True
+                        _logger.info(
+                            "update local file from server - %s -> %s",
+                            serverfile_verson,
+                            update_info["version"],
+                        )
+
+                except ValueError:
+                    newfile = True
+                    _logger.error(
+                        "there is a wrong configured local config file - override local file with server file"
+                    )
+                except KeyError:
+                    localfilemissing = True
+                    _logger.exception("there is a keyerror in the local file")
+
+                #if local config file invalid override by server
+                if newfile or localfilemissing:
+                    _logger.debug("override local file")
+                    # override local file
+                    f.seek(0)
+                    f.write(serverfile_request.content)
+                    f.truncate()
+                    returncode = self.CLOUD_FILE
+
+        # if server invalid use local file
+        if not serverfile_request:
+            servererror = True
+            returncode = self.LOCAL_FILE
+
+        # if both invalid use repo file
+        if servererror and localfilemissing:
+            _logger.info(
+                "fallback use local default config file /files/software_update/update_info.json"
+            )
+            try:
+                copy(
+                    join(
+                        dirname(realpath(__file__)),
+                        "files/software_update/update_info.json",
+                    ),
+                    get_sw_update_file_path(self._plugin),
+                )
+                newfile = True
+                returncode = self.REPO_FILE
+            except IOError as e:
+                _logger.error(
+                    "not even fallback version available: %s",
                     e,
                 )
-            if servererror and localfilemissing:
-                _logger.info(
-                    "fallback use local default config file /files/software_update/update_info.json"
-                )
-                try:
-                    copy(
-                        join(
-                            dirname(realpath(__file__)),
-                            "files/software_update/update_info.json",
-                        ),
-                        get_sw_update_file_path(self._plugin),
-                    )
-                    newfile = True
-                except IOError as e:
-                    _logger.error(
-                        "not even fallback version available: %s",
-                        e,
-                    )
-            if newfile:
-                _logger.info("new file => set info")
 
-                # inform SoftwareUpdate Pluging about new config
-                sw_update_plugin = self._plugin._plugin_manager.get_plugin_info(
-                    "softwareupdate"
-                ).implementation
-                sw_update_plugin._refresh_configured_checks = True
-                sw_update_plugin._version_cache = dict()
-                sw_update_plugin._version_cache_dirty = True
-        except:
-            e = sys.exc_info()[0]
-            _logger.error("error in load_update_file_from_cloud - %s", e)
+        #if file changed, reload update info
+        if newfile:
+            _logger.info("new file => set info")
 
+            # inform SoftwareUpdate Pluging about new config
+            sw_update_plugin = self._plugin._plugin_manager.get_plugin_info(
+                "softwareupdate"
+            ).implementation
+            sw_update_plugin._refresh_configured_checks = True
+            sw_update_plugin._version_cache = dict()
+            sw_update_plugin._version_cache_dirty = True
+        return returncode
 
+@logme(output=True)
 def get_update_information(plugin):
     """
     Gets called from the octoprint.plugin.softwareupdate.check_config Hook from Octoprint
@@ -182,23 +193,17 @@ def get_update_information(plugin):
     _logger.info("SoftwareUpdate using tier: %s %s", tier, beamos_date)
     global _softwareupdate_handler
     if _softwareupdate_handler is None:
-        _softwareupdate_handler = MrBeamSoftwareupdateHandler(plugin, tier, beamos_date)
+        _softwareupdate_handler = MrBeamSoftwareupdateHandler(plugin)
         _softwareupdate_handler.load_update_file_from_cloud()
 
-    _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler)
-
-    # _logger.debug(
-    #     "MrBeam Plugin provides this config (might be overridden by settings!):\n%s",
-    #     yaml.dump(sw_update_config, width=50000).strip(),
-    # )
-    return sw_update_config
+    return _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler)
 
 
 def software_channels_available(plugin):
     ret = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
     if plugin.is_dev_env():
         # fmt: off
-        ret.extend([SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_DEV,])
+        ret.extend([SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_DEV, ])
         # fmt: on
     return ret
 
@@ -231,51 +236,7 @@ def get_sw_update_file_path(plugin):
     """
     return join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)
 
-
-def _set_octoprint_config(plugin, tier, config, beamos_date):
-    """
-    handels the config for octoprint, it have to be set in the config.yaml, because a plugin is not allowed to update the information for octoprint
-    @param plugin: the calling plugin
-    @param tier: the software tier
-    @param config: the config from the config file
-    @param beamos_date: the image creation date of the running beamos
-    """
-    tierversion = get_tier_by_id(tier)
-    if tierversion in config:
-        module_tier = config[tierversion]
-        _set_update_config_from_dict(
-            config, module_tier
-        )  # set tier config from default settings
-
-    if "beamos_date" in config:
-        beamos_date_config = config["beamos_date"]
-        for date, beamos_config in beamos_date_config.items():
-            _logger.debug(
-                "date compare %s >= %s -> %s",
-                beamos_date,
-                datetime.strptime(date, "%Y-%m-%d").date(),
-                beamos_config,
-            )
-            if beamos_date >= datetime.strptime(date, "%Y-%m-%d").date():
-                _set_update_config_from_dict(config, beamos_config)
-        _logger.debug(
-            "beamosconfig %s %s",
-            beamos_config,
-            config,
-        )
-    op_swu_keys = ["plugins", "softwareupdate", "checks", "octoprint"]
-
-    plugin._settings.global_set(op_swu_keys + ["pip"], config["pip"])
-    plugin._settings.global_set(op_swu_keys + ["user"], "mrbeam")
-
-    _logger.debug("prerelease %s", config["prerelease"])
-    plugin._settings.global_set_boolean(
-        op_swu_keys + ["prerelease"], config["prerelease"]
-    )
-
-    # plugin._settings.global_set_boolean(op_swu_keys + ["prerelease"], False)
-
-
+@logExceptions
 def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
     """
     loads update info from the update_info.json file
@@ -285,12 +246,15 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
         {
             "version": <version_of_file>
             "default": {<default_settings>}
-            <module_id>: {
-                <module_settings>,
-                <tier>:{<tier_settings>},
-                "beamos_date": {
-                    <YYYY-MM-DD>: {<beamos_settings>}
+            "modules": {
+                <module_id>: {
+                    <module_settings>,
+                    <tier>:{<tier_settings>},
+                    "beamos_date": {
+                        <YYYY-MM-DD>: {<beamos_settings>}
+                    }
                 }
+                "dependencies: {<module>}
             }
         }
 
@@ -300,11 +264,12 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
     @param _softwareupdate_handler: the handler class to look for a new config file online
     """
     sw_update_file_path = get_sw_update_file_path(plugin)
+    sw_update_config = dict()
     try:
         with open(sw_update_file_path) as f:
-            update_info = json.load(f)
+            update_info = yaml.safe_load(f)
     except IOError as e:
-        _logger.error(
+        _logger.exception(
             "could not find file %s - error: %s",
             sw_update_file_path,
             e,
@@ -314,145 +279,134 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
         )
         loadfilethread.join()
     except ValueError as e:
-        _logger.error(
+        _logger.exception(
             "there is a wrong configured config file local - try to load from server"
         )
         _logger.debug("error %s - %s", e, f)
         loadfilethread = _softwareupdate_handler.load_update_file_from_cloud()
         loadfilethread.join()
     else:
-
-        fileversion = update_info.pop("version")
+        _logger.debug("update_info {}".format(update_info))
+        fileversion = update_info["version"]
         _logger.info("Software update file version: %s", fileversion)
-        defaultsettings = update_info.pop("default")
-        modules = update_info.get("modules")
+        defaultsettings = update_info["default"]
+        modules = update_info["modules"]
 
-        try:
-            _set_octoprint_config(plugin, tier, modules.pop("octoprint"), beamos_date)
-        except:
-            _logger.error("Error while setting octoprint update config")
         # TODO maybe drop the higher levels of the config so the output will be more tidy
         for module_id, module in modules.items():
-            try:
-                if tier in [
-                    SW_UPDATE_TIER_BETA,
-                    SW_UPDATE_TIER_DEV,
-                    SW_UPDATE_TIER_PROD,
-                ]:
-                    if _is_override_in_settings(
-                        plugin, module_id
-                    ):  # check if update config gets overriden in the settings
-                        return
-                    sw_update_config[module_id] = {}
-                    moduleconfig = sw_update_config[module_id]
-                    moduleconfig.update(defaultsettings)
+            if tier in [
+                SW_UPDATE_TIER_BETA,
+                SW_UPDATE_TIER_DEV,
+                SW_UPDATE_TIER_PROD,
+                SW_UPDATE_TIER_ALPHA
+            ]:
+                sw_update_config[module_id] = {}
+                moduleconfig = sw_update_config[module_id]
+                moduleconfig.update(defaultsettings)
+                print ("defaultsettings", defaultsettings)
+                print ("moduleconfig", moduleconfig)
 
-                    # get update info for tier branch
-                    tierversion = get_tier_by_id(tier)
+                # get update info for tier branch
+                tierversion = get_tier_by_id(tier)
 
-                    if tierversion in moduleconfig:
-                        module_tier = moduleconfig[tierversion]
-                        _set_update_config_from_dict(
-                            moduleconfig, module_tier
-                        )  # set tier config from default settings
-                    if tierversion in module:
-                        module_tier = module[tierversion]
-                        _set_update_config_from_dict(
-                            moduleconfig, module_tier
-                        )  # override tier config from tiers set in config_file
+                if tierversion in moduleconfig:
+                    moduleconfig = dict_merge(moduleconfig, moduleconfig[tierversion])  # set tier config from default settings
 
-                    _set_update_config_from_dict(
-                        moduleconfig, module
-                    )  # set default config from file for module
+                moduleconfig = dict_merge(moduleconfig, module)  # set default config from file for module
 
-                    # have to be after the default config from file
-                    if "beamos_date" in module:
-                        beamos_date_config = module["beamos_date"]
-                        for date, beamos_config in beamos_date_config.items():
-                            _logger.debug(
-                                "date compare %s >= %s -> %s",
-                                beamos_date,
-                                datetime.strptime(date, "%Y-%m-%d").date(),
-                                beamos_config,
-                            )
-                            if (
+                if tierversion in module:
+                    moduleconfig = dict_merge(moduleconfig, module[tierversion])  # override tier config from tiers set in config_file
+
+                # have to be after the default config from file
+                if "beamos_date" in module:
+                    beamos_date_config = module["beamos_date"]
+                    for date, beamos_config in beamos_date_config.items():
+                        _logger.debug(
+                            "date compare %s >= %s -> %s",
+                            beamos_date,
+                            datetime.strptime(date, "%Y-%m-%d").date(),
+                            beamos_config,
+                        )
+                        if (
                                 beamos_date
                                 >= datetime.strptime(date, "%Y-%m-%d").date()
-                            ):
-                                if tierversion in beamos_config:
-                                    beamos_config_module_tier = beamos_config[
-                                        tierversion
-                                    ]
-                                    _set_update_config_from_dict(
-                                        beamos_config, beamos_config_module_tier
-                                    )  # override tier config from tiers set in config_file
-                                _set_update_config_from_dict(
-                                    moduleconfig, beamos_config
-                                )
+                        ):
+                            if tierversion in beamos_config:
+                                beamos_config_module_tier = beamos_config[
+                                    tierversion
+                                ]
+                                moduleconfig = dict_merge(
+                                    beamos_config, beamos_config_module_tier
+                                )  # override tier config from tiers set in config_file
+                            moduleconfig = dict_merge(
+                                moduleconfig, beamos_config
+                            )
 
-                    if "{tier}" in moduleconfig["branch"]:
-                        moduleconfig["branch"] = moduleconfig["branch"].format(
-                            tier=get_tier_by_id(tier)
-                        )
-
-                    # get version number
-                    current_version = "-"
-                    _logger.debug(
-                        "pip command check %s %s - %s",
-                        module,
-                        moduleconfig,
-                        "pip_command" not in moduleconfig,
+                if "{tier}" in moduleconfig["branch"]:
+                    moduleconfig["branch"] = moduleconfig["branch"].format(
+                        tier=get_tier_by_id(tier)
                     )
-                    if (
+
+                # get version number
+                current_version = "-"
+                _logger.debug(
+                    "pip command check %s %s - %s",
+                    module,
+                    moduleconfig,
+                    "pip_command" not in moduleconfig,
+                )
+                if (
                         "global_pip_command" in module
                         and "pip_command" not in moduleconfig
-                    ):
-                        moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
-                    if "pip_command" in moduleconfig:
-                        pip_command = moduleconfig["pip_command"]
-                        # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
-                        # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-                        # pip_command = GLOBAL_PIP_COMMAND
-                        package_name = (
-                            module["package_name"]
-                            if "package_name" in module
-                            else module_id
-                        )
-                        _logger.debug("get version %s %s", package_name, pip_command)
-                        try:
-                            current_version_global_pip = get_version_of_pip_module(
-                                package_name, pip_command
-                            )
-                            if current_version_global_pip is not None:
-                                current_version = current_version_global_pip
-                        except:
-                            current_version = "not found"
-                            _logger.error(
-                                "version check error %s",
-                                current_version,
-                            )
+                ):
+                    moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
+                if "pip_command" in moduleconfig:
+                    #get version number of pip modules
+                    pip_command = moduleconfig["pip_command"]
+                    # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
+                    # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+                    # pip_command = GLOBAL_PIP_COMMAND
+                    package_name = (
+                        module["package_name"]
+                        if "package_name" in module
+                        else module_id
+                    )
+                    _logger.debug("get version %s %s", package_name, pip_command)
 
-                    else:
-                        # get versionnumber of octoprint plugin
-                        pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
-                        if pluginInfo is not None:
-                            current_version = pluginInfo.version
+                    current_version_global_pip = get_version_of_pip_module(
+                        package_name, pip_command
+                    )
+                    if current_version_global_pip is not None:
+                        current_version = current_version_global_pip
 
+                else:
+                    # get versionnumber of octoprint plugin
+                    pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
+                    if pluginInfo is not None:
+                        current_version = pluginInfo.version
+
+                if module_id != 'octoprint':
                     _logger.debug("%s current version: %s", module_id, current_version)
                     moduleconfig.update(
                         {
-                            "displayName": module["name"],
                             "displayVersion": current_version,
                         }
                     )
-            except:
-                _logger.error("Error in module %s %s", module_id, sys.exc_info()[0])
-        _logger.debug(sw_update_config)
+                if "name" in module:
+                    moduleconfig["displayName"] = module["name"]
+                # sw_update_config.update(moduleconfig)
+                moduleconfig = clean_update_config(moduleconfig)
+                sw_update_config[module_id] = moduleconfig
 
+        _logger.debug("sw_update_config {}".format(sw_update_config))
+        return sw_update_config
 
-def _set_update_config_from_dict(update_config, dict):
-    update_config.update(dict)
-
+def clean_update_config(update_config):
+    pop_list = ["alpha", "beta", "stable", "develop", "beamos_date", "name"]
+    for pop_element in pop_list:
+        if pop_element in update_config:
+            update_config.pop(pop_element)
+    return update_config
 
 def get_tier_by_id(tier):
     """
@@ -461,18 +415,3 @@ def get_tier_by_id(tier):
     @return: softwaretier name
     """
     return DEFAULT_REPO_BRANCH_ID.get(tier, tier)
-
-
-def _is_override_in_settings(plugin, module_id):
-    """
-    checks if there are softwareupdate settings in the config.yaml for the given module_id
-    @param plugin:
-    @param module_id:
-    @return:
-    """
-    settings_path = ["plugins", "softwareupdate", "checks", module_id, "override"]
-    is_override = plugin._settings.global_get(settings_path)
-    if is_override:
-        _logger.info("Module %s has overriding config in settings!", module_id)
-        return True
-    return False
