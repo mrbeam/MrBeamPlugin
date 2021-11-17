@@ -7,6 +7,18 @@ $(function () {
          * Add notification tempaltes here
          */
         self._notification_templates = {
+            i2c_bus_malfunction: {
+                title: gettext("I2C bus shorted"),
+                text: gettext(
+                    "This is pretty bad. We have detected that the communication bus to different components on the MrBeam is either temporarily or permanently damaged. Please make sure that your laser head is properly connected and restart your Mr Beam. If you see this message agin, please contact our support team."
+                ),
+                type: "error",
+                hide: false,
+                knowledgebase: {
+                    url:
+                        "https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#lhnotfound",
+                },
+            },
             err_leaserheadunit_missing: {
                 title: gettext("No laser head unit found"),
                 text: gettext(
