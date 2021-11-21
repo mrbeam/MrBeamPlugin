@@ -25,7 +25,7 @@ def gcode_before_path_color(color="#000000", intensity=0):
 
 
 def gcode_after_path():
-    return "M05"
+    return "M3S0"
 
 
 # TODO remove this or fetch machine settings from settings. (G92 X0 Y0 Z0 looks badly wrong for Mr Beam II machines.)
