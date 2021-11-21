@@ -154,21 +154,29 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             var transformedW = matrix.x(x + w, y + h) - transformedX;
             var transformedH = matrix.y(x + w, y + h) - transformedY;
 
+            // keep mirroring in the elements matrix if mirrored
+            const mirroredX = matrix.a < 0;
+            const mirroredY = matrix.d < 0;
+            let mat = Snap.matrix();
+            if (mirroredX) {
+                // mirrored x-axis
+                transformedW = Math.abs(transformedW);
+                mat.a = -1;
+                transformedX = -transformedX;
+            }
+            if (mirroredY) {
+                // mirrored x-axis
+                transformedH = Math.abs(transformedH);
+                mat.d = -1;
+                transformedY = -transformedY;
+            }
             elem.attr({
                 x: transformedX,
                 y: transformedY,
                 width: transformedW,
                 height: transformedH,
             });
-            elem.node.removeAttribute("transform"); // prefer less attributes.
-
-            if (transformedH < 0) {
-                elem.attr({
-                    style: "transform: scale(1,-1); transform-origin: top",
-                    height: -transformedH,
-                    y: -transformedY,
-                });
-            }
+            elem.transform(mat);
             return ignoredElements;
         }
 
