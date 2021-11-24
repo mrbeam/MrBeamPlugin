@@ -689,7 +689,8 @@ $(function () {
                                 setTimeout(() => {
                                     if (
                                         !$(this)[0].hasChildNodes() &&
-                                        modalElement.length === 1
+                                        modalElement.length === 1 &&
+                                        document.visibilityState === "visible"
                                     ) {
                                         $("body").removeClass("modal-open");
                                         backDrop.remove();
