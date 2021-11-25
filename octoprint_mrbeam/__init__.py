@@ -15,6 +15,8 @@ import collections
 import logging
 from subprocess import check_output
 
+from google_auth_oauthlib.flow import InstalledAppFlow
+
 import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
@@ -646,6 +648,7 @@ class MrBeamPlugin(
                 "js/settings/camera_settings.js",
                 "js/settings/backlash.js",
                 "js/settings/leds.js",
+                "js/settings/backup_settings.js",
                 "js/path_magic.js",
                 "js/lib/simplify.js",
                 "js/lib/clipper.js",
@@ -917,6 +920,13 @@ class MrBeamPlugin(
                 name=gettext("Custom Material Settings"),
                 template="settings/custom_material_settings.jinja2",
                 suffix="_custom_material",
+                custom_bindings=True,
+            ),
+            dict(
+                type="settings",
+                name=gettext("Custom Material Settings"),
+                template="settings/backup_settings.jinja2",
+                suffix="_backup",
                 custom_bindings=True,
             ),
             # disabled in appearance
@@ -2115,6 +2125,28 @@ class MrBeamPlugin(
             return make_response("Unable to interpret request", 400)
 
         return NO_CONTENT
+
+    @octoprint.plugin.BlueprintPlugin.route("/oauth/google/drive", methods=["GET"])
+    def cloud_storage(self):
+        # get_credentials()
+        self._logger.info("look here")
+        import flask
+        code = flask.request.args.get("code")
+        self._logger.info(str(code))
+        # TODO handle errors properly and show them to the user
+        credentials = self.get_credentials(code=code)
+        self._logger.info(str(credentials.to_json()))
+        # TODO if no error save the credentials in a file which we will use for the google drive API calls
+        # TODO show the user a feedback informing him that the connection with google drive was established
+        return "Connecting to cloud storage"
+
+    def get_credentials(self, code='', credentials_file='files/configurations/credentials_web.json', port=61222,
+                        domain='oauth.mr-beam.org'):
+        flow = InstalledAppFlow.from_client_secrets_file(credentials_file, SCOPES)
+        flow.redirect_uri = flow.redirect_uri = "https://{}:{}".format(domain, port)
+        flow.fetch_token(code=code)
+
+        return flow.credentials
 
     def focus_reminder(self, data):
         if "focusReminder" in data:
