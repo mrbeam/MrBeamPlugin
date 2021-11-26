@@ -332,7 +332,7 @@ class LaserheadHandler(object):
                 if data:
                     self._lh_cache = data.get("laser_heads")
                     self._last_used_lh_serial = data.get("last_used_lh_serial")
-                    self._last_used_lh_model_id = data.get("last_used_lh_model_id")
+                    self._last_used_lh_model_id = data.get("last_used_lh_model")
                     self._correction_settings = data.get("correction_settings")
             except IOError:
                 self._logger.exception(
@@ -348,7 +348,7 @@ class LaserheadHandler(object):
             laser_heads=self._lh_cache,
             correction_settings=self._correction_settings,
             last_used_lh_serial=self._current_used_lh_serial,
-            last_used_lh_model_id=self._current_used_lh_model_id,
+            last_used_lh_model=self._current_used_lh_model_id,
         )
         file = self._laser_heads_file if file is None else file
         try:
