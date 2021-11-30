@@ -58,8 +58,11 @@ class LaserheadHandler(object):
         Returns:
             str: laserhead model or None if Model name is not found
         """
-        laser_head_model_str_list = [k for (k, v) in self._LASERHEAD_MODEL_STRING_MAP.items()
-                                     if (v == self._current_used_lh_model) or (k == self._current_used_lh_model_id)]
+        self._logger.debug("Current laserhead ID: {}, Current LaserHead Model: {}".format(
+            self._current_used_lh_model_id, self._current_used_lh_model))
+        laser_head_model_str_list = [v for (k, v) in self._LASERHEAD_MODEL_STRING_MAP.items()
+                                     if ((v == str(self._current_used_lh_model)) or
+                                         (k == str(self._current_used_lh_model_id)))]
         try:
             return laser_head_model_str_list.pop(0)
         except IndexError:
@@ -95,7 +98,7 @@ class LaserheadHandler(object):
             if self._valid_lh_data(lh_data):
                 self._current_used_lh_serial = lh_data["main"]["serial"]
                 self._current_used_lh_model_id = self._get_lh_model(lh_data)
-                self._current_used_lh_model = self._LASERHEAD_MODEL_STRING_MAP[self._current_used_lh_model_id]
+                self._current_used_lh_model = self._LASERHEAD_MODEL_STRING_MAP[str(self._current_used_lh_model_id)]
                 # fmt: off
                 if (self._current_used_lh_serial != self._last_used_lh_serial) and self._last_used_lh_model_id is not None:
                     # fmt: on
@@ -188,7 +191,6 @@ class LaserheadHandler(object):
             if (
                 lh_data.get("main")
                 and lh_data["main"].get("serial")
-                and lh_data["head"].get("model") is not None
                 and lh_data.get("power_calibrations")
                 and len(lh_data["power_calibrations"]) > 0
                 and lh_data["power_calibrations"][-1].get("power_65")
@@ -364,18 +366,18 @@ class LaserheadHandler(object):
         """
         Loads laser head data from a file
         """
+        self._logger.debug("Loading data from  {} started...!".format(self._laser_heads_file))
         try:
             with open(self._laser_heads_file, "r") as stream:
                 data = yaml.safe_load(stream)
-
             if data:
                 self._lh_cache = data.get("laser_heads")
                 self._last_used_lh_serial = data.get("last_used_lh_serial")
                 self._last_used_lh_model = data.get("last_used_lh_model")
                 self._last_used_lh_model_id = data.get("last_used_lh_model_id")
                 self._correction_settings = data.get("correction_settings")
-                
-				self._logger.info("Loading data from  {} is finished!".format(self._laser_heads_file))
+
+                self._logger.info("Loading data from  {} is successful!".format(self._laser_heads_file))
             else:
                 self._logger.warn(
                     "Couldn't load laser head data, file: {} data: {}".format(self._laser_heads_file, data))
@@ -400,7 +402,7 @@ class LaserheadHandler(object):
             last_used_lh_model_id=self._current_used_lh_model_id,
         )
         laser_heads_file = self._laser_heads_file if laser_heads_file is None else laser_heads_file
-
+        self._logger.info("Writing to file: {} ..started".format(laser_heads_file))
         try:
             with open(laser_heads_file, "w+") as outfile:
                 yaml.safe_dump(data, outfile, default_flow_style=False)
