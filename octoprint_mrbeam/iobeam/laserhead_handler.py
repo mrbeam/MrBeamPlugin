@@ -404,7 +404,7 @@ class LaserheadHandler(object):
         laser_heads_file = self._laser_heads_file if laser_heads_file is None else laser_heads_file
         self._logger.info("Writing to file: {} ..started".format(laser_heads_file))
         try:
-            with open(laser_heads_file, "w+") as outfile:
+            with open(laser_heads_file, "w") as outfile:
                 yaml.safe_dump(data, outfile, default_flow_style=False)
                 self._logger.info("Writing to file: {} ..is successful!".format(laser_heads_file))
         except IOError as e:
