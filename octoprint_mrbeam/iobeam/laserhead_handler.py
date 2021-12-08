@@ -58,8 +58,6 @@ class LaserheadHandler(object):
         Returns:
             str: laserhead model or None if Model name is not found
         """
-        self._logger.debug("Current laserhead ID: {}, Current LaserHead Model: {}".format(
-            self._current_used_lh_model_id, self._current_used_lh_model))
         laser_head_model_str_list = [v for (k, v) in self._LASERHEAD_MODEL_STRING_MAP.items()
                                      if ((v == str(self._current_used_lh_model)) or
                                          (k == str(self._current_used_lh_model_id)))]
