@@ -44,10 +44,10 @@ if LooseVersion(setuptools.__version__) < LooseVersion("40.0"):
 else:
     picamera = 'picamera; platform_machine=="armv7l"'
 plugin_requires = [
-    "webcolors",
-    "pillow",
-    "lxml",
-    "numpy",
+    "webcolors == 1.10",
+    "pillow == 6.2.2",
+    "lxml == 4.6.3",
+    "numpy == 1.16.6",
     "pyyaml == 3.10",
     picamera,
 ]
