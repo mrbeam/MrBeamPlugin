@@ -1,5 +1,7 @@
 import json
 import os
+import shutil
+import threading
 from datetime import date
 from datetime import datetime
 from os.path import dirname, realpath
@@ -47,6 +49,7 @@ class MrBeamSoftwareupdateHandler:
     CLOUD_FILE = 1
     LOCAL_FILE = 2
     REPO_FILE = 3
+
     def __init__(self, plugin):
         self._plugin = plugin
 
@@ -179,7 +182,7 @@ class MrBeamSoftwareupdateHandler:
             sw_update_plugin._version_cache_dirty = True
         return returncode
 
-@logme(output=True)
+
 def get_update_information(plugin):
     """
     Gets called from the octoprint.plugin.softwareupdate.check_config Hook from Octoprint
@@ -235,6 +238,7 @@ def get_sw_update_file_path(plugin):
     @return: path to file
     """
     return join(plugin._settings.getBaseFolder("base"), SW_UPDATE_FILE)
+
 
 @logExceptions
 def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
@@ -298,24 +302,30 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
                 SW_UPDATE_TIER_BETA,
                 SW_UPDATE_TIER_DEV,
                 SW_UPDATE_TIER_PROD,
-                SW_UPDATE_TIER_ALPHA
+                SW_UPDATE_TIER_ALPHA,
             ]:
                 sw_update_config[module_id] = {}
                 moduleconfig = sw_update_config[module_id]
                 moduleconfig.update(defaultsettings)
-                print ("defaultsettings", defaultsettings)
-                print ("moduleconfig", moduleconfig)
+                print("defaultsettings", defaultsettings)
+                print("moduleconfig", moduleconfig)
 
                 # get update info for tier branch
                 tierversion = get_tier_by_id(tier)
 
                 if tierversion in moduleconfig:
-                    moduleconfig = dict_merge(moduleconfig, moduleconfig[tierversion])  # set tier config from default settings
+                    moduleconfig = dict_merge(
+                        moduleconfig, moduleconfig[tierversion]
+                    )  # set tier config from default settings
 
-                moduleconfig = dict_merge(moduleconfig, module)  # set default config from file for module
+                moduleconfig = dict_merge(
+                    moduleconfig, module
+                )  # set default config from file for module
 
                 if tierversion in module:
-                    moduleconfig = dict_merge(moduleconfig, module[tierversion])  # override tier config from tiers set in config_file
+                    moduleconfig = dict_merge(
+                        moduleconfig, module[tierversion]
+                    )  # override tier config from tiers set in config_file
 
                 # have to be after the default config from file
                 if "beamos_date" in module:
@@ -327,20 +337,13 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
                             datetime.strptime(date, "%Y-%m-%d").date(),
                             beamos_config,
                         )
-                        if (
-                                beamos_date
-                                >= datetime.strptime(date, "%Y-%m-%d").date()
-                        ):
+                        if beamos_date >= datetime.strptime(date, "%Y-%m-%d").date():
                             if tierversion in beamos_config:
-                                beamos_config_module_tier = beamos_config[
-                                    tierversion
-                                ]
+                                beamos_config_module_tier = beamos_config[tierversion]
                                 moduleconfig = dict_merge(
                                     beamos_config, beamos_config_module_tier
                                 )  # override tier config from tiers set in config_file
-                            moduleconfig = dict_merge(
-                                moduleconfig, beamos_config
-                            )
+                            moduleconfig = dict_merge(moduleconfig, beamos_config)
 
                 if "{tier}" in moduleconfig["branch"]:
                     moduleconfig["branch"] = moduleconfig["branch"].format(
@@ -355,13 +358,10 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
                     moduleconfig,
                     "pip_command" not in moduleconfig,
                 )
-                if (
-                        "global_pip_command" in module
-                        and "pip_command" not in moduleconfig
-                ):
+                if "global_pip_command" in module and "pip_command" not in moduleconfig:
                     moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
                 if "pip_command" in moduleconfig:
-                    #get version number of pip modules
+                    # get version number of pip modules
                     pip_command = moduleconfig["pip_command"]
                     # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
                     # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
@@ -385,7 +385,7 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
                     if pluginInfo is not None:
                         current_version = pluginInfo.version
 
-                if module_id != 'octoprint':
+                if module_id != "octoprint":
                     _logger.debug("%s current version: %s", module_id, current_version)
                     moduleconfig.update(
                         {
@@ -401,12 +401,14 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
         _logger.debug("sw_update_config {}".format(sw_update_config))
         return sw_update_config
 
+
 def clean_update_config(update_config):
     pop_list = ["alpha", "beta", "stable", "develop", "beamos_date", "name"]
     for pop_element in pop_list:
         if pop_element in update_config:
             update_config.pop(pop_element)
     return update_config
+
 
 def get_tier_by_id(tier):
     """

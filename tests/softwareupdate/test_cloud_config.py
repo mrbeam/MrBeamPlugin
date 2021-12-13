@@ -19,8 +19,11 @@ import octoprint.plugin
 import octoprint.settings
 
 from octoprint_mrbeam import MrBeamPlugin
-from octoprint_mrbeam.software_update_information import _set_info_from_file, MrBeamSoftwareupdateHandler, \
-    SW_UPDATE_CLOUD_PATH
+from octoprint_mrbeam.software_update_information import (
+    _set_info_from_file,
+    MrBeamSoftwareupdateHandler,
+    SW_UPDATE_CLOUD_PATH,
+)
 from octoprint_mrbeam.util import dict_merge
 
 
@@ -28,11 +31,14 @@ class SettingsDummy(object):
     def getBaseFolder(self, args, **kwargs):
         return "/tmp/cloud_config_test/"
 
-class PluginInfoDummy():
+
+class PluginInfoDummy:
     _refresh_configured_checks = None
     _version_cache = None
     _version_cache_dirty = None
-class PluginManagerDummy():
+
+
+class PluginManagerDummy:
     version = "dummy"
     implementation = PluginInfoDummy()
 
@@ -47,7 +53,7 @@ class PluginManagerDummy():
     # sw_update_plugin._version_cache_dirty = True
 
 
-class MrBeamPluginDummy():
+class MrBeamPluginDummy:
     _settings = SettingsDummy()
     _plugin_manager = PluginManagerDummy()
 
@@ -60,7 +66,7 @@ target_octoprint_config = {
         "restart": "environment",
         "user": "mrbeam",
         "displayVersion": "dummy",
-        "branch": "develop"
+        "branch": "develop",
     },
     "beta": {
         "type": "github_release",
@@ -69,7 +75,7 @@ target_octoprint_config = {
         "restart": "environment",
         "user": "mrbeam",
         "displayVersion": "dummy",
-        "branch": "mrbeam2-beta"
+        "branch": "mrbeam2-beta",
     },
     "alpha": {
         "type": "github_release",
@@ -78,30 +84,30 @@ target_octoprint_config = {
         "restart": "environment",
         "user": "mrbeam",
         "displayVersion": "dummy",
-        "branch": "mrbeam2-alpha"
+        "branch": "mrbeam2-alpha",
     },
     "stable": {
         "type": "github_release",
         "restart": "environment",
         "user": "mrbeam",
         "displayVersion": "dummy",
-        "branch": "mrbeam2-stable"
-    }
+        "branch": "mrbeam2-stable",
+    },
 }
 target_mrbeam_config = {
     "displayName": " MrBeam Plugin",
     "repo": "MrBeamPlugin",
     "restart": "octoprint",
     "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-    'type': 'github_commit',
-    'user': 'mrbeam',
-    'displayVersion': 'dummy',
+    "type": "github_commit",
+    "user": "mrbeam",
+    "displayVersion": "dummy",
     "dependencies": {
         "mrbeam-ledstrips": {
             "name": "MrBeam LED Strips",
             "repo": "MrBeamLedStrips",
             "pip": "https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
-            "global_pip_command": True
+            "global_pip_command": True,
         },
         "iobeam": {
             "name": "iobeam",
@@ -110,7 +116,7 @@ target_mrbeam_config = {
             "pip": "git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
             "global_pip_command": True,
             "api_user": "MrBeamDev",
-            "api_password": "v2T5pFkmdgDqbFBJAqrt"
+            "api_password": "v2T5pFkmdgDqbFBJAqrt",
         },
         "mrb_hw_info": {
             "name": "mrb_hw_info",
@@ -120,23 +126,15 @@ target_mrbeam_config = {
             "global_pip_command": True,
             "package_name": "mrb-hw-info",
             "api_user": "MrBeamDev",
-            "api_password": "v2T5pFkmdgDqbFBJAqrt"
-        }
+            "api_password": "v2T5pFkmdgDqbFBJAqrt",
+        },
     },
     "tiers": {
-        "develop": {
-            "branch": "develop"
-        },
-        "beta": {
-            "branch": "mrbeam2-beta"
-        },
-        "alpha": {
-            "branch": "mrbeam2-alpha"
-        },
-        "stable": {
-            "branch": "mrbeam2-stable"
-        }
-    }
+        "develop": {"branch": "develop"},
+        "beta": {"branch": "mrbeam2-beta"},
+        "alpha": {"branch": "mrbeam2-alpha"},
+        "stable": {"branch": "mrbeam2-stable"},
+    },
 }
 
 
@@ -153,67 +151,91 @@ class SettingsTestCase(unittest.TestCase):
 
     def test_file_fallback(self):
         with requests_mock.Mocker() as rm:
-            rm.get(SW_UPDATE_CLOUD_PATH, json={"test":"test"}, status_code=404)
-            assert self._softwareupdate_handler.load_update_file_from_cloud() == self._softwareupdate_handler.LOCAL_FILE
+            rm.get(SW_UPDATE_CLOUD_PATH, json={"test": "test"}, status_code=404)
+            assert (
+                self._softwareupdate_handler.load_update_file_from_cloud()
+                == self._softwareupdate_handler.LOCAL_FILE
+            )
 
-            #if localfile not available and servererror
-            assert self._softwareupdate_handler.load_update_file_from_cloud(localfilemissing=True) == self._softwareupdate_handler.REPO_FILE
+            # if localfile not available and servererror
+            assert (
+                self._softwareupdate_handler.load_update_file_from_cloud(
+                    localfilemissing=True
+                )
+                == self._softwareupdate_handler.REPO_FILE
+            )
             # assert self._softwareupdate_handler.returncode == 404
             # self.assertEqual(response, 'Weather data subscribed successfully!')
             # requests_mock.get(SW_UPDATE_CLOUD_PATH, json={'name': 'awesome-mock'})
-        #if file online reachable use this
-        #if file online not reachable use local file
-        #if local file has errors use mrbeam config file
+        # if file online reachable use this
+        # if file online not reachable use local file
+        # if local file has errors use mrbeam config file
         mock_open = mock.mock_open()
-        with mock.patch('__builtin__.open', mock_open):
-            assert self._softwareupdate_handler.load_update_file_from_cloud() == self._softwareupdate_handler.CLOUD_FILE
+        with mock.patch("__builtin__.open", mock_open):
+            assert (
+                self._softwareupdate_handler.load_update_file_from_cloud()
+                == self._softwareupdate_handler.CLOUD_FILE
+            )
 
             with requests_mock.Mocker() as rm:
                 rm.get(SW_UPDATE_CLOUD_PATH, json={"test": "test"}, status_code=404)
-                assert self._softwareupdate_handler.load_update_file_from_cloud() == self._softwareupdate_handler.CLOUD_FILE
+                assert (
+                    self._softwareupdate_handler.load_update_file_from_cloud()
+                    == self._softwareupdate_handler.CLOUD_FILE
+                )
         return True
 
     def test_cloud_confg_dev(self):
         plugin = self.plugin
         tier = "DEV"
         beamos_date = date(2018, 1, 12)
-        update_config = _set_info_from_file(plugin, tier, beamos_date, self._softwareupdate_handler)
+        update_config = _set_info_from_file(
+            plugin, tier, beamos_date, self._softwareupdate_handler
+        )
         print("config {}".format(update_config))
         assert update_config["mrbeam"]["branch"] == "develop"
         assert update_config["octoprint"] == target_octoprint_config["develop"]
-        self.validate_module_config(update_config["mrbeam"], 'develop')
+        self.validate_module_config(update_config["mrbeam"], "develop")
 
     def test_cloud_confg_alpha(self):
         plugin = self.plugin
         tier = "ALPHA"
         beamos_date = date(2018, 1, 12)
-        update_config = _set_info_from_file(plugin, tier, beamos_date, self._softwareupdate_handler)
+        update_config = _set_info_from_file(
+            plugin, tier, beamos_date, self._softwareupdate_handler
+        )
         print("config {}".format(update_config))
         assert update_config["mrbeam"]["branch"] == "mrbeam2-alpha"
         assert update_config["octoprint"] == target_octoprint_config["alpha"]
-        self.validate_module_config(update_config["mrbeam"], 'alpha')
+        self.validate_module_config(update_config["mrbeam"], "alpha")
 
     def test_cloud_confg_beta(self):
         plugin = self.plugin
         tier = "BETA"
         beamos_date = date(2018, 1, 12)
-        update_config = _set_info_from_file(plugin, tier, beamos_date, self._softwareupdate_handler)
+        update_config = _set_info_from_file(
+            plugin, tier, beamos_date, self._softwareupdate_handler
+        )
         print("config {}".format(update_config))
         assert update_config["mrbeam"]["branch"] == "mrbeam2-beta"
         assert update_config["octoprint"] == target_octoprint_config["beta"]
-        self.validate_module_config(update_config["mrbeam"], 'beta')
+        self.validate_module_config(update_config["mrbeam"], "beta")
 
     def test_cloud_confg_prod(self):
         plugin = self.plugin
         tier = "PROD"
         beamos_date = date(2018, 1, 12)
-        update_config = _set_info_from_file(plugin, tier, beamos_date, self._softwareupdate_handler)
+        update_config = _set_info_from_file(
+            plugin, tier, beamos_date, self._softwareupdate_handler
+        )
         print("config {}".format(update_config))
         assert update_config["mrbeam"]["branch"] == "mrbeam2-stable"
         assert update_config["octoprint"] == target_octoprint_config["stable"]
-        self.validate_module_config(update_config["mrbeam"], 'stable')
+        self.validate_module_config(update_config["mrbeam"], "stable")
 
     def validate_module_config(self, update_config, tier):
-        target_config = dict_merge(target_mrbeam_config, target_mrbeam_config['tiers'][tier])
-        target_config.pop('tiers')
+        target_config = dict_merge(
+            target_mrbeam_config, target_mrbeam_config["tiers"][tier]
+        )
+        target_config.pop("tiers")
         assert update_config == target_config
