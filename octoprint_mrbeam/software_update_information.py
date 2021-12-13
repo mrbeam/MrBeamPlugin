@@ -44,7 +44,6 @@ GLOBAL_PIP_COMMAND = (
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
 """this is used to only create and run one instance of the update handler"""
-_softwareupdate_handler = None
 load_file_lock = threading.Lock()
 
 
@@ -196,10 +195,9 @@ def get_update_information(plugin):
     tier = plugin._settings.get(["dev", "software_tier"])
     beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
     _logger.info("SoftwareUpdate using tier: %s %s", tier, beamos_date)
-    global _softwareupdate_handler
-    if _softwareupdate_handler is None:
-        _softwareupdate_handler = MrBeamSoftwareupdateHandler(plugin)
-        _softwareupdate_handler.load_update_file_from_cloud()
+
+    _softwareupdate_handler = MrBeamSoftwareupdateHandler(plugin)
+    _softwareupdate_handler.load_update_file_from_cloud()
 
     return _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler)
 
