@@ -43,7 +43,10 @@ GLOBAL_PIP_COMMAND = (
 
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
+"""this is used to only create and run one instance of the update handler"""
 _softwareupdate_handler = None
+load_file_lock = threading.Lock()
+
 
 class MrBeamSoftwareupdateHandler:
     CLOUD_FILE = 1
@@ -59,128 +62,127 @@ class MrBeamSoftwareupdateHandler:
         """
         overrides the local update config file if there is a newer one on the server
         """
-        newfile = False
-        servererror = False
-        serverfile_request = None
-        returncode = 0
+        with load_file_lock:
+            newfile = False
+            servererror = False
+            serverfile_request = None
+            returncode = 0
 
-        #load file from server
-        try:
-            serverfile_request = requests.get(
-                SW_UPDATE_CLOUD_PATH,
-                timeout=3,
-            )
-        except requests.ReadTimeout:
-            _logger.error("timeout while trying to get the update_config file")
-            servererror = True
-        except IOError as e:
-            servererror = True
-            _logger.error(
-                "There was an error on the server - error:%s",
-                e,
-            )
-
-        #check if valid
-        if serverfile_request:
+            # load file from server
             try:
-                serverfile_info = json.loads(serverfile_request.content)
-                serverfile_verson = serverfile_info["version"]
-            except ValueError as e:
+                serverfile_request = requests.get(
+                    SW_UPDATE_CLOUD_PATH,
+                    timeout=3,
+                )
+            except requests.ReadTimeout:
+                _logger.error("timeout while trying to get the update_config file")
+                servererror = True
+            except IOError as e:
                 servererror = True
                 _logger.error(
-                    "there is a wrong configured config file on the server - cancel loading of new file"
-                )
-                _logger.debug("error %s - %s", e, serverfile_request.content)
-
-        #check if local file exists valid
-        if not os.path.exists(
-                get_sw_update_file_path(self._plugin)
-        ):
-            localfilemissing = True
-
-        #if both valid compare and override
-        if not servererror and serverfile_request:
-            if localfilemissing:   # create new file
-                readwriteoption = "w+"
-                newfile = True
-            else: # checks if the file is available otherwise it will be created
-                readwriteoption = "r+"
-            with open(
-                    get_sw_update_file_path(self._plugin),
-                    readwriteoption,
-            ) as f:
-                try:
-                    update_info = json.load(f)
-                    _logger.debug("serverfile_info %s", serverfile_info)
-                    _logger.debug(
-                        "version compare %s - %s",
-                        serverfile_verson,
-                        update_info["version"],
-                    )
-                    if serverfile_verson > update_info["version"]:
-                        newfile = True
-                        _logger.info(
-                            "update local file from server - %s -> %s",
-                            serverfile_verson,
-                            update_info["version"],
-                        )
-
-                except ValueError:
-                    newfile = True
-                    _logger.error(
-                        "there is a wrong configured local config file - override local file with server file"
-                    )
-                except KeyError:
-                    localfilemissing = True
-                    _logger.exception("there is a keyerror in the local file")
-
-                #if local config file invalid override by server
-                if newfile or localfilemissing:
-                    _logger.debug("override local file")
-                    # override local file
-                    f.seek(0)
-                    f.write(serverfile_request.content)
-                    f.truncate()
-                    returncode = self.CLOUD_FILE
-
-        # if server invalid use local file
-        if not serverfile_request:
-            servererror = True
-            returncode = self.LOCAL_FILE
-
-        # if both invalid use repo file
-        if servererror and localfilemissing:
-            _logger.info(
-                "fallback use local default config file /files/software_update/update_info.json"
-            )
-            try:
-                copy(
-                    join(
-                        dirname(realpath(__file__)),
-                        "files/software_update/update_info.json",
-                    ),
-                    get_sw_update_file_path(self._plugin),
-                )
-                newfile = True
-                returncode = self.REPO_FILE
-            except IOError as e:
-                _logger.error(
-                    "not even fallback version available: %s",
+                    "There was an error on the server - error:%s",
                     e,
                 )
 
-        #if file changed, reload update info
-        if newfile:
-            _logger.info("new file => set info")
+            # check if valid
+            if serverfile_request:
+                try:
+                    serverfile_info = json.loads(serverfile_request.content)
+                    serverfile_verson = serverfile_info["version"]
+                except ValueError as e:
+                    servererror = True
+                    _logger.error(
+                        "there is a wrong configured config file on the server - cancel loading of new file"
+                    )
+                    _logger.debug("error %s - %s", e, serverfile_request.content)
 
-            # inform SoftwareUpdate Pluging about new config
-            sw_update_plugin = self._plugin._plugin_manager.get_plugin_info(
-                "softwareupdate"
-            ).implementation
-            sw_update_plugin._refresh_configured_checks = True
-            sw_update_plugin._version_cache = dict()
-            sw_update_plugin._version_cache_dirty = True
-        return returncode
+            # check if local file exists valid
+            if not os.path.exists(get_sw_update_file_path(self._plugin)):
+                localfilemissing = True
+
+            # if both valid compare and override
+            if not servererror and serverfile_request:
+                if localfilemissing:  # create new file
+                    readwriteoption = "w+"
+                    newfile = True
+                else:  # checks if the file is available otherwise it will be created
+                    readwriteoption = "r+"
+                with open(
+                    get_sw_update_file_path(self._plugin),
+                    readwriteoption,
+                ) as f:
+                    try:
+                        update_info = json.load(f)
+                        _logger.debug("serverfile_info %s", serverfile_info)
+                        _logger.debug(
+                            "version compare %s - %s",
+                            serverfile_verson,
+                            update_info["version"],
+                        )
+                        if serverfile_verson > update_info["version"]:
+                            newfile = True
+                            _logger.info(
+                                "update local file from server - %s -> %s",
+                                serverfile_verson,
+                                update_info["version"],
+                            )
+
+                    except ValueError:
+                        newfile = True
+                        _logger.error(
+                            "there is a wrong configured local config file - override local file with server file"
+                        )
+                    except KeyError:
+                        localfilemissing = True
+                        _logger.exception("there is a keyerror in the local file")
+
+                    # if local config file invalid override by server
+                    if newfile or localfilemissing:
+                        _logger.debug("override local file")
+                        # override local file
+                        f.seek(0)
+                        f.write(serverfile_request.content)
+                        f.truncate()
+                        returncode = self.CLOUD_FILE
+
+            # if server invalid use local file
+            if not serverfile_request:
+                servererror = True
+                returncode = self.LOCAL_FILE
+
+            # if both invalid use repo file
+            if servererror and localfilemissing:
+                _logger.info(
+                    "fallback use local default config file /files/software_update/update_info.json"
+                )
+                try:
+                    shutil.copy(
+                        join(
+                            dirname(realpath(__file__)),
+                            "files/software_update/update_info.json",
+                        ),
+                        get_sw_update_file_path(self._plugin),
+                    )
+                    newfile = True
+                    returncode = self.REPO_FILE
+                except IOError as e:
+                    _logger.error(
+                        "not even fallback version available: %s",
+                        e,
+                    )
+
+            # if file changed, reload update info
+            if newfile:
+                _logger.info("new file => set info")
+
+                # inform SoftwareUpdate Pluging about new config
+                sw_update_plugin = self._plugin._plugin_manager.get_plugin_info(
+                    "softwareupdate"
+                ).implementation
+                sw_update_plugin._refresh_configured_checks = True
+                sw_update_plugin._version_cache = dict()
+                sw_update_plugin._version_cache_dirty = True
+            return returncode
 
 
 def get_update_information(plugin):
@@ -404,9 +406,8 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
 
 def clean_update_config(update_config):
     pop_list = ["alpha", "beta", "stable", "develop", "beamos_date", "name"]
-    for pop_element in pop_list:
-        if pop_element in update_config:
-            update_config.pop(pop_element)
+    for key in set(update_config).intersection(pop_list):
+        del update_config[key]
     return update_config
 
 
