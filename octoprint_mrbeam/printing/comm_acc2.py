@@ -2388,19 +2388,11 @@ class MachineCom(octocomm.MachineCom):
                 terminal_as_comm=True,
             )
 
-    def selectFile(self, filename, sd=None, user=None, tags=None):
+    def selectFile(self, filename, sd=False, user=None, tags=None):
         if self.isBusy():
             return
 
         self._currentFile = PrintingGcodeFileInformation(filename, user=user)
-        eventManager().fire(
-            OctoPrintEvents.FILE_SELECTED,
-            {
-                "file": self._currentFile.getFilename(),
-                "filename": os.path.basename(self._currentFile.getFilename()),
-                "origin": self._currentFile.getFileLocation(),
-            },
-        )
         self._callback.on_comm_file_selected(
             filename, self._currentFile.getFilesize(), False, user=user
         )
@@ -2410,17 +2402,8 @@ class MachineCom(octocomm.MachineCom):
             return
 
         self._currentFile = PrintingGcodeFromMemoryInformation(gcode)
-        eventManager().fire(
-            OctoPrintEvents.FILE_SELECTED,
-            {
-                "file": self._currentFile.getFilename(),
-                "filename": os.path.basename(self._currentFile.getFilename()),
-                "origin": self._currentFile.getFileLocation(),
-            },
-        )
-        self._callback.on_comm_file_selected(
-            "In_Memory_GCode", len(gcode), True
-        )  # Hack: set SD-Card to true to avoid Octoprint os.stats check (which will fail of course).
+        # Hack: set SD-Card to true to avoid Octoprint os.stats check (which will fail of course).
+        self._callback.on_comm_file_selected("In_Memory_GCode", len(gcode), sd=True)
 
     def unselectFile(self):
         if self.isBusy():

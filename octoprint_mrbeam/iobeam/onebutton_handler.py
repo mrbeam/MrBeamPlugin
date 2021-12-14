@@ -320,15 +320,15 @@ class OneButtonHandler(object):
                 and self._printer.is_operational()
                 and not self._printer.is_paused()
                 and not self._printer.is_pausing()
-                and ("filename" in payload or len(payload) == 0)
+                and ("path" in payload or len(payload) == 0)
             ):
                 self._logger.debug(
                     "onEvent() FILE_SELECTED set_ready_to_laser filename: %s:",
-                    "filename" in payload,
+                    "path" in payload,
                 )
                 try:
                     # OctoPrint 1.3.4 doesn't provide the file name anymore
-                    path = payload.get("file")
+                    path = payload.get("path")
                     self.set_ready_to_laser(path)
                 except Exception as e:
                     self._logger.exception(
@@ -489,8 +489,8 @@ class OneButtonHandler(object):
         self._logger.debug(
             "_start_laser() LET'S LASER BABY!!! it's file %s", self.ready_to_laser_file
         )
-        myFile = self._file_manager.path_on_disk("local", self.ready_to_laser_file)
-        result = self._printer.select_file(myFile, False, True)
+        # myFile = self._file_manager.path_on_disk("local", self.ready_to_laser_file)
+        result = self._printer.start_print()
 
         self.unset_ready_to_laser(lasering=True)
 
