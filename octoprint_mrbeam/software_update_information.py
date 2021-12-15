@@ -43,8 +43,8 @@ GLOBAL_PIP_COMMAND = (
 
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
-"""this is used to only create and run one instance of the update handler"""
-load_file_lock = threading.Lock()
+"""this is used to lock the config file loading from server and using it as update information"""
+config_file_lock = threading.Lock()
 
 
 class MrBeamSoftwareupdateHandler:
@@ -61,7 +61,7 @@ class MrBeamSoftwareupdateHandler:
         """
         overrides the local update config file if there is a newer one on the server
         """
-        with load_file_lock:
+        with config_file_lock:
             newfile = False
             servererror = False
             serverfile_request = None
@@ -198,8 +198,9 @@ def get_update_information(plugin):
 
     _softwareupdate_handler = MrBeamSoftwareupdateHandler(plugin)
     _softwareupdate_handler.load_update_file_from_cloud()
-
-    return _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler)
+    return _set_info_from_file(
+        get_sw_update_file_path(plugin), tier, beamos_date, _softwareupdate_handler
+    )
 
 
 def software_channels_available(plugin):
@@ -267,139 +268,150 @@ def _set_info_from_file(plugin, tier, beamos_date, _softwareupdate_handler):
     @param beamos_date: the image creation date of the running beamos
     @param _softwareupdate_handler: the handler class to look for a new config file online
     """
-    sw_update_file_path = get_sw_update_file_path(plugin)
-    sw_update_config = dict()
-    try:
-        with open(sw_update_file_path) as f:
-            update_info = yaml.safe_load(f)
-    except IOError as e:
-        _logger.exception(
-            "could not find file %s - error: %s",
-            sw_update_file_path,
-            e,
-        )
-        loadfilethread = _softwareupdate_handler.load_update_file_from_cloud(
-            localfilemissing=True
-        )
-        loadfilethread.join()
-    except ValueError as e:
-        _logger.exception(
-            "there is a wrong configured config file local - try to load from server"
-        )
-        _logger.debug("error %s - %s", e, f)
-        loadfilethread = _softwareupdate_handler.load_update_file_from_cloud()
-        loadfilethread.join()
-    else:
-        _logger.debug("update_info {}".format(update_info))
-        fileversion = update_info["version"]
-        _logger.info("Software update file version: %s", fileversion)
-        defaultsettings = update_info["default"]
-        modules = update_info["modules"]
+    with config_file_lock:
+        sw_update_file_path = get_sw_update_file_path(plugin)
+        sw_update_config = dict()
+        try:
+            with open(sw_update_file_path) as f:
+                update_info = yaml.safe_load(f)
+        except IOError as e:
+            _logger.exception(
+                "could not find file %s - error: %s",
+                sw_update_file_path,
+                e,
+            )
+            loadfilethread = _softwareupdate_handler.load_update_file_from_cloud(
+                localfilemissing=True
+            )
+            loadfilethread.join()
+        except ValueError as e:
+            _logger.exception(
+                "there is a wrong configured config file local - try to load from server"
+            )
+            _logger.debug("error %s - %s", e, f)
+            loadfilethread = _softwareupdate_handler.load_update_file_from_cloud()
+            loadfilethread.join()
+        else:
+            _logger.debug("update_info {}".format(update_info))
+            fileversion = update_info["version"]
+            _logger.info("Software update file version: %s", fileversion)
+            defaultsettings = update_info["default"]
+            modules = update_info["modules"]
 
-        # TODO maybe drop the higher levels of the config so the output will be more tidy
-        for module_id, module in modules.items():
-            if tier in [
-                SW_UPDATE_TIER_BETA,
-                SW_UPDATE_TIER_DEV,
-                SW_UPDATE_TIER_PROD,
-                SW_UPDATE_TIER_ALPHA,
-            ]:
-                sw_update_config[module_id] = {}
-                moduleconfig = sw_update_config[module_id]
-                moduleconfig.update(defaultsettings)
-                print("defaultsettings", defaultsettings)
-                print("moduleconfig", moduleconfig)
+            # TODO maybe drop the higher levels of the config so the output will be more tidy
+            for module_id, module in modules.items():
+                if tier in [
+                    SW_UPDATE_TIER_BETA,
+                    SW_UPDATE_TIER_DEV,
+                    SW_UPDATE_TIER_PROD,
+                    SW_UPDATE_TIER_ALPHA,
+                ]:
+                    sw_update_config[module_id] = {}
+                    moduleconfig = sw_update_config[module_id]
+                    moduleconfig.update(defaultsettings)
+                    print("defaultsettings", defaultsettings)
+                    print("moduleconfig", moduleconfig)
 
-                # get update info for tier branch
-                tierversion = get_tier_by_id(tier)
+                    # get update info for tier branch
+                    tierversion = get_tier_by_id(tier)
 
-                if tierversion in moduleconfig:
+                    if tierversion in moduleconfig:
+                        moduleconfig = dict_merge(
+                            moduleconfig, moduleconfig[tierversion]
+                        )  # set tier config from default settings
+
                     moduleconfig = dict_merge(
-                        moduleconfig, moduleconfig[tierversion]
-                    )  # set tier config from default settings
+                        moduleconfig, module
+                    )  # set default config from file for module
 
-                moduleconfig = dict_merge(
-                    moduleconfig, module
-                )  # set default config from file for module
+                    if tierversion in module:
+                        moduleconfig = dict_merge(
+                            moduleconfig, module[tierversion]
+                        )  # override tier config from tiers set in config_file
 
-                if tierversion in module:
-                    moduleconfig = dict_merge(
-                        moduleconfig, module[tierversion]
-                    )  # override tier config from tiers set in config_file
+                    # have to be after the default config from file
+                    if "beamos_date" in module:
+                        beamos_date_config = module["beamos_date"]
+                        for date, beamos_config in beamos_date_config.items():
+                            _logger.debug(
+                                "date compare %s >= %s -> %s",
+                                beamos_date,
+                                datetime.strptime(date, "%Y-%m-%d").date(),
+                                beamos_config,
+                            )
+                            if (
+                                beamos_date
+                                >= datetime.strptime(date, "%Y-%m-%d").date()
+                            ):
+                                if tierversion in beamos_config:
+                                    beamos_config_module_tier = beamos_config[
+                                        tierversion
+                                    ]
+                                    moduleconfig = dict_merge(
+                                        beamos_config, beamos_config_module_tier
+                                    )  # override tier config from tiers set in config_file
+                                moduleconfig = dict_merge(moduleconfig, beamos_config)
 
-                # have to be after the default config from file
-                if "beamos_date" in module:
-                    beamos_date_config = module["beamos_date"]
-                    for date, beamos_config in beamos_date_config.items():
-                        _logger.debug(
-                            "date compare %s >= %s -> %s",
-                            beamos_date,
-                            datetime.strptime(date, "%Y-%m-%d").date(),
-                            beamos_config,
+                    if "{tier}" in moduleconfig["branch"]:
+                        moduleconfig["branch"] = moduleconfig["branch"].format(
+                            tier=get_tier_by_id(tier)
                         )
-                        if beamos_date >= datetime.strptime(date, "%Y-%m-%d").date():
-                            if tierversion in beamos_config:
-                                beamos_config_module_tier = beamos_config[tierversion]
-                                moduleconfig = dict_merge(
-                                    beamos_config, beamos_config_module_tier
-                                )  # override tier config from tiers set in config_file
-                            moduleconfig = dict_merge(moduleconfig, beamos_config)
 
-                if "{tier}" in moduleconfig["branch"]:
-                    moduleconfig["branch"] = moduleconfig["branch"].format(
-                        tier=get_tier_by_id(tier)
+                    # get version number
+                    current_version = "-"
+                    _logger.debug(
+                        "pip command check %s %s - %s",
+                        module,
+                        moduleconfig,
+                        "pip_command" not in moduleconfig,
                     )
+                    if (
+                        "global_pip_command" in module
+                        and "pip_command" not in moduleconfig
+                    ):
+                        moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
+                    if "pip_command" in moduleconfig:
+                        # get version number of pip modules
+                        pip_command = moduleconfig["pip_command"]
+                        # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
+                        # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+                        # pip_command = GLOBAL_PIP_COMMAND
+                        package_name = (
+                            module["package_name"]
+                            if "package_name" in module
+                            else module_id
+                        )
+                        _logger.debug("get version %s %s", package_name, pip_command)
 
-                # get version number
-                current_version = "-"
-                _logger.debug(
-                    "pip command check %s %s - %s",
-                    module,
-                    moduleconfig,
-                    "pip_command" not in moduleconfig,
-                )
-                if "global_pip_command" in module and "pip_command" not in moduleconfig:
-                    moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
-                if "pip_command" in moduleconfig:
-                    # get version number of pip modules
-                    pip_command = moduleconfig["pip_command"]
-                    # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
-                    # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-                    # pip_command = GLOBAL_PIP_COMMAND
-                    package_name = (
-                        module["package_name"]
-                        if "package_name" in module
-                        else module_id
-                    )
-                    _logger.debug("get version %s %s", package_name, pip_command)
+                        current_version_global_pip = get_version_of_pip_module(
+                            package_name, pip_command
+                        )
+                        if current_version_global_pip is not None:
+                            current_version = current_version_global_pip
 
-                    current_version_global_pip = get_version_of_pip_module(
-                        package_name, pip_command
-                    )
-                    if current_version_global_pip is not None:
-                        current_version = current_version_global_pip
+                    else:
+                        # get versionnumber of octoprint plugin
+                        pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
+                        if pluginInfo is not None:
+                            current_version = pluginInfo.version
 
-                else:
-                    # get versionnumber of octoprint plugin
-                    pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
-                    if pluginInfo is not None:
-                        current_version = pluginInfo.version
+                    if module_id != "octoprint":
+                        _logger.debug(
+                            "%s current version: %s", module_id, current_version
+                        )
+                        moduleconfig.update(
+                            {
+                                "displayVersion": current_version,
+                            }
+                        )
+                    if "name" in module:
+                        moduleconfig["displayName"] = module["name"]
+                    # sw_update_config.update(moduleconfig)
+                    moduleconfig = clean_update_config(moduleconfig)
+                    sw_update_config[module_id] = moduleconfig
 
-                if module_id != "octoprint":
-                    _logger.debug("%s current version: %s", module_id, current_version)
-                    moduleconfig.update(
-                        {
-                            "displayVersion": current_version,
-                        }
-                    )
-                if "name" in module:
-                    moduleconfig["displayName"] = module["name"]
-                # sw_update_config.update(moduleconfig)
-                moduleconfig = clean_update_config(moduleconfig)
-                sw_update_config[module_id] = moduleconfig
-
-        _logger.debug("sw_update_config {}".format(sw_update_config))
-        return sw_update_config
+            _logger.debug("sw_update_config {}".format(sw_update_config))
+            return sw_update_config
 
 
 def clean_update_config(update_config):
