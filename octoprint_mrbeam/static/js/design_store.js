@@ -21,27 +21,29 @@ $(function () {
             self.prepareDesignStoreTab();
         };
 
+        self.getUserSettings = function () {
+            const settings = self.loginState.currentUser?.()?.settings;
+            return settings;
+        };
+
         self.getEmail = function () {
-            if (
-                self.loginState.currentUser?.().settings?.mrbeam
-                    ?.design_store_email
-            ) {
-                return self.loginState.currentUser().settings.mrbeam
-                    .design_store_email;
+            const userSettings = self.getUserSettings();
+            if (userSettings?.mrbeam?.design_store_email) {
+                return userSettings.mrbeam.design_store_email;
             } else {
                 return self.loginState.username();
             }
         };
 
         self.getAuthToken = function () {
-            if (self.loginState.currentUser?.().settings?.mrbeam
-                    ?.design_store_auth_token ||
-                self.loginState.currentUser?.().settings?.mrbeam
-                    ?.user_token) {
+            const userSettings = self.getUserSettings();
+            if (
+                userSettings?.mrbeam?.design_store_auth_token ||
+                userSettings?.mrbeam?.user_token
+            ) {
                 return (
-                    self.loginState.currentUser().settings.mrbeam
-                        .design_store_auth_token ||
-                    self.loginState.currentUser().settings.mrbeam.user_token
+                    userSettings.mrbeam.design_store_auth_token ||
+                    userSettings.mrbeam.user_token
                 );
             } else {
                 return undefined;
@@ -49,16 +51,13 @@ $(function () {
         };
 
         self.getLastUploadedDate = function () {
-            if (self.loginState.currentUser?.().settings?.mrbeam
-                ?.design_store_last_uploaded) {
-                return (
-                    self.loginState.currentUser().settings.mrbeam
-                        .design_store_last_uploaded
-                );
+            const userSettings = self.getUserSettings();
+            if (userSettings?.mrbeam?.design_store_last_uploaded) {
+                return userSettings.mrbeam.design_store_last_uploaded;
             } else {
                 return undefined;
             }
-        }
+        };
 
         self.prepareDesignStoreTab = function () {
             let design_store_iframe = $("#design_store_iframe");
@@ -74,7 +73,9 @@ $(function () {
                                 self.onTokenReceived(event.data.payload);
                                 break;
                             case "lastUploadedDate":
-                                self.onLastUploadedDateReceived(event.data.payload);
+                                self.onLastUploadedDateReceived(
+                                    event.data.payload
+                                );
                                 break;
                             case "svg":
                                 self.onSvgReceived(event.data.payload);
@@ -126,7 +127,7 @@ $(function () {
                 user_token: self.getAuthToken(),
                 version: BEAMOS_VERSION,
                 language: MRBEAM_LANGUAGE,
-                last_uploaded: self.getLastUploadedDate()
+                last_uploaded: self.getLastUploadedDate(),
             };
 
             self.sendMessageToDesignStoreIframe("userData", userData);
@@ -138,9 +139,16 @@ $(function () {
 
         self.onLastUploadedDateReceived = function (payload) {
             let oldLastUploaded = self.getLastUploadedDate();
-            if (payload.last_uploaded && oldLastUploaded && oldLastUploaded !== payload.last_uploaded && $("#designstore_tab_btn span.red-dot").length === 0) {
+            if (
+                payload.last_uploaded &&
+                oldLastUploaded &&
+                oldLastUploaded !== payload.last_uploaded &&
+                $("#designstore_tab_btn span.red-dot").length === 0
+            ) {
                 // Notify user
-                $("#designstore_tab_btn").append('<span class="red-dot"></span>');
+                $("#designstore_tab_btn").append(
+                    '<span class="red-dot"></span>'
+                );
             }
             self.lastUploadedDate(payload.last_uploaded);
         };
@@ -151,14 +159,16 @@ $(function () {
 
         self.saveTokenInUserSettings = function (token) {
             let oldToken = self.getAuthToken();
-            if (token !== "" && oldToken !== token &&
-            self.loginState.currentUser?.().settings?.mrbeam?.user_token) {
-                let currentUserSettings = self.loginState.currentUser()
-                    .settings;
+            let currentUserSettings = self.getUserSettings();
+            if (
+                token !== "" &&
+                oldToken !== token &&
+                currentUserSettings?.mrbeam?.user_token
+            ) {
                 delete currentUserSettings["mrbeam"]["user_token"];
                 currentUserSettings["mrbeam"][
                     "design_store_auth_token"
-                    ] = token;
+                ] = token;
                 self.navigation.usersettings.updateSettings(
                     self.loginState.currentUser().name,
                     currentUserSettings
@@ -168,14 +178,18 @@ $(function () {
 
         self.saveLastUploadedInUserSettings = function (lastUploaded) {
             let oldLastUploaded = self.getLastUploadedDate();
-            if (lastUploaded !== "" && oldLastUploaded !== lastUploaded &&
-            self.loginState.currentUser?.().settings?.mrbeam?.design_store_last_uploaded) {
-                let currentUserSettings = self.loginState.currentUser()
-                    .settings;
-                delete currentUserSettings["mrbeam"]["design_store_last_uploaded"];
+            let currentUserSettings = self.getUserSettings();
+            if (
+                lastUploaded !== "" &&
+                oldLastUploaded !== lastUploaded &&
+                currentUserSettings?.mrbeam?.design_store_last_uploaded
+            ) {
+                delete currentUserSettings["mrbeam"][
+                    "design_store_last_uploaded"
+                ];
                 currentUserSettings["mrbeam"][
                     "design_store_last_uploaded"
-                    ] = lastUploaded;
+                ] = lastUploaded;
                 self.navigation.usersettings.updateSettings(
                     self.loginState.currentUser().name,
                     currentUserSettings
@@ -209,7 +223,7 @@ $(function () {
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.error(
                         "Store bought design saving failed with status " +
-                        jqXHR.status,
+                            jqXHR.status,
                         textStatus,
                         errorThrown
                     );
@@ -232,7 +246,11 @@ $(function () {
                 self.sendMessageToDesignStoreIframe("goToStore", {});
             }
             let oldLastUploaded = self.getLastUploadedDate();
-            if (self.lastUploadedDate() && self.lastUploadedDate() !== "" && oldLastUploaded !== self.lastUploadedDate()) {
+            if (
+                self.lastUploadedDate() &&
+                self.lastUploadedDate() !== "" &&
+                oldLastUploaded !== self.lastUploadedDate()
+            ) {
                 self.saveLastUploadedInUserSettings(self.lastUploadedDate());
             }
         };
