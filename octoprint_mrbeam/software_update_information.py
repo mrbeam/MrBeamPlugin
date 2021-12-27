@@ -313,6 +313,8 @@ def _get_package_description(
     if tier in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ALPHA):
         # adds pip upgrade flag in the develop tier so it will do a upgrade even without a version bump
         kwargs.update(pip_upgrade_flag=True)
+    # Disable pip colored output during software update for all tiers and updatable packages
+    kwargs.update(pip_nocolor_flag=True)
     update_info = dict(
         tier=tier,
         displayName=displayName,
