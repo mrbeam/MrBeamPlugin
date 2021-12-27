@@ -316,6 +316,7 @@ def _get_package_description(
     # Disable pip colored output during software update for all tiers and updatable packages
     kwargs.update(pip_nocolor_flag=True)
     #dummy commit, to be removed before review
+    #dummy commit 2
     update_info = dict(
         tier=tier,
         displayName=displayName,
