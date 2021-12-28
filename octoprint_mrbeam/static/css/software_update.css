@@ -1,0 +1,12 @@
+/* Overriding the Octoprint default colors for software update logs
+ * This change is driven by the need to give a better less distracting experience for our users during software update
+ * For more information, refer to https://mr-beam.atlassian.net/browse/SW-861
+ */
+#settings_plugin_softwareupdate_workingdialog_output .stderr,
+#settings_plugin_softwareupdate_workingdialog_output .call,
+#settings_plugin_softwareupdate_workingdialog_output .stdout,
+#settings_plugin_softwareupdate_workingdialog_output .message
+{
+    color: #333 !important;
+}
+
