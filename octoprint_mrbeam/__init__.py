@@ -693,6 +693,7 @@ class MrBeamPlugin(
                 "css/hopscotch.min.css",
                 "css/wizard.css",
                 "css/tab_messages.css",
+                "css/software_update.css"
             ],
             less=["less/mrbeam.less"],
         )
