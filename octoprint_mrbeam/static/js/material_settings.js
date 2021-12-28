@@ -6,6 +6,9 @@ $(function () {
         self.MATERIAL_SETTINGS_RETRY_TIME = 5000;
 
         window.mrbeam.viewModels["materialSettingsViewModel"] = self;
+
+        self.loginState = params[0];
+
         self.materialSettingsDatabase = {};
         self.laserSource = null;
 
@@ -30,7 +33,7 @@ $(function () {
                                 materialImportedSettings[materialKey].colors;
                             self.materialSettingsDatabase[
                                 materialKey
-                            ].custom = false;
+                                ].custom = false;
                             self.materialSettingsDatabase[materialKey].img =
                                 "/plugin/mrbeam/static/img/materials/" +
                                 self.materialSettingsDatabase[materialKey].img;
@@ -43,16 +46,20 @@ $(function () {
                     }
                 })
                 .fail(function (response) {
-                    setTimeout(
-                        self.loadMaterialSettings,
-                        self.MATERIAL_SETTINGS_RETRY_TIME,
-                        callback
-                    );
-                    console.error(
-                        "Unable to load material settings. Retrying in " +
+                    if (self.loginState.loggedIn()) {
+                        setTimeout(
+                            self.loadMaterialSettings,
+                            self.MATERIAL_SETTINGS_RETRY_TIME,
+                            callback
+                        );
+                        console.error(
+                            "Unable to load material settings. Retrying in " +
                             self.MATERIAL_SETTINGS_RETRY_TIME / 1000 +
                             " seconds."
-                    );
+                        );
+                    } else {
+                        console.log("Unable to load material settings. Not retrying because user is not logged in.");
+                    }
                 });
         };
 
@@ -348,13 +355,27 @@ $(function () {
                 hints: "",
                 safety_notes: "",
             },
+            "Wood Sticker": {
+                name: gettext("Wood Sticker"),
+                img: "Wood-Sticker.jpg",
+                description: "",
+                hints: "",
+                safety_notes: "",
+            },
+            "Solid Wood": {
+                name: gettext("Solid Wood"),
+                img: "Solid-Wood.jpg",
+                description: "",
+                hints: "",
+                safety_notes: "",
+            },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
     }
 
     ADDITIONAL_VIEWMODELS.push([
         MaterialSettingsViewModel,
-        [],
+        ["loginStateViewModel"],
         [
             /* ... */
         ],

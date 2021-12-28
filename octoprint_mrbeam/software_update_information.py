@@ -10,10 +10,12 @@ from util.pip_util import get_version_of_pip_module
 
 SW_UPDATE_TIER_PROD = "PROD"
 SW_UPDATE_TIER_BETA = "BETA"
+SW_UPDATE_TIER_ALPHA = "ALPHA"
 SW_UPDATE_TIER_DEV = "DEV"
 DEFAULT_REPO_BRANCH_ID = {
     SW_UPDATE_TIER_PROD: "stable",
     SW_UPDATE_TIER_BETA: "beta",
+    SW_UPDATE_TIER_ALPHA: "alpha",
     SW_UPDATE_TIER_DEV: "develop",
 }
 
@@ -45,7 +47,7 @@ def get_update_information(plugin):
     # The increased number of separate virtualenv for iobeam, netconnectd, ledstrips
     # will increase the "discovery time" to find those package versions.
     # "map-reduce" method can decrease lookup time by processing them in parallel
-    return dict(
+    res = dict(
         reduce(
             dict_merge,
             [
@@ -57,66 +59,69 @@ def get_update_information(plugin):
                 _set_info_netconnectd_daemon(plugin, tier, beamos_date),
                 _set_info_iobeam(plugin, tier, beamos_date),
                 _set_info_mrb_hw_info(plugin, tier, beamos_date),
-                # _config_octoprint(plugin, tier),
+                _config_octoprint(plugin, tier),
             ],
         )
     )
-
-
-def software_channels_available(plugin):
-    res = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
-    try:
-        if plugin.is_dev_env():
-            res.append(SW_UPDATE_TIER_DEV)
-    except:
-        pass
+    for pack, updt_info in res.items():
+        _logger.debug(
+            "{} targets branch {} using pip {}".format(
+                pack,
+                updt_info.get("branch"),
+                updt_info.get("pip_command", "~/oprint/bin/pip"),
+            )
+        )
     return res
 
 
+def software_channels_available(plugin):
+    ret = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
+    if plugin.is_dev_env():
+        # fmt: off
+        ret.extend([SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_DEV,])
+        # fmt: on
+    return ret
+
+
+@logExceptions
 def switch_software_channel(plugin, channel):
     old_channel = plugin._settings.get(["dev", "software_tier"])
-
-    if (
-        channel in software_channels_available(plugin)
-        or (plugin.is_dev_env() and channel == SW_UPDATE_TIER_DEV)
-    ) and not channel == old_channel:
+    if channel in software_channels_available(plugin) and channel != old_channel:
         _logger.info("Switching software channel to: %s", channel)
         plugin._settings.set(["dev", "software_tier"], channel)
-
-        try:
-            sw_update_plugin = plugin._plugin_manager.get_plugin_info(
-                "softwareupdate"
-            ).implementation
-            sw_update_plugin._refresh_configured_checks = True
-
-            sw_update_plugin._version_cache = dict()
-
-            sw_update_plugin._version_cache_dirty = True
-
-            plugin.analytics_handler.add_software_channel_switch_event(
-                old_channel, channel
-            )
-        except:
-            _logger.exception("Exception while switching software channel: ")
+        # fmt: off
+        sw_update_plugin = plugin._plugin_manager.get_plugin_info("softwareupdate").implementation
+        # fmt: on
+        sw_update_plugin._refresh_configured_checks = True
+        sw_update_plugin._version_cache = dict()
+        sw_update_plugin._version_cache_dirty = True
+        plugin.analytics_handler.add_software_channel_switch_event(old_channel, channel)
 
 
-# def _config_octoprint(plugin, tier):
-#     return dict(
-#         octoprint=dict(
-#             checkout_folder="/home/pi/OctoPrint",
-#             pip="https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
-#             user="mrbeam",
-#             branch="mrbeam2-stable",
-#             prerelease=(tier == SW_UPDATE_TIER_DEV),
-#         )
-#     )
+def _config_octoprint(plugin, tier):
+    prerelease_channel = None
+    type = "github_release"
+    if tier in [SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_BETA]:
+        prerelease_channel = "mrbeam2-{tier}"
+
+    elif tier in [SW_UPDATE_TIER_DEV]:
+        type = "github_commit"
+
+    return _get_octo_plugin_description(
+        "octoprint",
+        tier,
+        plugin,
+        type=type,
+        displayName="OctoPrint",
+        prerelease=(tier in [SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_BETA]),
+        prerelease_channel=prerelease_channel,
+        restart="octoprint",
+        pip="https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
+    )
 
 
 def _set_info_mrbeam_plugin(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE and tier == SW_UPDATE_TIER_PROD:
-        branch = "mrbeam2-{tier}-buster"
-    else:
-        branch = "mrbeam2-{tier}"
+    branch = "mrbeam2-{tier}"
     return _get_octo_plugin_description(
         "mrbeam",
         tier,
@@ -143,10 +148,7 @@ def _set_info_mrbeamdoc(plugin, tier):
 
 
 def _set_info_netconnectd_plugin(plugin, tier, beamos_date):
-    if beamos_date > BEAMOS_LEGACY_DATE and tier == SW_UPDATE_TIER_PROD:
-        branch = "mrbeam2-{tier}-buster"
-    else:
-        branch = "mrbeam2-{tier}"
+    branch = "mrbeam2-{tier}"
     return _get_octo_plugin_description(
         "netconnectd",
         tier,
@@ -256,14 +258,16 @@ def _get_octo_plugin_description(module_id, tier, plugin, **kwargs):
     """Additionally get the version from plugin manager (doesn't it do that by default??)"""
     # Commented pluginInfo -> If the module is not installed, then it Should be.
     pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
-    # if pluginInfo is None:
-    #     return {}
+    if pluginInfo is None:
+        display_version = None
+    else:
+        display_version = pluginInfo.version
     if tier == SW_UPDATE_TIER_DEV:
         # Fix: the develop branches are not formatted as "mrbeam2-{tier}"
         _b = DEFAULT_REPO_BRANCH_ID[SW_UPDATE_TIER_DEV]
         kwargs.update(branch=_b, branch_default=_b)
     return _get_package_description(
-        module_id=module_id, tier=tier, displayVersion=pluginInfo.version, **kwargs
+        module_id=module_id, tier=tier, displayVersion=display_version, **kwargs
     )
 
 
@@ -290,13 +294,12 @@ def _get_package_description(
     module_id,
     tier,
     displayName=None,
-    displayVersion=None,
     type="github_commit",
     user="mrbeam",
-    repo=None,
     branch="mrbeam2-{tier}",
     branch_default="mrbeam2-{tier}",
     restart="environment",
+    prerelease_channel=None,
     **kwargs
 ):
     """Shorthand to create repo details for octoprint software update plugin to handle."""
@@ -305,13 +308,16 @@ def _get_package_description(
         branch = branch.format(tier=get_tier_by_id(tier))
     if "{tier}" in branch_default:
         branch_default = branch_default.format(tier=get_tier_by_id(tier))
+    if prerelease_channel and "{tier}" in prerelease_channel:
+        kwargs.update(prerelease_channel=prerelease_channel.format(tier=get_tier_by_id(tier)))
+    if tier in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ALPHA):
+        # adds pip upgrade flag in the develop tier so it will do a upgrade even without a version bump
+        kwargs.update(pip_upgrade_flag=True)
     update_info = dict(
         tier=tier,
         displayName=displayName,
-        displayVersion=displayVersion,
         user=user,
         type=type,
-        repo=repo,
         branch=branch,
         branch_default=branch_default,
         restart=restart,

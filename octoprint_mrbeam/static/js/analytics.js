@@ -106,6 +106,7 @@ $(function () {
         };
 
         self.onAllBound = function () {
+            /* This is commented out to stop console logging for the time being
             self._updateAnalyticsEnabledValue();
 
             if (console.everything) {
@@ -123,6 +124,7 @@ $(function () {
                 console.callbacks.warn = self.send_console_event;
                 console.callbacks.log = self.send_console_event;
             }
+             */
         };
 
         self.onStartupComplete = function () {

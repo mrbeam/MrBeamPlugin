@@ -1,3 +1,4 @@
+import sys
 from collections import Iterable, Sized, Mapping
 import os
 import platform
@@ -10,14 +11,19 @@ from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
-from octoprint_mrbeam.util import logExceptions
+from octoprint_mrbeam.util import logExceptions, dict_get
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 from octoprint_mrbeam.__version import __version__
+from octoprint_mrbeam.materials import materials
 
 
 def migrate(plugin):
     Migration(plugin).run()
+
+
+class MigrationException(Exception):
+    pass
 
 
 class Migration(object):
@@ -30,19 +36,22 @@ class Migration(object):
     VERSION_PREFILL_MRB_HW_INFO = "0.1.55"
     VERSION_AVRDUDE_AUTORESET_SCRIPT = "0.2.0"
     VERSION_USERNAME_LOWCASE = "0.2.0"
-    VERSION_GRBL_AUTO_UPDATE = "0.2.1"
+    VERSION_GRBL_AUTO_UPDATE = "0.10.0"
     VERSION_MOUNT_MANAGER_172 = "0.7.13.1"
     VERSION_INITD_NETCONNECTD = "0.5.5"
     VERSION_DELETE_UPLOADED_STL_FILES = "0.6.1"
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
     VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.10.2"
+    VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS = "0.9.9"
+    VERSION_UPDATE_OCTOPRINT_PRERELEASE_FIX = "0.9.10"
+    VERSION_UPDATE_FORCE_FOCUS_REMINDER = "0.10.0"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
     MIGRATE_LOGROTATE_FOLDER = "files/migrate_logrotate/"
 
     # grbl auto update conf
-    GRBL_AUTO_UPDATE_FILE = MachineCom._get_grbl_file_name()
+    GRBL_AUTO_UPDATE_FILE = MachineCom.get_grbl_file_name()
     GRBL_AUTO_UPDATE_VERSION = MachineCom.GRBL_DEFAULT_VERSION
 
     # GRBL version that should be updated, regardless...
@@ -203,12 +212,7 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.disable_gcode_auto_deletion()
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
-                    "0.9.0.2",
-                    equal_ok=False,
-                ):
-                    self.track_devpi()
+
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
                     "0.9.4.0",
@@ -225,6 +229,26 @@ class Migration(object):
                 ):  # for images before the 19.7.2021
                     self.fix_s_series_mount_manager()
 
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    self.VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS,
+                    equal_ok=False,
+                ):
+                    self.update_custom_material_settings()
+
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    self.VERSION_UPDATE_FORCE_FOCUS_REMINDER,
+                    equal_ok=False,
+                ):
+                    self.update_focus_reminder_setting()
+
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    self.VERSION_UPDATE_OCTOPRINT_PRERELEASE_FIX,
+                    equal_ok=False,
+                ):
+                    self.fix_octoprint_prerelease_setting()
                 # migrations end
 
                 self._logger.info(
@@ -241,6 +265,8 @@ class Migration(object):
                 self._logger.debug("No migration required.")
 
             self.save_current_version()
+        except MigrationException as e:
+            self._logger.exception("Error while migration: {}".format(e))
         except Exception as e:
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
@@ -274,7 +300,7 @@ class Migration(object):
         Compares two versions and returns true if lower_vers < higher_vers
         :param lower_vers: needs to be inferior to higher_vers to be True
         :param lower_vers: needs to be superior to lower_vers to be True
-        :param equal_ok: returned value if lower_vers and lower_vers are equal.
+        :param equal_ok: returned value if lower_vers and higher_vers are equal.
         :return: True or False. None if one of the version was not a valid version number
         """
         if lower_vers is None or higher_vers is None:
@@ -294,8 +320,11 @@ class Migration(object):
         return LooseVersion(lower_vers) < LooseVersion(higher_vers)
 
     def save_current_version(self):
-        self.plugin._settings.set(["version"], self.version_current, force=False)
-        self.plugin._settings.save()
+        if self.plugin._settings.get(["version"]) != self.version_current:
+            self.plugin._settings.set(
+                ["version"], self.version_current, force=True
+            )  # force needed to save it if it wasn't there
+            self.plugin._settings.save()
 
     ##########################################################
     #####              general stuff                     #####
@@ -557,10 +586,17 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def auto_update_grbl(self):
         self._logger.info("auto_update_grbl() ")
-        default_profile = laserCutterProfileManager().get_default()
-        default_profile["grbl"]["auto_update_version"] = self.GRBL_AUTO_UPDATE_VERSION
-        default_profile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
-        laserCutterProfileManager().save(default_profile, allow_overwrite=True)
+        laserCutterProfile = laserCutterProfileManager().get_current_or_default()
+        if laserCutterProfile:
+            laserCutterProfile["grbl"][
+                "auto_update_version"
+            ] = self.GRBL_AUTO_UPDATE_VERSION
+            laserCutterProfile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
+            laserCutterProfileManager().save(laserCutterProfile, allow_overwrite=True)
+        else:
+            raise MigrationException(
+                "Error while configuring grbl update - no lasercutterProfile",
+            )
 
     def inflate_file_system(self):
         self._logger.info("inflate_file_system() ")
@@ -859,7 +895,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 val = 0.0
                 try:
                     val = float(_val)
-                except:
+                except ValueError:
                     self._logger.warning(
                         "Failed to convert %s to a float for backlash", _val
                     )
@@ -904,14 +940,6 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("Done.")
 
     @logExceptions
-    def track_devpi(self):
-        """Move pip.conf to track our devpi server. (removes it from the source files)"""
-        self._logger("Adding pip.conf to track MrBeam update server.")
-        src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, "pip.conf")
-        dst = "/home/pi/.pip/pip.conf"
-        os.renames(src, dst)
-
-    @logExceptions
     def hostname_helper_scripts(self):
         """
         Add systemd files and scripts to auto change the hostname on boot and/or
@@ -941,3 +969,39 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             # permission...
             os.system("sudo mv '%s' '%s'" % (src, fname))
             # os.renames(src, fname)
+
+    def update_custom_material_settings(self):
+        """
+        Updates custom material settings keys and values
+        It replaces 'laser_type 'key with 'laser_model' and
+        it sets the value according to the latest laserhead
+        model updates
+        It also replaces 'model' key with 'device_model'
+        """
+        self._logger.info("start update_custom_material_settings")
+        my_materials = materials(self.plugin)
+        for k, v in my_materials.get_custom_materials().items():
+            my_materials.put_custom_material(k, v)
+
+    def fix_octoprint_prerelease_setting(self):
+        """
+        Removes the prerelease flag from the OctoPrint update
+        config so it will only use releases of OctoPrint
+        """
+        self._logger.info("start fix_octoprint_prerelease_setting")
+        self.plugin._settings.global_set(
+            ["plugins", "softwareupdate", "checks", "octoprint", "prerelease"],
+            False,
+            force=True,
+        )
+        self.plugin._settings.save()
+
+    def update_focus_reminder_setting(self):
+        """
+        Updates the 'focusReminder' flag in settings
+        Enforce the flag to True so the user can see
+        the laser head removal warning at least once
+        """
+        self._logger.info("start update_focus_reminder_setting")
+        self.plugin._settings.set_boolean(["focusReminder"], True)
+        self.plugin._settings.save()

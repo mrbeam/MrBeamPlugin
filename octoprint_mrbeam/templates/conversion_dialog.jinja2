@@ -1,7 +1,8 @@
 <div id="dialog_vector_graphics_conversion" class="modal hide fade">
     <div class="modal-header">
-        <h3 data-bind="visible:!slicing_in_progress()">{{ _('Material') }} <span
-                data-bind="visible:customized_material()">{{ _('(customized)') }}</span></h3>
+        <h3 data-bind="visible:!slicing_in_progress()">{{ _('Material') }}
+            <span data-bind="visible:customized_material()">{{ _('(customized)') }}</span>
+            {% if laserhead_model == 'S' %}<span class="laserhead-model-icon">[S]</span>{% endif %}</h3>
         <h3 data-bind="visible:slicing_in_progress()">{{ _('Preparing...') }}</h3>
     </div>
     <div class="modal-body scrollable" style="box-sizing: border-box">
@@ -54,8 +55,8 @@
                                 <li class='material_entry hover_shadow'
                                     data-bind="click: function(vm, event){$root.set_material($data, event); $root.moveJobsToEngravingDefaultOption($data)},
 												style: { backgroundImage: 'url(\'' + ($data.img || '/plugin/mrbeam/static/img/materials/custommaterial.png') + '\')' },
-												css: {selected: $root.selected_material() === $data, custom: $data.custom === true },
-												attr: {mrb_name: $data.img}
+												css: {selected: $root.selected_material() === $data, custom: $data.custom === true, compatible_material: $data.compatible === true, incompatible_material: $data.compatible === false },
+												attr: {mrb_name: $data.img, data_content: $data.customBeforeElementContent}
 									">
                                     <span data-bind="text: $data.name"></span>
                                     <span class="delete_me"
@@ -192,7 +193,7 @@
                     <p>
                         <i class="icon-warning-sign" style="color:red;"
                            data-bind="visible: material_safety_notes()"></i>
-                        <span id="safety_notes" class="" data-bind="text: material_safety_notes"></span>
+                        <span id="safety_notes" class="" data-bind="text: material_safety_notes, css:{ incompatible_safety_warning: !$root.selected_material_compatibility() }"></span>
                     </p>
                     <a href="#" class="dropdown" data-toggle="collapse" data-target="#more_material_info"
                        data-bind="visible: material_description() !== '' || material_hints() !== ''">
@@ -444,22 +445,25 @@
                                                     {{ _('This can cause burnmarks on the left and right side of the engraving for sensitive material.') }}
                                             </li>
                                         </ul>">
-                                    <label class="control-label">{{ _('Prevent unwanted burn marks') }}</label>
+                                    <label class="control-label">
+                                        <span>{{ _('Prevent unwanted burn marks') }}</span>
+                                        <span class="text-success"><strong>({{ _('This feature has been disabled as the burn marks issue has been resolved in our Software') }})</strong></span>
+                                    </label>
                                     <div class="controls">
                                         <div class="btn-group" data-toggle="buttons-radio">
-                                            <label class="btn btn-default">
+                                            <label class="btn btn-default" disabled>
                                                 <input type="radio" name="overshoot_type" value="auto"
                                                        autocomplete="off"
                                                        data-bind="checked: _extraOvershoot.selected"></input>
                                                 {{ _('Auto') }}
                                             </label>
-                                            <label class="btn btn-default">
+                                            <label class="btn btn-default" disabled>
                                                 <input type="radio" name="overshoot_type" value="careful"
                                                        autocomplete="off"
                                                        data-bind="checked: _extraOvershoot.selected"></input>
                                                 {{ _('Careful') }}
                                             </label>
-                                            <label class="btn btn-default active">
+                                            <label class="btn btn-default active" disabled>
                                                 <input type="radio" name="overshoot_type" value="fast"
                                                        autocomplete="off"
                                                        data-bind="checked: _extraOvershoot.selected"></input>
@@ -662,9 +666,9 @@
                             <i class="icon-file-text" aria-hidden="true"></i> {{ _(' Learn how to do this.') }}</a>
                     </p>
                     <img id="laserhead_focus_reminder_image" src="/plugin/mrbeam/static/img/focus_reminder.png">
-                    <div id="laserhead_focus_reminder_alert"><i class="fa fa-exclamation-triangle" aria-hidden="true"
-                                                                style="color: #e25303;"></i>
-                        {{ _('Remember to turn off your Mr Beam if you disconnect the ribbon cable!') }}
+                    <div id="laserhead_focus_reminder_alert">
+                        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                        <span>{{ _('Reminder: Never remove any components while your Mr Beam is switched on! To make sure your Mr Beam is turned off, take out the key and unplug the power supply.') }}</span>
                     </div>
                 </div>
                 <div class="modal-footer">

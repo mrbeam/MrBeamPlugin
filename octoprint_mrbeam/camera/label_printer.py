@@ -32,12 +32,14 @@ class LabelPrinter(object):
         MRBEAM2_DC_R1=None,
         MRBEAM2_DC_R2=None,
         MRBEAM2_DC=dict(single="4260625360156", bundle="4260625360163"),
+        MRBEAM2_DC_S=dict(single="4260625361023", bundle="4260625361030"),
     )
 
     MRBEAM_2 = "MRBEAM2"
     MRBEAM_2_DC_R1 = "MRBEAM2_DC_R1"
     MRBEAM_2_DC_R2 = "MRBEAM2_DC_R2"
     MRBEAM_2_DC = "MRBEAM2_DC"
+    MRBEAM_2_DC_S = "MRBEAM2_DC_S"
 
     def __init__(self, plugin, use_dummy_values=False):
         self._plugin = plugin
@@ -81,15 +83,6 @@ class LabelPrinter(object):
         return res
 
     def print_serial_label(self):
-        return self._print_device_label()
-
-    def print_box_label(self):
-        return self._print_box_label()
-
-    def print_ean_labels(self):
-        return self._print_ean_labels()
-
-    def _print_device_label(self):
         try:
             ip = self.PRINTER["device_label_printer"]["ip"]
             self._logger.info("Printing device label to %s", ip)
@@ -112,7 +105,7 @@ class LabelPrinter(object):
 			^CF0,20
 			^FO135,53^FDS/N: {serial}^FS
 			^FO135,80^FDProduction date: {prod_date}^FS
-			^FO22,15^BQN,2,4^FDMMA{serial}^FS
+			^FO22,15^BQN,2,4^FDMMA {serial}^FS
 			^XZ
 		""".format(
             name=self._device_info.get_hostname(),
@@ -120,7 +113,7 @@ class LabelPrinter(object):
             prod_date=self._get_production_date_formatted(),
         )
 
-    def _print_box_label(self):
+    def print_box_label(self):
         try:
             ip = self.PRINTER["box_label_printer"]["ip"]
             self._logger.info("Printing box label to %s", ip)
@@ -145,7 +138,7 @@ class LabelPrinter(object):
 			^FO20,180^FDS/N: {serial}^FS
 			^CF0,35
 			^FO135,125^FD{prod_date}^FS
-			^FO22,60^BQN,2,4^FDMMA{serial}^FS
+			^FO22,60^BQN,2,4^FDMMA {serial}^FS
 			^XZ
 		""".format(
             name=self._device_info.get_hostname(),
@@ -154,13 +147,13 @@ class LabelPrinter(object):
             prod_date=self._get_production_date_formatted(),
         )
 
-    def _print_ean_labels(self):
+    def print_ean_labels(self):
         try:
             ip = self.PRINTER["box_label_printer"]["ip"]
             model = self._device_info.get_model()
             ok = True
             out = []
-            if model in self.EAN_NUMBERS and self.EAN_NUMBERS.get(model, None):
+            if self.EAN_NUMBERS.get(model, None):
                 for prod_string, ean_num in self.EAN_NUMBERS.get(
                     model, dict()
                 ).iteritems():
@@ -189,7 +182,7 @@ class LabelPrinter(object):
 			^CF0,30
 			^FO10,180^FDMr Beam II {model}^FS
 			^CF0,45
-			^FO220,168^FD{prod_string}^FS
+			^FO240,168^FD{prod_string}^FS
 			^XZ
 		""".format(
             prod_string=prod_string, model=self._get_model_abbrev(), ean_num=ean_num
@@ -221,6 +214,8 @@ class LabelPrinter(object):
             model = "DCR"
         elif self._device_info.get_model() in (self.MRBEAM_2_DC):
             model = "DC"
+        elif self._device_info.get_model() == self.MRBEAM_2_DC_S:
+            model = "DC [S]"
         return model
 
     def _get_production_date_formatted(self):

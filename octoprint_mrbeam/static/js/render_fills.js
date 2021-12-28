@@ -125,7 +125,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         let clusters = [];
         for (let i = 0; i < marked.length; i++) {
             let rasterEl = marked[i];
-            const bbox = rasterEl.get_total_bbox();
+            let bbox;
+            try {
+              bbox = rasterEl.get_total_bbox();
+            }
+            catch(error) {
+                console.warn(`Getting bounding box for ${rasterEl} failed.`, error);
+                continue;
+            }
             // find overlaps
             let lastOverlap = -1;
             for (var j = 0; j < clusters.length; j++) {
@@ -165,7 +172,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 rasterEl.addClass(`rasterCluster${c}`)
             );
             let tmpSvg = svg.clone();
-            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
+            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).forEach((element) => {
+                let elementToBeRemoved = tmpSvg.select('#' + element.attr('id'));
+                let elementsToBeExcluded = ["text", "tspan"]
+                if (elementToBeRemoved && !elementsToBeExcluded.includes(elementToBeRemoved.type)) {
+                    elementToBeRemoved.remove();
+                }
+            });
             // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
             tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
             // DON'T fix IDs of textPath references, they're cloned correct.

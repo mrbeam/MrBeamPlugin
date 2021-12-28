@@ -119,6 +119,7 @@ $(function () {
         self.has_engraving_proposal = ko.observable(false);
         self.has_cutting_proposal = ko.observable(false);
         self.custom_materials = ko.observable({});
+        self.incompatible_custom_materials_keys = ko.observableArray([]);
 
         self.customized_material = ko.observable(false);
         self.save_custom_material_image = ko.observable("");
@@ -145,6 +146,11 @@ $(function () {
         self.selected_material_img = ko.computed(function () {
             var mat = self.selected_material();
             if (mat !== null) return mat === null ? "" : mat.img;
+        });
+        self.selected_material_compatibility = ko.computed(function () {
+                return !(self.selected_material() !== null &&
+                    'compatible' in self.selected_material() &&
+                    !self.selected_material().compatible);
         });
 
         self.load_standard_materials = function () {
@@ -185,6 +191,7 @@ $(function () {
                     self.save_custom_material_name(
                         self.selected_material().name
                     );
+
                     self.save_custom_material_image(
                         self.selected_material().img
                     );
@@ -240,6 +247,16 @@ $(function () {
         self.save_material_settings = function () {
             var name = self.save_custom_material_name();
             var key = self._replace_non_ascii(name).toLowerCase();
+            // Change key if it overrides incompatible custom materials
+            if (self.incompatible_custom_materials_keys().includes(key)) {
+                let targetSavingMaterial = Object.values(self.custom_materials())
+                    .find(element => element.name === name && element.compatible);
+                if (targetSavingMaterial) {
+                    key = targetSavingMaterial.key;
+                } else {
+                    key = self._replace_non_ascii(MRBEAM_LASER_HEAD_SERIAL).toLowerCase() + " " + key;
+                }
+            }
             var thickness = Math.max(
                 parseFloat(self.save_custom_material_thickness(), 38)
             );
@@ -292,9 +309,13 @@ $(function () {
                 new_material.safety_notes = gettext(
                     "Custom material setting! Use at your own risk."
                 );
-                new_material.model = MRBEAM_MODEL;
+                new_material.laser_model = MRBEAM_LASER_HEAD_MODEL;
+                new_material.device_model = MRBEAM_MODEL;
                 new_material.custom = true;
                 new_material.v = BEAMOS_VERSION;
+                // Remove compatibility keys
+                delete new_material.compatible;
+                delete new_material.customBeforeElementContent;
             } else {
                 new_material = {
                     name: $("<div>").html(name).text(),
@@ -306,8 +327,8 @@ $(function () {
                     safety_notes: gettext(
                         "Custom material setting! Use at your own risk."
                     ),
-                    laser_type: "MrBeamII-1.0",
-                    model: MRBEAM_MODEL,
+                    laser_model: MRBEAM_LASER_HEAD_MODEL,
+                    device_model: MRBEAM_MODEL,
                     custom: true,
                     v: BEAMOS_VERSION,
                     colors: {},
@@ -337,7 +358,7 @@ $(function () {
             }
             // sort before we store it.
             tmp.sort(self._thickness_sort_function);
-            new_material.colors[color] = { cut: tmp, engrave: engrave_setting };
+            new_material.colors[color] = {cut: tmp, engrave: engrave_setting};
 
             var data = {};
             data[key] = new_material;
@@ -357,7 +378,7 @@ $(function () {
                     var fm = self.filteredMaterials();
                     for (var i = 0; i < fm.length; i++) {
                         var my_material = fm[i];
-                        if (my_material.name === new_material.name) {
+                        if (my_material.name === new_material.name && my_material.laser_model === MRBEAM_LASER_HEAD_MODEL) {
                             self.selected_material(my_material);
                             self.selected_material_color(color);
                             self._set_available_material_thicknesses(
@@ -378,7 +399,7 @@ $(function () {
                             gettext(
                                 "Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."
                             ),
-                            { br: "<br/>" }
+                            {br: "<br/>"}
                         ),
                         type: "error",
                         hide: true,
@@ -406,7 +427,7 @@ $(function () {
                             gettext(
                                 "Successfully restored %(number)d custom materials from file."
                             ),
-                            { number: Object.keys(materials).length }
+                            {number: Object.keys(materials).length}
                         ),
                         type: "info",
                         hide: true,
@@ -423,7 +444,7 @@ $(function () {
                             gettext(
                                 "Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."
                             ),
-                            { br: "<br/>" }
+                            {br: "<br/>"}
                         ),
                         type: "error",
                         hide: true,
@@ -514,7 +535,7 @@ $(function () {
                 //				console.log("closest color to " + hex, closest);
                 return material.colors[closest];
             } else {
-                return { engrave: self.no_engraving, cut: [] };
+                return {engrave: self.no_engraving, cut: []};
             }
         };
 
@@ -621,19 +642,33 @@ $(function () {
             // just to subscribe to this obserable!
             self.material_settings2_updated_trigger();
 
-            var q = self.filterQuery();
-            var out = [];
+            let q = self.filterQuery();
+            let out = [];
             // List custom materials first
             // filter custom materials
-            var customs = self.custom_materials();
-            for (var materialKey in customs) {
-                var m = customs[materialKey];
+            let customs = self.custom_materials();
+            // Show material compatibility when different laserhead models are detected
+            let materialCompatibilityDisplay = Object.values(customs).some(item => item?.laser_model !== MRBEAM_LASER_HEAD_MODEL);
+            for (let materialKey in customs) {
+                let m = customs[materialKey];
                 if (m !== null) {
                     //					m.name = materialKey; // TODO i18n
                     if (m.name.toLowerCase().indexOf(q) >= 0) {
                         m.key = materialKey;
                         m.custom = true;
                         out.push(m);
+                    }
+                    if (materialCompatibilityDisplay) {
+                        m.compatible = m.laser_model === MRBEAM_LASER_HEAD_MODEL;
+                        if (m.laser_model === 'S') {
+                            m.customBeforeElementContent = '[S]';
+                        }
+                        if (!m.compatible) {
+                            self.incompatible_custom_materials_keys.push(materialKey);
+                            m.safety_notes = gettext(
+                                "This is a custom setting you made for another laserhead.\n We recommend adjusting your saved custom material settings to your current laserhead.\n This will add a duplicate of your setting specific for the current laserhead model, your\n original ones will stay as they are in case you want to keep them."
+                            );
+                        }
                     }
                 }
             }
@@ -654,6 +689,9 @@ $(function () {
                 // custom material first
                 if (a.custom && !b.custom) return -1;
                 if (!a.custom && b.custom) return 1;
+                if ('compatible' in a) {
+                    return a.compatible < b.compatible ? -1 : 1;
+                }
                 // then sort by name
                 if (a.name == b.name) return 0;
                 return a.name < b.name ? -1 : 1;
@@ -1061,12 +1099,12 @@ $(function () {
                 var intensity_user =
                     intensity_white_user +
                     initial_factor *
-                        (intensity_black_user - intensity_white_user);
+                    (intensity_black_user - intensity_white_user);
                 var intensity = Math.round(
                     intensity_user *
-                        self.profile
-                            .currentProfileData()
-                            .laser.intensity_factor()
+                    self.profile
+                        .currentProfileData()
+                        .laser.intensity_factor()
                 );
                 var feedrate = Math.round(
                     speed_white + initial_factor * (speed_black - speed_white)
@@ -1103,8 +1141,8 @@ $(function () {
                 } else {
                     console.log(
                         "Skipping line engrave job (" +
-                            hex +
-                            "), invalid parameters."
+                        hex +
+                        "), invalid parameters."
                     );
                 }
             });
@@ -1391,7 +1429,7 @@ $(function () {
             if (
                 self.has_engraving_proposal() &&
                 $("#engrave_job .color_drop_zone").children(":visible").length >
-                    0
+                0
             ) {
                 validEng = true;
             }
@@ -1604,7 +1642,7 @@ $(function () {
             if (self.dontRemindMeAgainChecked() == self.showFocusReminder()) {
                 let focusReminder = !self.dontRemindMeAgainChecked();
                 self.showFocusReminder(focusReminder);
-                let data = { focusReminder: focusReminder };
+                let data = {focusReminder: focusReminder};
                 OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
                     .done(function (response) {
                         self.settings.requestData();
@@ -1626,7 +1664,7 @@ $(function () {
                                     gettext(
                                         "Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."
                                     ),
-                                    { br: "<br/>" }
+                                    {br: "<br/>"}
                                 ),
                                 type: "error",
                                 hide: true,
@@ -1694,7 +1732,7 @@ $(function () {
                     gettext(
                         "Sorry but the %(designType)s can only be %(laserJob)s, which is not supported for this material."
                     ),
-                    { designType: designType, laserJob: valid }
+                    {designType: designType, laserJob: valid}
                 );
 
                 $("#empty_job_support_link").show();
@@ -1762,8 +1800,8 @@ $(function () {
                             var length = json.length;
                             console.log(
                                 "Conversion: " +
-                                    length +
-                                    " bytes have to be converted."
+                                length +
+                                " bytes have to be converted."
                             );
                             $.ajax({
                                 url: "plugin/mrbeam/convert",
@@ -1785,7 +1823,7 @@ $(function () {
                                     self.slicing_in_progress(false);
                                     console.error(
                                         "Conversion failed with status " +
-                                            jqXHR.status,
+                                        jqXHR.status,
                                         textStatus,
                                         errorThrown
                                     );
@@ -1793,8 +1831,8 @@ $(function () {
                                         if (length > 10000000) {
                                             console.error(
                                                 "JSON size " +
-                                                    length +
-                                                    "Bytes may be over the request maximum."
+                                                length +
+                                                "Bytes may be over the request maximum."
                                             );
                                         }
                                         new PNotify({
@@ -1803,7 +1841,7 @@ $(function () {
                                                 gettext(
                                                     "Unable to start the conversion in the backend. Please try reloading this page or restarting Mr Beam.%(br)s%(br)sContent length was %(length)s bytes."
                                                 ),
-                                                { length: length, br: "<br/>" }
+                                                {length: length, br: "<br/>"}
                                             ),
                                             type: "error",
                                             tag: "conversion_error",
@@ -1863,8 +1901,8 @@ $(function () {
             var b = parseInt(hex.substr(5, 2), 16);
             return Math.round(
                 r * self.BRIGHTNESS_VALUE_RED +
-                    g * self.BRIGHTNESS_VALUE_GREEN +
-                    b * self.BRIGHTNESS_VALUE_BLUE
+                g * self.BRIGHTNESS_VALUE_GREEN +
+                b * self.BRIGHTNESS_VALUE_BLUE
             );
         };
 
@@ -2253,7 +2291,8 @@ $(function () {
         ],
         document.getElementById("dialog_vector_graphics_conversion"),
     ]);
-});
+})
+;
 
 window.mrbeam.colorDragging = {
     // Drag functions outside the viewmodel are way less complicated

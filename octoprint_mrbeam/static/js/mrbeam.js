@@ -39,7 +39,7 @@ browser.chrome_version = browser.chrome_version
 
 // supported browser
 browser.is_supported =
-    (browser.is_chrome && browser.chrome_version >= 60) || browser.is_ipad;
+    (browser.is_chrome && browser.chrome_version >= 80) || browser.is_ipad;
 mrbeam.browser = browser;
 
 // Mr Beam models
@@ -48,6 +48,7 @@ mrbeam.model = {
     MRBEAM2_DC_R1: "MRBEAM2_DC_R1",
     MRBEAM2_DC_R2: "MRBEAM2_DC_R2",
     MRBEAM2_DC: "MRBEAM2_DC",
+    MRBEAM2_DC_S: "MRBEAM2_DC_S",
     is_mrbeam2: function () {
         return window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2;
     },
@@ -59,6 +60,9 @@ mrbeam.model = {
     },
     is_mrbeam2_dreamcut: function () {
         return window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DC;
+    },
+    is_mrbeam2_dreamcut_s: function () {
+        return window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DC_S;
     },
 };
 
@@ -254,6 +258,7 @@ $(function () {
         self.users = parameters[2];
         self.loginState = parameters[3];
         self.system = parameters[4];
+        self.analytics = parameters[5];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
@@ -268,6 +273,8 @@ $(function () {
         self.invalidEmailHelp = gettext("Invalid e-mail address");
 
         self.passiveLoginInProgress = false;
+        self.error401Count = 0;
+        self.triggerUrl = {};
 
         // This extender forces the input value to lowercase. Used in loginsreen_viewmode.js and wizard_acl.js
         window.ko.extenders.lowercase = function (target, option) {
@@ -383,8 +390,10 @@ $(function () {
                     settings,
                     thrownError
                 ) {
-                    if (jqXHR.status == 401) {
-                        self._handle_session_expired(settings.url);
+                    if (jqXHR.status === 401) {
+                        self._handle_session_expired(settings.url, settings.data);
+                        // "self.loginState.loggedIn()" sometimes returns true when the user is actually logged out
+                        console.log("401 error - data:", settings.data, ", response:", jqXHR.responseText, ", loggedIn:", self.loginState.loggedIn(), ", loginRemember:", self.loginState.loginRemember(), ", api-key:", settings.headers["X-Api-Key"], ", settings:", settings)
                     }
                 });
             }
@@ -443,7 +452,32 @@ $(function () {
             }
         };
 
-        self._handle_session_expired = function (triggerUrl) {
+        self._handle_session_expired = function (triggerUrl, requestData) {
+            if (self.isCurtainOpened > 0) {
+                self.error401Count++;
+                if (!(triggerUrl in self.triggerUrl)) {
+                    self.triggerUrl[triggerUrl] = {'count': 0, 'data': []};
+                }
+                self.triggerUrl[triggerUrl]['count']++;
+                self.triggerUrl[triggerUrl]['data'].push(requestData);
+
+                if (self.error401Count === 1) {
+                    setTimeout(() => {
+                        let error401Count = self.error401Count;
+                        let triggerUrl = self.triggerUrl;
+                        let payload = {
+                            error401Count: error401Count,
+                            triggerUrl: triggerUrl,
+                        };
+                        self.analytics.send_fontend_event(
+                            "expired_session",
+                            payload
+                        );
+                        self.error401Count = 0;
+                        self.triggerUrl = {};
+                    }, 2000);
+                }
+            }
             // don't do this during boot time.
             if (
                 self.isCurtainOpened <= 0 &&
@@ -500,9 +534,14 @@ $(function () {
                             // give it some time to settle in an endless loop
                             setTimeout(function () {
                                 OctoPrint.socket.reconnect();
+                                // Add to analytics to check how often passive logins are used after 401 errors
+                                self.analytics.send_fontend_event(
+                                    "passive_login",
+                                    {}
+                                );
                             }, 3000);
 
-                            // give it some time to settle before we acept another passive login or logout
+                            // give it some time to settle before we accept another passive login or logout
                             setTimeout(function () {
                                 self.passiveLoginInProgress = false;
                             }, 10000);
@@ -571,8 +610,8 @@ $(function () {
                     text: _.sprintf(
                         gettext(
                             "As you are currently in our Beta channel, you would help us " +
-                                "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
-                                "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"
+                            "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
+                            "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"
                         ),
                         {
                             open:
@@ -650,11 +689,12 @@ $(function () {
                                 setTimeout(() => {
                                     if (
                                         !$(this)[0].hasChildNodes() &&
-                                        modalElement.length === 1
+                                        modalElement.length === 1 &&
+                                        document.visibilityState === "visible"
                                     ) {
                                         $("body").removeClass("modal-open");
                                         backDrop.remove();
-                                        $(this)[0].remove();
+                                        $(this).removeClass("modal-scrollable");
                                         console.warn(
                                             "mutationCallback: removed incomplete modal after 500ms"
                                         );
@@ -715,6 +755,7 @@ $(function () {
             "usersViewModel",
             "loginStateViewModel",
             "systemViewModel",
+            "analyticsViewModel",
         ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...

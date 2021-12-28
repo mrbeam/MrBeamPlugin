@@ -131,9 +131,13 @@ class AnalyticsKeys:
             POWER_65 = "p_65"
             POWER_75 = "p_75"
             POWER_85 = "p_85"
+            TARGET_POWER = "target_power"
+            HEAD_MODEL_ID = "laserhead_model_id"
             CORRECTION_FACTOR = "correction_factor"
             CORRECTION_ENABLED = "correction_enabled"
             CORRECTION_OVERRIDE = "correction_override"
+            LAST_USED_HEAD_MODEL_ID = "last_used_laserhead_model_id"
+            LAST_USED_SERIAL = "last_used_laserhead_serial"
 
         class Grbl:
             FROM_VERSION = "from_version"

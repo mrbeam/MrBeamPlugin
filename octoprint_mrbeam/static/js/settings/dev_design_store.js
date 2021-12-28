@@ -22,7 +22,9 @@ $(function () {
         self.devDsEmail = ko.observable();
         self.authToken = ko.observable();
         self.devDsEmail.subscribe(function (newValue) {
-            self.handleChange();
+            if (self.loginState.currentUser?.().settings?.mrbeam) {
+                self.handleChange();
+            }
         });
 
         self.selectedEnv = ko.observable('prod');

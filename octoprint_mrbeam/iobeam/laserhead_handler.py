@@ -19,6 +19,10 @@ class LaserheadHandler(object):
     LASER_POWER_GOAL_DEFAULT = 950
     LASER_POWER_GOAL_MAX = 1300
     LASERHEAD_SERIAL_REGEXP = re.compile("^[0-9a-f-]{36}$")
+    _LASERHEAD_MODEL_STRING_MAP = {
+        "0": '0',  # dreamcut, mrbeam2 and mrbeam laserheads
+        "1": 'S',  # dreamcut[S] laserhead
+    }
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.laserhead")
@@ -29,6 +33,8 @@ class LaserheadHandler(object):
 
         self._lh_cache = {}
         self._last_used_lh_serial = None
+        self._last_used_lh_model = None
+        self._last_used_lh_model_id = None
         self._correction_settings = {}
         self._laser_heads_file = os.path.join(
             self._settings.getBaseFolder("base"),
@@ -37,19 +43,73 @@ class LaserheadHandler(object):
         self._load_laser_heads_file()  # Loads correction_settings, last_used_lh_serial and lh_cache
 
         self._current_used_lh_serial = self._last_used_lh_serial
+        self._current_used_lh_model = self._last_used_lh_model
+        self._current_used_lh_model_id = self._last_used_lh_model_id
 
         self._event_bus.subscribe(
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
         )
 
+    @property
+    def _current_used_lh_model_string(self):
+        """
+        Returns the laserhead model name
+
+        Returns:
+            str: laserhead model or None if Model name is not found
+        """
+        laser_head_model_str_list = [v for (k, v) in self._LASERHEAD_MODEL_STRING_MAP.items()
+                                     if ((v == str(self._current_used_lh_model)) or
+                                         (k == str(self._current_used_lh_model_id)))]
+        try:
+            return laser_head_model_str_list.pop(0)
+        except IndexError:
+            self._logger.error("Unknown laserhead model,  name: {} ID: {}".format(
+                self._current_used_lh_model, self._current_used_lh_model_id))
+            return str(None)
+
     def _on_mrbeam_plugin_initialized(self, event, payload):
+        # the following params are Not used for the time being
+        # TODO check later
+        _ = event
+        _ = payload
         self._analytics_handler = self._plugin.analytics_handler
+
+    def _get_lh_model(self, lh_data):
+        try:
+            read_model = lh_data["head"]["model"]
+            if str(read_model) in self._LASERHEAD_MODEL_STRING_MAP:
+                model = read_model
+            else:
+                model = 0
+                self._logger.warn(
+                    "Laserhead model received is not valid, Model: {} assume default model 0".format(read_model)
+                )
+            return model
+        except Exception as e:
+            self._logger.error(
+                "Error for Laserhead model, no model found in laserhead data: {}".format(e)
+            )
 
     def set_current_used_lh_data(self, lh_data):
         try:
             if self._valid_lh_data(lh_data):
-                self._logger.info("Laserhead: %s", lh_data)
                 self._current_used_lh_serial = lh_data["main"]["serial"]
+                self._current_used_lh_model_id = self._get_lh_model(lh_data)
+                self._current_used_lh_model = self._LASERHEAD_MODEL_STRING_MAP[str(self._current_used_lh_model_id)]
+                # fmt: off
+                if (self._current_used_lh_serial != self._last_used_lh_serial) and self._last_used_lh_model_id is not None:
+                    # fmt: on
+                    if self._current_used_lh_model_id == 1:
+                        self._settings.set_boolean(["laserheadChanged"], True)
+                        self._settings.save()
+                    self._logger.info(
+                        "Laserhead changed: s/n:%s model:%s -> s/n:%s model:%s",
+                        self._last_used_lh_serial,
+                        self._last_used_lh_model_id,
+                        self._current_used_lh_serial,
+                        self._current_used_lh_model_id,
+                    )
                 self._write_lh_data_to_cache(lh_data)
 
                 self._calculate_and_write_correction_factor()
@@ -57,33 +117,55 @@ class LaserheadHandler(object):
                 self._analytics_handler.add_laserhead_info()
                 self._write_laser_heads_file()
                 self._plugin.fire_event(
-                    MrBeamEvents.LASER_HEAD_READ, dict(serial=lh_data["main"]["serial"])
+                    MrBeamEvents.LASER_HEAD_READ,
+                    dict(
+                        serial=self._current_used_lh_serial,
+                        model=self._current_used_lh_model_id,
+                    ),
                 )
 
             # BACKWARD_COMPATIBILITY: This is for detecting mrb_hw_info v0.0.20
+            # This part of the code should never by reached, if reached then this means an update for mrb_hw_info did
+            # fail TODO Remove this part of the code later
+            # deprecated part Start
             elif self._valid_lh_data_backwards_compatibility(lh_data):
                 self._logger.info("Laserhead (< v0.0.21): %s", lh_data)
                 self._logger.warning(
                     "Received old laser head data from iobeam.", analytics=True
                 )
+            # deprecated part End
 
-            elif lh_data is {}:
+            elif lh_data == {}:
+                # TODO this case needs to be handled better
                 self._logger.warn("Received empty laser head data from iobeam.")
 
             else:
-                if lh_data.get("main", {}).get("serial", None) is None:
+                if lh_data.get("main", {}).get("serial") is None:
                     self._logger.exception(
                         "Received invalid laser head data from iobeam - no serial number. Laser head dataset: {}".format(
                             lh_data
                         ),
                         analytics="received-no-lh-data",
                     )
-                else:
+                elif (
+                    not lh_data.get("power_calibrations")
+                    or not len(lh_data["power_calibrations"]) > 0
+                    or not lh_data["power_calibrations"][-1].get("power_65")
+                    or not lh_data["power_calibrations"][-1].get("power_75")
+                    or not lh_data["power_calibrations"][-1].get("power_85")
+                ):
                     self._logger.exception(
                         "Received invalid laser head data from iobeam - invalid power calibrations data: {}".format(
                             lh_data.get("power_calibrations", [])
                         ),
                         analytics="invalid-power-calibration",
+                    )
+                else:
+                    self._logger.exception(
+                        "Received invalid laser head data from iobeam {}".format(
+                            lh_data
+                        ),
+                        analytics="received-invalid-lh-data",
                     )
         except Exception as e:
             self._logger.exception(
@@ -91,16 +173,29 @@ class LaserheadHandler(object):
             )
 
     def _valid_lh_data(self, lh_data):
+        """
+        Checks if essential laser head data are valid or not
+        Args:
+            lh_data (dict):
+
+        Returns:
+            True: if laser Head data are valid
+            False: if laser Head data are not valid
+
+        Raises:
+            Exception: If the essential laser head data or parts of it are not valid
+        """
         try:
             if (
-                lh_data.get("main", None)
-                and lh_data["main"].get("serial", None)
-                and lh_data.get("power_calibrations", None)
+                lh_data.get("main")
+                and lh_data["main"].get("serial")
+                and lh_data.get("power_calibrations")
                 and len(lh_data["power_calibrations"]) > 0
-                and lh_data["power_calibrations"][-1].get("power_65", None)
-                and lh_data["power_calibrations"][-1].get("power_75", None)
-                and lh_data["power_calibrations"][-1].get("power_85", None)
+                and lh_data["power_calibrations"][-1].get("power_65")
+                and lh_data["power_calibrations"][-1].get("power_75")
+                and lh_data["power_calibrations"][-1].get("power_85")
             ):
+                self._logger.info("Valid Laser head Data Received: {}".format(lh_data))
                 return True
             else:
                 return False
@@ -111,12 +206,12 @@ class LaserheadHandler(object):
     def _valid_lh_data_backwards_compatibility(self, lh_data):
         try:
             if (
-                lh_data.get("serial", None)
-                and lh_data.get("calibration_data", None)
+                lh_data.get("serial")
+                and lh_data.get("calibration_data")
                 and len(lh_data["calibration_data"]) > 0
-                and lh_data["calibration_data"][-1].get("power_65", None)
-                and lh_data["calibration_data"][-1].get("power_75", None)
-                and lh_data["calibration_data"][-1].get("power_85", None)
+                and lh_data["calibration_data"][-1].get("power_65")
+                and lh_data["calibration_data"][-1].get("power_75")
+                and lh_data["calibration_data"][-1].get("power_85")
             ):
                 return True
             else:
@@ -129,14 +224,22 @@ class LaserheadHandler(object):
         self._lh_cache[self._current_used_lh_serial] = lh_data
 
     def get_current_used_lh_data(self):
+        """
+        Retrieves the current used laserhead data
+
+        Returns:
+            dict: current laserhead data if exists or default data otherwise
+        """
         if self._current_used_lh_serial:
             data = dict(
                 serial=self._current_used_lh_serial,
+                model=self._current_used_lh_model_string,
                 info=self._lh_cache[self._current_used_lh_serial],
             )
         else:
             data = dict(
                 serial=None,
+                model=None,
                 info=dict(
                     correction_factor=1,
                 ),
@@ -159,12 +262,15 @@ class LaserheadHandler(object):
 
         return self._correction_settings
 
+    def get_current_used_lh_model_id(self):
+        return self._current_used_lh_model_id
+
     def _validate_lh_serial(self, serial):
         try:
             return bool(self.LASERHEAD_SERIAL_REGEXP.match(serial))
-        except:
-            self.logger.exception(
-                "_validate_lh_serial() Failed to validate serial due to exception. Serial: %s ",
+        except Exception as e:
+            self._logger.exception(
+                "_validate_lh_serial() Failed to validate serial due to exception. Serial: {serial} e:{e}".format(serial=serial, e=e),
                 serial,
             )
             return False
@@ -185,15 +291,35 @@ class LaserheadHandler(object):
         p_85 = None
         target_power = self.LASER_POWER_GOAL_DEFAULT
         if power_calibration:
-            p_65 = power_calibration.get("power_65", None)
-            p_75 = power_calibration.get("power_75", None)
-            p_85 = power_calibration.get("power_85", None)
+            p_65 = power_calibration.get("power_65")
+            p_75 = power_calibration.get("power_75")
+            p_85 = power_calibration.get("power_85")
             target_power = power_calibration.get(
                 "target_power", self.LASER_POWER_GOAL_DEFAULT
             )
 
-            if target_power < 0 or target_power >= self.LASER_POWER_GOAL_MAX:
-                target_power = self.LASER_POWER_GOAL_DEFAULT
+            # laserhead model S fix for correction factor
+            # TODO fix this GOAL_MAX problem for all laser heads in a separate issue SW-394
+            if self._current_used_lh_model_id == 1:
+                if target_power < 0 or target_power >= p_85:
+                    self._logger.warn(
+                        "Laserhead target_power ({target}) over p_85 ({p_85}) => target_power will be set to GOAL_DEFAULT ({default}) for the calculation of the correction factor".format(
+                            target=target_power,
+                            p_85=p_85,
+                            default=self.LASER_POWER_GOAL_DEFAULT,
+                        )
+                    )
+                    target_power = self.LASER_POWER_GOAL_DEFAULT
+            else:
+                if target_power < 0 or target_power >= self.LASER_POWER_GOAL_MAX:
+                    self._logger.warn(
+                        "Laserhead target_power ({target}) over LASER_POWER_MAX ({max}) => target_power will be set to GOAL_DEFAULT ({default}) for the calculation of the correction factor".format(
+                            target=target_power,
+                            max=self.LASER_POWER_GOAL_MAX,
+                            default=self.LASER_POWER_GOAL_DEFAULT,
+                        )
+                    )
+                    target_power = self.LASER_POWER_GOAL_DEFAULT
 
         correction_factor = 1
 
@@ -209,6 +335,10 @@ class LaserheadHandler(object):
                 goal_difference = target_power - p_75
                 new_intensity = goal_difference * (85 - 75) / step_difference + 75
                 correction_factor = new_intensity / 65.0
+            else:
+                self._logger.warn(
+                    "Laserhead target power not in valid range => correction_factor will be set to 1"
+                )
 
         else:
             self._logger.info(
@@ -231,37 +361,49 @@ class LaserheadHandler(object):
         return correction_factor
 
     def _load_laser_heads_file(self):
-        if os.path.isfile(self._laser_heads_file):
-            self._logger.info("Loading laser_heads.yaml...")
-            try:
-                with open(self._laser_heads_file, "r") as stream:
-                    data = yaml.safe_load(stream)
+        """
+        Loads laser head data from a file
+        """
+        self._logger.debug("Loading data from  {} started...!".format(self._laser_heads_file))
+        try:
+            with open(self._laser_heads_file, "r") as stream:
+                data = yaml.safe_load(stream)
+            if data:
+                self._lh_cache = data.get("laser_heads")
+                self._last_used_lh_serial = data.get("last_used_lh_serial")
+                self._last_used_lh_model = data.get("last_used_lh_model")
+                self._last_used_lh_model_id = data.get("last_used_lh_model_id")
+                self._correction_settings = data.get("correction_settings")
 
-                if data:
-                    if "laser_heads" in data:
-                        self._lh_cache = data["laser_heads"]
+                self._logger.info("Loading data from  {} is successful!".format(self._laser_heads_file))
+            else:
+                self._logger.warn(
+                    "Couldn't load laser head data, file: {} data: {}".format(self._laser_heads_file, data))
+        except IOError as e:
+            self._logger.error("Can't open file: {} {}".format(self._laser_heads_file, e))
 
-                    if "last_used_lh_serial" in data:
-                        self._last_used_lh_serial = data["last_used_lh_serial"]
+    def _write_laser_heads_file(self, laser_heads_file=None):
+        """
+        Overwrites the file containing the laser heads info and creates the file if it doesn't exist
 
-                    if "correction_settings" in data:
-                        self._correction_settings = data["correction_settings"]
-            except:
-                self._logger.error(
-                    "Can't read _laser_heads_file file: %s", self._laser_heads_file
-                )
+        Args:
+            laser_heads_file (Yaml): path to the file to be used
 
-    def _write_laser_heads_file(self, file=None):
-        self._logger.info("Writing to laser_heads.yaml...")
-
+        Returns:
+            None
+        """
         data = dict(
             laser_heads=self._lh_cache,
             correction_settings=self._correction_settings,
             last_used_lh_serial=self._current_used_lh_serial,
+            last_used_lh_model=self._current_used_lh_model,
+            last_used_lh_model_id=self._current_used_lh_model_id,
         )
-        file = self._laser_heads_file if file is None else file
+        laser_heads_file = self._laser_heads_file if laser_heads_file is None else laser_heads_file
+        self._logger.info("Writing to file: {} ..started".format(laser_heads_file))
         try:
-            with open(file, "w") as outfile:
+            with open(laser_heads_file, "w") as outfile:
                 yaml.safe_dump(data, outfile, default_flow_style=False)
-        except:
-            self._logger.exception("Can't write file %s due to an exception: ", file)
+                self._logger.info("Writing to file: {} ..is successful!".format(laser_heads_file))
+        except IOError as e:
+            self._logger.error("Can't open file: {} , Due to error: {}: ".format(laser_heads_file, e))

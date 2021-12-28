@@ -1,5 +1,5 @@
 {#    Download link is language specific  #}
-{% set mrbeamorg_downloads = _('https://mr-beam.org/en/downloads/') %}
+{% set mrbeamorg_downloads = _('https://mr-beam.org/software-update-stick/') %}
 
 <div class="hide" id="software_channel_selector">
     <h3 style="display: inline">{{ _('Software Channel') }}:</h3>
@@ -8,7 +8,7 @@
         <div class="control-group span6 ">
             <h5><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>{{ _('Stable Channel') }}: </h5>
             <p>{{ _('Use the most stable software for your Mr&nbsp;Beam. You will only get notified about officially released and well tested software updates.') }}</p>
-            <p>{{ _('You can also download the latest STABLE software update at %(opening_tag)smr-beam.org/downloads%(closing_tag)s and update your Mr&nbsp;Beam per USB stick.',
+            <p>{{ _('You can also download the latest STABLE software update via %(opening_tag)sthis link%(closing_tag)s and update your Mr&nbsp;Beam per USB stick.',
                     opening_tag= '<a href="'+ mrbeamorg_downloads + '" target="_blank" style="white-space:nowrap;"><i class="icon-external-link"></i>&nbsp;',
                     closing_tag='</a>'
                     ) }}</p>

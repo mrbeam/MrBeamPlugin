@@ -16,14 +16,21 @@ from itertools import chain
 from . import profiles
 
 from octoprint.printer.profile import PrinterProfileManager
-from octoprint.util import dict_merge, dict_clean, dict_contains_keys
+from octoprint.util import (
+    dict_merge,
+    dict_clean,
+    dict_contains_keys,
+    dict_minimal_mergediff,
+)
 from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.util import dict_get
+from octoprint_mrbeam.util import dict_get, device_info
 from octoprint_mrbeam.util.log import logme
 
 
 # singleton
+from octoprint_mrbeam.util.device_info import deviceInfo
+
 _instance = None
 
 
@@ -123,7 +130,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
             os.makedirs(_laser_cutter_profile_folder)
         PrinterProfileManager.__init__(self)
         self._folder = _laser_cutter_profile_folder
-        self._logger = mrb_logger(__name__)
+        self._logger = mrb_logger("octoprint.plugins.mrbeam." + __name__)
         # HACK - select the default profile.
         # See self.select() - waiting for upstream fix
         self.select(profile_id or settings().get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID))
@@ -191,6 +198,11 @@ class LaserCutterProfileManager(PrinterProfileManager):
                 hard_coded = dict_merge(default, LASER_PROFILE_MAP[identifier])
                 return dict_merge(hard_coded, file_based_result)
             else:
+                if identifier is None:
+                    identifier = device_info.deviceInfo().get_type()
+                else:
+                    default["id"] = identifier
+                    default["model"] = identifier[-1]
                 return dict_merge(default, PrinterProfileManager.get(self, identifier))
         except InvalidProfileError:
             return None
@@ -234,7 +246,10 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return PrinterProfileManager.get_current_or_default(self)
 
     def exists(self, identifier):
-        if identifier in LASER_PROFILE_IDENTIFIERS:
+        # if the regex matches and there is no profile it will use the default and change the id and model
+        if identifier in LASER_PROFILE_IDENTIFIERS or re.match(
+            r"MrBeam[0-9][A-Z]", identifier
+        ):
             return True
         else:
             return PrinterProfileManager.exists(self, identifier)
@@ -243,7 +258,10 @@ class LaserCutterProfileManager(PrinterProfileManager):
     def _load_all(self):
         """Extend the file based ``PrinterProfileManager._load_all`` with the few hardcoded ones we have."""
         file_based_profiles = PrinterProfileManager._load_all(self)
-        return dict_merge(LASER_PROFILE_MAP, file_based_profiles)
+        device_type = deviceInfo().get_type()
+        mrbeam_generated_profiles = {device_type: self.get(device_type)}
+        mrbeam_profiles = dict_merge(LASER_PROFILE_MAP, mrbeam_generated_profiles)
+        return dict_merge(mrbeam_profiles, file_based_profiles)
 
     def _load_default(self, defaultModel=None):
         # Overloaded because of settings path
@@ -254,14 +272,55 @@ class LaserCutterProfileManager(PrinterProfileManager):
             raise InvalidProfileError()
         return profile
 
+    def _save_to_path(self, path, profile, allow_overwrite=False):
+        """
+        Changes the file base PrinterProfileManager._save_to_path
+        so only the diff between the profile and the default profile will be saved
+        """
+        validated_profile = self._ensure_valid_profile(profile)
+
+        if not validated_profile:
+            raise InvalidProfileError()
+
+        default = self._load_default()
+        validated_profile = dict_minimal_mergediff(default, validated_profile)
+
+        if os.path.exists(path) and not allow_overwrite:
+            raise SaveError(
+                "Profile %s already exists and not allowed to overwrite" % profile["id"]
+            )
+
+        import yaml
+
+        from octoprint.util import atomic_write
+
+        try:
+            with atomic_write(path, mode="wt", max_permissions=0o666) as f:
+                yaml.safe_dump(
+                    validated_profile,
+                    f,
+                    default_flow_style=False,
+                    indent=2,
+                    allow_unicode=True,
+                )
+        except Exception as e:
+            self._logger.exception(
+                "Error while trying to save profile %s" % validated_profile["id"]
+            )
+            raise SaveError(
+                "Cannot save profile %s: %s" % (validated_profile["id"], str(e))
+            )
+
     def _ensure_valid_profile(self, profile):
         # Ensuring that all keys are present is the default behaviour of the OP ``PrinterProfileManager``
         # This ``LaserCutterProfileManager`` can use partially declared profiles, as they are
         # completed using the default profile.
 
+        # will merge with default config so the minimal saved one won't fail
+        profile = dict_merge(copy.deepcopy(LASER_PROFILE_DEFAULT), profile)
+
         # conversion helper
-        def convert_value(profile, path, converter):
-            value = profile
+        def convert_value(value, path, converter):
             for part in path[:-1]:
                 if not isinstance(value, dict) or not part in value:
                     raise RuntimeError(

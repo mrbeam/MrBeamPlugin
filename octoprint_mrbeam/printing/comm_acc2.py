@@ -65,6 +65,10 @@ class MachineCom(object):
     #
     # adds checksums
     GRBL_VERSION_2019_MRB_CHECKSUM = "0.9g_20190327_d2868b9"
+    #
+    # fixes burn marks
+    GRBL_VERSION_20210714_d5e31ee = "0.9g_20210714_d5e31ee"
+
     GRBL_FEAT_BLOCK_CHECKSUMS = (
         GRBL_VERSION_20170919_22270fa,
         GRBL_VERSION_20180223_61638c5,
@@ -73,7 +77,7 @@ class MachineCom(object):
     )
     #
     #
-    GRBL_DEFAULT_VERSION = GRBL_VERSION_2019_MRB_CHECKSUM
+    GRBL_DEFAULT_VERSION = GRBL_VERSION_20210714_d5e31ee
     ##########################################################
 
     GRBL_SETTINGS_READ_WINDOW = 10.0
@@ -239,9 +243,9 @@ class MachineCom(object):
         self._current_lh_data = (
             _mrbeam_plugin_implementation.laserhead_handler.get_current_used_lh_data()
         )
-        self._gcode_intensity_limit = self._power_correction_settings[
-            "gcode_intensity_limit"
-        ]
+        self._intensity_upper_bound = int(
+            self._laserCutterProfile["laser"]["intensity_upper_bound"]
+        )
 
         self._power_correction_factor = 1
         if self._power_correction_settings["correction_enabled"]:
@@ -1744,7 +1748,7 @@ class MachineCom(object):
             self._logger.warn(msg, terminal_as_comm=True)
             return
 
-        grbl_file = grbl_file or self._get_grbl_file_name()
+        grbl_file = grbl_file or self.get_grbl_file_name()
 
         if grbl_file.startswith("..") or grbl_file.startswith("/"):
             msg = "ERROR {} GRBL '{}': Invalid filename.".format(log_verb, grbl_file)
@@ -1822,7 +1826,7 @@ class MachineCom(object):
                         title="GRBL Update failed", text=msg, is_err=True
                     )
                 )
-            except:
+            except Exception:
                 self._logger.exception(
                     "Exception while notifying frontend after failed flash_grbl: "
                 )
@@ -1874,7 +1878,7 @@ class MachineCom(object):
                 )
 
     @staticmethod
-    def _get_grbl_file_name(grbl_version=None):
+    def get_grbl_file_name(grbl_version=None):
         """
         Gets you the filename according to the given grbl version.
         :param grbl_version: (optional) grbl version - If no grbl version is provided it returns you the filename of the default version for this release.
@@ -1904,7 +1908,7 @@ class MachineCom(object):
                 == self._laserCutterProfile["grbl"]["auto_update_version"]
             ):
                 self._logger.info(
-                    "Removing grbl auto update flags from lasercutterprofile..."
+                    "Removing grbl auto update flags from lasercutterProfile..."
                 )
                 try:
                     self._laserCutterProfile["grbl"]["auto_update_file"] = None
@@ -1912,9 +1916,9 @@ class MachineCom(object):
                     laserCutterProfileManager().save(
                         self._laserCutterProfile, allow_overwrite=True
                     )
-                except:
+                except Exception:
                     self._logger.exception(
-                        "Exception while saving lasercutterProfile changes to auto update controls: "
+                        "Exception while saving lasercutterProfile changes for auto update controls"
                     )
             else:
                 self._logger.warn(
@@ -2079,29 +2083,53 @@ class MachineCom(object):
         obj = self._regex_intensity.search(cmd)
         if obj is not None:
             intensity_limit = int(self._laserCutterProfile["laser"]["intensity_limit"])
+            max_correction_factor = float(
+                self._laserCutterProfile["laser"]["max_correction_factor"]
+            )
             intensity_cmd = cmd[obj.start() : obj.end()]
             parsed_intensity = int(intensity_cmd[1:])
 
             # Limit GCode input (in case users enter a too high value in the gcode)
             self._current_intensity = parsed_intensity
             if self._current_intensity > intensity_limit:
-                self._current_intensity = intensity_limit
+                self._logger.debug(
+                    "gcode intensity higher as allowed max, will limit to max value - %s => %s",
+                    self._current_intensity,
+                    intensity_limit,
+                )
+            self._current_intensity = min(intensity_limit, self._current_intensity)
 
             # Apply power correction factor and limit again (in case there is something wrong with the calculation of
             # the correction factor)
+            if self._power_correction_factor > max_correction_factor:
+                self._logger.debug(
+                    "Power correction factor higher as allowed max, will limit to max value - %s => %s",
+                    self._power_correction_factor,
+                    max_correction_factor,
+                )
+            self._power_correction_factor = min(
+                self._power_correction_factor, max_correction_factor
+            )
             self._current_intensity = int(
                 round(self._current_intensity * self._power_correction_factor)
             )
             if (
-                self._gcode_intensity_limit
-                and self._current_intensity > self._gcode_intensity_limit
+                self._intensity_upper_bound
+                and self._current_intensity > self._intensity_upper_bound
             ):
-                self._current_intensity = self._gcode_intensity_limit
+                self._logger.debug(
+                    "Intensity higher as allowed max, will limit to max value - %s => %s",
+                    self._current_intensity,
+                    self._intensity_upper_bound,
+                )
+            self._current_intensity = min(
+                self._current_intensity, self._intensity_upper_bound
+            )
 
             # self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor} and '
             # 				  'intensity limit {limit})'.format(old=parsed_intensity, new=self._current_intensity,
             # 													factor=self._power_correction_factor,
-            # 													limit=self._gcode_intensity_limit))
+            # 													limit=self._intensity_upper_bound))
 
             return cmd.replace(intensity_cmd, "S%d" % self._current_intensity)
         return cmd
@@ -2305,7 +2333,7 @@ class MachineCom(object):
                 self._serial.write(list(bytearray("\x18")))
             elif specialcmd.startswith("/flash_grbl"):
                 # if no file given: flash default grbl version
-                file = self._get_grbl_file_name()
+                file = self.get_grbl_file_name()
                 if len(tokens) > 1:
                     file = tokens[1]
                 if file in (None, "?", "-h", "--help"):
@@ -2326,7 +2354,7 @@ class MachineCom(object):
                     self.flash_grbl(file)
             elif specialcmd.startswith("/verify_grbl"):
                 # if no file given: verify to currently installed
-                file = self._get_grbl_file_name(self._grbl_version)
+                file = self.get_grbl_file_name(self._grbl_version)
                 if len(tokens) > 1:
                     file = tokens[1]
                 if file in (None, "?", "-h", "--help"):
