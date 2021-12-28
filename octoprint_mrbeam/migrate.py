@@ -1,3 +1,4 @@
+import sys
 from collections import Iterable, Sized, Mapping
 import os
 import platform
@@ -21,6 +22,10 @@ def migrate(plugin):
     Migration(plugin).run()
 
 
+class MigrationException(Exception):
+    pass
+
+
 class Migration(object):
     VERSION_SETUP_IPTABLES = "0.1.19"
     VERSION_SYNC_GRBL_SETTINGS = "0.1.24"
@@ -38,6 +43,7 @@ class Migration(object):
     VERSION_DISABLE_WIFI_POWER_MANAGEMENT = "0.6.13.2"
     VERSION_DISABLE_GCODE_AUTO_DELETION = "0.7.10.2"
     VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS = "0.9.9"
+    VERSION_UPDATE_OCTOPRINT_PRERELEASE_FIX = "0.9.10"
     VERSION_UPDATE_FORCE_FOCUS_REMINDER = "0.10.0"
 
     # this is where we have files needed for migrations
@@ -45,7 +51,7 @@ class Migration(object):
     MIGRATE_LOGROTATE_FOLDER = "files/migrate_logrotate/"
 
     # grbl auto update conf
-    GRBL_AUTO_UPDATE_FILE = MachineCom._get_grbl_file_name()
+    GRBL_AUTO_UPDATE_FILE = MachineCom.get_grbl_file_name()
     GRBL_AUTO_UPDATE_VERSION = MachineCom.GRBL_DEFAULT_VERSION
 
     # GRBL version that should be updated, regardless...
@@ -209,13 +215,6 @@ class Migration(object):
 
                 if self.version_previous is None or self._compare_versions(
                     self.version_previous,
-                    "0.9.0.2",
-                    equal_ok=False,
-                ):
-                    self.track_devpi()
-
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
                     "0.9.4.0",
                     equal_ok=False,
                 ):
@@ -266,6 +265,8 @@ class Migration(object):
                 self._logger.debug("No migration required.")
 
             self.save_current_version()
+        except MigrationException as e:
+            self._logger.exception("Error while migration: {}".format(e))
         except Exception as e:
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
@@ -585,10 +586,17 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def auto_update_grbl(self):
         self._logger.info("auto_update_grbl() ")
-        default_profile = laserCutterProfileManager().get_default()
-        default_profile["grbl"]["auto_update_version"] = self.GRBL_AUTO_UPDATE_VERSION
-        default_profile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
-        laserCutterProfileManager().save(default_profile, allow_overwrite=True)
+        laserCutterProfile = laserCutterProfileManager().get_current_or_default()
+        if laserCutterProfile:
+            laserCutterProfile["grbl"][
+                "auto_update_version"
+            ] = self.GRBL_AUTO_UPDATE_VERSION
+            laserCutterProfile["grbl"]["auto_update_file"] = self.GRBL_AUTO_UPDATE_FILE
+            laserCutterProfileManager().save(laserCutterProfile, allow_overwrite=True)
+        else:
+            raise MigrationException(
+                "Error while configuring grbl update - no lasercutterProfile",
+            )
 
     def inflate_file_system(self):
         self._logger.info("inflate_file_system() ")
@@ -887,7 +895,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
                 val = 0.0
                 try:
                     val = float(_val)
-                except:
+                except ValueError:
                     self._logger.warning(
                         "Failed to convert %s to a float for backlash", _val
                     )
@@ -930,14 +938,6 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             _set(path, data, settings().setBoolean)
         settings().save()
         self._logger.info("Done.")
-
-    @logExceptions
-    def track_devpi(self):
-        """Move pip.conf to track our devpi server. (removes it from the source files)"""
-        self._logger.info("Adding pip.conf to track MrBeam update server.")
-        src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, "pip.conf")
-        dst = "/home/pi/.pip/pip.conf"
-        os.renames(src, dst)
 
     @logExceptions
     def hostname_helper_scripts(self):
@@ -985,11 +985,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def fix_octoprint_prerelease_setting(self):
         """
-        Updates custom material settings keys and values
-        It replaces 'laser_type 'key with 'laser_model' and
-        it sets the value according to the latest laserhead
-        model updates
-        It also replaces 'model' key with 'device_model'
+        Removes the prerelease flag from the OctoPrint update
+        config so it will only use releases of OctoPrint
         """
         self._logger.info("start fix_octoprint_prerelease_setting")
         self.plugin._settings.global_set(
