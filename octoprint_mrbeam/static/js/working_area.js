@@ -1063,11 +1063,11 @@ $(function () {
                     ] = 0;
                 analyticsData.removed_unnecessary_elements[
                     removeElements[i].type
-                    ]++;
+                ]++;
                 console.warn(
                     "Unsupported '" +
-                    removeElements[i].type +
-                    "' element in SVG is removed"
+                        removeElements[i].type +
+                        "' element in SVG is removed"
                 );
             }
             removeElements.remove();
@@ -1376,6 +1376,7 @@ $(function () {
                 class: srcElem.attr("class"),
             });
 
+            // clone filter references
             if (newSvg.attr("class").includes("userIMG")) {
                 let url = self._getIMGserveUrl(file);
                 self._create_img_filter(previewId);
@@ -1385,12 +1386,16 @@ $(function () {
                 });
             }
 
+            // clone <textPath> references
             if (newSvg.attr("class").includes("userText")) {
                 const newCurvePathId = previewId + "_baselinepath";
                 let curvePathId = srcElem.select("textPath").attr("href");
                 let newCurvePath = snap.select(curvePathId).clone();
                 newCurvePath.attr("id", newCurvePathId);
-                newSvg.select("textPath").attr("href", `#${newCurvePathId}`);
+                newSvg.select("textPath").attr({
+                    textpath: newCurvePath,
+                    href: `#${newCurvePathId}`,
+                });
             }
 
             // TODO use self._prepareAndInsertSVG()
@@ -3699,7 +3704,8 @@ $(function () {
                     "font-family": font,
                     fill: fill,
                 });
-                const textPathAttr = curvedText.select("textPath").attr();
+                const textPathEl = curvedText.select("textPath");
+                const textPathAttr = textPathEl.attr();
                 const path = snap.select(textPathAttr.href);
                 const textLength = self._qt_currentQuicktextGetTextLength(
                     displayText,
@@ -3714,12 +3720,13 @@ $(function () {
 
                 // update text content and click handle bbox
                 let bb;
+                const textPathNode = textPathEl.node;
                 if (isStraightText) {
-                    curvedText.textPath.node.textContent = "";
+                    textPathNode.textContent = "";
                     straightText.node.textContent = displayText;
                     bb = straightText.getBBox();
                 } else {
-                    curvedText.textPath.node.textContent = displayText;
+                    textPathNode.textContent = displayText;
                     straightText.node.textContent = "";
                     bb = curvedText.getBBox();
                 }
