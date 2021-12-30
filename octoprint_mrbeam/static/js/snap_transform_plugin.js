@@ -60,6 +60,7 @@
          * @returns {path}
          */
         //TODO add fill for Text (like bounding box or similar)
+        // TODO rewrite with elem.selectAll('path') should increase performance
         Element.prototype.add_fill = function () {
             var elem = this;
             var children = elem.selectAll("*");

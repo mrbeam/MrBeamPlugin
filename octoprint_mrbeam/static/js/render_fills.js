@@ -127,10 +127,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             let rasterEl = marked[i];
             let bbox;
             try {
-              bbox = rasterEl.get_total_bbox();
-            }
-            catch(error) {
-                console.warn(`Getting bounding box for ${rasterEl} failed.`, error);
+                bbox = rasterEl.get_total_bbox();
+            } catch (error) {
+                console.warn(
+                    `Getting bounding box for ${rasterEl} failed.`,
+                    error
+                );
                 continue;
             }
             // find overlaps
@@ -172,13 +174,20 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 rasterEl.addClass(`rasterCluster${c}`)
             );
             let tmpSvg = svg.clone();
-            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).forEach((element) => {
-                let elementToBeRemoved = tmpSvg.select('#' + element.attr('id'));
-                let elementsToBeExcluded = ["text", "tspan"]
-                if (elementToBeRemoved && !elementsToBeExcluded.includes(elementToBeRemoved.type)) {
-                    elementToBeRemoved.remove();
-                }
-            });
+            tmpSvg
+                .selectAll(`.toRaster:not(.rasterCluster${c})`)
+                .forEach((element) => {
+                    let elementToBeRemoved = tmpSvg.select(
+                        "#" + element.attr("id")
+                    );
+                    let elementsToBeExcluded = ["text", "tspan"];
+                    if (
+                        elementToBeRemoved &&
+                        !elementsToBeExcluded.includes(elementToBeRemoved.type)
+                    ) {
+                        elementToBeRemoved.remove();
+                    }
+                });
             // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
             tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
             // DON'T fix IDs of textPath references, they're cloned correct.
@@ -256,7 +265,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
      * Reads a linked image and embeds it with a dataUrl
      * @returns {Promise} Promise with the element or null in case of non-image element.
      */
-    Element.prototype.embedImage = function () {
+    Element.prototype.embedImage = function (cropToVisible = false) {
         let elem = this;
         if (elem.type !== "image") {
             console.warn(
@@ -271,31 +280,78 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         } else if (elem.attr("href") !== null) {
             url = elem.attr("href");
         }
-        if (url === null || url.startsWith("data:")) {
-            console.info(`embedImage: nothing do to. Url was ${url}`);
+        if (url === null || (url.startsWith("data:") && !cropToVisible)) {
+            console.info(
+                `embedImage: nothing do to. Url was ${url.substr(0, 100)}`
+            ); // only 100 chars of the dataUrl go to the log.
             return Promise.resolve(elem);
         }
 
         let prom = loadImagePromise(url)
             .then(function (image) {
-                let canvas = document.createElement("canvas");
+                const canvas = document.createElement("canvas");
                 canvas.width = image.naturalWidth; // or 'width' if you want a special/scaled size
                 canvas.height = image.naturalHeight; // or 'height' if you want a special/scaled size
 
                 canvas.getContext("2d").drawImage(image, 0, 0);
 
-                const ratio = getWhitePixelRatio(canvas);
+                let ratio;
+                let dataUrl;
+
+                if (cropToVisible) {
+                    const bounds = CanvasUtil.getBoundaries(canvas);
+                    console.log("embedImage() boundaries: ", bounds);
+
+                    const cropCanvas = document.createElement("canvas");
+                    cropCanvas.id = "cropCanvas";
+                    cropCanvas.width = bounds.px.w;
+                    cropCanvas.height = bounds.px.h;
+                    //(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+                    cropCanvas
+                        .getContext("2d")
+                        .drawImage(
+                            canvas,
+                            bounds.px.l,
+                            bounds.px.t,
+                            bounds.px.w,
+                            bounds.px.h,
+                            0,
+                            0,
+                            bounds.px.w,
+                            bounds.px.h
+                        );
+
+                    const current = elem.attr();
+                    elem.attr({
+                        x:
+                            parseFloat(current.x) +
+                            bounds.percent.l * parseFloat(current.width),
+                        y:
+                            parseFloat(current.y) +
+                            bounds.percent.t * parseFloat(current.height),
+                        width: parseFloat(current.width) * bounds.percent.w,
+                        height: parseFloat(current.height) * bounds.percent.h,
+                    });
+                    ratio = CanvasUtil.getWhitePixelRatio(cropCanvas);
+
+                    dataUrl = cropCanvas.toDataURL("image/png");
+                    cropCanvas.remove();
+                } else {
+                    ratio = CanvasUtil.getWhitePixelRatio(canvas);
+                    dataUrl = canvas.toDataURL("image/png");
+                }
+
                 console.log(
                     `embedImage() white pixel ratio: ${(ratio * 100).toFixed(
                         2
                     )}%, total white pixel: ${
                         canvas.width * canvas.height * ratio
-                    }, image:${image.src}`
+                    }, image:${image.src.substr(0, 100)}` // avoid logging full data urls
                 );
 
-                const dataUrl = canvas.toDataURL("image/png");
                 elem.attr("href", dataUrl);
                 canvas.remove();
+
                 return elem;
             })
             .catch(function (error) {
@@ -335,7 +391,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             //            );
         }
 
-        // TODO only enlarge on images and fonts
+        // TODO:
+        // only enlarge on images and fonts.
+        // const criticalElements = elem.selectAll('text, textPath, image');
+        // 1. iterate over the elements and enlarge only bboxes of text & images??
+        // 2. merge to one total bbox
+        // 3. crop bbox afterwards
+
         // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
         const enlargement_x = 0.4; // percentage of the width added to each side
         const enlargement_y = 0.4; // percentage of the height added to each side

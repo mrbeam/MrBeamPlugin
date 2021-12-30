@@ -32,7 +32,8 @@ $(function () {
         });
     };
 
-    getWhitePixelRatio = function (canvas) {
+    CanvasUtil = {};
+    CanvasUtil.getWhitePixelRatio = function (canvas) {
         // count ratio of white pixel
         const pixelData = canvas
             .getContext("2d")
@@ -49,6 +50,49 @@ $(function () {
         }
         const ratio = countWhite / (countNoneWhite + countWhite);
         return ratio;
+    };
+
+    CanvasUtil.getBoundaries = function (canvas) {
+        // get bounds of visible (non transparent) pixel
+        const pxArr = canvas
+            .getContext("2d")
+            .getImageData(0, 0, canvas.width, canvas.height).data;
+        let right = 0;
+        let left = canvas.width - 1;
+        let bottom = 0;
+        let top = canvas.height - 1;
+        for (var p = 0; p < pxArr.length; p += 4) {
+            const x = (p / 4) % canvas.width;
+            const y = Math.floor(p / 4 / canvas.width);
+            const isVisible = pxArr[p + 3] > 0; // alpha
+
+            if (isVisible) {
+                left = Math.min(x, left);
+                right = Math.max(x, right);
+                top = Math.min(y, top);
+                bottom = Math.max(y, bottom);
+            }
+        }
+        const result = {
+            px: {
+                l: left,
+                r: right,
+                t: top,
+                b: bottom,
+                w: right - left,
+                h: bottom - top,
+            },
+            percent: {
+                l: left / canvas.width,
+                r: right / canvas.width,
+                t: top / canvas.height,
+                b: bottom / canvas.height,
+                w: (right - left) / canvas.width,
+                h: (bottom - top) / canvas.height,
+            },
+        };
+
+        return result;
     };
 
     observableInt = function (owner, default_val) {

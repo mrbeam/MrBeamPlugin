@@ -672,7 +672,7 @@ $(function () {
                 ).toTransformString();
 
                 var analyticsData = {};
-                analyticsData.file_type = "svg";
+                analyticsData.file_type = "svg"; // TODO check for .mrb ??
                 analyticsData.svg_generator_info = generator_info;
                 analyticsData.svg_generator_info.generator =
                     analyticsData.svg_generator_info.generator === "unknown"
@@ -1063,11 +1063,11 @@ $(function () {
                     ] = 0;
                 analyticsData.removed_unnecessary_elements[
                     removeElements[i].type
-                    ]++;
+                ]++;
                 console.warn(
                     "Unsupported '" +
-                    removeElements[i].type +
-                    "' element in SVG is removed"
+                        removeElements[i].type +
+                        "' element in SVG is removed"
                 );
             }
             removeElements.remove();
@@ -2618,6 +2618,9 @@ $(function () {
                 "mb:beamOS_version": BEAMOS_VERSION,
                 "mb:gc_options": gc_options_str,
             });
+            // remove filters to reduce file size of .mrb file
+            compSvg.selectAll("defs>filter").remove();
+            compSvg.selectAll(".quicktext_curve_path").remove();
             if (compSvg.children().length > 1) {
                 // <defs> should be always present
                 let svgStr = compSvg.outerSVG();
@@ -2986,7 +2989,7 @@ $(function () {
 
             let pAll = await Promise.all(
                 allImages.items.map(async (elem, idx) => {
-                    const embedded = await elem.embedImage();
+                    const embedded = await elem.embedImage(true); // crop = true
                     console.log(
                         `embedding Image ${idx + 1}/${allImages.length}}`
                     );
