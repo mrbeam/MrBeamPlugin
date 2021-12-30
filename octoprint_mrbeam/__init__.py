@@ -53,6 +53,8 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
+from octoprint_mrbeam.rest_handler.docs_handler import DocsRestHandlerMixin
+from octoprint_mrbeam.services.settings_service import SettingsService
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
@@ -110,6 +112,7 @@ class MrBeamPlugin(
     octoprint.plugin.SlicerPlugin,
     octoprint.plugin.ShutdownPlugin,
     octoprint.plugin.EnvironmentDetectionPlugin,
+    DocsRestHandlerMixin,
 ):
     # CONSTANTS
     ENV_PROD = "PROD"
@@ -816,6 +819,7 @@ class MrBeamPlugin(
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
+                settings_model= SettingsService(self._logger).get_template_settings_model(self.get_model_id()),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
