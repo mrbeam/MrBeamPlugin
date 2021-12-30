@@ -51,6 +51,14 @@ $(function () {
                 type: "info",
                 hide: true,
             },
+            missing_updateinformation_info: {
+                title: gettext("No update information"),
+                text: gettext(
+                    "No information about available updates could be retrieved, please try again later."
+                ),
+                type: "info",
+                hide: true,
+            },
             err_cam_conn_err: {
                 title: gettext("Camera Error"),
                 text: gettext(
