@@ -40,7 +40,7 @@
 		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar" style="min-width:730px;">
 			<div class="">
 				<div class="navbar-header brand">
-					<a id="mrbeam_logo_link" class="navbar-brand" href="#"><img id="logo_wide" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo_x120.png') }}"><img id="logo_compact" alt="{{ _('Mr Beam Logo') }}" src="{{ url_for('plugin.mrbeam.static', filename='img/mr_x120.png') }}"></a>
+					<a id="mrbeam_logo_link" class="navbar-brand" href="#"><img loading="lazy" id="logo_wide" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo_x120.png') }}"><img loading="lazy" id="logo_compact" alt="{{ _('Mr Beam Logo') }}" src="{{ url_for('plugin.mrbeam.static', filename='img/mr_x120.png') }}"></a>
                     {% if beta_label %}
                         <span style="margin: 6px; vertical-align: -5px; font-size: 14px; font-weight: 400; color: #e25303; text-decoration: none;">{{ beta_label }}</span>
                     {% endif %}
