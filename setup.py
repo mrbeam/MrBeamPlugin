@@ -48,7 +48,7 @@ plugin_requires = [
     "pillow == 6.2.2",
     "lxml == 4.6.3",
     "numpy == 1.16.6",
-    "yaml == 5.4.1",
+    "pyyaml == 3.10",
     picamera,
 ]
 
