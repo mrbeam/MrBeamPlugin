@@ -49,6 +49,7 @@ class Migration(object):
     VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS = "0.9.9"
     VERSION_UPDATE_OCTOPRINT_PRERELEASE_FIX = "0.9.10"
     VERSION_UPDATE_FORCE_FOCUS_REMINDER = "0.10.0"
+    VERSION_ENABLE_ONLINECHECK = "0.11.0"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
@@ -254,6 +255,12 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.fix_octoprint_prerelease_setting()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    self.VERSION_ENABLE_ONLINECHECK,
+                    equal_ok=False,
+                ):
+                    self.enable_online_check()
 
                 # migrations end
 
@@ -1082,4 +1089,15 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         """
         self._logger.info("start update_focus_reminder_setting")
         self.plugin._settings.set_boolean(["focusReminder"], True)
+        self.plugin._settings.save()
+
+    def enable_online_check(self):
+        """
+        Enables the octoprint onlinecheck so the update info will only be pulled if there is a internet connection
+        """
+        self._logger.info("start enable_online_check")
+        self.plugin._settings.global_set(
+            ["server", "onlineCheck", "enabled"],
+            True,
+        )
         self.plugin._settings.save()
