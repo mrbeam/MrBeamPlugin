@@ -91,6 +91,16 @@ $(function () {
             self.softwareUpdate.performCheck(true, false, true);
         };
 
+        // get the hook when softwareUpdate perform the Updatecheck to force the update on the normal button
+        self.performCheck_copy = self.softwareUpdate.performCheck;
+        self.softwareUpdate.performCheck= function(showIfNothingNew, force, ignoreSeen) {
+            reload_update_info();
+            if (force !== undefined) {
+                force = true; //only forces the update check if it was disabled ("check for update" button press)
+            }
+            self.performCheck_copy(showIfNothingNew, force, ignoreSeen);
+        };
+
         /**
          * This one wraps all content of the #settings_plugin_softwareupdate elem into a div
          * which makes the whole page scrollable. it's a bit tricky/dirty because the content comes from OP.
@@ -117,8 +127,17 @@ $(function () {
             button.addClass("sticky-footer");
         };
     }
+    function reload_update_info() {
+        OctoPrint.get("plugin/mrbeam/fetch_update_info")
+            .done(function (response) {
+            })
+            .fail(function () {
+                console.error("Unable to relaod update info.");
+            });
+    }
 
     let DOM_ELEMENT_TO_BIND_TO = "software_channel_selector";
+
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
@@ -131,3 +150,4 @@ $(function () {
         [document.getElementById(DOM_ELEMENT_TO_BIND_TO)],
     ]);
 });
+

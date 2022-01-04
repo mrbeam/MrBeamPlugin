@@ -180,8 +180,8 @@ def get_update_information(plugin):
 
     # todo if offline start thread that will wait till online
 
-    config_tag = get_tag_of_github_repo("beamos_config")
-    if plugin._connectivity_checker.online:
+    if plugin._connectivity_checker.check_immediately():
+        config_tag = get_tag_of_github_repo("beamos_config")
         _logger.warn("online")
         # if plugin._connectivity_checker.check_immediately():  # check if device online
         if config_tag:
@@ -274,6 +274,23 @@ def switch_software_channel(plugin, channel):
         sw_update_plugin._version_cache = dict()
         sw_update_plugin._version_cache_dirty = True
         plugin.analytics_handler.add_software_channel_switch_event(old_channel, channel)
+
+
+def reload_update_info(plugin):
+    """
+    clears the version cache and refires the get_update_info hook
+    @param plugin: MrBeamPlugin
+    @return:
+    """
+
+    _logger.debug("Reload update info")
+
+    # fmt: off
+    sw_update_plugin = plugin._plugin_manager.get_plugin_info("softwareupdate").implementation
+    # fmt: on
+    sw_update_plugin._refresh_configured_checks = True
+    sw_update_plugin._version_cache = dict()
+    sw_update_plugin._version_cache_dirty = True
 
 
 @logExceptions
