@@ -9,7 +9,11 @@ class SettingsService:
         self._logger = logger
 
     def get_template_settings_model(self, mrbeam_model):
-        mrbeam_model_found = next(model for model in MrBeamModel if model.value.lower() == mrbeam_model.lower())
+        if not mrbeam_model:
+            self._logger.error('MrBeamModel not valid -> %s', mrbeam_model)
+            return self._empty_settings_model()
+
+        mrbeam_model_found = next((model for model in MrBeamModel if model.value.lower() == mrbeam_model.lower()), None)
         if mrbeam_model_found is None:
             self._logger.error('MrBeamModel not identified %s', mrbeam_model)
             return self._empty_settings_model()
