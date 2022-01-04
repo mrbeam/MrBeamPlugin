@@ -57,7 +57,7 @@ $(function () {
                     "No information about available updates could be retrieved, please try again later."
                 ),
                 type: "info",
-                hide: true,
+                hide: false,
             },
             err_cam_conn_err: {
                 title: gettext("Camera Error"),
