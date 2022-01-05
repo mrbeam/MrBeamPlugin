@@ -1100,4 +1100,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             ["server", "onlineCheck", "enabled"],
             True,
         )
+        self.plugin._settings.global_set(
+            ["server", "onlineCheck", "host"],
+            "1.1.1.1",
+        )
         self.plugin._settings.save()
