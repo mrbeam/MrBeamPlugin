@@ -62,7 +62,7 @@ def get_tag_of_github_repo(repo):
         }
 
         s = requests.Session()
-        retry = Retry(connect=5, backoff_factor=1)
+        retry = Retry(connect=3, backoff_factor=0.3)
         adapter = HTTPAdapter(max_retries=retry)
         s.mount("https://", adapter)
         s.keep_alive = False
@@ -108,7 +108,7 @@ def get_config_of_tag(tag):
         }
 
         s = requests.Session()
-        retry = Retry(connect=5, backoff_factor=1)
+        retry = Retry(connect=3, backoff_factor=0.3)
         adapter = HTTPAdapter(max_retries=retry)
         s.mount("https://", adapter)
         s.keep_alive = False
@@ -129,41 +129,6 @@ def get_config_of_tag(tag):
     else:
         _logger.warning("no valid response for the update_config file")
         return None
-
-
-def on_event(self, event, payload):
-    from octoprint.events import Events
-
-    if (
-        event != Events.CONNECTIVITY_CHANGED
-        or not payload
-        or not payload.get("new", False)
-    ):
-        return
-
-    _logger.info("Connectifiy changed, update plugin test")
-    thread = threading.Thread(target=self.get_current_versions, kwargs=dict(force=True))
-    thread.daemon = True
-    thread.start()
-
-
-class SoftwareUpdatePluginMrBeam(SoftwareUpdatePlugin):
-    def on_event(self, event, payload):
-        from octoprint.events import Events
-
-        if (
-            event != Events.CONNECTIVITY_CHANGED
-            or not payload
-            or not payload.get("new", False)
-        ):
-            return
-        self._logger.info("Connectifiy changed, update plugin test")
-
-        thread = threading.Thread(
-            target=self.get_current_versions, kwargs=dict(force=True)
-        )
-        thread.daemon = True
-        thread.start()
 
 
 def get_update_information(plugin):
