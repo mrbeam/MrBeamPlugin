@@ -75,3 +75,6 @@ websocket-client==0.40.0
 Werkzeug==0.8.3
 wrapt==1.10.11
 zipp==1.2.0
+
+mock~=3.0.5
+setuptools~=44.1.1
