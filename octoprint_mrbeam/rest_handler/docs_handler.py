@@ -23,7 +23,8 @@ class DocsRestHandlerMixin:
             abort(404)
 
         try:
-            mrbeamdoc = get_doc_path(mrbeam_doctype_found, mrbeam_model_found, supported_language_found)
+            mrbeamdoc = get_doc_path(mrbeam_doctype_found, mrbeam_model_found, supported_language_found,
+                                     extension=extension)
         except MrBeamDocNotFoundException as e:
             self._logger.warn(e)
             abort(404)
