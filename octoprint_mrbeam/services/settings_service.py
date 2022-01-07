@@ -5,10 +5,19 @@ from octoprint_mrbeamdoc import MrBeamDocAvailable, MrBeamModel
 
 
 class SettingsService:
+    """
+    In this class we gather all the service layer calculations needed regarding settings
+    """
+
     def __init__(self, logger):
         self._logger = logger
 
     def get_template_settings_model(self, mrbeam_model):
+        """
+        mrbeam_model String: Name of the running mrbeam_model
+
+        Return SettingsModel containing all the information and settings available for this specific mrbeam_model
+        """
         if not mrbeam_model:
             self._logger.error('MrBeamModel not valid -> %s', mrbeam_model)
             return self._empty_settings_model()

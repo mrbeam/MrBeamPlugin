@@ -5,6 +5,10 @@ from octoprint_mrbeamdoc import get_doc_path, MrBeamDocType, MrBeamModel, Suppor
 
 
 class DocsRestHandlerMixin:
+    """
+    This class contains all the rest handlers and endpoints related to handle docs
+    """
+
     @octoprint.plugin.BlueprintPlugin.route(
         "/docs/<string:model>/<string:language>/<string:doctype>.<string:extension>", methods=["GET"])
     def get_doc(self, model, doctype, language, extension):
