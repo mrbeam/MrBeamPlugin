@@ -144,7 +144,7 @@ def get_update_information(plugin):
     _logger.info("SoftwareUpdate using tier: %s %s", tier, beamos_date)
 
     # todo if offline start thread that will wait till online
-
+    _logger.info("onlinechecker: %s", plugin._connectivity_checker.online)
     if plugin._connectivity_checker.check_immediately():
         config_tag = get_tag_of_github_repo("beamos_config")
         _logger.warn("online")

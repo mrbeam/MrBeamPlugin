@@ -31,6 +31,8 @@ from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
+from .util.connectivity_checker import ConnectivityChecker
+
 IS_X86 = platform.machine() == "x86_64"
 
 from octoprint_mrbeam.__version import __version__
@@ -256,6 +258,10 @@ class MrBeamPlugin(
         self._logger.info("MrBeamPlugin initialized!")
         self.mrbeam_plugin_initialized = True
         self.fire_event(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
+
+        # move octoprints connectivity checker to a new var so we can use our abstraction
+        self._octoprint_connectivity_checker = self._connectivity_checker
+        self._connectivity_checker = ConnectivityChecker(self)
 
         self._do_initial_log()
 
