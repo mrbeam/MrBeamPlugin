@@ -6,6 +6,8 @@ import shutil
 from datetime import datetime
 from distutils.version import LooseVersion, StrictVersion
 
+from enum import Enum
+
 from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -28,6 +30,13 @@ def migrate(plugin):
 
 class MigrationException(Exception):
     pass
+
+
+class Restart(Enum):
+    NONE = 0
+    DEVICE = 1
+    OCTOPRINT = 2
+    IOBEAM = 3
 
 
 class Migration(object):
@@ -76,6 +85,7 @@ class Migration(object):
         )
         beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
         self.beamos_version = self.plugin._device_info.get_beamos_version_number()
+        self._restart = 0
 
     def run(self):
         try:
@@ -279,6 +289,7 @@ class Migration(object):
 
             self._run_migration()
             self.save_current_version()
+            self._check_for_restart()
         except MigrationException as e:
             self._logger.exception("Error while migration: {}".format(e))
         except Exception as e:
@@ -410,6 +421,32 @@ class Migration(object):
                 ["version"], self.version_current, force=True
             )  # force needed to save it if it wasn't there
             self.plugin._settings.save()
+
+    def _check_for_restart(self):
+        if self._restart:
+            if self._restart == Restart.OCTOPRINT:
+                self._logger.info("restart octoprint after migration")
+                exec_cmd("sudo systemctl restart octoprint.service")
+            elif self._restart == Restart.DEVICE:
+                self._logger.info("restart device after migration")
+                exec_cmd("sudo reboot now")
+            elif self._restart == Restart.IOBEAM:
+                self._logger.info("restart iobeam after migration")
+                exec_cmd("sudo systemctl restart iobeam")
+            else:
+                self._logger.info(
+                    "restart after migration choosen but unknown type: %s",
+                    self._restart,
+                )
+
+    @property
+    def restart(self):
+        return self._restart
+
+    @restart.setter
+    def restart(self, value):
+        if self._restart == 0 or value < self._restart:
+            self._restart = value
 
     ##########################################################
     #####              general stuff                     #####
@@ -1105,3 +1142,4 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             "1.1.1.1",
         )
         self.plugin._settings.save()
+        self.restart = Restart.OCTOPRINT

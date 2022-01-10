@@ -49,6 +49,7 @@ plugin_requires = [
     "lxml == 4.6.3",
     "numpy == 1.16.6",
     "pyyaml == 3.10",
+    "enum == 0.4.7",
     picamera,
 ]
 
