@@ -132,63 +132,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         }
 
         if (elem.type === "image") {
-            var x = parseFloat(elem.attr("x")),
-                y = parseFloat(elem.attr("y")),
-                w = parseFloat(elem.attr("width")),
-                h = parseFloat(elem.attr("height"));
-
-            // Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
-            // If 'x' and 'y' are not specified, then set both to default=0. // CorelDraw is creating that sometimes
-            if (!isFinite(x)) {
-                console.log("Image: No x value -> using 0 (SVG default)");
-                x = 0;
-            }
-            if (!isFinite(y)) {
-                console.log("Image: No y value -> using 0 (SVG default)");
-                y = 0;
-            }
+            // just apply total transform matrix which incorporates transforms of parent elements as well.
             var transform = elem.transform();
             const tm = transform["totalMatrix"].add(correctionMatrix);
-            const lm = transform["localMatrix"];
-
             elem.transform(tm);
-            //            tm.add(lm.invert());
-
-            // keep local matrix
-            // apply matrices from parent element as those are removed
-
-            //            var transformedX = matrix.x(x, y);
-            //            var transformedY = matrix.y(x, y);
-            //            var transformedW = matrix.x(x + w, y + h) - transformedX;
-            //            var transformedH = matrix.y(x + w, y + h) - transformedY;
-
-            //            const transformComponents = matrix.split();
-            //            const transformedW = w * transformComponents.scalex;
-            //            const transformedH = h * transformComponents.scaley;
-            //
-            //            // keep mirroring in the elements matrix if mirrored
-            //            const mirroredX = matrix.a < 0;
-            //            const mirroredY = matrix.d < 0;
-            //            let mat = Snap.matrix();
-            //            if (mirroredX) {
-            //                // mirrored x-axis
-            //                transformedW = Math.abs(transformedW);
-            //                mat.a = -1;
-            //                transformedX = -transformedX;
-            //            }
-            //            if (mirroredY) {
-            //                // mirrored x-axis
-            //                transformedH = Math.abs(transformedH);
-            //                mat.d = -1;
-            //                transformedY = -transformedY;
-            //            }
-            //            elem.attr({
-            //                x: transformedX,
-            //                y: transformedY,
-            //                width: transformedW,
-            //                height: transformedH,
-            //            });
-            //            elem.transform(mat);
             return ignoredElements;
         }
 
