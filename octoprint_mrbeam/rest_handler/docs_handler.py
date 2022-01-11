@@ -1,6 +1,5 @@
-from flask import abort, send_file
-
 import octoprint.plugin
+from flask import abort, send_file
 from octoprint_mrbeamdoc import get_doc_path, MrBeamDocType, MrBeamModel, SupportedLanguage, MrBeamDocNotFoundException
 
 
@@ -17,11 +16,12 @@ class DocsRestHandlerMixin:
             {'model': model, 'doctype': doctype, 'language': language, 'extension': extension})
 
         mrbeam_model_found = next(
-            (mrbea_model for mrbea_model in MrBeamModel if mrbea_model.value.lower() == model.lower()), None)
+            (mrbeam_model for mrbeam_model in MrBeamModel if mrbeam_model.value.lower() == model.lower()), None)
         supported_language_found = next((supported_language for supported_language in SupportedLanguage if
                                          supported_language.value.lower() == language.lower()), None)
         mrbeam_doctype_found = next(
-            (mrbea_doctype for mrbea_doctype in MrBeamDocType if mrbea_doctype.value.lower() == doctype.lower()), None)
+            (mrbeam_doctype for mrbeam_doctype in MrBeamDocType if mrbeam_doctype.value.lower() == doctype.lower()),
+            None)
 
         if mrbeam_model_found is None or supported_language_found is None or mrbeam_doctype_found is None:
             abort(404)

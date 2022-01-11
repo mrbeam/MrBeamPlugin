@@ -1,7 +1,7 @@
 from flask_babel import gettext
-
-from octoprint_mrbeam.model.settings_model import SettingsModel, About, Document, DocumentLink
 from octoprint_mrbeamdoc import MrBeamDocAvailable, MrBeamModel
+
+from octoprint_mrbeam.model.settings_model import SettingsModel, AboutModel, DocumentModel, DocumentLinkModel
 
 
 class SettingsService:
@@ -29,16 +29,17 @@ class SettingsService:
 
         definitions = MrBeamDocAvailable.get_mrbeam_definitions_for(mrbeam_model_found)
         settings_model = SettingsModel()
-        settings_model.about = About([self._get_documents_for_definition(definition) for definition in definitions])
+        settings_model.about = AboutModel(
+            [self._get_documents_for_definition(definition) for definition in definitions])
         return settings_model
 
     def _empty_settings_model(self):
         settings_model = SettingsModel()
-        settings_model.about = About([])
+        settings_model.about = AboutModel([])
         return settings_model
 
     def _get_documents_for_definition(self, definition):
-        document_links = [DocumentLink(language, self._get_url_for_definition_language(definition, language)) for
+        document_links = [DocumentLinkModel(language, self._get_url_for_definition_language(definition, language)) for
                           language in definition.supported_languages]
         title_key = definition.mrbeamdoc_type.value
         title_translated = gettext(title_key)
@@ -47,7 +48,7 @@ class SettingsService:
                 'No key found for title_key=%(title_key)s title_translated=%(title_translated)s' % {
                     'title_key': title_key,
                     'title_translated': title_translated})
-        return Document(title_translated, document_links)
+        return DocumentModel(title_translated, document_links)
 
     def _get_url_for_definition_language(self, definition, language, extension='pdf'):
         return '/plugin/mrbeam/docs/%(mrbeam_model)s/%(language)s/%(mrbeam_type)s.%(extension)s' % {

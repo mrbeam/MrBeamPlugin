@@ -6,7 +6,7 @@ class SettingsModel:
         return 'SettingsModel(about=%s)' % (repr(self.about))
 
 
-class About:
+class AboutModel:
     def __init__(self, support_documents):
         self.support_documents = support_documents
 
@@ -14,7 +14,7 @@ class About:
         return 'About(support_documents=%s)' % (','.join([repr(document) for document in self.support_documents]))
 
 
-class Document:
+class DocumentModel:
     def __init__(self, title, document_links):
         self.title = title
         self.document_links = document_links
@@ -24,7 +24,7 @@ class Document:
             self.title, ','.join([repr(document_link) for document_link in self.document_links]))
 
 
-class DocumentLink:
+class DocumentLinkModel:
     def __init__(self, language, url):
         self.language = language
         self.url = url
