@@ -1,5 +1,6 @@
 def gcode_before_job(color="#000000", compressor=100):
     gcode = []
+    gcode.append("M3S0")
     if compressor is not None:
         gcode.append("; gcode_before_job - color: {color}".format(color=color))
         gcode.append("M100P{p} ; mrbeam_compressor: {p}".format(p=compressor))
