@@ -11,19 +11,19 @@ class Test(TestCase):
         super(Test, self).setUp()
         self.service = SettingsService(LoggerMock())
 
-    def test_get_template_settings_model_with_none_then_return_settings_empty_object(self):
+    def test_get_template_settings_model_with_none__then_return_settings_empty_object(self):
         settings_model = self.service.get_template_settings_model(None)
         self._validate_empty_settings_model(settings_model)
 
-    def test_get_template_settings_model_with_unknown_then_return_settings_empty_object(self):
+    def test_get_template_settings_model_with_unknown__then_return_settings_empty_object(self):
         settings_model = self.service.get_template_settings_model('unknown')
         self._validate_empty_settings_model(settings_model)
 
-    def test_get_template_settings_model_with_mrbeam2_then_return_settings_with_about_and_nonempty_documents(self):
+    def test_get_template_settings_model_with_mrbeam2__then_return_settings_with_about_and_nonempty_documents(self):
         settings_model = self.service.get_template_settings_model(MrBeamModel.MRBEAM2.value)
         self._validate_settings_model(settings_model)
 
-    def test_get_template_settings_model_with_dreamcut_then_return_settings_with_about_and_nonempty_documents(self):
+    def test_get_template_settings_model_with_dreamcut__then_return_settings_with_about_and_nonempty_documents(self):
         settings_model = self.service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
         self._validate_settings_model(settings_model)
 
@@ -53,5 +53,3 @@ class Test(TestCase):
                 self.assertIsNotNone(document_link.url)
                 self.assertNotEquals(document_link.url, '')
                 self.assertNotEquals(document_link.url, ' ')
-
-

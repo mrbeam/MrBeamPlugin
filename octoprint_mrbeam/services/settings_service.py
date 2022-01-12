@@ -1,7 +1,8 @@
-from flask_babel import gettext
+from flask_babel import gettext, get_locale
 from octoprint_mrbeamdoc import MrBeamDocAvailable, MrBeamModel
 
 from octoprint_mrbeam.model.settings_model import SettingsModel, AboutModel, DocumentModel, DocumentLinkModel
+from octoprint_mrbeam.util import string_util
 
 
 class SettingsService:
@@ -41,9 +42,9 @@ class SettingsService:
     def _get_documents_for_definition(self, definition):
         document_links = [DocumentLinkModel(language, self._get_url_for_definition_language(definition, language)) for
                           language in definition.supported_languages]
-        title_key = definition.mrbeamdoc_type.value
+        title_key = string_util.separate_camelcase_words(definition.mrbeamdoc_type.value)
         title_translated = gettext(title_key)
-        if title_key == title_translated:
+        if get_locale() is not None and get_locale().language != 'en' and title_key == title_translated:
             self._logger.error(
                 'No key found for title_key=%(title_key)s title_translated=%(title_translated)s' % {
                     'title_key': title_key,
