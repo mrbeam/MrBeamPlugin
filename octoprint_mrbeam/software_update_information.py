@@ -143,11 +143,8 @@ def get_update_information(plugin):
     beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
     _logger.info("SoftwareUpdate using tier: %s %s", tier, beamos_date)
 
-    # todo if offline start thread that will wait till online
-    _logger.info("onlinechecker: %s", plugin._connectivity_checker.online)
     if plugin._connectivity_checker.check_immediately():
         config_tag = get_tag_of_github_repo("beamos_config")
-        _logger.warn("online")
         # if plugin._connectivity_checker.check_immediately():  # check if device online
         if config_tag:
             cloud_config = get_config_of_tag(get_tag_of_github_repo("beamos_config"))
