@@ -11,6 +11,16 @@ $(function () {
         var self = this;
         window.mrbeam.viewModels["workingAreaViewModel"] = self;
 
+        self.SUPPORTED_IMAGE_TYPES = [
+            "jpg",
+            "jpeg",
+            "png",
+            "gif",
+            "bmp",
+            "pcx",
+            "webp",
+        ];
+
         self.parser = new gcParser();
 
         self.loginState = params[0];
@@ -611,6 +621,30 @@ $(function () {
             var previewId = file.previewId;
             snap.selectAll("#" + previewId).remove();
             self.placedDesigns.remove(file);
+        };
+
+        self.placeUpload = function (data) {
+            if (data.type === "machinecode") {
+                self.placeGcode(data);
+            } else if (data.type === "model") {
+                var extension = data.name.split(".").pop().toLowerCase();
+                if (extension === "svg") {
+                    self.placeSVG(data);
+                } else if (extension === "dxf") {
+                    self.placeDXF(data);
+                } else if (_.contains(self.SUPPORTED_IMAGE_TYPES, extension)) {
+                    self.placeIMG(data);
+                } else {
+                    console.warn("Unable to place unidentified upload", data);
+                }
+            } else if (data.type === "recentjob") {
+                self.placeSVG(data);
+            } else {
+                console.warn(
+                    "Upload type is neither machinecode nor model",
+                    data
+                );
+            }
         };
 
         /**
@@ -2403,12 +2437,7 @@ $(function () {
                     return "wa_template_" + data.type + "_svg";
                 } else if (extension === "dxf") {
                     return "wa_template_" + data.type + "_svg";
-                } else if (
-                    _.contains(
-                        ["jpg", "jpeg", "png", "gif", "bmp", "pcx", "webp"],
-                        extension
-                    )
-                ) {
+                } else if (_.contains(self.SUPPORTED_IMAGE_TYPES, extension)) {
                     return "wa_template_" + data.type + "_img";
                 } else {
                     return "wa_template_" + data.type;
