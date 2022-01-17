@@ -236,8 +236,8 @@ $(function () {
 
             self.state.intensityOverride = ko.observable(100);
             self.state.feedrateOverride = ko.observable(100);
-            self.state.intensityOverride.extend({rateLimit: 500});
-            self.state.feedrateOverride.extend({rateLimit: 500});
+            self.state.intensityOverride.extend({ rateLimit: 500 });
+            self.state.feedrateOverride.extend({ rateLimit: 500 });
             self.state.numberOfPasses = ko.observable(1);
             self.state.isConnecting = ko.observable(undefined);
 
@@ -285,7 +285,12 @@ $(function () {
             tabs.on("show", function (e) {
                 var current = e.target.hash;
                 var previous = e.relatedTarget.hash;
-                //                log.debug("Selected OctoPrint tab changed: previous = " + previous + ", current = " + current);
+                log.debug(
+                    "Selected OctoPrint tab changed: previous = " +
+                        previous +
+                        ", current = " +
+                        current
+                );
                 OctoPrint.coreui.selectedTab = current;
                 callViewModels(allViewModels, "onTabChange", [
                     current,
@@ -302,6 +307,11 @@ $(function () {
                 ]);
             });
 
+            // initialize selected tab correct (is Octoprints '#temp' otherwise).
+            OctoPrint.coreui.selectedTab = $(
+                "#mrbeam-main-tabs li.active a"
+            ).attr("href");
+
             // terminal stuff
             terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
             self.terminal.upperLimit(terminalMaxLines * 2);
@@ -315,8 +325,39 @@ $(function () {
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display
-            self.state._processProgressData = function () {
-            };
+            self.state._processProgressData = function () {};
+        };
+
+        // event fired (once for each file) after onEventFileAdded, but only on upload (not on filecopy)
+        self.onEventUpload = async function (payload) {
+            // if tab workingarea, place it there (assuming tabs did not change during upload)
+            if (OctoPrint.coreui.selectedTab === "#workingarea") {
+                const path = payload.path;
+
+                // onEventUpload is fired sometimes before the filesViewmodel is updated. In this case elementByPath() is returning undefined.
+                let file = self.files.elementByPath(path);
+                let i = 0;
+                while (typeof file === "undefined" && i < 10) {
+                    // increase 10 if warning occures too often.
+                    file = self.files.elementByPath(path);
+                    i++;
+                    console.debug(
+                        "onEventUpload waiting for filesViewmodel to be updated",
+                        file,
+                        path,
+                        i
+                    );
+                    await new Promise((r) => setTimeout(r, 200));
+                }
+
+                if (file) {
+                    self.workingArea.placeUpload(file);
+                } else {
+                    console.warn(
+                        "Unable to place upload on the workingArea. FilesViewmodel was not updated yet."
+                    );
+                }
+            }
         };
 
         self.onStartupComplete = function () {
@@ -327,8 +368,11 @@ $(function () {
         };
 
         self.onEventMrbPluginVersion = function (payload) {
-            if (payload?.version || payload?.is_first_run ||
-                payload?.mrb_state?.laser_model) {
+            if (
+                payload?.version ||
+                payload?.is_first_run ||
+                payload?.mrb_state?.laser_model
+            ) {
                 self.force_reload_if_required(
                     payload["version"],
                     payload["is_first_run"],
@@ -379,43 +423,50 @@ $(function () {
             laserHeadModel = laserHeadModel?.toString();
             if (self.settings.settings?.plugins?.mrbeam) {
                 let mrb_settings = self.settings.settings.plugins.mrbeam;
-                backend_version = backend_version ? backend_version : mrb_settings._version();
-                isFirstRun = isFirstRun ? isFirstRun : mrb_settings.isFirstRun();
-                if(mrb_settings?.laserhead?.model()){
-                    laserHeadModel = laserHeadModel ? laserHeadModel : mrb_settings.laserhead.model().toString();
+                backend_version = backend_version
+                    ? backend_version
+                    : mrb_settings._version();
+                isFirstRun = isFirstRun
+                    ? isFirstRun
+                    : mrb_settings.isFirstRun();
+                if (mrb_settings?.laserhead?.model()) {
+                    laserHeadModel = laserHeadModel
+                        ? laserHeadModel
+                        : mrb_settings.laserhead.model().toString();
                 }
             }
             if (
                 backend_version !== BEAMOS_VERSION ||
                 isFirstRun !== CONFIG_FIRST_RUN ||
-                (laserHeadModel !== undefined && laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
+                (laserHeadModel !== undefined &&
+                    laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
             ) {
                 console.log(
                     "Frontend reload check: RELOAD! (version: frontend=" +
-                    BEAMOS_VERSION +
-                    ", backend=" +
-                    backend_version +
-                    ", isFirstRun: frontend=" +
-                    CONFIG_FIRST_RUN +
-                    ", backend=" +
-                    isFirstRun +
-                    ", laserheadModel: frontend=" +
-                    MRBEAM_LASER_HEAD_MODEL +
-                    ", backend=" +
-                    laserHeadModel +
-                    ")"
+                        BEAMOS_VERSION +
+                        ", backend=" +
+                        backend_version +
+                        ", isFirstRun: frontend=" +
+                        CONFIG_FIRST_RUN +
+                        ", backend=" +
+                        isFirstRun +
+                        ", laserheadModel: frontend=" +
+                        MRBEAM_LASER_HEAD_MODEL +
+                        ", backend=" +
+                        laserHeadModel +
+                        ")"
                 );
                 console.log("Reloading frontend...");
                 window.location.href = "/?ts=" + Date.now();
             } else {
                 console.log(
                     "Frontend reload check: OK (version: " +
-                    BEAMOS_VERSION +
-                    ", isFirstRun: " +
-                    CONFIG_FIRST_RUN +
-                    ", laserheadModel: " +
-                    MRBEAM_LASER_HEAD_MODEL +
-                    ")"
+                        BEAMOS_VERSION +
+                        ", isFirstRun: " +
+                        CONFIG_FIRST_RUN +
+                        ", laserheadModel: " +
+                        MRBEAM_LASER_HEAD_MODEL +
+                        ")"
                 );
             }
         };
@@ -521,7 +572,7 @@ $(function () {
             if (self.storedSocketData.length > 0) {
                 console.log(
                     "Handling stored socked data: " +
-                    self.storedSocketData.length
+                        self.storedSocketData.length
                 );
                 for (var i = 0; i < self.storedSocketData.length; i++) {
                     self._fromData(
@@ -539,7 +590,7 @@ $(function () {
             self.state.isFlashing(data.flags.flashing);
             self.state.isConnecting(
                 data.text === "Connecting" ||
-                data.text === "Opening serial port"
+                    data.text === "Opening serial port"
             );
         };
 
@@ -552,9 +603,9 @@ $(function () {
                 isNaN(data[0]) ||
                 isNaN(data[1])
             ) {
-                self.state.currentPos({x: 0, y: 0});
+                self.state.currentPos({ x: 0, y: 0 });
             } else {
-                self.state.currentPos({x: data[0], y: data[1]});
+                self.state.currentPos({ x: data[0], y: data[1] });
             }
         };
 
@@ -721,7 +772,7 @@ $(function () {
                 "/" +
                 payload.gcode;
             var data = {
-                refs: {resource: url},
+                refs: { resource: url },
                 origin: payload.gcode_location,
                 path: payload.gcode,
             };
