@@ -211,6 +211,34 @@ class WorkingAreaHelper {
                 }
             }
 
+            // detect Microsoft Visio generated svg
+            // <svg ... xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" ...>
+            if (
+                root_attrs["xmlns:v"] &&
+                root_attrs["xmlns:v"].value.search("microsoft.com/visio") > 0
+            ) {
+                let version = "unknown";
+                const ns = root_attrs["xmlns:v"].value;
+                const regex = /microsoft\.com\/visio\/(.+)\/SVGExtensions/gm;
+                let m;
+
+                while ((m = regex.exec(ns)) !== null) {
+                    // This is necessary to avoid infinite loops with zero-width matches
+                    if (m.index === regex.lastIndex) {
+                        regex.lastIndex++;
+                    }
+
+                    // The result can be accessed through the `m`-variable.
+                    m.forEach((match, groupIndex) => {
+                        console.log(
+                            `Found match, group ${groupIndex}: ${match}`
+                        );
+                        version = match;
+                    });
+                }
+                return { generator: "Microsoft Visio", version: version };
+            }
+
             // detect dxf.js generated svg
             // <!-- Created with dxf.js -->
             for (var i = 0; i < children.length; i++) {
