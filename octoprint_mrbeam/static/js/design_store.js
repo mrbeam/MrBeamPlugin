@@ -16,6 +16,7 @@ $(function () {
         self.settings = params[3];
 
         self.lastUploadedDate = ko.observable("");
+        self.eventListenerAdded = ko.observable(false);
 
         self.onUserLoggedIn = function () {
             self.prepareDesignStoreTab();
@@ -95,11 +96,15 @@ $(function () {
                     }
                 }
 
-                window.addEventListener(
-                    "message",
-                    receiveMessagesFromDesignStoreIframe,
-                    false
-                );
+                if(!self.eventListenerAdded()){
+                    window.addEventListener(
+                        "message",
+                        receiveMessagesFromDesignStoreIframe,
+                        false
+                    );
+                    self.eventListenerAdded(true);
+                }
+
             });
 
             // Add iframe source
