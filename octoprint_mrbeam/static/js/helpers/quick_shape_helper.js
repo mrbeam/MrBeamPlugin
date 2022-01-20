@@ -108,7 +108,7 @@ class QuickShapeHelper {
         var step = (2 * Math.PI) / c;
         var ri = (1 - sh) * r;
         for (var i = 0; i < c; i++) {
-            var angle_outer = i * step;
+            var angle_outer = i * step - Math.PI / 2; // -Math.PI/2 rotates 90deg
             var angle_inner = angle_outer + step / 2;
             var pox = Math.cos(angle_outer) * r;
             var poy = Math.sin(angle_outer) * r;
@@ -132,8 +132,8 @@ class QuickShapeHelper {
         //         \     /
         //          \   /
         //            a
-        var dx = (w / 5) * 0.78;
-        var dy = (h / 5) * 0.96;
+        var dx = (w / 5) * 0.89686;
+        var dy = (h / 5) * 1.0444;
         var q = 0.552284749831; // circle approximation with cubic beziers: (4/3)*tan(pi/8) = 0.552284749831
         var rx = dx;
         var ry = dy;
@@ -162,7 +162,7 @@ class QuickShapeHelper {
         var a1 = [f[0] + dx / 2, f[1] + dy / 2];
         var a2 = [a[0] - dx + lr * dx, a[1] - dy];
 
-        var d =
+        var out =
             "M" +
             a.join(",") +
             "C" +
@@ -201,26 +201,35 @@ class QuickShapeHelper {
             a2.join(",") +
             " " +
             a.join(",") +
-            //				// Debug bezier handles
-            //				+'M' + a.join(',')
-            //				+ 'L' + b1.join(',')
-            //				+ 'M' + a.join(',')
-            //				+ 'L' + a2.join(',')
-            //
-            //				+ 'M' + c.join(',')
-            //				+ 'L' + d1.join(',')
-            //				+ 'M' + d.join(',')
-            //				+ 'L' + d2.join(',')
-            //
-            //				+ 'M' + e1.join(',')
-            //				+ 'L' + e.join(',')
-            //				+ 'L' + e2.join(',')
-            //
-            //				+ 'M' + f1.join(',')
-            //				+ 'L' + f.join(',')
-            //				+ 'L' + f2.join(',')
             "z";
-        return d;
+
+        /** Debug bezier handles
+            out +=
+            'M' + a2.join(',') +
+            'L' + a.join(',') +
+            'L' + b1.join(',') +
+
+            'M' + b2.join(',') +
+            'L' + b.join(',') +
+            'L' + c1.join(',') +
+
+            'M' + c2.join(',') +
+            'L' + c.join(',') +
+            'L' + d1.join(',') +
+
+            'M' + d2.join(',') +
+            'L' + d.join(',') +
+            'L' + e1.join(',') +
+
+            'M' + e2.join(',') +
+            'L' + e.join(',') +
+            'L' + f1.join(',') +
+
+            'M' + f2.join(',') +
+            'L' + f.join(',') +
+            'L' + a1.join(',');
+            */
+        return out;
     }
 
     static getTextPath(
