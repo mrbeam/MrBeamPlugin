@@ -168,7 +168,7 @@ $(function () {
             if (
                 token !== "" &&
                 oldToken !== token &&
-                currentUserSettings?.mrbeam?.user_token
+                currentUserSettings?.mrbeam
             ) {
                 delete currentUserSettings["mrbeam"]["user_token"];
                 currentUserSettings["mrbeam"][
@@ -187,7 +187,7 @@ $(function () {
             if (
                 lastUploaded !== "" &&
                 oldLastUploaded !== lastUploaded &&
-                currentUserSettings?.mrbeam?.design_store_last_uploaded
+                currentUserSettings?.mrbeam
             ) {
                 delete currentUserSettings["mrbeam"][
                     "design_store_last_uploaded"
