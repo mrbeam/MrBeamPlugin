@@ -328,6 +328,31 @@ $(function () {
             self.state._processProgressData = function () {};
         };
 
+        // Mutation Observer to show a spinner in working area when file upload is in progress
+        // since there are no events detecting the start of a the file upload process
+        const uploadProgressMutationNode = document.getElementById("gcode_upload_progress");
+        const uploadProgressMutationConfig = {
+            childList: true,
+            attributes: true,
+            subtree: true,
+        };
+        const uploadProgressMutationCallback = function (mutationsList, uploadProgressObserver) {
+            for (let mutation of mutationsList) {
+                if (OctoPrint.coreui.selectedTab === "#workingarea") {
+                    let width = $(mutation.target).inlineStyle("width");
+                    if (width === "0%") {
+                        $("body").removeClass("activitySpinnerActive");
+                    } else {
+                        $("body").addClass("activitySpinnerActive");
+                    }
+                }
+            }
+        };
+        const uploadProgressObserver = new MutationObserver(uploadProgressMutationCallback);
+        uploadProgressObserver.observe(uploadProgressMutationNode, uploadProgressMutationConfig);
+        // End of Mutation Observer
+
+
         // event fired (once for each file) after onEventFileAdded, but only on upload (not on filecopy)
         self.onEventUpload = async function (payload) {
             // if tab workingarea, place it there (assuming tabs did not change during upload)

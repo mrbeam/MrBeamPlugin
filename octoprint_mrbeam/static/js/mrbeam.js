@@ -590,11 +590,6 @@ $(function () {
         const mutationCallback = function (mutationsList, observer) {
             for (let mutation of mutationsList) {
                 if (mutation.type === "childList") {
-                    (function ($) {
-                        $.fn.inlineStyle = function (prop) {
-                            return this.prop("style")[$.camelCase(prop)];
-                        };
-                    })(jQuery);
                     let modalElement = $(".modal-scrollable");
                     let backDrop = $(".modal-backdrop");
                     if (modalElement.length !== 0) {
