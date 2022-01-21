@@ -1,6 +1,10 @@
 import octoprint.plugin
 from flask import abort, send_file
-from octoprint_mrbeamdoc import get_doc_path, MrBeamDocType, MrBeamModel, SupportedLanguage, MrBeamDocNotFoundException
+from octoprint_mrbeamdoc.enum.mrbeam_doctype import MrBeamDocType
+from octoprint_mrbeamdoc.enum.mrbeam_model import MrBeamModel
+from octoprint_mrbeamdoc.enum.supported_languages import SupportedLanguage
+from octoprint_mrbeamdoc.exception.mrbeam_doc_not_found import MrBeamDocNotFoundException
+from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils
 
 
 class DocsRestHandlerMixin:
@@ -27,8 +31,8 @@ class DocsRestHandlerMixin:
             abort(404)
 
         try:
-            mrbeamdoc = get_doc_path(mrbeam_doctype_found, mrbeam_model_found, supported_language_found,
-                                     extension=extension)
+            mrbeamdoc = MrBeamDocUtils.get_mrbeamdoc_for(mrbeam_doctype_found, mrbeam_model_found,
+                                                        supported_language_found, extension=extension)
         except MrBeamDocNotFoundException as e:
             self._logger.warn(e)
             abort(404)

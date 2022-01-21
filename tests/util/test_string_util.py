@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from octoprint_mrbeamdoc import MrBeamDocType
+from octoprint_mrbeamdoc.enum.mrbeam_doctype import MrBeamDocType
 
 from octoprint_mrbeam.util import string_util
 

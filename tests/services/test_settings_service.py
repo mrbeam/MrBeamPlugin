@@ -1,14 +1,14 @@
 from unittest import TestCase
 
-from octoprint_mrbeamdoc import MrBeamModel
+from octoprint_mrbeamdoc.enum.mrbeam_model import MrBeamModel
 
 from octoprint_mrbeam.services.settings_service import SettingsService
 from tests.logger.test_logger import LoggerMock
 
 
-class Test(TestCase):
+class TestSettingsService(TestCase):
     def setUp(self):
-        super(Test, self).setUp()
+        super(TestSettingsService, self).setUp()
         self.service = SettingsService(LoggerMock())
 
     def test_get_template_settings_model_with_none__then_return_settings_empty_object(self):

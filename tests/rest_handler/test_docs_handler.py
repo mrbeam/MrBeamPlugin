@@ -1,16 +1,18 @@
 from unittest import TestCase
 
 from mock import patch, MagicMock
-from octoprint_mrbeamdoc import MrBeamDocType, SupportedLanguage, MrBeamModel
+from octoprint_mrbeamdoc.enum.mrbeam_doctype import MrBeamDocType
+from octoprint_mrbeamdoc.enum.mrbeam_model import MrBeamModel
+from octoprint_mrbeamdoc.enum.supported_languages import SupportedLanguage
 from werkzeug.exceptions import NotFound
 
 from octoprint_mrbeam import DocsRestHandlerMixin
 from tests.logger.test_logger import LoggerMock
 
 
-class Test(TestCase):
+class TestDocsRestHandlerMixin(TestCase):
     def setUp(self):
-        super(Test, self).setUp()
+        super(TestDocsRestHandlerMixin, self).setUp()
         self.docs_handler = DocsRestHandlerMixin()
         self.docs_handler._logger = LoggerMock()
 

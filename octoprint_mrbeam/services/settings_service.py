@@ -1,5 +1,6 @@
 from flask_babel import gettext, get_locale
-from octoprint_mrbeamdoc import MrBeamDocAvailable, MrBeamModel
+from octoprint_mrbeamdoc.enum.mrbeam_model import MrBeamModel
+from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils
 
 from octoprint_mrbeam.model.settings_model import SettingsModel, AboutModel, DocumentModel, DocumentLinkModel
 from octoprint_mrbeam.util import string_util
@@ -28,7 +29,7 @@ class SettingsService:
             self._logger.error('MrBeamModel not identified %s', mrbeam_model)
             return self._empty_settings_model()
 
-        definitions = MrBeamDocAvailable.get_mrbeam_definitions_for(mrbeam_model_found)
+        definitions = MrBeamDocUtils.get_mrbeam_definitions_for(mrbeam_model_found)
         settings_model = SettingsModel()
         settings_model.about = AboutModel(
             [self._get_documents_for_definition(definition) for definition in definitions])
