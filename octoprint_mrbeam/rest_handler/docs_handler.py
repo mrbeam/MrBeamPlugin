@@ -1,8 +1,5 @@
 import octoprint.plugin
 from flask import abort, send_file
-from octoprint_mrbeamdoc.enum.mrbeam_doctype import MrBeamDocType
-from octoprint_mrbeamdoc.enum.mrbeam_model import MrBeamModel
-from octoprint_mrbeamdoc.enum.supported_languages import SupportedLanguage
 from octoprint_mrbeamdoc.exception.mrbeam_doc_not_found import MrBeamDocNotFoundException
 from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils
 
@@ -19,20 +16,16 @@ class DocsRestHandlerMixin:
             'Request to Model: %(model)s Doctype: %(doctype)s Language: %(language)s Extension:%(extension)s',
             {'model': model, 'doctype': doctype, 'language': language, 'extension': extension})
 
-        mrbeam_model_found = next(
-            (mrbeam_model for mrbeam_model in MrBeamModel if mrbeam_model.value.lower() == model.lower()), None)
-        supported_language_found = next((supported_language for supported_language in SupportedLanguage if
-                                         supported_language.value.lower() == language.lower()), None)
-        mrbeam_doctype_found = next(
-            (mrbeam_doctype for mrbeam_doctype in MrBeamDocType if mrbeam_doctype.value.lower() == doctype.lower()),
-            None)
+        mrbeam_model_found = MrBeamDocUtils.get_mrbeam_model_enum_for(model)
+        supported_language_found = MrBeamDocUtils.get_supported_language_enum_for(language)
+        mrbeam_doctype_found = MrBeamDocUtils.get_mrbeamdoc_type_enum_for(doctype)
 
         if mrbeam_model_found is None or supported_language_found is None or mrbeam_doctype_found is None:
             abort(404)
 
         try:
             mrbeamdoc = MrBeamDocUtils.get_mrbeamdoc_for(mrbeam_doctype_found, mrbeam_model_found,
-                                                        supported_language_found, extension=extension)
+                                                         supported_language_found, extension=extension)
         except MrBeamDocNotFoundException as e:
             self._logger.warn(e)
             abort(404)

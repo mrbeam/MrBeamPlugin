@@ -5,7 +5,7 @@ from octoprint_mrbeamdoc.enum.mrbeam_doctype import MrBeamDocType
 from octoprint_mrbeam.util import string_util
 
 
-class Test(TestCase):
+class TestStringUtils(TestCase):
     def test_extra_space_at_the_end__then_removed(self):
         self.assertEquals(string_util.separate_camelcase_words('Test '), 'Test')
 

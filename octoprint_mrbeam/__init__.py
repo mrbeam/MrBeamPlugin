@@ -31,6 +31,9 @@ from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
+from .services.burger_menu_service import BurgerMenuService
+from .services.document_service import DocumentService
+
 IS_X86 = platform.machine() == "x86_64"
 
 from octoprint_mrbeam.__version import __version__
@@ -819,7 +822,8 @@ class MrBeamPlugin(
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
-                settings_model= SettingsService(self._logger).get_template_settings_model(self.get_model_id()),
+                settings_model= SettingsService(self._logger, DocumentService(self._logger)).get_template_settings_model(self.get_model_id()),
+                burger_menu_model= BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(self.get_model_id()),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
