@@ -340,7 +340,7 @@ $(function () {
             for (let mutation of mutationsList) {
                 if (OctoPrint.coreui.selectedTab === "#workingarea") {
                     let width = $(mutation.target).inlineStyle("width");
-                    if (width === "0%") {
+                    if (width === "0%" || width === "100%") {
                         $("body").removeClass("activitySpinnerActive");
                     } else {
                         $("body").addClass("activitySpinnerActive");
@@ -376,7 +376,17 @@ $(function () {
                 }
 
                 if (file) {
-                    self.workingArea.placeUpload(file);
+                    const fileAlreadyPlaced = (element) => element.path === path;
+                    if(!self.workingArea.placedDesigns().some(fileAlreadyPlaced)){
+                        self.workingArea.placeUpload(file);
+                    } else {
+                        new PNotify({
+                            title: gettext("File uploaded but not added to the Working Area"),
+                            text: gettext("The file you uploaded was not added to the working area because another file with the same name already exists."),
+                            type: "warn",
+                            hide: false
+                        });
+                    }
                 } else {
                     console.warn(
                         "Unable to place upload on the workingArea. FilesViewmodel was not updated yet."
