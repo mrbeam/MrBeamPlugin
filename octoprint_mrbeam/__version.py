@@ -1,1 +1,4 @@
-__version__ = "0.10.1"
+"""
+Version of Mr beam plugin
+"""
+__version__ = "0.10.2"
