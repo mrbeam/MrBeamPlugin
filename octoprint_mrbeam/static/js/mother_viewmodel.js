@@ -375,8 +375,8 @@ $(function () {
                     await new Promise((r) => setTimeout(r, 200));
                 }
 
-                const fileAlreadyPlaced = (element) => element.path === path;
                 if (file) {
+                    const fileAlreadyPlaced = (element) => element.path === path;
                     if(!self.workingArea.placedDesigns().some(fileAlreadyPlaced)){
                         self.workingArea.placeUpload(file);
                     } else {
