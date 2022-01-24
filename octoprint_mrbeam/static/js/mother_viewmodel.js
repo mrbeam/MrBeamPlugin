@@ -375,8 +375,18 @@ $(function () {
                     await new Promise((r) => setTimeout(r, 200));
                 }
 
+                const fileAlreadyPlaced = (element) => element.path === path;
                 if (file) {
-                    self.workingArea.placeUpload(file);
+                    if(!self.workingArea.placedDesigns().some(fileAlreadyPlaced)){
+                        self.workingArea.placeUpload(file);
+                    } else {
+                        new PNotify({
+                            title: gettext("File uploaded but not added to the Working Area"),
+                            text: gettext("The file you uploaded was not added to the working area because another file with the same name already exists."),
+                            type: "warn",
+                            hide: false
+                        });
+                    }
                 } else {
                     console.warn(
                         "Unable to place upload on the workingArea. FilesViewmodel was not updated yet."
