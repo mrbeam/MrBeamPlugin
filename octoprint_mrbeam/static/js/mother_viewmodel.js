@@ -340,7 +340,7 @@ $(function () {
             for (let mutation of mutationsList) {
                 if (OctoPrint.coreui.selectedTab === "#workingarea") {
                     let width = $(mutation.target).inlineStyle("width");
-                    if (width === "0%") {
+                    if (width === "0%" || width === "100%") {
                         $("body").removeClass("activitySpinnerActive");
                     } else {
                         $("body").addClass("activitySpinnerActive");
