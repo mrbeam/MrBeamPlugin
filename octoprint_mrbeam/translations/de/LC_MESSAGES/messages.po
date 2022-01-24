@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-11-17 11:40+0100\n"
-"PO-Revision-Date: 2021-11-17 11:41+0100\n"
+"POT-Creation-Date: 2022-01-24 11:40+0100\n"
+"PO-Revision-Date: 2022-01-24 11:43+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -254,11 +254,11 @@ msgstr "Mehr Disk-Speicherplatz frei machen"
 msgid "Cut "
 msgstr "Schneiden "
 
-#: octoprint_mrbeam/static/js/design_store.js:217
+#: octoprint_mrbeam/static/js/design_store.js:236
 msgid "Could not download design"
 msgstr "Konnte das Design nicht herunterladen"
 
-#: octoprint_mrbeam/static/js/design_store.js:218
+#: octoprint_mrbeam/static/js/design_store.js:237
 msgid "The purchased design could not be downloaded. Please download again."
 msgstr ""
 "Das gekaufte Design konnte nicht heruntergeladen werden. Bitte versuche es "
@@ -751,38 +751,50 @@ msgstr "Vollholz"
 msgid "Starts the laser job"
 msgstr "Startet den Laserjob"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:607
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:618
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:384
+msgid "File uploaded but not added to the Working Area"
+msgstr "Datei hochgeladen, aber nicht zum Arbeitsbereich hinzugefügt"
+
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:385
+msgid ""
+"The file you uploaded was not added to the working area because another file "
+"with the same name already exists."
+msgstr ""
+"Die hochgeladene Datei wurde nicht in den Arbeitsbereich hinzugefügt, da "
+"bereits eine andere Datei mit demselben Namen existiert."
+
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:693
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:704
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:2
 msgid "Files"
 msgstr "Dateien"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:617
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:703
 msgid "1 File"
 msgstr "1 Datei"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:627
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:713
 msgid "recent job"
 msgstr "letzter Job"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:629
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:715
 msgid "image"
 msgstr "Bild"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:745
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:831
 msgid "Preparation done"
 msgstr "Vorbereitung abgeschlossen"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:747
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:833
 #, python-format
 msgid "Converted %(stl)s to %(gcode)s, took %(time).2f seconds"
 msgstr "Datei %(stl)s nach %(gcode)s konvertiert. Dauer: %(time).2f Sekunden"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:844
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:930
 msgid "Ready to laser?"
 msgstr "Bereit zum Lasern?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:847
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:933
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:501
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:125
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:118
@@ -794,11 +806,11 @@ msgstr "Bereit zum Lasern?"
 msgid "Cancel"
 msgstr "Abbruch"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:848
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:934
 msgid "Proceed"
 msgstr "Fortfahren"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:849
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:935
 msgid ""
 "The laser will now start. Protect yourself and everybody in the room "
 "appropriately before proceeding!"
@@ -806,16 +818,16 @@ msgstr ""
 "Der Laser wird nun gestartet. Schütze Dich und alle anderen im Raum "
 "angemessen, bevor Du fortfährst!"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:852
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:938
 msgid "Are you sure you want to proceed?"
 msgstr "Möchtest Du wirklich fortfahren?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:856
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:942
 msgid "The laser will now start. Please make sure the lid is closed."
 msgstr ""
 "Der Laser wird nun gestartet. Achte darauf, dass der Deckel geschlossen ist."
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:859
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:945
 msgid "Please confirm to proceed."
 msgstr "Bitte bestätige, um fortzufahren."
 
@@ -1422,27 +1434,27 @@ msgstr "Was gibt's Neues"
 msgid "What's New in Beta"
 msgstr "Was gibt's Neues in Beta"
 
-#: octoprint_mrbeam/static/js/working_area.js:115
+#: octoprint_mrbeam/static/js/working_area.js:125
 msgid "Rectangle"
 msgstr "Rechteck"
 
-#: octoprint_mrbeam/static/js/working_area.js:116
+#: octoprint_mrbeam/static/js/working_area.js:126
 msgid "Circle"
 msgstr "Kreis"
 
-#: octoprint_mrbeam/static/js/working_area.js:117
+#: octoprint_mrbeam/static/js/working_area.js:127
 msgid "Star"
 msgstr "Stern"
 
-#: octoprint_mrbeam/static/js/working_area.js:118
+#: octoprint_mrbeam/static/js/working_area.js:128
 msgid "Heart"
 msgstr "Herz"
 
-#: octoprint_mrbeam/static/js/working_area.js:1308
+#: octoprint_mrbeam/static/js/working_area.js:1342
 msgid "Limited split result."
 msgstr "Nur teilweise zerteiltes Ergebnis."
 
-#: octoprint_mrbeam/static/js/working_area.js:1309
+#: octoprint_mrbeam/static/js/working_area.js:1343
 msgid ""
 "Splitting this design would result in too many parts. Here are "
 "${split_result.length} parts. You can split the last one again if necessary."
@@ -1451,27 +1463,27 @@ msgstr ""
 "${split_result.length} Teile. Du kannst den letzten Teil bei Bedarf noch "
 "einmal zerteilen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1320
+#: octoprint_mrbeam/static/js/working_area.js:1354
 msgid "No different line colors found."
 msgstr "Keine unterschiedlichen Linienfarben gefunden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1323
+#: octoprint_mrbeam/static/js/working_area.js:1357
 msgid "No non-intersecting shapes found."
 msgstr "Keine nicht-überlappenden Formen gefunden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1330
+#: octoprint_mrbeam/static/js/working_area.js:1364
 msgid "Looks like a single path."
 msgstr "Sieht nach einem einzigen Pfad aus."
 
-#: octoprint_mrbeam/static/js/working_area.js:1333
+#: octoprint_mrbeam/static/js/working_area.js:1367
 msgid "Element not splittable with this method."
 msgstr "Element is nicht zerteilbar mit dieser Methode."
 
-#: octoprint_mrbeam/static/js/working_area.js:1335
+#: octoprint_mrbeam/static/js/working_area.js:1369
 msgid "Can't split this design."
 msgstr "Dieses Design kann nicht zerteilt werden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1870
+#: octoprint_mrbeam/static/js/working_area.js:1909
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements "
@@ -1480,12 +1492,12 @@ msgstr ""
 "Die SVG-Datei enthält nicht unterstützte Elemente: %(elemName)s' Diese "
 "Elemente wurden entfernt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1878
+#: octoprint_mrbeam/static/js/working_area.js:1917
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr "Nicht unterstützte Elemente in SVG: '%(elemName)s'"
 
-#: octoprint_mrbeam/static/js/working_area.js:1891
+#: octoprint_mrbeam/static/js/working_area.js:1930
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their "
@@ -1496,11 +1508,11 @@ msgstr ""
 "willst,%(br)skonvertiere sie in Pfade.%(br)sAnsonsten werden sie mit Füllung "
 "graviert."
 
-#: octoprint_mrbeam/static/js/working_area.js:1898
+#: octoprint_mrbeam/static/js/working_area.js:1937
 msgid "Text elements found"
 msgstr "Textelemente gefunden"
 
-#: octoprint_mrbeam/static/js/working_area.js:1911
+#: octoprint_mrbeam/static/js/working_area.js:1950
 msgid ""
 "The SVG file contained style elements with online references. Since online "
 "references are not supported, we removed them. The image might look a bit "
@@ -1510,11 +1522,11 @@ msgstr ""
 "Referenzen nicht unterstützt werden, haben wir sie entfernt. Das Bild könnte "
 "jetzt etwas anders aussehen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1916
+#: octoprint_mrbeam/static/js/working_area.js:1955
 msgid "Style elements removed"
 msgstr "Style-Elemente entfernt"
 
-#: octoprint_mrbeam/static/js/working_area.js:1930
+#: octoprint_mrbeam/static/js/working_area.js:1969
 msgid ""
 "The selected design file can not be handled. Please make sure it is a valid "
 "design file."
@@ -1522,25 +1534,25 @@ msgstr ""
 "Die ausgewählte Design-Datei kann nicht bearbeitet werden. Bitte stelle "
 "sicher, dass es sich um eine gültige Design-Datei handelt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1936
+#: octoprint_mrbeam/static/js/working_area.js:1975
 msgid "File error."
 msgstr "Dateifehler."
 
-#: octoprint_mrbeam/static/js/working_area.js:1950
+#: octoprint_mrbeam/static/js/working_area.js:1989
 msgid "The selected design file does not have any content."
 msgstr "Die ausgewählte Design-Datei hat keinen Inhalt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1956
+#: octoprint_mrbeam/static/js/working_area.js:1995
 msgid "Empty File."
 msgstr "Leere Datei."
 
-#: octoprint_mrbeam/static/js/working_area.js:1970
+#: octoprint_mrbeam/static/js/working_area.js:2009
 msgid "An unknown error occurred while processing this design file."
 msgstr ""
 "Ein bekannter Fehler ist während der Verarbeitung dieser Designdatei "
 "aufgetreten."
 
-#: octoprint_mrbeam/static/js/working_area.js:1978
+#: octoprint_mrbeam/static/js/working_area.js:2017
 msgid ""
 "Please try reloading this browser window and try again. If this error "
 "remains, contact the Mr Beam Support Team. Make sure you provide the error "
@@ -1554,8 +1566,8 @@ msgstr ""
 #: octoprint_mrbeam/static/js/calibration/calibration.js:120
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:124
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:367
-#: octoprint_mrbeam/static/js/working_area.js:1985
-#: octoprint_mrbeam/static/js/working_area.js:1990
+#: octoprint_mrbeam/static/js/working_area.js:2024
+#: octoprint_mrbeam/static/js/working_area.js:2029
 msgid "Error"
 msgstr "Fehler"
 
