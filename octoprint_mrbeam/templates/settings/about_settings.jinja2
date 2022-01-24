@@ -70,7 +70,7 @@
                     {% for document in settings_model.about.support_documents %}
                         <div>
                             <strong>{{ document.title }}</strong>
-                            {% for link in document.document_links %}
+                            {% for link in document.document_links | sort_enum(attribute='language') %}
                                 <a href="{{ link.url }}" target="_blank"> {{ link.language.value }} </a> |
                             {% endfor %}
                             {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank">{{ _('online') }}</a>

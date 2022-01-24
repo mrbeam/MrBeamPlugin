@@ -6,7 +6,8 @@ from octoprint_mrbeamdoc.enum.mrbeam_model import MrBeamModel
 from octoprint_mrbeamdoc.enum.supported_languages import SupportedLanguage
 from octoprint_mrbeamdoc.model.mrbeam_doc_definition import MrBeamDocDefinition
 
-from octoprint_mrbeam import BurgerMenuService, DocumentService
+from octoprint_mrbeam.services.document_service import DocumentService
+from octoprint_mrbeam.services.burger_menu_service import BurgerMenuService
 from tests.logger.test_logger import LoggerMock
 
 

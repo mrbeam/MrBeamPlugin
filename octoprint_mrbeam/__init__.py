@@ -31,8 +31,6 @@ from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
-from .services.burger_menu_service import BurgerMenuService
-from .services.document_service import DocumentService
 
 IS_X86 = platform.machine() == "x86_64"
 
@@ -46,6 +44,7 @@ from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.iobeam.hw_malfunction_handler import hwMalfunctionHandler
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from octoprint_mrbeam.iobeam.compressor_handler import compressor_handler
+from octoprint_mrbeam.jinja.filter_loader import FilterLoader
 from octoprint_mrbeam.user_notification_system import user_notification_system
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
@@ -58,6 +57,8 @@ from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.rest_handler.docs_handler import DocsRestHandlerMixin
 from octoprint_mrbeam.services.settings_service import SettingsService
+from octoprint_mrbeam.services.burger_menu_service import BurgerMenuService
+from octoprint_mrbeam.services.document_service import DocumentService
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
@@ -191,6 +192,9 @@ class MrBeamPlugin(
 
         # MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
         MrBeamEvents.register_with_octoprint()
+
+        # Jinja custom filters need to be loaded already on instance creation
+        FilterLoader.load_custom_jinja_filters()
 
     # inside initialize() OctoPrint is already loaded, not assured during __init__()!
     def initialize(self):
@@ -822,8 +826,10 @@ class MrBeamPlugin(
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
-                settings_model= SettingsService(self._logger, DocumentService(self._logger)).get_template_settings_model(self.get_model_id()),
-                burger_menu_model= BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(self.get_model_id()),
+                settings_model=SettingsService(self._logger, DocumentService(self._logger)).get_template_settings_model(
+                    self.get_model_id()),
+                burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
+                    self.get_model_id()),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
