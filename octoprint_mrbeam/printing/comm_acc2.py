@@ -393,6 +393,7 @@ class MachineCom(object):
                         )
                         self._sendCommand(self.COMMAND_RESET)  # Serial-Connection Error
                 except Exception as e:
+                    self._log(e)
                     self._logger.exception(
                         "Exception in _monitor_loop: {}".format(e),
                         terminal_dump=True,
@@ -400,7 +401,7 @@ class MachineCom(object):
                     )
                     errorMsg = gettext(
                         "Please contact Mr Beam support team and attach octoprint.log."
-                    )
+                    ) + "Exception in _monitor_loop: {}".format(e)
                     self._log(errorMsg)
                     self._errorValue = errorMsg
                     self._fire_print_failed()
@@ -1234,12 +1235,17 @@ class MachineCom(object):
                 "Unable to parse GRBL version from startup message: %s", line
             )
 
+        # TEST corexy RP2040
+        self._grbl_version = MachineCom.GRBL_DEFAULT_VERSION
+
         self.grbl_feat_rescue_from_home = (
             self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME
         )
         self.grbl_feat_checksums = (
             self._grbl_version not in self.GRBL_FEAT_BLOCK_CHECKSUMS
         )
+        self.grbl_feat_checksums = False
+
         self.reset_grbl_auto_update_config()
 
         self._logger.info(
@@ -1256,8 +1262,8 @@ class MachineCom(object):
                 terminal_as_comm=True,
             )
 
-        self._onConnected(self.STATE_LOCKED)
-        self.correct_grbl_settings()
+        self._onConnected(self.STATE_OPERATIONAL)
+        # self.correct_grbl_settings()
 
     def _handle_g24avoided_corrupted_line(self, line):
         """
