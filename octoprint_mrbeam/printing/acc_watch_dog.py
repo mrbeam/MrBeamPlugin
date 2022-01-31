@@ -171,7 +171,8 @@ class AccWatchDog(object):
             temp = float(temp.strip().replace("temp=", "").replace("'C", ""))
             return temp
         except:
-            self._logger.exception("Excpetion while reading cpu temperature: ")
+            self._logger.warn("Excpetion while reading cpu temperature: ")
+            return -1
 
     def _get_cpu_throttle_warnings(self):
         """
@@ -198,7 +199,10 @@ class AccWatchDog(object):
         t_hex = None
         throttled_binary = None
         try:
+            # TODO check if t_hex is None instead of running in the next exception
             t_hex = self._get_cpu_throttled()
+            if t_hex == "":
+                return []
             t_int = int(t_hex, 16)
             if t_int == 0:
                 return []
@@ -221,9 +225,11 @@ class AccWatchDog(object):
         return res
 
     def _get_cpu_throttled(self):
+        # TODO check if vcgencmd is available
         try:
             tmp = os.popen("vcgencmd get_throttled").readline()
             t_hex = tmp.strip().replace("throttled=", "")
+            # TODO check if result is "" and return None otherwise
             return t_hex
         except:
             self._logger.exception(

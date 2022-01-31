@@ -94,6 +94,7 @@ LASER_PROFILES_DERIVED = (
     LASER_PROFILE_2U,
     profiles.mrb2v.profile,
     LASER_PROFILE_DUMMY,
+    profiles.mrb3a.profile,
 )
 
 # fmt: off
@@ -246,6 +247,8 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return PrinterProfileManager.get_current_or_default(self)
 
     def exists(self, identifier):
+        self._logger.warning("############## %s", identifier)
+
         # if the regex matches and there is no profile it will use the default and change the id and model
         if identifier in LASER_PROFILE_IDENTIFIERS or re.match(
             r"MrBeam[0-9][A-Z]", identifier

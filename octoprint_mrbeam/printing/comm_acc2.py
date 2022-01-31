@@ -36,6 +36,7 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
+from octoprint_mrbeam.printing.grblInterface import GrblInterface
 from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -68,6 +69,8 @@ class MachineCom(object):
     #
     # fixes burn marks
     GRBL_VERSION_20210714_d5e31ee = "0.9g_20210714_d5e31ee"
+
+    GRBL_VERSION_MB3 = "1.1f"
 
     GRBL_FEAT_BLOCK_CHECKSUMS = (
         GRBL_VERSION_20170919_22270fa,
@@ -125,6 +128,19 @@ class MachineCom(object):
 
     GRBL_HEX_FOLDER = "files/grbl/"
 
+    # GrblHAL 1.1 @ RP2040 produces these status messages
+    # <Idle|MPos:0.000,0.000,0.000|Bf:35,1023|FS:0,0|Pn:Z|WCO:0.000,0.000,0.000>
+    # <Idle|MPos:0.000,0.000,0.000|Bf:35,1023|FS:0,0|Pn:Z|Ov:100,100,100>
+    pattern_grbl_status_MRB3 = re.compile(
+        "<(?P<status>\w+)"
+        + "\|.*(?P<pos_type>[MW])Pos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),(?P<pos_z>[0-9.\-]+)"
+        + "\|.*Bf:(?P<rx>\d+),(?P<plan_buf>\d+)"
+        + "\|.*FS:(?P<feedrate>\d+),(?P<laser_intensity>\d+)"
+        + "\|.*Pn:(?P<limit_x>[X]?)(?P<limit_y>[Y]?)(?P<limit_z>[Z]?)"
+        + "(\|.*WCO:(?P<wco_x>[0-9.\-]+),(?P<wco_y>[0-9.\-]+),(?P<wco_z>[0-9.\-]+))?"
+        + "(\|.*Ov:(?P<ov_1>\d+),(?P<ov_2>\d+),(?P<ov_3>\d+))?.*>"
+    )
+
     pattern_grbl_status_legacy = re.compile(
         "<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*RX:(?P<rx>\d+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>"
     )
@@ -165,9 +181,11 @@ class MachineCom(object):
         self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
 
         self._state = self.STATE_NONE
-        self._grbl_state = None
-        self._grbl_version = None
+
+        self._grbl = None
+
         self._grbl_settings = dict()
+
         self._errorValue = "Unknown Error"
         self._serial = None
         self._currentFile = None
@@ -176,11 +194,13 @@ class MachineCom(object):
         self._status_polling_interval = self.STATUS_POLL_FREQUENCY_DEFAULT
         self._status_last_ts = 0
         self._acc_line_buffer = AccLineBuffer()
+
         self._current_feedrate = None
         self._current_intensity = None
         self._current_pos_x = None
         self._current_pos_y = None
         self._current_laser_on = False
+
         self._cmd = None
         self._recovery_lock = False
         self._recovery_ignore_further_alarm_responses = False
@@ -196,11 +216,7 @@ class MachineCom(object):
         self._flush_command_ts = -1
         self._sync_command_ts = -1
         self._sync_command_state_sent = False
-        self.limit_x = -1
-        self.limit_y = -1
-        # from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
-        self._grbl_rx_status = -1
-        self._grbl_rx_last_change = -1
+
         self._grbl_settings_correction_ts = 0
 
         self.g24_avoided_message = []
@@ -211,10 +227,6 @@ class MachineCom(object):
         self._terminal_show_checksums = _mrbeam_plugin_implementation._settings.get(
             ["terminal_show_checksums"]
         )
-
-        # grbl features
-        self.grbl_feat_rescue_from_home = False
-        self.grbl_feat_checksums = False
 
         # regular expressions
         self._regex_command = re.compile("^\s*\*?\d*\s*\$?([GM]\d+|[THFSX])")
@@ -509,13 +521,16 @@ class MachineCom(object):
                     self._flush_command_ts = time.time()
                     self._logger.debug(
                         "FLUSHing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-                            self._grbl_state,
+                            self._grbl.state["status"],
                             self._acc_line_buffer.get_char_len(),
-                            self._grbl_rx_status,
+                            self.self._grbl.state["serialBuffer"],
                         ),
                         terminal_as_comm=True,
                     )
-                    if self.DEBUG_PRODUCE_FAKE_SYNC_ERRORS and self._grbl_rx_status > 0:
+                    if (
+                        self.DEBUG_PRODUCE_FAKE_SYNC_ERRORS
+                        and self.self._grbl.state["serialBuffer"] > 0
+                    ):
                         self._acc_line_buffer.add(
                             "DUMMY\n",
                             intensity=self._current_intensity,
@@ -526,9 +541,9 @@ class MachineCom(object):
                         )
                         self._logger.debug(
                             "FLUSHing DEBUG_PRODUCE_FAKE_SYNC_ERRORS added fake command (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-                                self._grbl_state,
+                                self._grbl.state["status"],
                                 self._acc_line_buffer.get_char_len(),
-                                self._grbl_rx_status,
+                                self.self._grbl.state["serialBuffer"],
                             ),
                             terminal_as_comm=True,
                         )
@@ -547,9 +562,9 @@ class MachineCom(object):
                 elif (
                     (time.time() - self._flush_command_ts) > 3.0
                     and (self._status_last_ts > self._flush_command_ts)
-                    and self._grbl_rx_status == 0
+                    and self.self._grbl.state["serialBuffer"] == 0
                     and (
-                        time.time() - self._grbl_rx_last_change
+                        time.time() - self.self._grbl.state["serialBufferLastUpdated"]
                         > self.STATUS_POLL_FREQUENCY_PRINTING * 2 + 0.1
                     )
                     and not self._acc_line_buffer.is_empty()
@@ -576,13 +591,16 @@ class MachineCom(object):
                     self._sync_command_state_sent = False
                     self._logger.debug(
                         "SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-                            self._grbl_state,
+                            self._grbl.state["status"],
                             self._acc_line_buffer.get_char_len(),
-                            self._grbl_rx_status,
+                            self.self._grbl.state["serialBuffer"],
                         ),
                         terminal_as_comm=True,
                     )
-                    if self.DEBUG_PRODUCE_FAKE_SYNC_ERRORS and self._grbl_rx_status > 0:
+                    if (
+                        self.DEBUG_PRODUCE_FAKE_SYNC_ERRORS
+                        and self.self._grbl.state["serialBuffer"] > 0
+                    ):
                         self._acc_line_buffer.add(
                             "DUMMY\n",
                             intensity=self._current_intensity,
@@ -593,15 +611,15 @@ class MachineCom(object):
                         )
                         self._logger.debug(
                             "SYNCing DEBUG_PRODUCE_FAKE_SYNC_ERRORS added fake command (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-                                self._grbl_state,
+                                self._grbl.state["status"],
                                 self._acc_line_buffer.get_char_len(),
-                                self._grbl_rx_status,
+                                self.self._grbl.state["serialBuffer"],
                             ),
                             terminal_as_comm=True,
                         )
                     return
                 elif self._acc_line_buffer.is_empty() and not (
-                    self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES
+                    self._grbl.state["status"] in self.GRBL_SYNC_COMMAND_WAIT_STATES
                 ):
                     # Successfully synced, let's move on
                     self._cmd.pop("sync", None)
@@ -617,7 +635,9 @@ class MachineCom(object):
                     self._sync_command_state_sent = False
                 elif (
                     self._acc_line_buffer.is_empty()
-                    and (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES)
+                    and (
+                        self._grbl.state["status"] in self.GRBL_SYNC_COMMAND_WAIT_STATES
+                    )
                     and not self._sync_command_state_sent
                 ):
                     # Request a status update from GRBL to see if it's really ready.
@@ -633,9 +653,9 @@ class MachineCom(object):
                 elif (
                     (time.time() - self._sync_command_ts) > 3.0
                     and (self._status_last_ts > self._sync_command_ts)
-                    and self._grbl_rx_status == 0
+                    and self.self._grbl.state["serialBuffer"] == 0
                     and (
-                        time.time() - self._grbl_rx_last_change
+                        time.time() - self.self._grbl.state["serialBufferLastUpdated"]
                         > self.STATUS_POLL_FREQUENCY_PRINTING * 2 + 0.1
                     )
                     and not self._acc_line_buffer.is_empty()
@@ -797,7 +817,7 @@ class MachineCom(object):
         return True
 
     def _openSerial(self):
-        self._grbl_version = None
+        self.grbl = None
         self._grbl_settings = dict()
 
         def default(_, port, baudrate, read_timeout):
@@ -976,61 +996,21 @@ class MachineCom(object):
         self.sendCommand("M9")
 
     def _handle_status_report(self, line):
-        match = None
-        if self._grbl_version == self.GRBL_VERSION_20170919_22270fa:
-            match = self.pattern_grbl_status_legacy.match(line)
-        else:
-            match = self.pattern_grbl_status.match(line)
-        if not match:
-            self._logger.warn(
-                "GRBL status string did not match pattern. GRBL version: %s, status string: %s",
-                self._grbl_version,
-                line,
-            )
-            return
-
-        groups = match.groupdict()
-        self._grbl_state = groups["status"]
-
-        #  limit (end stops) not supported in legacy GRBL version
-        if "limit_x" in groups:
-            self.limit_x = time.time() if groups["limit_x"] else 0
-        if "limit_y" in groups:
-            self.limit_y = time.time() if groups["limit_y"] else 0
-
-        # grbl_character_buffer
-        if "rx" in groups:
-            rx = -1
-            try:
-                rx = int(groups["rx"])
-            except ValueError:
-                self._logger.error(
-                    "Can't convert RX value from GRBL status to int. RX value: %s",
-                    groups["rx"],
-                )
-            if not rx == self._grbl_rx_status:
-                self._grbl_rx_status = rx
-                self._grbl_rx_last_change = time.time()
+        status = self._grbl.parseStatus(line)
+        self._logger.info("##### parsed Status %s", status)
 
         # positions
-        try:
-            self.MPosX = float(groups["mpos_x"])
-            self.MPosY = float(groups["mpos_y"])
-            wx = float(groups["pos_x"])
-            wy = float(groups["pos_y"])
-            self._callback.on_comm_pos_update([self.MPosX, self.MPosY, 0], [wx, wy, 0])
-        except:
-            self._logger.exception(
-                "Exception while handling position updates from GRBL."
-            )
+        mpos = self._grbl.state["mpos"]
+        wpos = self._grbl.state["wpos"]
+        self._callback.on_comm_pos_update(mpos, wpos)
 
         # laser
         self._handle_laser_intensity_for_analytics(
-            groups["laser_state"], groups["laser_intensity"]
+            status["laserActive"], status["laserIntensity"]
         )
 
         # unintended pause....
-        if self._grbl_state == self.GRBL_STATE_QUEUE:
+        if self._grbl.state["status"] == self.GRBL_STATE_QUEUE:
             if time.time() - self._pause_delay_time > 0.3:
                 if not self.isPaused():
                     if (
@@ -1040,7 +1020,7 @@ class MachineCom(object):
                     ):
                         self._logger.warn(
                             "_handle_status_report() Override pause since we got status '%s' from grbl. (_flush_command_ts: %s, _sync_command_ts: %s)",
-                            self._grbl_state,
+                            self._grbl.state["status"],
                             self._flush_command_ts,
                             self._sync_command_ts,
                             analytics=True,
@@ -1054,7 +1034,7 @@ class MachineCom(object):
                     else:
                         self._logger.warn(
                             "_handle_status_report() Pausing since we got status '%s' from grbl. (_flush_command_ts: %s, _sync_command_ts: %s)",
-                            self._grbl_state,
+                            self._grbl.state["status"],
                             self._flush_command_ts,
                             self._sync_command_ts,
                             terminal_dump=True,
@@ -1062,14 +1042,14 @@ class MachineCom(object):
                         )
                         self.setPause(True, send_cmd=False, trigger="GRBL_QUEUE")
         elif (
-            self._grbl_state == self.GRBL_STATE_RUN
-            or self._grbl_state == self.GRBL_STATE_IDLE
+            self._grbl.state["status"] == self.GRBL_STATE_RUN
+            or self._grbl.state["status"] == self.GRBL_STATE_IDLE
         ):
             if time.time() - self._pause_delay_time > 0.3:
                 if self.isPaused():
                     self._logger.warn(
                         "_handle_status_report() Unpausing since we got status '%s' from grbl. (_flush_command_ts: %s, _sync_command_ts: %s)",
-                        self._grbl_state,
+                        self._grbl.state["status"],
                         self._flush_command_ts,
                         self._sync_command_ts,
                         analytics=True,
@@ -1227,33 +1207,24 @@ class MachineCom(object):
             pass
 
     def _handle_startup_message(self, line):
-        match = self.pattern_grbl_version.match(line)
+        match = GrblInterface.RE_WELCOME.match(line)
+        # match = self.pattern_grbl_version.match(line)
         if match:
-            self._grbl_version = match.group("version")
+            version = match.group("version")
+            self._grbl = GrblInterface(version)
         else:
             self._logger.error(
                 "Unable to parse GRBL version from startup message: %s", line
             )
 
-        # TEST corexy RP2040
-        self._grbl_version = MachineCom.GRBL_DEFAULT_VERSION
-
-        self.grbl_feat_rescue_from_home = (
-            self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME
-        )
-        self.grbl_feat_checksums = (
-            self._grbl_version not in self.GRBL_FEAT_BLOCK_CHECKSUMS
-        )
-        self.grbl_feat_checksums = False
-
         self.reset_grbl_auto_update_config()
 
         self._logger.info(
             "GRBL version: %s, rescue_from_home: %s, auto_update: %s, checksums: %s",
-            self._grbl_version,
-            self.grbl_feat_rescue_from_home,
+            self._grbl.version,
+            self._grbl.grbl["supportsRescueFromHome"],
             self.grbl_auto_update_enabled,
-            self.grbl_feat_checksums,
+            self._grbl.grbl["supportsChecksums"],
         )
 
         if self.DEBUG_PRODUCE_CHECKSUM_ERRORS:
@@ -1654,7 +1625,7 @@ class MachineCom(object):
             self._start_sending_thread()
 
         payload = dict(
-            grbl_version=self._grbl_version, port=self._port, baudrate=self._baudrate
+            grbl_version=self._grbl.version, port=self._port, baudrate=self._baudrate
         )
         eventManager().fire(OctoPrintEvents.CONNECTED, payload)
 
@@ -1761,7 +1732,7 @@ class MachineCom(object):
             self._logger.warn(msg, terminal_as_comm=True)
             return
 
-        from_version = self._grbl_version
+        from_version = self._grbl.version
 
         grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER, grbl_file)
         if not os.path.isfile(grbl_path):
@@ -1910,7 +1881,7 @@ class MachineCom(object):
             and self._laserCutterProfile["grbl"]["auto_update_version"] is not None
         ):
             if (
-                self._grbl_version
+                self._grbl.version
                 == self._laserCutterProfile["grbl"]["auto_update_version"]
             ):
                 self._logger.info(
@@ -1931,7 +1902,7 @@ class MachineCom(object):
                     "GRBL auto update still set: auto_update_file: %s, auto_update_version: %s, current grbl version: %s",
                     self._laserCutterProfile["grbl"]["auto_update_file"],
                     self._laserCutterProfile["grbl"]["auto_update_version"],
-                    self._grbl_version,
+                    self._grbl.version,
                 )
 
     def rescue_from_home_pos(self, retry=0):
@@ -1947,26 +1918,28 @@ class MachineCom(object):
         Requires GRBL v '0.9g_20180223_61638c5' because we need limit data reported.
         """
         if retry <= 0:
-            if self._grbl_version is None:
+            if self._grbl is None:
                 self._logger.warn("rescue_from_home_pos() No GRBL version yet.")
                 return
 
-            if not self.grbl_feat_rescue_from_home:
+            if not self._grbl.grbl["supportsRescueFromHome"]:
                 self._logger.info(
                     "rescue_from_home_pos() Rescue from home not supported by current GRBL version. GRBL version: %s",
-                    self._grbl_version,
+                    self._grbl.version,
                 )
                 return
             else:
                 self._logger.info(
-                    "rescue_from_home_pos() GRBL version: %s", self._grbl_version
+                    "rescue_from_home_pos() GRBL version: %s", self._grbl.version
                 )
 
         elif retry > 3:
             params = dict(
-                x="X" if self.limit_x > 0 else "",
-                y="Y" if self.limit_y > 0 else "",
-                none="None" if self.limit_x == 0 and self.limit_y == 0 else "",
+                x="X" if self._grbl.state["limitX"] > 0 else "",
+                y="Y" if self._grbl.state["limitY"] > 0 else "",
+                none="None"
+                if self._grbl.state["limitX"] == 0 and self._grbl.state["limitY"] == 0
+                else "",
                 retries=retry,
             )
             msg = (
@@ -1987,13 +1960,13 @@ class MachineCom(object):
 
         self._wait_for_limits_status_update(force=True)
 
-        if self.limit_x < 0 or self.limit_y < 0:
+        if self._grbl.state["limitX"] < 0 or self._grbl.state["limitY"] < 0:
             self._logger.warn(
                 "rescue_from_home_pos() Can't get status with limit data. Returning."
             )
             return
 
-        if self.limit_x == 0 and self.limit_y == 0:
+        if self._grbl.state["limitX"] == 0 and self._grbl.state["limitY"] == 0:
             self._logger.debug(
                 "rescue_from_home_pos() Not in home pos. nothing to rescue."
             )
@@ -2008,7 +1981,8 @@ class MachineCom(object):
         self.sendCommand("G91")
         self.sendCommand(
             "G1X{x}Y{y}F500S0".format(
-                x="-5" if self.limit_x > 0 else "0", y="-5" if self.limit_y > 0 else "0"
+                x="-5" if self._grbl.state["limitX"] > 0 else "0",
+                y="-5" if self._grbl.state["limitY"] > 0 else "0",
             )
         )
         self.sendCommand("G90")
@@ -2016,28 +1990,30 @@ class MachineCom(object):
         time.sleep(1)  # turns out we need this :-/
 
         self._wait_for_limits_status_update(force=True)
-        if self.limit_x > 0 or self.limit_y > 0:
+        if self._grbl.state["limitX"] > 0 or self._grbl.state["limitY"] > 0:
             retry += 1
             self.rescue_from_home_pos(retry=retry)
 
     def _wait_for_limits_status_update(self, force=False):
         if force:
-            self.limit_x = -1
-            self.limit_y = -1
-        if self.limit_x < 0 or self.limit_y < 0:
+            self._grbl.state["limitX"] = -1
+            self._grbl.state["limitY"] = -1
+        if self._grbl.state["limitX"] < 0 or self._grbl.state["limitY"] < 0:
             ts = time.time()
             self._logger.debug(
                 "_wait_for_limits_status_update() No limit data yet. Requesting status update from GRBL..."
             )
             self._sendCommand(self.COMMAND_STATUS)
             i = 0
-            while i < 200 and (self.limit_x < 0 or self.limit_y < 0):
+            while i < 200 and (
+                self._grbl.state["limitX"] < 0 or self._grbl.state["limitY"] < 0
+            ):
                 i += 1
                 time.sleep(0.01)
             self._logger.debug(
                 "_wait_for_limits_status_update() Limits: limit_x=%s, limit_y=%s (took %.3fms)",
-                self.limit_x,
-                self.limit_y,
+                self._grbl.state["limitX"],
+                self._grbl.state["limitY"],
                 time.time() - ts,
             )
 
@@ -2286,7 +2262,7 @@ class MachineCom(object):
                 if cmd_obj is None or len(cmd_obj) <= 0:
                     return
 
-                if self.grbl_feat_checksums:
+                if self._grbl.grbl["supportsChecksums"]:
                     cmd_obj["cmd"] = self._add_checksum_to_cmd(cmd_obj["cmd"])
 
             if cmd_obj.get("cmd", None) is not None:
@@ -2360,7 +2336,7 @@ class MachineCom(object):
                     self.flash_grbl(file)
             elif specialcmd.startswith("/verify_grbl"):
                 # if no file given: verify to currently installed
-                file = self.get_grbl_file_name(self._grbl_version)
+                file = self.get_grbl_file_name(self._grbl.version)
                 if len(tokens) > 1:
                     file = tokens[1]
                 if file in (None, "?", "-h", "--help"):
@@ -2747,7 +2723,7 @@ class MachineCom(object):
             )
 
     def getGrblVersion(self):
-        return self._grbl_version
+        return self._grbl.version
 
     def _get_printing_file_state(self):
         file_state = {
@@ -3202,7 +3178,7 @@ def serialList():
 
 
 def baudrateList():
-    ret = [250000, 230400, 115200, 57600, 38400, 19200, 9600]
+    ret = [921600, 250000, 230400, 115200, 57600, 38400, 19200, 9600]
     prev = settings().getInt(["serial", "baudrate"])
     if prev in ret:
         ret.remove(prev)
