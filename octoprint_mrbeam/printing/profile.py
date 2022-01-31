@@ -247,7 +247,8 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return PrinterProfileManager.get_current_or_default(self)
 
     def exists(self, identifier):
-        self._logger.warning("############## %s", identifier)
+        if identifier is None:
+            return False
 
         # if the regex matches and there is no profile it will use the default and change the id and model
         if identifier in LASER_PROFILE_IDENTIFIERS or re.match(
