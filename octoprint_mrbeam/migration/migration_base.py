@@ -55,7 +55,7 @@ class MigrationBaseClass:
         if self.state != MIGRATION_STATE.error:
             self.state = state
 
-    def exec_command(self, command):
+    def exec_cmd(self, command):
         if not exec_cmd(command):
             self._setState(MIGRATION_STATE.error)
 
