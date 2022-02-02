@@ -2,7 +2,7 @@
 import abc, future
 from abc import abstractmethod
 
-from octoprint_mrbeam import exec_cmd
+from octoprint_mrbeam.util.cmd_exec import exec_cmd
 
 MIGRATE_NETCONNECTD = "0.10.1-hotfix"
 
