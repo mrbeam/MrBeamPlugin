@@ -1,5 +1,5 @@
 # TODO Baseclass
-import abc, future
+import abc, six
 from abc import abstractmethod
 
 from octoprint_mrbeam.util.cmd_exec import exec_cmd
@@ -16,8 +16,8 @@ class MIGRATION_STATE(enumerate):
     error = -1
 
 
-@future.utils.with_metaclass(abc.ABCMeta)
-class MigrationBaseClass(object):
+@six.add_metaclass(abc.ABCMeta)
+class MigrationBaseClass:
     def __init__(self, plugin, version):
         self.plugin = plugin
         self.version = version

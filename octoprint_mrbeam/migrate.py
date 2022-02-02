@@ -17,7 +17,7 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 from octoprint_mrbeam.__version import __version__
 from octoprint_mrbeam.materials import materials
-from migration import *
+from octoprint_mrbeam.migration.migration_0_10_1 import Migrate_0_10_1
 
 
 def migrate(plugin):
