@@ -2,6 +2,7 @@
 import abc, six
 from abc import abstractmethod
 
+from octoprint_mrbeam import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd
 
 MIGRATE_NETCONNECTD = "0.10.1-hotfix"
@@ -22,6 +23,9 @@ class MigrationBaseClass:
         self.plugin = plugin
         self.version = version
         self.state = MIGRATION_STATE.init
+        self._logger = mrb_logger(
+            "octoprint.plugins.mrbeam.migrate." + self.__class__.__name__
+        )
         beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
 
     @abc.abstractmethod
