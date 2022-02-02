@@ -8,6 +8,7 @@ from datetime import datetime
 from distutils.version import LooseVersion, StrictVersion
 
 from octoprint_mrbeam import IS_X86
+from octoprint_mrbeam.migration.migration_base import MIGRATE_NETCONNECTD
 from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
@@ -16,6 +17,7 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 from octoprint_mrbeam.__version import __version__
 from octoprint_mrbeam.materials import materials
+from migration import *
 
 
 def migrate(plugin):
@@ -253,6 +255,13 @@ class Migration(object):
                 # TODO check filename of migration folder (oderd by version number) if name part matches current MrBeamPlugin version -> load (create object run migration)
                 # if self.version_previous is None or self._compare_versions(self.version_previous, migrationbase.MIGRATE_NETCONNECTD, equal_ok=False):
                 # TODO create object of migrate_0.10.3 and run run()
+                if self.version_previous is None or self._compare_versions(
+                    self.version_previous,
+                    MIGRATE_NETCONNECTD,
+                    equal_ok=False,
+                ):
+                    migrate_0_10_3 = Migrate_0_10_1(self.plugin)
+                    migrate_0_10_3.run()
 
                 # migrations end
 
