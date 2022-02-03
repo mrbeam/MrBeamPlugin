@@ -49,7 +49,7 @@ class MigrationBaseClass:
             if self.state != MIGRATION_STATE.migrationDone:
                 self.rollback()
         except Exception as e:
-            self._logger.exception("exception during migration: " + e)
+            self._logger.exception("exception during migration: {}".format(e))
             self.rollback()
 
     def rollback(self):
