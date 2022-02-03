@@ -42,9 +42,12 @@ class MigrationBaseClass:
     def run(self):
         self._setState(MIGRATION_STATE.migrate)
         self._logger.info("start migration of " + self.__class__.__name__)
-        self._run()
-        self._setState(MIGRATION_STATE.migrationDone)
-        self._logger.info("end migration of " + self.__class__.__name__)
+        try:
+            self._run()
+            self._setState(MIGRATION_STATE.migrationDone)
+            self._logger.info("end migration of " + self.__class__.__name__)
+        except:
+            self.rollback()
 
     def rollback(self):
         self._setState(MIGRATION_STATE.rollback)
@@ -54,7 +57,10 @@ class MigrationBaseClass:
         self._logger.info("end rollback " + self.__class__.__name__)
 
     def _setState(self, state):
-        if self.state != MIGRATION_STATE.error:
+        if self.state != MIGRATION_STATE.error or self.state in [
+            MIGRATION_STATE.rollback,
+            MIGRATION_STATE.rollbackDone,
+        ]:
             self.state = state
 
     def exec_cmd(self, command):

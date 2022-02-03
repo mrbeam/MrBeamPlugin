@@ -46,4 +46,6 @@ class Migrate_0_10_1(MigrationBaseClass):
         super(Migrate_0_10_1, self)._run()
 
     def _rollback(self):
+        self._logger.debug("restart netconnectd service")
+        self.exec_cmd("sudo service netconnectd restart")
         super(Migrate_0_10_1, self)._rollback()
