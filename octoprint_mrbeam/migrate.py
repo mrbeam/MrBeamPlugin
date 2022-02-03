@@ -260,8 +260,7 @@ class Migration(object):
                         MIGRATE_NETCONNECTD,
                         equal_ok=False,
                     )
-                    and BEAMOS_LEGACY_DATE < self.beamos_date
-                ):
+                ) and BEAMOS_LEGACY_DATE < self.beamos_date:
                     migrate_0_10_3 = Migrate_0_10_1(self.plugin)
                     migrate_0_10_3.run()
 
