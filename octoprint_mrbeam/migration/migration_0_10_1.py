@@ -40,6 +40,9 @@ class Migrate_0_10_1(MigrationBaseClass):
             dst = "/etc/logrotate.d/" + logrotate
             self.exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
 
+        self._logger.debug("restart of logrotate so changed config will take affect")
+        self.exec_cmd("sudo logrotate /etc/logrotate.conf")
+
         self._logger.debug("restart netconnectd service")
         self.exec_cmd("sudo service netconnectd restart")
         # make sure what happens with <.log.x> files => these are not on the new image as logrotate is not enabled there
