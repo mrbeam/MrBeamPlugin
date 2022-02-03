@@ -253,12 +253,14 @@ class Migration(object):
                     self.fix_octoprint_prerelease_setting()
 
                 # TODO check filename of migration folder (oderd by version number) if name part matches current MrBeamPlugin version -> load (create object run migration)
-                # if self.version_previous is None or self._compare_versions(self.version_previous, migrationbase.MIGRATE_NETCONNECTD, equal_ok=False):
-                # TODO create object of migrate_0.10.3 and run run()
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
-                    MIGRATE_NETCONNECTD,
-                    equal_ok=False,
+                if (
+                    self.version_previous is None
+                    or self._compare_versions(
+                        self.version_previous,
+                        MIGRATE_NETCONNECTD,
+                        equal_ok=False,
+                    )
+                    and BEAMOS_LEGACY_DATE < self.beamos_date
                 ):
                     migrate_0_10_3 = Migrate_0_10_1(self.plugin)
                     migrate_0_10_3.run()
