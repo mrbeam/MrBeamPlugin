@@ -46,12 +46,15 @@ class MigrationBaseClass:
             self._run()
             self._setState(MIGRATION_STATE.migrationDone)
             self._logger.info("end migration of " + self.__class__.__name__)
-        except:
+            if self.state != MIGRATION_STATE.migrationDone:
+                self.rollback()
+        except Exception as e:
+            self._logger.exception("exception during migration", e)
             self.rollback()
 
     def rollback(self):
         self._setState(MIGRATION_STATE.rollback)
-        self._logger.info("start rollback " + self.__class__.__name__)
+        self._logger.warn("start rollback " + self.__class__.__name__)
         self._rollback()
         self._setState(MIGRATION_STATE.rollbackDone)
         self._logger.info("end rollback " + self.__class__.__name__)
@@ -66,6 +69,7 @@ class MigrationBaseClass:
     def exec_cmd(self, command):
         if not exec_cmd(command):
             self._setState(MIGRATION_STATE.error)
+            self._logger.error("error during migration for cmd:", command)
 
 
 # TODO build guide in confluence
