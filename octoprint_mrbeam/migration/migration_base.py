@@ -19,6 +19,8 @@ class MIGRATION_STATE(enumerate):
 
 @six.add_metaclass(abc.ABCMeta)
 class MigrationBaseClass:
+    MIGRATE_FILES_FOLDER = "files/migrate/"
+
     def __init__(self, plugin, version):
         self.plugin = plugin
         self.version = version

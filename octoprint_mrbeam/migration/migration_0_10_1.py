@@ -6,6 +6,8 @@ from octoprint_mrbeam.migration.migration_base import (
 
 
 class Migrate_0_10_1(MigrationBaseClass):
+    MIGRATE_LOGROTATE_FOLDER = "files/migrate_logrotate/"
+
     def __init__(self, plugin):
         super(Migrate_0_10_1, self).__init__(plugin, version="0.10.1-hotfix")
 
@@ -33,7 +35,7 @@ class Migrate_0_10_1(MigrationBaseClass):
         for logrotate in logrotates:
             self._logger.debug("enable logrotate of " + logrotate)
             src = os.path.join(
-                __package_path__, self.MIGRATE_FILES_FOLDER, logrotate + ".logrotate"
+                __package_path__, self.MIGRATE_LOGROTATE_FOLDER, logrotate
             )
             dst = "/etc/logrotate.d/" + logrotate
             self.exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
