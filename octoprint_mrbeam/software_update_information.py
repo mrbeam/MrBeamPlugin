@@ -309,9 +309,7 @@ def _get_package_description(
     if "{tier}" in branch_default:
         branch_default = branch_default.format(tier=get_tier_by_id(tier))
     if prerelease_channel and "{tier}" in prerelease_channel:
-        kwargs.update(
-            prerelease_channel=prerelease_channel.format(tier=get_tier_by_id(tier))
-        )
+        kwargs.update(prerelease_channel=prerelease_channel.format(tier=get_tier_by_id(tier)))
     if tier in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ALPHA):
         # adds pip upgrade flag in the develop tier so it will do a upgrade even without a version bump
         kwargs.update(pip_upgrade_flag=True)
