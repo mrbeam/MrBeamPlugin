@@ -6,6 +6,4 @@
     missingok
     notifempty
     copytruncate
-    dateext
-    dateformat %Y-%m-%d
 }
