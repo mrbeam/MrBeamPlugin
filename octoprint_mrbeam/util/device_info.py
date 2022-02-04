@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import os
 import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
@@ -86,7 +87,7 @@ class DeviceInfo(object):
     def get_production_date(self):
         return self._device_data.get(self.KEY_PRODUCTION_DATE, None)
 
-    def get_beamos_version(self):
+    def get_beamos_date(self):
         """Expect the beamos version to be formatted as TIER-YYYY-MM-DD"""
         from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 
@@ -100,6 +101,16 @@ class DeviceInfo(object):
             return match.group(1), date
         else:
             return None, BEAMOS_LEGACY_DATE
+
+    def get_beamos_version(self):
+        beamos_version = None
+        # TODO get beamos version of legacy and buster image
+        path_to_beamos_version = os.path.join("/etc/beamos_version")
+        if os.path.exists(path_to_beamos_version):
+            with open(path_to_beamos_version) as f:
+                self.beamos_version = f.read()
+
+        return beamos_version
 
     def _read_file(self):
         try:

@@ -73,14 +73,7 @@ class Migration(object):
         self.suppress_migrations = (
             self.plugin._settings.get(["dev", "suppress_migrations"]) or IS_X86
         )
-        beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
-
-        # TODO get beamos version of legacy and buster image
-        if os.path.exists("/etc/beamos_version"):
-            with open("/etc/beamos_version") as f:
-                self.beamos_version = f.read()
-        else:
-            self.beamos_version = None
+        beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_date()
 
     def run(self):
         try:

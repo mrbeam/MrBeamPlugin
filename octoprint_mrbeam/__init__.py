@@ -206,7 +206,7 @@ class MrBeamPlugin(
         self.start_time_ntp_timer()
 
         # do os health care
-        beamos_tier, beamos_date = self._device_info.get_beamos_version()
+        beamos_tier, beamos_date = self._device_info.get_beamos_date()
         if beamos_date < BEAMOS_LEGACY_DATE:
             # Only Trigger for Jessie images
             os_health_care(self)

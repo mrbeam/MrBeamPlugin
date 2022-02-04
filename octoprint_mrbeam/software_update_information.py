@@ -41,7 +41,7 @@ def get_update_information(plugin):
     result = dict()
 
     tier = plugin._settings.get(["dev", "software_tier"])
-    beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
+    beamos_tier, beamos_date = plugin._device_info.get_beamos_date()
     _logger.info("SoftwareUpdate using tier: %s", tier)
 
     # The increased number of separate virtualenv for iobeam, netconnectd, ledstrips
