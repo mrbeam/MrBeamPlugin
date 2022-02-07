@@ -4,14 +4,21 @@ from __future__ import absolute_import, division, print_function
 import base64
 import json
 import unittest
+import requests_mock
 from copy import deepcopy
 from datetime import date, datetime
-
-import requests_mock
+from mock import mock_open
 from ddt import ddt
+from mock import patch
+from octoprint.events import EventManager
 
-
-from octoprint_mrbeam import deviceInfo, IS_X86
+from octoprint_mrbeam import (
+    deviceInfo,
+    IS_X86,
+    mrb_logger,
+    user_notification_system,
+    MrBeamPlugin,
+)
 from octoprint_mrbeam.software_update_information import (
     get_config_of_tag,
     _set_info_from_cloud_config,
@@ -21,15 +28,21 @@ from octoprint_mrbeam.software_update_information import (
     SW_UPDATE_TIER_PROD,
     SW_UPDATE_TIER_BETA,
     get_tier_by_id,
+    get_update_information,
+    SW_UPDATE_INFO_FILE_NAME,
 )
+from octoprint_mrbeam.user_notification_system import UserNotificationSystem
 from octoprint_mrbeam.util import dict_merge
+from octoprint_mrbeam.util.device_info import DeviceInfo
+
+TMP_BASE_FOLDER_PATH = "/tmp/cloud_config_test/"
 
 
 class SettingsDummy(object):
     tier = None
 
     def getBaseFolder(self, args, **kwargs):
-        return "/tmp/cloud_config_test/"
+        return TMP_BASE_FOLDER_PATH
 
     def get(self, list):
         return self.tier
@@ -37,9 +50,15 @@ class SettingsDummy(object):
     def set(self, tier):
         self.tier = tier
 
+    def settings(self, init=False, basedir=None, configfile=None):
+        return None
+
 
 class DummyConnectifityChecker:
     online = True
+
+    def check_immediately(self):
+        return self.online
 
 
 class PluginInfoDummy:
@@ -52,6 +71,9 @@ class PluginManagerDummy:
     version = "dummy"
     implementation = PluginInfoDummy()
 
+    def send_plugin_message(self, *args):
+        return True
+
     def get_plugin_info(self, module_id):
         return self
 
@@ -63,10 +85,23 @@ class PluginManagerDummy:
     # sw_update_plugin._version_cache_dirty = True
 
 
-class MrBeamPluginDummy:
+class MrBeamPluginDummy(MrBeamPlugin):
     _settings = SettingsDummy()
     _plugin_manager = PluginManagerDummy()
     _device_info = deviceInfo(use_dummy_values=IS_X86)
+    _connectivity_checker = DummyConnectifityChecker()
+    _plugin_version = "dummy"
+    _event_bus = EventManager()
+
+    @patch("octoprint.settings.settings")
+    def __init__(self, settings_mock):
+        # mocker.patch("octoprint.settings.settings", return_value=True)
+        settings_mock.return_value = None
+        # with mock.patch('octoprint.settings') as settings_mock:
+        # sett
+        self._logger = mrb_logger("test.Plugindummy")
+        self.user_notification_system = user_notification_system(self)
+        # super(MrBeamPluginDummy, self).__init__()
 
 
 target_octoprint_config = {
@@ -433,143 +468,269 @@ class SettingsTestCase(unittest.TestCase):
     def setUp(self):
         self.plugin = MrBeamPluginDummy()
 
-    def test_server_not_reachable(self):
+    @patch.object(
+        UserNotificationSystem,
+        "show_notifications",
+    )
+    @patch.object(
+        UserNotificationSystem,
+        "get_notification",
+    )
+    def test_server_not_reachable(self, show_notifications_mock, get_notification_mock):
+        with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
+            get_notification_mock.return_value = None
+            plugin = self.plugin
+
+            with requests_mock.Mocker() as rm:
+                rm.get(
+                    "https://api.github.com/repos/mrbeam/beamos_config/tags",
+                    json={"test": "test"},
+                    status_code=404,
+                )
+                rm.get(
+                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=vNone",
+                    status_code=404,
+                )
+                update_config = get_update_information(plugin)
+                assert update_config == {
+                    "findmymrbeam": {
+                        "displayName": "OctoPrint-FindMyMrBeam offline2",
+                        "displayVersion": "dummy",
+                        "pip": "",
+                        "repo": "",
+                        "type": "github_commit",
+                        "user": "",
+                    },
+                    "mrbeam": {
+                        "displayName": " MrBeam Plugin offline2",
+                        "displayVersion": "dummy",
+                        "pip": "",
+                        "repo": "",
+                        "type": "github_commit",
+                        "user": "",
+                    },
+                    "mrbeamdoc": {
+                        "displayName": "Mr Beam Documentation offline2",
+                        "displayVersion": "dummy",
+                        "pip": "",
+                        "repo": "",
+                        "type": "github_commit",
+                        "user": "",
+                    },
+                    "netconnectd": {
+                        "displayName": "OctoPrint-Netconnectd Plugin offline2",
+                        "displayVersion": "dummy",
+                        "pip": "",
+                        "repo": "",
+                        "type": "github_commit",
+                        "user": "",
+                    },
+                }
+        show_notifications_mock.assert_called_with(
+            notification_id="missing_updateinformation_info", replay=False
+        )
+        show_notifications_mock.assert_called_once()
+
+    @patch.object(DeviceInfo, "get_beamos_version")
+    def test_cloud_config_buster(self, device_info_mock):
+        beamos_date_buster = date(2021, 6, 11)
+        device_info_mock.return_value = "PROD", beamos_date_buster
         plugin = self.plugin
-        tier = "DEV"
-        beamos_date = date(2018, 1, 12)
-        with requests_mock.Mocker() as rm:
-            rm.get(
-                "https://api.github.com/repos/mrbeam/beamos_config/tags",
-                json={"test": "test"},
-                status_code=404,
-            )
-            rm.get(
-                "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=vNone",
-                status_code=404,
-            )
-            tag_of_github_repo = get_tag_of_github_repo("beamos_config")
-            assert tag_of_github_repo == None
-            cloud_config = get_config_of_tag(tag_of_github_repo)
-            assert cloud_config == None
-            self.plugin._settings.set(tier)
-            update_config = _set_info_from_cloud_config(
-                plugin, tier, beamos_date, cloud_config
-            )
-            assert update_config == None
+        with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
+            tiers = [
+                SW_UPDATE_TIER_DEV,
+                SW_UPDATE_TIER_ALPHA,
+                SW_UPDATE_TIER_BETA,
+                SW_UPDATE_TIER_PROD,
+            ]
+            # test for all tiers
+            for tier in tiers:
+                self.plugin._settings.set(tier)
+                update_config = get_update_information(plugin)
+                print("config {}".format(update_config))
+                assert (
+                    update_config["octoprint"]
+                    == target_octoprint_config[get_tier_by_id(tier)]
+                )
+                self.validate_mrbeam_module_config(
+                    update_config["mrbeam"], get_tier_by_id(tier), beamos_date_buster
+                )
+                self.validate_findmymrbeam_module_config(
+                    update_config["findmymrbeam"],
+                    get_tier_by_id(tier),
+                    beamos_date_buster,
+                )
+                self.validate_netconnect_module_config(
+                    update_config["netconnectd"],
+                    get_tier_by_id(tier),
+                    beamos_date_buster,
+                )
 
-    def test_cloud_confg_buster(self):
-        plugin = self.plugin
+    @patch.object(DeviceInfo, "get_beamos_version")
+    def test_cloud_confg_legacy(self, device_info_mock):
+        beamos_date_legacy = date(2018, 1, 12)
+        device_info_mock.return_value = "PROD", beamos_date_legacy
+        with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
+            plugin = self.plugin
 
-        beamos_date = date(2021, 6, 11)
-        tiers = [
-            SW_UPDATE_TIER_DEV,
-            SW_UPDATE_TIER_ALPHA,
-            SW_UPDATE_TIER_BETA,
-            SW_UPDATE_TIER_PROD,
-        ]
-        # test for all tiers
-        for tier in tiers:
-            cloud_config = get_config_of_tag(get_tag_of_github_repo("beamos_config"))
-            update_config = _set_info_from_cloud_config(
-                plugin, tier, beamos_date, cloud_config
-            )
-            print("config {}".format(update_config))
-            assert (
-                update_config["octoprint"]
-                == target_octoprint_config[get_tier_by_id(tier)]
-            )
-            self.validate_mrbeam_module_config(
-                update_config["mrbeam"], get_tier_by_id(tier), beamos_date
-            )
-            self.validate_findmymrbeam_module_config(
-                update_config["findmymrbeam"], get_tier_by_id(tier), beamos_date
-            )
-            self.validate_netconnect_module_config(
-                update_config["netconnectd"], get_tier_by_id(tier), beamos_date
-            )
-
-    def test_cloud_confg_legacy(self):
-        plugin = self.plugin
-
-        beamos_date = date(2018, 1, 12)
-        tiers = [
-            SW_UPDATE_TIER_DEV,
-            SW_UPDATE_TIER_ALPHA,
-            SW_UPDATE_TIER_BETA,
-            SW_UPDATE_TIER_PROD,
-        ]
-        # test for all tiers
-        for tier in tiers:
-            cloud_config = get_config_of_tag(get_tag_of_github_repo("beamos_config"))
-            update_config = _set_info_from_cloud_config(
-                plugin, tier, beamos_date, cloud_config
-            )
-            print("config {}".format(update_config))
-            assert (
-                update_config["octoprint"]
-                == target_octoprint_config[get_tier_by_id(tier)]
-            )
-            self.validate_mrbeam_module_config(
-                update_config["mrbeam"], get_tier_by_id(tier), beamos_date
-            )
-            self.validate_findmymrbeam_module_config(
-                update_config["findmymrbeam"], get_tier_by_id(tier), beamos_date
-            )
-            self.validate_netconnect_module_config(
-                update_config["netconnectd"], get_tier_by_id(tier), beamos_date
-            )
+            tiers = [
+                SW_UPDATE_TIER_DEV,
+                SW_UPDATE_TIER_ALPHA,
+                SW_UPDATE_TIER_BETA,
+                SW_UPDATE_TIER_PROD,
+            ]
+            # test for all tiers
+            for tier in tiers:
+                self.plugin._settings.set(tier)
+                update_config = get_update_information(plugin)
+                print("config {}".format(update_config))
+                assert (
+                    update_config["octoprint"]
+                    == target_octoprint_config[get_tier_by_id(tier)]
+                )
+                self.validate_mrbeam_module_config(
+                    update_config["mrbeam"], get_tier_by_id(tier), beamos_date_legacy
+                )
+                self.validate_findmymrbeam_module_config(
+                    update_config["findmymrbeam"],
+                    get_tier_by_id(tier),
+                    beamos_date_legacy,
+                )
+                self.validate_netconnect_module_config(
+                    update_config["netconnectd"],
+                    get_tier_by_id(tier),
+                    beamos_date_legacy,
+                )
 
     # TEST BUSTER [ALPHA; BETA; DEVELOP; STABLE]
-    def test_cloud_confg_buster_mock(self):
-        with requests_mock.Mocker() as rm:
-            rm.get(
-                "https://api.github.com/repos/mrbeam/beamos_config/tags",
-                status_code=200,
-                json=[
-                    {
-                        "name": "v0.0.2-mock",
-                    }
-                ],
-            )
-            rm.get(
-                "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
-                status_code=200,
-                json={"content": base64.urlsafe_b64encode(json.dumps(mock_config))},
-            )
-            plugin = self.plugin
+    @patch.object(DeviceInfo, "get_beamos_version")
+    def test_cloud_confg_buster_mock(self, device_info_mock):
+        beamos_date_buster = date(2021, 6, 11)
+        device_info_mock.return_value = "PROD", beamos_date_buster
+        with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
+            with requests_mock.Mocker() as rm:
+                rm.get(
+                    "https://api.github.com/repos/mrbeam/beamos_config/tags",
+                    status_code=200,
+                    json=[
+                        {
+                            "name": "v0.0.2-mock",
+                        }
+                    ],
+                )
+                rm.get(
+                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
+                    status_code=200,
+                    json={"content": base64.urlsafe_b64encode(json.dumps(mock_config))},
+                )
+                plugin = self.plugin
 
-            beamos_date = date(2021, 6, 11)
-            tiers = [
-                SW_UPDATE_TIER_DEV,
-                SW_UPDATE_TIER_ALPHA,
-                SW_UPDATE_TIER_BETA,
-                SW_UPDATE_TIER_PROD,
-            ]
-            # test for all tiers
-            for tier in tiers:
-                cloud_config = get_config_of_tag(
-                    get_tag_of_github_repo("beamos_config")
-                )
-                update_config = _set_info_from_cloud_config(
-                    plugin, tier, beamos_date, cloud_config
-                )
-                print("config {}".format(update_config))
-                assert (
-                    update_config["octoprint"]
-                    == target_octoprint_config[get_tier_by_id(tier)]
-                )
-                self.validate_mrbeam_module_config(
-                    update_config["mrbeam"], get_tier_by_id(tier), beamos_date
-                )
-                self.validate_findmymrbeam_module_config(
-                    update_config["findmymrbeam"], get_tier_by_id(tier), beamos_date
-                )
-                self.validate_netconnect_module_config(
-                    update_config["netconnectd"], get_tier_by_id(tier), beamos_date
-                )
+                tiers = [
+                    SW_UPDATE_TIER_DEV,
+                    SW_UPDATE_TIER_ALPHA,
+                    SW_UPDATE_TIER_BETA,
+                    SW_UPDATE_TIER_PROD,
+                ]
+                # test for all tiers
+                for tier in tiers:
+                    self.plugin._settings.set(tier)
+                    update_config = get_update_information(plugin)
+                    print("config {}".format(update_config))
+                    assert (
+                        update_config["octoprint"]
+                        == target_octoprint_config[get_tier_by_id(tier)]
+                    )
+                    self.validate_mrbeam_module_config(
+                        update_config["mrbeam"],
+                        get_tier_by_id(tier),
+                        beamos_date_buster,
+                    )
+                    self.validate_findmymrbeam_module_config(
+                        update_config["findmymrbeam"],
+                        get_tier_by_id(tier),
+                        beamos_date_buster,
+                    )
+                    self.validate_netconnect_module_config(
+                        update_config["netconnectd"],
+                        get_tier_by_id(tier),
+                        beamos_date_buster,
+                    )
+        mock_file.assert_called_with(
+            TMP_BASE_FOLDER_PATH + SW_UPDATE_INFO_FILE_NAME, "w"
+        )
 
     # TEST LEGACY [ALPHA; BETA; DEVELOP; STABLE]
-    def test_cloud_confg_legacy_mock(self):
+    @patch.object(DeviceInfo, "get_beamos_version")
+    def test_cloud_confg_legacy_mock(self, device_info_mock):
+        beamos_date_legacy = date(2018, 1, 12)
+        device_info_mock.return_value = "PROD", beamos_date_legacy
+        with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
+            with requests_mock.Mocker() as rm:
+                rm.get(
+                    "https://api.github.com/repos/mrbeam/beamos_config/tags",
+                    status_code=200,
+                    json=[
+                        {
+                            "name": "v0.0.2-mock",
+                        }
+                    ],
+                )
+                rm.get(
+                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
+                    status_code=200,
+                    json={"content": base64.urlsafe_b64encode(json.dumps(mock_config))},
+                )
+                plugin = self.plugin
+
+                tiers = [
+                    SW_UPDATE_TIER_DEV,
+                    SW_UPDATE_TIER_ALPHA,
+                    SW_UPDATE_TIER_BETA,
+                    SW_UPDATE_TIER_PROD,
+                ]
+                # test for all tiers
+                for tier in tiers:
+                    self.plugin._settings.set(tier)
+                    update_config = get_update_information(plugin)
+
+                    print("config {}".format(update_config))
+                    assert (
+                        update_config["octoprint"]
+                        == target_octoprint_config[get_tier_by_id(tier)]
+                    )
+                    self.validate_mrbeam_module_config(
+                        update_config["mrbeam"],
+                        get_tier_by_id(tier),
+                        beamos_date_legacy,
+                    )
+                    self.validate_findmymrbeam_module_config(
+                        update_config["findmymrbeam"],
+                        get_tier_by_id(tier),
+                        beamos_date_legacy,
+                    )
+                    self.validate_netconnect_module_config(
+                        update_config["netconnectd"],
+                        get_tier_by_id(tier),
+                        beamos_date_legacy,
+                    )
+        mock_file.assert_called_with(
+            TMP_BASE_FOLDER_PATH + SW_UPDATE_INFO_FILE_NAME, "w"
+        )
+
+    @patch.object(
+        UserNotificationSystem,
+        "show_notifications",
+    )
+    @patch.object(
+        UserNotificationSystem,
+        "get_notification",
+    )
+    def test_cloud_confg_fileerror(
+        self,
+        user_notification_system_show_mock,
+        user_notification_system_get_mock,
+    ):
+        user_notification_system_get_mock.return_value = None
         with requests_mock.Mocker() as rm:
             rm.get(
                 "https://api.github.com/repos/mrbeam/beamos_config/tags",
@@ -587,35 +748,13 @@ class SettingsTestCase(unittest.TestCase):
             )
             plugin = self.plugin
 
-            beamos_date = date(2018, 1, 12)
-            tiers = [
-                SW_UPDATE_TIER_DEV,
-                SW_UPDATE_TIER_ALPHA,
-                SW_UPDATE_TIER_BETA,
-                SW_UPDATE_TIER_PROD,
-            ]
-            # test for all tiers
-            for tier in tiers:
-                cloud_config = get_config_of_tag(
-                    get_tag_of_github_repo("beamos_config")
-                )
-                update_config = _set_info_from_cloud_config(
-                    plugin, tier, beamos_date, cloud_config
-                )
-                print("config {}".format(update_config))
-                assert (
-                    update_config["octoprint"]
-                    == target_octoprint_config[get_tier_by_id(tier)]
-                )
-                self.validate_mrbeam_module_config(
-                    update_config["mrbeam"], get_tier_by_id(tier), beamos_date
-                )
-                self.validate_findmymrbeam_module_config(
-                    update_config["findmymrbeam"], get_tier_by_id(tier), beamos_date
-                )
-                self.validate_netconnect_module_config(
-                    update_config["netconnectd"], get_tier_by_id(tier), beamos_date
-                )
+            update_config = get_update_information(plugin)
+
+            assert update_config == None
+        user_notification_system_show_mock.assert_called_with(
+            notification_id="write_error_update_info_file_err", replay=False
+        )
+        user_notification_system_show_mock.assert_called_once()
 
     def validate_mrbeam_module_config(self, update_config, tier, beamos_date):
         self.validate_module_config(
