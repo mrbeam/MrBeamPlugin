@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import os
 import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
-BEAMOS_PATTERN = re.compile(r"([A-Z]+)-([0-9]+-[0-9]+-[0-9]+)")
+BEAMOS_DATE_PATTERN = re.compile(r"([A-Z]+)-([0-9]+-[0-9]+-[0-9]+)")
+BEAMOS_VERSION_PATTERN = re.compile(r"([0-9]+.[0-9]+.[0-9]+\S*)")
 
 _instance = None
 
@@ -86,20 +88,39 @@ class DeviceInfo(object):
     def get_production_date(self):
         return self._device_data.get(self.KEY_PRODUCTION_DATE, None)
 
-    def get_beamos_version(self):
+    def get_beamos_date(self):
         """Expect the beamos version to be formatted as TIER-YYYY-MM-DD"""
         from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 
-        beamos_ver = self._device_data.get(self.KEY_OCTOPI, None)
-        if not beamos_ver:
+        beamos_date = self._device_data.get(self.KEY_OCTOPI, None)
+        if not beamos_date:
             return None, BEAMOS_LEGACY_DATE
-        match = BEAMOS_PATTERN.match(beamos_ver)
+        match = BEAMOS_DATE_PATTERN.match(beamos_date)
         if match:
             # date = datetime.date.fromisoformat(match.group(2)) # available in python3
             date = datetime.datetime.strptime(match.group(2), "%Y-%m-%d").date()
             return match.group(1), date
         else:
             return None, BEAMOS_LEGACY_DATE
+
+    def get_beamos_version(self):
+        path_to_beamos_version_buster = os.path.join("/etc/beamos_version")
+        path_to_beamos_version_legacy = os.path.join("/etc/octopi_version")
+        if os.path.exists(path_to_beamos_version_buster):
+            path_to_beamos_version = path_to_beamos_version_buster
+        elif os.path.exists(path_to_beamos_version_legacy):
+            path_to_beamos_version = path_to_beamos_version_legacy
+        else:
+            self._logger.error("can't find beamos version file")
+            return None
+        with open(path_to_beamos_version) as f:
+            beamos_version = f.read()
+        match = BEAMOS_VERSION_PATTERN.match(beamos_version)
+        if match:
+            return match.group(1)
+        else:
+            self._logger.debug("beamos_version invalid: " + beamos_version)
+            return None
 
     def _read_file(self):
         try:
