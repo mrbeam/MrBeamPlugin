@@ -1139,7 +1139,11 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         )
         self.plugin._settings.global_set(
             ["server", "onlineCheck", "host"],
-            "142.251.36.179",
+            "find.mr-beam.org",
+        )
+        self.plugin._settings.global_set(
+            ["server", "onlineCheck", "port"],
+            "80",
         )
         self.plugin._settings.save()
         self.restart = Restart.OCTOPRINT
