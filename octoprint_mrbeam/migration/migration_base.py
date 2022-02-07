@@ -1,4 +1,5 @@
 import abc, six
+import os
 from abc import abstractmethod
 from distutils.version import LooseVersion
 
@@ -11,17 +12,22 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd
 
 class MIGRATION_STATE(enumerate):
     init = 1
-    migrate = 2
-    migrationDone = 3
-    rollback = 4
-    rollbackDone = 5
+    migration_started = 2
+    migration_done = 3
+    rollback_started = 4
+    rollback_done = 5
     error = -1
+    rollback_error = -2
+
+
+class MigrationException(Exception):
+    pass
 
 
 @six.add_metaclass(abc.ABCMeta)
 class MigrationBaseClass:
     # folder of the files needed during migration
-    MIGRATE_FILES_FOLDER = "files/migrate/"
+    MIGRATE_FILES_FOLDER = os.path.join("files/migrate/")
 
     # lowest beamos version that should run the migration
     BEAMOS_VERSION_LOW = None
@@ -75,33 +81,34 @@ class MigrationBaseClass:
     def _run(self):
         """
         this class should be witten in the childclasses it will be executed as migration
-        @return:
+        @return: boolean if successfull
         """
-        pass
+        return True
 
     @abstractmethod
     def _rollback(self):
         """
         this class should be written in the childclasses it will be executed as rollback
-        @return:
+        @return: boolean if successfull
         """
-        pass
+        return True
 
     def run(self):
         """
         this will wrap the migration execution
         @return:
         """
-        self._setState(MIGRATION_STATE.migrate)
+        self._setState(MIGRATION_STATE.migration_started)
         self._logger.info("start migration of " + self.__class__.__name__)
         try:
             self._run()
-            self._setState(MIGRATION_STATE.migrationDone)
+            self._setState(MIGRATION_STATE.migration_done)
             self._logger.info("end migration of " + self.__class__.__name__)
-            if self._state != MIGRATION_STATE.migrationDone:
-                self.rollback()
+        except MigrationException as e:
+            self._setState(MIGRATION_STATE.error)
+            self._logger.error("error during migration {}".format(e))
         except Exception as e:
-            # self._logger.exception("exception during migration: {}".format(e))
+            self._logger.exception("exception during migration: {}".format(e))
             self.rollback()
 
     def rollback(self):
@@ -109,11 +116,16 @@ class MigrationBaseClass:
         this will wrap the rollback execution
         @return:
         """
-        self._setState(MIGRATION_STATE.rollback)
+        self._setState(MIGRATION_STATE.rollback_started)
         self._logger.warn("start rollback " + self.__class__.__name__)
-        self._rollback()
-        self._setState(MIGRATION_STATE.rollbackDone)
-        self._logger.info("end rollback " + self.__class__.__name__)
+
+        try:
+            self._rollback()
+            self._setState(MIGRATION_STATE.rollback_done)
+            self._logger.info("end rollback " + self.__class__.__name__)
+        except MigrationException as e:
+            self._setState(MIGRATION_STATE.rollback_error)
+            self._logger.exception("exception during rollback: {}".format(e))
 
     def _setState(self, state):
         """
@@ -122,8 +134,9 @@ class MigrationBaseClass:
         @return:
         """
         if self._state != MIGRATION_STATE.error or self._state in [
-            MIGRATION_STATE.rollback,
-            MIGRATION_STATE.rollbackDone,
+            MIGRATION_STATE.rollback_started,
+            MIGRATION_STATE.rollback_done,
+            MIGRATION_STATE.rollback_error,
         ]:
             self._state = state
 
@@ -138,5 +151,4 @@ class MigrationBaseClass:
         @return:
         """
         if not exec_cmd(command):
-            self._setState(MIGRATION_STATE.error)
-            self._logger.error("error during migration for cmd:", command)
+            raise MigrationException("error during migration for cmd:", command)

@@ -4,6 +4,9 @@ from octoprint_mrbeam.migration.migration_base import (
 
 
 class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
+    """
+    Migration for beamos versions 0.18.0 up to 0.18.1 to disable the the netconnectd debug mode
+    """
 
     BEAMOS_VERSION_LOW = "0.18.0"
     BEAMOS_VERSION_HIGH = "0.18.1"

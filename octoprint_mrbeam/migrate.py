@@ -7,10 +7,6 @@ from datetime import datetime
 from distutils.version import LooseVersion, StrictVersion
 
 from octoprint_mrbeam import IS_X86
-from octoprint_mrbeam.migration.migration_base import (
-    MIGRATION_STATE,
-    MigrationBaseClass,
-)
 from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
@@ -19,7 +15,11 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 from octoprint_mrbeam.__version import __version__
 from octoprint_mrbeam.materials import materials
-from migration import list_of_migrations
+from octoprint_mrbeam.migration import (
+    MIGRATION_STATE,
+    MigrationBaseClass,
+    list_of_migrations,
+)
 
 
 def migrate(plugin):
@@ -74,6 +74,7 @@ class Migration(object):
             self.plugin._settings.get(["dev", "suppress_migrations"]) or IS_X86
         )
         beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_date()
+        self.beamos_version = self.plugin._device_info.get_beamos_version()
 
     def run(self):
         try:
@@ -267,7 +268,7 @@ class Migration(object):
                     "No migration done because 'suppress_migrations' is set to true in settings."
                 )
             else:
-                self._logger.debug("No migration required.")
+                self._logger.debug("No migration required. - old migration")
 
             self._run_migration()
             self.save_current_version()
@@ -283,35 +284,41 @@ class Migration(object):
         """
         self._logger.debug("beamos_version: " + self.beamos_version)
 
-        list_of_migrations_available_to_run = [
+        list_of_migrations_obj_available_to_run = [
             MigrationBaseClass.return_obj(migration, self.plugin)
             for migration in list_of_migrations
             if migration.shouldrun(migration, self.beamos_version) is not None
         ]
-        self._logger.debug(list_of_migrations_available_to_run)
+        self._logger.debug(list_of_migrations_obj_available_to_run)
 
-        if not len(list_of_migrations_available_to_run):
-            self._logger.debug("no migration needed")
+        if not len(list_of_migrations_obj_available_to_run):
+            self._logger.debug("no migration needed - new migration")
             return
 
-        migration_executed_file = os.path.join(
+        migrations_json_file_path = os.path.join(
             self.plugin._settings.getBaseFolder("base"), "migrations.json"
         )
 
         # if file is not there create it
-        if not os.path.exists(migration_executed_file):
-            with open(migration_executed_file, "w") as f:
+        if not os.path.exists(migrations_json_file_path):
+            self._logger.info("create " + migrations_json_file_path + " file")
+            with open(migrations_json_file_path, "w") as f:
                 json.dump({}, f)
 
         try:
-            with open(migration_executed_file, "r") as f:
+            with open(migrations_json_file_path, "r") as f:
                 try:
                     migration_executed = json.load(f)
                 except ValueError:
-                    migration_executed = {}
+                    raise MigrationException(
+                        "couldn't read migrations json file content filepath:"
+                        + migrations_json_file_path
+                    )
 
-                list_of_migrations_to_run = list(list_of_migrations_available_to_run)
-                for migration in list_of_migrations_available_to_run:
+                list_of_migrations_to_run = list(
+                    list_of_migrations_obj_available_to_run
+                )
+                for migration in list_of_migrations_obj_available_to_run:
                     if migration.id in migration_executed:
                         if migration_executed[migration.id]:
                             list_of_migrations_to_run.remove(migration)
@@ -319,23 +326,23 @@ class Migration(object):
                             # migration failed, should stay in execution queue and the following too
                             break
 
-                # run migrations
                 for migration in list_of_migrations_to_run:
-                    # run migration
                     migration.run()
 
                     # if migration sucessfull append to executed successfull
-                    if migration.state == MIGRATION_STATE.migrationDone:
+                    if migration.state == MIGRATION_STATE.migration_done:
                         migration_executed[migration.id] = True
                     else:
                         # mark migration as failed and skipp the following ones
                         migration_executed[migration.id] = False
                         break
 
-            with open(migration_executed_file, "w") as f:
+            with open(migrations_json_file_path, "w") as f:
                 f.write(json.dumps(migration_executed))
         except IOError:
             self._logger.error("migration execution file IO error")
+        except MigrationException as e:
+            self._logger.exception("error during migration {}".format(e))
 
     def is_migration_required(self):
         self._logger.debug(
