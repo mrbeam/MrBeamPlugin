@@ -11,6 +11,10 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd
 
 
 class MIGRATION_STATE(enumerate):
+    """
+    enum of the different migraton states
+    """
+
     init = 1
     migration_started = 2
     migration_done = 3
@@ -21,11 +25,19 @@ class MIGRATION_STATE(enumerate):
 
 
 class MigrationException(Exception):
+    """
+    Exception that could occure during migration
+    """
+
     pass
 
 
 @six.add_metaclass(abc.ABCMeta)
 class MigrationBaseClass:
+    """
+    Base Class of a migration, this has to be extended in a childclass for each migration that should run
+    """
+
     # folder of the files needed during migration
     MIGRATE_FILES_FOLDER = os.path.join("files/migrate/")
 
@@ -35,6 +47,11 @@ class MigrationBaseClass:
     BEAMOS_VERSION_HIGH = None
 
     def __init__(self, plugin):
+        """
+        initalization of the class
+        Args:
+            plugin: Mr Beam Plugin
+        """
         self.plugin = plugin
         self._state = MIGRATION_STATE.init
         self._logger = mrb_logger(
@@ -46,7 +63,8 @@ class MigrationBaseClass:
     def id(self):
         """
         return the id of this migration step
-        @return:
+        Returns:
+            string: id of this migration step
         """
         # TODO return correct migration id regex from filename
         return None
@@ -54,10 +72,13 @@ class MigrationBaseClass:
     @staticmethod
     def shouldrun(cls, beamos_version):
         """
-        @param cls: Migrationclass
-        @param beamos_version: current beamos_version
-        @param plugin: Mr Beam Plugin instance
-        @return: boolean if this migration should run
+        Checks if this Miration should run
+        Args:
+            cls: Migrationclass
+            beamos_version: current beamos_version
+
+        Returns:
+            bool: True if this migration should run
         """
         if (
             LooseVersion(cls.BEAMOS_VERSION_LOW)
@@ -71,7 +92,13 @@ class MigrationBaseClass:
     @staticmethod
     def return_obj(cls, plugin):
         """
-        @return: new instance of the class
+        returns a instance of the Class
+        Args:
+            cls: class
+            plugin: Mr Beam Plugin
+
+        Returns:
+            objct: new instance of the class
         """
         new_instance = cls(plugin)
         return new_instance
@@ -81,7 +108,8 @@ class MigrationBaseClass:
     def _run(self):
         """
         this class should be witten in the childclasses it will be executed as migration
-        @return: boolean if successfull
+        Returns:
+            bool: True if successfull
         """
         return True
 
@@ -89,14 +117,17 @@ class MigrationBaseClass:
     def _rollback(self):
         """
         this class should be written in the childclasses it will be executed as rollback
-        @return: boolean if successfull
+        Returns:
+            bool: True if successfull
         """
         return True
 
     def run(self):
         """
         this will wrap the migration execution
-        @return:
+
+        Returns:
+            None
         """
         self._setState(MIGRATION_STATE.migration_started)
         self._logger.info("start migration of " + self.__class__.__name__)
@@ -114,7 +145,8 @@ class MigrationBaseClass:
     def rollback(self):
         """
         this will wrap the rollback execution
-        @return:
+        Returns:
+            None
         """
         self._setState(MIGRATION_STATE.rollback_started)
         self._logger.warn("start rollback " + self.__class__.__name__)
@@ -130,8 +162,11 @@ class MigrationBaseClass:
     def _setState(self, state):
         """
         sets the state of the migration
-        @param state: new state
-        @return:
+        Args:
+            state: new state
+
+        Returns:
+            None
         """
         if self._state != MIGRATION_STATE.error or self._state in [
             MIGRATION_STATE.rollback_started,
@@ -142,13 +177,24 @@ class MigrationBaseClass:
 
     @property
     def state(self):
+        """
+        returns state
+
+        Returns:
+            state
+        """
         return self._state
 
     def exec_cmd(self, command):
         """
         wrapper of exec_cmd to change to errorstate in case of a error
-        @param command:
-        @return:
+        Args:
+            command: command to be executed
+
+        Returns:
+            None
+        Raises:
+            MigrationException: if the execution of the command ended with a errorcode different to 0
         """
         if not exec_cmd(command):
             raise MigrationException("error during migration for cmd:", command)

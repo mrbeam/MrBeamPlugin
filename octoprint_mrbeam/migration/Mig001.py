@@ -12,13 +12,28 @@ class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
     BEAMOS_VERSION_HIGH = "0.18.1"
 
     def __init__(self, plugin):
+        """
+        initalization of the migration 001
+        Args:
+            plugin: Mr Beam Plugin
+        """
         super(Mig001NetconnectdDisableLogDebugLevel, self).__init__(plugin)
 
     @property
     def id(self):
+        """
+        return the id of the migration
+        Returns:
+            string: id of the migration
+        """
         return "001"
 
     def _run(self):
+        """
+        migration steps executet during migration
+        Returns:
+            None
+        """
         self._logger.debug("stop netconnectd service")
         self.exec_cmd("sudo service netconnectd stop")
 
@@ -34,6 +49,11 @@ class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
         super(Mig001NetconnectdDisableLogDebugLevel, self)._run()
 
     def _rollback(self):
+        """
+        rollback steps executet during rollback
+        Returns:
+            None
+        """
         self._logger.debug("restart netconnectd service")
         self.exec_cmd("sudo service netconnectd restart")
         super(Mig001NetconnectdDisableLogDebugLevel, self)._rollback()
