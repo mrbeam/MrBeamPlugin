@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 import base64
 import json
 import unittest
+import requests
 import requests_mock
 from copy import deepcopy
 from datetime import date, datetime
@@ -532,7 +533,8 @@ class SettingsTestCase(unittest.TestCase):
         show_notifications_mock.assert_called_once()
 
     @patch.object(DeviceInfo, "get_beamos_version")
-    def test_cloud_config_buster(self, device_info_mock):
+    def test_cloud_config_buster_online(self, device_info_mock):
+        self.check_if_githubapi_rate_limit_exceeded()
         beamos_date_buster = date(2021, 6, 11)
         device_info_mock.return_value = "PROD", beamos_date_buster
         plugin = self.plugin
@@ -567,7 +569,9 @@ class SettingsTestCase(unittest.TestCase):
                 )
 
     @patch.object(DeviceInfo, "get_beamos_version")
-    def test_cloud_confg_legacy(self, device_info_mock):
+    def test_cloud_confg_legacy_online(self, device_info_mock):
+        self.check_if_githubapi_rate_limit_exceeded()
+
         beamos_date_legacy = date(2018, 1, 12)
         device_info_mock.return_value = "PROD", beamos_date_legacy
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
@@ -805,3 +809,10 @@ class SettingsTestCase(unittest.TestCase):
         copy_target_config = self._set_tier_config(copy_target_config, tier)
 
         assert update_config == copy_target_config
+
+    def check_if_githubapi_rate_limit_exceeded(self):
+        r = requests.get(
+            "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json"
+        )
+        # check if rate limit exceeded
+        r.raise_for_status()
