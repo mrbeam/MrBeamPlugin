@@ -33,6 +33,7 @@ DEFAULT_REPO_BRANCH_ID = {
     SW_UPDATE_TIER_DEV: "develop",
 }
 MAJOR_VERSION_CLOUD_CONFIG = 0
+SW_UPDATE_INFO_FILE_NAME = "update_info.json"
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
 
@@ -299,17 +300,34 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
 
                 module = dict_merge(defaultsettings, module)
 
-                sw_update_config[module_id] = generate_config_of_module(
+                sw_update_config[module_id] = _generate_config_of_module(
                     module_id, module, defaultsettings, tier, beamos_date, plugin
                 )
 
         _logger.debug("sw_update_config {}".format(sw_update_config))
+
+        sw_update_file_path = os.path.join(
+            plugin._settings.getBaseFolder("base"), SW_UPDATE_INFO_FILE_NAME
+        )
+        try:
+            with open(sw_update_file_path, "w") as f:
+                f.write(json.dumps(sw_update_config))
+        except IOError:
+            plugin._logger.error("can't create update info file")
+            user_notification_system = plugin.user_notification_system
+            user_notification_system.show_notifications(
+                user_notification_system.get_notification(
+                    notification_id="write_error_update_info_file_err", replay=False
+                )
+            )
+            return None
+
         return sw_update_config
     else:
         return None
 
 
-def generate_config_of_module(
+def _generate_config_of_module(
     module_id, input_moduleconfig, defaultsettings, tier, beamos_date, plugin
 ):
     if tier in [
@@ -419,7 +437,7 @@ def generate_config_of_module(
             ].items():
                 input_moduleconfig["dependencies"][
                     dependencie_name
-                ] = generate_config_of_module(
+                ] = _generate_config_of_module(
                     dependencie_name,
                     dependencie_config,
                     defaultsettings,

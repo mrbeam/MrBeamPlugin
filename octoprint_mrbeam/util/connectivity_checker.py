@@ -21,7 +21,6 @@ class ConnectivityChecker(object):
         """
         @return: {boolean} is the device connected to the internet, returns None if the octoprint checker is disabled
         """
-        self._logger.error("this is a test online")
         with self._check_mutex:
             # if the octoprint connectivity checker is disabled return None instead of true
             if self._plugin._octoprint_connectivity_checker.enabled:
@@ -35,7 +34,6 @@ class ConnectivityChecker(object):
         checks immediatley for a internet connection and don't wait for the interval
         @return: {boolean} is the device connected to the internet
         """
-        self._logger.error("this is a test - check immediately")
         with self._check_mutex:
             # calls the octoprint check_immediately methode to run the checker immediately
             self._plugin._octoprint_connectivity_checker.check_immediately()
