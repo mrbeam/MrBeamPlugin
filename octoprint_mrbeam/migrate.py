@@ -326,6 +326,10 @@ class Migration(object):
                             # migration failed, should stay in execution queue and the following too
                             break
 
+                if not len(list_of_migrations_to_run):
+                    self._logger.debug("all migrations already done - new migration")
+                    return
+
                 for migration in list_of_migrations_to_run:
                     migration.run()
 
