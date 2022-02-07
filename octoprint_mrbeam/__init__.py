@@ -31,7 +31,8 @@ from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
-from .util.connectivity_checker import ConnectivityChecker
+from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
+from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
 
 IS_X86 = platform.machine() == "x86_64"
 
@@ -70,7 +71,6 @@ from octoprint_mrbeam.software_update_information import (
     SW_UPDATE_TIER_BETA,
     SW_UPDATE_TIER_DEV,
     BEAMOS_LEGACY_DATE,
-    reload_update_info,
 )
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.cli import get_cli_commands
@@ -113,6 +113,7 @@ class MrBeamPlugin(
     octoprint.plugin.SlicerPlugin,
     octoprint.plugin.ShutdownPlugin,
     octoprint.plugin.EnvironmentDetectionPlugin,
+    UpdateRestHandlerMixin,
 ):
     # CONSTANTS
     ENV_PROD = "PROD"
@@ -974,11 +975,6 @@ class MrBeamPlugin(
         self._logger.info("Setup Wizard finished.")
 
     # map(lambda m: m(handled), self._get_subwizard_attrs("_on_", "_wizard_finish").values())
-
-    @octoprint.plugin.BlueprintPlugin.route("/fetch_update_info", methods=["GET"])
-    def fetch_update_info(self):
-        reload_update_info(self)
-        return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
     def acl_wizard_api(self):

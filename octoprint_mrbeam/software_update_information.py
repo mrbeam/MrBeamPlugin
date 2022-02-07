@@ -14,7 +14,7 @@ import semantic_version
 import yaml
 from octoprint.plugins.softwareupdate import SoftwareUpdatePlugin
 from requests import ConnectionError
-from requests.adapters import HTTPAdapter
+from requests.adapters import HTTPAdapter, MaxRetryError
 from semantic_version import Spec
 from urllib3 import Retry
 
@@ -57,8 +57,9 @@ def get_tag_of_github_repo(repo):
 
     try:
         url = "https://api.github.com/repos/mrbeam/" + repo + "/tags"
-
+        # auth = "token " + "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"
         headers = {
+            # "Authorization": auth,
             "Accept": "application/json",
         }
 
@@ -83,7 +84,7 @@ def get_tag_of_github_repo(repo):
         else:
             _logger.warning("no valid response for the tag of the update_config file")
             return None
-    except requests.ReadTimeout:
+    except MaxRetryError:
         _logger.warning("timeout while trying to get the tag of the update_config file")
         return None
     except ConnectionError:
@@ -104,7 +105,9 @@ def get_config_of_tag(tag):
             + str(tag)
         )
 
+        # auth = "token " + "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"
         headers = {
+            # "Authorization": auth,
             "Accept": "application/json",
         }
 
@@ -148,7 +151,7 @@ def get_update_information(plugin):
         config_tag = get_tag_of_github_repo("beamos_config")
         # if plugin._connectivity_checker.check_immediately():  # check if device online
         if config_tag:
-            cloud_config = get_config_of_tag(get_tag_of_github_repo("beamos_config"))
+            cloud_config = get_config_of_tag(config_tag)
             if cloud_config:
                 print("cloud config", cloud_config)
                 return _set_info_from_cloud_config(

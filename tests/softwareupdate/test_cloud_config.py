@@ -550,9 +550,9 @@ class SettingsTestCase(unittest.TestCase):
                 self.plugin._settings.set(tier)
                 update_config = get_update_information(plugin)
                 print("config {}".format(update_config))
-                assert (
-                    update_config["octoprint"]
-                    == target_octoprint_config[get_tier_by_id(tier)]
+                self.assertEquals(
+                    update_config["octoprint"],
+                    target_octoprint_config[get_tier_by_id(tier)],
                 )
                 self.validate_mrbeam_module_config(
                     update_config["mrbeam"], get_tier_by_id(tier), beamos_date_buster
@@ -588,9 +588,9 @@ class SettingsTestCase(unittest.TestCase):
                 self.plugin._settings.set(tier)
                 update_config = get_update_information(plugin)
                 print("config {}".format(update_config))
-                assert (
-                    update_config["octoprint"]
-                    == target_octoprint_config[get_tier_by_id(tier)]
+                self.assertEquals(
+                    update_config["octoprint"],
+                    target_octoprint_config[get_tier_by_id(tier)],
                 )
                 self.validate_mrbeam_module_config(
                     update_config["mrbeam"], get_tier_by_id(tier), beamos_date_legacy
@@ -640,9 +640,9 @@ class SettingsTestCase(unittest.TestCase):
                     self.plugin._settings.set(tier)
                     update_config = get_update_information(plugin)
                     print("config {}".format(update_config))
-                    assert (
-                        update_config["octoprint"]
-                        == target_octoprint_config[get_tier_by_id(tier)]
+                    self.assertEquals(
+                        update_config["octoprint"],
+                        target_octoprint_config[get_tier_by_id(tier)],
                     )
                     self.validate_mrbeam_module_config(
                         update_config["mrbeam"],
@@ -698,9 +698,9 @@ class SettingsTestCase(unittest.TestCase):
                     update_config = get_update_information(plugin)
 
                     print("config {}".format(update_config))
-                    assert (
-                        update_config["octoprint"]
-                        == target_octoprint_config[get_tier_by_id(tier)]
+                    self.assertEquals(
+                        update_config["octoprint"],
+                        target_octoprint_config[get_tier_by_id(tier)],
                     )
                     self.validate_mrbeam_module_config(
                         update_config["mrbeam"],
@@ -754,7 +754,7 @@ class SettingsTestCase(unittest.TestCase):
 
             update_config = get_update_information(plugin)
 
-            assert update_config == None
+            self.assertIsNone(update_config)
         user_notification_system_show_mock.assert_called_with(
             notification_id="write_error_update_info_file_err", replay=False
         )
@@ -808,7 +808,7 @@ class SettingsTestCase(unittest.TestCase):
 
         copy_target_config = self._set_tier_config(copy_target_config, tier)
 
-        assert update_config == copy_target_config
+        self.assertEquals(update_config, copy_target_config)
 
     def check_if_githubapi_rate_limit_exceeded(self):
         r = requests.get(
