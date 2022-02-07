@@ -268,7 +268,7 @@ class Migration(object):
                     "No migration done because 'suppress_migrations' is set to true in settings."
                 )
             else:
-                self._logger.debug("No migration required. - old migration")
+                self._logger.info("old migration - No migration required.")
 
             self._run_migration()
             self.save_current_version()
@@ -292,7 +292,7 @@ class Migration(object):
         self._logger.debug(list_of_migrations_obj_available_to_run)
 
         if not len(list_of_migrations_obj_available_to_run):
-            self._logger.debug("no migration needed - new migration")
+            self._logger.info("new migration - no migration needed")
             return
 
         migrations_json_file_path = os.path.join(
@@ -327,7 +327,7 @@ class Migration(object):
                             break
 
                 if not len(list_of_migrations_to_run):
-                    self._logger.debug("all migrations already done - new migration")
+                    self._logger.info("new migration - all migrations already done")
                     return
 
                 for migration in list_of_migrations_to_run:
