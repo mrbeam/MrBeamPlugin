@@ -57,9 +57,7 @@ def get_tag_of_github_repo(repo):
 
     try:
         url = "https://api.github.com/repos/mrbeam/" + repo + "/tags"
-        # auth = "token " + "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"
         headers = {
-            # "Authorization": auth,
             "Accept": "application/json",
         }
 
@@ -105,9 +103,7 @@ def get_config_of_tag(tag):
             + str(tag)
         )
 
-        # auth = "token " + "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"
         headers = {
-            # "Authorization": auth,
             "Accept": "application/json",
         }
 
