@@ -1,25 +1,17 @@
 import base64
 import json
 import os
-import shutil
-import threading
 from datetime import date
 from datetime import datetime
-from os.path import dirname, realpath
-from os.path import join
-from shutil import copy
-
-import requests
 import semantic_version
 import yaml
-from octoprint.plugins.softwareupdate import SoftwareUpdatePlugin
 from requests import ConnectionError
 from requests.adapters import HTTPAdapter, MaxRetryError
 from semantic_version import Spec
 from urllib3 import Retry
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.util import get_thread, dict_merge, logme, logExceptions
+from octoprint_mrbeam.util import dict_merge, logExceptions
 from util.pip_util import get_version_of_pip_module
 
 SW_UPDATE_TIER_PROD = "PROD"
@@ -47,11 +39,16 @@ GLOBAL_PIP_COMMAND = (
 
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
-"""this is used to lock the config file loading from server and using it as update information"""
-config_file_lock = threading.Lock()
 
+def _get_tag_of_github_repo(repo):
+    """
+    return the latest tag of a github repository
+    Args:
+        repo: repository name
 
-def get_tag_of_github_repo(repo):
+    Returns:
+        latest tag of the given majorversion <MAJOR_VERSION_CLOUD_CONFIG>
+    """
     import requests
     import json
 
@@ -92,7 +89,15 @@ def get_tag_of_github_repo(repo):
         return None
 
 
-def get_config_of_tag(tag):
+def _get_config_of_tag(tag):
+    """
+    return the software update config of the given tag on the repository
+    Args:
+        tag: tagname
+
+    Returns:
+        software update config
+    """
     import requests
     import json
 
@@ -136,18 +141,21 @@ def get_update_information(plugin):
     Gets called from the octoprint.plugin.softwareupdate.check_config Hook from Octoprint
     Starts a thread to look online for a new config file
     sets the config for the Octoprint Softwareupdate Plugin with the data from the config file
-    @param plugin: calling plugin
-    @return: the config for the Octoprint embedded softwareupdate Plugin
+    Args:
+        plugin: Mr Beam Plugin
+
+    Returns:
+        the config for the Octoprint embedded softwareupdate Plugin
     """
     tier = plugin._settings.get(["dev", "software_tier"])
     beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
     _logger.info("SoftwareUpdate using tier: %s %s", tier, beamos_date)
 
     if plugin._connectivity_checker.check_immediately():
-        config_tag = get_tag_of_github_repo("beamos_config")
+        config_tag = _get_tag_of_github_repo("beamos_config")
         # if plugin._connectivity_checker.check_immediately():  # check if device online
         if config_tag:
-            cloud_config = get_config_of_tag(config_tag)
+            cloud_config = _get_config_of_tag(config_tag)
             if cloud_config:
                 print("cloud config", cloud_config)
                 return _set_info_from_cloud_config(
@@ -210,6 +218,14 @@ def get_update_information(plugin):
 
 
 def software_channels_available(plugin):
+    """
+    return the available software channels
+    Args:
+        plugin: Mr Beam Plugin
+
+    Returns:
+        list of available software channels
+    """
     ret = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
     if plugin.is_dev_env():
         # fmt: off
@@ -221,9 +237,12 @@ def software_channels_available(plugin):
 def switch_software_channel(plugin, channel):
     """
     Switches the Softwarechannel and triggers the reload of the config
-    @param plugin: the calling plugin
-    @param channel: the channel where to switch to
-    @return:
+    Args:
+        plugin: Mr Beam Plugin
+        channel: the channel where to switch to
+
+    Returns:
+        None
     """
     old_channel = plugin._settings.get(["dev", "software_tier"])
     if channel in software_channels_available(plugin) and channel != old_channel:
@@ -241,10 +260,12 @@ def switch_software_channel(plugin, channel):
 def reload_update_info(plugin):
     """
     clears the version cache and refires the get_update_info hook
-    @param plugin: MrBeamPlugin
-    @return:
-    """
+    Args:
+        plugin: Mr Beam Plugin
 
+    Returns:
+        None
+    """
     _logger.debug("Reload update info")
 
     # fmt: off
@@ -275,11 +296,14 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
                 "dependencies: {<module>}
             }
         }
+    Args:
+        plugin: Mr Beam Plugin
+        tier: the software tier which should be used
+        beamos_date: the image creation date of the running beamos
+        cloud_config: the update config from the cloud
 
-    @param plugin: the plugin from which it was started (mrbeam)
-    @param tier: the software tier which should be used
-    @param beamos_date: the image creation date of the running beamos
-    @param _softwareupdate_handler: the handler class to look for a new config file online
+    Returns:
+        software update information or None
     """
     if cloud_config:
         sw_update_config = dict()
@@ -287,7 +311,6 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
         defaultsettings = cloud_config.get("default", None)
         modules = cloud_config["modules"]
 
-        # TODO maybe drop the higher levels of the config so the output will be more tidy
         for module_id, module in modules.items():
             if tier in [
                 SW_UPDATE_TIER_BETA,
@@ -329,28 +352,35 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
 def _generate_config_of_module(
     module_id, input_moduleconfig, defaultsettings, tier, beamos_date, plugin
 ):
+    """
+    generates the config of a software module <module_id>
+    Args:
+        module_id: the id of the software module
+        input_moduleconfig: moduleconfig
+        defaultsettings: default settings
+        tier: software tier
+        beamos_date: date of the beamos
+        plugin: Mr Beam Plugin
+
+    Returns:
+        software update informationen for the module
+    """
     if tier in [
         SW_UPDATE_TIER_BETA,
         SW_UPDATE_TIER_DEV,
         SW_UPDATE_TIER_PROD,
         SW_UPDATE_TIER_ALPHA,
     ]:
-        print("moduleconfig", input_moduleconfig)
         # merge default settings and input is master
         input_moduleconfig = dict_merge(defaultsettings, input_moduleconfig)
 
         # get update info for tier branch
-        tierversion = get_tier_by_id(tier)
+        tierversion = _get_tier_by_id(tier)
 
         if tierversion in input_moduleconfig:
             input_moduleconfig = dict_merge(
                 input_moduleconfig, input_moduleconfig[tierversion]
             )  # set tier config from default settings
-
-        if tierversion in input_moduleconfig:
-            input_moduleconfig = dict_merge(
-                input_moduleconfig, input_moduleconfig[tierversion]
-            )  # override tier config from tiers set in config_file
 
         # have to be after the default config from file
         if "beamos_date" in input_moduleconfig:
@@ -377,7 +407,7 @@ def _generate_config_of_module(
 
         if "branch" in input_moduleconfig and "{tier}" in input_moduleconfig["branch"]:
             input_moduleconfig["branch"] = input_moduleconfig["branch"].format(
-                tier=get_tier_by_id(tier)
+                tier=_get_tier_by_id(tier)
             )
 
         # get version number
@@ -428,7 +458,7 @@ def _generate_config_of_module(
         if "name" in input_moduleconfig:
             input_moduleconfig["displayName"] = input_moduleconfig["name"]
 
-        input_moduleconfig = clean_update_config(input_moduleconfig)
+        input_moduleconfig = _clean_update_config(input_moduleconfig)
 
         if "dependencies" in input_moduleconfig:
             for dependencie_name, dependencie_config in input_moduleconfig[
@@ -447,17 +477,28 @@ def _generate_config_of_module(
         return input_moduleconfig
 
 
-def clean_update_config(update_config):
+def _clean_update_config(update_config):
+    """
+    removes working parameters from the given config
+    Args:
+        update_config: update config information
+
+    Returns:
+        cleaned version of the update config
+    """
     pop_list = ["alpha", "beta", "stable", "develop", "beamos_date", "name"]
     for key in set(update_config).intersection(pop_list):
         del update_config[key]
     return update_config
 
 
-def get_tier_by_id(tier):
+def _get_tier_by_id(tier):
     """
     returns the tier name with the given id
-    @param tier: id of the softwaretier
-    @return: softwaretier name
+    Args:
+        tier: id of the software tier
+
+    Returns:
+        softwaretier name
     """
     return DEFAULT_REPO_BRANCH_ID.get(tier, tier)
