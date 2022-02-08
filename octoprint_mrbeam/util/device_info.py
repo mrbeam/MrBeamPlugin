@@ -88,7 +88,7 @@ class DeviceInfo(object):
     def get_production_date(self):
         return self._device_data.get(self.KEY_PRODUCTION_DATE, None)
 
-    def get_beamos_date(self):
+    def get_beamos_version(self):
         """Expect the beamos version to be formatted as TIER-YYYY-MM-DD"""
         from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 
@@ -103,7 +103,7 @@ class DeviceInfo(object):
         else:
             return None, BEAMOS_LEGACY_DATE
 
-    def get_beamos_version(self):
+    def get_beamos_version_number(self):
         path_to_beamos_version_buster = os.path.join("/etc/beamos_version")
         path_to_beamos_version_legacy = os.path.join("/etc/octopi_version")
         if os.path.exists(path_to_beamos_version_buster):
