@@ -3,7 +3,10 @@ from __future__ import absolute_import, division, print_function
 
 import base64
 import json
+import os
 import unittest
+from os.path import dirname, realpath
+
 import requests
 import requests_mock
 from copy import deepcopy
@@ -21,14 +24,11 @@ from octoprint_mrbeam import (
     MrBeamPlugin,
 )
 from octoprint_mrbeam.software_update_information import (
-    get_config_of_tag,
-    _set_info_from_cloud_config,
-    get_tag_of_github_repo,
     SW_UPDATE_TIER_DEV,
     SW_UPDATE_TIER_ALPHA,
     SW_UPDATE_TIER_PROD,
     SW_UPDATE_TIER_BETA,
-    get_tier_by_id,
+    _get_tier_by_id,
     get_update_information,
     SW_UPDATE_INFO_FILE_NAME,
 )
@@ -78,13 +78,6 @@ class PluginManagerDummy:
     def get_plugin_info(self, module_id):
         return self
 
-    # sw_update_plugin = self._plugin._plugin_manager.get_plugin_info(
-    #     "softwareupdate"
-    # ).implementation
-    # sw_update_plugin._refresh_configured_checks = True
-    # sw_update_plugin._version_cache = dict()
-    # sw_update_plugin._version_cache_dirty = True
-
 
 class MrBeamPluginDummy(MrBeamPlugin):
     _settings = SettingsDummy()
@@ -96,378 +89,40 @@ class MrBeamPluginDummy(MrBeamPlugin):
 
     @patch("octoprint.settings.settings")
     def __init__(self, settings_mock):
-        # mocker.patch("octoprint.settings.settings", return_value=True)
         settings_mock.return_value = None
-        # with mock.patch('octoprint.settings') as settings_mock:
-        # sett
         self._logger = mrb_logger("test.Plugindummy")
         self.user_notification_system = user_notification_system(self)
-        # super(MrBeamPluginDummy, self).__init__()
-
-
-target_octoprint_config = {
-    "develop": {
-        "type": "github_commit",
-        "restart": "environment",
-        "user": "mrbeam",
-        "branch": "develop",
-        "branch_default": "develop",
-    },
-    "beta": {
-        "type": "github_release",
-        "prerelease_channel": "mrbeam2-beta",
-        "prerelease": True,
-        "restart": "environment",
-        "user": "mrbeam",
-        "branch": "mrbeam2-beta",
-        "branch_default": "mrbeam2-beta",
-    },
-    "alpha": {
-        "type": "github_release",
-        "prerelease_channel": "mrbeam2-alpha",
-        "prerelease": True,
-        "restart": "environment",
-        "user": "mrbeam",
-        "branch": "mrbeam2-alpha",
-        "branch_default": "mrbeam2-alpha",
-    },
-    "stable": {
-        "type": "github_release",
-        "restart": "environment",
-        "user": "mrbeam",
-        "branch": "mrbeam2-stable",
-        "branch_default": "mrbeam2-stable",
-    },
-}
-target_find_my_mr_beam_config = {
-    "displayName": "OctoPrint-FindMyMrBeam",
-    "repo": "OctoPrint-FindMyMrBeam",
-    "displayVersion": "dummy",
-    "pip": "https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
-    "type": "github_commit",
-    "restart": "octoprint",
-    "user": "mrbeam",
-    "tiers": {
-        "develop": {"branch": "develop", "branch_default": "develop"},
-        "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
-        "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
-        "stable": {
-            "branch": "mrbeam2-stable",
-            "branch_default": "mrbeam2-stable",
-        },
-    },
-}
-target_netconnectd_config = {
-    "displayVersion": "dummy",
-    "displayName": "OctoPrint-Netconnectd Plugin",
-    "user": "mrbeam",
-    "repo": "OctoPrint-Netconnectd",
-    "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
-    "restart": "octoprint",
-    "type": "github_commit",
-    "dependencies": {
-        "netconnectd-daemon": {
-            "displayName": "Netconnectd Daemon",
-            "displayVersion": "-",
-            "repo": "netconnectd_mrbeam",
-            "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
-            "global_pip_command": True,
-            "package_name": "netconnectd",
-            "branch": "mrbeam2-stable",
-            "pip_command": "sudo /usr/local/bin/pip",
-            "restart": "environment",
-            "type": "github_commit",
-            "user": "mrbeam",
-            "beamos_date": {
-                "2021-06-11": {
-                    "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip",
-                    "tiers": {
-                        "develop": {"branch": "develop", "branch_default": "develop"},
-                        "beta": {
-                            "branch": "mrbeam2-beta",
-                            "branch_default": "mrbeam2-beta",
-                        },
-                        "alpha": {
-                            "branch": "mrbeam2-alpha",
-                            "branch_default": "mrbeam2-alpha",
-                        },
-                        "stable": {"branch": "master", "branch_default": "master"},
-                    },
-                }
-            },
-            "tiers": {
-                "develop": {
-                    "branch": "mrbeam2-stable",
-                    "branch_default": "mrbeam2-stable",
-                },
-                "beta": {
-                    "branch": "mrbeam2-stable",
-                    "branch_default": "mrbeam2-stable",
-                },
-                "alpha": {
-                    "branch": "mrbeam2-stable",
-                    "branch_default": "mrbeam2-stable",
-                },
-                "stable": {
-                    "branch": "mrbeam2-stable",
-                    "branch_default": "mrbeam2-stable",
-                },
-            },
-        }
-    },
-    "tiers": {
-        "develop": {"branch": "develop", "branch_default": "develop"},
-        "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
-        "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
-        "stable": {
-            "branch": "mrbeam2-stable",
-            "branch_default": "mrbeam2-stable",
-        },
-    },
-}
-target_mrbeam_config = {
-    "displayName": " MrBeam Plugin",
-    "repo": "MrBeamPlugin",
-    "restart": "octoprint",
-    "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-    "type": "github_commit",
-    "user": "mrbeam",
-    "dependencies": {
-        "mrbeam-ledstrips": {
-            "repo": "MrBeamLedStrips",
-            "pip": "https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
-            "global_pip_command": True,
-            "displayName": "MrBeam LED Strips",
-            "displayVersion": "-",
-            "pip_command": "sudo /usr/local/bin/pip",
-            "restart": "environment",
-            "type": "github_commit",
-            "user": "mrbeam",
-            "beamos_date": {
-                "2021-06-11": {
-                    "pip_command": "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip",
-                }
-            },
-            "tiers": {
-                "develop": {"branch": "develop", "branch_default": "develop"},
-                "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
-                "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
-                "stable": {
-                    "branch": "mrbeam2-stable",
-                    "branch_default": "mrbeam2-stable",
-                },
-            },
-        },
-        "iobeam": {
-            "type": "bitbucket_commit",
-            "repo": "iobeam",
-            "pip": "git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
-            "global_pip_command": True,
-            "api_user": "MrBeamDev",
-            "api_password": "v2T5pFkmdgDqbFBJAqrt",
-            "displayName": "iobeam",
-            "displayVersion": "-",
-            "pip_command": "sudo /usr/local/bin/pip",
-            "restart": "environment",
-            "user": "mrbeam",
-            "beamos_date": {
-                "2021-06-11": {
-                    "pip_command": "sudo /usr/local/iobeam/venv/bin/pip",
-                }
-            },
-            "tiers": {
-                "develop": {"branch": "develop", "branch_default": "develop"},
-                "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
-                "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
-                "stable": {
-                    "branch": "mrbeam2-stable",
-                    "branch_default": "mrbeam2-stable",
-                },
-            },
-        },
-        "mrb_hw_info": {
-            "type": "bitbucket_commit",
-            "repo": "mrb_hw_info",
-            "pip": "git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
-            "global_pip_command": True,
-            "package_name": "mrb-hw-info",
-            "api_user": "MrBeamDev",
-            "api_password": "v2T5pFkmdgDqbFBJAqrt",
-            "displayName": "mrb_hw_info",
-            "displayVersion": "-",
-            "restart": "environment",
-            "user": "mrbeam",
-            "pip_command": "sudo /usr/local/bin/pip",
-            "beamos_date": {
-                "2021-06-11": {
-                    "pip_command": "sudo /usr/local/iobeam/venv/bin/pip",
-                }
-            },
-            "tiers": {
-                "develop": {"branch": "develop", "branch_default": "develop"},
-                "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
-                "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
-                "stable": {
-                    "branch": "mrbeam2-stable",
-                    "branch_default": "mrbeam2-stable",
-                },
-            },
-        },
-        "mrbeamdoc": {
-            "displayName": "Mr Beam Documentation",
-            "pip": "https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
-            "repo": "MrBeamDoc",
-            "restart": "octoprint",
-            "user": "mrbeam",
-            "displayVersion": "dummy",
-            "type": "github_commit",
-            "tiers": {
-                "develop": {"branch": "develop", "branch_default": "develop"},
-                "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
-                "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
-                "stable": {
-                    "branch": "mrbeam2-stable",
-                    "branch_default": "mrbeam2-stable",
-                },
-            },
-        },
-    },
-    "tiers": {
-        "develop": {"branch": "develop", "branch_default": "develop"},
-        "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
-        "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
-        "stable": {"branch": "mrbeam2-stable", "branch_default": "mrbeam2-stable"},
-    },
-    "displayVersion": "dummy",
-}
-
-mock_config = {
-    "default": {
-        "type": "github_commit",
-        "user": "mrbeam",
-        "stable": {"branch": "mrbeam2-stable", "branch_default": "mrbeam2-stable"},
-        "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
-        "develop": {"branch": "develop", "branch_default": "develop"},
-        "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
-        "restart": "environment",
-    },
-    "modules": {
-        "octoprint": {
-            "type": "github_release",
-            "develop": {"type": "github_commit"},
-            "beta": {"prerelease_channel": "mrbeam2-beta", "prerelease": True},
-            "alpha": {"prerelease_channel": "mrbeam2-alpha", "prerelease": True},
-        },
-        "mrbeam": {
-            "name": " MrBeam Plugin",
-            "repo": "MrBeamPlugin",
-            "restart": "octoprint",
-            "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-            "dependencies": {
-                "mrbeam-ledstrips": {
-                    "name": "MrBeam LED Strips",
-                    "repo": "MrBeamLedStrips",
-                    "pip": "https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
-                    "global_pip_command": True,
-                    "beamos_date": {
-                        "2021-06-11": {
-                            "pip_command": "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
-                        }
-                    },
-                },
-                "iobeam": {
-                    "name": "iobeam",
-                    "type": "bitbucket_commit",
-                    "repo": "iobeam",
-                    "pip": "git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
-                    "global_pip_command": True,
-                    "api_user": "MrBeamDev",
-                    "api_password": "v2T5pFkmdgDqbFBJAqrt",
-                    "beamos_date": {
-                        "2021-06-11": {
-                            "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
-                        }
-                    },
-                },
-                "mrb_hw_info": {
-                    "name": "mrb_hw_info",
-                    "type": "bitbucket_commit",
-                    "repo": "mrb_hw_info",
-                    "pip": "git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
-                    "global_pip_command": True,
-                    "package_name": "mrb-hw-info",
-                    "api_user": "MrBeamDev",
-                    "api_password": "v2T5pFkmdgDqbFBJAqrt",
-                    "beamos_date": {
-                        "2021-06-11": {
-                            "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
-                        }
-                    },
-                },
-                "mrbeamdoc": {
-                    "name": "Mr Beam Documentation",
-                    "repo": "MrBeamDoc",
-                    "pip": "https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
-                    "restart": "octoprint",
-                },
-            },
-        },
-        "netconnectd": {
-            "name": "OctoPrint-Netconnectd Plugin",
-            "repo": "OctoPrint-Netconnectd",
-            "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
-            "restart": "octoprint",
-            "dependencies": {
-                "netconnectd-daemon": {
-                    "name": "Netconnectd Daemon",
-                    "repo": "netconnectd_mrbeam",
-                    "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
-                    "global_pip_command": True,
-                    "package_name": "netconnectd",
-                    "beamos_date": {
-                        "2018-01-12": {
-                            "stable": {
-                                "branch": "mrbeam2-stable",
-                                "branch_default": "mrbeam2-stable",
-                            },
-                            "beta": {
-                                "branch": "mrbeam2-stable",
-                                "branch_default": "mrbeam2-stable",
-                            },
-                            "develop": {
-                                "branch": "mrbeam2-stable",
-                                "branch_default": "mrbeam2-stable",
-                            },
-                            "alpha": {
-                                "branch": "mrbeam2-stable",
-                                "branch_default": "mrbeam2-stable",
-                            },
-                        },
-                        "2021-06-11": {
-                            "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip",
-                            "stable": {"branch": "master", "branch_default": "master"},
-                        },
-                    },
-                }
-            },
-        },
-        "findmymrbeam": {
-            "name": "OctoPrint-FindMyMrBeam",
-            "repo": "OctoPrint-FindMyMrBeam",
-            "pip": "https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
-            "restart": "octoprint",
-        },
-    },
-}
 
 
 @ddt
-class SettingsTestCase(unittest.TestCase):
+class SoftwareupdateConfigTestCase(unittest.TestCase):
     _softwareupdate_handler = None
     plugin = None
 
     def setUp(self):
         self.plugin = MrBeamPluginDummy()
+        with open(
+            os.path.join(dirname(realpath(__file__)), "target_octoprint_config.json")
+        ) as json_file:
+            self.target_octoprint_config = json.load(json_file)
+        with open(
+            os.path.join(
+                dirname(realpath(__file__)), "target_find_my_mr_beam_config.json"
+            )
+        ) as json_file:
+            self.target_find_my_mr_beam_config = json.load(json_file)
+        with open(
+            os.path.join(dirname(realpath(__file__)), "target_netconnectd_config.json")
+        ) as json_file:
+            self.target_netconnectd_config = json.load(json_file)
+        with open(
+            os.path.join(dirname(realpath(__file__)), "target_mrbeam_config.json")
+        ) as json_file:
+            self.target_mrbeam_config = json.load(json_file)
+        with open(
+            os.path.join(dirname(realpath(__file__)), "mock_config.json")
+        ) as json_file:
+            self.mock_config = json.load(json_file)
 
     @patch.object(
         UserNotificationSystem,
@@ -552,19 +207,19 @@ class SettingsTestCase(unittest.TestCase):
                 print("config {}".format(update_config))
                 self.assertEquals(
                     update_config["octoprint"],
-                    target_octoprint_config[get_tier_by_id(tier)],
+                    self.target_octoprint_config[_get_tier_by_id(tier)],
                 )
                 self.validate_mrbeam_module_config(
-                    update_config["mrbeam"], get_tier_by_id(tier), beamos_date_buster
+                    update_config["mrbeam"], _get_tier_by_id(tier), beamos_date_buster
                 )
                 self.validate_findmymrbeam_module_config(
                     update_config["findmymrbeam"],
-                    get_tier_by_id(tier),
+                    _get_tier_by_id(tier),
                     beamos_date_buster,
                 )
                 self.validate_netconnect_module_config(
                     update_config["netconnectd"],
-                    get_tier_by_id(tier),
+                    _get_tier_by_id(tier),
                     beamos_date_buster,
                 )
 
@@ -590,19 +245,19 @@ class SettingsTestCase(unittest.TestCase):
                 print("config {}".format(update_config))
                 self.assertEquals(
                     update_config["octoprint"],
-                    target_octoprint_config[get_tier_by_id(tier)],
+                    self.target_octoprint_config[_get_tier_by_id(tier)],
                 )
                 self.validate_mrbeam_module_config(
-                    update_config["mrbeam"], get_tier_by_id(tier), beamos_date_legacy
+                    update_config["mrbeam"], _get_tier_by_id(tier), beamos_date_legacy
                 )
                 self.validate_findmymrbeam_module_config(
                     update_config["findmymrbeam"],
-                    get_tier_by_id(tier),
+                    _get_tier_by_id(tier),
                     beamos_date_legacy,
                 )
                 self.validate_netconnect_module_config(
                     update_config["netconnectd"],
-                    get_tier_by_id(tier),
+                    _get_tier_by_id(tier),
                     beamos_date_legacy,
                 )
 
@@ -625,7 +280,11 @@ class SettingsTestCase(unittest.TestCase):
                 rm.get(
                     "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
                     status_code=200,
-                    json={"content": base64.urlsafe_b64encode(json.dumps(mock_config))},
+                    json={
+                        "content": base64.urlsafe_b64encode(
+                            json.dumps(self.mock_config)
+                        )
+                    },
                 )
                 plugin = self.plugin
 
@@ -642,21 +301,21 @@ class SettingsTestCase(unittest.TestCase):
                     print("config {}".format(update_config))
                     self.assertEquals(
                         update_config["octoprint"],
-                        target_octoprint_config[get_tier_by_id(tier)],
+                        self.target_octoprint_config[_get_tier_by_id(tier)],
                     )
                     self.validate_mrbeam_module_config(
                         update_config["mrbeam"],
-                        get_tier_by_id(tier),
+                        _get_tier_by_id(tier),
                         beamos_date_buster,
                     )
                     self.validate_findmymrbeam_module_config(
                         update_config["findmymrbeam"],
-                        get_tier_by_id(tier),
+                        _get_tier_by_id(tier),
                         beamos_date_buster,
                     )
                     self.validate_netconnect_module_config(
                         update_config["netconnectd"],
-                        get_tier_by_id(tier),
+                        _get_tier_by_id(tier),
                         beamos_date_buster,
                     )
         mock_file.assert_called_with(
@@ -682,7 +341,11 @@ class SettingsTestCase(unittest.TestCase):
                 rm.get(
                     "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
                     status_code=200,
-                    json={"content": base64.urlsafe_b64encode(json.dumps(mock_config))},
+                    json={
+                        "content": base64.urlsafe_b64encode(
+                            json.dumps(self.mock_config)
+                        )
+                    },
                 )
                 plugin = self.plugin
 
@@ -700,21 +363,21 @@ class SettingsTestCase(unittest.TestCase):
                     print("config {}".format(update_config))
                     self.assertEquals(
                         update_config["octoprint"],
-                        target_octoprint_config[get_tier_by_id(tier)],
+                        self.target_octoprint_config[_get_tier_by_id(tier)],
                     )
                     self.validate_mrbeam_module_config(
                         update_config["mrbeam"],
-                        get_tier_by_id(tier),
+                        _get_tier_by_id(tier),
                         beamos_date_legacy,
                     )
                     self.validate_findmymrbeam_module_config(
                         update_config["findmymrbeam"],
-                        get_tier_by_id(tier),
+                        _get_tier_by_id(tier),
                         beamos_date_legacy,
                     )
                     self.validate_netconnect_module_config(
                         update_config["netconnectd"],
-                        get_tier_by_id(tier),
+                        _get_tier_by_id(tier),
                         beamos_date_legacy,
                     )
         mock_file.assert_called_with(
@@ -748,7 +411,9 @@ class SettingsTestCase(unittest.TestCase):
             rm.get(
                 "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
                 status_code=200,
-                json={"content": base64.urlsafe_b64encode(json.dumps(mock_config))},
+                json={
+                    "content": base64.urlsafe_b64encode(json.dumps(self.mock_config))
+                },
             )
             plugin = self.plugin
 
@@ -762,17 +427,17 @@ class SettingsTestCase(unittest.TestCase):
 
     def validate_mrbeam_module_config(self, update_config, tier, beamos_date):
         self.validate_module_config(
-            update_config, tier, target_mrbeam_config, beamos_date
+            update_config, tier, self.target_mrbeam_config, beamos_date
         )
 
     def validate_findmymrbeam_module_config(self, update_config, tier, beamos_date):
         self.validate_module_config(
-            update_config, tier, target_find_my_mr_beam_config, beamos_date
+            update_config, tier, self.target_find_my_mr_beam_config, beamos_date
         )
 
     def validate_netconnect_module_config(self, update_config, tier, beamos_date):
         self.validate_module_config(
-            update_config, tier, target_netconnectd_config, beamos_date=beamos_date
+            update_config, tier, self.target_netconnectd_config, beamos_date=beamos_date
         )
 
     def _set_beamos_config(self, config, beamos_date=None):

@@ -1,0 +1,34 @@
+{
+    "develop": {
+        "type": "github_commit",
+        "restart": "environment",
+        "user": "mrbeam",
+        "branch": "develop",
+        "branch_default": "develop"
+    },
+    "beta": {
+        "type": "github_release",
+        "prerelease_channel": "mrbeam2-beta",
+        "prerelease": true,
+        "restart": "environment",
+        "user": "mrbeam",
+        "branch": "mrbeam2-beta",
+        "branch_default": "mrbeam2-beta"
+    },
+    "alpha": {
+        "type": "github_release",
+        "prerelease_channel": "mrbeam2-alpha",
+        "prerelease": true,
+        "restart": "environment",
+        "user": "mrbeam",
+        "branch": "mrbeam2-alpha",
+        "branch_default": "mrbeam2-alpha"
+    },
+    "stable": {
+        "type": "github_release",
+        "restart": "environment",
+        "user": "mrbeam",
+        "branch": "mrbeam2-stable",
+        "branch_default": "mrbeam2-stable"
+    }
+}

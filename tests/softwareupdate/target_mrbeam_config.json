@@ -1,0 +1,115 @@
+{
+    "displayName": " MrBeam Plugin",
+    "repo": "MrBeamPlugin",
+    "restart": "octoprint",
+    "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+    "type": "github_commit",
+    "user": "mrbeam",
+    "dependencies": {
+        "mrbeam-ledstrips": {
+            "repo": "MrBeamLedStrips",
+            "pip": "https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+            "global_pip_command": true,
+            "displayName": "MrBeam LED Strips",
+            "displayVersion": "-",
+            "pip_command": "sudo /usr/local/bin/pip",
+            "restart": "environment",
+            "type": "github_commit",
+            "user": "mrbeam",
+            "beamos_date": {
+                "2021-06-11": {
+                    "pip_command": "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
+                }
+            },
+            "tiers": {
+                "develop": {"branch": "develop", "branch_default": "develop"},
+                "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
+                "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
+                "stable": {
+                    "branch": "mrbeam2-stable",
+                    "branch_default": "mrbeam2-stable"
+                }
+            }
+        },
+        "iobeam": {
+            "type": "bitbucket_commit",
+            "repo": "iobeam",
+            "pip": "git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
+            "global_pip_command": true,
+            "api_user": "MrBeamDev",
+            "api_password": "v2T5pFkmdgDqbFBJAqrt",
+            "displayName": "iobeam",
+            "displayVersion": "-",
+            "pip_command": "sudo /usr/local/bin/pip",
+            "restart": "environment",
+            "user": "mrbeam",
+            "beamos_date": {
+                "2021-06-11": {
+                    "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
+                }
+            },
+            "tiers": {
+                "develop": {"branch": "develop", "branch_default": "develop"},
+                "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
+                "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
+                "stable": {
+                    "branch": "mrbeam2-stable",
+                    "branch_default": "mrbeam2-stable"
+                }
+            }
+        },
+        "mrb_hw_info": {
+            "type": "bitbucket_commit",
+            "repo": "mrb_hw_info",
+            "pip": "git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+            "global_pip_command": true,
+            "package_name": "mrb-hw-info",
+            "api_user": "MrBeamDev",
+            "api_password": "v2T5pFkmdgDqbFBJAqrt",
+            "displayName": "mrb_hw_info",
+            "displayVersion": "-",
+            "restart": "environment",
+            "user": "mrbeam",
+            "pip_command": "sudo /usr/local/bin/pip",
+            "beamos_date": {
+                "2021-06-11": {
+                    "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
+                }
+            },
+            "tiers": {
+                "develop": {"branch": "develop", "branch_default": "develop"},
+                "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
+                "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
+                "stable": {
+                    "branch": "mrbeam2-stable",
+                    "branch_default": "mrbeam2-stable"
+                }
+            }
+        },
+        "mrbeamdoc": {
+            "displayName": "Mr Beam Documentation",
+            "pip": "https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
+            "repo": "MrBeamDoc",
+            "restart": "octoprint",
+            "user": "mrbeam",
+            "displayVersion": "dummy",
+            "type": "github_commit",
+            "tiers": {
+                "develop": {"branch": "develop", "branch_default": "develop"},
+                "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
+                "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
+                "stable": {
+                    "branch": "mrbeam2-stable",
+                    "branch_default": "mrbeam2-stable"
+                }
+            }
+        }
+    },
+    "tiers": {
+        "develop": {"branch": "develop", "branch_default": "develop"},
+        "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
+        "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
+        "stable": {"branch": "mrbeam2-stable", "branch_default": "mrbeam2-stable"}
+    },
+    "displayVersion": "dummy"
+}
