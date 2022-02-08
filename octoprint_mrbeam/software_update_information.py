@@ -3,6 +3,8 @@ import json
 import os
 from datetime import date
 from datetime import datetime
+from enum import Enum
+
 import semantic_version
 import yaml
 from requests import ConnectionError
@@ -14,15 +16,23 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_merge, logExceptions
 from util.pip_util import get_version_of_pip_module
 
-SW_UPDATE_TIER_PROD = "PROD"
-SW_UPDATE_TIER_BETA = "BETA"
-SW_UPDATE_TIER_ALPHA = "ALPHA"
-SW_UPDATE_TIER_DEV = "DEV"
+
+class SWUpdateTier(Enum):
+    PROD = "PROD"
+    BETA = "BETA"
+    ALPHA = "ALPHA"
+    DEV = "DEV"
+
+
+SW_UPDATE_TIERS_DEV = [SWUpdateTier.ALPHA, SWUpdateTier.DEV]
+SW_UPDATE_TIERS_STABLE = [SWUpdateTier.ALPHA, SWUpdateTier.DEV]
+SW_UPDATE_TIERS = SW_UPDATE_TIERS_DEV + SW_UPDATE_TIERS_STABLE
+
 DEFAULT_REPO_BRANCH_ID = {
-    SW_UPDATE_TIER_PROD: "stable",
-    SW_UPDATE_TIER_BETA: "beta",
-    SW_UPDATE_TIER_ALPHA: "alpha",
-    SW_UPDATE_TIER_DEV: "develop",
+    SWUpdateTier.PROD: "stable",
+    SWUpdateTier.BETA: "beta",
+    SWUpdateTier.ALPHA: "alpha",
+    SWUpdateTier.DEV: "develop",
 }
 MAJOR_VERSION_CLOUD_CONFIG = 0
 SW_UPDATE_INFO_FILE_NAME = "update_info.json"
@@ -171,12 +181,13 @@ def get_update_information(plugin):
         )
     )
 
+    # mark update config as dirty
     sw_update_plugin = plugin._plugin_manager.get_plugin_info(
         "softwareupdate"
     ).implementation
-
     sw_update_plugin._version_cache = dict()
     sw_update_plugin._version_cache_dirty = True
+
     return _set_info_from_cloud_config(
         plugin,
         tier,
@@ -226,10 +237,10 @@ def software_channels_available(plugin):
     Returns:
         list of available software channels
     """
-    ret = [SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA]
+    ret = SW_UPDATE_TIERS_STABLE
     if plugin.is_dev_env():
         # fmt: off
-        ret.extend([SW_UPDATE_TIER_ALPHA, SW_UPDATE_TIER_DEV, ])
+        ret.extend(SW_UPDATE_TIERS_DEV)
         # fmt: on
     return ret
 
@@ -248,13 +259,7 @@ def switch_software_channel(plugin, channel):
     if channel in software_channels_available(plugin) and channel != old_channel:
         _logger.info("Switching software channel to: %s", channel)
         plugin._settings.set(["dev", "software_tier"], channel)
-        # fmt: off
-        sw_update_plugin = plugin._plugin_manager.get_plugin_info("softwareupdate").implementation
-        # fmt: on
-        sw_update_plugin._refresh_configured_checks = True
-        sw_update_plugin._version_cache = dict()
-        sw_update_plugin._version_cache_dirty = True
-        plugin.analytics_handler.add_software_channel_switch_event(old_channel, channel)
+        reload_update_info(plugin)
 
 
 def reload_update_info(plugin):
@@ -312,12 +317,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
         modules = cloud_config["modules"]
 
         for module_id, module in modules.items():
-            if tier in [
-                SW_UPDATE_TIER_BETA,
-                SW_UPDATE_TIER_DEV,
-                SW_UPDATE_TIER_PROD,
-                SW_UPDATE_TIER_ALPHA,
-            ]:
+            if tier in SW_UPDATE_TIERS:
                 sw_update_config[module_id] = {}
 
                 module = dict_merge(defaultsettings, module)
@@ -365,12 +365,7 @@ def _generate_config_of_module(
     Returns:
         software update informationen for the module
     """
-    if tier in [
-        SW_UPDATE_TIER_BETA,
-        SW_UPDATE_TIER_DEV,
-        SW_UPDATE_TIER_PROD,
-        SW_UPDATE_TIER_ALPHA,
-    ]:
+    if tier in SW_UPDATE_TIERS:
         # merge default settings and input is master
         input_moduleconfig = dict_merge(defaultsettings, input_moduleconfig)
 

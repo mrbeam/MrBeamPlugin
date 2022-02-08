@@ -67,10 +67,8 @@ from octoprint_mrbeam.software_update_information import (
     get_update_information,
     switch_software_channel,
     software_channels_available,
-    SW_UPDATE_TIER_PROD,
-    SW_UPDATE_TIER_BETA,
-    SW_UPDATE_TIER_DEV,
     BEAMOS_LEGACY_DATE,
+    SWUpdateTier,
 )
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.cli import get_cli_commands
@@ -376,7 +374,7 @@ class MrBeamPlugin(
                 terminalMaxLines=2000,
                 env=self.ENV_PROD,
                 load_gremlins=False,
-                software_tier=SW_UPDATE_TIER_PROD,
+                software_tier=SWUpdateTier.PROD,
                 iobeam_disable_warnings=False,  # for development on non-MrBeam devices
                 suppress_migrations=False,  # for development on non-MrBeam devices
                 support_mode=False,
@@ -2965,10 +2963,10 @@ class MrBeamPlugin(
                 timer.start()
 
     def is_beta_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.BETA
 
     def is_develop_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_DEV
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.DEV
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:

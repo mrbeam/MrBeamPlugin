@@ -24,13 +24,10 @@ from octoprint_mrbeam import (
     MrBeamPlugin,
 )
 from octoprint_mrbeam.software_update_information import (
-    SW_UPDATE_TIER_DEV,
-    SW_UPDATE_TIER_ALPHA,
-    SW_UPDATE_TIER_PROD,
-    SW_UPDATE_TIER_BETA,
     _get_tier_by_id,
     get_update_information,
     SW_UPDATE_INFO_FILE_NAME,
+    SW_UPDATE_TIERS,
 )
 from octoprint_mrbeam.user_notification_system import UserNotificationSystem
 from octoprint_mrbeam.util import dict_merge
@@ -194,14 +191,8 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         device_info_mock.return_value = "PROD", beamos_date_buster
         plugin = self.plugin
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
-            tiers = [
-                SW_UPDATE_TIER_DEV,
-                SW_UPDATE_TIER_ALPHA,
-                SW_UPDATE_TIER_BETA,
-                SW_UPDATE_TIER_PROD,
-            ]
             # test for all tiers
-            for tier in tiers:
+            for tier in SW_UPDATE_TIERS:
                 self.plugin._settings.set(tier)
                 update_config = get_update_information(plugin)
                 print("config {}".format(update_config))
@@ -232,14 +223,8 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
             plugin = self.plugin
 
-            tiers = [
-                SW_UPDATE_TIER_DEV,
-                SW_UPDATE_TIER_ALPHA,
-                SW_UPDATE_TIER_BETA,
-                SW_UPDATE_TIER_PROD,
-            ]
             # test for all tiers
-            for tier in tiers:
+            for tier in SW_UPDATE_TIERS:
                 self.plugin._settings.set(tier)
                 update_config = get_update_information(plugin)
                 print("config {}".format(update_config))
@@ -288,14 +273,8 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 )
                 plugin = self.plugin
 
-                tiers = [
-                    SW_UPDATE_TIER_DEV,
-                    SW_UPDATE_TIER_ALPHA,
-                    SW_UPDATE_TIER_BETA,
-                    SW_UPDATE_TIER_PROD,
-                ]
                 # test for all tiers
-                for tier in tiers:
+                for tier in SW_UPDATE_TIERS:
                     self.plugin._settings.set(tier)
                     update_config = get_update_information(plugin)
                     print("config {}".format(update_config))
@@ -349,14 +328,8 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 )
                 plugin = self.plugin
 
-                tiers = [
-                    SW_UPDATE_TIER_DEV,
-                    SW_UPDATE_TIER_ALPHA,
-                    SW_UPDATE_TIER_BETA,
-                    SW_UPDATE_TIER_PROD,
-                ]
                 # test for all tiers
-                for tier in tiers:
+                for tier in SW_UPDATE_TIERS:
                     self.plugin._settings.set(tier)
                     update_config = get_update_information(plugin)
 
