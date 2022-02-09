@@ -14,6 +14,7 @@ class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
     def __init__(self, plugin):
         """
         initalization of the migration 001
+
         Args:
             plugin: Mr Beam Plugin
         """
@@ -23,6 +24,7 @@ class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
     def id(self):
         """
         return the id of the migration
+
         Returns:
             string: id of the migration
         """
@@ -31,6 +33,7 @@ class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
     def _run(self):
         """
         migration steps executet during migration
+
         Returns:
             None
         """
@@ -51,6 +54,7 @@ class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
     def _rollback(self):
         """
         rollback steps executet during rollback
+
         Returns:
             None
         """

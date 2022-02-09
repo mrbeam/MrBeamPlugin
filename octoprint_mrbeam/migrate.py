@@ -282,7 +282,7 @@ class Migration(object):
         run the new migrations
         @return:
         """
-        self._logger.debug("beamos_version: " + self.beamos_version)
+        self._logger.debug("beamos_version: {}".format(self.beamos_version))
 
         list_of_migrations_obj_available_to_run = [
             MigrationBaseClass.return_obj(migration, self.plugin)
