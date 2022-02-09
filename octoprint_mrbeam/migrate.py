@@ -73,8 +73,8 @@ class Migration(object):
         self.suppress_migrations = (
             self.plugin._settings.get(["dev", "suppress_migrations"]) or IS_X86
         )
-        beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_date()
-        self.beamos_version = self.plugin._device_info.get_beamos_version()
+        beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
+        self.beamos_version = self.plugin._device_info.get_beamos_version_number()
 
     def run(self):
         try:
@@ -282,12 +282,12 @@ class Migration(object):
         run the new migrations
         @return:
         """
-        self._logger.debug("beamos_version: " + self.beamos_version)
+        self._logger.debug("beamos_version: {}".format(self.beamos_version))
 
         list_of_migrations_obj_available_to_run = [
             MigrationBaseClass.return_obj(migration, self.plugin)
             for migration in list_of_migrations
-            if migration.shouldrun(migration, self.beamos_version) is not None
+            if migration.shouldrun(migration, self.beamos_version)
         ]
         self._logger.debug(list_of_migrations_obj_available_to_run)
 

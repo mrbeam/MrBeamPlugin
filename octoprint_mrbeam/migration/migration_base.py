@@ -49,6 +49,7 @@ class MigrationBaseClass:
     def __init__(self, plugin):
         """
         initalization of the class
+
         Args:
             plugin: Mr Beam Plugin
         """
@@ -63,6 +64,7 @@ class MigrationBaseClass:
     def id(self):
         """
         return the id of this migration step
+
         Returns:
             string: id of this migration step
         """
@@ -73,6 +75,7 @@ class MigrationBaseClass:
     def shouldrun(cls, beamos_version):
         """
         Checks if this Miration should run
+
         Args:
             cls: Migrationclass
             beamos_version: current beamos_version
@@ -80,6 +83,11 @@ class MigrationBaseClass:
         Returns:
             bool: True if this migration should run
         """
+        if not isinstance(beamos_version, basestring):
+            mrb_logger(
+                "octoprint.plugins.mrbeam.migrate.{}".format(cls.__name__)
+            ).error("beamos_version is not a string: {}".format(beamos_version))
+            return False
         if (
             LooseVersion(cls.BEAMOS_VERSION_LOW)
             <= LooseVersion(beamos_version)
@@ -93,6 +101,7 @@ class MigrationBaseClass:
     def return_obj(cls, plugin):
         """
         returns a instance of the Class
+
         Args:
             cls: class
             plugin: Mr Beam Plugin
