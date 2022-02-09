@@ -1,4 +1,5 @@
 import base64
+import copy
 import json
 import os
 from datetime import date
@@ -25,7 +26,7 @@ class SWUpdateTier(Enum):
 
 
 SW_UPDATE_TIERS_DEV = [SWUpdateTier.ALPHA, SWUpdateTier.DEV]
-SW_UPDATE_TIERS_STABLE = [SWUpdateTier.ALPHA, SWUpdateTier.DEV]
+SW_UPDATE_TIERS_STABLE = [SWUpdateTier.PROD, SWUpdateTier.BETA]
 SW_UPDATE_TIERS = SW_UPDATE_TIERS_DEV + SW_UPDATE_TIERS_STABLE
 
 DEFAULT_REPO_BRANCH_ID = {
@@ -185,8 +186,7 @@ def get_update_information(plugin):
     sw_update_plugin = plugin._plugin_manager.get_plugin_info(
         "softwareupdate"
     ).implementation
-    sw_update_plugin._version_cache = dict()
-    sw_update_plugin._version_cache_dirty = True
+    _clear_version_cache(sw_update_plugin)
 
     return _set_info_from_cloud_config(
         plugin,
@@ -228,6 +228,11 @@ def get_update_information(plugin):
     )
 
 
+def _clear_version_cache(sw_update_plugin):
+    sw_update_plugin._version_cache = dict()
+    sw_update_plugin._version_cache_dirty = True
+
+
 def software_channels_available(plugin):
     """
     return the available software channels
@@ -237,10 +242,10 @@ def software_channels_available(plugin):
     Returns:
         list of available software channels
     """
-    ret = SW_UPDATE_TIERS_STABLE
+    ret = copy.deepcopy(SW_UPDATE_TIERS_STABLE)
     if plugin.is_dev_env():
         # fmt: off
-        ret.extend(SW_UPDATE_TIERS_DEV)
+        ret += SW_UPDATE_TIERS_DEV
         # fmt: on
     return ret
 
@@ -277,8 +282,7 @@ def reload_update_info(plugin):
     sw_update_plugin = plugin._plugin_manager.get_plugin_info("softwareupdate").implementation
     # fmt: on
     sw_update_plugin._refresh_configured_checks = True
-    sw_update_plugin._version_cache = dict()
-    sw_update_plugin._version_cache_dirty = True
+    _clear_version_cache(sw_update_plugin)
 
 
 @logExceptions
@@ -378,76 +382,24 @@ def _generate_config_of_module(
             )  # set tier config from default settings
 
         # have to be after the default config from file
-        if "beamos_date" in input_moduleconfig:
-            beamos_date_config = input_moduleconfig["beamos_date"]
-            prev_beamos_date_entry = datetime.strptime("2000-01-01", "%Y-%m-%d").date()
-            for date, beamos_config in beamos_date_config.items():
-                _logger.debug(
-                    "date compare %s >= %s -> %s",
-                    beamos_date,
-                    datetime.strptime(date, "%Y-%m-%d").date(),
-                    beamos_config,
-                )
-                if (
-                    beamos_date >= datetime.strptime(date, "%Y-%m-%d").date()
-                    and prev_beamos_date_entry < beamos_date
-                ):
-                    prev_beamos_date_entry = datetime.strptime(date, "%Y-%m-%d").date()
-                    if tierversion in beamos_config:
-                        beamos_config_module_tier = beamos_config[tierversion]
-                        beamos_config = dict_merge(
-                            beamos_config, beamos_config_module_tier
-                        )  # override tier config from tiers set in config_file
-                    input_moduleconfig = dict_merge(input_moduleconfig, beamos_config)
+
+        input_moduleconfig = dict_merge(
+            input_moduleconfig,
+            _generate_config_of_beamos(input_moduleconfig, beamos_date, tierversion),
+        )
 
         if "branch" in input_moduleconfig and "{tier}" in input_moduleconfig["branch"]:
             input_moduleconfig["branch"] = input_moduleconfig["branch"].format(
                 tier=_get_tier_by_id(tier)
             )
 
-        # get version number
-        current_version = "-"
-        _logger.debug(
-            "pip command check %s %s - %s",
-            input_moduleconfig,
-            input_moduleconfig,
-            "pip_command" not in input_moduleconfig,
-        )
-        if (
-            "global_pip_command" in input_moduleconfig
-            and "pip_command" not in input_moduleconfig
-        ):
-            input_moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
-        if "pip_command" in input_moduleconfig:
-            # get version number of pip modules
-            pip_command = input_moduleconfig["pip_command"]
-            # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
-            # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-            # pip_command = GLOBAL_PIP_COMMAND
-            package_name = (
-                input_moduleconfig["package_name"]
-                if "package_name" in input_moduleconfig
-                else module_id
-            )
-            _logger.debug("get version %s %s", package_name, pip_command)
-
-            current_version_global_pip = get_version_of_pip_module(
-                package_name, pip_command
-            )
-            if current_version_global_pip is not None:
-                current_version = current_version_global_pip
-
-        else:
-            # get versionnumber of octoprint plugin
-            pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
-            if pluginInfo is not None:
-                current_version = pluginInfo.version
+        current_version = _get_curent_version(input_moduleconfig, module_id, plugin)
 
         if module_id != "octoprint":
             _logger.debug("%s current version: %s", module_id, current_version)
             input_moduleconfig.update(
                 {
-                    "displayVersion": current_version,
+                    "displayVersion": current_version if current_version else "-",
                 }
             )
         if "name" in input_moduleconfig:
@@ -470,6 +422,93 @@ def _generate_config_of_module(
                     plugin,
                 )
         return input_moduleconfig
+
+
+def _get_curent_version(input_moduleconfig, module_id, plugin):
+    """
+    returns the version of the given module
+    Args:
+        input_moduleconfig: module to get the version for
+        module_id: id of the module
+        plugin: Mr Beam Plugin
+
+    Returns:
+        version of the module or None
+    """
+    # get version number
+    current_version = None
+    _logger.debug(
+        "pip command check %s %s - %s",
+        input_moduleconfig,
+        input_moduleconfig,
+        "pip_command" not in input_moduleconfig,
+    )
+    if (
+        "global_pip_command" in input_moduleconfig
+        and "pip_command" not in input_moduleconfig
+    ):
+        input_moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
+    if "pip_command" in input_moduleconfig:
+        # get version number of pip modules
+        pip_command = input_moduleconfig["pip_command"]
+        # if global_pip_command is set module is installed outside of our virtualenv therefor we can't use default pip command.
+        # /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+        # pip_command = GLOBAL_PIP_COMMAND
+        package_name = (
+            input_moduleconfig["package_name"]
+            if "package_name" in input_moduleconfig
+            else module_id
+        )
+        _logger.debug("get version %s %s", package_name, pip_command)
+
+        current_version_global_pip = get_version_of_pip_module(
+            package_name, pip_command
+        )
+        if current_version_global_pip is not None:
+            current_version = current_version_global_pip
+
+    else:
+        # get versionnumber of octoprint plugin
+        pluginInfo = plugin._plugin_manager.get_plugin_info(module_id)
+        if pluginInfo is not None:
+            current_version = pluginInfo.version
+    return current_version
+
+
+def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
+    """
+    generates the config for the given beamos_date of the tierversion
+    Args:
+        moduleconfig: update config of the module
+        beamos_date: date of the beamos
+        tierversion: software tier
+
+    Returns:
+        beamos config of the tierversion
+    """
+    if "beamos_date" not in moduleconfig:
+        return {}
+
+    beamos_date_config = moduleconfig["beamos_date"]
+    prev_beamos_date_entry = datetime.strptime("2000-01-01", "%Y-%m-%d").date()
+    for date, beamos_config in beamos_date_config.items():
+        _logger.debug(
+            "date compare %s >= %s -> %s",
+            beamos_date,
+            datetime.strptime(date, "%Y-%m-%d").date(),
+            beamos_config,
+        )
+        if (
+            beamos_date >= datetime.strptime(date, "%Y-%m-%d").date()
+            and prev_beamos_date_entry < beamos_date
+        ):
+            prev_beamos_date_entry = datetime.strptime(date, "%Y-%m-%d").date()
+            if tierversion in beamos_config:
+                beamos_config_module_tier = beamos_config[tierversion]
+                beamos_config = dict_merge(
+                    beamos_config, beamos_config_module_tier
+                )  # override tier config from tiers set in config_file
+    return beamos_config
 
 
 def _clean_update_config(update_config):

@@ -128,11 +128,11 @@ $(function () {
         };
     }
     function reload_update_info() {
-        OctoPrint.get("plugin/mrbeam/fetch_update_info")
+        OctoPrint.post("plugin/mrbeam/info/update")
             .done(function (response) {
             })
             .fail(function () {
-                console.error("Unable to relaod update info.");
+                console.error("Unable to reload update info.");
             });
     }
 

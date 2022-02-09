@@ -374,7 +374,7 @@ class MrBeamPlugin(
                 terminalMaxLines=2000,
                 env=self.ENV_PROD,
                 load_gremlins=False,
-                software_tier=SWUpdateTier.PROD,
+                software_tier=SWUpdateTier.PROD.value,
                 iobeam_disable_warnings=False,  # for development on non-MrBeam devices
                 suppress_migrations=False,  # for development on non-MrBeam devices
                 support_mode=False,
@@ -460,7 +460,9 @@ class MrBeamPlugin(
             dev=dict(
                 env=self.get_env(),
                 software_tier=self._settings.get(["dev", "software_tier"]),
-                software_tiers_available=software_channels_available(self),
+                software_tiers_available=[
+                    channel.value for channel in software_channels_available(self)
+                ],
                 terminalMaxLines=self._settings.get(["dev", "terminalMaxLines"]),
             ),
             gcode_nextgen=dict(
