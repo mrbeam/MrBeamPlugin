@@ -124,7 +124,10 @@ $(function () {
                 email: self.getEmail(),
                 serial: MRBEAM_SERIAL,
                 user_token: self.getAuthToken(),
-                version: BEAMOS_VERSION,
+                // TODO: remove the following sanitization once the version
+                //  comparative methods support "-hotfix..." verisoning
+                // Remove any versioning characters after "-" like "-hotfix"
+                version: BEAMOS_VERSION.split("-")[0],
                 language: MRBEAM_LANGUAGE,
                 last_uploaded: self.getLastUploadedDate()
             };
