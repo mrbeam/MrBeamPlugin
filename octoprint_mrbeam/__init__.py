@@ -461,7 +461,7 @@ class MrBeamPlugin(
                 env=self.get_env(),
                 software_tier=self._settings.get(["dev", "software_tier"]),
                 software_tiers_available=[
-                    channel.value for channel in software_channels_available(self)
+                    channel for channel in software_channels_available(self)
                 ],
                 terminalMaxLines=self._settings.get(["dev", "terminalMaxLines"]),
             ),
@@ -702,7 +702,7 @@ class MrBeamPlugin(
                 "css/hopscotch.min.css",
                 "css/wizard.css",
                 "css/tab_messages.css",
-                "css/software_update.css"
+                "css/software_update.css",
             ],
             less=["less/mrbeam.less"],
         )

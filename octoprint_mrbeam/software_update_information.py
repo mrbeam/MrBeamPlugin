@@ -25,15 +25,15 @@ class SWUpdateTier(Enum):
     DEV = "DEV"
 
 
-SW_UPDATE_TIERS_DEV = [SWUpdateTier.ALPHA, SWUpdateTier.DEV]
-SW_UPDATE_TIERS_STABLE = [SWUpdateTier.PROD, SWUpdateTier.BETA]
+SW_UPDATE_TIERS_DEV = [SWUpdateTier.ALPHA.value, SWUpdateTier.DEV.value]
+SW_UPDATE_TIERS_STABLE = [SWUpdateTier.PROD.value, SWUpdateTier.BETA.value]
 SW_UPDATE_TIERS = SW_UPDATE_TIERS_DEV + SW_UPDATE_TIERS_STABLE
 
 DEFAULT_REPO_BRANCH_ID = {
-    SWUpdateTier.PROD: "stable",
-    SWUpdateTier.BETA: "beta",
-    SWUpdateTier.ALPHA: "alpha",
-    SWUpdateTier.DEV: "develop",
+    SWUpdateTier.PROD.value: "stable",
+    SWUpdateTier.BETA.value: "beta",
+    SWUpdateTier.ALPHA.value: "alpha",
+    SWUpdateTier.DEV.value: "develop",
 }
 MAJOR_VERSION_CLOUD_CONFIG = 0
 SW_UPDATE_INFO_FILE_NAME = "update_info.json"
@@ -76,6 +76,7 @@ def _get_tag_of_github_repo(repo):
         s.keep_alive = False
 
         response = s.request("GET", url, headers=headers, timeout=3)
+        response.raise_for_status()  # This will throw an exception if status is 4xx or 5xx
         if response:
             json_data = json.loads(response.text)
             versionlist = [
@@ -85,13 +86,19 @@ def _get_tag_of_github_repo(repo):
             majorversion = Spec(
                 "<" + str(MAJOR_VERSION_CLOUD_CONFIG + 1) + ".0.0"
             )  # simpleSpec("0.*.*")
-            print(versionlist)
             return majorversion.select(versionlist)
         else:
-            _logger.warning("no valid response for the tag of the update_config file")
+            _logger.warning(
+                "no valid response for the tag of the update_config file {}".format(
+                    response
+                )
+            )
             return None
     except MaxRetryError:
         _logger.warning("timeout while trying to get the tag of the update_config file")
+        return None
+    except requests.HTTPError as e:
+        _logger.warning("server error {}".format(e))
         return None
     except ConnectionError:
         _logger.warning(
@@ -130,7 +137,7 @@ def _get_config_of_tag(tag):
         s.keep_alive = False
 
         response = s.request("GET", url, headers=headers)
-    except requests.ReadTimeout:
+    except requests.MaxRetryError:
         _logger.warning("timeout while trying to get the update_config file")
         return None
     except ConnectionError:
@@ -168,7 +175,6 @@ def get_update_information(plugin):
         if config_tag:
             cloud_config = _get_config_of_tag(config_tag)
             if cloud_config:
-                print("cloud config", cloud_config)
                 return _set_info_from_cloud_config(
                     plugin, tier, beamos_date, cloud_config
                 )
@@ -397,10 +403,8 @@ def _generate_config_of_module(
 
         if module_id != "octoprint":
             _logger.debug("%s current version: %s", module_id, current_version)
-            input_moduleconfig.update(
-                {
-                    "displayVersion": current_version if current_version else "-",
-                }
+            input_moduleconfig["displayVersion"] = (
+                current_version if current_version else "-"
             )
         if "name" in input_moduleconfig:
             input_moduleconfig["displayName"] = input_moduleconfig["name"]
@@ -486,12 +490,13 @@ def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
     Returns:
         beamos config of the tierversion
     """
+    _logger.debug("generate config of beamos {}".format(moduleconfig))
     if "beamos_date" not in moduleconfig:
         return {}
 
-    beamos_date_config = moduleconfig["beamos_date"]
+    beamos_date_config = {}
     prev_beamos_date_entry = datetime.strptime("2000-01-01", "%Y-%m-%d").date()
-    for date, beamos_config in beamos_date_config.items():
+    for date, beamos_config in moduleconfig["beamos_date"].items():
         _logger.debug(
             "date compare %s >= %s -> %s",
             beamos_date,
@@ -508,7 +513,9 @@ def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
                 beamos_config = dict_merge(
                     beamos_config, beamos_config_module_tier
                 )  # override tier config from tiers set in config_file
-    return beamos_config
+            beamos_date_config = dict_merge(beamos_date_config, beamos_config)
+    _logger.debug("generate config of beamos {}".format(beamos_date_config))
+    return beamos_date_config
 
 
 def _clean_update_config(update_config):

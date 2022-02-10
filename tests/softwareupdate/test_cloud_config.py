@@ -15,6 +15,7 @@ from mock import mock_open
 from ddt import ddt
 from mock import patch
 from octoprint.events import EventManager
+import yaml
 
 from octoprint_mrbeam import (
     deviceInfo,
@@ -101,25 +102,25 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         with open(
             os.path.join(dirname(realpath(__file__)), "target_octoprint_config.json")
         ) as json_file:
-            self.target_octoprint_config = json.load(json_file)
+            self.target_octoprint_config = yaml.safe_load(json_file)
         with open(
             os.path.join(
                 dirname(realpath(__file__)), "target_find_my_mr_beam_config.json"
             )
         ) as json_file:
-            self.target_find_my_mr_beam_config = json.load(json_file)
+            self.target_find_my_mr_beam_config = yaml.safe_load(json_file)
         with open(
             os.path.join(dirname(realpath(__file__)), "target_netconnectd_config.json")
         ) as json_file:
-            self.target_netconnectd_config = json.load(json_file)
+            self.target_netconnectd_config = yaml.safe_load(json_file)
         with open(
             os.path.join(dirname(realpath(__file__)), "target_mrbeam_config.json")
         ) as json_file:
-            self.target_mrbeam_config = json.load(json_file)
+            self.target_mrbeam_config = yaml.safe_load(json_file)
         with open(
             os.path.join(dirname(realpath(__file__)), "mock_config.json")
         ) as json_file:
-            self.mock_config = json.load(json_file)
+            self.mock_config = yaml.safe_load(json_file)
 
     @patch.object(
         UserNotificationSystem,
@@ -277,7 +278,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 for tier in SW_UPDATE_TIERS:
                     self.plugin._settings.set(tier)
                     update_config = get_update_information(plugin)
-                    print("config {}".format(update_config))
+                    self.maxDiff = None
                     self.assertEquals(
                         update_config["octoprint"],
                         self.target_octoprint_config[_get_tier_by_id(tier)],
@@ -410,7 +411,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
 
     def validate_netconnect_module_config(self, update_config, tier, beamos_date):
         self.validate_module_config(
-            update_config, tier, self.target_netconnectd_config, beamos_date=beamos_date
+            update_config, tier, self.target_netconnectd_config, beamos_date
         )
 
     def _set_beamos_config(self, config, beamos_date=None):
