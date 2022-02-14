@@ -180,12 +180,12 @@ $(function () {
             }
             // version_and_newer
             if (restrictions.version_and_newer && restrictions.version_and_newer.length > 0 &&
-                window.mrbeam._isVersionOrHigher(BEAMOS_VERSION, restrictions.version_and_newer)) {
+                window.compareVersions(BEAMOS_VERSION, restrictions.version_and_newer) >= 0) {
                 return false;
             }
             // version_and_older
             if (restrictions.version_and_older && restrictions.version_and_older.length > 0 &&
-                window.mrbeam._isVersionOrLower(BEAMOS_VERSION, restrictions.version_and_older)) {
+                window.compareVersions(BEAMOS_VERSION, restrictions.version_and_older) <= 0) {
                 return false;
             }
             // ts_after

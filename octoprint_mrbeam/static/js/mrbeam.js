@@ -73,10 +73,10 @@ mrbeam.model = {
  */
 mrbeam.isOctoPrintVersionMin = function (expectedOctPrintVersion) {
     if (VERSION) {
-        return mrbeam._isVersionOrHigher(
+        return window.compareVersions(
             VERSION.replace("v", ""),
             expectedOctPrintVersion
-        );
+        ) >= 0;
     } else {
         return undefined;
     }
