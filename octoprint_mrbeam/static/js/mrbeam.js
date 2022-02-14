@@ -67,22 +67,6 @@ mrbeam.model = {
 };
 
 /**
- * Test if OctoPrint of a specific or higher version is running.
- * @param expectedOctPrintVersion
- * @returns Boolean or undefined if VERSION is not set
- */
-mrbeam.isOctoPrintVersionMin = function (expectedOctPrintVersion) {
-    if (VERSION) {
-        return window.compareVersions(
-            VERSION.replace("v", ""),
-            expectedOctPrintVersion
-        ) >= 0;
-    } else {
-        return undefined;
-    }
-};
-
-/**
  * Push a new PNotify notification.
  * If pn_obj contains attribute 'id',
  * this method makes sure that only one notification with the same id is shown at a time.
