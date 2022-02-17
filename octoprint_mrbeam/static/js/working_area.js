@@ -1158,7 +1158,7 @@ $(function () {
             if (declaredUnit === "px" || declaredUnit === "") {
                 if (generator.generator === "inkscape") {
                     if (
-                        window.compareVersions(
+                        WorkingAreaHelper.versionCompare(
                             generator.version,
                             "0.91"
                         ) <= 0
