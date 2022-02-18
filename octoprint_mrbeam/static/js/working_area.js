@@ -1157,12 +1157,26 @@ $(function () {
             }
             if (declaredUnit === "px" || declaredUnit === "") {
                 if (generator.generator === "inkscape") {
-                    if (
-                        window.compareVersions(
-                            generator.version,
+                    let isOldInkscapeVersion = NaN;
+                    try {
+                        isOldInkscapeVersion= window.compareVersions(
+                            // 1.1.2 (1:1.1+202202050950+0a00cf5339) -> 1.1
+                            generator.version.split('.').slice(0,2).join('.'),
                             "0.91"
-                        ) <= 0
-                    ) {
+                        ) <= 0;
+                    } catch(e) {
+                        let payload = {
+                            error: e.message,
+                        };
+                        self._sendAnalytics("inkscape_version_comparison_error", payload);
+                        console.log("inkscape_version_comparison_error: ", e);
+                        // In case the comparison fails, we assume the version to be above 0.91
+                        // This assumption (the scaling) does not have a major impact as it has
+                        // been the case in the plugin up till 0.10.1-hotfix.2
+                        isOldInkscapeVersion = true;
+                    }
+
+                    if (isOldInkscapeVersion) {
                         //						console.log("old inkscape, px @ 90dpi");
                         declaredUnit = "px_inkscape_old";
                     } else {
