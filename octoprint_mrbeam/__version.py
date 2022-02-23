@@ -1,1 +1,4 @@
-__version__ = "0.10.1-hotfix.2"
+"""
+ Version of Mr Beam plugin
+"""
+__version__ = "0.10.3"
