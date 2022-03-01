@@ -52,7 +52,7 @@ class SettingsDummy(object):
         return None
 
 
-class DummyConnectifityChecker:
+class DummyConnectivityChecker:
     online = True
 
     def check_immediately(self):
@@ -80,7 +80,7 @@ class MrBeamPluginDummy(MrBeamPlugin):
     _settings = SettingsDummy()
     _plugin_manager = PluginManagerDummy()
     _device_info = deviceInfo(use_dummy_values=IS_X86)
-    _connectivity_checker = DummyConnectifityChecker()
+    _connectivity_checker = DummyConnectivityChecker()
     _plugin_version = "dummy"
     _event_bus = EventManager()
 

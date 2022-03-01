@@ -374,7 +374,7 @@ class MrBeamPlugin(
                 terminalMaxLines=2000,
                 env=self.ENV_PROD,
                 load_gremlins=False,
-                software_tier=SWUpdateTier.PROD.value,
+                software_tier=SWUpdateTier.STABLE.value,
                 iobeam_disable_warnings=False,  # for development on non-MrBeam devices
                 suppress_migrations=False,  # for development on non-MrBeam devices
                 support_mode=False,

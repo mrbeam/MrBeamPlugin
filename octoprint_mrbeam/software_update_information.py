@@ -19,18 +19,18 @@ from util.pip_util import get_version_of_pip_module
 
 
 class SWUpdateTier(Enum):
-    PROD = "PROD"
+    STABLE = "PROD"
     BETA = "BETA"
     ALPHA = "ALPHA"
     DEV = "DEV"
 
 
 SW_UPDATE_TIERS_DEV = [SWUpdateTier.ALPHA.value, SWUpdateTier.DEV.value]
-SW_UPDATE_TIERS_STABLE = [SWUpdateTier.PROD.value, SWUpdateTier.BETA.value]
-SW_UPDATE_TIERS = SW_UPDATE_TIERS_DEV + SW_UPDATE_TIERS_STABLE
+SW_UPDATE_TIERS_PROD = [SWUpdateTier.STABLE.value, SWUpdateTier.BETA.value]
+SW_UPDATE_TIERS = SW_UPDATE_TIERS_DEV + SW_UPDATE_TIERS_PROD
 
 DEFAULT_REPO_BRANCH_ID = {
-    SWUpdateTier.PROD.value: "stable",
+    SWUpdateTier.STABLE.value: "stable",
     SWUpdateTier.BETA.value: "beta",
     SWUpdateTier.ALPHA.value: "alpha",
     SWUpdateTier.DEV.value: "develop",
@@ -137,7 +137,7 @@ def _get_config_of_tag(tag):
         s.keep_alive = False
 
         response = s.request("GET", url, headers=headers)
-    except requests.MaxRetryError:
+    except MaxRetryError:
         _logger.warning("timeout while trying to get the update_config file")
         return None
     except ConnectionError:
@@ -248,7 +248,7 @@ def software_channels_available(plugin):
     Returns:
         list of available software channels
     """
-    ret = copy.deepcopy(SW_UPDATE_TIERS_STABLE)
+    ret = copy.deepcopy(SW_UPDATE_TIERS_PROD)
     if plugin.is_dev_env():
         # fmt: off
         ret += SW_UPDATE_TIERS_DEV
@@ -373,7 +373,7 @@ def _generate_config_of_module(
         plugin: Mr Beam Plugin
 
     Returns:
-        software update informationen for the module
+        software update informations for the module
     """
     if tier in SW_UPDATE_TIERS:
         # merge default settings and input is master
