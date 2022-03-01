@@ -51,7 +51,7 @@ GLOBAL_PIP_COMMAND = (
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
 
-def _get_tag_of_github_repo(repo):
+def get_tag_of_github_repo(repo):
     """
     return the latest tag of a github repository
     Args:
@@ -170,7 +170,7 @@ def get_update_information(plugin):
     _logger.info("SoftwareUpdate using tier: %s %s", tier, beamos_date)
 
     if plugin._connectivity_checker.check_immediately():
-        config_tag = _get_tag_of_github_repo("beamos_config")
+        config_tag = get_tag_of_github_repo("beamos_config")
         # if plugin._connectivity_checker.check_immediately():  # check if device online
         if config_tag:
             cloud_config = _get_config_of_tag(config_tag)
