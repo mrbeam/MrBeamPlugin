@@ -54,7 +54,7 @@ $(function () {
             missing_updateinformation_info: {
                 title: gettext("No update information"),
                 text: gettext(
-                    "No information about available updates could be retrieved, please try again later. Errorcode: E-FFFF-1000"
+                    "No information about available updates could be retrieved, please try again later. Errorcode: E-1000"
                 ),
                 type: "info",
                 hide: false,
@@ -62,7 +62,7 @@ $(function () {
             write_error_update_info_file_err: {
                 title: gettext("Error during fetching update information"),
                 text: gettext(
-                    "There was a error during fetching the update information Errorcode: E-FFFF-1001"
+                    "There was a error during fetching the update information Errorcode: E-1001"
                 ),
                 type: "info",
                 hide: false,
