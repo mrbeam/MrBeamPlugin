@@ -21,6 +21,7 @@ from octoprint_mrbeam.migration import (
     MIGRATION_STATE,
     MigrationBaseClass,
     list_of_migrations,
+    MIGRATION_RESTART,
 )
 
 
@@ -30,13 +31,6 @@ def migrate(plugin):
 
 class MigrationException(Exception):
     pass
-
-
-class Restart(Enum):
-    NONE = 0
-    DEVICE = 1
-    OCTOPRINT = 2
-    IOBEAM = 3
 
 
 class Migration(object):
@@ -85,7 +79,7 @@ class Migration(object):
         )
         beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
         self.beamos_version = self.plugin._device_info.get_beamos_version_number()
-        self._restart = 0
+        self._restart = MIGRATION_RESTART.NONE
 
     def run(self):
         try:
@@ -265,12 +259,6 @@ class Migration(object):
                     equal_ok=False,
                 ):
                     self.fix_octoprint_prerelease_setting()
-                if self.version_previous is None or self._compare_versions(
-                    self.version_previous,
-                    self.VERSION_ENABLE_ONLINECHECK,
-                    equal_ok=False,
-                ):
-                    self.enable_online_check()
 
                 # migrations end
 
@@ -289,7 +277,6 @@ class Migration(object):
 
             self._run_migration()
             self.save_current_version()
-            self._check_for_restart()
         except MigrationException as e:
             self._logger.exception("Error while migration: {}".format(e))
         except Exception as e:
@@ -354,6 +341,7 @@ class Migration(object):
                     # if migration sucessfull append to executed successfull
                     if migration.state == MIGRATION_STATE.migration_done:
                         migration_executed[migration.id] = True
+                        self.restart = migration.restart
                     else:
                         # mark migration as failed and skipp the following ones
                         migration_executed[migration.id] = False
@@ -361,6 +349,8 @@ class Migration(object):
 
             with open(migrations_json_file_path, "w") as f:
                 f.write(json.dumps(migration_executed))
+
+            MigrationBaseClass.execute_restart(self.restart)
         except IOError:
             self._logger.error("migration execution file IO error")
         except MigrationException as e:
@@ -421,23 +411,6 @@ class Migration(object):
                 ["version"], self.version_current, force=True
             )  # force needed to save it if it wasn't there
             self.plugin._settings.save()
-
-    def _check_for_restart(self):
-        if self._restart:
-            if self._restart == Restart.OCTOPRINT:
-                self._logger.info("restart octoprint after migration")
-                exec_cmd("sudo systemctl restart octoprint.service")
-            elif self._restart == Restart.DEVICE:
-                self._logger.info("restart device after migration")
-                exec_cmd("sudo reboot now")
-            elif self._restart == Restart.IOBEAM:
-                self._logger.info("restart iobeam after migration")
-                exec_cmd("sudo systemctl restart iobeam")
-            else:
-                self._logger.info(
-                    "restart after migration choosen but unknown type: %s",
-                    self._restart,
-                )
 
     @property
     def restart(self):
@@ -1127,23 +1100,3 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("start update_focus_reminder_setting")
         self.plugin._settings.set_boolean(["focusReminder"], True)
         self.plugin._settings.save()
-
-    def enable_online_check(self):
-        """
-        Enables the octoprint onlinecheck so the update info will only be pulled if there is a internet connection
-        """
-        self._logger.info("start enable_online_check")
-        self.plugin._settings.global_set(
-            ["server", "onlineCheck", "enabled"],
-            True,
-        )
-        self.plugin._settings.global_set(
-            ["server", "onlineCheck", "host"],
-            "find.mr-beam.org",
-        )
-        self.plugin._settings.global_set(
-            ["server", "onlineCheck", "port"],
-            "80",
-        )
-        self.plugin._settings.save()
-        self.restart = Restart.OCTOPRINT

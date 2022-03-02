@@ -441,12 +441,6 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
     """
     # get version number
     current_version = None
-    _logger.debug(
-        "pip command check %s %s - %s",
-        input_moduleconfig,
-        input_moduleconfig,
-        "pip_command" not in input_moduleconfig,
-    )
     if (
         "global_pip_command" in input_moduleconfig
         and "pip_command" not in input_moduleconfig
