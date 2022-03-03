@@ -1,0 +1,4 @@
+iobeam==0.7.15
+mrb_hw_info==0.0.25
+leds==0.2.2
+mrb_docs==0.1.2
