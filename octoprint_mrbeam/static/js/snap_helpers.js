@@ -63,7 +63,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     Element.prototype.get_total_bbox = function () {
         const el = this;
         const mat = el.transform().totalMatrix;
-        const bb = el.getBBox();
+        const bb = el.getBBox(true); // isWithoutTransform=true
         return Snap.path.getBBoxWithTransformation(bb, mat);
     };
 });

@@ -127,10 +127,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             let rasterEl = marked[i];
             let bbox;
             try {
-              bbox = rasterEl.get_total_bbox();
-            }
-            catch(error) {
-                console.warn(`Getting bounding box for ${rasterEl} failed.`, error);
+                bbox = rasterEl.get_total_bbox();
+                //              if(MRBEAM_DEBUG_RENDERING){ // enable to debug render bbox
+                //                  const debugBB = svg.paper.rect(bbox).attr({fill: 'none', stroke:"#FF00FF", "stroke-dasharray": "1 1 1 1", class:"debugBBox"});
+                //              }
+            } catch (error) {
+                console.warn(
+                    `Getting bounding box for ${rasterEl} failed.`,
+                    error
+                );
                 continue;
             }
             // find overlaps
@@ -172,13 +177,20 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 rasterEl.addClass(`rasterCluster${c}`)
             );
             let tmpSvg = svg.clone();
-            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).forEach((element) => {
-                let elementToBeRemoved = tmpSvg.select('#' + element.attr('id'));
-                let elementsToBeExcluded = ["text", "tspan"]
-                if (elementToBeRemoved && !elementsToBeExcluded.includes(elementToBeRemoved.type)) {
-                    elementToBeRemoved.remove();
-                }
-            });
+            tmpSvg
+                .selectAll(`.toRaster:not(.rasterCluster${c})`)
+                .forEach((element) => {
+                    let elementToBeRemoved = tmpSvg.select(
+                        "#" + element.attr("id")
+                    );
+                    let elementsToBeExcluded = ["text", "tspan"];
+                    if (
+                        elementToBeRemoved &&
+                        !elementsToBeExcluded.includes(elementToBeRemoved.type)
+                    ) {
+                        elementToBeRemoved.remove();
+                    }
+                });
             // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
             tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
             // DON'T fix IDs of textPath references, they're cloned correct.
