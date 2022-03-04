@@ -64,7 +64,7 @@ def get_tag_of_github_repo(repo):
     import json
 
     try:
-        url = "https://api.github.com/repos/mrbeam/" + repo + "/tags"
+        url = "https://api.github.com/repos/mrbeam/{repo}/tags".format(repo=repo)
         headers = {
             "Accept": "application/json",
         }
@@ -84,7 +84,7 @@ def get_tag_of_github_repo(repo):
                 for version in json_data
             ]
             majorversion = Spec(
-                "<" + str(MAJOR_VERSION_CLOUD_CONFIG + 1) + ".0.0"
+                "<{}.0.0".format(str(MAJOR_VERSION_CLOUD_CONFIG + 1))
             )  # simpleSpec("0.*.*")
             return majorversion.select(versionlist)
         else:
@@ -120,10 +120,8 @@ def _get_config_of_tag(tag):
     import json
 
     try:
-        url = (
-            "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json"
-            + "?ref=v"
-            + str(tag)
+        url = "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{tag}".format(
+            tag=str(tag)
         )
 
         headers = {
@@ -165,34 +163,41 @@ def get_update_information(plugin):
     Returns:
         the config for the Octoprint embedded softwareupdate Plugin
     """
-    tier = plugin._settings.get(["dev", "software_tier"])
-    beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
-    _logger.info("SoftwareUpdate using tier: %s %s", tier, beamos_date)
-
-    if plugin._connectivity_checker.check_immediately():
-        config_tag = get_tag_of_github_repo("beamos_config")
-        # if plugin._connectivity_checker.check_immediately():  # check if device online
-        if config_tag:
-            cloud_config = _get_config_of_tag(config_tag)
-            if cloud_config:
-                return _set_info_from_cloud_config(
-                    plugin, tier, beamos_date, cloud_config
-                )
-    else:
-        _logger.warn("no internet connection")
-
-    user_notification_system = plugin.user_notification_system
-    user_notification_system.show_notifications(
-        user_notification_system.get_notification(
-            notification_id="missing_updateinformation_info", replay=False
+    try:
+        tier = plugin._settings.get(["dev", "software_tier"])
+        beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
+        _logger.info(
+            "SoftwareUpdate using tier: {tier} {beamos_date}".format(
+                tier=tier, beamos_date=beamos_date
+            )
         )
-    )
 
-    # mark update config as dirty
-    sw_update_plugin = plugin._plugin_manager.get_plugin_info(
-        "softwareupdate"
-    ).implementation
-    _clear_version_cache(sw_update_plugin)
+        if plugin._connectivity_checker.check_immediately():
+            config_tag = get_tag_of_github_repo("beamos_config")
+            # if plugin._connectivity_checker.check_immediately():  # check if device online
+            if config_tag:
+                cloud_config = _get_config_of_tag(config_tag)
+                if cloud_config:
+                    return _set_info_from_cloud_config(
+                        plugin, tier, beamos_date, cloud_config
+                    )
+        else:
+            _logger.warn("no internet connection")
+
+        user_notification_system = plugin.user_notification_system
+        user_notification_system.show_notifications(
+            user_notification_system.get_notification(
+                notification_id="missing_updateinformation_info", replay=False
+            )
+        )
+
+        # mark update config as dirty
+        sw_update_plugin = plugin._plugin_manager.get_plugin_info(
+            "softwareupdate"
+        ).implementation
+        _clear_version_cache(sw_update_plugin)
+    except Exception as e:
+        _logger.exception(e)
 
     return _set_info_from_cloud_config(
         plugin,
@@ -202,28 +207,28 @@ def get_update_information(plugin):
             "default": {},
             "modules": {
                 "mrbeam": {
-                    "name": " MrBeam Plugin offline2",
+                    "name": " MrBeam Plugin",
                     "type": "github_commit",
                     "user": "",
                     "repo": "",
                     "pip": "",
                 },
                 "mrbeamdoc": {
-                    "name": "Mr Beam Documentation offline2",
+                    "name": "Mr Beam Documentation",
                     "type": "github_commit",
                     "user": "",
                     "repo": "",
                     "pip": "",
                 },
                 "netconnectd": {
-                    "name": "OctoPrint-Netconnectd Plugin offline2",
+                    "name": "OctoPrint-Netconnectd Plugin",
                     "type": "github_commit",
                     "user": "",
                     "repo": "",
                     "pip": "",
                 },
                 "findmymrbeam": {
-                    "name": "OctoPrint-FindMyMrBeam offline2",
+                    "name": "OctoPrint-FindMyMrBeam",
                     "type": "github_commit",
                     "user": "",
                     "repo": "",
@@ -268,7 +273,7 @@ def switch_software_channel(plugin, channel):
     """
     old_channel = plugin._settings.get(["dev", "software_tier"])
     if channel in software_channels_available(plugin) and channel != old_channel:
-        _logger.info("Switching software channel to: %s", channel)
+        _logger.info("Switching software channel to: {channel}".format(channel=channel))
         plugin._settings.set(["dev", "software_tier"], channel)
         reload_update_info(plugin)
 
@@ -344,7 +349,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
         try:
             with open(sw_update_file_path, "w") as f:
                 f.write(json.dumps(sw_update_config))
-        except IOError:
+        except (IOError, TypeError):
             plugin._logger.error("can't create update info file")
             user_notification_system = plugin.user_notification_system
             user_notification_system.show_notifications(
@@ -402,7 +407,11 @@ def _generate_config_of_module(
         current_version = _get_curent_version(input_moduleconfig, module_id, plugin)
 
         if module_id != "octoprint":
-            _logger.debug("%s current version: %s", module_id, current_version)
+            _logger.debug(
+                "{module_id} current version: {current_version}".format(
+                    module_id=module_id, current_version=current_version
+                )
+            )
             input_moduleconfig["displayVersion"] = (
                 current_version if current_version else "-"
             )
@@ -457,7 +466,11 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
             if "package_name" in input_moduleconfig
             else module_id
         )
-        _logger.debug("get version %s %s", package_name, pip_command)
+        _logger.debug(
+            "get version {package_name} {pip_command}".format(
+                package_name=package_name, pip_command=pip_command
+            )
+        )
 
         current_version_global_pip = get_version_of_pip_module(
             package_name, pip_command
@@ -491,12 +504,6 @@ def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
     beamos_date_config = {}
     prev_beamos_date_entry = datetime.strptime("2000-01-01", "%Y-%m-%d").date()
     for date, beamos_config in moduleconfig["beamos_date"].items():
-        _logger.debug(
-            "date compare %s >= %s -> %s",
-            beamos_date,
-            datetime.strptime(date, "%Y-%m-%d").date(),
-            beamos_config,
-        )
         if (
             beamos_date >= datetime.strptime(date, "%Y-%m-%d").date()
             and prev_beamos_date_entry < beamos_date

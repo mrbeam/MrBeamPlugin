@@ -52,7 +52,6 @@ class Migration(object):
     VERSION_UPDATE_CUSTOM_MATERIAL_SETTINGS = "0.9.9"
     VERSION_UPDATE_OCTOPRINT_PRERELEASE_FIX = "0.9.10"
     VERSION_UPDATE_FORCE_FOCUS_REMINDER = "0.10.0"
-    VERSION_ENABLE_ONLINECHECK = "0.11.0"
 
     # this is where we have files needed for migrations
     MIGRATE_FILES_FOLDER = "files/migrate/"
@@ -341,7 +340,8 @@ class Migration(object):
                     # if migration sucessfull append to executed successfull
                     if migration.state == MIGRATION_STATE.migration_done:
                         migration_executed[migration.id] = True
-                        self.restart = migration.restart
+                        if migration.restart:
+                            self.restart = migration.restart
                     else:
                         # mark migration as failed and skipp the following ones
                         migration_executed[migration.id] = False

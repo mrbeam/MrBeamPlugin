@@ -227,6 +227,7 @@ class MigrationBaseClass:
                 exec_cmd("sudo reboot now")
             else:
                 logger.info(
-                    "restart after migration choosen but unknown type: %s",
-                    restart,
+                    "restart after migration choosen but unknown type: {}".format(
+                        restart
+                    )
                 )

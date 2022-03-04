@@ -6,6 +6,7 @@ $(function () {
         self.loginState = params[0];
         self.settings = params[1];
         self.softwareUpdate = params[2];
+        self.analytics = params[3];
 
         self.selector = ko.observable("PROD");
         self.available_channels = ko.observableArray([]);
@@ -94,7 +95,7 @@ $(function () {
         // get the hook when softwareUpdate perform the Updatecheck to force the update on the normal button
         self.performCheck_copy = self.softwareUpdate.performCheck;
         self.softwareUpdate.performCheck= function(showIfNothingNew, force, ignoreSeen) {
-            reload_update_info();
+            self.reload_update_info();
             if (force !== undefined) {
                 force = true; //only forces the update check if it was disabled ("check for update" button press)
             }
@@ -126,15 +127,18 @@ $(function () {
             );
             button.addClass("sticky-footer");
         };
+        self.reload_update_info = function(){
+            OctoPrint.post("plugin/mrbeam/info/update")
+                .done(function (response) {
+                })
+                .fail(function (error) {
+                    console.error("Unable to reload update info.");
+                    self.analytics.send_fontend_event("update_info_call_failure", {error_message: error})
+                    console.error("test");
+                });
+        }
     }
-    function reload_update_info() {
-        OctoPrint.post("plugin/mrbeam/info/update")
-            .done(function (response) {
-            })
-            .fail(function () {
-                console.error("Unable to reload update info.");
-            });
-    }
+
 
     let DOM_ELEMENT_TO_BIND_TO = "software_channel_selector";
 
@@ -144,7 +148,7 @@ $(function () {
         SoftwareChannelSelector,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["loginStateViewModel", "settingsViewModel", "softwareUpdateViewModel"],
+        ["loginStateViewModel", "settingsViewModel", "softwareUpdateViewModel", "analyticsViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [document.getElementById(DOM_ELEMENT_TO_BIND_TO)],

@@ -156,7 +156,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 update_config = get_update_information(plugin)
                 assert update_config == {
                     "findmymrbeam": {
-                        "displayName": "OctoPrint-FindMyMrBeam offline2",
+                        "displayName": "OctoPrint-FindMyMrBeam",
                         "displayVersion": "dummy",
                         "pip": "",
                         "repo": "",
@@ -164,7 +164,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                         "user": "",
                     },
                     "mrbeam": {
-                        "displayName": " MrBeam Plugin offline2",
+                        "displayName": " MrBeam Plugin",
                         "displayVersion": "dummy",
                         "pip": "",
                         "repo": "",
@@ -172,7 +172,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                         "user": "",
                     },
                     "mrbeamdoc": {
-                        "displayName": "Mr Beam Documentation offline2",
+                        "displayName": "Mr Beam Documentation",
                         "displayVersion": "dummy",
                         "pip": "",
                         "repo": "",
@@ -180,7 +180,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                         "user": "",
                     },
                     "netconnectd": {
-                        "displayName": "OctoPrint-Netconnectd Plugin offline2",
+                        "displayName": "OctoPrint-Netconnectd Plugin",
                         "displayVersion": "dummy",
                         "pip": "",
                         "repo": "",
