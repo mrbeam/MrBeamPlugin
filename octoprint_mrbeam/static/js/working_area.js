@@ -113,6 +113,7 @@ $(function () {
         self.currentQuickText = ko.observable();
         self.quickShapeNames = new Map([
             ["rect", gettext("Rectangle")],
+            ["line", gettext("Line")],
             ["circle", gettext("Circle")],
             ["star", gettext("Star")],
             ["heart", gettext("Heart")],
