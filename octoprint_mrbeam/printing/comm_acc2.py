@@ -31,6 +31,7 @@ from octoprint.util import (
     CountedEvent,
     sanitize_ascii,
 )
+from octoprint.util.comm import TemperatureRecord
 
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -2795,6 +2796,22 @@ class MachineCom(object):
                 _mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
         except:
             self._logger.exception("Exception in _set_air_pressure() ")
+
+    def getTemp(self):
+        temp = TemperatureRecord()
+        temp.set_tool(0, "10", "20")
+        temp.set_tool(1, "10", "20")
+        return temp.tools
+        # return (            TemperatureRecord().set_tool(0, "10", "20").tools        )  # self.last_temperature.tools
+        # return dict("20")
+
+    def getOffsets(self):
+        return dict()
+
+    def getBedTemp(self):
+        bedtemp = TemperatureRecord()
+        bedtemp.set_bed("10", "20")
+        return bedtemp.bed
 
 
 ### MachineCom callback ################################################################################################

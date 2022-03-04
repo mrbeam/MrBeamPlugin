@@ -8,9 +8,9 @@ li.nav-header {
 #settings_printerProfiles_link {
   display: none;
 }
-#settings_temperature_link {
-  display: none;
-}
+/*#settings_temperature_link {*/
+/*  display: none;*/
+/*}*/
 #settings_gcodeScripts_link {
   display: none;
 }

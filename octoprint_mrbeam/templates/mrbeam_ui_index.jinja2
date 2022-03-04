@@ -62,6 +62,18 @@
                     {# Translatots: Name of the tab #}
 					<li><a href="#mrb_term" data-toggle="tab" id="terminal_tab_btn">{{ _('terminal') }}</a></li>
                     {% endif %}
+                {% for key in templates.tab.order %}
+                                {% set entry, data = templates.tab.entries[key] %}
+                                {% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- ko allowBindings: false -->{% endif %}
+                                <li id="{{ data._div }}_link"
+                                    class="{% if loop.first %}active{% endif %} {% if "classes_link" in data %}{{ data.classes_link|join(' ') }}{% elif "classes" in data %}{{ data.classes|join(' ') }}{% endif %}"
+                                    {% if "data_bind" in data %}data-bind="{{ data.data_bind }}"{% endif %}
+                                    {% if "styles_link" in data %} style="{{ data.styles_link|join(', ') }}" {% elif "styles" in data %} style="{{ data.styles|join(', ') }}" {% endif %}
+                                        >
+                                        <a href="#{{ data._div }}" data-toggle="tab">{{ entry|e }}</a>
+                                </li>
+                                {% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- /ko -->{% endif %}
+                            {% endfor %}
 
 					{% for key in templates.navbar.order %}
 						{% set data = templates.navbar.entries[key] %}
@@ -115,9 +127,21 @@
 		</nav>
 
 		<div class="row-fluid">
+
 			<div class="span12 tabbable" id="mrbeam-tabs">
 				<div class="tab-content">
-
+                    {% for key in templates.tab.order %}
+                                {% set entry, data = templates.tab.entries[key] %}
+                                {% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- ko allowBindings: false -->{% endif %}
+                                <div id="{{ data._div }}"
+                                     class="tab-pane{% if loop.first %} active{% endif %}{% if "additional_classes" in data %} {{ data.additional_classes|join(' ') }}{% endif %}"
+                                     {% if "data_bind" in data %}data-bind="{{ data.data_bind }}"{% endif %}
+                                     {% if "styles_content" in data %} style="{{ data.styles_content|join(', ') }}" {% elif "styles" in data %} style="{{ data.styles|join(', ') }}" {% endif %}
+                                        >
+                                            {% try "There was an error with the template {filename} at line number {lineno}: {exception}" %}{% include data.template ignore missing %}{% endtry %}
+                                </div>
+                                {% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- /ko -->{% endif %}
+                            {% endfor %}
 					{% include 'tab_workingarea.jinja2' %}
 					{% if terminalEnabled %}
                     {%      include 'tab_terminal.jinja2' %}
@@ -147,6 +171,7 @@
 				</div>
 			</div>
 		</div>
+
 
 		<footer class="footer" style="display:none">
 			<ul class="pull-left muted">

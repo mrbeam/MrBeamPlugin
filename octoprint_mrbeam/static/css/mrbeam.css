@@ -1338,13 +1338,13 @@ table td.settings_logs_action a.disabled {
 }
 
 /** Temperature tab */
-#temperature-graph {
-  height: 350px;
-  width: 100%;
-  background-image: url("../img/graph-background.png");
-  background-position: center;
-  background-repeat: no-repeat;
-}
+/*#temperature-graph {*/
+/*  height: 350px;*/
+/*  width: 100%;*/
+/*  background-image: url("../img/graph-background.png");*/
+/*  background-position: center;*/
+/*  background-repeat: no-repeat;*/
+/*}*/
 
 .tab-content,
 .tab-pane {
@@ -2084,15 +2084,15 @@ td.settings_printerProfiles_profiles_action a.disabled {
   border-radius: 50%;
 }
 
-#control #btn_motors_off,
-#tab_temp,
-#temp,
-#gcode_command_slider,
-#gcode_layer_slider,
-#renderer_options,
-#control_extruder {
-  display: none;
-}
+/*#control #btn_motors_off,*/
+/*#tab_temp,*/
+/*#temp,*/
+/*#gcode_command_slider,*/
+/*#gcode_layer_slider,*/
+/*#renderer_options,*/
+/*#control_extruder {*/
+/*  display: none;*/
+/*}*/
 
 /*.btn-group>.btn:first-child,*/
 /*.btn-group>.btn:last-child,*/

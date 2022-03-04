@@ -180,6 +180,10 @@ class DustManager(object):
             err = True
         if args["rpm"] is not None:
             self._rpm = args["rpm"]
+            self._plugin._printer._addTemperatureData(
+                None,
+                (self._rpm / 100, self._dust * 100),
+            )
         else:
             err = True
 

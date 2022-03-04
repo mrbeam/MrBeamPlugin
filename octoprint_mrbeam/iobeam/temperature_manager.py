@@ -18,7 +18,6 @@ def temperatureManager(plugin):
 
 # This guy manages the temperature of the laser head
 class TemperatureManager(object):
-
     TEMP_TIMER_INTERVAL = 3
     TEMP_MAX_AGE = 10  # seconds
 
@@ -136,6 +135,10 @@ class TemperatureManager(object):
                 "laser_temp - first temperature from laserhead: %s", self.temperature
             )
         self.temperature_ts = time.time()
+        self._plugin._printer._addTemperatureData(
+            {0: {0: self.temperature, 1: self.temperature_max}},
+            None,
+        )
         self._check_temp_val()
         self._analytics_handler.collect_laser_temp_value(self.temperature)
 
