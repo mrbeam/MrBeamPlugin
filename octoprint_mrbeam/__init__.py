@@ -31,6 +31,8 @@ from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
+from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
+from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
 
 IS_X86 = platform.machine() == "x86_64"
 
@@ -70,10 +72,8 @@ from octoprint_mrbeam.software_update_information import (
     get_update_information,
     switch_software_channel,
     software_channels_available,
-    SW_UPDATE_TIER_PROD,
-    SW_UPDATE_TIER_BETA,
-    SW_UPDATE_TIER_DEV,
     BEAMOS_LEGACY_DATE,
+    SWUpdateTier,
 )
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.cli import get_cli_commands
@@ -116,6 +116,7 @@ class MrBeamPlugin(
     octoprint.plugin.SlicerPlugin,
     octoprint.plugin.ShutdownPlugin,
     octoprint.plugin.EnvironmentDetectionPlugin,
+    UpdateRestHandlerMixin,
     DocsRestHandlerMixin,
 ):
     # CONSTANTS
@@ -266,6 +267,10 @@ class MrBeamPlugin(
         self.mrbeam_plugin_initialized = True
         self.fire_event(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
 
+        # move octoprints connectivity checker to a new var so we can use our abstraction
+        self._octoprint_connectivity_checker = self._connectivity_checker
+        self._connectivity_checker = ConnectivityChecker(self)
+
         self._do_initial_log()
 
     def _init_frontend_logger(self):
@@ -378,7 +383,7 @@ class MrBeamPlugin(
                 terminalMaxLines=2000,
                 env=self.ENV_PROD,
                 load_gremlins=False,
-                software_tier=SW_UPDATE_TIER_PROD,
+                software_tier=SWUpdateTier.STABLE.value,
                 iobeam_disable_warnings=False,  # for development on non-MrBeam devices
                 suppress_migrations=False,  # for development on non-MrBeam devices
                 support_mode=False,
@@ -464,7 +469,9 @@ class MrBeamPlugin(
             dev=dict(
                 env=self.get_env(),
                 software_tier=self._settings.get(["dev", "software_tier"]),
-                software_tiers_available=software_channels_available(self),
+                software_tiers_available=[
+                    channel for channel in software_channels_available(self)
+                ],
                 terminalMaxLines=self._settings.get(["dev", "terminalMaxLines"]),
             ),
             gcode_nextgen=dict(
@@ -704,7 +711,7 @@ class MrBeamPlugin(
                 "css/hopscotch.min.css",
                 "css/wizard.css",
                 "css/tab_messages.css",
-                "css/software_update.css"
+                "css/software_update.css",
             ],
             less=["less/mrbeam.less"],
         )
@@ -2971,10 +2978,10 @@ class MrBeamPlugin(
                 timer.start()
 
     def is_beta_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.BETA
 
     def is_develop_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_DEV
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.DEV
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:

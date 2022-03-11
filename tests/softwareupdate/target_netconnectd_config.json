@@ -1,0 +1,68 @@
+{
+    "displayVersion": "dummy",
+    "displayName": "OctoPrint-Netconnectd Plugin",
+    "user": "mrbeam",
+    "repo": "OctoPrint-Netconnectd",
+    "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
+    "restart": "octoprint",
+    "type": "github_commit",
+    "dependencies": {
+        "netconnectd-daemon": {
+            "displayName": "Netconnectd Daemon",
+            "displayVersion": "-",
+            "repo": "netconnectd_mrbeam",
+            "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
+            "global_pip_command": true,
+            "package_name": "netconnectd",
+            "branch": "mrbeam2-stable",
+            "pip_command": "sudo /usr/local/bin/pip",
+            "restart": "environment",
+            "type": "github_commit",
+            "user": "mrbeam",
+            "beamos_date": {
+                "2021-06-11": {
+                    "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip",
+                    "tiers": {
+                        "develop": {"branch": "develop", "branch_default": "develop"},
+                        "beta": {
+                            "branch": "mrbeam2-beta",
+                            "branch_default": "mrbeam2-beta"
+                        },
+                        "alpha": {
+                            "branch": "mrbeam2-alpha",
+                            "branch_default": "mrbeam2-alpha"
+                        },
+                        "stable": {"branch": "master", "branch_default": "master"}
+                    }
+                }
+            },
+            "tiers": {
+                "develop": {
+                    "branch": "mrbeam2-stable",
+                    "branch_default": "mrbeam2-stable"
+                },
+                "beta": {
+                    "branch": "mrbeam2-stable",
+                    "branch_default": "mrbeam2-stable"
+                },
+                "alpha": {
+                    "branch": "mrbeam2-stable",
+                    "branch_default": "mrbeam2-stable"
+                },
+                "stable": {
+                    "branch": "mrbeam2-stable",
+                    "branch_default": "mrbeam2-stable"
+                }
+            }
+        }
+    },
+    "tiers": {
+        "develop": {"branch": "develop", "branch_default": "develop"},
+        "beta": {"branch": "mrbeam2-beta", "branch_default": "mrbeam2-beta"},
+        "alpha": {"branch": "mrbeam2-alpha", "branch_default": "mrbeam2-alpha"},
+        "stable": {
+            "branch": "mrbeam2-stable",
+            "branch_default": "mrbeam2-stable"
+        }
+    }
+}

@@ -48,6 +48,8 @@ plugin_requires = [
     "pillow",
     "lxml",
     "numpy",
+    "pyyaml",
+    "enum34",
     picamera,
 ]
 
