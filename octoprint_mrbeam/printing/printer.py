@@ -24,6 +24,7 @@ class Laser(Printer):
         self._stateMonitor = LaserStateMonitor(
             interval=0.5,
             on_update=self._sendCurrentDataCallbacks,
+            # on_add_temperature=self._sendAddTemperatureCallbacks,
             on_add_temperature=self._sendAddTemperatureCallbacks,
             on_add_log=self._sendAddLogCallbacks,
             on_add_message=self._sendAddMessageCallbacks,
@@ -235,6 +236,32 @@ class Laser(Printer):
     # 			sendCommandToPrinter = _mrbeam_plugin_implementation.execute_command(command)
     # 		if sendCommandToPrinter:
     # 			self._comm.sendCommand(command)
+
+    def _addTemperatureData(self, tools=None, bed=None, custom=None):
+        if tools is None:
+            tools = dict()
+
+        currentTimeUtc = int(time.time())
+
+        data = {"time": currentTimeUtc}
+        for tool in tools.keys():
+            data["tool%d" % tool] = {"actual": tools[tool][0], "target": tools[tool][1]}
+        if bed is not None and isinstance(bed, tuple):
+            data["bed"] = {"actual": bed[0], "target": bed[1]}
+        if custom is None:
+            custom = dict()
+        for identifier in custom.keys():
+            data[identifier] = {
+                "actual": custom[identifier][0],
+                "target": custom[identifier][1],
+            }
+
+        self._temps.append(data)
+
+        self._temp = tools
+        self._bedTemp = bed
+
+        self._stateMonitor.add_temperature(data)
 
 
 class LaserStateMonitor(StateMonitor):

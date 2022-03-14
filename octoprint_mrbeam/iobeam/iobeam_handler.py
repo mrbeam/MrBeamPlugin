@@ -744,6 +744,9 @@ class IoBeamHandler(object):
                 dataset,
                 dict(val=vals[self.MESSAGE_ACTION_FAN_RPM]),
             )
+            self._plugin._printer._addTemperatureData(
+                custom={"fan rpm": (vals[self.MESSAGE_ACTION_FAN_RPM] / 100, 0)}
+            )
             self._call_callback(
                 IoBeamValueEvents.DUST_VALUE,
                 dataset,
@@ -768,6 +771,9 @@ class IoBeamHandler(object):
                 if rpm_val is not None:
                     self._call_callback(
                         IoBeamValueEvents.RPM_VALUE, dataset, dict(val=rpm_val)
+                    )
+                    self._plugin._printer._addTemperatureData(
+                        custom={"fan rpm": (rpm_val / 100, 0)}
                     )
 
             if self.MESSAGE_ACTION_FAN_STATE in dataset:
@@ -1076,6 +1082,9 @@ class IoBeamHandler(object):
                 "pressure": dataset["dust"],
             }
             self._call_callback(IoBeamValueEvents.EXHAUST_DYNAMIC_VALUE, dataset, vals)
+            self._plugin._printer._addTemperatureData(
+                custom={"pressure": (dataset["dust"] / 10, 0)}
+            )
         return 0
 
     def _handle_link_quality(self, dataset):

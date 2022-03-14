@@ -161,6 +161,9 @@ class CompressorHandler(object):
                     )
 
             if "rpm_actual" in dataset and self._printer.is_printing():
+                self._plugin._printer._addTemperatureData(
+                    custom={"rpm_compressor": (dataset["rpm_actual"] / 10, 0)}
+                )
                 if dataset["rpm_actual"] == 0:
                     self._num_rpm_0 += 1
                     if self._num_rpm_0 >= self.MAX_TIMES_RPM_0:
@@ -184,6 +187,10 @@ class CompressorHandler(object):
                         )
                 else:
                     self._num_rpm_0 = 0
+            if "press_actual" in dataset and self._printer.is_printing():
+                self._plugin._printer._addTemperatureData(
+                    custom={"pressure_compressor": (dataset["press_actual"] / 10, 0)}
+                )
         else:
             # If the dataset is empty but we know there is a compressor, something is wrong
             if self.has_compressor():
