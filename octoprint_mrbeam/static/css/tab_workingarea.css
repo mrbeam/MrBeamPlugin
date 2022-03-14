@@ -780,7 +780,7 @@ body.ctrlKey #translateHandle {
 #crosshairDummy circle.dot {
   stroke: #000000;
   opacity: 0.5;
-  filter: url(#designHighlight);
+  /*filter: url(#designHighlight);*/
 }
 
 #crosshairDummy circle.dragger,
