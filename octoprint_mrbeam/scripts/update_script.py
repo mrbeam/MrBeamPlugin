@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import base64
 import logging
 import os
 import re
@@ -8,13 +7,12 @@ import subprocess
 import sys
 
 import yaml
-from octoprint.plugins.softwareupdate import exceptions, version_checks
+from octoprint.plugins.softwareupdate import exceptions
 from octoprint.plugins.softwareupdate.updaters.pip import _get_pip_caller
 
 from octoprint.settings import _default_basedir
-from requests import ConnectionError
-from requests.adapters import HTTPAdapter, Retry
-from urllib3.exceptions import MaxRetryError
+
+from octoprint_mrbeam.util.github_api import get_file_of_repo_for_tag
 from octoprint_mrbeam.util.pip_util import get_version_of_pip_module
 
 # _logger = logging.getLogger("octoprint.plugins.mrbeam.softwareupdate.updatescript")
@@ -103,9 +101,6 @@ def get_dependencies(path):
     try:
         with open(dependencies_path, "r") as f:
             dependencies_content = f.read()
-            dependencies_content = re.sub(
-                r"[^\S\r\n]", "", dependencies_content
-            )  # TODO mabye replace by unittesting the dependencies.txt file
             dependencies = re.findall(dependencies_pattern, dependencies_content)
             dependencies = [{"name": dep[0], "version": dep[2]} for dep in dependencies]
     except IOError:
@@ -128,53 +123,6 @@ def get_update_info():
     except yaml.YAMLError as e:
         raise RuntimeError("update info not valid json - {}".format(e))
     return update_info
-
-
-# TODO move to util an refactor cloud config part to use same
-def get_file_of_repo_for_tag(file, repo, tag):
-    """
-    return the software update config of the given tag on the repository
-
-    Args:
-        tag: tagname
-
-    Returns:
-        software update config
-    """
-    import requests
-    import json
-
-    try:
-        url = "https://api.github.com/repos/mrbeam/{repo}/contents/{file}?ref={tag}".format(
-            repo=repo, file=file, tag=str(tag)
-        )
-
-        headers = {
-            "Accept": "application/json",
-        }
-
-        s = requests.Session()
-        retry = Retry(connect=3, backoff_factor=0.3)
-        adapter = HTTPAdapter(max_retries=retry)
-        s.mount("https://", adapter)
-        s.keep_alive = False
-
-        response = s.request("GET", url, headers=headers)
-    except MaxRetryError:
-        _logger.warning("timeout while trying to get the  file")
-        return None
-    except ConnectionError:
-        _logger.warning("connection error while trying to get the  file")
-        return None
-
-    if response:
-        json_data = json.loads(response.text)
-        content = base64.b64decode(json_data["content"])
-
-        return content
-    else:
-        _logger.warning("no valid response for the file - %s", response)
-        return None
 
 
 def build_wheels(queue):
@@ -215,13 +163,11 @@ def build_wheels(queue):
             pip_caller.on_log_stdout = _log_stdout
             pip_caller.on_log_stderr = _log_stderr
 
-        # TODO check arguemtns will work with legacy image pip version
         pip_args = [
             "wheel",
             "--no-python-version-warning",
             "--disable-pip-version-check",
-            "--wheel-dir=/tmp/wheelhouse",
-            # Build wheels into <dir>, where the default is the current working directory.
+            "--wheel-dir=/tmp/wheelhouse",  # Build wheels into <dir>, where the default is the current working directory.
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
@@ -326,7 +272,6 @@ def build_queue(update_info, dependencies, target):
         }
     )
 
-    print("dependencies.txt", dependencies)
     if dependencies:
         for dependency in dependencies:
             mrbeam_config = update_info.get("mrbeam")
@@ -338,7 +283,6 @@ def build_queue(update_info, dependencies, target):
                 raise exceptions.UpdateError(
                     "no update info for dependency", dependency["name"]
                 )
-            print(dependency["name"], dependency_config)  # TODO only debug
             if dependency_config.get("pip"):
                 archive = dependency_config["pip"].format(
                     repo=dependency_config["repo"],
@@ -354,7 +298,6 @@ def build_queue(update_info, dependencies, target):
                 dependency["name"],
                 dependency_config.get("pip_command", "/home/pi/oprint/bin/pip"),
             )
-            print("version", version, dependency["version"])  # TODO only for debug
             if version != dependency["version"]:
                 install_queue.setdefault(
                     dependency_config.get("pip_command", "/home/pi/oprint/bin/pip"), []
@@ -411,19 +354,19 @@ def main():
         if not os.access(folder, os.W_OK):
             raise RuntimeError("Could not update, base folder is not writable")
 
-        # dependencies = get_file_of_repo_for_tag(
-        #     "octoprint_mrbeam/dependencies.txt",
-        #     "MrBeamPlugin",
-        #     args.target,
-        # )
-        # TODO ony for debug
-        with open(
-            os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "../dependencies.txt"
-            ),
-            "r",
-        ) as f:
-            dependencies = f.read()
+        dependencies = get_file_of_repo_for_tag(
+            "octoprint_mrbeam/dependencies.txt",
+            "MrBeamPlugin",
+            args.target,
+        )
+        # # TODO ony for debug
+        # with open(
+        #     os.path.join(
+        #         os.path.dirname(os.path.abspath(__file__)), "../dependencies.txt"
+        #     ),
+        #     "r",
+        # ) as f:
+        #     dependencies = f.read()
         if dependencies is None:
             raise RuntimeError("No dependencies found")
         try:
@@ -435,14 +378,14 @@ def main():
             )
 
         new_update_script_path = os.path.join(folder, "update_script_file.py")
-        # update_script_file = get_file_of_repo_for_tag(
-        #     "octoprint_mrbeam/scripts/update_script.py",
-        #     "MrBeamPlugin",
-        #     args.target,
-        # )
+        update_script_file = get_file_of_repo_for_tag(
+            "octoprint_mrbeam/scripts/update_script.py",
+            "MrBeamPlugin",
+            args.target,
+        )
         # TODO only for debug
-        with open(os.path.abspath(__file__), "r") as f:
-            update_script_file = f.read()
+        # with open(os.path.abspath(__file__), "r") as f:
+        #     update_script_file = f.read()
 
         if update_script_file is None:
             raise RuntimeError("No update_script found")

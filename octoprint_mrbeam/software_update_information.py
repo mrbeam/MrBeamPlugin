@@ -15,6 +15,7 @@ from urllib3 import Retry
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_merge, logExceptions
+from octoprint_mrbeam.util.github_api import get_file_of_repo_for_tag
 from util.pip_util import get_version_of_pip_module
 
 
@@ -107,51 +108,6 @@ def get_tag_of_github_repo(repo):
         return None
 
 
-def _get_config_of_tag(tag):
-    """
-    return the software update config of the given tag on the repository
-    Args:
-        tag: tagname
-
-    Returns:
-        software update config
-    """
-    import requests
-    import json
-
-    try:
-        url = "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{tag}".format(
-            tag=str(tag)
-        )
-
-        headers = {
-            "Accept": "application/json",
-        }
-
-        s = requests.Session()
-        retry = Retry(connect=3, backoff_factor=0.3)
-        adapter = HTTPAdapter(max_retries=retry)
-        s.mount("https://", adapter)
-        s.keep_alive = False
-
-        response = s.request("GET", url, headers=headers)
-    except MaxRetryError:
-        _logger.warning("timeout while trying to get the update_config file")
-        return None
-    except ConnectionError:
-        _logger.warning("connection error while trying to get the update_config file")
-        return None
-
-    if response:
-        json_data = json.loads(response.text)
-        yaml_file = base64.b64decode(json_data["content"])
-
-        return yaml.safe_load(yaml_file)
-    else:
-        _logger.warning("no valid response for the update_config file")
-        return None
-
-
 def get_update_information(plugin):
     """
     Gets called from the octoprint.plugin.softwareupdate.check_config Hook from Octoprint
@@ -176,7 +132,13 @@ def get_update_information(plugin):
             config_tag = get_tag_of_github_repo("beamos_config")
             # if plugin._connectivity_checker.check_immediately():  # check if device online
             if config_tag:
-                cloud_config = _get_config_of_tag(config_tag)
+                cloud_config = yaml.safe_load(
+                    get_file_of_repo_for_tag(
+                        repo="beamos_config",
+                        file="docs/sw-update-conf.json",
+                        tag="v{tag}".format(tag=str(config_tag)),
+                    )
+                )
                 if cloud_config:
                     return _set_info_from_cloud_config(
                         plugin, tier, beamos_date, cloud_config
@@ -403,6 +365,14 @@ def _generate_config_of_module(
             input_moduleconfig["branch"] = input_moduleconfig["branch"].format(
                 tier=_get_tier_by_id(tier)
             )
+
+        if "update_script" in input_moduleconfig and module_id == "mrbeam":
+            update_script = os.path.join(
+                plugin._basefolder, "scripts", "update_script.py"
+            )
+            input_moduleconfig["update_script"] = input_moduleconfig[
+                "update_script"
+            ].format(update_script=update_script)
 
         current_version = _get_curent_version(input_moduleconfig, module_id, plugin)
 
