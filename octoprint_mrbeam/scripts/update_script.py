@@ -15,12 +15,13 @@ from octoprint.settings import _default_basedir
 from requests import ConnectionError
 from requests.adapters import HTTPAdapter, Retry
 from urllib3.exceptions import MaxRetryError
+from octoprint_mrbeam.util.pip_util import get_version_of_pip_module
 
 # _logger = logging.getLogger("octoprint.plugins.mrbeam.softwareupdate.updatescript")
 _logger = logging
 
 
-def parse_arguments():
+def _parse_arguments():
     import argparse
 
     boolean_trues = ["true", "yes", "1"]
@@ -88,6 +89,15 @@ def parse_arguments():
 
 
 def get_dependencies(path):
+    """
+    return the dependencies saved in the <path>
+
+    Args:
+         path: path to the dependencies.txt file
+
+    Returns:
+        list of dependencie dict [{"name", "version"}]
+    """
     dependencies_path = os.path.join(path, "dependencies.txt")
     dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)(.=)+([0-9]+.[0-9]+.[0-9]+)"
     try:
@@ -104,16 +114,19 @@ def get_dependencies(path):
 
 
 def get_update_info():
-    # TODO test additional exceptions \00 as null char
+    """
+    returns the update info saved in the update_info.json file
+    """
     update_info_path = os.path.join(_default_basedir("OctoPrint"), "update_info.json")
     try:
         with open(update_info_path, "r") as f:
-            # print("file", f.read())
             update_info = yaml.safe_load(f)
     except IOError:
         raise RuntimeError("Could not load update info")
     except ValueError:
         raise RuntimeError("update info not valid json")
+    except yaml.YAMLError as e:
+        raise RuntimeError("update info not valid json - {}".format(e))
     return update_info
 
 
@@ -121,8 +134,10 @@ def get_update_info():
 def get_file_of_repo_for_tag(file, repo, tag):
     """
     return the software update config of the given tag on the repository
+
     Args:
         tag: tagname
+
     Returns:
         software update config
     """
@@ -163,6 +178,16 @@ def get_file_of_repo_for_tag(file, repo, tag):
 
 
 def build_wheels(queue):
+    """
+    build the wheels of the packages in the queue
+
+    Args:
+        queue: dict of venvs with a list of packages to build the wheels
+
+    Returns:
+        None
+
+    """
     for venv, packages in queue.items():
 
         pip_caller = _get_pip_caller(command=venv)
@@ -216,6 +241,15 @@ def build_wheels(queue):
 
 # TODO fix for mrbeam plugin commit hash package_version is not target
 def install_wheels(queue):
+    """
+    installs the wheels in the given venv of the queue
+
+    Args:
+        queue: dict of venvs with a list of packages to install
+
+    Returns:
+        None
+    """
     for venv, packages in queue.items():
 
         pip_caller = _get_pip_caller(command=venv)
@@ -247,10 +281,9 @@ def install_wheels(queue):
             "install",
             "--no-python-version-warning",
             "--disable-pip-version-check",
-            "--upgrade"  # Upgrade all specified packages to the newest available version. The handling of dependencies depends on the upgrade-strategy used.
+            "--upgrade",  # Upgrade all specified packages to the newest available version. The handling of dependencies depends on the upgrade-strategy used.
             "--no-index",  # Ignore package index (only looking at --find-links URLs instead).
-            "--find-links=/tmp/wheelhouse",
-            # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
+            "--find-links=/tmp/wheelhouse",  # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
@@ -267,30 +300,17 @@ def install_wheels(queue):
             )
 
 
-def do_update():
-    # curl "https://api.github.com/repos/mrbeam/OctoPrint/releases/latest" | yq ".tag_name" -
-    # wget https://github.com/{username}/{projectname}/archive/{sha}.zip
-    # pip    wheel[project1].zip[project2].zip
-    # my/venv/bin/pip install [project1].whl
-
-    args = parse_arguments()
-
-    # get dependencies
-    dependencies = get_dependencies(args.folder)
-
-    # get update config of dependencies
-    update_info = get_update_info()
-
+def build_queue(update_info, dependencies, target):
     """
-        {
-        "venv_path": [
-                {
-                    "name": "packagename"
-                    "archive": "archive path"
-                    "target": "v01.2.5/#123123"
-                }
-            ]
-        }
+    build the queue of packages to install
+
+    Args:
+        update_info: a dict of informations how to update the packages
+        dependencies: a list dicts of dependencies [{"name", "version"}]
+        target: target of the Mr Beam Plugin to update to
+
+    Returns:
+        install_queue: dict of venvs with a list of package dicts {"<venv path>": [{"name", "archive", "target"}]
     """
     install_queue = {}
 
@@ -298,16 +318,15 @@ def do_update():
         update_info.get("mrbeam").get("pip_command", "/home/pi/oprint/bin/pip"), []
     ).append(
         {
-            "name": update_info.get("mrbeam").get("repo"),
+            "name": "Mr_Beam",  # update_info.get("mrbeam").get("repo"),
             "archive": update_info.get("mrbeam")
             .get("pip")
-            .format(target_version=args.target),
-            "target": args.target,
+            .format(target_version=target),
+            "target": "0.10.3",  # TODO fix he version
         }
     )
 
     print("dependencies.txt", dependencies)
-    # self._plugin_manager.plugins.[softwareupdate].get_current_versions()
     if dependencies:
         for dependency in dependencies:
             mrbeam_config = update_info.get("mrbeam")
@@ -317,7 +336,7 @@ def do_update():
             # fail if requirements file contains dependencies but cloud config not
             if dependency_config == None:
                 raise exceptions.UpdateError(
-                    "no update info for dependency {}".format(dependency["name"])
+                    "no update info for dependency", dependency["name"]
                 )
             print(dependency["name"], dependency_config)  # TODO only debug
             if dependency_config.get("pip"):
@@ -330,28 +349,59 @@ def do_update():
                 raise exceptions.UpdateError(
                     "pip not configured for {}".format(dependency["name"])
                 )
-            # TODO check if version is already installed
-            install_queue.setdefault(
-                dependency_config.get("pip_command", "/home/pi/oprint/bin/pip"), []
-            ).append(
-                {
-                    "name": dependency["name"],
-                    "archive": archive,
-                    "target": dependency["version"],
-                }
+
+            version = get_version_of_pip_module(
+                dependency["name"],
+                dependency_config.get("pip_command", "/home/pi/oprint/bin/pip"),
             )
+            print("version", version, dependency["version"])  # TODO only for debug
+            if version != dependency["version"]:
+                install_queue.setdefault(
+                    dependency_config.get("pip_command", "/home/pi/oprint/bin/pip"), []
+                ).append(
+                    {
+                        "name": dependency["name"],
+                        "archive": archive,
+                        "target": dependency["version"],
+                    }
+                )
+    return install_queue
+
+
+def run_update():
+    """
+    collects the dependencies and the update info, builds the wheels and installs them in the correct venv
+    """
+
+    args = _parse_arguments()
+
+    # get dependencies
+    dependencies = get_dependencies(args.folder)
+
+    # get update config of dependencies
+    update_info = get_update_info()
+
+    install_queue = build_queue(update_info, dependencies, args.target)
 
     print("install_queue", install_queue)  # TODO only for debug
-    build_wheels(install_queue)
-    install_wheels(install_queue)
+    if install_queue is not None:
+        build_wheels(install_queue)
+        install_wheels(install_queue)
 
 
 def main():
+    """
+    loads the dependencies.txt and the update_script of the given target and executes the new update_script
+
+    Args:
+        target: target of the Mr Beam Plugin to update to
+        call: if true executet the update itselfe
+    """
     _logger.error("test logger")
 
-    args = parse_arguments()
+    args = _parse_arguments()
     if args.call:
-        do_update()
+        run_update()
     else:
 
         folder = args.folder
@@ -364,7 +414,7 @@ def main():
         # dependencies = get_file_of_repo_for_tag(
         #     "octoprint_mrbeam/dependencies.txt",
         #     "MrBeamPlugin",
-        #     "feature/SW-649-create-update-script-for-mrbeam-plugin",
+        #     args.target,
         # )
         # TODO ony for debug
         with open(
@@ -374,28 +424,50 @@ def main():
             "r",
         ) as f:
             dependencies = f.read()
-        with open(os.path.join(folder, "dependencies.txt"), "w") as f:
-            f.write(dependencies)
+        if dependencies is None:
+            raise RuntimeError("No dependencies found")
+        try:
+            with open(os.path.join(folder, "dependencies.txt"), "w") as f:
+                f.write(dependencies)
+        except IOError:
+            raise RuntimeError(
+                "could not write {}".format(os.path.join(folder, "dependencies.txt"))
+            )
 
         new_update_script_path = os.path.join(folder, "update_script_file.py")
         # update_script_file = get_file_of_repo_for_tag(
         #     "octoprint_mrbeam/scripts/update_script.py",
         #     "MrBeamPlugin",
-        #     "feature/SW-649-create-update-script-for-mrbeam-plugin",
+        #     args.target,
         # )
         # TODO only for debug
         with open(os.path.abspath(__file__), "r") as f:
             update_script_file = f.read()
 
-        with open(new_update_script_path, "w") as f:
-            f.write(update_script_file)
+        if update_script_file is None:
+            raise RuntimeError("No update_script found")
+
+        try:
+            with open(new_update_script_path, "w") as f:
+                f.write(update_script_file)
+        except IOError:
+            raise RuntimeError("could not write {}".format(new_update_script_path))
 
         # call new update script with args
         sys.argv = ["--call=true"] + sys.argv[1:]
-        subprocess.call([sys.executable, new_update_script_path] + sys.argv)
+        try:
+            result = subprocess.call(
+                [sys.executable, new_update_script_path] + sys.argv,
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            print(e.output)
+            raise RuntimeError("error code %s", (e.returncode, e.output))
 
-        # TODO only for testing
-        raise RuntimeError("TEST - Could not update")
+        print("result", result)
+        if result != 0:
+            #     # TODO only for testing
+            raise exceptions.UpdateError("TEST - Could not update", result)
 
 
 if __name__ == "__main__":
