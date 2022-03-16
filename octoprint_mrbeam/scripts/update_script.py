@@ -1,22 +1,27 @@
 from __future__ import absolute_import, division, print_function
 
-import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
+from io import BytesIO
 
 import yaml
+import zipfile
+import requests
 from octoprint.plugins.softwareupdate import exceptions
 from octoprint.plugins.softwareupdate.updaters.pip import _get_pip_caller
 
 from octoprint.settings import _default_basedir
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
-from octoprint_mrbeam.util.github_api import get_file_of_repo_for_tag
 from octoprint_mrbeam.util.pip_util import get_version_of_pip_module
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
+from urllib3.exceptions import MaxRetryError, ConnectionError
 
-# _logger = logging.getLogger("octoprint.plugins.mrbeam.softwareupdate.updatescript")
-_logger = logging
+_logger = mrb_logger("octoprint.plugins.mrbeam.softwareupdate.updatescript")
 
 
 def _parse_arguments():
@@ -71,6 +76,22 @@ def _parse_arguments():
         type=lambda x: x in boolean_trues,
         dest="call",
         default=False,
+    )
+    parser.add_argument(
+        "--archive",
+        action="store",
+        type=str,
+        dest="archive",
+        default=None,
+        help="path of target zip file on local system",
+    )
+    parser.add_argument(
+        "--target_version",
+        action="store",
+        type=str,
+        dest="target_version",
+        default=None,
+        help="version number of the target",
     )
     parser.add_argument(
         "folder",
@@ -156,7 +177,6 @@ def build_wheels(queue):
                 lines = map(lambda x: x.strip(), lines)
             for line in lines:
                 print(u"{} {}".format(prefix, line))
-                _logger.debug(u"{} {}".format(prefix, line))
 
         if _logger is not None:
             pip_caller.on_log_call = _log_call
@@ -185,7 +205,6 @@ def build_wheels(queue):
             )
 
 
-# TODO fix for mrbeam plugin commit hash package_version is not target
 def install_wheels(queue):
     """
     installs the wheels in the given venv of the queue
@@ -216,7 +235,6 @@ def install_wheels(queue):
                 lines = map(lambda x: x.strip(), lines)
             for line in lines:
                 print(u"{} {}".format(prefix, line))
-                _logger.debug(u"{} {}".format(prefix, line))
 
         if _logger is not None:
             pip_caller.on_log_call = _log_call
@@ -246,7 +264,7 @@ def install_wheels(queue):
             )
 
 
-def build_queue(update_info, dependencies, target):
+def build_queue(update_info, dependencies, target, mrbeam_archive):
     """
     build the queue of packages to install
 
@@ -265,10 +283,8 @@ def build_queue(update_info, dependencies, target):
     ).append(
         {
             "name": "Mr_Beam",  # update_info.get("mrbeam").get("repo"),
-            "archive": update_info.get("mrbeam")
-            .get("pip")
-            .format(target_version=target),
-            "target": "0.10.3",  # TODO fix he version
+            "archive": mrbeam_archive,
+            "target": target,
         }
     )
 
@@ -324,12 +340,114 @@ def run_update():
     # get update config of dependencies
     update_info = get_update_info()
 
-    install_queue = build_queue(update_info, dependencies, args.target)
+    install_queue = build_queue(
+        update_info, dependencies, args.target_version, args.archive
+    )
 
-    print("install_queue", install_queue)  # TODO only for debug
+    print("install_queue", install_queue)
     if install_queue is not None:
         build_wheels(install_queue)
         install_wheels(install_queue)
+
+
+def retryget(url, retrys=3, backoff_factor=0.3):
+    """
+    retrys the get <retrys> times
+
+    Args:
+        url: url to access
+        retrys: number of retrys
+        backoff_factor: factor for time between retrys
+
+    Returns:
+        response
+    """
+    try:
+        s = requests.Session()
+        retry = Retry(connect=retrys, backoff_factor=backoff_factor)
+        adapter = HTTPAdapter(max_retries=retry)
+        s.mount("https://", adapter)
+        s.keep_alive = False
+
+        response = s.request("GET", url)
+        return response
+    except MaxRetryError:
+        raise RuntimeError("timeout while trying to get {}".format(url))
+    except ConnectionError:
+        raise RuntimeError("connection error while trying to get {}".format(url))
+
+
+def loadMrBeamPluginTarget(archive, folder):
+    """
+    download the archive of the Mr Beam Plugin and copy dependencies and update script in the working directory
+
+    Args:
+        archive: path of the archive to download and unzip
+        folder: working directory
+
+    Returns:
+        (zip_file_path, target_version) - path of the downloaded zip file and target version string
+    """
+
+    # download target repo zip
+    req = retryget(archive)
+    filename = archive.split("/")[-1]
+    zip_file_path = os.path.join(folder, filename)
+    try:
+        with open(zip_file_path, "wb") as output_file:
+            output_file.write(req.content)
+    except IOError:
+        raise RuntimeError(
+            "Could not save the zip file to the working directory {}".format(folder)
+        )
+
+    # unzip repo
+    mrbeam_plugin_extracted_path = os.path.join(folder, "mrbeamplugin/")
+    mrbeam_plugin_extracted_path_folder = os.path.join(
+        mrbeam_plugin_extracted_path,
+        "MrBeamPlugin-{target}".format(target=filename.split(".zip")[0]),
+    )
+    try:
+        mrbeam_zipfile = zipfile.ZipFile(BytesIO(req.content))
+        mrbeam_zipfile.extractall(mrbeam_plugin_extracted_path)
+        mrbeam_zipfile.close()
+    except (zipfile.BadZipfile, zipfile.LargeZipFile) as e:
+        raise RuntimeError("Could not unzip mrbeam repo - error: {}".format(e))
+
+    # copy new dependencies to working directory
+    try:
+        shutil.copy2(
+            os.path.join(
+                mrbeam_plugin_extracted_path_folder, "octoprint_mrbeam/dependencies.txt"
+            ),
+            os.path.join(folder, "dependencies.txt"),
+        )
+    except IOError:
+        raise RuntimeError("Could not copy dependencies to working directory")
+
+    # copy new update script to working directory
+    try:
+        shutil.copy2(
+            os.path.join(
+                mrbeam_plugin_extracted_path_folder,
+                "octoprint_mrbeam/scripts/update_script.py",
+            ),
+            os.path.join(folder, "update_script_file.py"),
+        )
+    except IOError:
+        raise RuntimeError("Could not copy update_script to working directory")
+
+    # get target version
+    exec(
+        open(
+            os.path.join(
+                mrbeam_plugin_extracted_path_folder, "octoprint_mrbeam/__version.py"
+            )
+        ).read()
+    )
+    target_version = __version__
+
+    return zip_file_path, target_version
 
 
 def main():
@@ -340,10 +458,13 @@ def main():
         target: target of the Mr Beam Plugin to update to
         call: if true executet the update itselfe
     """
-    _logger.error("test logger")
 
     args = _parse_arguments()
     if args.call:
+        if args.archive is None or args.target_version is None:
+            raise RuntimeError(
+                "Could not run update archive or target_version is missing"
+            )
         run_update()
     else:
 
@@ -354,63 +475,61 @@ def main():
         if not os.access(folder, os.W_OK):
             raise RuntimeError("Could not update, base folder is not writable")
 
-        dependencies = get_file_of_repo_for_tag(
-            "octoprint_mrbeam/dependencies.txt",
-            "MrBeamPlugin",
-            args.target,
+        # dependencies = get_file_of_repo_for_tag(
+        #     "octoprint_mrbeam/dependencies.txt",
+        #     "MrBeamPlugin",
+        #     args.target,
+        # )
+        #
+        # if dependencies is None:
+        #     raise RuntimeError("No dependencies found")
+        # try:
+        #     with open(os.path.join(folder, "dependencies.txt"), "w") as f:
+        #         f.write(dependencies)
+        # except IOError:
+        #     raise RuntimeError(
+        #         "could not write {}".format(os.path.join(folder, "dependencies.txt"))
+        #     )
+        #
+        # new_update_script_path = os.path.join(folder, "update_script_file.py")
+        # update_script_file = get_file_of_repo_for_tag(
+        #     "octoprint_mrbeam/scripts/update_script.py",
+        #     "MrBeamPlugin",
+        #     args.target,
+        # )
+        #
+        # if update_script_file is None:
+        #     raise RuntimeError("No update_script found")
+        #
+        # try:
+        #     with open(new_update_script_path, "w") as f:
+        #         f.write(update_script_file)
+        # except IOError:
+        #     raise RuntimeError("could not write {}".format(new_update_script_path))
+        update_info = get_update_info()
+        archive, target_version = loadMrBeamPluginTarget(
+            update_info.get("mrbeam").get("pip").format(target_version=args.target),
+            folder,
         )
-        # # TODO ony for debug
-        # with open(
-        #     os.path.join(
-        #         os.path.dirname(os.path.abspath(__file__)), "../dependencies.txt"
-        #     ),
-        #     "r",
-        # ) as f:
-        #     dependencies = f.read()
-        if dependencies is None:
-            raise RuntimeError("No dependencies found")
-        try:
-            with open(os.path.join(folder, "dependencies.txt"), "w") as f:
-                f.write(dependencies)
-        except IOError:
-            raise RuntimeError(
-                "could not write {}".format(os.path.join(folder, "dependencies.txt"))
-            )
-
-        new_update_script_path = os.path.join(folder, "update_script_file.py")
-        update_script_file = get_file_of_repo_for_tag(
-            "octoprint_mrbeam/scripts/update_script.py",
-            "MrBeamPlugin",
-            args.target,
-        )
-        # TODO only for debug
-        # with open(os.path.abspath(__file__), "r") as f:
-        #     update_script_file = f.read()
-
-        if update_script_file is None:
-            raise RuntimeError("No update_script found")
-
-        try:
-            with open(new_update_script_path, "w") as f:
-                f.write(update_script_file)
-        except IOError:
-            raise RuntimeError("could not write {}".format(new_update_script_path))
 
         # call new update script with args
-        sys.argv = ["--call=true"] + sys.argv[1:]
+        sys.argv = [
+            "--call=true",
+            "--archive={}".format(archive),
+            "--target_version={}".format(target_version),
+        ] + sys.argv[1:]
         try:
             result = subprocess.call(
-                [sys.executable, new_update_script_path] + sys.argv,
+                [sys.executable, os.path.join(folder, "update_script_file.py")]
+                + sys.argv,
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
             print(e.output)
             raise RuntimeError("error code %s", (e.returncode, e.output))
 
-        print("result", result)
         if result != 0:
-            #     # TODO only for testing
-            raise exceptions.UpdateError("TEST - Could not update", result)
+            raise exceptions.UpdateError("Error Could not update", result)
 
 
 if __name__ == "__main__":
