@@ -475,37 +475,6 @@ def main():
         if not os.access(folder, os.W_OK):
             raise RuntimeError("Could not update, base folder is not writable")
 
-        # dependencies = get_file_of_repo_for_tag(
-        #     "octoprint_mrbeam/dependencies.txt",
-        #     "MrBeamPlugin",
-        #     args.target,
-        # )
-        #
-        # if dependencies is None:
-        #     raise RuntimeError("No dependencies found")
-        # try:
-        #     with open(os.path.join(folder, "dependencies.txt"), "w") as f:
-        #         f.write(dependencies)
-        # except IOError:
-        #     raise RuntimeError(
-        #         "could not write {}".format(os.path.join(folder, "dependencies.txt"))
-        #     )
-        #
-        # new_update_script_path = os.path.join(folder, "update_script_file.py")
-        # update_script_file = get_file_of_repo_for_tag(
-        #     "octoprint_mrbeam/scripts/update_script.py",
-        #     "MrBeamPlugin",
-        #     args.target,
-        # )
-        #
-        # if update_script_file is None:
-        #     raise RuntimeError("No update_script found")
-        #
-        # try:
-        #     with open(new_update_script_path, "w") as f:
-        #         f.write(update_script_file)
-        # except IOError:
-        #     raise RuntimeError("could not write {}".format(new_update_script_path))
         update_info = get_update_info()
         archive, target_version = loadMrBeamPluginTarget(
             update_info.get("mrbeam").get("pip").format(target_version=args.target),
