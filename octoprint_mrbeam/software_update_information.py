@@ -366,13 +366,36 @@ def _generate_config_of_module(
                 tier=_get_tier_by_id(tier)
             )
 
-        if "update_script" in input_moduleconfig and module_id == "mrbeam":
-            update_script = os.path.join(
-                plugin._basefolder, "scripts", "update_script.py"
+        if "update_script" in input_moduleconfig:
+            if "update_script_relative_path" not in input_moduleconfig:
+                _logger.error(
+                    "update_script_relative_path is missing in update config for {}".format(
+                        module_id
+                    )
+                )
+            try:
+                if not os.path.isdir(input_moduleconfig["update_folder"]):
+                    os.mkdir(input_moduleconfig["update_folder"])
+            except (IOError, OSError) as e:
+                _logger.error(
+                    "could not create folder {} e:".format(
+                        input_moduleconfig["update_folder"], e
+                    )
+                )
+                user_notification_system = plugin.user_notification_system
+                user_notification_system.show_notifications(
+                    user_notification_system.get_notification(
+                        notification_id="update_fetching_information_err",
+                        err_msg=["E-1002"],
+                        replay=False,
+                    )
+                )
+            update_script_path = os.path.join(
+                plugin._basefolder, input_moduleconfig["update_script_relative_path"]
             )
             input_moduleconfig["update_script"] = input_moduleconfig[
                 "update_script"
-            ].format(update_script=update_script)
+            ].format(update_script=update_script_path)
 
         current_version = _get_curent_version(input_moduleconfig, module_id, plugin)
 
@@ -436,11 +459,6 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
             if "package_name" in input_moduleconfig
             else module_id
         )
-        _logger.debug(
-            "get version {package_name} {pip_command}".format(
-                package_name=package_name, pip_command=pip_command
-            )
-        )
 
         current_version_global_pip = get_version_of_pip_module(
             package_name, pip_command
@@ -467,7 +485,6 @@ def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
     Returns:
         beamos config of the tierversion
     """
-    _logger.debug("generate config of beamos {}".format(moduleconfig))
     if "beamos_date" not in moduleconfig:
         return {}
 
@@ -485,7 +502,6 @@ def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
                     beamos_config, beamos_config_module_tier
                 )  # override tier config from tiers set in config_file
             beamos_date_config = dict_merge(beamos_date_config, beamos_config)
-    _logger.debug("generate config of beamos {}".format(beamos_date_config))
     return beamos_date_config
 
 

@@ -125,7 +125,7 @@ def get_dependencies(path):
         list of dependencie dict [{"name", "version"}]
     """
     dependencies_path = os.path.join(path, "dependencies.txt")
-    dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)(.=)+([0-9]+.[0-9]+.[0-9]+)"
+    dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)(.=)+((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)"
     try:
         with open(dependencies_path, "r") as f:
             dependencies_content = f.read()

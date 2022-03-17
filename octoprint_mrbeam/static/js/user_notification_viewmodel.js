@@ -64,7 +64,15 @@ $(function () {
                 text: gettext(
                     "There was a error during fetching the update information Errorcode: E-1001"
                 ),
-                type: "info",
+                type: "error",
+                hide: false,
+            },
+            update_fetching_information_err: {
+                title: gettext("Error during fetching update information"),
+                text: gettext(
+                    "There was a error during fetching the update information."
+                ),
+                type: "error",
                 hide: false,
             },
             err_cam_conn_err: {

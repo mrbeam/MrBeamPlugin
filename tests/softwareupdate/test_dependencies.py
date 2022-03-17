@@ -9,7 +9,7 @@ class UpdateScriptTestCase(unittest.TestCase):
             os.path.dirname(os.path.abspath(__file__)),
             "../../octoprint_mrbeam/dependencies.txt",
         )
-        dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)==([0-9]+.[0-9]+.[0-9]+)"
+        dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)==((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)"
         with open(dependencies_path, "r") as f:
             lines = f.readlines()
             for line in lines:
