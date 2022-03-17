@@ -24,6 +24,13 @@ from urllib3.exceptions import MaxRetryError, ConnectionError
 _logger = mrb_logger("octoprint.plugins.mrbeam.softwareupdate.updatescript")
 
 
+UPDATE_CONFIG_NAME = "mrbeam"
+REPO_NAME = "MrBeamPlugin"
+MAIN_SRC_FOLDER_NAME = "octoprint_mrbeam"
+PLUGIN_NAME = "Mr_Beam"
+DEFAULT_OPRINT_VENV = "/home/pi/oprint/bin/pip"
+
+
 def _parse_arguments():
     import argparse
 
@@ -264,7 +271,7 @@ def install_wheels(queue):
             )
 
 
-def build_queue(update_info, dependencies, target, mrbeam_archive):
+def build_queue(update_info, dependencies, target, plugin_archive):
     """
     build the queue of packages to install
 
@@ -279,20 +286,20 @@ def build_queue(update_info, dependencies, target, mrbeam_archive):
     install_queue = {}
 
     install_queue.setdefault(
-        update_info.get("mrbeam").get("pip_command", "/home/pi/oprint/bin/pip"), []
+        update_info.get(UPDATE_CONFIG_NAME).get("pip_command", DEFAULT_OPRINT_VENV), []
     ).append(
         {
-            "name": "Mr_Beam",  # update_info.get("mrbeam").get("repo"),
-            "archive": mrbeam_archive,
+            "name": PLUGIN_NAME,
+            "archive": plugin_archive,
             "target": target,
         }
     )
 
     if dependencies:
         for dependency in dependencies:
-            mrbeam_config = update_info.get("mrbeam")
-            mrbeam_dependencies_config = mrbeam_config.get("dependencies")
-            dependency_config = mrbeam_dependencies_config.get(dependency["name"])
+            plugin_config = update_info.get(UPDATE_CONFIG_NAME)
+            plugin_dependencies_config = plugin_config.get("dependencies")
+            dependency_config = plugin_dependencies_config.get(dependency["name"])
 
             # fail if requirements file contains dependencies but cloud config not
             if dependency_config == None:
@@ -312,11 +319,11 @@ def build_queue(update_info, dependencies, target, mrbeam_archive):
 
             version = get_version_of_pip_module(
                 dependency["name"],
-                dependency_config.get("pip_command", "/home/pi/oprint/bin/pip"),
+                dependency_config.get("pip_command", DEFAULT_OPRINT_VENV),
             )
             if version != dependency["version"]:
                 install_queue.setdefault(
-                    dependency_config.get("pip_command", "/home/pi/oprint/bin/pip"), []
+                    dependency_config.get("pip_command", DEFAULT_OPRINT_VENV), []
                 ).append(
                     {
                         "name": dependency["name"],
@@ -377,9 +384,9 @@ def retryget(url, retrys=3, backoff_factor=0.3):
         raise RuntimeError("connection error while trying to get {}".format(url))
 
 
-def loadMrBeamPluginTarget(archive, folder):
+def loadPluginTarget(archive, folder):
     """
-    download the archive of the Mr Beam Plugin and copy dependencies and update script in the working directory
+    download the archive of the Plugin and copy dependencies and update script in the working directory
 
     Args:
         archive: path of the archive to download and unzip
@@ -402,23 +409,25 @@ def loadMrBeamPluginTarget(archive, folder):
         )
 
     # unzip repo
-    mrbeam_plugin_extracted_path = os.path.join(folder, "mrbeamplugin/")
-    mrbeam_plugin_extracted_path_folder = os.path.join(
-        mrbeam_plugin_extracted_path,
-        "MrBeamPlugin-{target}".format(target=filename.split(".zip")[0]),
+    plugin_extracted_path = os.path.join(folder, UPDATE_CONFIG_NAME)
+    plugin_extracted_path_folder = os.path.join(
+        plugin_extracted_path,
+        "{repo_name}-{target}".format(
+            repo_name=REPO_NAME, target=filename.split(".zip")[0]
+        ),
     )
     try:
-        mrbeam_zipfile = zipfile.ZipFile(BytesIO(req.content))
-        mrbeam_zipfile.extractall(mrbeam_plugin_extracted_path)
-        mrbeam_zipfile.close()
+        plugin_zipfile = zipfile.ZipFile(BytesIO(req.content))
+        plugin_zipfile.extractall(plugin_extracted_path)
+        plugin_zipfile.close()
     except (zipfile.BadZipfile, zipfile.LargeZipFile) as e:
-        raise RuntimeError("Could not unzip mrbeam repo - error: {}".format(e))
+        raise RuntimeError("Could not unzip plugin repo - error: {}".format(e))
 
     # copy new dependencies to working directory
     try:
         shutil.copy2(
             os.path.join(
-                mrbeam_plugin_extracted_path_folder, "octoprint_mrbeam/dependencies.txt"
+                plugin_extracted_path_folder, MAIN_SRC_FOLDER_NAME, "dependencies.txt"
             ),
             os.path.join(folder, "dependencies.txt"),
         )
@@ -429,10 +438,11 @@ def loadMrBeamPluginTarget(archive, folder):
     try:
         shutil.copy2(
             os.path.join(
-                mrbeam_plugin_extracted_path_folder,
-                "octoprint_mrbeam/scripts/update_script.py",
+                plugin_extracted_path_folder,
+                MAIN_SRC_FOLDER_NAME,
+                "scripts/update_script.py",
             ),
-            os.path.join(folder, "update_script_file.py"),
+            os.path.join(folder, "update_script.py"),
         )
     except IOError:
         raise RuntimeError("Could not copy update_script to working directory")
@@ -441,7 +451,7 @@ def loadMrBeamPluginTarget(archive, folder):
     exec(
         open(
             os.path.join(
-                mrbeam_plugin_extracted_path_folder, "octoprint_mrbeam/__version.py"
+                plugin_extracted_path_folder, MAIN_SRC_FOLDER_NAME, "__version.py"
             )
         ).read()
     )
@@ -476,8 +486,10 @@ def main():
             raise RuntimeError("Could not update, base folder is not writable")
 
         update_info = get_update_info()
-        archive, target_version = loadMrBeamPluginTarget(
-            update_info.get("mrbeam").get("pip").format(target_version=args.target),
+        archive, target_version = loadPluginTarget(
+            update_info.get(UPDATE_CONFIG_NAME)
+            .get("pip")
+            .format(target_version=args.target),
             folder,
         )
 
@@ -489,8 +501,7 @@ def main():
         ] + sys.argv[1:]
         try:
             result = subprocess.call(
-                [sys.executable, os.path.join(folder, "update_script_file.py")]
-                + sys.argv,
+                [sys.executable, os.path.join(folder, "update_script.py")] + sys.argv,
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
