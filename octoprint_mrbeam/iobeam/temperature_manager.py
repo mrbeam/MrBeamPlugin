@@ -28,11 +28,7 @@ class TemperatureManager(object):
         self._event_bus = plugin._event_bus
         self.temperature = None
         self.temperature_ts = 0
-        self.temperature_max = (
-            plugin.laserCutterProfileManager.get_current_or_default()["laser"][
-                "max_temperature"
-            ]
-        )
+        self.temperature_max = plugin.laserhead_handler.current_laserhead_max_temperature
         self.hysteresis_temperature = (
             plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"
@@ -91,11 +87,7 @@ class TemperatureManager(object):
         self._shutting_down = True
 
     def reset(self):
-        self.temperature_max = (
-            self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
-                "max_temperature"
-            ]
-        )
+        self.temperature_max = self._plugin.laserhead_handler.current_laserhead_max_temperature
         self.hysteresis_temperature = (
             self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"
