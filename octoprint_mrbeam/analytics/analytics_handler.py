@@ -22,6 +22,7 @@ from analytics_keys import AnalyticsKeys as ak
 from timer_handler import TimerHandler
 from uploader import AnalyticsFileUploader
 from octoprint_mrbeam.util.uptime import get_uptime
+from octoprint._version import get_versions as get_octoprint_version
 
 # singleton
 _instance = None
@@ -809,6 +810,7 @@ class AnalyticsHandler(object):
                 ak.Header.NTP_SYNCED: self._plugin.is_time_ntp_synced(),
                 ak.Header.SESSION_ID: self._session_id,
                 ak.Header.VERSION_MRBEAM_PLUGIN: self._plugin_version,
+                ak.Header.VERSION_OCTOPRINT: get_octoprint_version()['version'],
                 ak.Header.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
                 ak.Header.DATA: data,
                 ak.Header.UPTIME: get_uptime(),
