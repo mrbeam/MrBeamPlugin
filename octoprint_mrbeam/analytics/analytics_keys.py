@@ -11,7 +11,6 @@ class AnalyticsKeys:
         DATA = "data"
         SOFTWARE_TIER = "sw_tier"
         VERSION_MRBEAM_PLUGIN = "version_mrbeam_plugin"
-        VERSION_OCTOPRINT = "version_octoprint"
         UPTIME = "uptime"
         MODEL = "model"
 
