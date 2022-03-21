@@ -8,13 +8,11 @@ import subprocess
 import sys
 from io import BytesIO
 
-import yaml
 import zipfile
 import requests
 import argparse
 
 from octoprint.plugins.softwareupdate import exceptions
-from octoprint.plugins.softwareupdate.updaters.pip import _get_pip_caller
 
 from octoprint.settings import _default_basedir
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -128,6 +126,15 @@ def get_dependencies(path):
     """
     dependencies_path = os.path.join(path, "dependencies.txt")
     dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)(.=)+((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)"
+    """
+    Example:
+    input:  iobeam==0.7.15
+            mrb-hw-info==0.0.25
+            mrbeam-ledstrips==0.2.2-alpha.2
+    output: [[iobeam][==][0.7.15]]
+            [[mrb-hw-info][==][0.0.25]]
+            [[mrbeam-ledstrips][==][0.2.2-alpha.2]]        
+    """
     try:
         with open(dependencies_path, "r") as f:
             dependencies_content = f.read()

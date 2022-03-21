@@ -375,10 +375,10 @@ def _generate_config_of_module(
                 )
             try:
                 if not os.path.isdir(input_moduleconfig["update_folder"]):
-                    os.mkdir(input_moduleconfig["update_folder"])
+                    os.makedirs(input_moduleconfig["update_folder"])
             except (IOError, OSError) as e:
                 _logger.error(
-                    "could not create folder {} e:".format(
+                    "could not create folder {} e:{}".format(
                         input_moduleconfig["update_folder"], e
                     )
                 )
