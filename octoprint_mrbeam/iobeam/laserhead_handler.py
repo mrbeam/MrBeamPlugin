@@ -414,8 +414,9 @@ class LaserheadHandler(object):
     def current_laserhead_max_temperature(self):
         """
         Return the current laser head max temperature
+
         Returns:
-        Laser head max temp (float)
+            Laser head max temp (float)
         """
         current_laserhead_properties = self._load_current_laserhead_properties()
 
@@ -436,6 +437,7 @@ class LaserheadHandler(object):
     def _load_current_laserhead_properties(self):
         """
         Loads the current detected laser head related properties and return them
+
         Returns:
             Current laser head properties (dict), (None) otherwise
 
@@ -444,7 +446,7 @@ class LaserheadHandler(object):
         laserhead_id = self.get_current_used_lh_model_id()
 
         # 2. Load the corresponding yaml file and return it's content
-        lh_properties_file_path = os.path.join("/home/pi/oprint/lib/python2.7/site-packages/octoprint_mrbeam",
+        lh_properties_file_path = os.path.join(self._plugin._basefolder,
                                                "profiles", "laserhead", "laserhead_id_{}.yaml".format(laserhead_id))
         if not os.path.isfile(lh_properties_file_path):
             self._logger.exception(
