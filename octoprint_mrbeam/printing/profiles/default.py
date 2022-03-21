@@ -18,7 +18,7 @@ profile = dict(
     # if set to onebutton, MR Beam 2 One Button to start laser is activated.
     start_method="onebutton",
     laser=dict(
-        max_temperature=55.0,
+        max_temperature=55.0,   # deprecated, moved to iobeam.laserhead_handler in SW-1077
         hysteresis_temperature=48.0,
         cooling_duration=25,  # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
         intensity_factor=13,  # to get from 100% intesity to GCODE-intensity of 1300
