@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import json
 import os
 import re
 import shutil
@@ -10,13 +11,15 @@ from io import BytesIO
 import yaml
 import zipfile
 import requests
+import argparse
+
 from octoprint.plugins.softwareupdate import exceptions
 from octoprint.plugins.softwareupdate.updaters.pip import _get_pip_caller
 
 from octoprint.settings import _default_basedir
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
-from octoprint_mrbeam.util.pip_util import get_version_of_pip_module
+from octoprint_mrbeam.util.pip_util import get_version_of_pip_module, get_pip_caller
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 from urllib3.exceptions import MaxRetryError, ConnectionError
@@ -32,11 +35,9 @@ DEFAULT_OPRINT_VENV = "/home/pi/oprint/bin/pip"
 
 
 def _parse_arguments():
-    import argparse
-
     boolean_trues = ["true", "yes", "1"]
 
-    parser = argparse.ArgumentParser(prog="update_script.py")
+    parser = argparse.ArgumentParser(prog=__file__)
 
     parser.add_argument(
         "--git",
@@ -83,6 +84,7 @@ def _parse_arguments():
         type=lambda x: x in boolean_trues,
         dest="call",
         default=False,
+        help="Calls the update methode",
     )
     parser.add_argument(
         "--archive",
@@ -90,7 +92,7 @@ def _parse_arguments():
         type=str,
         dest="archive",
         default=None,
-        help="path of target zip file on local system",
+        help="Path of target zip file on local system",
     )
     parser.add_argument(
         "--target_version",
@@ -98,7 +100,7 @@ def _parse_arguments():
         type=str,
         dest="target_version",
         default=None,
-        help="version number of the target",
+        help="Version number of the target",
     )
     parser.add_argument(
         "folder",
@@ -143,52 +145,26 @@ def get_update_info():
     update_info_path = os.path.join(_default_basedir("OctoPrint"), "update_info.json")
     try:
         with open(update_info_path, "r") as f:
-            update_info = yaml.safe_load(f)
+            update_info = json.load(f)
     except IOError:
         raise RuntimeError("Could not load update info")
-    except ValueError:
-        raise RuntimeError("update info not valid json")
-    except yaml.YAMLError as e:
+    except ValueError as e:
         raise RuntimeError("update info not valid json - {}".format(e))
     return update_info
 
 
-def build_wheels(queue):
+def build_wheels(build_queue):
     """
     build the wheels of the packages in the queue
 
     Args:
-        queue: dict of venvs with a list of packages to build the wheels
+        build_queue: dict of venvs with a list of packages to build the wheels
 
     Returns:
         None
 
     """
-    for venv, packages in queue.items():
-
-        pip_caller = _get_pip_caller(command=venv)
-        if pip_caller is None:
-            raise exceptions.UpdateError("Can't run pip", None)
-
-        def _log_call(*lines):
-            _log(lines, prefix=" ", stream="call")
-
-        def _log_stdout(*lines):
-            _log(lines, prefix=">", stream="stdout")
-
-        def _log_stderr(*lines):
-            _log(lines, prefix="!", stream="stderr")
-
-        def _log(lines, prefix=None, stream=None, strip=True):
-            if strip:
-                lines = map(lambda x: x.strip(), lines)
-            for line in lines:
-                print(u"{} {}".format(prefix, line))
-
-        if _logger is not None:
-            pip_caller.on_log_call = _log_call
-            pip_caller.on_log_stdout = _log_stdout
-            pip_caller.on_log_stderr = _log_stderr
+    for venv, packages in build_queue.items():
 
         pip_args = [
             "wheel",
@@ -201,52 +177,31 @@ def build_wheels(queue):
             if package.get("archive"):
                 pip_args.append(package.get("archive"))
             else:
-                raise exceptions.UpdateError(
-                    "Archive not found for package {}".format(package)
-                )
+                raise RuntimeError("Archive not found for package {}".format(package))
 
-        returncode, stdout, stderr = pip_caller.execute(*pip_args)
+        returncode, exec_stdout, exec_stderr = get_pip_caller(venv, _logger).execute(
+            *pip_args
+        )
         if returncode != 0:
             raise exceptions.UpdateError(
-                "Error while executing pip wheel", (stdout, stderr)
+                "Error while executing pip wheel", (exec_stdout, exec_stderr)
             )
 
 
-def install_wheels(queue):
+def install_wheels(install_queue):
     """
     installs the wheels in the given venv of the queue
 
     Args:
-        queue: dict of venvs with a list of packages to install
+        install_queue: dict of venvs with a list of packages to install
 
     Returns:
         None
     """
-    for venv, packages in queue.items():
+    if not isinstance(install_queue, dict):
+        raise RuntimeError("install queue is not a dict")
 
-        pip_caller = _get_pip_caller(command=venv)
-        if pip_caller is None:
-            raise exceptions.UpdateError("Can't run pip", None)
-
-        def _log_call(*lines):
-            _log(lines, prefix=" ", stream="call")
-
-        def _log_stdout(*lines):
-            _log(lines, prefix=">", stream="stdout")
-
-        def _log_stderr(*lines):
-            _log(lines, prefix="!", stream="stderr")
-
-        def _log(lines, prefix=None, stream=None, strip=True):
-            if strip:
-                lines = map(lambda x: x.strip(), lines)
-            for line in lines:
-                print(u"{} {}".format(prefix, line))
-
-        if _logger is not None:
-            pip_caller.on_log_call = _log_call
-            pip_caller.on_log_stdout = _log_stdout
-            pip_caller.on_log_stderr = _log_stderr
+    for venv, packages in install_queue.items():
 
         pip_args = [
             "install",
@@ -264,10 +219,12 @@ def install_wheels(queue):
                 )
             )
 
-        returncode, stdout, stderr = pip_caller.execute(*pip_args)
+        returncode, exec_stdout, exec_stderr = get_pip_caller(venv, _logger).execute(
+            *pip_args
+        )
         if returncode != 0:
             raise exceptions.UpdateError(
-                "Error while executing pip install", (stdout, stderr)
+                "Error while executing pip install", (exec_stdout, exec_stderr)
             )
 
 
@@ -294,7 +251,7 @@ def build_queue(update_info, dependencies, target, plugin_archive):
             "target": target,
         }
     )
-
+    print("dependencies - {}".format(dependencies))
     if dependencies:
         for dependency in dependencies:
             plugin_config = update_info.get(UPDATE_CONFIG_NAME)
@@ -303,8 +260,8 @@ def build_queue(update_info, dependencies, target, plugin_archive):
 
             # fail if requirements file contains dependencies but cloud config not
             if dependency_config == None:
-                raise exceptions.UpdateError(
-                    "no update info for dependency", dependency["name"]
+                raise RuntimeError(
+                    "no update info for dependency {}".format(dependency["name"])
                 )
             if dependency_config.get("pip"):
                 archive = dependency_config["pip"].format(
@@ -313,7 +270,7 @@ def build_queue(update_info, dependencies, target, plugin_archive):
                     target_version="v{version}".format(version=dependency["version"]),
                 )
             else:
-                raise exceptions.UpdateError(
+                raise RuntimeError(
                     "pip not configured for {}".format(dependency["name"])
                 )
 
@@ -330,6 +287,12 @@ def build_queue(update_info, dependencies, target, plugin_archive):
                         "archive": archive,
                         "target": dependency["version"],
                     }
+                )
+            else:
+                print(
+                    "skip dependency {} as the target version {} is already installed".format(
+                        dependency["name"], dependency["version"]
+                    )
                 )
     return install_queue
 
@@ -509,7 +472,7 @@ def main():
             raise RuntimeError("error code %s", (e.returncode, e.output))
 
         if result != 0:
-            raise exceptions.UpdateError("Error Could not update", result)
+            raise RuntimeError("Error Could not update returncode - {}".format(result))
 
 
 if __name__ == "__main__":

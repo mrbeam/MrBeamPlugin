@@ -87,7 +87,7 @@ def get_tag_of_github_repo(repo):
             majorversion = Spec(
                 "<{}.0.0".format(str(MAJOR_VERSION_CLOUD_CONFIG + 1))
             )  # simpleSpec("0.*.*")
-            return majorversion.select(versionlist)
+            return "v{}".format(majorversion.select(versionlist))
         else:
             _logger.warning(
                 "no valid response for the tag of the update_config file {}".format(
@@ -136,7 +136,7 @@ def get_update_information(plugin):
                     get_file_of_repo_for_tag(
                         repo="beamos_config",
                         file="docs/sw-update-conf.json",
-                        tag="v{tag}".format(tag=str(config_tag)),
+                        tag=config_tag,
                     )
                 )
                 if cloud_config:

@@ -1,4 +1,6 @@
-# TODO move to util an refactor cloud config part to use same
+"""
+This util contains all the necessary methods to communicate with the github api
+"""
 import base64
 
 from requests.adapters import HTTPAdapter, MaxRetryError

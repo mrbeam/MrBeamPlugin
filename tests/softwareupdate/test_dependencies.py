@@ -3,7 +3,7 @@ import re
 import unittest
 
 
-class UpdateScriptTestCase(unittest.TestCase):
+class TestUpdateScript(unittest.TestCase):
     def test_dependencies_file(self):
         dependencies_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
