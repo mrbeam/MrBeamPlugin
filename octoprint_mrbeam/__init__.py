@@ -36,7 +36,6 @@ from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
 
 IS_X86 = platform.machine() == "x86_64"
 
-from octoprint_mrbeam.__version import __version__
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
@@ -3127,3 +3126,9 @@ def __plugin_load__():
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.cli.commands": get_cli_commands,
     }
+
+
+from .__version import get_versions
+
+__version__ = get_versions()["version"]
+del get_versions
