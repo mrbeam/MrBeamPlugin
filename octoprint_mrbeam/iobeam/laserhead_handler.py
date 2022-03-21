@@ -416,7 +416,8 @@ class LaserheadHandler(object):
         Return the current laser head max temperature
 
         Returns:
-            Laser head max temp (float)
+            float: Laser head max temp
+
         """
         current_laserhead_properties = self._load_current_laserhead_properties()
 
@@ -439,7 +440,7 @@ class LaserheadHandler(object):
         Loads the current detected laser head related properties and return them
 
         Returns:
-            Current laser head properties (dict), (None) otherwise
+            dict: current laser head properties, None: otherwise
 
         """
         # 1. get the ID of the current laser head
