@@ -213,13 +213,6 @@ def get_update_information(plugin):
                     "repo": "",
                     "pip": "",
                 },
-                "mrbeamdoc": {
-                    "name": "Mr Beam Documentation",
-                    "type": "github_commit",
-                    "user": "",
-                    "repo": "",
-                    "pip": "",
-                },
                 "netconnectd": {
                     "name": "OctoPrint-Netconnectd Plugin",
                     "type": "github_commit",
