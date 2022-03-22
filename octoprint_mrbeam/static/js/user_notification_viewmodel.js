@@ -70,7 +70,7 @@ $(function () {
             update_fetching_information_err: {
                 title: gettext("Error during fetching update information"),
                 text: gettext(
-                    "There was a error during fetching the update information."
+                    "There was a error during fetching the update information, please try again later."
                 ),
                 type: "error",
                 hide: false,

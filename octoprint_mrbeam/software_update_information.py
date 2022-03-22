@@ -8,6 +8,7 @@ from enum import Enum
 
 import semantic_version
 import yaml
+from octoprint.plugins.softwareupdate import exceptions as softwareupdate_exceptions
 from requests import ConnectionError
 from requests.adapters import HTTPAdapter, MaxRetryError
 from semantic_version import Spec
@@ -293,15 +294,26 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
         defaultsettings = cloud_config.get("default", None)
         modules = cloud_config["modules"]
 
-        for module_id, module in modules.items():
-            if tier in SW_UPDATE_TIERS:
-                sw_update_config[module_id] = {}
+        try:
+            for module_id, module in modules.items():
+                if tier in SW_UPDATE_TIERS:
+                    sw_update_config[module_id] = {}
 
-                module = dict_merge(defaultsettings, module)
+                    module = dict_merge(defaultsettings, module)
 
-                sw_update_config[module_id] = _generate_config_of_module(
-                    module_id, module, defaultsettings, tier, beamos_date, plugin
+                    sw_update_config[module_id] = _generate_config_of_module(
+                        module_id, module, defaultsettings, tier, beamos_date, plugin
+                    )
+        except softwareupdate_exceptions.ConfigurationInvalid as e:
+            _logger.exception("ConfigurationInvalid {}".format(e))
+            user_notification_system = plugin.user_notification_system
+            user_notification_system.show_notifications(
+                user_notification_system.get_notification(
+                    notification_id="update_fetching_information_err",
+                    err_msg=["E-1003"],
+                    replay=False,
                 )
+            )
 
         _logger.debug("sw_update_config {}".format(sw_update_config))
 
@@ -368,7 +380,7 @@ def _generate_config_of_module(
 
         if "update_script" in input_moduleconfig:
             if "update_script_relative_path" not in input_moduleconfig:
-                _logger.error(
+                raise softwareupdate_exceptions.ConfigurationInvalid(
                     "update_script_relative_path is missing in update config for {}".format(
                         module_id
                     )
