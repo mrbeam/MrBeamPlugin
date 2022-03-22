@@ -48,7 +48,7 @@ system, and maybe making new tarballs.
 
 * `pip install versioneer` to somewhere to your $PATH
 * add a `[versioneer]` section to your setup.cfg (see below)
-* run `versioneer install` in your source tree, commit the results
+* run `python versioneer.py setup` in your source tree, commit the results
 
 ## Version Identifiers
 
@@ -183,7 +183,7 @@ To versioneer-enable your project:
   parentdir_prefix = myproject-
   ````
 
-* 2: Run `versioneer install`. This will do the following:
+* 2: Run `python versioneer.py setup`. This will do the following:
 
   * copy `versioneer.py` into the top of your source tree
   * create `__version.py` in the right place (`versionfile_source`)
@@ -192,7 +192,7 @@ To versioneer-enable your project:
   * modify your `MANIFEST.in` to include both `versioneer.py` and the
     generated `__version.py` in sdist tarballs
 
-  `versioneer install` will complain about any problems it finds with your
+  `python versioneer.py setup` will complain about any problems it finds with your
   `setup.py` or `setup.cfg`. Run it multiple times until you have fixed all
   the problems.
 
@@ -203,7 +203,7 @@ To versioneer-enable your project:
         cmdclass=versioneer.get_cmdclass(),
 
 * 4: commit these changes to your VCS. To make sure you won't forget,
-  `versioneer install` will mark everything it touched for addition using
+  `python versioneer.py setup` will mark everything it touched for addition using
   `git add`. Don't forget to add `setup.py` and `setup.cfg` too.
 
 ## Post-Installation Usage
@@ -309,7 +309,7 @@ To upgrade your project to a new release of Versioneer, do the following:
 * install the new Versioneer (`pip install -U versioneer` or equivalent)
 * edit `setup.cfg`, if necessary, to include any new configuration settings
   indicated by the release notes
-* re-run `versioneer install` in your source tree, to replace
+* re-run `python versioneer.py setup` in your source tree, to replace
   `SRC/__version.py`
 * commit any changed files
 
