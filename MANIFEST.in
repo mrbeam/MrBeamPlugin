@@ -1,7 +1,7 @@
 include README.md
+include versioneer.py
+include octoprint_mrbeam/__version.py
 graft octoprint_mrbeam/templates
 graft octoprint_mrbeam/static
 graft octoprint_mrbeam/state
 graft octoprint_mrbeam/translations
-include versioneer.py
-include octoprint_mrbeam/__version.py
