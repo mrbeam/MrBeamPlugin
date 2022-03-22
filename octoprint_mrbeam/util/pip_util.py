@@ -67,6 +67,16 @@ def get_version_of_pip_module(pip_name, pip_command=None, disable_pip_ver_check=
 
 
 def get_pip_caller(venv, _logger=None):
+    """
+    gets the pip caller of the givenv venv
+
+    Args:
+        venv: path to venv
+        _logger: logger to log call, stdout and stderr of the pip caller
+
+    Returns:
+        PipCaller of the venv
+    """
     pip_caller = _get_pip_caller(command=venv)
     if not isinstance(pip_caller, PipCaller):
         raise RuntimeError("Can't run pip", None)
