@@ -1,8 +1,6 @@
 # coding=utf-8
 import versioneer
 
-execfile("octoprint_mrbeam/__version.py")
-
 ########################################################################################################################
 ### Do not forget to adjust the following variables to your own plugin.
 

@@ -1,1 +1,1 @@
-octoprint_mrbeam/__version.py export-subst
+octoprint_mrbeam/_version.py export-subst
