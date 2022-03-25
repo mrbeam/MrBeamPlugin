@@ -434,7 +434,7 @@ def _generate_config_of_module(
                 ] = _generate_config_of_module(
                     dependencie_name,
                     dependencie_config,
-                    defaultsettings,
+                    {},
                     tier,
                     beamos_date,
                     plugin,
