@@ -171,14 +171,6 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                         "type": "github_commit",
                         "user": "",
                     },
-                    "mrbeamdoc": {
-                        "displayName": "Mr Beam Documentation",
-                        "displayVersion": "dummy",
-                        "pip": "",
-                        "repo": "",
-                        "type": "github_commit",
-                        "user": "",
-                    },
                     "netconnectd": {
                         "displayName": "OctoPrint-Netconnectd Plugin",
                         "displayVersion": "dummy",
@@ -205,6 +197,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
             None
         """
         self.check_if_githubapi_rate_limit_exceeded()
+        self.maxDiff = None
         beamos_date_buster = date(2021, 6, 11)
         device_info_mock.return_value = "PROD", beamos_date_buster
         plugin = self.plugin
@@ -244,7 +237,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
             None
         """
         self.check_if_githubapi_rate_limit_exceeded()
-
+        self.maxDiff = None
         beamos_date_legacy = date(2018, 1, 12)
         device_info_mock.return_value = "PROD", beamos_date_legacy
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
