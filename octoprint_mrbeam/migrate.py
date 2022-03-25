@@ -8,14 +8,13 @@ from distutils.version import LooseVersion, StrictVersion
 
 from enum import Enum
 
-from octoprint_mrbeam import IS_X86
+from octoprint_mrbeam import IS_X86, __version__
 from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.util import logExceptions
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
-from octoprint_mrbeam.__version import __version__
 from octoprint_mrbeam.materials import materials
 from octoprint_mrbeam.migration import (
     MIGRATION_STATE,
