@@ -128,26 +128,6 @@ class MachineCom(object):
 
     GRBL_HEX_FOLDER = "files/grbl/"
 
-    # GrblHAL 1.1 @ RP2040 produces these status messages
-    # <Idle|MPos:0.000,0.000,0.000|Bf:35,1023|FS:0,0|Pn:Z|WCO:0.000,0.000,0.000>
-    # <Idle|MPos:0.000,0.000,0.000|Bf:35,1023|FS:0,0|Pn:Z|Ov:100,100,100>
-    pattern_grbl_status_MRB3 = re.compile(
-        "<(?P<status>\w+)"
-        + "\|.*(?P<pos_type>[MW])Pos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),(?P<pos_z>[0-9.\-]+)"
-        + "\|.*Bf:(?P<rx>\d+),(?P<plan_buf>\d+)"
-        + "\|.*FS:(?P<feedrate>\d+),(?P<laser_intensity>\d+)"
-        + "\|.*Pn:(?P<limit_x>[X]?)(?P<limit_y>[Y]?)(?P<limit_z>[Z]?)"
-        + "(\|.*WCO:(?P<wco_x>[0-9.\-]+),(?P<wco_y>[0-9.\-]+),(?P<wco_z>[0-9.\-]+))?"
-        + "(\|.*Ov:(?P<ov_1>\d+),(?P<ov_2>\d+),(?P<ov_3>\d+))?.*>"
-    )
-
-    pattern_grbl_status_legacy = re.compile(
-        "<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*RX:(?P<rx>\d+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>"
-    )
-    pattern_grbl_status = re.compile(
-        "<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*RX:(?P<rx>\d+),.*limits:(?P<limit_x>[x]?)(?P<limit_y>[y]?)z?,.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>"
-    )
-    pattern_grbl_version = re.compile("Grbl (?P<version>\S+)\s.*")
     pattern_grbl_setting = re.compile(
         "\$(?P<id>\d+)=(?P<value>\S+)\s\((?P<comment>.*)\)"
     )
@@ -183,8 +163,6 @@ class MachineCom(object):
         self._state = self.STATE_NONE
 
         self._grbl = None
-
-        self._grbl_settings = dict()
 
         self._errorValue = "Unknown Error"
         self._serial = None
@@ -313,6 +291,7 @@ class MachineCom(object):
             terminal_as_comm=True,
         )
 
+    # TODO Move to Lasercutterprofile
     def get_home_position(self):
         """
         Returns the home position which usually where the head is after homing. (Except in C series)
@@ -818,7 +797,6 @@ class MachineCom(object):
 
     def _openSerial(self):
         self.grbl = None
-        self._grbl_settings = dict()
 
         def default(_, port, baudrate, read_timeout):
             if port is None or port == "AUTO":
@@ -997,7 +975,6 @@ class MachineCom(object):
 
     def _handle_status_report(self, line):
         status = self._grbl.parseStatus(line)
-        self._logger.info("##### parsed Status %s", status)
 
         # positions
         mpos = self._grbl.state["mpos"]
@@ -1006,8 +983,15 @@ class MachineCom(object):
 
         # laser
         self._handle_laser_intensity_for_analytics(
-            status["laserActive"], status["laserIntensity"]
+            self._grbl.state["laserActive"], self._grbl.state["laserIntensity"]
         )
+
+        # homing finished
+        if (
+            self._state == self.STATE_HOMING
+            and self._grbl.state["status"] == self._grbl.GRBL_STATE_IDLE
+        ):
+            self._changeState(self.STATE_OPERATIONAL)
 
         # unintended pause....
         if self._grbl.state["status"] == self.GRBL_STATE_QUEUE:
@@ -1097,7 +1081,10 @@ class MachineCom(object):
         Handles error messages from GRBL
         :param line: GRBL error respnse
         """
+
         line = line.rstrip() if line else line
+
+        self._logger.info("#### ERROR Line %s", line)
         # grbl repots an error if there was never any data written to it's eeprom.
         # it's going to write default values to eeprom and everything is fine then....
         if "EEPROM read fail" in line:
@@ -1208,7 +1195,6 @@ class MachineCom(object):
 
     def _handle_startup_message(self, line):
         match = GrblInterface.RE_WELCOME.match(line)
-        # match = self.pattern_grbl_version.match(line)
         if match:
             version = match.group("version")
             self._grbl = GrblInterface(version)
@@ -1233,7 +1219,7 @@ class MachineCom(object):
                 terminal_as_comm=True,
             )
 
-        self._onConnected(self.STATE_OPERATIONAL)
+        self._onConnected(self.STATE_LOCKED)
         # self.correct_grbl_settings()
 
     def _handle_g24avoided_corrupted_line(self, line):
@@ -1283,21 +1269,7 @@ class MachineCom(object):
         Handles grbl settings message like '$130=515.1'
         :param line:
         """
-        match = self.pattern_grbl_setting.match(line)
-        # there are a bunch of responses that do not match and it's ok.
-        if match:
-            id = int(match.group("id"))
-            comment = match.group("comment")
-            v_str = match.group("value")
-            v = float(v_str)
-            try:
-                i = int(v)
-            except ValueError:
-                pass
-            value = v
-            if i == v and v_str.find(".") < 0:
-                value = i
-            self._grbl_settings[id] = dict(value=value, comment=comment)
+        self._grbl.parseSettings(line)
 
     def _start_recovery_thread(self):
         """
@@ -1401,7 +1373,8 @@ class MachineCom(object):
             > self.GRBL_SETTINGS_READ_WINDOW
         ):
             self._grbl_settings_correction_ts = time.time()
-            self._refresh_grbl_settings()
+            self._grbl.refreshSettings()
+            self.sendCommand("$$")
             self._verify_and_correct_loaded_grbl_settings(
                 retries=retries,
                 timeout=self.GRBL_SETTINGS_READ_WINDOW,
@@ -1413,13 +1386,9 @@ class MachineCom(object):
                 self.GRBL_SETTINGS_READ_WINDOW,
             )
 
-    def _refresh_grbl_settings(self):
-        self._grbl_settings = dict()
-        self.sendCommand("$$")
-
     def _get_string_loaded_grbl_settings(self, settings=None):
         my_grbl_settings = (
-            settings or self._grbl_settings.copy()
+            settings or self._grbl.settings.copy()
         )  # to avoid race conditions
         log = []
         for id, data in sorted(my_grbl_settings.iteritems()):
@@ -1438,11 +1407,11 @@ class MachineCom(object):
         self._logger.debug(
             "GRBL Settings waiting... timeout: %s, settings count: %s",
             timeout,
-            len(self._grbl_settings),
+            len(self._grbl.settings),
         )
 
         if force_thread or (
-            timeout > 0.0 and len(self._grbl_settings) < settings_count
+            timeout > 0.0 and len(self._grbl.settings) < settings_count
         ):
             timeout = timeout - self.GRBL_SETTINGS_CHECK_FREQUENCY
             myThread = threading.Timer(
@@ -1454,7 +1423,7 @@ class MachineCom(object):
             myThread.name = "CommAcc2_GrblSettings"
             myThread.start()
         else:
-            my_grbl_settings = self._grbl_settings.copy()  # to avoid race conditions
+            my_grbl_settings = self._grbl.settings.copy()  # to avoid race conditions
 
             log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
 

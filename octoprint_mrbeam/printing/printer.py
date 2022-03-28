@@ -1,4 +1,5 @@
 import time
+import traceback
 from octoprint.printer.standard import Printer, StateMonitor
 from octoprint.events import eventManager, Events
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -68,7 +69,11 @@ class Laser(Printer):
 
     # overwrite operational state to accept commands in locked state
     def is_operational(self):
-        return Printer.is_operational(self) or self.is_locked()
+        #        whereami = ''.join(traceback.format_stack()[-5:])
+        #        self._logger.info(whereami)
+        return (
+            Printer.is_operational(self) or self.is_locked()
+        )  # (self._comm is not None and self._comm.isFlashing()) TODO allow status reports in homing cycle
 
     # send color settings to commAcc to inject settings into Gcode
     def set_colors(self, currentFileName, value):

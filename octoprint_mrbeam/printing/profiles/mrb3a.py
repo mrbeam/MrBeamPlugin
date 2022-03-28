@@ -7,10 +7,10 @@ profile = dict(
     model="A",
     axes=dict(
         x=dict(
-            inverted=False, speed=18000, overshoot=1, homing_direction_positive=True
+            inverted=False, speed=60000, overshoot=1, homing_direction_positive=True
         ),
         y=dict(
-            inverted=False, speed=18000, overshoot=0, homing_direction_positive=True
+            inverted=False, speed=60000, overshoot=0, homing_direction_positive=True
         ),
         z=dict(inverted=False, speed=1000, overshoot=0, homing_direction_positive=True),
     ),
@@ -46,8 +46,8 @@ profile = dict(
         height=60.0,
         origin_offset_x=1.1,
         origin_offset_y=1.1,
-        width=600.0,
-        working_area_shift_x=7.0,
+        width=270.0,
+        working_area_shift_x=0.0,
         working_area_shift_y=0.0,
     ),
     grbl=dict(
@@ -68,7 +68,7 @@ profile = dict(
             4: 0,  # step enable invert, bool
             5: 0,  # limit pins invert, bool
             6: 0,  # probe pin invert, bool
-            10: 31,  # status report mask:00011111
+            10: 4094,  # status report mask:00011111
             11: 0.020,  # junction deviation, mm
             12: 0.002,  # arc tolerance, mm
             13: 0,  # report inches, bool
@@ -77,23 +77,23 @@ profile = dict(
             21: 0,  # hard limits, bool
             22: 1,  # homing cycle, bool
             23: 0,  # homing dir invert mask:00000000
-            24: 25.000,  # homing feed, mm/min
-            25: 2000.000,  # homing seek, mm/min
+            24: 500.000,  # homing feed, mm/min
+            25: 5000.000,  # homing seek, mm/min
             26: 100,  # homing debounce, msec
             27: 1.000,  # homing pull-off, mm
             40: 1,  # turn Laser mode on, bool
             100: 100.000,  # x, step/mm
             101: 100.000,  # y, step/mm
             102: 100.000,  # z, step/mm
-            110: 5000.000,  # x max rate, mm/min
-            111: 5000.000,  # y max rate, mm/min
+            110: 60000.000,  # x max rate, mm/min
+            111: 60000.000,  # y max rate, mm/min
             112: 5000.000,  # z max rate, mm/min
-            120: 700.000,  # x accel, mm/sec^2
-            121: 700.000,  # y accel, mm/sec^2
-            122: 100.000,  # z accel, mm/sec^2
-            130: 515.100,  # x max travel, mm       # !! C-Series: 501.1
-            131: 391.100,  # y max travel, mm
-            132: 40.000,  # z max travel, mm
+            120: 3000.000,  # x accel, mm/sec^2
+            121: 3000.000,  # y accel, mm/sec^2
+            122: 1000.000,  # z accel, mm/sec^2
+            130: 270.100,  # x max travel, mm       # !! C-Series: 501.1
+            131: 400.100,  # y max travel, mm
+            132: 60.000,  # z max travel, mm
         },
     ),
     zAxis=False,
