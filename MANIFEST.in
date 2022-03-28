@@ -5,3 +5,4 @@ graft octoprint_mrbeam/templates
 graft octoprint_mrbeam/static
 graft octoprint_mrbeam/state
 graft octoprint_mrbeam/translations
+graft octoprint_mrbeam/scripts
