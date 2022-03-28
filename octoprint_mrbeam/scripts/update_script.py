@@ -388,7 +388,7 @@ def loadPluginTarget(archive, folder):
     plugin_extracted_path_folder = os.path.join(
         plugin_extracted_path,
         "{repo_name}-{target}".format(
-            repo_name=REPO_NAME, target=filename.split(".zip")[0]
+            repo_name=REPO_NAME, target=re.sub(r"^v", "", filename.split(".zip")[0])
         ),
     )
     try:
