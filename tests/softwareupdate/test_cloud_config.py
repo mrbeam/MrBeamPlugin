@@ -83,6 +83,7 @@ class MrBeamPluginDummy(MrBeamPlugin):
     _connectivity_checker = DummyConnectivityChecker()
     _plugin_version = "dummy"
     _event_bus = EventManager()
+    _basefolder = "octoprint_mrbeam"
 
     @patch("octoprint.settings.settings")
     def __init__(self, settings_mock):
@@ -196,6 +197,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         Returns:
             None
         """
+        self.maxDiff = None
         self.check_if_githubapi_rate_limit_exceeded()
         self.maxDiff = None
         beamos_date_buster = date(2021, 6, 11)

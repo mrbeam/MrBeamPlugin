@@ -8,6 +8,7 @@ from enum import Enum
 
 import semantic_version
 import yaml
+from octoprint.plugins.softwareupdate import exceptions as softwareupdate_exceptions
 from requests import ConnectionError
 from requests.adapters import HTTPAdapter, MaxRetryError
 from semantic_version import Spec
@@ -15,6 +16,7 @@ from urllib3 import Retry
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_merge, logExceptions
+from octoprint_mrbeam.util.github_api import get_file_of_repo_for_tag
 from util.pip_util import get_version_of_pip_module
 
 
@@ -86,7 +88,7 @@ def get_tag_of_github_repo(repo):
             majorversion = Spec(
                 "<{}.0.0".format(str(MAJOR_VERSION_CLOUD_CONFIG + 1))
             )  # simpleSpec("0.*.*")
-            return majorversion.select(versionlist)
+            return "v{}".format(majorversion.select(versionlist))
         else:
             _logger.warning(
                 "no valid response for the tag of the update_config file {}".format(
@@ -104,51 +106,6 @@ def get_tag_of_github_repo(repo):
         _logger.warning(
             "connection error while trying to get the tag of the update_config file"
         )
-        return None
-
-
-def _get_config_of_tag(tag):
-    """
-    return the software update config of the given tag on the repository
-    Args:
-        tag: tagname
-
-    Returns:
-        software update config
-    """
-    import requests
-    import json
-
-    try:
-        url = "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{tag}".format(
-            tag=str(tag)
-        )
-
-        headers = {
-            "Accept": "application/json",
-        }
-
-        s = requests.Session()
-        retry = Retry(connect=3, backoff_factor=0.3)
-        adapter = HTTPAdapter(max_retries=retry)
-        s.mount("https://", adapter)
-        s.keep_alive = False
-
-        response = s.request("GET", url, headers=headers)
-    except MaxRetryError:
-        _logger.warning("timeout while trying to get the update_config file")
-        return None
-    except ConnectionError:
-        _logger.warning("connection error while trying to get the update_config file")
-        return None
-
-    if response:
-        json_data = json.loads(response.text)
-        yaml_file = base64.b64decode(json_data["content"])
-
-        return yaml.safe_load(yaml_file)
-    else:
-        _logger.warning("no valid response for the update_config file")
         return None
 
 
@@ -176,7 +133,13 @@ def get_update_information(plugin):
             config_tag = get_tag_of_github_repo("beamos_config")
             # if plugin._connectivity_checker.check_immediately():  # check if device online
             if config_tag:
-                cloud_config = _get_config_of_tag(config_tag)
+                cloud_config = yaml.safe_load(
+                    get_file_of_repo_for_tag(
+                        repo="beamos_config",
+                        file="docs/sw-update-conf.json",
+                        tag=config_tag,
+                    )
+                )
                 if cloud_config:
                     return _set_info_from_cloud_config(
                         plugin, tier, beamos_date, cloud_config
@@ -324,15 +287,26 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
         defaultsettings = cloud_config.get("default", None)
         modules = cloud_config["modules"]
 
-        for module_id, module in modules.items():
-            if tier in SW_UPDATE_TIERS:
-                sw_update_config[module_id] = {}
+        try:
+            for module_id, module in modules.items():
+                if tier in SW_UPDATE_TIERS:
+                    sw_update_config[module_id] = {}
 
-                module = dict_merge(defaultsettings, module)
+                    module = dict_merge(defaultsettings, module)
 
-                sw_update_config[module_id] = _generate_config_of_module(
-                    module_id, module, defaultsettings, tier, beamos_date, plugin
+                    sw_update_config[module_id] = _generate_config_of_module(
+                        module_id, module, defaultsettings, tier, beamos_date, plugin
+                    )
+        except softwareupdate_exceptions.ConfigurationInvalid as e:
+            _logger.exception("ConfigurationInvalid {}".format(e))
+            user_notification_system = plugin.user_notification_system
+            user_notification_system.show_notifications(
+                user_notification_system.get_notification(
+                    notification_id="update_fetching_information_err",
+                    err_msg=["E-1003"],
+                    replay=False,
                 )
+            )
 
         _logger.debug("sw_update_config {}".format(sw_update_config))
 
@@ -397,6 +371,37 @@ def _generate_config_of_module(
                 tier=_get_tier_by_id(tier)
             )
 
+        if "update_script" in input_moduleconfig:
+            if "update_script_relative_path" not in input_moduleconfig:
+                raise softwareupdate_exceptions.ConfigurationInvalid(
+                    "update_script_relative_path is missing in update config for {}".format(
+                        module_id
+                    )
+                )
+            try:
+                if not os.path.isdir(input_moduleconfig["update_folder"]):
+                    os.makedirs(input_moduleconfig["update_folder"])
+            except (IOError, OSError) as e:
+                _logger.error(
+                    "could not create folder {} e:{}".format(
+                        input_moduleconfig["update_folder"], e
+                    )
+                )
+                user_notification_system = plugin.user_notification_system
+                user_notification_system.show_notifications(
+                    user_notification_system.get_notification(
+                        notification_id="update_fetching_information_err",
+                        err_msg=["E-1002"],
+                        replay=False,
+                    )
+                )
+            update_script_path = os.path.join(
+                plugin._basefolder, input_moduleconfig["update_script_relative_path"]
+            )
+            input_moduleconfig["update_script"] = input_moduleconfig[
+                "update_script"
+            ].format(update_script=update_script_path)
+
         current_version = _get_curent_version(input_moduleconfig, module_id, plugin)
 
         if module_id != "octoprint":
@@ -422,7 +427,7 @@ def _generate_config_of_module(
                 ] = _generate_config_of_module(
                     dependencie_name,
                     dependencie_config,
-                    defaultsettings,
+                    {},
                     tier,
                     beamos_date,
                     plugin,
@@ -459,11 +464,6 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
             if "package_name" in input_moduleconfig
             else module_id
         )
-        _logger.debug(
-            "get version {package_name} {pip_command}".format(
-                package_name=package_name, pip_command=pip_command
-            )
-        )
 
         current_version_global_pip = get_version_of_pip_module(
             package_name, pip_command
@@ -490,7 +490,6 @@ def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
     Returns:
         beamos config of the tierversion
     """
-    _logger.debug("generate config of beamos {}".format(moduleconfig))
     if "beamos_date" not in moduleconfig:
         return {}
 
@@ -508,7 +507,6 @@ def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
                     beamos_config, beamos_config_module_tier
                 )  # override tier config from tiers set in config_file
             beamos_date_config = dict_merge(beamos_date_config, beamos_config)
-    _logger.debug("generate config of beamos {}".format(beamos_date_config))
     return beamos_date_config
 
 
