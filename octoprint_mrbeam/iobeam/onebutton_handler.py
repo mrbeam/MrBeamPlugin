@@ -1,3 +1,4 @@
+import re
 import threading
 import time
 from subprocess import check_output
@@ -7,6 +8,7 @@ from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from flask.ext.babel import gettext
 from octoprint_mrbeam.printing.comm_acc2 import PrintingGcodeFromMemoryInformation
 
@@ -389,14 +391,53 @@ class OneButtonHandler(object):
         self.ready_to_laser_file = gcode_file
 
     def set_ready_to_laser(self, gcode_file=None):
+        cpu_load = self.wait_for_cpu_below()
         if gcode_file is not None:
             self._test_conditions(gcode_file)
             self.ready_to_laser_file = gcode_file
         self.ready_to_laser_flag = True
         self.ready_to_laser_ts = time.time()
         self.print_started = -1
-        self._fireEvent(MrBeamEvents.READY_TO_LASER_START)
+        self._fireEvent(MrBeamEvents.READY_TO_LASER_START, dict(cpu_load=cpu_load))
         self._check_if_still_ready_to_laser()
+
+    def wait_for_cpu_below(self, cpu_max=60.0, check_interval=2.5):
+        """
+        now it's actually not the cpu load, it's the cpu usage of the octoprint process.
+
+        this would be an alternative but it's downside is that it updates slower than top
+        # r"^\s*.+\s+\d+\s+([0-9.]+)\s+[0-9.]+\s+\d+\s+\d+\s+", re.MULTILINE
+        # command = "ps aux | sort -nrk 3,3 | head -n 5"
+        (seemingly it's a avg over that pas minute, documentation says it's the avg for the process since ever.)
+        """
+        cpu_load = -1.0
+        find_cpu_load = re.compile(
+            r"^\s*\d+\s\w+\s+.*\s+[DRSTI]\s+([0-9.]+)\s+.*\s+octoprint$", re.MULTILINE
+        )
+        command = "top -b -n 1 | grep octoprint"
+
+        while cpu_load < 0.0 or cpu_load > cpu_max:
+            try:
+                ps_out, code = exec_cmd_output(command, shell=True)
+                # self._logger.debug(
+                #     "wait_for_cpu_below() test command output:\n%s", ps_out
+                # )
+                cpu_load = sum(map(lambda x: float(x), find_cpu_load.findall(ps_out)))
+            except Exception:
+                self._logger.exception("Exception while reading cpu load: ")
+                time.sleep(check_interval)
+            self._logger.debug(
+                "wait_for_cpu_below() cpu_load: %s, cpu_max: %s, cpu_load > cpu_max: %s",
+                cpu_load,
+                cpu_max,
+                cpu_load > cpu_max,
+            )
+            if cpu_load > cpu_max:
+                time.sleep(check_interval)
+        self._logger.info(
+            "wait_for_cpu_below() final cpu_load: %s, code: %s", cpu_load, code
+        )
+        return cpu_load
 
     def unset_ready_to_laser(self, lasering=False):
         self._logger.debug("unset_ready_to_laser()")
