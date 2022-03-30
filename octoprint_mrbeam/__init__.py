@@ -2489,7 +2489,7 @@ class MrBeamPlugin(
                 payload.get("remoteAddress", None)
             )
             self.fire_event(
-                MrBeamEvents.MRB_PLUGIN_VERSION,
+                MrBeamEvents.MRB_PLUGINS_VERSIONS,
                 payload=dict(
                     version=self._plugin_version, is_first_run=self.isFirstRun()
                 ),

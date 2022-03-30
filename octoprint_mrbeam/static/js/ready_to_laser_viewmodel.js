@@ -204,7 +204,7 @@ $(function () {
             self._fromData(payload);
         };
 
-        self.onEventMrbPluginVersion = function (payload) {
+        self.onEventMrbPluginsVersions = function (payload) {
             self._fromData(payload);
         };
 

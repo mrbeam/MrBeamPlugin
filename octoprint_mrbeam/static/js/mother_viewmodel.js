@@ -402,7 +402,7 @@ $(function () {
             self.removeLoadingOverlay();
         };
 
-        self.onEventMrbPluginVersion = function (payload) {
+        self.onEventMrbPluginsVersions = function (payload) {
             if (
                 payload?.version ||
                 payload?.is_first_run ||
