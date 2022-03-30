@@ -24,6 +24,12 @@ class MIGRATION_STATE(enumerate):
     rollback_error = -2
 
 
+class MIGRATION_RESTART(enumerate):
+    NONE = 0
+    DEVICE = 1
+    OCTOPRINT = 2
+
+
 class MigrationException(Exception):
     """
     Exception that could occure during migration
@@ -46,7 +52,7 @@ class MigrationBaseClass:
     # highest beamos version that should run the migration
     BEAMOS_VERSION_HIGH = None
 
-    def __init__(self, plugin):
+    def __init__(self, plugin, restart=MIGRATION_RESTART.NONE):
         """
         initalization of the class
 
@@ -58,6 +64,7 @@ class MigrationBaseClass:
         self._logger = mrb_logger(
             "octoprint.plugins.mrbeam.migrate." + self.__class__.__name__
         )
+        self.restart = restart
 
     @property
     @abstractmethod
@@ -207,3 +214,20 @@ class MigrationBaseClass:
         """
         if not exec_cmd(command):
             raise MigrationException("error during migration for cmd:", command)
+
+    @staticmethod
+    def execute_restart(restart):
+        logger = mrb_logger("octoprint.plugins.mrbeam.migrate.restart")
+        if restart:
+            if restart == MIGRATION_RESTART.OCTOPRINT:
+                logger.info("restart octoprint after migration")
+                exec_cmd("sudo systemctl restart octoprint.service")
+            elif restart == MIGRATION_RESTART.DEVICE:
+                logger.info("restart device after migration")
+                exec_cmd("sudo reboot now")
+            else:
+                logger.info(
+                    "restart after migration choosen but unknown type: {}".format(
+                        restart
+                    )
+                )
