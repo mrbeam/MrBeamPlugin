@@ -1,7 +1,5 @@
 # coding=utf-8
-
-
-execfile("octoprint_mrbeam/__version.py")
+import versioneer
 
 ########################################################################################################################
 ### Do not forget to adjust the following variables to your own plugin.
@@ -17,7 +15,7 @@ plugin_package = "octoprint_mrbeam"
 plugin_name = "Mr_Beam"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = __version__
+plugin_version = versioneer.get_version()
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -48,6 +46,8 @@ plugin_requires = [
     "pillow",
     "lxml",
     "numpy",
+    "pyyaml",
+    "enum34",
     picamera,
 ]
 
@@ -106,6 +106,7 @@ setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
     package=plugin_package,
     name=plugin_name,
     version=plugin_version,
+    cmdclass=versioneer.get_cmdclass(),
     description=plugin_description,
     author=plugin_author,
     mail=plugin_author_email,

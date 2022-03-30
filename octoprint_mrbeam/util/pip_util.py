@@ -1,3 +1,5 @@
+from octoprint.plugins.softwareupdate.updaters.pip import _get_pip_caller
+from octoprint.util.pip import PipCaller
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from cmd_exec import exec_cmd_output
 
@@ -62,3 +64,41 @@ def get_version_of_pip_module(pip_name, pip_command=None, disable_pip_ver_check=
             break
     _logger.debug("%s==%s", pip_name, version)
     return version
+
+
+def get_pip_caller(venv, _logger=None):
+    """
+    gets the pip caller of the givenv venv
+
+    Args:
+        venv: path to venv
+        _logger: logger to log call, stdout and stderr of the pip caller
+
+    Returns:
+        PipCaller of the venv
+    """
+    pip_caller = _get_pip_caller(command=venv)
+    if not isinstance(pip_caller, PipCaller):
+        raise RuntimeError("Can't run pip", None)
+
+    def _log_call(*lines):
+        _log(lines, prefix=" ", stream="call")
+
+    def _log_stdout(*lines):
+        _log(lines, prefix=">", stream="stdout")
+
+    def _log_stderr(*lines):
+        _log(lines, prefix="!", stream="stderr")
+
+    def _log(lines, prefix=None, stream=None, strip=True):
+        if strip:
+            lines = map(lambda x: x.strip(), lines)
+        for line in lines:
+            print(u"{} {}".format(prefix, line))
+
+    if _logger is not None:
+        pip_caller.on_log_call = _log_call
+        pip_caller.on_log_stdout = _log_stdout
+        pip_caller.on_log_stderr = _log_stderr
+
+    return pip_caller
