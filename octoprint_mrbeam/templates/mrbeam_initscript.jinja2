@@ -1,5 +1,7 @@
 <script lang="javascript">
     var BEAMOS_VERSION = "{{ beamosVersionNumber }}";
+    // PLUGINS_VERSIONS is set by single quotes since "pluginVersions" is returning a JSON dump which will break with double quotes
+    var PLUGINS_VERSIONS = '{{ plugins_versions }}';
     var BEAMOS_BRANCH = "{{ beamosVersionBranch }}";
     var BEAMOS_DISPLAY_VERSION = "{{ beamosVersionDisplayVersion }}";
     var BEAMOS_IMAGE = "{{ beamosVersionImage }}";

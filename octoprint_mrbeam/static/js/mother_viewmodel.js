@@ -404,12 +404,12 @@ $(function () {
 
         self.onEventMrbPluginsVersions = function (payload) {
             if (
-                payload?.version ||
+                payload?.plugins_versions ||
                 payload?.is_first_run ||
                 payload?.mrb_state?.laser_model
             ) {
                 self.force_reload_if_required(
-                    payload["version"],
+                    payload["plugins_versions"],
                     payload["is_first_run"],
                     payload["mrb_state"]["laser_model"]
                 );
