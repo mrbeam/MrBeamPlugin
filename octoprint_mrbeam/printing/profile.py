@@ -24,7 +24,7 @@ from octoprint.util import (
 )
 from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.util import dict_get, device_info
+from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.log import logme
 
 
@@ -199,7 +199,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
                 return dict_merge(hard_coded, file_based_result)
             else:
                 if identifier is None:
-                    identifier = device_info.deviceInfo().get_type()
+                    identifier = deviceInfo(self).get_type()
                 else:
                     default["id"] = identifier
                     default["model"] = identifier[-1]
@@ -258,7 +258,7 @@ class LaserCutterProfileManager(PrinterProfileManager):
     def _load_all(self):
         """Extend the file based ``PrinterProfileManager._load_all`` with the few hardcoded ones we have."""
         file_based_profiles = PrinterProfileManager._load_all(self)
-        device_type = deviceInfo().get_type()
+        device_type = deviceInfo(self).get_type()
         mrbeam_generated_profiles = {device_type: self.get(device_type)}
         mrbeam_profiles = dict_merge(LASER_PROFILE_MAP, mrbeam_generated_profiles)
         return dict_merge(mrbeam_profiles, file_based_profiles)

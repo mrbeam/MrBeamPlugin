@@ -13,10 +13,10 @@ BEAMOS_VERSION_PATTERN = re.compile(r"([0-9]+.[0-9]+.[0-9]+\S*)")
 _instance = None
 
 
-def deviceInfo(use_dummy_values=False):
+def deviceInfo(plugin, use_dummy_values=False):
     global _instance
     if _instance is None:
-        _instance = DeviceInfo(use_dummy_values=use_dummy_values)
+        _instance = DeviceInfo(plugin, use_dummy_values=use_dummy_values)
     return _instance
 
 
@@ -48,8 +48,9 @@ class DeviceInfo(object):
     KEY_PRODUCTION_DATE = "production_date"
     KEY_MODEL = "model"
 
-    def __init__(self, use_dummy_values=False):
+    def __init__(self, plugin, use_dummy_values=False):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.util.device_info")
+        self._plugin = plugin
         self._device_data = (
             self._read_file() if not use_dummy_values else self._get_dummy_values()
         )
@@ -136,6 +137,42 @@ class DeviceInfo(object):
         else:
             self._logger.debug("beamos_version invalid: " + beamos_version)
             return None
+
+    def get_software_versions(self):
+        result = dict()
+        software_info = None
+
+        try:
+            plugin_info = self._plugin._plugin_manager.get_plugin_info("softwareupdate")
+            impl = plugin_info.implementation
+            # using the method get_current_versions() is OK as it is threadsafe
+            software_info, _, _ = impl.get_current_versions()
+            self._logger.debug("Software_info: \n {}".format(software_info))
+        except Exception as e:
+            self._logger.exception(
+                "Exception while reading software_info from softwareupdate plugin. Error:{} ".format(e)
+            )
+            return result
+
+        if isinstance(software_info, dict) is False:
+            self._logger.warn(
+                "get_current_versions() Can't read software version from softwareupdate plugin."
+            )
+            return result
+
+        # Reaching this section means we are OK so far
+        for name, info in software_info.iteritems():
+            commit_hash = info["information"]["local"].get("name", None)
+            if commit_hash is not None:
+                # regex: "Commit 89nhfbffnf7f8fbfgfndhf" --> "89nhfbffnf7f8fbfgfndhf"
+                regex_match = re.match(r"Commit (\S+)", commit_hash)
+                if regex_match is not None:
+                    commit_hash = regex_match.group(1)
+            result[name] = dict(
+                version=info.get("displayVersion", None),
+                commit_hash=commit_hash,
+            )
+        return result
 
     def _read_file(self):
         try:

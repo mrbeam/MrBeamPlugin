@@ -159,7 +159,7 @@ class MrBeamPlugin(
         self.slicing_progress_last = -1
         self._logger = mrb_logger("octoprint.plugins.mrbeam")
 
-        self._device_info = deviceInfo(use_dummy_values=IS_X86)
+        self._device_info = deviceInfo(self, use_dummy_values=IS_X86)
         self._hostname = None  # see self.getHosetname()
         self._serial_num = None
         self._mac_addrs = dict()
