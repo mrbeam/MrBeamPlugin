@@ -51,6 +51,30 @@ $(function () {
                 type: "info",
                 hide: true,
             },
+            missing_updateinformation_info: {
+                title: gettext("No update information"),
+                text: gettext(
+                    "No information about available updates could be retrieved, please try again later. Errorcode: E-1000"
+                ),
+                type: "info",
+                hide: false,
+            },
+            write_error_update_info_file_err: {
+                title: gettext("Error during fetching update information"),
+                text: gettext(
+                    "There was a error during fetching the update information Errorcode: E-1001"
+                ),
+                type: "error",
+                hide: false,
+            },
+            update_fetching_information_err: {
+                title: gettext("Error during fetching update information"),
+                text: gettext(
+                    "There was a error during fetching the update information, please try again later."
+                ),
+                type: "error",
+                hide: false,
+            },
             err_cam_conn_err: {
                 title: gettext("Camera Error"),
                 text: gettext(
