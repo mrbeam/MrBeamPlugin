@@ -277,8 +277,6 @@ def build_queue(update_info, dependencies, plugin_archive):
                 )
             if dependency_config.get("pip"):
                 archive = dependency_config["pip"].format(
-                    repo=dependency_config["repo"],
-                    user=dependency_config["user"],
                     target_version="v{version}".format(version=dependency["version"]),
                 )
             else:
