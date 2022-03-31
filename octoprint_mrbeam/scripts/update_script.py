@@ -118,7 +118,7 @@ def get_dependencies(path):
         list of dependencie dict [{"name", "version"}]
     """
     dependencies_path = os.path.join(path, "dependencies.txt")
-    dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)(.=)+((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)"
+    dependencies_pattern = r"([a-z]+(?:[_-][a-z]+)*)(.=)+(([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?)"
     """
     Example:
     input:  iobeam==0.7.15
@@ -277,8 +277,6 @@ def build_queue(update_info, dependencies, plugin_archive):
                 )
             if dependency_config.get("pip"):
                 archive = dependency_config["pip"].format(
-                    repo=dependency_config["repo"],
-                    user=dependency_config["user"],
                     target_version="v{version}".format(version=dependency["version"]),
                 )
             else:
