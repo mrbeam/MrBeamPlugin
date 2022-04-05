@@ -62,6 +62,7 @@ class IoBeamValueEvents(object):
     FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
     COMPRESSOR_STATIC = "iobeam.compressor.static"
     COMPRESSOR_DYNAMIC = "iobeam.compressor.dynamic"
+    LASERHEAD_CHANGED = "iobeam.laserhead.changed"
 
 
 class IoBeamHandler(object):

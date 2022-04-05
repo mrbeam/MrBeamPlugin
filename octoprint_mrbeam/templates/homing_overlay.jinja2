@@ -48,7 +48,7 @@
 							"></i><br/><br/>
                         <div style="width: 30%;margin: 0 auto;">
                             <strong>{{ _('Make sure your Mr Beam is empty.') }}</strong><br/>
-                            {{ _('Then do a homing cycle so that your Mr&nbsp;Beam knows its current position.') }}<br/>
+                            {{ _('Then run a homing cycle so your Mr&nbsp;Beam can detect the position of the laser head.') }}<br/>
                         </div>
 						<div style='text-align: center; padding:.5em;'>
                             <button class="btn btn-default" id="homing_overlay_homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { performHomingCycle('homing_overlay') }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button>

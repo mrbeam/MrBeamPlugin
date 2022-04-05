@@ -28,11 +28,7 @@ class TemperatureManager(object):
         self._event_bus = plugin._event_bus
         self.temperature = None
         self.temperature_ts = 0
-        self.temperature_max = (
-            plugin.laserCutterProfileManager.get_current_or_default()["laser"][
-                "max_temperature"
-            ]
-        )
+        self.temperature_max = plugin.laserhead_handler.current_laserhead_max_temperature
         self.hysteresis_temperature = (
             plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"
@@ -55,7 +51,7 @@ class TemperatureManager(object):
 
         self.dev_mode = plugin._settings.get_boolean(["dev", "iobeam_disable_warnings"])
 
-        msg = "TemperatureManager initialized. temperature_max: {max}, {key}: {value}".format(
+        msg = "TemperatureManager: initialized. temperature_max: {max}, {key}: {value}".format(
             max=self.temperature_max,
             key="cooling_duration"
             if self.mode_time_based
@@ -74,13 +70,15 @@ class TemperatureManager(object):
         self._iobeam = self._plugin.iobeam
         self._analytics_handler = self._plugin.analytics_handler
         self._one_button_handler = self._plugin.onebutton_handler
-
+        self._subscribe()
         self._start_temp_timer()
 
-        self._subscribe()
+
 
     def _subscribe(self):
         self._iobeam.subscribe(IoBeamValueEvents.LASER_TEMP, self.handle_temp)
+
+        self._iobeam.subscribe(IoBeamValueEvents.LASERHEAD_CHANGED, self.reset)
 
         self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
         self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
@@ -90,12 +88,9 @@ class TemperatureManager(object):
     def shutdown(self):
         self._shutting_down = True
 
-    def reset(self):
-        self.temperature_max = (
-            self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
-                "max_temperature"
-            ]
-        )
+    def reset(self, kwargs):
+        self._logger.info("TemperatureManager: Reset trigger Received : {}".format(kwargs.get("event", None)))
+        self.temperature_max = self._plugin.laserhead_handler.current_laserhead_max_temperature
         self.hysteresis_temperature = (
             self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"
@@ -109,7 +104,19 @@ class TemperatureManager(object):
         self.mode_time_based = self.cooling_duration > 0
         self.is_cooling_since = 0
 
+        msg = "TemperatureManager: Reset Done. temperature_max: {max}, {key}: {value}".format(
+            max=self.temperature_max,
+            key="cooling_duration"
+            if self.mode_time_based
+            else "hysteresis_temperature",
+            value=self.cooling_duration
+            if self.mode_time_based
+            else self.hysteresis_temperature,
+        )
+        self._logger.info(msg)
+
     def onEvent(self, event, payload):
+        self._logger.debug("TemperatureManager: Event received: {}".format(event))
         if event == IoBeamValueEvents.LASER_TEMP:
             self.handle_temp(payload)
         elif event in (
@@ -117,7 +124,8 @@ class TemperatureManager(object):
             OctoPrintEvents.PRINT_FAILED,
             OctoPrintEvents.PRINT_CANCELLED,
         ):
-            self.reset()
+
+            self.reset({"event": event})
         elif event == OctoPrintEvents.SHUTDOWN:
             self.shutdown()
 
