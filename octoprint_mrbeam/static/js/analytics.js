@@ -106,8 +106,8 @@ $(function () {
         };
 
         self.onAllBound = function () {
-            /* This is commented out to stop console logging for the time being
             self._updateAnalyticsEnabledValue();
+            /* This is commented out to stop console logging for the time being
 
             if (console.everything) {
                 console.everything.forEach(function (logData) {
