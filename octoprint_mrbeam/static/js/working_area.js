@@ -70,6 +70,33 @@ $(function () {
         self.workingAreaHeightMM = ko.computed(function () {
             return self.profile.currentProfileData().volume.depth();
         }, self);
+
+        // QuickShape limits
+        self.rectangleMaxWidth = ko.computed(function () {
+            return self.workingAreaWidthMM();
+        }, self);
+        self.rectangleMaxHeight = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+        self.lineMaxLength = ko.computed(function () {
+            return self.workingAreaWidthMM();
+        }, self);
+        self.circleMaxRadius = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+        // TODO: The limit of the star radius should be calculated differently
+        self.starMaxRadius = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+        // TODO: The limit of the heart width should be calculated differently
+        self.heartMaxWidth = ko.computed(function () {
+            return self.workingAreaWidthMM();
+        }, self);
+        // TODO: The limit of the heart height should be calculated differently
+        self.heartMaxHeight = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+
         self.imgTranslate = ko.computed(function () {
             // Used for the translate transformation of the picture on the work area
             return [-self.workingAreaWidthMM(), -self.workingAreaHeightMM()]
@@ -3339,20 +3366,20 @@ $(function () {
                 var qs_params = {
                     type: type,
                     color: $("#quick_shape_color").val(),
-                    rect_w: parseFloat($("#quick_shape_rect_w").val()),
-                    rect_h: parseFloat($("#quick_shape_rect_h").val()),
+                    rect_w: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_rect_w").val()), self.rectangleMaxWidth()),
+                    rect_h: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_rect_h").val()), self.rectangleMaxHeight()),
                     rect_radius: parseFloat(
                         $("#quick_shape_rect_radius").val()
                     ),
-                    line_length: parseFloat(
+                    line_length: WorkingAreaHelper.limitValue(parseFloat(
                         $("#quick_shape_line_length").val()
-                    ),
-                    circle_radius: parseFloat(
+                    ), self.lineMaxLength()),
+                    circle_radius: WorkingAreaHelper.limitValue(parseFloat(
                         $("#quick_shape_circle_radius").val()
-                    ),
-                    star_radius: parseFloat(
+                    ), self.circleMaxRadius()),
+                    star_radius: WorkingAreaHelper.limitValue(parseFloat(
                         $("#quick_shape_star_radius").val()
-                    ),
+                    ), self.starMaxRadius()),
                     star_corners: parseInt(
                         $("#quick_shape_star_corners").val(),
                         10
@@ -3360,8 +3387,8 @@ $(function () {
                     star_sharpness: parseFloat(
                         $("#quick_shape_star_sharpness").val()
                     ),
-                    heart_w: parseFloat($("#quick_shape_heart_w").val()),
-                    heart_h: parseFloat($("#quick_shape_heart_h").val()),
+                    heart_w: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_heart_w").val()), self.heartMaxWidth()),
+                    heart_h: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_heart_h").val()), self.heartMaxHeight()),
                     heart_lr: parseFloat($("#quick_shape_heart_lr").val()),
                     stroke: $("#quick_shape_stroke").prop("checked"),
                     fill_color: $("#quick_shape_fill_brightness").val(),
