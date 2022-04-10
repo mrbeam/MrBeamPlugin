@@ -283,17 +283,30 @@
 										<div class="accordion-body in" id="mrb_connection_wrapper"
 											 data-bind="visible: !state.isFlashing() && state.isErrorOrClosed() && loginState.isUser()">
 											<div class="accordion-inner">
-												<label for="connection_ports" data-bind="css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()">{{ _('Serial Port') }}</label>
-												<select id="connection_ports" data-bind="options: connection.portOptions, optionsCaption: 'AUTO', value: connection.selectedPort, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"></select>
-												<label for="connection_baudrates" data-bind="css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()">{{ _('Baudrate') }}</label>
-												<select id="connection_baudrates" data-bind="options: connection.baudrateOptions, optionsCaption: 'AUTO', value: connection.selectedBaudrate, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"></select>
-	<!--											<label class="checkbox">
-													<input type="checkbox" id="connection_save" data-bind="checked: saveSettings, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"> {{ _('Save connection settings') }}
-												</label>-->
-												<label class="checkbox">
-													<input type="checkbox" id="connection_autoconnect" data-bind="checked: settings.serial_autoconnect, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"> {{ _('Auto-connect on server startup') }}
-												</label>
-												<button class="btn btn-block" id="printer_connect" data-bind="click: connection.connect, text: connection.buttonText(), enable: loginState.isUser()">{{ _('Connect') }}</button>
+                                                <div style="border: 2px red solid; border-radius: 8px; margin: 0em 0em 1em; padding:1em;">
+                                                    <h3>{{ _("Please restart your Mr Beam.") }}</h3>
+                                                    <p>
+                                                        {{ _("Mr Beam can not talk to the motors.") }}<br/>
+                                                        {{ _("He apologizes profusely.") }}
+                                                    </p>
+                                                    <p>
+                                                        {{ _("If afterwards this message still appears, please file a") }}
+                                                        <a href="http://mr-beam.org/support" target="_blank" style="font-weight: bold">{{_("Support Ticket")}}</a>
+                                                    </p>
+                                                </div>
+                                                <div style="display:none;">
+                                                    <label for="connection_ports" data-bind="css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()">{{ _('Serial Port') }}</label>
+                                                    <select id="connection_ports" data-bind="options: connection.portOptions, optionsCaption: 'AUTO', value: connection.selectedPort, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"></select>
+                                                    <label for="connection_baudrates" data-bind="css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()">{{ _('Baudrate') }}</label>
+                                                    <select id="connection_baudrates" data-bind="options: connection.baudrateOptions, optionsCaption: 'AUTO', value: connection.selectedBaudrate, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"></select>
+        <!--											<label class="checkbox">
+                                                        <input type="checkbox" id="connection_save" data-bind="checked: saveSettings, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"> {{ _('Save connection settings') }}
+                                                    </label>-->
+                                                    <label class="checkbox">
+                                                        <input type="checkbox" id="connection_autoconnect" data-bind="checked: settings.serial_autoconnect, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"> {{ _('Auto-connect on server startup') }}
+                                                    </label>
+                                                    <button class="btn btn-block" id="printer_connect" data-bind="click: connection.connect, text: connection.buttonText(), enable: loginState.isUser()">{{ _('Connect') }}</button>
+                                                </div>
 											</div>
 										</div>
 									</div>
