@@ -6,6 +6,7 @@
     "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
     "restart": "environment",
     "type": "github_commit",
+    "force_base": false,
     "dependencies": {
         "netconnectd": {
             "displayVersion": "-",
@@ -13,8 +14,8 @@
             "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
             "global_pip_command": true,
             "pip_command": "sudo /usr/local/bin/pip",
-            "beamos_date": {
-                "2021-06-11": {
+            "beamos_version": {
+                "0.18.0": {
                     "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip",
                 }
             }
@@ -46,7 +47,7 @@
       ]
     }
   ],
-  "release_compare": "unequal",
+  "release_compare": "python_unequal",
   "tiers": {
     "stable": {
       "branch": "mrbeam2-stable",

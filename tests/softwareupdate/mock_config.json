@@ -2,7 +2,8 @@
   "default": {
     "type": "github_commit",
     "user": "mrbeam",
-    "release_compare": "unequal",
+    "release_compare": "python_unequal",
+    "force_base": false,
     "stable": {
       "branch": "mrbeam2-stable",
       "branch_default": "mrbeam2-stable",
@@ -59,7 +60,13 @@
     "octoprint": {
       "type": "github_release",
       "develop": {
-        "type": "github_commit"
+        "type": "github_commit",
+        "branch": "alpha",
+        "branch_default": "alpha"
+      },
+      "alpha": {
+        "branch": "alpha",
+        "branch_default": "alpha",
       }
     },
     "mrbeam": {
@@ -84,8 +91,8 @@
           "repo": "MrBeamLedStrips",
           "pip": "https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
           "global_pip_command": true,
-          "beamos_date": {
-            "2021-06-11": {
+          "beamos_version": {
+            "0.18.0": {
               "pip_command": "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
             }
           }
@@ -94,8 +101,8 @@
           "repo": "iobeam",
           "pip": "git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
           "global_pip_command": true,
-          "beamos_date": {
-            "2021-06-11": {
+          "beamos_version": {
+            "0.18.0": {
               "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
             }
           }
@@ -104,8 +111,8 @@
           "repo": "mrb_hw_info",
           "pip": "git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
           "global_pip_command": true,
-          "beamos_date": {
-            "2021-06-11": {
+          "beamos_version": {
+            "0.18.0": {
               "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
             }
           }
@@ -126,8 +133,8 @@
           "repo": "netconnectd_mrbeam",
           "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
           "global_pip_command": true,
-          "beamos_date": {
-            "2021-06-11": {
+          "beamos_version": {
+            "0.18.0": {
               "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip"
             }
           }

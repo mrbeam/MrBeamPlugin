@@ -32,7 +32,8 @@
       ]
     }
   ],
-  "release_compare": "unequal",
+  "force_base": false,
+  "release_compare": "python_unequal",
   "tiers": {
     "stable": {
       "branch": "mrbeam2-stable",
@@ -49,7 +50,7 @@
     "develop": {
       "type": "github_commit",
       "branch": "alpha",
-      "branch_default": "alpha",
+      "branch_default": "alpha"
     },
     "alpha": {
       "branch": "mrbeam2-alpha",

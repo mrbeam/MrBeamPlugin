@@ -13,6 +13,7 @@ from requests import ConnectionError
 from requests.adapters import HTTPAdapter, MaxRetryError
 from semantic_version import Spec
 from urllib3 import Retry
+from packaging import version
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_merge, logExceptions
@@ -51,6 +52,7 @@ GLOBAL_PIP_COMMAND = (
 )
 
 BEAMOS_LEGACY_VERSION = "0.14.0"
+BEAMOS_LEGACY_DATE = date(2018, 1, 12)
 
 
 def get_tag_of_github_repo(repo):
@@ -253,7 +255,7 @@ def reload_update_info(plugin):
 
 
 @logExceptions
-def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
+def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
     """
     loads update info from the update_info.json file
     the override order: default_settings->module_settings->tier_settings->beamos_settings
@@ -295,7 +297,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
                     module = dict_merge(defaultsettings, module)
 
                     sw_update_config[module_id] = _generate_config_of_module(
-                        module_id, module, defaultsettings, tier, beamos_date, plugin
+                        module_id, module, defaultsettings, tier, beamos_version, plugin
                     )
         except softwareupdate_exceptions.ConfigurationInvalid as e:
             _logger.exception("ConfigurationInvalid {}".format(e))
@@ -495,13 +497,13 @@ def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
 
     beamos_version_config = {}
     # TODO change to version instead of date
-    prev_beamos_date_entry = datetime.strptime("2000-01-01", "%Y-%m-%d").date()
-    for date, beamos_config in moduleconfig["beamos_date"].items():
+    prev_beamos_version_entry = "0.0.0"
+    for beamos_version, beamos_config in moduleconfig["beamos_version"].items():
         if (
-            beamos_date >= datetime.strptime(date, "%Y-%m-%d").date()
-            and prev_beamos_date_entry < beamos_date
+            version.parse(beamos_version) >= version.parse(beamos_version)
+            and prev_beamos_version_entry < beamos_version
         ):
-            prev_beamos_date_entry = datetime.strptime(date, "%Y-%m-%d").date()
+            prev_beamos_version_entry = version.parse(beamos_version)
             if tierversion in beamos_config:
                 beamos_config_module_tier = beamos_config[tierversion]
                 beamos_config = dict_merge(

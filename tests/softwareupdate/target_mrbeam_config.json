@@ -5,6 +5,7 @@
   "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
   "type": "github_commit",
   "user": "mrbeam",
+  "force_base": false,
   "dependencies": {
     "mrbeam-ledstrips": {
       "repo": "MrBeamLedStrips",
@@ -12,8 +13,8 @@
       "global_pip_command": true,
       "displayVersion": "-",
       "pip_command": "sudo /usr/local/bin/pip",
-      "beamos_date": {
-        "2021-06-11": {
+      "beamos_version": {
+        "0.18.0": {
           "pip_command": "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
         }
       }
@@ -24,8 +25,8 @@
       "global_pip_command": true,
       "displayVersion": "-",
       "pip_command": "sudo /usr/local/bin/pip",
-      "beamos_date": {
-        "2021-06-11": {
+      "beamos_version": {
+        "0.18.0": {
           "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
         }
       }
@@ -36,8 +37,8 @@
       "global_pip_command": true,
       "displayVersion": "-",
       "pip_command": "sudo /usr/local/bin/pip",
-      "beamos_date": {
-        "2021-06-11": {
+      "beamos_version": {
+        "0.18.0": {
           "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
         }
       }
@@ -74,7 +75,7 @@
       ]
     }
   ],
-  "release_compare": "unequal",
+  "release_compare": "python_unequal",
   "tiers": {
     "stable": {
       "branch": "mrbeam2-stable",
