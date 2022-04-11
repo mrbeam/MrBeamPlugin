@@ -50,7 +50,7 @@ GLOBAL_PIP_COMMAND = (
     "sudo {}".format(GLOBAL_PIP_BIN) if os.path.isfile(GLOBAL_PIP_BIN) else None
 )
 
-BEAMOS_LEGACY_DATE = date(2018, 1, 12)
+BEAMOS_LEGACY_VERSION = "0.14.0"
 
 
 def get_tag_of_github_repo(repo):
@@ -122,10 +122,10 @@ def get_update_information(plugin):
     """
     try:
         tier = plugin._settings.get(["dev", "software_tier"])
-        beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
+        beamos_version = plugin._device_info.get_beamos_version_number()
         _logger.info(
-            "SoftwareUpdate using tier: {tier} {beamos_date}".format(
-                tier=tier, beamos_date=beamos_date
+            "SoftwareUpdate using tier: {tier} {beamos_version}".format(
+                tier=tier, beamos_version=beamos_version
             )
         )
 
@@ -142,7 +142,7 @@ def get_update_information(plugin):
                 )
                 if cloud_config:
                     return _set_info_from_cloud_config(
-                        plugin, tier, beamos_date, cloud_config
+                        plugin, tier, beamos_version, cloud_config
                     )
         else:
             _logger.warn("no internet connection")
@@ -165,7 +165,7 @@ def get_update_information(plugin):
     return _set_info_from_cloud_config(
         plugin,
         tier,
-        beamos_date,
+        beamos_version,
         {
             "default": {},
             "modules": {
@@ -265,8 +265,8 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
                 <module_id>: {
                     <module_settings>,
                     <tier>:{<tier_settings>},
-                    "beamos_date": {
-                        <YYYY-MM-DD>: {<beamos_settings>}
+                    "beamos_version": {
+                        "X.X.X": {<beamos_settings>}
                     }
                 }
                 "dependencies: {<module>}
@@ -275,7 +275,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
     Args:
         plugin: Mr Beam Plugin
         tier: the software tier which should be used
-        beamos_date: the image creation date of the running beamos
+        beamos_version: the version of the running beamos
         cloud_config: the update config from the cloud
 
     Returns:
@@ -332,7 +332,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
 
 
 def _generate_config_of_module(
-    module_id, input_moduleconfig, defaultsettings, tier, beamos_date, plugin
+    module_id, input_moduleconfig, defaultsettings, tier, beamos_version, plugin
 ):
     """
     generates the config of a software module <module_id>
@@ -341,7 +341,7 @@ def _generate_config_of_module(
         input_moduleconfig: moduleconfig
         defaultsettings: default settings
         tier: software tier
-        beamos_date: date of the beamos
+        beamos_version: version of the beamos
         plugin: Mr Beam Plugin
 
     Returns:
@@ -363,7 +363,7 @@ def _generate_config_of_module(
 
         input_moduleconfig = dict_merge(
             input_moduleconfig,
-            _generate_config_of_beamos(input_moduleconfig, beamos_date, tierversion),
+            _generate_config_of_beamos(input_moduleconfig, beamos_version, tierversion),
         )
 
         if "branch" in input_moduleconfig and "{tier}" in input_moduleconfig["branch"]:
@@ -429,7 +429,7 @@ def _generate_config_of_module(
                     dependencie_config,
                     {},
                     tier,
-                    beamos_date,
+                    beamos_version,
                     plugin,
                 )
         return input_moduleconfig
@@ -479,21 +479,22 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
     return current_version
 
 
-def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
+def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
     """
-    generates the config for the given beamos_date of the tierversion
+    generates the config for the given beamos_version of the tierversion
     Args:
         moduleconfig: update config of the module
-        beamos_date: date of the beamos
+        beamos_version: version of the beamos
         tierversion: software tier
 
     Returns:
         beamos config of the tierversion
     """
-    if "beamos_date" not in moduleconfig:
+    if "beamos_version" not in moduleconfig:
         return {}
 
-    beamos_date_config = {}
+    beamos_version_config = {}
+    # TODO change to version instead of date
     prev_beamos_date_entry = datetime.strptime("2000-01-01", "%Y-%m-%d").date()
     for date, beamos_config in moduleconfig["beamos_date"].items():
         if (
@@ -506,8 +507,8 @@ def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
                 beamos_config = dict_merge(
                     beamos_config, beamos_config_module_tier
                 )  # override tier config from tiers set in config_file
-            beamos_date_config = dict_merge(beamos_date_config, beamos_config)
-    return beamos_date_config
+            beamos_version_config = dict_merge(beamos_version_config, beamos_config)
+    return beamos_version_config
 
 
 def _clean_update_config(update_config):
@@ -519,7 +520,7 @@ def _clean_update_config(update_config):
     Returns:
         cleaned version of the update config
     """
-    pop_list = ["alpha", "beta", "stable", "develop", "beamos_date", "name"]
+    pop_list = ["alpha", "beta", "stable", "develop", "beamos_version", "name"]
     for key in set(update_config).intersection(pop_list):
         del update_config[key]
     return update_config
