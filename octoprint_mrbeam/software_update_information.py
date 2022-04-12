@@ -1,9 +1,9 @@
-import base64
 import copy
 import json
 import os
 from datetime import date
-from datetime import datetime
+
+import pkg_resources
 from enum import Enum
 
 import semantic_version
@@ -13,7 +13,6 @@ from requests import ConnectionError
 from requests.adapters import HTTPAdapter, MaxRetryError
 from semantic_version import Spec
 from urllib3 import Retry
-from packaging import version
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_merge, logExceptions
@@ -484,10 +483,13 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
 def _comparision_generator(comparision, beamos_version, prev_beamos_version_entry):
     comperator = _get_comparator(comparision)
     if (
-        comperator(version.parse(beamos_version), version.parse(beamos_version))
+        comperator(
+            pkg_resources.parse_version(beamos_version),
+            pkg_resources.parse_version(beamos_version),
+        )
         and prev_beamos_version_entry < beamos_version
     ):
-        prev_beamos_version_entry = version.parse(beamos_version)
+        prev_beamos_version_entry = pkg_resources.parse_version(beamos_version)
         return True, prev_beamos_version_entry
 
 
@@ -566,7 +568,7 @@ def get_config_for_version(target_version, config, comparision_options):
     retconfig = {}
     for comp, comp_config in config:
         sorted_comp_config = sorted(
-            comp_config.items(), key=lambda ver: version.parse(ver[0])
+            comp_config.items(), key=lambda ver: pkg_resources.parse_version(ver[0])
         )
 
         for check_version, version_config in sorted_comp_config:

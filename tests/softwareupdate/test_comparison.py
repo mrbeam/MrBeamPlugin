@@ -1,10 +1,11 @@
 import unittest
 
+import pkg_resources
+
 from octoprint_mrbeam.software_update_information import (
     VersionComperator,
     _generate_config_of_beamos,
 )
-from packaging import version
 
 
 def bla(comp1, comparision_options):
@@ -63,7 +64,7 @@ class VersionCaomparisionTestCase(unittest.TestCase):
         retvalue = None
         for comp, comp_config in config:
             sorted_comp_config = sorted(
-                comp_config.items(), key=lambda ver: version.parse(ver[0])
+                comp_config.items(), key=lambda ver: pkg_resources.parse_version(ver[0])
             )
             print("sorted", sorted_comp_config)
             for check_version, version_config in sorted_comp_config:
