@@ -480,19 +480,6 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
     return current_version
 
 
-def _comparision_generator(comparision, beamos_version, prev_beamos_version_entry):
-    comperator = _get_comparator(comparision)
-    if (
-        comperator(
-            pkg_resources.parse_version(beamos_version),
-            pkg_resources.parse_version(beamos_version),
-        )
-        and prev_beamos_version_entry < beamos_version
-    ):
-        prev_beamos_version_entry = pkg_resources.parse_version(beamos_version)
-        return True, prev_beamos_version_entry
-
-
 def _get_comparator(compare_type, custom=None):
     if compare_type == "__eq__":
         return lambda a, b: a == b
