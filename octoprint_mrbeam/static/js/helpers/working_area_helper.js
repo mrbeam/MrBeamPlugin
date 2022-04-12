@@ -350,6 +350,10 @@ class WorkingAreaHelper {
         //console.debug("idx, idx1 -> idx2", index, idx1, idx2);
         return [strBefore, v1, strAfter];
     }
+
+    static limitValue(fieldValue, maxValue) {
+        return fieldValue < maxValue ? fieldValue : maxValue;
+    }
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = "bcdfghjklmnpqrstvwxz";
