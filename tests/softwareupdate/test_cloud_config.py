@@ -113,9 +113,21 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         ) as json_file:
             self.target_netconnectd_config = yaml.safe_load(json_file)
         with open(
+            os.path.join(
+                dirname(realpath(__file__)), "target_netconnectd_config_legacy.json"
+            )
+        ) as json_file:
+            self.target_netconnectd_config_legacy = yaml.safe_load(json_file)
+        with open(
             os.path.join(dirname(realpath(__file__)), "target_mrbeam_config.json")
         ) as json_file:
             self.target_mrbeam_config = yaml.safe_load(json_file)
+        with open(
+            os.path.join(
+                dirname(realpath(__file__)), "target_mrbeam_config_legacy.json"
+            )
+        ) as json_file:
+            self.target_mrbeam_config_legacy = yaml.safe_load(json_file)
         with open(
             os.path.join(dirname(realpath(__file__)), "mock_config.json")
         ) as json_file:
@@ -229,7 +241,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     beamos_version_buster,
                 )
 
-    @patch.object(DeviceInfo, "get_beamos_version")
+    @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_confg_legacy_online(self, device_info_mock):
         """
         Testcase to test the leagcy image config with the online available cloud config
@@ -272,7 +284,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     beamos_version_legacy,
                 )
 
-    @patch.object(DeviceInfo, "get_beamos_version")
+    @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_confg_buster_mock(self, device_info_mock):
         """
         tests the update info with a mocked server response
@@ -335,7 +347,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
             TMP_BASE_FOLDER_PATH + SW_UPDATE_INFO_FILE_NAME, "w"
         )
 
-    @patch.object(DeviceInfo, "get_beamos_version")
+    @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_confg_legacy_mock(self, device_info_mock):
         """
         tests the updateinfo hook for the legacy image
@@ -463,9 +475,11 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         Returns:
             None
         """
-        self.validate_module_config(
-            update_config, tier, self.target_mrbeam_config, beamos_version
-        )
+        if beamos_version >= "0.18.0":
+            target_config = self.target_mrbeam_config
+        else:
+            target_config = self.target_mrbeam_config_legacy
+        self.validate_module_config(update_config, tier, target_config, beamos_version)
 
     def validate_findmymrbeam_module_config(self, update_config, tier, beamos_version):
         """
@@ -495,29 +509,12 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         Returns:
             None
         """
-        self.validate_module_config(
-            update_config, tier, self.target_netconnectd_config, beamos_version
-        )
+        if beamos_version >= "0.18.0":
+            target_config = self.target_netconnectd_config
+        else:
+            target_config = self.target_netconnectd_config_legacy
 
-    def _set_beamos_config(self, config, beamos_version=None):
-        """
-        generates the updateinformation for a given beamos image version
-
-        Args:
-            config: update config
-            beamos_version: beamos image version
-
-        Returns:
-            updateinformation for the given beamos image version
-        """
-        if "beamos_version" in config:
-            for config_beamos_version, beamos_config in config[
-                "beamos_version"
-            ].items():
-                if beamos_version >= version.parse(config_beamos_version):
-                    config = dict_merge(config, beamos_config)
-            config.pop("beamos_version")
-        return config
+        self.validate_module_config(update_config, tier, target_config, beamos_version)
 
     def _set_tier_config(self, config, tier):
         """
@@ -551,14 +548,10 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
             None
         """
         copy_target_config = deepcopy(target_module_config)
-        self._set_beamos_config(copy_target_config, beamos_version)
         if "dependencies" in copy_target_config:
             for dependencie_name, dependencie_config in copy_target_config[
                 "dependencies"
             ].items():
-                dependencie_config = self._set_beamos_config(
-                    dependencie_config, beamos_version
-                )
                 dependencie_config = self._set_tier_config(dependencie_config, tier)
                 copy_target_config["dependencies"][
                     dependencie_name

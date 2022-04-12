@@ -481,6 +481,44 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
     return current_version
 
 
+def _comparision_generator(comparision, beamos_version, prev_beamos_version_entry):
+    comperator = _get_comparator(comparision)
+    if (
+        comperator(version.parse(beamos_version), version.parse(beamos_version))
+        and prev_beamos_version_entry < beamos_version
+    ):
+        prev_beamos_version_entry = version.parse(beamos_version)
+        return True, prev_beamos_version_entry
+
+
+def _get_comparator(compare_type, custom=None):
+    if compare_type == "__eq__":
+        return lambda a, b: a == b
+    elif compare_type == "__ne__":
+        return lambda a, b: a != b
+    elif compare_type == "__lt__":
+        return lambda a, b: a < b
+    elif compare_type == "__le__":
+        return lambda a, b: a <= b
+    elif compare_type == "__gt__":
+        return lambda a, b: a > b
+    elif compare_type == "__ge__":
+        return lambda a, b: a >= b
+
+
+class VersionComperator:
+    def __init__(self, identifier, priority, comparision):
+        self.identifier = identifier
+        self.priority = priority
+        self.comparision = comparision
+
+    @staticmethod
+    def get_comperator(comparision_string, comparision_options):
+        for item in comparision_options:
+            if item.identifier == comparision_string:
+                return item
+
+
 def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
     """
     generates the config for the given beamos_version of the tierversion
@@ -494,23 +532,49 @@ def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
     """
     if "beamos_version" not in moduleconfig:
         return {}
+    config_for_beamos_versions = moduleconfig.get("beamos_version")
 
-    beamos_version_config = {}
-    # TODO change to version instead of date
-    prev_beamos_version_entry = "0.0.0"
-    for beamos_version, beamos_config in moduleconfig["beamos_version"].items():
-        if (
-            version.parse(beamos_version) >= version.parse(beamos_version)
-            and prev_beamos_version_entry < beamos_version
-        ):
-            prev_beamos_version_entry = version.parse(beamos_version)
-            if tierversion in beamos_config:
-                beamos_config_module_tier = beamos_config[tierversion]
-                beamos_config = dict_merge(
-                    beamos_config, beamos_config_module_tier
-                )  # override tier config from tiers set in config_file
-            beamos_version_config = dict_merge(beamos_version_config, beamos_config)
-    return beamos_version_config
+    comparision_options = [
+        VersionComperator("__eq__", 5, lambda a, b: a == b),
+        VersionComperator("__le__", 4, lambda a, b: a <= b),
+        VersionComperator("__lt__", 3, lambda a, b: a < b),
+        VersionComperator("__ge__", 2, lambda a, b: a >= b),
+        VersionComperator("__gt__", 1, lambda a, b: a > b),
+    ]
+
+    sorted_config_for_beamos_versions = sorted(
+        config_for_beamos_versions.items(),
+        key=lambda com: VersionComperator.get_comperator(
+            com[0], comparision_options
+        ).priority,
+    )
+
+    config_for_beamos = get_config_for_version(
+        beamos_version, sorted_config_for_beamos_versions, comparision_options
+    )
+
+    if tierversion in config_for_beamos:
+        beamos_config_module_tier = config_for_beamos.get(tierversion)
+        config_for_beamos = dict_merge(
+            config_for_beamos, beamos_config_module_tier
+        )  # override tier config from tiers set in config_file
+
+    return config_for_beamos
+
+
+def get_config_for_version(target_version, config, comparision_options):
+    retconfig = {}
+    for comp, comp_config in config:
+        sorted_comp_config = sorted(
+            comp_config.items(), key=lambda ver: version.parse(ver[0])
+        )
+
+        for check_version, version_config in sorted_comp_config:
+            if VersionComperator.get_comperator(comp, comparision_options).comparision(
+                target_version, check_version
+            ):
+                retconfig = dict_merge(retconfig, version_config)
+    return retconfig
 
 
 def _clean_update_config(update_config):

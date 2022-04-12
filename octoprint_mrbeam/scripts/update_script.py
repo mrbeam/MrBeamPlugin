@@ -288,20 +288,27 @@ def build_queue(update_info, dependencies, plugin_archive):
                 dependency["name"],
                 dependency_config.get("pip_command", DEFAULT_OPRINT_VENV),
             )
-            if version != dependency["version"]:
+
+            # override the dependency version from the dependencies files with the one from the cloud config
+            if dependency_config.get("version"):
+                version_needed = dependency_config.get("version")
+            else:
+                version_needed = dependency.get("version")
+
+            if installed_version != version_needed:
                 install_queue.setdefault(
                     dependency_config.get("pip_command", DEFAULT_OPRINT_VENV), []
                 ).append(
                     {
                         "name": dependency["name"],
                         "archive": archive,
-                        "target": dependency["version"],
+                        "target": version_needed,
                     }
                 )
             else:
                 print(
                     "skip dependency {} as the target version {} is already installed".format(
-                        dependency["name"], dependency["version"]
+                        dependency["name"], version_needed
                     )
                 )
     return install_queue

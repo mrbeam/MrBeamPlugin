@@ -66,7 +66,7 @@
       },
       "alpha": {
         "branch": "alpha",
-        "branch_default": "alpha",
+        "branch_default": "alpha"
       }
     },
     "mrbeam": {
@@ -92,8 +92,10 @@
           "pip": "https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
           "global_pip_command": true,
           "beamos_version": {
-            "0.18.0": {
-              "pip_command": "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
+            "__ge__": {
+              "0.18.0": {
+                "pip_command": "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
+              }
             }
           }
         },
@@ -102,8 +104,10 @@
           "pip": "git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
           "global_pip_command": true,
           "beamos_version": {
-            "0.18.0": {
-              "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
+            "__ge__": {
+              "0.18.0": {
+                "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
+              }
             }
           }
         },
@@ -112,8 +116,10 @@
           "pip": "git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
           "global_pip_command": true,
           "beamos_version": {
-            "0.18.0": {
-              "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
+            "__ge__": {
+              "0.18.0": {
+                "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
+              }
             }
           }
         },
@@ -134,10 +140,17 @@
           "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
           "global_pip_command": true,
           "beamos_version": {
-            "0.18.0": {
-              "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip"
+              "__ge__": {
+                "0.18.0": {
+                  "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip"
+                }
+              },
+              "__le__": {
+                "0.14.0": {
+                  "version": "0.0.1"
+                }
+              }
             }
-          }
         }
       },
       "develop": {
