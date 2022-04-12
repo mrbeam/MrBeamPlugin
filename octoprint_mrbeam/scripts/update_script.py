@@ -284,7 +284,7 @@ def build_queue(update_info, dependencies, plugin_archive):
                     "pip not configured for {}".format(dependency["name"])
                 )
 
-            version = get_version_of_pip_module(
+            installed_version = get_version_of_pip_module(
                 dependency["name"],
                 dependency_config.get("pip_command", DEFAULT_OPRINT_VENV),
             )
