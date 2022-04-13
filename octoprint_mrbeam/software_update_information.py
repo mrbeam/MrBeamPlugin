@@ -1,5 +1,6 @@
 import copy
 import json
+import operator
 import os
 from datetime import date
 
@@ -37,7 +38,7 @@ DEFAULT_REPO_BRANCH_ID = {
     SWUpdateTier.ALPHA.value: "alpha",
     SWUpdateTier.DEV.value: "develop",
 }
-MAJOR_VERSION_CLOUD_CONFIG = 0
+MAJOR_VERSION_CLOUD_CONFIG = 1
 SW_UPDATE_INFO_FILE_NAME = "update_info.json"
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
@@ -51,7 +52,7 @@ GLOBAL_PIP_COMMAND = (
 )
 
 BEAMOS_LEGACY_VERSION = "0.14.0"
-BEAMOS_LEGACY_DATE = date(2018, 1, 12)
+BEAMOS_LEGACY_DATE = date(2018, 1, 12)  # still used in the migrations
 
 
 def get_tag_of_github_repo(repo):
@@ -267,7 +268,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
                     <module_settings>,
                     <tier>:{<tier_settings>},
                     "beamos_version": {
-                        "X.X.X": {<beamos_settings>}
+                        "X.X.X": {<beamos_settings>} # only supports major minor patch
                     }
                 }
                 "dependencies: {<module>}
@@ -439,10 +440,11 @@ def _generate_config_of_module(
 def _get_curent_version(input_moduleconfig, module_id, plugin):
     """
     returns the version of the given module
+
     Args:
-        input_moduleconfig: module to get the version for
-        module_id: id of the module
-        plugin: Mr Beam Plugin
+        input_moduleconfig (dict): module to get the version for
+        module_id (str): id of the module
+        plugin (:obj:`OctoPrint Plugin`): Mr Beam Plugin
 
     Returns:
         version of the module or None
@@ -480,29 +482,27 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
     return current_version
 
 
-def _get_comparator(compare_type, custom=None):
-    if compare_type == "__eq__":
-        return lambda a, b: a == b
-    elif compare_type == "__ne__":
-        return lambda a, b: a != b
-    elif compare_type == "__lt__":
-        return lambda a, b: a < b
-    elif compare_type == "__le__":
-        return lambda a, b: a <= b
-    elif compare_type == "__gt__":
-        return lambda a, b: a > b
-    elif compare_type == "__ge__":
-        return lambda a, b: a >= b
-
-
 class VersionComperator:
-    def __init__(self, identifier, priority, comparision):
+    """
+    Version Comperator class to compare two versions with the compare method
+    """
+
+    def __init__(self, identifier, priority, compare):
         self.identifier = identifier
         self.priority = priority
-        self.comparision = comparision
+        self.compare = compare
 
     @staticmethod
     def get_comperator(comparision_string, comparision_options):
+        """
+        returns the comperator of the given list of VersionComperator with the matchin identifier
+        Args:
+            comparision_string (str): identifier to search for
+            comparision_options (list:
+
+        Returns:
+
+        """
         for item in comparision_options:
             if item.identifier == comparision_string:
                 return item
@@ -511,24 +511,27 @@ class VersionComperator:
 def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
     """
     generates the config for the given beamos_version of the tierversion
+
     Args:
-        moduleconfig: update config of the module
-        beamos_version: version of the beamos
-        tierversion: software tier
+        moduleconfig (dict): update config of the module
+        beamos_version (str): version of the beamos
+        tierversion (str): software tier
 
     Returns:
         beamos config of the tierversion
     """
     if "beamos_version" not in moduleconfig:
+        _logger.debug("no beamos_version set in moduleconfig")
         return {}
+
     config_for_beamos_versions = moduleconfig.get("beamos_version")
 
     comparision_options = [
-        VersionComperator("__eq__", 5, lambda a, b: a == b),
-        VersionComperator("__le__", 4, lambda a, b: a <= b),
-        VersionComperator("__lt__", 3, lambda a, b: a < b),
-        VersionComperator("__ge__", 2, lambda a, b: a >= b),
-        VersionComperator("__gt__", 1, lambda a, b: a > b),
+        VersionComperator("__eq__", 5, operator.eq),
+        VersionComperator("__le__", 4, operator.le),
+        VersionComperator("__lt__", 3, operator.lt),
+        VersionComperator("__ge__", 2, operator.ge),
+        VersionComperator("__gt__", 1, operator.gt),
     ]
 
     sorted_config_for_beamos_versions = sorted(
@@ -552,18 +555,22 @@ def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
 
 
 def get_config_for_version(target_version, config, comparision_options):
-    retconfig = {}
-    for comp, comp_config in config:
-        sorted_comp_config = sorted(
-            comp_config.items(), key=lambda ver: pkg_resources.parse_version(ver[0])
+    config_to_be_updated = {}
+    for comperator, version_config_items in config:
+        # sort the version config items by the version
+        sorted_version_config_items = sorted(
+            version_config_items.items(),
+            key=lambda version_config_tuple: pkg_resources.parse_version(
+                version_config_tuple[0]
+            ),
         )
 
-        for check_version, version_config in sorted_comp_config:
-            if VersionComperator.get_comperator(comp, comparision_options).comparision(
-                target_version, check_version
-            ):
-                retconfig = dict_merge(retconfig, version_config)
-    return retconfig
+        for check_version, version_config in sorted_version_config_items:
+            if VersionComperator.get_comperator(
+                comperator, comparision_options
+            ).compare(target_version, check_version):
+                config_to_be_updated = dict_merge(config_to_be_updated, version_config)
+    return config_to_be_updated
 
 
 def _clean_update_config(update_config):

@@ -1,3 +1,4 @@
+import operator
 import unittest
 
 import pkg_resources
@@ -5,6 +6,7 @@ import pkg_resources
 from octoprint_mrbeam.software_update_information import (
     VersionComperator,
     _generate_config_of_beamos,
+    get_config_for_version,
 )
 
 
@@ -15,18 +17,25 @@ def bla(comp1, comparision_options):
 class VersionCaomparisionTestCase(unittest.TestCase):
     def setUp(self):
         self.le_element = {"__le__": {"0.17.0": {"value": 3}}}
-        self.ge_element = {"__ge__": {"0.18.0": {"value": 2}, "0.14.0": {"value": 1}}}
+        self.ge_element = {
+            "__ge__": {
+                "0.18.0": {"value": 2},
+                "0.14.0": {"value": 1},
+                "0.18.1": {"value": 5},
+                "1.0.0": {"value": 6},
+            }
+        }
         self.eq_element = {"__eq__": {"0.16.5": {"value": 4}}}
         self.config = {}
         self.config.update(self.ge_element)
         self.config.update(self.le_element)
         self.config.update(self.eq_element)
         self.comparision_options = [
-            VersionComperator("__eq__", 5, lambda a, b: a == b),
-            VersionComperator("__le__", 4, lambda a, b: a <= b),
-            VersionComperator("__lt__", 3, lambda a, b: a < b),
-            VersionComperator("__ge__", 2, lambda a, b: a >= b),
-            VersionComperator("__gt__", 1, lambda a, b: a > b),
+            VersionComperator("__eq__", 5, operator.eq),
+            VersionComperator("__le__", 4, operator.le),
+            VersionComperator("__lt__", 3, operator.lt),
+            VersionComperator("__ge__", 2, operator.ge),
+            VersionComperator("__gt__", 1, operator.gt),
         ]
 
     def test_sorted(self):
@@ -37,42 +46,67 @@ class VersionCaomparisionTestCase(unittest.TestCase):
                 bla(comp1, self.comparision_options),
                 bla(comp2, self.comparision_options),
             ),
-            # key=lambda com: VersionComperator.get_comperator(
-            #     com[0], self.comparision_options
-            # ).priority,
         )
         self.assertEquals(config, ["__ge__", "__le__", "__eq__"]),
 
     def test_compare(self):
         config = sorted(
             self.config.items(),
-            # cmp=lambda comp1, comp2: cmp(
-            #     bla(comp1, comparision_options), bla(comp2, comparision_options)
-            # ),
             key=lambda com: VersionComperator.get_comperator(
                 com[0], self.comparision_options
             ).priority,
         )
         print(config)
 
-        self.assertEquals(2, self.get_value_for_version("0.18.1", config))
-        self.assertEquals(1, self.get_value_for_version("0.17.1", config))
-        self.assertEquals(3, self.get_value_for_version("0.16.8", config))
-        self.assertEquals(4, self.get_value_for_version("0.16.5", config))
-
-    def get_value_for_version(self, target_version, config):
-        retvalue = None
-        for comp, comp_config in config:
-            sorted_comp_config = sorted(
-                comp_config.items(), key=lambda ver: pkg_resources.parse_version(ver[0])
-            )
-            print("sorted", sorted_comp_config)
-            for check_version, version_config in sorted_comp_config:
-                if VersionComperator.get_comperator(
-                    comp, self.comparision_options
-                ).comparision(target_version, check_version):
-                    retvalue = version_config.get("value")
-        return retvalue
+        self.assertEquals(
+            2,
+            get_config_for_version("0.18.0", config, self.comparision_options).get(
+                "value"
+            ),
+        )
+        self.assertEquals(
+            1,
+            get_config_for_version("0.17.1", config, self.comparision_options).get(
+                "value"
+            ),
+        )
+        self.assertEquals(
+            3,
+            get_config_for_version("0.16.8", config, self.comparision_options).get(
+                "value"
+            ),
+        )
+        self.assertEquals(
+            4,
+            get_config_for_version("0.16.5", config, self.comparision_options).get(
+                "value"
+            ),
+        )
+        self.assertEquals(
+            5,
+            get_config_for_version("0.18.2", config, self.comparision_options).get(
+                "value"
+            ),
+        )
+        self.assertEquals(
+            6,
+            get_config_for_version("1.0.0", config, self.comparision_options).get(
+                "value"
+            ),
+        )
+        # only support major minor patch so far
+        # self.assertEquals(
+        #     1,
+        #     get_config_for_version("0.17.5.pre0", config, self.comparision_options).get(
+        #         "value"
+        #     ),
+        # )
+        # self.assertEquals(
+        #     1,
+        #     get_config_for_version("0.18.0a0", config, self.comparision_options).get(
+        #         "value"
+        #     ),
+        # )
 
     def test_generate_config_of_beamos(self):
         config = {

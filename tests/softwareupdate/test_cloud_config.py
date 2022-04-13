@@ -98,6 +98,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
 
     def setUp(self):
         self.plugin = MrBeamPluginDummy()
+        self.mock_major_tag_version = 1
         with open(
             os.path.join(dirname(realpath(__file__)), "target_octoprint_config.json")
         ) as json_file:
@@ -304,12 +305,14 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     status_code=200,
                     json=[
                         {
-                            "name": "v0.0.2-mock",
+                            "name": "v{}.0.2-mock".format(self.mock_major_tag_version),
                         }
                     ],
                 )
                 rm.get(
-                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
+                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{}.0.2-mock".format(
+                        self.mock_major_tag_version
+                    ),
                     status_code=200,
                     json={
                         "content": base64.urlsafe_b64encode(
@@ -367,12 +370,14 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     status_code=200,
                     json=[
                         {
-                            "name": "v0.0.2-mock",
+                            "name": "v{}.0.2-mock".format(self.mock_major_tag_version),
                         }
                     ],
                 )
                 rm.get(
-                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
+                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{}.0.2-mock".format(
+                        self.mock_major_tag_version
+                    ),
                     status_code=200,
                     json={
                         "content": base64.urlsafe_b64encode(
@@ -442,12 +447,14 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 status_code=200,
                 json=[
                     {
-                        "name": "v0.0.2-mock",
+                        "name": "v{}.0.2-mock".format(self.mock_major_tag_version),
                     }
                 ],
             )
             rm.get(
-                "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
+                "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{}.0.2-mock".format(
+                    self.mock_major_tag_version
+                ),
                 status_code=200,
                 json={
                     "content": base64.urlsafe_b64encode(json.dumps(self.mock_config))
