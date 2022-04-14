@@ -1358,12 +1358,11 @@ class PhotoCreator(object):
                 # No shutter speed info present in this file
                 settings = {k: v[-1] for k, v in settings.items()}
                 camera_settings = [settings, None]
-            self._logger.debug("lid_handler: Fallback camera settings loaded from file: {}".format(__file__, backup_path))
+            self._logger.debug("lid_handler: Fallback camera settings loaded from file: {}".format(backup_path))
             return camera_settings
         except(IOError, OSError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
             self._logger.exception(
-                "lid_handler: File: {} does not exist or invalid, Camera Settings Load failed".format(
-                    __file__, backup_path)
+                "lid_handler: File: {} does not exist or invalid, Camera Settings Load failed".format(backup_path)
             )
             return [None, None]
 
