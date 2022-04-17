@@ -338,10 +338,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             //            );
         }
 
-        // TODO only enlarge on images and fonts
-        // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
-        const enlargement_x = 0.4; // percentage of the width added to each side
-        const enlargement_y = 0.4; // percentage of the height added to each side
+        // only enlarge on fonts, images not necessary.
+        const doEnlargeBBox =
+            elem.selectAll("text").filter((e) => {
+                const bb = e.getBBox();
+                // this filter is required, as every quick text creates an empty text element (for switching between curved and straight text)
+                return bb.width > 0 && bb.height > 0;
+            }).length > 0;
+
+        // Quick fix: in some browsers the bbox is too tight, so we just add an extra margin to all the sides, making the height and width larger in total
+        const enlargement_x = doEnlargeBBox ? 0.4 : 0; // percentage of the width added to each side
+        const enlargement_y = doEnlargeBBox ? 0.4 : 0; // percentage of the height added to each side
         const x1 = Math.max(0, bbox.x - bbox.width * enlargement_x);
         const x2 = Math.min(wMM, bbox.x2 + bbox.width * enlargement_x);
         const w = x2 - x1;
