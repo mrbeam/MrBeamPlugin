@@ -30,6 +30,7 @@ class WorkingAreaHelper {
     }
 
     static getHexColorStr(inputColor) {
+        // TODO inputColor='none' => '#000000' <- this is a bug
         const c = new Color(inputColor);
         return c.getHex();
     }

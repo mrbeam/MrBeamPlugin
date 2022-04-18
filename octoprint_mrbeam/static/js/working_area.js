@@ -913,6 +913,8 @@ $(function () {
                     newSvgAttrs["transform"] = scaleMatrixStr;
                 }
 
+                const root_style_attr = fragment.select("svg")?.attr("style"); // can be undefined or null
+
                 // assign id directly after placement. otherwise it is not UI-removable in case of exceptions during placement.
                 var newSvg = snap.group(fragment.selectAll("svg>*"));
                 newSvg.attr({
@@ -921,6 +923,9 @@ $(function () {
                     class: "userSVG",
                     "mb:origin": origin,
                 });
+                if (root_style_attr) {
+                    newSvg.attr({ style: root_style_attr });
+                }
 
                 // remove hidden elements with "display:none" via a css class (svg fragment needs to be placed to use getComputedStyle())
                 let allElems = newSvg.selectAll("*[class]");
@@ -1012,19 +1017,22 @@ $(function () {
                     .attr({ strokeWidth: "0.8", class: "vector_outline" });
                 // replace all fancy color definitions (rgba(...), hsl(...), 'pink', ...) with hex values
                 newSvg.selectAll("*[stroke]:not(#bbox)").forEach(function (el) {
-                    var colStr = el.attr().stroke;
-                    // handle stroke="" default value (#000000)
+                    const computedStyle = getComputedStyle(el.node);
+                    var colStr = computedStyle.stroke; // handles stroke="" => default value (#000000)
+
                     if (typeof colStr !== "undefined" && colStr !== "none") {
                         var colHex = WorkingAreaHelper.getHexColorStr(colStr);
                         el.attr("stroke", colHex);
                     }
                 });
-                newSvg.selectAll("*[fill]:not(#bbox)").forEach(function (el) {
-                    var colStr = el.attr().fill;
-                    // handle fill="" default value (#000000)
+                newSvg.selectAll("*[fill]:not(#bbox)").forEach((el) => {
+                    const computedStyle = getComputedStyle(el.node);
+                    const fillRule = computedStyle.fillRule;
+                    const colStr = computedStyle.fill; // handles fill="" => default value (#000000)
+
                     if (typeof colStr !== "undefined" && colStr !== "none") {
-                        var colHex = WorkingAreaHelper.getHexColorStr(colStr);
-                        el.attr("fill", colHex);
+                        const colHex = WorkingAreaHelper.getHexColorStr(colStr);
+                        el.attr({ fill: colHex, "fill-rule": fillRule });
                     }
                 });
 
@@ -1201,16 +1209,23 @@ $(function () {
                 if (generator.generator === "inkscape") {
                     let isOldInkscapeVersion = NaN;
                     try {
-                        isOldInkscapeVersion= window.compareVersions(
-                            // 1.1.2 (1:1.1+202202050950+0a00cf5339) -> 1.1
-                            generator.version.split('.').slice(0,2).join('.'),
-                            "0.91"
-                        ) <= 0;
-                    } catch(e) {
+                        isOldInkscapeVersion =
+                            window.compareVersions(
+                                // 1.1.2 (1:1.1+202202050950+0a00cf5339) -> 1.1
+                                generator.version
+                                    .split(".")
+                                    .slice(0, 2)
+                                    .join("."),
+                                "0.91"
+                            ) <= 0;
+                    } catch (e) {
                         let payload = {
                             error: e.message,
                         };
-                        self._sendAnalytics("inkscape_version_comparison_error", payload);
+                        self._sendAnalytics(
+                            "inkscape_version_comparison_error",
+                            payload
+                        );
                         console.log("inkscape_version_comparison_error: ", e);
                         // In case the comparison fails, we assume the version to be above 0.91
                         // This assumption (the scaling) does not have a major impact as it has
