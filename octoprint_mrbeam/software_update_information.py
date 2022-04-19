@@ -495,13 +495,14 @@ class VersionComperator:
     @staticmethod
     def get_comperator(comparision_string, comparision_options):
         """
-        returns the comperator of the given list of VersionComperator with the matchin identifier
+        returns the comperator of the given list of VersionComperator with the matching identifier
+
         Args:
             comparision_string (str): identifier to search for
-            comparision_options (list:
+            comparision_options (list): list of VersionComperator objects
 
         Returns:
-
+            object: matching VersionComperator object
         """
         for item in comparision_options:
             if item.identifier == comparision_string:
@@ -518,7 +519,7 @@ def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
         tierversion (str): software tier
 
     Returns:
-        beamos config of the tierversion
+        dict: beamos config of the tierversion
     """
     if "beamos_version" not in moduleconfig:
         _logger.debug("no beamos_version set in moduleconfig")
