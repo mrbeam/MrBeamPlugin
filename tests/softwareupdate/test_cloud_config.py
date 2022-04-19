@@ -10,10 +10,10 @@ from os.path import dirname, realpath
 import requests
 import requests_mock
 from copy import deepcopy
-from datetime import date, datetime
 from mock import mock_open
 from mock import patch
 from octoprint.events import EventManager
+from packaging import version
 import yaml
 
 from octoprint_mrbeam import (
@@ -98,6 +98,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
 
     def setUp(self):
         self.plugin = MrBeamPluginDummy()
+        self.mock_major_tag_version = 1
         with open(
             os.path.join(dirname(realpath(__file__)), "target_octoprint_config.json")
         ) as json_file:
@@ -113,9 +114,21 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         ) as json_file:
             self.target_netconnectd_config = yaml.safe_load(json_file)
         with open(
+            os.path.join(
+                dirname(realpath(__file__)), "target_netconnectd_config_legacy.json"
+            )
+        ) as json_file:
+            self.target_netconnectd_config_legacy = yaml.safe_load(json_file)
+        with open(
             os.path.join(dirname(realpath(__file__)), "target_mrbeam_config.json")
         ) as json_file:
             self.target_mrbeam_config = yaml.safe_load(json_file)
+        with open(
+            os.path.join(
+                dirname(realpath(__file__)), "target_mrbeam_config_legacy.json"
+            )
+        ) as json_file:
+            self.target_mrbeam_config_legacy = yaml.safe_load(json_file)
         with open(
             os.path.join(dirname(realpath(__file__)), "mock_config.json")
         ) as json_file:
@@ -186,13 +199,13 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         )
         show_notifications_mock.assert_called_once()
 
-    @patch.object(DeviceInfo, "get_beamos_version")
+    @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_config_buster_online(self, device_info_mock):
         """
         Testcase to test the buster config with the online available cloud config
 
         Args:
-            device_info_mock: mocks the device info to change the image date
+            device_info_mock: mocks the device info to change the image version
 
         Returns:
             None
@@ -200,8 +213,8 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         self.maxDiff = None
         self.check_if_githubapi_rate_limit_exceeded()
         self.maxDiff = None
-        beamos_date_buster = date(2021, 6, 11)
-        device_info_mock.return_value = "PROD", beamos_date_buster
+        beamos_version_buster = "0.18.0"
+        device_info_mock.return_value = beamos_version_buster
         plugin = self.plugin
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
             # test for all tiers
@@ -214,34 +227,36 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     self.target_octoprint_config[_get_tier_by_id(tier)],
                 )
                 self.validate_mrbeam_module_config(
-                    update_config["mrbeam"], _get_tier_by_id(tier), beamos_date_buster
+                    update_config["mrbeam"],
+                    _get_tier_by_id(tier),
+                    beamos_version_buster,
                 )
                 self.validate_findmymrbeam_module_config(
                     update_config["findmymrbeam"],
                     _get_tier_by_id(tier),
-                    beamos_date_buster,
+                    beamos_version_buster,
                 )
                 self.validate_netconnect_module_config(
                     update_config["netconnectd"],
                     _get_tier_by_id(tier),
-                    beamos_date_buster,
+                    beamos_version_buster,
                 )
 
-    @patch.object(DeviceInfo, "get_beamos_version")
+    @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_confg_legacy_online(self, device_info_mock):
         """
         Testcase to test the leagcy image config with the online available cloud config
 
         Args:
-            device_info_mock: mocks the device info to change the image date
+            device_info_mock: mocks the device info to change the image version
 
         Returns:
             None
         """
         self.check_if_githubapi_rate_limit_exceeded()
         self.maxDiff = None
-        beamos_date_legacy = date(2018, 1, 12)
-        device_info_mock.return_value = "PROD", beamos_date_legacy
+        beamos_version_legacy = "0.14.0"
+        device_info_mock.return_value = beamos_version_legacy
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
             plugin = self.plugin
 
@@ -255,32 +270,34 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     self.target_octoprint_config[_get_tier_by_id(tier)],
                 )
                 self.validate_mrbeam_module_config(
-                    update_config["mrbeam"], _get_tier_by_id(tier), beamos_date_legacy
+                    update_config["mrbeam"],
+                    _get_tier_by_id(tier),
+                    beamos_version_legacy,
                 )
                 self.validate_findmymrbeam_module_config(
                     update_config["findmymrbeam"],
                     _get_tier_by_id(tier),
-                    beamos_date_legacy,
+                    beamos_version_legacy,
                 )
                 self.validate_netconnect_module_config(
                     update_config["netconnectd"],
                     _get_tier_by_id(tier),
-                    beamos_date_legacy,
+                    beamos_version_legacy,
                 )
 
-    @patch.object(DeviceInfo, "get_beamos_version")
+    @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_confg_buster_mock(self, device_info_mock):
         """
         tests the update info with a mocked server response
 
         Args:
-            device_info_mock: mocks the device info to change the image date
+            device_info_mock: mocks the device info to change the image version
 
         Returns:
             None
         """
-        beamos_date_buster = date(2021, 6, 11)
-        device_info_mock.return_value = "PROD", beamos_date_buster
+        beamos_version_buster = "0.18.0"
+        device_info_mock.return_value = beamos_version_buster
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
             with requests_mock.Mocker() as rm:
                 rm.get(
@@ -288,12 +305,14 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     status_code=200,
                     json=[
                         {
-                            "name": "v0.0.2-mock",
+                            "name": "v{}.0.2-mock".format(self.mock_major_tag_version),
                         }
                     ],
                 )
                 rm.get(
-                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
+                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{}.0.2-mock".format(
+                        self.mock_major_tag_version
+                    ),
                     status_code=200,
                     json={
                         "content": base64.urlsafe_b64encode(
@@ -315,35 +334,35 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     self.validate_mrbeam_module_config(
                         update_config["mrbeam"],
                         _get_tier_by_id(tier),
-                        beamos_date_buster,
+                        beamos_version_buster,
                     )
                     self.validate_findmymrbeam_module_config(
                         update_config["findmymrbeam"],
                         _get_tier_by_id(tier),
-                        beamos_date_buster,
+                        beamos_version_buster,
                     )
                     self.validate_netconnect_module_config(
                         update_config["netconnectd"],
                         _get_tier_by_id(tier),
-                        beamos_date_buster,
+                        beamos_version_buster,
                     )
         mock_file.assert_called_with(
             TMP_BASE_FOLDER_PATH + SW_UPDATE_INFO_FILE_NAME, "w"
         )
 
-    @patch.object(DeviceInfo, "get_beamos_version")
+    @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_confg_legacy_mock(self, device_info_mock):
         """
         tests the updateinfo hook for the legacy image
 
         Args:
-            device_info_mock: mocks the device info to change the image date
+            device_info_mock: mocks the device info to change the image version
 
         Returns:
             None
         """
-        beamos_date_legacy = date(2018, 1, 12)
-        device_info_mock.return_value = "PROD", beamos_date_legacy
+        beamos_version_legacy = "0.14.0"
+        device_info_mock.return_value = beamos_version_legacy
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
             with requests_mock.Mocker() as rm:
                 rm.get(
@@ -351,12 +370,14 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     status_code=200,
                     json=[
                         {
-                            "name": "v0.0.2-mock",
+                            "name": "v{}.0.2-mock".format(self.mock_major_tag_version),
                         }
                     ],
                 )
                 rm.get(
-                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
+                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{}.0.2-mock".format(
+                        self.mock_major_tag_version
+                    ),
                     status_code=200,
                     json={
                         "content": base64.urlsafe_b64encode(
@@ -372,6 +393,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     update_config = get_update_information(plugin)
 
                     print("config {}".format(update_config))
+                    self.maxDiff = None
                     self.assertEquals(
                         update_config["octoprint"],
                         self.target_octoprint_config[_get_tier_by_id(tier)],
@@ -379,17 +401,17 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     self.validate_mrbeam_module_config(
                         update_config["mrbeam"],
                         _get_tier_by_id(tier),
-                        beamos_date_legacy,
+                        beamos_version_legacy,
                     )
                     self.validate_findmymrbeam_module_config(
                         update_config["findmymrbeam"],
                         _get_tier_by_id(tier),
-                        beamos_date_legacy,
+                        beamos_version_legacy,
                     )
                     self.validate_netconnect_module_config(
                         update_config["netconnectd"],
                         _get_tier_by_id(tier),
-                        beamos_date_legacy,
+                        beamos_version_legacy,
                     )
         mock_file.assert_called_with(
             TMP_BASE_FOLDER_PATH + SW_UPDATE_INFO_FILE_NAME, "w"
@@ -425,12 +447,14 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 status_code=200,
                 json=[
                     {
-                        "name": "v0.0.2-mock",
+                        "name": "v{}.0.2-mock".format(self.mock_major_tag_version),
                     }
                 ],
             )
             rm.get(
-                "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v0.0.2-mock",
+                "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{}.0.2-mock".format(
+                    self.mock_major_tag_version
+                ),
                 status_code=200,
                 json={
                     "content": base64.urlsafe_b64encode(json.dumps(self.mock_config))
@@ -446,71 +470,58 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         )
         user_notification_system_show_mock.assert_called_once()
 
-    def validate_mrbeam_module_config(self, update_config, tier, beamos_date):
+    def validate_mrbeam_module_config(self, update_config, tier, beamos_version):
         """
         validates the config of the mrbeam software module
 
         Args:
             update_config: update config
             tier: software tier
-            beamos_date: date of the beamos image
+            beamos_version: version of the beamos image
 
         Returns:
             None
         """
-        self.validate_module_config(
-            update_config, tier, self.target_mrbeam_config, beamos_date
-        )
+        if beamos_version >= "0.18.0":
+            target_config = self.target_mrbeam_config
+        else:
+            target_config = self.target_mrbeam_config_legacy
+        self.validate_module_config(update_config, tier, target_config, beamos_version)
 
-    def validate_findmymrbeam_module_config(self, update_config, tier, beamos_date):
+    def validate_findmymrbeam_module_config(self, update_config, tier, beamos_version):
         """
         validates the config of a the findmymrbeam software module
 
         Args:
             update_config: update config
             tier: software tier
-            beamos_date: date of the beamos image
+            beamos_version: version of the beamos image
 
         Returns:
             None
         """
         self.validate_module_config(
-            update_config, tier, self.target_find_my_mr_beam_config, beamos_date
+            update_config, tier, self.target_find_my_mr_beam_config, beamos_version
         )
 
-    def validate_netconnect_module_config(self, update_config, tier, beamos_date):
+    def validate_netconnect_module_config(self, update_config, tier, beamos_version):
         """
         validates the config of a the netconnectd software module
 
         Args:
             update_config: update config
             tier: software tier
-            beamos_date: date of the beamos image
+            beamos_version: version of the beamos image
 
         Returns:
             None
         """
-        self.validate_module_config(
-            update_config, tier, self.target_netconnectd_config, beamos_date
-        )
+        if beamos_version >= "0.18.0":
+            target_config = self.target_netconnectd_config
+        else:
+            target_config = self.target_netconnectd_config_legacy
 
-    def _set_beamos_config(self, config, beamos_date=None):
-        """
-        generates the updateinformation for a given beamos image date
-
-        Args:
-            config: update config
-            beamos_date: beamos image date
-
-        Returns:
-            updateinformation for the given beamos image date
-        """
-        if "beamos_date" in config:
-            for date, beamos_config in config["beamos_date"].items():
-                if beamos_date >= datetime.strptime(date, "%Y-%m-%d").date():
-                    config = dict_merge(config, beamos_config)
-            config.pop("beamos_date")
-        return config
+        self.validate_module_config(update_config, tier, target_config, beamos_version)
 
     def _set_tier_config(self, config, tier):
         """
@@ -529,7 +540,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         return config
 
     def validate_module_config(
-        self, update_config, tier, target_module_config, beamos_date
+        self, update_config, tier, target_module_config, beamos_version
     ):
         """
         validates the updateinfromation fot the given software module
@@ -538,20 +549,16 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
             update_config: update config
             tier: software tier
             target_module_config: software module to validate
-            beamos_date: beamos image date
+            beamos_version: beamos image version
 
         Returns:
             None
         """
         copy_target_config = deepcopy(target_module_config)
-        self._set_beamos_config(copy_target_config, beamos_date)
         if "dependencies" in copy_target_config:
             for dependencie_name, dependencie_config in copy_target_config[
                 "dependencies"
             ].items():
-                dependencie_config = self._set_beamos_config(
-                    dependencie_config, beamos_date
-                )
                 dependencie_config = self._set_tier_config(dependencie_config, tier)
                 copy_target_config["dependencies"][
                     dependencie_name

@@ -13,7 +13,8 @@
             "repo": "netconnectd_mrbeam",
             "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
             "global_pip_command": true,
-            "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip"
+            "pip_command": "sudo /usr/local/bin/pip",
+            "version": "0.0.1"
         }
     },
     "stable_branch": {
