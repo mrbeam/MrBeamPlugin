@@ -180,7 +180,6 @@ def build_wheels(build_queue):
 
         pip_args = [
             "wheel",
-            "--no-python-version-warning",
             "--disable-pip-version-check",
             "--wheel-dir={}".format(tmp_folder),  # Build wheels into <dir>, where the default is the current working directory.
             "--no-dependencies",  # Don't install package dependencies.
@@ -217,7 +216,6 @@ def install_wheels(install_queue):
         tmp_folder = os.path.join(PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
         pip_args = [
             "install",
-            "--no-python-version-warning",
             "--disable-pip-version-check",
             "--upgrade",  # Upgrade all specified packages to the newest available version. The handling of dependencies depends on the upgrade-strategy used.
             "--no-index",  # Ignore package index (only looking at --find-links URLs instead).
@@ -275,33 +273,41 @@ def build_queue(update_info, dependencies, plugin_archive):
                 raise RuntimeError(
                     "no update info for dependency {}".format(dependency["name"])
                 )
+
+            # override the dependency version from the dependencies files with the one from the cloud config
+            if dependency_config.get("version"):
+                version_needed = dependency_config.get("version")
+            else:
+                version_needed = dependency.get("version")
+
             if dependency_config.get("pip"):
                 archive = dependency_config["pip"].format(
-                    target_version="v{version}".format(version=dependency["version"]),
+                    target_version="v{version}".format(version=version_needed),
                 )
             else:
                 raise RuntimeError(
                     "pip not configured for {}".format(dependency["name"])
                 )
 
-            version = get_version_of_pip_module(
+            installed_version = get_version_of_pip_module(
                 dependency["name"],
                 dependency_config.get("pip_command", DEFAULT_OPRINT_VENV),
             )
-            if version != dependency["version"]:
+
+            if installed_version != version_needed:
                 install_queue.setdefault(
                     dependency_config.get("pip_command", DEFAULT_OPRINT_VENV), []
                 ).append(
                     {
                         "name": dependency["name"],
                         "archive": archive,
-                        "target": dependency["version"],
+                        "target": version_needed,
                     }
                 )
             else:
                 print(
                     "skip dependency {} as the target version {} is already installed".format(
-                        dependency["name"], dependency["version"]
+                        dependency["name"], version_needed
                     )
                 )
     return install_queue

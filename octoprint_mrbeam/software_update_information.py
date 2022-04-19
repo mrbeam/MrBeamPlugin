@@ -1,9 +1,10 @@
-import base64
 import copy
 import json
+import operator
 import os
 from datetime import date
-from datetime import datetime
+
+import pkg_resources
 from enum import Enum
 
 import semantic_version
@@ -37,7 +38,7 @@ DEFAULT_REPO_BRANCH_ID = {
     SWUpdateTier.ALPHA.value: "alpha",
     SWUpdateTier.DEV.value: "develop",
 }
-MAJOR_VERSION_CLOUD_CONFIG = 0
+MAJOR_VERSION_CLOUD_CONFIG = 1
 SW_UPDATE_INFO_FILE_NAME = "update_info.json"
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
@@ -50,7 +51,8 @@ GLOBAL_PIP_COMMAND = (
     "sudo {}".format(GLOBAL_PIP_BIN) if os.path.isfile(GLOBAL_PIP_BIN) else None
 )
 
-BEAMOS_LEGACY_DATE = date(2018, 1, 12)
+BEAMOS_LEGACY_VERSION = "0.14.0"
+BEAMOS_LEGACY_DATE = date(2018, 1, 12)  # still used in the migrations
 
 
 def get_tag_of_github_repo(repo):
@@ -122,10 +124,10 @@ def get_update_information(plugin):
     """
     try:
         tier = plugin._settings.get(["dev", "software_tier"])
-        beamos_tier, beamos_date = plugin._device_info.get_beamos_version()
+        beamos_version = plugin._device_info.get_beamos_version_number()
         _logger.info(
-            "SoftwareUpdate using tier: {tier} {beamos_date}".format(
-                tier=tier, beamos_date=beamos_date
+            "SoftwareUpdate using tier: {tier} {beamos_version}".format(
+                tier=tier, beamos_version=beamos_version
             )
         )
 
@@ -142,7 +144,7 @@ def get_update_information(plugin):
                 )
                 if cloud_config:
                     return _set_info_from_cloud_config(
-                        plugin, tier, beamos_date, cloud_config
+                        plugin, tier, beamos_version, cloud_config
                     )
         else:
             _logger.warn("no internet connection")
@@ -165,7 +167,7 @@ def get_update_information(plugin):
     return _set_info_from_cloud_config(
         plugin,
         tier,
-        beamos_date,
+        beamos_version,
         {
             "default": {},
             "modules": {
@@ -253,7 +255,7 @@ def reload_update_info(plugin):
 
 
 @logExceptions
-def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
+def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
     """
     loads update info from the update_info.json file
     the override order: default_settings->module_settings->tier_settings->beamos_settings
@@ -265,8 +267,8 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
                 <module_id>: {
                     <module_settings>,
                     <tier>:{<tier_settings>},
-                    "beamos_date": {
-                        <YYYY-MM-DD>: {<beamos_settings>}
+                    "beamos_version": {
+                        "X.X.X": {<beamos_settings>} # only supports major minor patch
                     }
                 }
                 "dependencies: {<module>}
@@ -275,7 +277,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
     Args:
         plugin: Mr Beam Plugin
         tier: the software tier which should be used
-        beamos_date: the image creation date of the running beamos
+        beamos_version: the version of the running beamos
         cloud_config: the update config from the cloud
 
     Returns:
@@ -295,7 +297,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
                     module = dict_merge(defaultsettings, module)
 
                     sw_update_config[module_id] = _generate_config_of_module(
-                        module_id, module, defaultsettings, tier, beamos_date, plugin
+                        module_id, module, defaultsettings, tier, beamos_version, plugin
                     )
         except softwareupdate_exceptions.ConfigurationInvalid as e:
             _logger.exception("ConfigurationInvalid {}".format(e))
@@ -332,7 +334,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_date, cloud_config):
 
 
 def _generate_config_of_module(
-    module_id, input_moduleconfig, defaultsettings, tier, beamos_date, plugin
+    module_id, input_moduleconfig, defaultsettings, tier, beamos_version, plugin
 ):
     """
     generates the config of a software module <module_id>
@@ -341,7 +343,7 @@ def _generate_config_of_module(
         input_moduleconfig: moduleconfig
         defaultsettings: default settings
         tier: software tier
-        beamos_date: date of the beamos
+        beamos_version: version of the beamos
         plugin: Mr Beam Plugin
 
     Returns:
@@ -363,7 +365,7 @@ def _generate_config_of_module(
 
         input_moduleconfig = dict_merge(
             input_moduleconfig,
-            _generate_config_of_beamos(input_moduleconfig, beamos_date, tierversion),
+            _generate_config_of_beamos(input_moduleconfig, beamos_version, tierversion),
         )
 
         if "branch" in input_moduleconfig and "{tier}" in input_moduleconfig["branch"]:
@@ -429,7 +431,7 @@ def _generate_config_of_module(
                     dependencie_config,
                     {},
                     tier,
-                    beamos_date,
+                    beamos_version,
                     plugin,
                 )
         return input_moduleconfig
@@ -438,10 +440,11 @@ def _generate_config_of_module(
 def _get_curent_version(input_moduleconfig, module_id, plugin):
     """
     returns the version of the given module
+
     Args:
-        input_moduleconfig: module to get the version for
-        module_id: id of the module
-        plugin: Mr Beam Plugin
+        input_moduleconfig (dict): module to get the version for
+        module_id (str): id of the module
+        plugin (:obj:`OctoPrint Plugin`): Mr Beam Plugin
 
     Returns:
         version of the module or None
@@ -479,35 +482,96 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
     return current_version
 
 
-def _generate_config_of_beamos(moduleconfig, beamos_date, tierversion):
+class VersionComperator:
     """
-    generates the config for the given beamos_date of the tierversion
+    Version Comperator class to compare two versions with the compare method
+    """
+
+    def __init__(self, identifier, priority, compare):
+        self.identifier = identifier
+        self.priority = priority
+        self.compare = compare
+
+    @staticmethod
+    def get_comperator(comparision_string, comparision_options):
+        """
+        returns the comperator of the given list of VersionComperator with the matching identifier
+
+        Args:
+            comparision_string (str): identifier to search for
+            comparision_options (list): list of VersionComperator objects
+
+        Returns:
+            object: matching VersionComperator object
+        """
+        for item in comparision_options:
+            if item.identifier == comparision_string:
+                return item
+
+
+def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
+    """
+    generates the config for the given beamos_version of the tierversion
+
     Args:
-        moduleconfig: update config of the module
-        beamos_date: date of the beamos
-        tierversion: software tier
+        moduleconfig (dict): update config of the module
+        beamos_version (str): version of the beamos
+        tierversion (str): software tier
 
     Returns:
-        beamos config of the tierversion
+        dict: beamos config of the tierversion
     """
-    if "beamos_date" not in moduleconfig:
+    if "beamos_version" not in moduleconfig:
+        _logger.debug("no beamos_version set in moduleconfig")
         return {}
 
-    beamos_date_config = {}
-    prev_beamos_date_entry = datetime.strptime("2000-01-01", "%Y-%m-%d").date()
-    for date, beamos_config in moduleconfig["beamos_date"].items():
-        if (
-            beamos_date >= datetime.strptime(date, "%Y-%m-%d").date()
-            and prev_beamos_date_entry < beamos_date
-        ):
-            prev_beamos_date_entry = datetime.strptime(date, "%Y-%m-%d").date()
-            if tierversion in beamos_config:
-                beamos_config_module_tier = beamos_config[tierversion]
-                beamos_config = dict_merge(
-                    beamos_config, beamos_config_module_tier
-                )  # override tier config from tiers set in config_file
-            beamos_date_config = dict_merge(beamos_date_config, beamos_config)
-    return beamos_date_config
+    config_for_beamos_versions = moduleconfig.get("beamos_version")
+
+    comparision_options = [
+        VersionComperator("__eq__", 5, operator.eq),
+        VersionComperator("__le__", 4, operator.le),
+        VersionComperator("__lt__", 3, operator.lt),
+        VersionComperator("__ge__", 2, operator.ge),
+        VersionComperator("__gt__", 1, operator.gt),
+    ]
+
+    sorted_config_for_beamos_versions = sorted(
+        config_for_beamos_versions.items(),
+        key=lambda com: VersionComperator.get_comperator(
+            com[0], comparision_options
+        ).priority,
+    )
+
+    config_for_beamos = get_config_for_version(
+        beamos_version, sorted_config_for_beamos_versions, comparision_options
+    )
+
+    if tierversion in config_for_beamos:
+        beamos_config_module_tier = config_for_beamos.get(tierversion)
+        config_for_beamos = dict_merge(
+            config_for_beamos, beamos_config_module_tier
+        )  # override tier config from tiers set in config_file
+
+    return config_for_beamos
+
+
+def get_config_for_version(target_version, config, comparision_options):
+    config_to_be_updated = {}
+    for comperator, version_config_items in config:
+        # sort the version config items by the version
+        sorted_version_config_items = sorted(
+            version_config_items.items(),
+            key=lambda version_config_tuple: pkg_resources.parse_version(
+                version_config_tuple[0]
+            ),
+        )
+
+        for check_version, version_config in sorted_version_config_items:
+            if VersionComperator.get_comperator(
+                comperator, comparision_options
+            ).compare(target_version, check_version):
+                config_to_be_updated = dict_merge(config_to_be_updated, version_config)
+    return config_to_be_updated
 
 
 def _clean_update_config(update_config):
@@ -519,7 +583,7 @@ def _clean_update_config(update_config):
     Returns:
         cleaned version of the update config
     """
-    pop_list = ["alpha", "beta", "stable", "develop", "beamos_date", "name"]
+    pop_list = ["alpha", "beta", "stable", "develop", "beamos_version", "name"]
     for key in set(update_config).intersection(pop_list):
         del update_config[key]
     return update_config

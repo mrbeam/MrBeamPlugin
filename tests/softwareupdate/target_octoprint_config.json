@@ -5,7 +5,8 @@
     "user": "mrbeam",
     "branch": "alpha",
     "branch_default": "alpha",
-    "release_compare": "unequal",
+    "force_base": false,
+    "release_compare": "python_unequal",
     "stable_branch": {
       "branch": "stable",
       "name": "stable",
@@ -41,7 +42,8 @@
     "user": "mrbeam",
     "branch": "mrbeam2-beta",
     "branch_default": "mrbeam2-beta",
-    "release_compare": "unequal",
+    "force_base": false,
+    "release_compare": "python_unequal",
     "stable_branch": {
       "branch": "stable",
       "name": "stable",
@@ -75,9 +77,10 @@
     "prerelease": true,
     "restart": "environment",
     "user": "mrbeam",
-    "branch": "mrbeam2-alpha",
-    "branch_default": "mrbeam2-alpha",
-    "release_compare": "unequal",
+    "branch": "alpha",
+    "branch_default": "alpha",
+    "force_base": false,
+    "release_compare": "python_unequal",
     "stable_branch": {
       "branch": "stable",
       "name": "stable",
@@ -111,7 +114,8 @@
     "user": "mrbeam",
     "branch": "mrbeam2-stable",
     "branch_default": "mrbeam2-stable",
-    "release_compare": "unequal",
+    "force_base": false,
+    "release_compare": "python_unequal",
     "stable_branch": {
       "branch": "stable",
       "name": "stable",
