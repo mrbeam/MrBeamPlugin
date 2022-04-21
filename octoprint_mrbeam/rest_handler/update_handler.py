@@ -17,9 +17,6 @@ class UpdateRestHandlerMixin:
         if hasattr(request, "json") and request.json:
             data = request.json
             clicked_by_user = data.get("user", False)
-        self._logger.debug(
-            "update rest handler data {} {}".format(clicked_by_user, data)
-        )
         reload_update_info(self, clicked_by_user)
         return self._plugin_manager.get_plugin_info(
             "softwareupdate"
