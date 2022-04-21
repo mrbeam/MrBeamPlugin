@@ -175,6 +175,7 @@ class MrBeamPlugin(
         self._serial_num = None
         self._mac_addrs = dict()
         self._model_id = None
+        self._user_checks_for_updates = False
         self._grbl_version = None
         self._device_series = self._device_info.get_series()
         self.called_hosts = []
@@ -737,6 +738,15 @@ class MrBeamPlugin(
         ret = check_calibration_tool_mode(self)
         self._fixEmptyUserManager()
         return ret
+
+    @property
+    def user_checks_for_updates(self):
+        return self._user_checks_for_updates
+
+    @user_checks_for_updates.setter
+    def user_checks_for_updates(self, value):
+        self._logger.debug("set plugin.user_checks_for_updates {}".format(value))
+        self._user_checks_for_updates = value
 
     ##~~ UiPlugin mixin
 

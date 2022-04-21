@@ -54,6 +54,30 @@ GLOBAL_PIP_COMMAND = (
 BEAMOS_LEGACY_VERSION = "0.14.0"
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)  # still used in the migrations
 
+FALLBACK_UPDATE_CONFIG = {
+    "mrbeam": {
+        "name": " MrBeam Plugin",
+        "type": "github_commit",
+        "user": "",
+        "repo": "",
+        "pip": "",
+    },
+    "netconnectd": {
+        "name": "OctoPrint-Netconnectd Plugin",
+        "type": "github_commit",
+        "user": "",
+        "repo": "",
+        "pip": "",
+    },
+    "findmymrbeam": {
+        "name": "OctoPrint-FindMyMrBeam",
+        "type": "github_commit",
+        "user": "",
+        "repo": "",
+        "pip": "",
+    },
+}
+
 
 def get_tag_of_github_repo(repo):
     """
@@ -149,12 +173,13 @@ def get_update_information(plugin):
         else:
             _logger.warn("no internet connection")
 
-        user_notification_system = plugin.user_notification_system
-        user_notification_system.show_notifications(
-            user_notification_system.get_notification(
-                notification_id="missing_updateinformation_info", replay=False
+        if plugin.user_checks_for_updates:
+            user_notification_system = plugin.user_notification_system
+            user_notification_system.show_notifications(
+                user_notification_system.get_notification(
+                    notification_id="missing_updateinformation_info", replay=False
+                )
             )
-        )
 
         # mark update config as dirty
         sw_update_plugin = plugin._plugin_manager.get_plugin_info(
@@ -168,32 +193,7 @@ def get_update_information(plugin):
         plugin,
         tier,
         beamos_version,
-        {
-            "default": {},
-            "modules": {
-                "mrbeam": {
-                    "name": " MrBeam Plugin",
-                    "type": "github_commit",
-                    "user": "",
-                    "repo": "",
-                    "pip": "",
-                },
-                "netconnectd": {
-                    "name": "OctoPrint-Netconnectd Plugin",
-                    "type": "github_commit",
-                    "user": "",
-                    "repo": "",
-                    "pip": "",
-                },
-                "findmymrbeam": {
-                    "name": "OctoPrint-FindMyMrBeam",
-                    "type": "github_commit",
-                    "user": "",
-                    "repo": "",
-                    "pip": "",
-                },
-            },
-        },
+        {},
     )
 
 
@@ -229,6 +229,7 @@ def switch_software_channel(plugin, channel):
     Returns:
         None
     """
+    _logger.debug("switch_software_channel")
     old_channel = plugin._settings.get(["dev", "software_tier"])
     if channel in software_channels_available(plugin) and channel != old_channel:
         _logger.info("Switching software channel to: {channel}".format(channel=channel))
@@ -236,7 +237,7 @@ def switch_software_channel(plugin, channel):
         reload_update_info(plugin)
 
 
-def reload_update_info(plugin):
+def reload_update_info(plugin, clicked_by_user=False):
     """
     clears the version cache and refires the get_update_info hook
     Args:
@@ -245,6 +246,9 @@ def reload_update_info(plugin):
     Returns:
         None
     """
+    if clicked_by_user:
+        plugin.user_checks_for_updates = True
+
     _logger.debug("Reload update info")
 
     # fmt: off
@@ -301,14 +305,15 @@ def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
                     )
         except softwareupdate_exceptions.ConfigurationInvalid as e:
             _logger.exception("ConfigurationInvalid {}".format(e))
-            user_notification_system = plugin.user_notification_system
-            user_notification_system.show_notifications(
-                user_notification_system.get_notification(
-                    notification_id="update_fetching_information_err",
-                    err_msg=["E-1003"],
-                    replay=False,
+            if plugin.user_checks_for_updates:
+                user_notification_system = plugin.user_notification_system
+                user_notification_system.show_notifications(
+                    user_notification_system.get_notification(
+                        notification_id="update_fetching_information_err",
+                        err_msg=["E-1003"],
+                        replay=False,
+                    )
                 )
-            )
 
         _logger.debug("sw_update_config {}".format(sw_update_config))
 
@@ -320,17 +325,20 @@ def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
                 f.write(json.dumps(sw_update_config))
         except (IOError, TypeError):
             plugin._logger.error("can't create update info file")
-            user_notification_system = plugin.user_notification_system
-            user_notification_system.show_notifications(
-                user_notification_system.get_notification(
-                    notification_id="write_error_update_info_file_err", replay=False
+            if plugin.user_checks_for_updates:
+                user_notification_system = plugin.user_notification_system
+                user_notification_system.show_notifications(
+                    user_notification_system.get_notification(
+                        notification_id="write_error_update_info_file_err", replay=False
+                    )
                 )
-            )
-            return None
+            sw_update_config = FALLBACK_UPDATE_CONFIG
 
-        return sw_update_config
     else:
-        return None
+        sw_update_config = FALLBACK_UPDATE_CONFIG
+
+    plugin.user_checks_for_updates = False
+    return sw_update_config
 
 
 def _generate_config_of_module(
@@ -389,14 +397,15 @@ def _generate_config_of_module(
                         input_moduleconfig["update_folder"], e
                     )
                 )
-                user_notification_system = plugin.user_notification_system
-                user_notification_system.show_notifications(
-                    user_notification_system.get_notification(
-                        notification_id="update_fetching_information_err",
-                        err_msg=["E-1002"],
-                        replay=False,
+                if plugin.user_checks_for_updates:
+                    user_notification_system = plugin.user_notification_system
+                    user_notification_system.show_notifications(
+                        user_notification_system.get_notification(
+                            notification_id="update_fetching_information_err",
+                            err_msg=["E-1002"],
+                            replay=False,
+                        )
                     )
-                )
             update_script_path = os.path.join(
                 plugin._basefolder, input_moduleconfig["update_script_relative_path"]
             )

@@ -28,6 +28,7 @@ from octoprint_mrbeam.software_update_information import (
     get_update_information,
     SW_UPDATE_INFO_FILE_NAME,
     SW_UPDATE_TIERS,
+    FALLBACK_UPDATE_CONFIG,
 )
 from octoprint_mrbeam.user_notification_system import UserNotificationSystem
 from octoprint_mrbeam.util import dict_merge
@@ -156,6 +157,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
             get_notification_mock.return_value = None
             plugin = self.plugin
+            plugin.user_checks_for_updates = True
 
             with requests_mock.Mocker() as rm:
                 rm.get(
@@ -168,32 +170,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     status_code=404,
                 )
                 update_config = get_update_information(plugin)
-                assert update_config == {
-                    "findmymrbeam": {
-                        "displayName": "OctoPrint-FindMyMrBeam",
-                        "displayVersion": "dummy",
-                        "pip": "",
-                        "repo": "",
-                        "type": "github_commit",
-                        "user": "",
-                    },
-                    "mrbeam": {
-                        "displayName": " MrBeam Plugin",
-                        "displayVersion": "dummy",
-                        "pip": "",
-                        "repo": "",
-                        "type": "github_commit",
-                        "user": "",
-                    },
-                    "netconnectd": {
-                        "displayName": "OctoPrint-Netconnectd Plugin",
-                        "displayVersion": "dummy",
-                        "pip": "",
-                        "repo": "",
-                        "type": "github_commit",
-                        "user": "",
-                    },
-                }
+                assert update_config == FALLBACK_UPDATE_CONFIG
         show_notifications_mock.assert_called_with(
             notification_id="missing_updateinformation_info", replay=False
         )
@@ -461,10 +438,11 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 },
             )
             plugin = self.plugin
+            plugin.user_checks_for_updates = True
 
             update_config = get_update_information(plugin)
 
-            self.assertIsNone(update_config)
+            self.assertEquals(update_config, FALLBACK_UPDATE_CONFIG)
         user_notification_system_show_mock.assert_called_with(
             notification_id="write_error_update_info_file_err", replay=False
         )
