@@ -735,12 +735,8 @@ var mrbeam = mrbeam || {};
     };
 
     module.gcode = function (paths, id, mb_meta) {
-        if (paths.length === 0) {
-            console.warn("No paths to generate gcode!");
-            //            return null;
-        }
         var commands = [];
-        let first_point = null;
+        let first_point = {};
         let last_point = {};
 
         mb_meta = mb_meta || {};
@@ -758,23 +754,17 @@ var mrbeam = mrbeam || {};
         // helper for number formatting
         var fmt = (number) => number.toFixed(2);
 
-        let length = 0;
         paths.forEach(function (path) {
             var pt = path[0];
             first_point = first_point || pt;
-            last_point = first_point;
+
             commands.push(`G0X${fmt(pt.x)}Y${fmt(pt.y)}`);
             commands.push(";_laseron_");
 
             for (let i = 1; i < path.length; i += 1) {
                 pt = path[i];
-                const dist = Math.sqrt(
-                    Math.pow(pt.x - last_point.x, 2) +
-                        Math.pow(pt.y - last_point.y, 2)
-                );
                 commands.push(`G1X${fmt(pt.x)}Y${fmt(pt.y)}`);
                 last_point = pt;
-                length += dist;
             }
 
             commands.push(";_laseroff_");
@@ -782,12 +772,7 @@ var mrbeam = mrbeam || {};
 
         var gcode = commands.join(" ");
 
-        return {
-            gcode: gcode,
-            begin: first_point,
-            end: last_point,
-            gc_length: length,
-        };
+        return { gcode: gcode, begin: first_point, end: last_point };
     };
 
     module.clip = function (paths, clip, tolerance) {
