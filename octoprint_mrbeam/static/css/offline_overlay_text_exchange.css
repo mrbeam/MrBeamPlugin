@@ -1,0 +1,21 @@
+#offline_overlay h1#offline_overlay_title {
+  line-height: 0;
+  color: transparent;
+}
+#offline_overlay h1#offline_overlay_title:after {
+  display: block;
+  content: "BeamOS not running";
+  line-height: initial;
+  color: initial;
+}
+
+#offline_overlay p#offline_overlay_message {
+  line-height: 0;
+  color: transparent;
+}
+#offline_overlay p#offline_overlay_message:after {
+  display: block;
+  content: "Mr Beam is not responding. Maybe he is switched off or currently restarting. I will try again automatically, but you may try it manually using the button below. If this message stays for minutes, please restart your Mr Beam.";
+  line-height: initial;
+  color: initial;
+}
