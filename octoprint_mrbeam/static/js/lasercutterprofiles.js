@@ -28,43 +28,6 @@ $(function () {
             };
         };
 
-        self.grblKeys = {
-            step_pulse: 0,
-            step_idle_delay: 1, //	Step idle delay, milliseconds
-            step_port_invert_mask: 2, //	Step port invert, mask
-            dir_port_invert_mask: 3, //	Direction port invert, mask
-            step_enable_invert: 4, //	Step enable invert, boolean
-            limit_pins_invert: 5, //	Limit pins invert, boolean
-            probe_pin_invert: 6, //	Probe pin invert, boolean
-            status_report_mask: 10, //	Status report, mask
-            juction_deviation: 11, //	Junction deviation, mm
-            arc_tolerance: 12, //	Arc tolerance, mm
-            report_inches: 13, //	Report inches, boolean
-            soft_limits: 20, //	Soft limits, boolean
-            hard_limits: 21, //	Hard limits, boolean
-            homing_cycle: 22, //	Homing cycle, boolean
-            homing_dir_invert_mask: 23, //	Homing dir invert, mask
-            homing_feed: 24, //	Homing feed, mm / min
-            homing_seek: 25, //	Homing seek, mm / min
-            homing_debounce: 26, //	Homing debounce, milliseconds
-            homing_pulloff: 27, //	Homing pull - off, mm
-            max_spindle: 30, //	Max spindle speed, RPM
-            min_spindle: 31, //	Min spindle speed, RPM
-            laser_mode: 32, //	Laser mode, boolean
-            steps_per_mm_x: 100, //	X steps / mm
-            steps_per_mm_y: 101, //	Y steps / mm
-            steps_per_mm_z: 102, //	Z steps / mm
-            max_feedrate_x: 110, //	X Max rate, mm / min
-            max_feedrate_y: 111, //	Y Max rate, mm / min
-            max_feedrate_z: 112, //	Z Max rate, mm / min
-            max_acc_x: 120, //	X Acceleration, mm / sec ^ 2
-            max_acc_y: 121, //	Y Acceleration, mm / sec ^ 2
-            max_acc_z: 122, //	Z Acceleration, mm / sec ^ 2
-            max_travel_x: 130, //	X Max travel, mm
-            max_travel_y: 131, //	Y Max travel, mm
-            max_travel_z: 132, //	Z Max travel, mm
-        };
-
         self.profiles = new ItemListHelper(
             "laserCutterProfiles",
             {
@@ -271,25 +234,6 @@ $(function () {
             } else {
                 self.updateProfile(undefined, callback);
             }
-        };
-
-        self.getMechanicalPerformanceData = function () {
-            const fx = self.currentProfileData().axes.x.speed();
-            const fy = self.currentProfileData().axes.y.speed();
-            const maxF = Math.min(fx, fy);
-            const ax = self
-                .currentProfileData()
-                .grbl.settings[self.grblKeys.max_acc_x]();
-            const ay = self
-                .currentProfileData()
-                .grbl.settings[self.grblKeys.max_acc_y]();
-            const maxAcc = Math.min(ax, ay);
-            return {
-                workingAreaWidth: self.currentProfileData().volume.width(),
-                workingAreaHeight: self.currentProfileData().volume.depth(),
-                maxFeedrateXY: maxF,
-                accelerationXY: maxAcc,
-            };
         };
 
         self._editorData = function () {
