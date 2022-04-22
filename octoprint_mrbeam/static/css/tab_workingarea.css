@@ -125,6 +125,10 @@ g#camera_markers.markerSW.gray circle#markerSW {
   pointer-events: auto;
 }
 
+svg#area_preview #userContent .hideWhileRastering {
+  opacity: 0;
+}
+
 @keyframes blinker {
   50% {
     opacity: 0;
@@ -215,7 +219,7 @@ g#camera_markers.markerSW.gray circle#markerSW {
   font-size: 0.8rem;
 }
 #wa_filelist .detail_information input {
-  width: calc(30% - 1em);
+  width: calc(30% - 1.5em);
   box-sizing: border-box;
   padding-left: 0.2em;
   padding-top: 0;
@@ -514,10 +518,9 @@ input.decent_input:hover {
 /*Laser button */
 
 /* Quick text */
-#quick_text_dialog_intensity {
-  margin-top: 4em;
+#quick_text_stroke_and_fill {
+  margin-top: 2em;
   margin-bottom: 2em;
-  width: 100%;
 }
 
 #quick_text_dialog #qt_round_text_section img {
@@ -529,13 +532,12 @@ input.decent_input:hover {
   padding-bottom: 0;
 }
 #qt_round_text_section.straight #quick_text_dialog_circle {
-  display: none;
+  visibility: hidden;
 }
 
 #quick_text_dialog_circle {
   width: 60%;
-  margin: 1em;
-  float: right;
+  margin: 2em 0em;
 }
 
 /*Sliders*/

@@ -595,7 +595,11 @@ class Converter:
                 else:
                     # path
                     if i.tag == _add_ns("path", "svg"):
-                        self._handle_node(i, layer)
+                        d = get_path_d(i)
+                        if not d == None:
+                            self._handle_node(i, layer)
+                        else:
+                            self._log.debug("Skipping path with empty d attribute.")
 
                     # rect, line, polygon, polyline, circle, ellipse
                     elif (

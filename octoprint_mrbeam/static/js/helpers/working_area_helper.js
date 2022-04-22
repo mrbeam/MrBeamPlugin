@@ -354,6 +354,353 @@ class WorkingAreaHelper {
     static limitValue(fieldValue, maxValue) {
         return fieldValue < maxValue ? fieldValue : maxValue;
     }
+
+    /* Get CSS Declarations of Quicktext fonts for embedding in SVG before rasterization
+     *
+     * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
+     * installed on the system which we can't assume.)
+     * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
+     * contains @font-face entries with woff2 files as dataUrls. Eg:
+     * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
+     * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
+     * AND their fontFamily name must be included in self.fontMap
+     *
+     * @param {Set} whitelist List used for filtering result
+     * @returns {Array} A list of css declarations
+     */
+    static getFontDeclarations = function (whitelist = null) {
+        const result = [];
+        const styleSheetArray = [...document.styleSheets];
+        const fontRules = styleSheetArray
+            .filter(
+                (s) =>
+                    s.href &&
+                    (s.href.includes("quicktext-fonts.css") ||
+                        s.href.includes("packed_plugins.css"))
+            )
+            .map((styleSheet) => {
+                try {
+                    return [...styleSheet.cssRules]
+                        .filter(
+                            (rule) =>
+                                rule.constructor === CSSFontFaceRule &&
+                                rule.style
+                        )
+                        .filter((rule) => {
+                            if (whitelist === null) return true;
+                            const fontname = rule.style
+                                .getPropertyValue("font-family")
+                                //                        .replace(/["']/g, "")
+                                .trim();
+                            return whitelist.has(fontname);
+                        })
+                        .forEach((rule) => result.push(rule.cssText));
+                } catch (e) {
+                    console.log(
+                        "Access to stylesheet %s is denied. Ignoring...",
+                        styleSheet.href
+                    );
+                }
+            });
+        return result;
+    };
+
+    /**
+     * Estimates the job run time based on path length, img histograms and job parameters
+     *
+     * @param {object} gcLengthSummary
+     * @param {object} vectorData
+     * @param {object} engravingData
+     * @param {object} machineData
+     * @returns {object} modified gcLengthSummary, durations are added
+     */
+    static get_estimated_gcode_duration(
+        gcLengthSummary,
+        vectorData,
+        engravingData,
+        machineData
+    ) {
+        // mechanical gantry parameters
+        const workingAreaWidth = machineData.workingAreaWidth;
+        const workingAreaHeight = machineData.workingAreaHeight;
+        const maxFeedrate = machineData.maxFeedrateXY; // mm/min
+        const maxAcceleration = machineData.accelerationXY; // mm/s²
+        const variance = 0.07;
+
+        // 1. Vectors
+        // Principle:
+        // Iterate over each stroke color and sum up...
+        // time for moving along the path with the color's speed
+        // time for positioning moves with maximum machine speed.
+        // Acceleration is ignored in this estimation.
+        let vector_lookup = {};
+        vectorData.forEach(
+            (d) =>
+                (vector_lookup[d.color] = {
+                    feedrate: d.feedrate,
+                    passes: d.passes,
+                    pierce_time: d.pierce_time,
+                })
+        );
+
+        let sumVectorDur = 0;
+        Object.keys(gcLengthSummary.vectors).forEach(function (color) {
+            let duration = 0;
+            const vd = vector_lookup[color];
+            if (vd) {
+                // Time for moving on the colored path
+                duration = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    gcLengthSummary.vectors[color].lengthInMM,
+                    vd.feedrate,
+                    vd.passes,
+                    vd.pierce_time
+                );
+                // Time for positioning moves between paths of the same color
+                duration += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    gcLengthSummary.vectors[color].positioningInMM,
+                    maxFeedrate,
+                    1,
+                    0
+                );
+            }
+            gcLengthSummary.vectors[color].duration = { raw: duration };
+            sumVectorDur += duration;
+        });
+
+        // 2. Rasters
+        // Principle:
+        // Iterate over each rastered bitmap cluster and sum up:
+        //   Linefeed durations incl. overshoot travel (max machine speed)
+        //   Acceleration duration: time for the total necessary acceleration, summed up across the whole bitmap
+        //   Histogram duration: time for the total travel of each pixel brightness 0-254, 255 will be skipped
+        // Assumptions:
+        //   White pixels on the outside of the image are skipped, inside they are traveled with maximum machine speed
+        const minSpeed = Math.min(
+            engravingData.speed_black,
+            engravingData.speed_white
+        );
+        const maxSpeed = Math.max(
+            engravingData.speed_black,
+            engravingData.speed_white
+        );
+
+        let sumBitmapDur = 0;
+        if (engravingData.engraving_enabled) {
+            gcLengthSummary.bitmaps.forEach(function (b, idx) {
+                // basics
+                const lineCount = b.h / engravingData.line_distance;
+                const lineWidth = b.w;
+
+                // Linefeed duration
+                const linefeedLength =
+                    b.h +
+                    lineCount * (engravingData.extra_overshoot ? 3 * 2 : 1); // assumption: extra overshoot move is 6mm per line, standard 1mm
+                const linefeedPathDur = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    linefeedLength,
+                    maxFeedrate,
+                    engravingData.eng_passes,
+                    0
+                );
+
+                const linefeedAccelerationDur =
+                    lineCount *
+                    WorkingAreaHelper.get_acceleration_duration_in_seconds(
+                        engravingData.speed_white,
+                        maxAcceleration
+                    );
+
+                const linefeedDur = Math.max(
+                    linefeedPathDur,
+                    linefeedAccelerationDur
+                );
+
+                // acceleration duration
+                const deltaV =
+                    (b.totalBrightnessChange * Math.abs(maxSpeed - minSpeed)) /
+                    255; // feedrate difference of one brightness step
+                const accelerationDur = WorkingAreaHelper.get_acceleration_duration_in_seconds(
+                    deltaV,
+                    maxAcceleration
+                );
+
+                // histogram duration
+                let histogramDur = 0;
+                let histogramLength = 0;
+                for (
+                    let brightness = 0;
+                    brightness < b.histogram.length;
+                    brightness++
+                ) {
+                    let pixelAmount = b.histogram[brightness];
+                    let speed =
+                        (Math.abs(minSpeed - maxSpeed) * brightness) / 255 +
+                        minSpeed;
+                    if (brightness === 255) {
+                        speed = maxFeedrate;
+                        pixelAmount -= b.whitePixelsOutside; // White pixels (brightness===255) are always skipped (means not lasered)!
+                    }
+                    const length = pixelAmount * engravingData.beam_diameter;
+                    histogramLength += length;
+                    histogramDur += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                        length,
+                        speed,
+                        engravingData.eng_passes,
+                        engravingData.pierce_time
+                    );
+                }
+                // engraving mode correction factor
+                let modeCorrection = 1; // default: engraving_mode === "precise"
+                if (engravingData.engraving_mode === "basic") {
+                    modeCorrection = 1 + b.innerWhitePixelRatio * 0.25; // assumption. useless moves over inner white pixel are 25% more than in precise mode
+                } else if (engravingData.engraving_mode === "fast") {
+                    modeCorrection = 1;
+                }
+
+                const bitmapDur =
+                    linefeedDur +
+                    accelerationDur +
+                    histogramDur * modeCorrection;
+                sumBitmapDur += bitmapDur;
+                gcLengthSummary.bitmaps[idx].duration = { raw: bitmapDur };
+                gcLengthSummary.bitmaps[
+                    idx
+                ].histogramLengthInMM = histogramLength;
+            });
+        }
+
+        // 3. Positioning moves
+        // assumption: an average positioning move is half the diagonal of the working area
+        // such an positioning move has to be done between each item (paths with same stroke color, bitmap)
+        // additionally at the beginning and the end
+        const avgPositioningLength =
+            euclideanDistance([0, 0], [workingAreaWidth, workingAreaHeight]) /
+            2;
+        const itemsCount =
+            Object.keys(gcLengthSummary.vectors).length +
+            gcLengthSummary.bitmaps.length;
+        const sumPosDur =
+            WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                avgPositioningLength,
+                maxFeedrate,
+                1,
+                0
+            ) *
+            (itemsCount + 2); // +2 for begin and end of the job
+
+        const sum = sumVectorDur + sumBitmapDur + sumPosDur;
+
+        // the correction factor is determined by some real experiments.
+        // It is chosen according to the total estimation length as longer estimations are more precise than shorter ones.
+        const c = WorkingAreaHelper.get_jte_correction(sum);
+        gcLengthSummary.estimationVariance = variance;
+        gcLengthSummary.estimationCorrection = c;
+
+        Object.keys(gcLengthSummary.vectors).forEach(function (color) {
+            const vec = gcLengthSummary.vectors[color];
+            WorkingAreaHelper.extend_duration_info(vec.duration, c, variance);
+        });
+
+        if (engravingData.engraving_enabled) {
+            gcLengthSummary.bitmaps.forEach(function (b, idx) {
+                const bmp = gcLengthSummary.bitmaps[idx];
+                WorkingAreaHelper.extend_duration_info(
+                    bmp.duration,
+                    c,
+                    variance
+                );
+            });
+        }
+
+        gcLengthSummary.total = {
+            vector: { raw: sumVectorDur },
+            raster: { raw: sumBitmapDur },
+            positioning: { raw: sumPosDur },
+            sum: { raw: sum },
+        };
+        Object.keys(gcLengthSummary.total).forEach(function (key) {
+            const obj = gcLengthSummary.total[key];
+            WorkingAreaHelper.extend_duration_info(obj, c, variance);
+        });
+
+        return gcLengthSummary;
+    }
+
+    /**
+     * Calculates the duration of one path based on length, speed, passes, piercetime
+     *
+     * @param {Number} lengthInMM
+     * @param {Number} feedrateInMMperMin
+     * @param {Integer} passes
+     * @param {Number} pierceTimeMS
+     * @returns {Number}
+     */
+    static get_gcode_path_duration_in_seconds(
+        lengthInMM,
+        feedrateInMMperMin,
+        passes,
+        pierceTimeMS
+    ) {
+        const l = parseFloat(lengthInMM);
+        const f = parseFloat(feedrateInMMperMin) / 60;
+        const p = parseInt(passes);
+        const pt = parseInt(pierceTimeMS) / 1000;
+        return (l / f) * p + pt; // seconds
+    }
+
+    /**
+     * Calculates the time needed to accelerate from v to v + deltaV where accerlation a is given
+     *
+     * @param {Number} deltaVinMMperMinute
+     * @param {Number} accelerationMMperS
+     * @returns {Number} seconds
+     */
+    static get_acceleration_duration_in_seconds(
+        deltaVinMMperMinute,
+        accelerationMMperS
+    ) {
+        const deltaV = deltaVinMMperMinute / 60;
+        return deltaV / accelerationMMperS;
+    }
+
+    static get_jte_correction(durationInSeconds) {
+        // correction factors, figured out by testing on mrbeam-7055
+        const CORRECTION_FACTORS = {
+            lt1m: 1.3,
+            lt10m: 1.1,
+            lt60m: 1.07,
+            def: 1.04,
+        };
+
+        let factor = CORRECTION_FACTORS.def;
+
+        if (durationInSeconds < 60) {
+            factor = CORRECTION_FACTORS.lt1m;
+        } else if (durationInSeconds < 60 * 10) {
+            factor = CORRECTION_FACTORS.lt10m;
+        } else if (durationInSeconds < 60 * 60) {
+            factor = CORRECTION_FACTORS.lt60m;
+        }
+
+        return factor;
+    }
+
+    static apply_jte_variance(durationInSeconds, variance) {
+        return {
+            val: durationInSeconds,
+            min: durationInSeconds * (1 - variance),
+            max: durationInSeconds * (1 + variance),
+            abs: durationInSeconds * variance,
+        };
+    }
+
+    static extend_duration_info(obj, factor, variance) {
+        const corrected = obj.raw * factor;
+        const range = WorkingAreaHelper.apply_jte_variance(corrected, variance);
+        obj.val = corrected;
+        obj.range = range;
+        obj.hr = formatFuzzyHHMM(range);
+        return obj;
+    }
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = "bcdfghjklmnpqrstvwxz";

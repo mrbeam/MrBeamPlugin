@@ -1511,8 +1511,8 @@
 
             // check if exists
             let lineEl = self.paper.select("#" + id);
-            const sx = x2 === x1 ? 1 : x2 - x1;
-            const sy = y2 === y1 ? 1 : y2 - y1;
+            const sx = x2 === x1 ? 0.001 : x2 - x1;
+            const sy = y2 === y1 ? 0.001 : y2 - y1;
             if (!lineEl) {
                 const line = self.paper.path({
                     d: "M0,0l1,1",
@@ -1528,7 +1528,15 @@
                     style:
                         "vector-effect: non-scaling-stroke; font-size:8px; font-family:monospace; transform:translate(2px,-2px); vector-effect:non-scaling-stroke;",
                 });
-                lineEl = self.paper.group(line, pointLabel);
+                const start = self.paper.circle({
+                    cx: x1,
+                    cy: y1,
+                    r: 1,
+                    stroke: color,
+                    strokeWidth: 1,
+                    fill: "none",
+                });
+                lineEl = self.paper.group(line, pointLabel, start);
                 lineEl.attr({ id: id, class: "_dbg_" });
             }
             lineEl.select("path").transform(`scale(${sx},${sy})`);
