@@ -545,6 +545,10 @@
             self.elements_to_transform = self._getElementSet(
                 elementset_or_selector
             );
+            if (self.elements_to_transform.length === 0) {
+                console.warn("manualTransform: Nothing selected -> Skip.");
+                return;
+            }
             self._remember_original_transform();
 
             // init session
