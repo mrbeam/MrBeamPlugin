@@ -69,7 +69,7 @@ $(function () {
             self._handleClick(e);
         });
 
-        self.send_fontend_event = function (event, payload) {
+        self.send_frontend_event = function (event, payload, ) {
             if (self.isStartupComplete && !self.analyticsEnabled()) {
                 return {};
             }

@@ -22,6 +22,7 @@ from analytics_keys import AnalyticsKeys as ak
 from timer_handler import TimerHandler
 from uploader import AnalyticsFileUploader
 from octoprint_mrbeam.util.uptime import get_uptime
+from octoprint_mrbeam.util import dict_merge
 
 # singleton
 _instance = None
@@ -140,7 +141,7 @@ class AnalyticsHandler(object):
         ).start()
 
     # INIT
-    def analytics_user_permission_change(self, analytics_enabled):
+    def analytics_user_permission_change(self, analytics_enabled, header_extension=None):
         try:
             self._logger.info(
                 "analytics user permission change: analyticsEnabled=%s",
@@ -152,7 +153,7 @@ class AnalyticsHandler(object):
                 self._settings.set_boolean(["analyticsEnabled"], True)
                 self._activate_analytics()
                 self._add_device_event(
-                    ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=True)
+                    ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=True), header_extension=header_extension
                 )
             else:
                 # can not log this since the user just disagreed
@@ -165,7 +166,7 @@ class AnalyticsHandler(object):
                 "Exception during analytics_user_permission_change: {}".format(e)
             )
 
-    def add_ui_render_call_event(self, host, remote_ip, referrer, language, user_agent):
+    def add_ui_render_call_event(self, host, remote_ip, referrer, language, user_agent, header_extension=None):
         try:
             call = {
                 ak.Connectivity.Call.HOST: host,
@@ -176,92 +177,92 @@ class AnalyticsHandler(object):
             }
 
             self._add_connectivity_event(
-                ak.Connectivity.Event.UI_RENDER_CALL, payload=call
+                ak.Connectivity.Event.UI_RENDER_CALL, payload=call, header_extension=header_extension
             )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_ui_render_call_event: {}".format(e)
             )
 
-    def add_client_opened_event(self, remote_ip):
+    def add_client_opened_event(self, remote_ip, header_extension=None):
         try:
             data = {
                 ak.Connectivity.Call.REMOTE_IP: remote_ip,
             }
 
             self._add_connectivity_event(
-                ak.Connectivity.Event.CLIENT_OPENED, payload=data
+                ak.Connectivity.Event.CLIENT_OPENED, payload=data, header_extension=header_extension
             )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_client_opened_event: {}".format(e)
             )
 
-    def add_frontend_event(self, event, payload=None):
+    def add_frontend_event(self, event, payload=None, header_extension=None):
         try:
             self._add_frontend_event(event, payload=payload)
         except Exception as e:
             self._logger.exception(
-                "Exception during add_frontend_event: {}".format(e), analytics=True
+                "Exception during add_frontend_event: {}".format(e), analytics=True, header_extension=header_extension
             )
 
     # TIMER_HANDLER
-    def add_mrbeam_usage(self, usage_data):
+    def add_mrbeam_usage(self, usage_data, header_extension=None):
         try:
-            self._add_device_event(ak.Device.Event.MRBEAM_USAGE, payload=usage_data)
+            self._add_device_event(ak.Device.Event.MRBEAM_USAGE, payload=usage_data, header_extension=header_extension)
         except Exception as e:
             self._logger.exception("Exception during add_mrbeam_usage: {}".format(e))
 
-    def add_http_self_check(self, payload):
+    def add_http_self_check(self, payload, header_extension=None):
         try:
-            self._add_device_event(ak.Device.Event.HTTP_SELF_CHECK, payload=payload)
+            self._add_device_event(ak.Device.Event.HTTP_SELF_CHECK, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception("Exception during add_http_self_check: {}".format(e))
 
-    def add_internet_connection(self, payload):
+    def add_internet_connection(self, payload, header_extension=None):
         try:
-            self._add_device_event(ak.Device.Event.INTERNET_CONNECTION, payload=payload)
+            self._add_device_event(ak.Device.Event.INTERNET_CONNECTION, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_internet_connection: {}".format(e)
             )
 
-    def add_ip_addresses(self, payload):
+    def add_ip_addresses(self, payload, header_extension=None):
         try:
-            self._add_device_event(ak.Device.Event.IPS, payload=payload)
+            self._add_device_event(ak.Device.Event.IPS, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception("Exception during add_ip_addresses: {}".format(e))
 
-    def add_disk_space(self, payload):
+    def add_disk_space(self, payload, header_extension=None):
         try:
-            self._add_device_event(ak.Device.Event.DISK_SPACE, payload=payload)
+            self._add_device_event(ak.Device.Event.DISK_SPACE, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception("Exception during add_disk_space: {}".format(e))
 
-    def add_software_versions(self, payload):
+    def add_software_versions(self, payload, header_extension=None):
         try:
-            self._add_device_event(ak.Device.Event.SOFTWARE_VERSIONS, payload=payload)
+            self._add_device_event(ak.Device.Event.SOFTWARE_VERSIONS, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_software_versions: {}".format(e)
             )
 
-    def add_num_files(self, payload):
+    def add_num_files(self, payload, header_extension=None):
         try:
-            self._add_device_event(ak.Device.Event.NUM_FILES, payload=payload)
+            self._add_device_event(ak.Device.Event.NUM_FILES, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception("Exception during add_num_files: {}".format(e))
 
-    def add_analytics_file_crop(self, payload):
+    def add_analytics_file_crop(self, payload, header_extension=None):
         try:
-            self._add_device_event(ak.Log.Event.ANALYTICS_FILE_CROP, payload=payload)
+            self._add_device_event(ak.Log.Event.ANALYTICS_FILE_CROP, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_analytics_file_crop: {}".format(e)
             )
 
     # MRB_LOGGER
-    def add_logger_event(self, event_details, wait_for_terminal_dump):
+    def add_logger_event(self, event_details, wait_for_terminal_dump, header_extension=None):
         try:
             filename = event_details["caller"].filename.replace(
                 __package_path__ + "/", ""
@@ -295,18 +296,18 @@ class AnalyticsHandler(object):
                 self.event_waiting_for_terminal_dump = dict(event_details)
             else:
                 self._add_log_event(
-                    ak.Log.Event.EVENT_LOG, payload=event_details, analytics=False
+                    ak.Log.Event.EVENT_LOG, payload=event_details, analytics=False, header_extension=header_extension
                 )
         except Exception as e:
             self._logger.exception("Exception during add_logger_event: {}".format(e))
 
-    def log_terminal_dump(self, dump):  # Will be used with e.g. GRBL errors
+    def log_terminal_dump(self, dump, header_extension=None):  # Will be used with e.g. GRBL errors
         try:
             if self.event_waiting_for_terminal_dump is not None:
                 payload = dict(self.event_waiting_for_terminal_dump)
                 payload[ak.Log.TERMINAL_DUMP] = dump
                 self._add_log_event(
-                    ak.Log.Event.EVENT_LOG, payload=payload, analytics=False
+                    ak.Log.Event.EVENT_LOG, payload=payload, analytics=False, header_extension=header_extension
                 )
                 self.event_waiting_for_terminal_dump = None
             else:
@@ -318,7 +319,7 @@ class AnalyticsHandler(object):
             self._logger.exception("Exception during log_terminal_dump: {}".format(e))
 
     # LASERHEAD_HANDLER
-    def add_laserhead_info(self):
+    def add_laserhead_info(self, header_extension=None):
         try:
             lh = self._laserhead_handler.get_current_used_lh_data()
             power_calibration = self._laserhead_handler.get_current_used_lh_power()
@@ -339,94 +340,94 @@ class AnalyticsHandler(object):
                 ],
             }
             self._add_device_event(
-                ak.Device.Event.LASERHEAD_INFO, payload=laserhead_info
+                ak.Device.Event.LASERHEAD_INFO, payload=laserhead_info, header_extension=header_extension
             )
 
         except:
             self._logger.exception("Exception during add_laserhead_info")
 
     # LID_HANDLER
-    def add_camera_session_details(self, session_details):
+    def add_camera_session_details(self, session_details, header_extension=None):
         try:
-            self._add_log_event(ak.Log.Event.CAMERA, payload=session_details)
+            self._add_log_event(ak.Log.Event.CAMERA, payload=session_details, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_camera_session: {}".format(e), analytics=True
             )
 
-    def add_camera_image(self, payload):
+    def add_camera_image(self, payload, header_extension=None):
         try:
-            self._add_device_event(ak.Device.Event.CAMERA_IMAGE, payload=payload)
+            self._add_device_event(ak.Device.Event.CAMERA_IMAGE, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_camera_image: {}".format(e), analytics=True
             )
 
     # ACC_WATCH_DOG
-    def add_cpu_log(self, temp, throttle_alerts):
+    def add_cpu_log(self, temp, throttle_alerts, header_extension=None):
         try:
             cpu_data = {
                 ak.Log.Cpu.TEMP: temp,
                 ak.Log.Cpu.THROTTLE_ALERTS: throttle_alerts,
             }
-            self._add_log_event(ak.Log.Event.CPU, payload=cpu_data)
+            self._add_log_event(ak.Log.Event.CPU, payload=cpu_data, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_cpu_log: {}".format(e), analytics=True
             )
 
     # CONVERTER
-    def add_material_details(self, material_details):
+    def add_material_details(self, material_details, header_extension=None):
         try:
-            self._add_job_event(ak.Job.Event.Slicing.MATERIAL, payload=material_details)
+            self._add_job_event(ak.Job.Event.Slicing.MATERIAL, payload=material_details, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_material_details: {}".format(e)
             )
 
-    def add_engraving_parameters(self, eng_params):
+    def add_engraving_parameters(self, eng_params, header_extension=None):
         try:
             eng_params.update(
                 {
                     ak.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
                 }
             )
-            self._add_job_event(ak.Job.Event.Slicing.CONV_ENGRAVE, payload=eng_params)
+            self._add_job_event(ak.Job.Event.Slicing.CONV_ENGRAVE, payload=eng_params, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_engraving_parameters: {}".format(e)
             )
 
-    def add_cutting_parameters(self, cut_details):
+    def add_cutting_parameters(self, cut_details, header_extension=None):
         try:
             # fmt: off
             cut_details[ak.Device.LaserHead.HEAD_MODEL_ID] = self._laserhead_handler.get_current_used_lh_model_id()
             # fmt: on
-            self._add_job_event(ak.Job.Event.Slicing.CONV_CUT, payload=cut_details)
+            self._add_job_event(ak.Job.Event.Slicing.CONV_CUT, payload=cut_details, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_cutting_parameters: {}".format(e)
             )
 
-    def add_design_file_details(self, design_file):
+    def add_design_file_details(self, design_file, header_extension=None):
         try:
-            self._add_job_event(ak.Job.Event.Slicing.DESIGN_FILE, payload=design_file)
+            self._add_job_event(ak.Job.Event.Slicing.DESIGN_FILE, payload=design_file, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_design_file_details: {}".format(e)
             )
 
     # USAGE
-    def add_job_ntp_sync_details(self, sync_details):
+    def add_job_ntp_sync_details(self, sync_details, header_extension=None):
         try:
-            self._add_job_event(ak.Job.Event.NTP_SYNC, payload=sync_details)
+            self._add_job_event(ak.Job.Event.NTP_SYNC, payload=sync_details, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_job_ntp_sync_details: {}".format(e)
             )
 
     # COMM_ACC2
-    def add_grbl_flash_event(self, from_version, to_version, successful, err=None):
+    def add_grbl_flash_event(self, from_version, to_version, successful, err=None, header_extension=None):
         try:
             flashing = {
                 ak.Device.Grbl.FROM_VERSION: from_version,
@@ -435,21 +436,21 @@ class AnalyticsHandler(object):
                 ak.Device.ERROR: err,
             }
 
-            self._add_device_event(ak.Device.Event.FLASH_GRBL, payload=flashing)
+            self._add_device_event(ak.Device.Event.FLASH_GRBL, payload=flashing, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_grbl_flash_event: {}".format(e)
             )
 
     # SOFTWARE_UPDATE_INFORMATION
-    def add_software_channel_switch_event(self, old_channel, new_channel):
+    def add_software_channel_switch_event(self, old_channel, new_channel, header_extension=None):
         try:
             channels = {
                 ak.Device.SoftwareChannel.OLD: old_channel,
                 ak.Device.SoftwareChannel.NEW: new_channel,
             }
 
-            self._add_device_event(ak.Device.Event.SW_CHANNEL_SWITCH, payload=channels)
+            self._add_device_event(ak.Device.Event.SW_CHANNEL_SWITCH, payload=channels, header_extension=header_extension)
 
         except Exception as e:
             self._logger.exception(
@@ -457,10 +458,10 @@ class AnalyticsHandler(object):
             )
 
     # LED_EVENTS
-    def add_connections_state(self, connections):
+    def add_connections_state(self, connections, header_extension=None):
         try:
             self._add_connectivity_event(
-                ak.Connectivity.Event.CONNECTIONS_STATE, payload=connections
+                ak.Connectivity.Event.CONNECTIONS_STATE, payload=connections, header_extension=header_extension
             )
         except Exception as e:
             self._logger.exception(
@@ -468,27 +469,27 @@ class AnalyticsHandler(object):
             )
 
     # DUST_MANAGER
-    def add_fan_rpm_test(self, data):
+    def add_fan_rpm_test(self, data, header_extension=None):
         try:
             # The fan_rpm_test might finish after the job is done, in that case it isn't interesting for us
             if self._current_job_id:
-                self._add_job_event(ak.Job.Event.Print.FAN_RPM_TEST, payload=data)
+                self._add_job_event(ak.Job.Event.Print.FAN_RPM_TEST, payload=data, header_extension=header_extension)
         except Exception as e:
             self._logger.exception("Exception during add_fan_rpm_test: {}".format(e))
 
     # OS_HEALTH_CARE
-    def add_os_health_log(self, data):
+    def add_os_health_log(self, data, header_extension=None):
         try:
-            self._add_log_event(ak.Log.Event.OS_HEALTH, payload=data)
+            self._add_log_event(ak.Log.Event.OS_HEALTH, payload=data, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_os_health_log: {}".format(e), analytics=True
             )
 
     # COMPRESSOR_HANDLER
-    def add_compressor_data(self, data):
+    def add_compressor_data(self, data, header_extension=None):
         try:
-            self._add_device_event(ak.Device.Event.COMPRESSOR, payload=data)
+            self._add_device_event(ak.Device.Event.COMPRESSOR, payload=data, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_compressor_static_data: {}".format(e)
@@ -553,7 +554,7 @@ class AnalyticsHandler(object):
             MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated
         )
 
-    def _event_startup(self, event, payload):
+    def _event_startup(self, event, payload, header_extension=None):
         # Here the MrBeamPlugin is not fully initialized yet, so we have to access this data direct from the plugin
         payload = {
             ak.Device.LaserHead.LAST_USED_SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()[
@@ -562,22 +563,22 @@ class AnalyticsHandler(object):
             ak.Device.LaserHead.LAST_USED_HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
             ak.Device.Usage.USERS: len(self._plugin._user_manager._users),
         }
-        self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
+        self._add_device_event(ak.Device.Event.STARTUP, payload=payload, header_extension=header_extension)
 
-    def _event_shutdown(self, event, payload):
+    def _event_shutdown(self, event, payload, header_extension=None):
         payload = {
             ak.Device.Cpu.THROTTLE_ALERTS: Cpu(
                 state="shutdown", repeat=False
             ).get_cpu_throttle_warnings(),
         }
-        self._add_device_event(ak.Device.Event.SHUTDOWN, payload=payload)
+        self._add_device_event(ak.Device.Event.SHUTDOWN, payload=payload, header_extension=header_extension)
 
-    def _event_slicing_started(self, event, payload):
+    def _event_slicing_started(self, event, payload, header_extension=None):
         self._init_new_job()
-        self._add_job_event(ak.Job.Event.Slicing.STARTED)
+        self._add_job_event(ak.Job.Event.Slicing.STARTED, header_extension=header_extension)
         self._current_cpu_data = Cpu(state="slicing", repeat=False)
 
-    def _event_slicing_done(self, event, payload):
+    def _event_slicing_done(self, event, payload, header_extension=None):
         if self._current_cpu_data:
             self._current_cpu_data.record_cpu_data()
             self._add_cpu_data(dur=payload["time"])
@@ -586,31 +587,31 @@ class AnalyticsHandler(object):
         payload = {
             ak.Job.Duration.CURRENT: int(round(payload["time"])),
         }
-        self._add_job_event(ak.Job.Event.Slicing.DONE, payload=payload)
+        self._add_job_event(ak.Job.Event.Slicing.DONE, payload=payload, header_extension=header_extension)
 
-    def _event_slicing_failed(self, event, payload):
+    def _event_slicing_failed(self, event, payload, header_extension=None):
         self._add_job_event(
             ak.Job.Event.Slicing.FAILED, payload={ak.Job.ERROR: payload["reason"]}
         )
 
-    def _event_slicing_cancelled(self, event, payload):
-        self._add_job_event(ak.Job.Event.Slicing.CANCELLED)
+    def _event_slicing_cancelled(self, event, payload, header_extension=None):
+        self._add_job_event(ak.Job.Event.Slicing.CANCELLED, header_extension=header_extension)
 
-    def _add_cpu_data(self, dur=None):
+    def _add_cpu_data(self, dur=None, header_extension=None):
         if self._current_cpu_data:
             payload = self._current_cpu_data.get_cpu_data()
             payload["dur"] = dur
-            self._add_job_event(ak.Job.Event.CPU, payload=payload)
+            self._add_job_event(ak.Job.Event.CPU, payload=payload, header_extension=header_extension)
 
-    def _event_print_started(self, event, payload):
+    def _event_print_started(self, event, payload, header_extension=None):
         # If there's no job_id, it may be a gcode file (no slicing), so we have to start the job here
         if not self._current_job_id:
             self._init_new_job()
         self._current_cpu_data = Cpu(state="laser", repeat=True)
         self._init_collectors()
-        self._add_job_event(ak.Job.Event.Print.STARTED)
+        self._add_job_event(ak.Job.Event.Print.STARTED, header_extension=header_extension)
 
-    def _event_print_progress(self, event, payload):
+    def _event_print_progress(self, event, payload, header_extension=None):
         laser_temp = None
         laser_intensity = None
         dust_value = None
@@ -640,12 +641,12 @@ class AnalyticsHandler(object):
                 }
             )
 
-        self._add_job_event(ak.Job.Event.Print.PROGRESS, data)
+        self._add_job_event(ak.Job.Event.Print.PROGRESS, data, header_extension=header_extension)
 
         if self._current_cpu_data:
             self._current_cpu_data.update_progress(payload["progress"])
 
-    def _event_print_paused(self, event, payload):
+    def _event_print_paused(self, event, payload, header_extension=None):
         """
         Cooling: payload holds some information if it was a cooling_pause or not. Lid/Button: Currently there is no
         way to know other than checking the current state: _mrbeam_plugin_implementation.iobeam
@@ -653,70 +654,70 @@ class AnalyticsHandler(object):
         """
         self._add_job_event(
             ak.Job.Event.Print.PAUSED,
-            payload={ak.Job.Duration.CURRENT: int(round(payload["time"]))},
+            payload={ak.Job.Duration.CURRENT: int(round(payload["time"]))}, header_extension=header_extension
         )
 
-    def _event_print_resumed(self, event, payload):
+    def _event_print_resumed(self, event, payload, header_extension=None):
         self._add_job_event(
             ak.Job.Event.Print.RESUMED,
-            payload={ak.Job.Duration.CURRENT: int(round(payload["time"]))},
+            payload={ak.Job.Duration.CURRENT: int(round(payload["time"]))}, header_extension=header_extension
         )
 
-    def _event_laser_cooling_pause(self, event, payload):
+    def _event_laser_cooling_pause(self, event, payload, header_extension=None):
         data = {ak.Job.LaserHead.TEMP: None}
         if self._current_lasertemp_collector:
             data[
                 ak.Job.LaserHead.TEMP
             ] = self._current_lasertemp_collector.get_latest_value()
-        self._add_job_event(ak.Job.Event.Cooling.START, payload=data)
+        self._add_job_event(ak.Job.Event.Cooling.START, payload=data, header_extension=header_extension)
 
-    def _event_laser_cooling_resume(self, event, payload):
+    def _event_laser_cooling_resume(self, event, payload, header_extension=None):
         data = {ak.Job.LaserHead.TEMP: None}
         if self._current_lasertemp_collector:
             data[
                 ak.Job.LaserHead.TEMP
             ] = self._current_lasertemp_collector.get_latest_value()
-        self._add_job_event(ak.Job.Event.Cooling.DONE, payload=data)
+        self._add_job_event(ak.Job.Event.Cooling.DONE, payload=data, header_extension=header_extension)
 
-    def _event_print_done(self, event, payload):
+    def _event_print_done(self, event, payload, header_extension=None):
         duration = {
             ak.Job.Duration.CURRENT: int(round(payload["time"])),
             ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
         }
         self._current_job_final_status = "Done"
-        self._add_job_event(ak.Job.Event.Print.DONE, payload=duration)
+        self._add_job_event(ak.Job.Event.Print.DONE, payload=duration, header_extension=header_extension)
         self._add_collector_details()
         self._add_cpu_data(dur=payload["time"])
 
-    def _event_print_failed(self, event, payload):
+    def _event_print_failed(self, event, payload, header_extension=None):
         details = {
             ak.Job.Duration.CURRENT: int(round(payload["time"])),
             ak.Job.ERROR: payload["error_msg"],
         }
         self._current_job_final_status = "Failed"
-        self._add_job_event(ak.Job.Event.Print.FAILED, payload=details)
+        self._add_job_event(ak.Job.Event.Print.FAILED, payload=details, header_extension=header_extension)
         self._add_collector_details()
         self._add_cpu_data(dur=payload["time"])
 
-    def _event_print_cancelled(self, event, payload):
+    def _event_print_cancelled(self, event, payload, header_extension=None):
         self._current_job_final_status = "Cancelled"
         self._add_job_event(
             ak.Job.Event.Print.CANCELLED,
-            payload={ak.Job.Duration.CURRENT: int(round(payload["time"]))},
+            payload={ak.Job.Duration.CURRENT: int(round(payload["time"]))}, header_extension=header_extension
         )
         self._add_collector_details()
         self._add_cpu_data(dur=payload["time"])
 
-    def _event_laser_job_finished(self, event, payload):
+    def _event_laser_job_finished(self, event, payload, header_extension=None):
         self._add_job_event(
             ak.Job.Event.LASERJOB_FINISHED,
-            payload={ak.Job.STATUS: self._current_job_final_status},
+            payload={ak.Job.STATUS: self._current_job_final_status}, header_extension=header_extension
         )
         self._cleanup_job()
 
         self.upload()  # delay of 5.0 s
 
-    def _event_job_time_estimated(self, event, payload):
+    def _event_job_time_estimated(self, event, payload, header_extension=None):
         self._current_job_time_estimation = payload["job_time_estimation"]
 
         if self._current_job_id:
@@ -728,9 +729,9 @@ class AnalyticsHandler(object):
                 ak.Job.Duration.CALC_DURATION_WOKE: payload["calc_duration_woke"],
                 ak.Job.Duration.CALC_LINES: payload["calc_lines"],
             }
-            self._add_job_event(ak.Job.Event.JOB_TIME_ESTIMATED, payload=payload)
+            self._add_job_event(ak.Job.Event.JOB_TIME_ESTIMATED, payload=payload, header_extension=header_extension)
 
-    def _add_other_plugin_data(self, event, event_payload):
+    def _add_other_plugin_data(self, event, event_payload, header_extension=None):
         try:
             if (
                 "component" in event_payload
@@ -761,7 +762,7 @@ class AnalyticsHandler(object):
                     data.update(
                         {"plugin_version": event_payload.get("plugin_version", None)}
                     )
-                    self._add_event_to_queue(plugin, event_name, payload=data)
+                    self._add_event_to_queue(plugin, event_name, payload=data, header_extension=header_extension)
                 else:
                     self._logger.warn(
                         "Invalid plugin: '%s'. payload: %s", plugin, event_payload
@@ -774,26 +775,26 @@ class AnalyticsHandler(object):
             )
 
     # -------- ANALYTICS LOGS QUEUE ------------------------------------------------------------------------------------
-    def _add_device_event(self, event, payload=None):
-        self._add_event_to_queue(ak.EventType.DEVICE, event, payload=payload)
+    def _add_device_event(self, event, payload=None, header_extension=None):
+        self._add_event_to_queue(ak.EventType.DEVICE, event, payload=payload, header_extension=header_extension)
 
-    def _add_log_event(self, event, payload=None, analytics=False):
+    def _add_log_event(self, event, payload=None, analytics=False, header_extension=None):
         self._add_event_to_queue(
-            ak.EventType.LOG, event, payload=payload, analytics=analytics
+            ak.EventType.LOG, event, payload=payload, analytics=analytics, header_extension=header_extension
         )
 
-    def _add_frontend_event(self, event, payload=None):
+    def _add_frontend_event(self, event, payload=None, header_extension=None):
         self._add_event_to_queue(
-            ak.EventType.FRONTEND, event, payload=payload, analytics=True
+            ak.EventType.FRONTEND, event, payload=payload, analytics=True, header_extension=header_extension
         )
 
-    def _add_job_event(self, event, payload=None):
+    def _add_job_event(self, event, payload=None, header_extension=None):
         self._add_event_to_queue(ak.EventType.JOB, event, payload=payload)
 
-    def _add_connectivity_event(self, event, payload):
-        self._add_event_to_queue(ak.EventType.CONNECTIVITY, event, payload=payload)
+    def _add_connectivity_event(self, event, payload, header_extension=None):
+        self._add_event_to_queue(ak.EventType.CONNECTIVITY, event, payload=payload, header_extension=header_extension)
 
-    def _add_event_to_queue(self, event_type, event_name, payload=None, analytics=True):
+    def _add_event_to_queue(self, event_type, event_name, payload=None, analytics=True, header_extension=None):
         try:
             data = dict()
             if isinstance(payload, dict):
@@ -817,6 +818,9 @@ class AnalyticsHandler(object):
 
             if event_type == ak.EventType.JOB:
                 event[ak.Job.ID] = self._current_job_id
+
+            if header_extension and isinstance(header_extension, dict):
+                dict_merge(event, header_extension)
 
             self._add_to_queue(event)
 
