@@ -15,6 +15,7 @@ $(function () {
                 intensityWhite: 0,
                 intensityBlack: 50,
                 extraOvershoot: "fast",
+                engravingMode: "precise",
                 feedrateWhite: 1500,
                 feedrateBlack: 250,
                 contrast: 1.0,
@@ -36,7 +37,7 @@ $(function () {
                 lineDistance: 1.0,
             },
             min: {
-                speed: 50,
+                speed: 30,
                 compressor: 0,
                 engPasses: 1,
                 cutPasses: 1,
@@ -918,7 +919,6 @@ $(function () {
         self.images_placed = ko.observable(false);
         self.text_placed = ko.observable(false);
         self.filled_shapes_placed = ko.observable(false);
-        self.engrave_outlines = ko.observable(false);
 
         self.show_image_parameters = ko.computed(function () {
             return (
@@ -974,6 +974,15 @@ $(function () {
             }
         });
         self.beamDiameter = ko.observable(self.JOB_PARAMS.default.beamDiameter);
+        self.beamDiameter.subscribe(function (newVal) {
+            if (self.do_raster_engrave()) {
+                console.log(
+                    "beam Diameter changed -> re-doing the frontend rendering",
+                    newVal
+                );
+                self.doFrontendRendering(); // for update job time estimation
+            }
+        });
         self.engravingPiercetime = observableInt(
             self,
             self.JOB_PARAMS.default.pierceTime
@@ -982,6 +991,14 @@ $(function () {
             self,
             self.JOB_PARAMS.default.engCompressor
         );
+
+        self.engravingMode = ko.observable(
+            self.JOB_PARAMS.default.engravingMode
+        );
+        self.updateEngravingMode = function (vm, event) {
+            const em = event.currentTarget.value;
+            self.engravingMode(em);
+        };
 
         self.get_dialog_state = function () {
             if (self.selected_material() === null) {
@@ -1094,17 +1111,17 @@ $(function () {
                 var colorkey = $(el).attr("id").substr(-6);
                 var hex = "#" + colorkey;
                 var slider_id = "#adjuster_cd_color_" + colorkey;
-                var brightness = $(slider_id).val();
+                var brightness = parseFloat($(slider_id).val());
                 var initial_factor = brightness / 255;
                 var intensity_user =
                     intensity_white_user +
                     initial_factor *
-                    (intensity_black_user - intensity_white_user);
+                        (intensity_black_user - intensity_white_user);
                 var intensity = Math.round(
                     intensity_user *
-                    self.profile
-                        .currentProfileData()
-                        .laser.intensity_factor()
+                        self.profile
+                            .currentProfileData()
+                            .laser.intensity_factor()
                 );
                 var feedrate = Math.round(
                     speed_white + initial_factor * (speed_black - speed_white)
@@ -1148,16 +1165,23 @@ $(function () {
             });
 
             $(".job_row_vector").each(function (i, job) {
-                var intensity_user = $(job).find(".param_intensity").val();
+                if ($(job).find(".used_color").length === 0) {
+                    return;
+                }
+                var intensity_user = parseFloat(
+                    $(job).find(".param_intensity").val()
+                );
                 var intensity =
                     intensity_user *
                     self.profile.currentProfileData().laser.intensity_factor();
-                var feedrate = $(job).find(".param_feedrate").val();
-                var piercetime = $(job).find(".param_piercetime").val();
+                var feedrate = parseFloat($(job).find(".param_feedrate").val());
+                var piercetime = parseFloat(
+                    $(job).find(".param_piercetime").val()
+                );
                 var progressive = $(job)
                     .find(".param_progressive")
                     .prop("checked");
-                var passes = $(job).find(".param_passes").val();
+                var passes = parseInt($(job).find(".param_passes").val());
                 let cut_compressor = $(job).find(".param_cut_compressor").val();
 
                 if (prepareForBackend) {
@@ -1226,23 +1250,19 @@ $(function () {
             intensity,
             feedrate,
             passes,
-            pierce_time
+            pierceTime
         ) {
-            if (intensity === "" || intensity > 100 || intensity < 0)
-                return false;
-            if (
-                feedrate === "" ||
-                feedrate > self.JOB_PARAMS.max.speed ||
-                feedrate < self.JOB_PARAMS.min.speed
-            )
-                return false;
-            if (passes === "" || passes <= 0) return false;
-            if (
-                pierce_time === "" ||
-                pierce_time < self.JOB_PARAMS.min.pierceTime
-            )
-                return false;
-            return true;
+            const intensityValid =
+                !isNaN(intensity) && intensity <= 100 && intensity >= 0;
+            const feedrateValid =
+                !isNaN(feedrate) &&
+                feedrate <= self.JOB_PARAMS.max.speed &&
+                feedrate >= self.JOB_PARAMS.min.speed;
+            const passesValid = !isNaN(passes) && passes > 0;
+            const ptValid =
+                !isNaN(pierceTime) &&
+                pierceTime >= self.JOB_PARAMS.min.pierceTime;
+            return intensityValid && feedrateValid && passesValid && ptValid;
         };
 
         self.get_current_engraving_settings = function (
@@ -1255,7 +1275,7 @@ $(function () {
             }
 
             var data = {
-                // "engrave_outlines" : self.engrave_outlines(),
+                engraving_enabled: self.do_raster_engrave(),
                 intensity_black_user: self.imgIntensityBlack(),
                 intensity_black:
                     self.imgIntensityBlack() *
@@ -1269,10 +1289,8 @@ $(function () {
                 dithering: self.imgDithering(),
                 beam_diameter: parseFloat(self.beamDiameter()),
                 pierce_time: self.engravingPiercetime(),
-                engraving_mode: $(
-                    "#svgtogcode_img_engraving_mode > .btn.active"
-                ).attr("value"),
-                line_distance: $("#svgtogcode_img_line_dist").val(),
+                engraving_mode: self.engravingMode(),
+                line_distance: self.beamDiameter(), // $("#svgtogcode_img_line_dist").val(), TODO??? why twice?
                 eng_compressor: eng_compressor,
                 extra_overshoot: self.extraOvershoot(),
                 eng_passes: self.engravingPasses(),

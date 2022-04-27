@@ -386,10 +386,10 @@
                                                 {{ _('Clusters are processed successively and each cluster is processed line by line.') }}
                                                 {{ _('This option reduces \'empty rides\' moderately and <b>gives the best precision</b>.') }}
                                         </li>
-									    <li><b>{{ _('Fast:') }}</b>
+<!--									    <li><b>{{ _('Fast:') }}</b>
                                                 {{ _('Aggressive clustering also of smaller objects to reduce \'empty rides\' as much as possible.') }}
 									            {{ _('The higher speed might compromise the precision of some engravings, but <b>works well with text or clip-art design.</b>') }}
-									    </li>
+									    </li>-->
 									    <li><b>{{ _('Basic:') }}</b>
                                                 {{ _('No clustering at all, the engravings are processed line by line. In this mode the laserhead may have a lot of \'empty rides\' making it slower, but the precision is not compromised.') }}
                                                 {{ _('<b>Use this option as fallback</b> if you\'re experiencing issues with the other options.') }}</li>
@@ -402,12 +402,15 @@
                                              data-toggle="buttons-radio">
                                             <button type="button" value="precise"
                                                     id="parameter_assignment_engraving_mode_precise_btn"
+                                                    data-bind="event: {click: updateEngravingMode}"
                                                     class="btn btn-default active">{{ _('Recommended') }}</button>
                                             <button type="button" value="fast"
                                                     id="parameter_assignment_engraving_mode_fast_btn"
+                                                    data-bind="event: {click: updateEngravingMode}"
                                                     class="btn btn-default">{{ _('Fast') }}</button>
                                             <button type="button" value="basic"
                                                     id="parameter_assignment_engraving_mode_basic_btn"
+                                                    data-bind="event: {click: updateEngravingMode}"
                                                     class="btn btn-default">{{ _('Basic') }}</button>
                                         </div>
                                     </div>
