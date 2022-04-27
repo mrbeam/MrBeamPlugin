@@ -2693,6 +2693,82 @@ $(function () {
             }
         };
 
+        self.get_gc_length_summary = function (svg) {
+            let summary = { vectors: {}, no_info: 0, bitmaps: [] };
+
+            const vectors = self.getStrokedVectors(svg);
+            let lastEnd = null;
+            vectors.forEach(function (e) {
+                const color = Snap.getRGB(e.attr("stroke")).hex;
+                const l = e.attr("mb:gc_length");
+                if (l) {
+                    if (!summary.vectors[color])
+                        summary.vectors[color] = {
+                            lengthInMM: 0,
+                            positioningInMM: 0,
+                        };
+                    summary.vectors[color].lengthInMM += parseFloat(l);
+                    if (lastEnd !== null) {
+                        let start = [
+                            parseFloat(e.attr("mb:start_x")),
+                            parseFloat(e.attr("mb:start_y")),
+                        ];
+                        const posLength = euclideanDistance(start, lastEnd);
+                        summary.vectors[color].positioningInMM += posLength;
+                    }
+                    lastEnd = [
+                        parseFloat(e.attr("mb:end_x")),
+                        parseFloat(e.attr("mb:end_y")),
+                    ];
+                } else {
+                    summary.no_info += 1;
+                }
+            });
+
+            const bitmaps = svg.selectAll("image.fillRendering");
+            bitmaps.forEach(function (b) {
+                const w = parseFloat(b.attr("mb:img_w"));
+                const h = parseFloat(b.attr("mb:img_h"));
+                const histogram = b
+                    .attr("mb:histogram")
+                    .split(",")
+                    .map((v) => parseInt(v));
+                const whitePixelRatio = parseFloat(
+                    b.attr("mb:whitePixelRatio")
+                );
+                const innerWhitePixelRatio = parseFloat(
+                    b.attr("mb:innerWhitePixelRatio")
+                );
+                const whitePixelsOutside = parseInt(
+                    b.attr("mb:whitePixelsOutside")
+                );
+                const brightnessChanges = parseInt(
+                    b.attr("mb:brightnessChanges")
+                );
+                const totalBrightnessChange = parseInt(
+                    b.attr("mb:totalBrightnessChange")
+                );
+                if (w && h && histogram) {
+                    summary.bitmaps.push({
+                        w: w,
+                        h: h,
+                        histogram: histogram,
+                        whitePixelRatio: whitePixelRatio,
+                        innerWhitePixelRatio: innerWhitePixelRatio,
+                        whitePixelsOutside: whitePixelsOutside,
+                        brightnessChanges: brightnessChanges,
+                        totalBrightnessChange: totalBrightnessChange,
+                    });
+                } else {
+                    summary.no_info += 1;
+                }
+            });
+
+            const items = vectors.length + bitmaps.length;
+            if (items > 0) summary.no_info = summary.no_info / items;
+            return summary;
+        };
+
         self._normalize_mb_id = function (id) {
             return id ? id.replace(/\s/g, "_") : "";
         };
@@ -2857,6 +2933,20 @@ $(function () {
                 }
             }
             return false;
+        };
+
+        self.getStrokedVectors = function (paper) {
+            let elements = paper.selectAll(".vector_outline");
+            let out = [];
+            for (var i = 0; i < elements.length; i++) {
+                var e = elements[i];
+                var stroke = e.attr("stroke");
+                var sw = e.attr("stroke-width");
+                if (stroke !== "none" && parseFloat(sw) > 0) {
+                    out.push(e);
+                }
+            }
+            return elements;
         };
 
         self.draw_gcode = function (points, intensity, target) {

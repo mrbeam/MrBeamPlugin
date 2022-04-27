@@ -472,6 +472,109 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         return prom;
     };
 
+    Element.prototype.renderJobTimeEstimationPNG = function (
+        wPT,
+        hPT,
+        wMM,
+        hMM
+    ) {
+        var elem = this;
+        console.debug(
+            `renderJobTimeEstimationPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm)`
+        );
+
+        // get svg as dataUrl
+        var svgDataUri = elem.toDataURL(); // TODO fix style="font-family:\"Allerta Stencil\"" quoting bug... needs to be 'Allerta Stencil'
+        // TODO fix href and src references. not copied from defs...
+        let bbox = elem.getBBox();
+        const pxPerMM = 1;
+
+        // init render canvas and attach to page
+        const canvas = document.createElement("canvas");
+        canvas.id = `renderCanvas_JobTimeEst`;
+        canvas.class = "renderCanvas";
+        canvas.width = bbox.w * pxPerMM;
+        canvas.height = bbox.h * pxPerMM;
+
+        if (MRBEAM_DEBUG_RENDERING) {
+            canvas.style =
+                "position: fixed; bottom: 0; left: 0; width: 95vw; border: 1px solid red;";
+            canvas.addEventListener("click", function () {
+                this.remove();
+            });
+        }
+        document.getElementsByTagName("body")[0].appendChild(canvas);
+        var renderCanvasContext = canvas.getContext("2d");
+        renderCanvasContext.fillStyle = "white"; // avoids one backend rendering step (has to be disabled in the backend)
+        renderCanvasContext.fillRect(0, 0, canvas.width, canvas.height);
+
+        let prom = loadImagePromise(svgDataUri)
+            .then(
+                function (imgTag) {
+                    let histogram = {};
+                    let whitePxRatio = 0;
+                    try {
+                        const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+                        const cx = bbox.x * srcScale;
+                        const cy = bbox.y * srcScale;
+                        const cw = bbox.w * srcScale;
+                        const ch = bbox.h * srcScale;
+
+                        renderCanvasContext.drawImage(
+                            imgTag,
+                            cx,
+                            cy,
+                            cw,
+                            ch,
+                            0,
+                            0,
+                            canvas.width,
+                            canvas.height
+                        );
+                        const canvasAnalysis = getCanvasAnalysis(canvas);
+                        histogram = canvasAnalysis.histogram;
+                        whitePxRatio = canvasAnalysis.whitePixelRatio;
+                    } catch (exception) {
+                        console.error(
+                            "renderCanvasContext.drawImage failed:",
+                            exception
+                        );
+                    }
+
+                    if (!MRBEAM_DEBUG_RENDERING) {
+                        canvas.remove();
+                    }
+                    return {
+                        bbox: bbox,
+                        histogram: histogram,
+                        whitePixelRatio: whitePxRatio,
+                    };
+                },
+                // after onerror
+                function (e) {
+                    // var len = svgDataUri ? svgDataUri.length : -1;
+                    var len = getDataUriSize(svgDataUri, "B");
+                    var msg =
+                        "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length: " +
+                        len +
+                        ")";
+                    console.error(msg, e);
+                    console.debug(
+                        "renderJobTimeEstimationPNG ERR: svgDataUri that failed to load: ",
+                        svgDataUri
+                    );
+                    if (!MRBEAM_DEBUG_RENDERING) {
+                        canvas.remove();
+                    }
+                }
+            )
+            .catch(function (error) {
+                console.error(error);
+            });
+
+        return prom;
+    };
+
     Element.prototype.fixIds = function (selector, srcIdAttr) {
         const root = this;
         let elemsToFix = root.selectAll(selector);

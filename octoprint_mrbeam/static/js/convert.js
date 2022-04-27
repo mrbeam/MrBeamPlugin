@@ -131,6 +131,68 @@ $(function () {
 
         self.hasCompressor = ko.observable(false);
 
+        // Job time estimation 2.0
+        self.gcode_length_summary = ko.observable(null);
+        self.estimated_job_time_trigger = ko.observable(0);
+        self.estimated_job_time = ko.computed(function () {
+            self.estimated_job_time_trigger(); // does nothing, but required to trigger the recalculation of the computed.
+            self.selected_material_thickness(); // same here
+            const summary = self.gcode_length_summary();
+
+            //            console.log("triggered");
+            if (summary !== null) {
+                const multicolor_data = self.get_current_multicolor_settings();
+                const engraving_data = self.get_current_engraving_settings();
+                const machinePerformanceData = self.profile.getMechanicalPerformanceData();
+                const dur = WorkingAreaHelper.get_estimated_gcode_duration(
+                    summary,
+                    multicolor_data,
+                    engraving_data,
+                    machinePerformanceData
+                );
+
+                const hrEngravingDur = dur.total.raster.hr;
+                const hrMovementDur = dur.total.positioning.hr;
+                let list = [];
+                list.push({
+                    label: "Engraving",
+                    duration: hrEngravingDur,
+                    bgr: "#ffffff",
+                    img: "/plugin/mrbeam/static/img/img_and_fills2.svg",
+                });
+                const hrVectorDur = Object.keys(dur.vectors).forEach(function (
+                    col
+                ) {
+                    list.push({
+                        label: "Path ",
+                        duration: dur.vectors[col].duration.hr,
+                        bgr: col,
+                        img: "/plugin/mrbeam/static/img/line_overlay.svg",
+                    });
+                });
+                list.push({
+                    label: "Movement",
+                    duration: hrMovementDur,
+                    bgr: "#383e42",
+                    img: "/plugin/mrbeam/static/img/position_movement.svg",
+                });
+
+                const hrTotal = dur.total.sum.hr;
+                return {
+                    val: dur,
+                    humanReadable: hrTotal,
+                    detailed_list: list,
+                };
+            } else {
+                return { val: -1, humanReadable: "-", verbose: "" };
+            }
+        });
+
+        self.recalcJobTime = function () {
+            console.info("recalc JTE", Date.now());
+            self.estimated_job_time_trigger(Date.now());
+        };
+
         self.expandMaterialSelector = ko.computed(function () {
             return (
                 self.selected_material() === null ||
