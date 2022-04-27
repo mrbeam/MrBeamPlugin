@@ -259,6 +259,13 @@ $(function () {
             return self.placedDesigns().length === 0;
         });
 
+        self.spinnerShow = function () {
+            $("body").addClass("activitySpinnerActive");
+        };
+        self.spinnerHide = function () {
+            $("body").removeClass("activitySpinnerActive");
+        };
+
         self.clear = function () {
             self.abortFreeTransforms();
             snap.selectAll("#userContent>*:not(defs)").remove();
@@ -655,7 +662,7 @@ $(function () {
         self.placeSVG = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
             cb = function (fragment) {
                 var duration_load = Date.now() - start_ts;
                 start_ts = Date.now();
@@ -747,7 +754,7 @@ $(function () {
         self.placeDXF = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
             cb = function (fragment, timestamps) {
                 var duration_load = timestamps.load_done
                     ? timestamps.load_done - start_ts
@@ -832,7 +839,7 @@ $(function () {
             origin = origin || "";
             start_ts = start_ts || Date.now();
 
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
 
             if (!analyticsData._skip) {
                 // this is a flag used by quickShape
@@ -1040,7 +1047,7 @@ $(function () {
                 analyticsData.duration_processing = Date.now() - start_ts;
                 self._analyticsPrepareAndInsertSVG(analyticsData);
                 setTimeout(function () {
-                    $("body").removeClass("activitySpinnerActive");
+                    self.spinnerHide();
                 }, 1);
             }
         };
@@ -2061,7 +2068,7 @@ $(function () {
         self.placeIMG = function (file, textMode) {
             var start_ts = Date.now();
             var url = self._getIMGserveUrl(file);
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
             var img = new Image();
             textMode = textMode || false;
             img.onload = function () {
@@ -2126,7 +2133,7 @@ $(function () {
                 self._analyticsPlaceImage(analyticsData);
 
                 // remove Activity Spinner
-                $("body").removeClass("activitySpinnerActive");
+                self.spinnerHide();
             };
             img.src = url;
         };
