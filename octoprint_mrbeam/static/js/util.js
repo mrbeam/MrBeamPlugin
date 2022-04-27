@@ -21,11 +21,11 @@ $(function () {
             var image = new Image();
             image.crossOrigin = "Anonymous"; // allow external links together with server side header Access-Control-Allow-Origin "*"
             image.onload = function () {
-                //                console.log("### img loaded", image);
+                // console.log("### img loaded", image);
                 resolve(image);
             };
             image.onerror = function (err) {
-                //                console.log("###", err, image);
+                // console.log("###", err, image);
                 reject(image, url, err);
             };
             image.src = url;

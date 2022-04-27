@@ -254,7 +254,6 @@ $(function () {
                     self.save_custom_material_name(
                         self.selected_material().name
                     );
-
                     self.save_custom_material_image(
                         self.selected_material().img
                     );
@@ -421,7 +420,7 @@ $(function () {
             }
             // sort before we store it.
             tmp.sort(self._thickness_sort_function);
-            new_material.colors[color] = {cut: tmp, engrave: engrave_setting};
+            new_material.colors[color] = { cut: tmp, engrave: engrave_setting };
 
             var data = {};
             data[key] = new_material;
@@ -462,7 +461,7 @@ $(function () {
                             gettext(
                                 "Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."
                             ),
-                            {br: "<br/>"}
+                            { br: "<br/>" }
                         ),
                         type: "error",
                         hide: true,
@@ -490,7 +489,7 @@ $(function () {
                             gettext(
                                 "Successfully restored %(number)d custom materials from file."
                             ),
-                            {number: Object.keys(materials).length}
+                            { number: Object.keys(materials).length }
                         ),
                         type: "info",
                         hide: true,
@@ -507,7 +506,7 @@ $(function () {
                             gettext(
                                 "Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."
                             ),
-                            {br: "<br/>"}
+                            { br: "<br/>" }
                         ),
                         type: "error",
                         hide: true,
@@ -598,7 +597,7 @@ $(function () {
                 //				console.log("closest color to " + hex, closest);
                 return material.colors[closest];
             } else {
-                return {engrave: self.no_engraving, cut: []};
+                return { engrave: self.no_engraving, cut: [] };
             }
         };
 
@@ -919,6 +918,7 @@ $(function () {
             }
             self.recalcJobTime();
         };
+
         self.apply_engraving_proposal = function () {
             var material = self.selected_material();
             var param_set = self.get_closest_color_params();
@@ -1726,7 +1726,7 @@ $(function () {
             if (self.dontRemindMeAgainChecked() == self.showFocusReminder()) {
                 let focusReminder = !self.dontRemindMeAgainChecked();
                 self.showFocusReminder(focusReminder);
-                let data = {focusReminder: focusReminder};
+                let data = { focusReminder: focusReminder };
                 OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
                     .done(function (response) {
                         self.settings.requestData();
@@ -1748,7 +1748,7 @@ $(function () {
                                     gettext(
                                         "Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."
                                     ),
-                                    {br: "<br/>"}
+                                    { br: "<br/>" }
                                 ),
                                 type: "error",
                                 hide: true,
@@ -1835,7 +1835,7 @@ $(function () {
                     gettext(
                         "Sorry but the %(designType)s can only be %(laserJob)s, which is not supported for this material."
                     ),
-                    {designType: designType, laserJob: valid}
+                    { designType: designType, laserJob: valid }
                 );
 
                 $("#empty_job_support_link").show();
@@ -2379,8 +2379,7 @@ $(function () {
         ],
         document.getElementById("dialog_vector_graphics_conversion"),
     ]);
-})
-;
+});
 
 window.mrbeam.colorDragging = {
     // Drag functions outside the viewmodel are way less complicated
