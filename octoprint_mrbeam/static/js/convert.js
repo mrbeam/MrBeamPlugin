@@ -917,6 +917,7 @@ $(function () {
                     .find(".param_cut_compressor")
                     .val(p.cut_compressor || 3); // Fall back to 100%
             }
+            self.recalcJobTime();
         };
         self.apply_engraving_proposal = function () {
             var material = self.selected_material();
@@ -946,6 +947,7 @@ $(function () {
             self.engravingCompressor(
                 p.eng_compressor || self.JOB_PARAMS.default.engCompressor
             ); // Here we pass the value of the range (0), not the real one (10%)
+            self.recalcJobTime();
         };
 
         self._find_closest_color_to = function (hex, available_colors) {
@@ -2223,12 +2225,18 @@ $(function () {
                         line_mapping_container.append(outer);
                         $("#" + slider_id + "_out").append(color_circle);
                         $("#" + slider_id + "_out").append(slider);
+                        $("#" + slider_id + "_out input#" + slider_id).change(
+                            function () {
+                                self.recalcJobTime();
+                            }
+                        );
                     }
                 }
             }
             // remove all slider still flagged
             $("#colored_line_mapping >." + classFlag).remove();
             self.show_line_color_mappings(show_line_mappings);
+            self.recalcJobTime();
         };
 
         self.setInputLimits = function () {
@@ -2337,8 +2345,10 @@ $(function () {
 
         // quick hack
         self._update_job_summary = function () {
-            var jobs = self.get_current_multicolor_settings();
-            self.vectorJobs(jobs);
+            console.info(" #### update_job_summary");
+            self.recalcJobTime();
+            //            var jobs = self.get_current_multicolor_settings();
+            //            self.vectorJobs(jobs);
         };
 
         self._thickness_sort_function = function (a, b) {
