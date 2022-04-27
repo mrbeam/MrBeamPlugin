@@ -1154,7 +1154,6 @@ $(function () {
             self.showTransformHandles(file.previewId, true);
 
             var mb_meta = self._set_mb_attributes(svg);
-            // svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
         };
 
         /**

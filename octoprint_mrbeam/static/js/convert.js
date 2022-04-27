@@ -1293,30 +1293,6 @@ $(function () {
                 }
             });
 
-            // $('.job_row_vector').each(function(i, job){
-            // 	var intensity_user = $(job).find('.param_intensity').val();
-            // 	var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
-            // 	var feedrate = $(job).find('.param_feedrate').val();
-            // 	var piercetime = $(job).find('.param_piercetime').val();
-            // 	var passes = $(job).find('.param_passes').val();
-            // 	if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
-            // 		$(job).find('.used_color').each(function(j, col){
-            // 			var hex = '#' + $(col).attr('id').substr(-6);
-            // 			data.push({
-            // 				color: hex,
-            // 				intensity: intensity,
-            // 				intensity_user: intensity_user,
-            // 				feedrate: feedrate,
-            // 				pierce_time: piercetime,
-            // 				passes: passes,
-            //                 engrave: false
-            // 			});
-            // 		});
-            // 	} else {
-            // 		console.log("Skipping vector job ("+1+"), invalid parameters.");
-            // 	}
-            // });
-
             return data;
         };
 

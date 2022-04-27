@@ -352,8 +352,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM}`
         );
 
-        let bboxFromElem = elem.getBBox();
-
         let bbox; // attention, this bbox uses viewBox coordinates (mm)
         if (renderBBoxMM === null) {
             // warning: correct result depends upon all resources (img, fonts, ...) have to be fully loaded already.
