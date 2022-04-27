@@ -1103,6 +1103,8 @@ $(function () {
             self.text_placed(self.workingArea.hasTextItems());
             self.color_key_update();
 
+            // Job Time Estimation 2.0
+            self.doFrontendRendering(true); // initial rendering for job time estimation
             self._update_job_summary();
 
             if (self.show_vector_parameters() || self.show_image_parameters()) {
@@ -1775,7 +1777,26 @@ $(function () {
             self.workingArea.move_laser_to_xy(x, y);
         };
 
-        self.convert = function () {
+        self.doFrontendRendering = async function (forceRastering = false) {
+            const pixPerMM = 1 / self.beamDiameter();
+            //            console.info(
+            //                "### renderInput: do_raster_engrave",
+            //                self.do_raster_engrave()
+            //            );
+            const enableRastering = forceRastering || self.do_raster_engrave();
+            const renderOutput = await self.workingArea.getCompositionSVG(
+                enableRastering,
+                pixPerMM
+            );
+            //            console.info(
+            //                "### renderOutput",
+            //                renderOutput.jobTimeEstimationData
+            //            );
+            self.svg = renderOutput.renderedSvg;
+            self.gcode_length_summary(renderOutput.jobTimeEstimationData);
+        };
+
+        self.convert = async function () {
             if (
                 self.gcodeFilesToAppend.length === 1 &&
                 self.svg === undefined
@@ -1822,116 +1843,93 @@ $(function () {
                 if (self._allParametersSet()) {
                     //self.update_colorSettings();
                     self.slicing_in_progress(true);
-                    var pixPerMM = 1 / self.beamDiameter();
-                    snap.select("#userContent").embed_gc(
-                        self.workingArea.flipYMatrix(),
-                        self.workingArea.gc_options(),
-                        self.workingArea.gc_meta
-                    ); // hack
-                    self.workingArea.getCompositionSVG(
-                        self.do_raster_engrave(),
-                        pixPerMM,
-                        self.engrave_outlines(),
-                        function (composition) {
-                            self.svg = composition;
-                            var filename = self.gcodeFilename();
-                            var gcodeFilename =
-                                self._sanitize(filename) + ".gco";
-                            var multicolor_data = self.get_current_multicolor_settings(
-                                true
-                            );
-                            var engraving_data = self.get_current_engraving_settings(
-                                true
-                            );
-                            var advancedSettings = self.is_advanced_settings_checked();
-                            var colorStr =
-                                "<!--COLOR_PARAMS_START" +
-                                JSON.stringify(multicolor_data) +
-                                "COLOR_PARAMS_END-->";
-                            var material = self.get_current_material_settings();
-                            var design_files = self.get_design_files_info();
-                            var data = {
-                                command: "convert",
-                                engrave: self.do_raster_engrave(),
-                                vector: multicolor_data,
-                                raster: engraving_data,
-                                slicer: "svgtogcode",
-                                gcode: gcodeFilename,
-                                material: material,
-                                design_files: design_files,
-                                advanced_settings: advancedSettings,
-                            };
+                    self.doFrontendRendering(); // final rendering for backend handover
 
-                            if (self.svg !== undefined) {
-                                // TODO place comment within initial <svg > tag.
-                                data.svg = colorStr + "\n" + self.svg;
-                            } else {
-                                data.svg =
-                                    colorStr +
-                                    "\n" +
-                                    '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
-                            }
-                            if (self.gcodeFilesToAppend !== undefined) {
-                                data.gcodeFilesToAppend =
-                                    self.gcodeFilesToAppend;
-                            }
-
-                            var json = JSON.stringify(data);
-                            var length = json.length;
-                            console.log(
-                                "Conversion: " +
-                                length +
-                                " bytes have to be converted."
-                            );
-                            $.ajax({
-                                url: "plugin/mrbeam/convert",
-                                type: "POST",
-                                dataType: "json",
-                                contentType: "application/json; charset=UTF-8",
-                                data: json,
-                                success: function (response) {
-                                    console.log(
-                                        "Conversion started.",
-                                        response
-                                    );
-                                },
-                                error: function (
-                                    jqXHR,
-                                    textStatus,
-                                    errorThrown
-                                ) {
-                                    self.slicing_in_progress(false);
-                                    console.error(
-                                        "Conversion failed with status " +
-                                        jqXHR.status,
-                                        textStatus,
-                                        errorThrown
-                                    );
-                                    if (jqXHR.status != 401) {
-                                        if (length > 10000000) {
-                                            console.error(
-                                                "JSON size " +
-                                                length +
-                                                "Bytes may be over the request maximum."
-                                            );
-                                        }
-                                        new PNotify({
-                                            title: gettext("Conversion failed"),
-                                            text: _.sprintf(
-                                                gettext(
-                                                    "Unable to start the conversion in the backend. Please try reloading this page or restarting Mr Beam.%(br)s%(br)sContent length was %(length)s bytes."
-                                                ),
-                                                {length: length, br: "<br/>"}
-                                            ),
-                                            type: "error",
-                                            tag: "conversion_error",
-                                            hide: false,
-                                        });
-                                    }
-                                },
-                            });
-                        }
+                    var filename = self.gcodeFilename();
+                    var gcodeFilename = self._sanitize(filename) + ".gco";
+                    var multicolor_data = self.get_current_multicolor_settings(
+                        true
                     );
+                    var engraving_data = self.get_current_engraving_settings(
+                        true
+                    );
+                    var advancedSettings = self.is_advanced_settings_checked();
+                    var colorStr =
+                        "<!--COLOR_PARAMS_START" +
+                        JSON.stringify(multicolor_data) +
+                        "COLOR_PARAMS_END-->";
+                    var material = self.get_current_material_settings();
+                    var design_files = self.get_design_files_info();
+                    var data = {
+                        command: "convert",
+                        engrave: self.do_raster_engrave(),
+                        vector: multicolor_data,
+                        raster: engraving_data,
+                        slicer: "svgtogcode",
+                        gcode: gcodeFilename,
+                        material: material,
+                        design_files: design_files,
+                        advanced_settings: advancedSettings,
+                        job_time_estimation: self.estimated_job_time(),
+                    };
+
+                    if (self.svg !== undefined) {
+                        // TODO place comment within initial <svg > tag.
+                        data.svg = colorStr + "\n" + self.svg;
+                    } else {
+                        data.svg =
+                            colorStr +
+                            "\n" +
+                            '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
+                    }
+                    if (self.gcodeFilesToAppend !== undefined) {
+                        data.gcodeFilesToAppend = self.gcodeFilesToAppend;
+                    }
+
+                    var json = JSON.stringify(data);
+                    var length = json.length;
+                    console.log(
+                        "Conversion: " + length + " bytes have to be converted."
+                    );
+                    $.ajax({
+                        url: "plugin/mrbeam/convert",
+                        type: "POST",
+                        dataType: "json",
+                        contentType: "application/json; charset=UTF-8",
+                        data: json,
+                        success: function (response) {
+                            console.log("Conversion started.", response);
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            self.slicing_in_progress(false);
+                            console.error(
+                                "Conversion failed with status " + jqXHR.status,
+                                textStatus,
+                                errorThrown
+                            );
+                            if (jqXHR.status != 401) {
+                                if (length > 10000000) {
+                                    console.error(
+                                        "JSON size " +
+                                            length +
+                                            "Bytes may be over the request maximum."
+                                    );
+                                }
+                                new PNotify({
+                                    title: gettext("Conversion failed"),
+                                    text: _.sprintf(
+                                        gettext(
+                                            "Unable to start the conversion in the backend. Please try reloading this page or restarting Mr Beam.%(br)s%(br)sContent length was %(length)s bytes."
+                                        ),
+                                        { length: length, br: "<br/>" }
+                                    ),
+                                    type: "error",
+                                    tag: "conversion_error",
+                                    hide: false,
+                                });
+                            }
+                        },
+                    });
                 } else {
                     console.log("Conversion parameter missing");
                     new PNotify({

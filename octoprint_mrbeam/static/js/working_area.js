@@ -2573,16 +2573,24 @@ $(function () {
             self._updateTransformationButtons();
         };
 
-        self.getCompositionSVG = function (
-            fillAreas,
-            pxPerMM,
-            engraveStroke,
-            callback
-        ) {
+        /**
+         *
+         * @param {boolean} fillAreas: flag if rastering has to be done or not
+         * @param {number} pxPerMM: resolution used for rastering text, images and filled paths
+         * @returns {object}: {renderedSvg: result as string, jobTimeEstimationData: pathLengths & image summary, renderParams: params used for creation}
+         */
+        self.getCompositionSVG = async function (fillAreas, pxPerMM) {
+            // stop ongoing operations
             self.abortFreeTransforms();
+
+            self.spinnerShow();
+            const renderStart = Date.now();
+            console.log(`Frontend rendering startet ...`);
+
+            // create svg to do the rendering within
             var wMM = self.workingAreaWidthMM();
             var hMM = self.workingAreaHeightMM();
-            var wPT = (wMM * 90) / 25.4; // TODO ... switch to 96dpi ?
+            var wPT = (wMM * 90) / 25.4; // TODO ... switch to 96dpi ? Or even to mm?
             var hPT = (hMM * 90) / 25.4;
             var compSvg = self.getNewSvg("compSvg", wPT, hPT);
             var namespaces = self._getDocumentNamespaceAttributes(snap);
@@ -2590,17 +2598,21 @@ $(function () {
             var attrs = {};
             var content = compSvg.g(attrs);
 
-            // TODO: here getBBox() should be reliably sized, but contains a lot of non renderable stuff.
-            let contentBBox = snap.select("#userContent").getBBox();
-            console.log("contentBBox", contentBBox);
+            // render paths and embed the resulting gcode
+            snap.select("#userContent").embed_gc(
+                self.flipYMatrix(),
+                self.gc_options(),
+                self.gc_meta
+            );
+
+            // copy all stuff placed by the user on the working area to the compSvg, cleanup afterwards and fill <defs> tag and fix references
             var userContent = snap.select("#userContent").clone();
             content.append(userContent);
             compSvg.selectAll(".deleteBeforeRendering").remove();
             const targetDefs = compSvg.select("svg>defs");
 
-            // if text in document
+            // if text in document embed the fonts as dataUris, copy textPaths and fix id references
             if (userContent.selectAll(".userText").length > 0) {
-                // embed the fonts as dataUris
                 $("#compSvg defs").append(
                     '<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>'
                 );
@@ -2608,7 +2620,6 @@ $(function () {
                     compSvg.select(".quickTextFontPlaceholder").node
                 );
 
-                // copy curved textPaths to defs
                 const allTextPaths = snap.selectAll(
                     "defs>.quicktext_curve_path"
                 );
@@ -2617,7 +2628,6 @@ $(function () {
                     const original_id = tp.attr("id");
                     const clone = tp.clone();
                     const destTextPath = clone.appendTo(targetDefs);
-                    // restore id to keep references working
                     destTextPath.attr({
                         id: original_id,
                         "mb:id": original_id,
@@ -2625,39 +2635,68 @@ $(function () {
                 }
             }
 
-            // embed filters
+            // for bitmaps: embed filters
             // copy defs for filters (e.g. imgCropping, imgSharpening, etc...)
             var originalFilters = snap.selectAll("defs>filter");
             for (let i = 0; i < originalFilters.length; i++) {
                 const original_id = originalFilters[i].attr("id");
                 const clone = originalFilters[i].clone();
                 const destFilter = clone.appendTo(targetDefs);
-                // restore id to keep references working
                 destFilter.attr({ id: original_id, "mb:id": original_id });
             }
 
-            // embed Images
-            self._embedAllImages(content).then(function (allEmbeddedImages) {
-                self.rasterInfill(
-                    compSvg,
-                    namespaces,
-                    wPT,
-                    hPT,
-                    fillAreas,
-                    wMM,
-                    hMM,
-                    pxPerMM,
-                    function (svgWithRenderedInfill) {
-                        callback(
-                            self._finalizeBackendSVG(
-                                svgWithRenderedInfill,
-                                namespaces
-                            )
-                        );
-                        $("#compSvg").remove();
-                    }
-                );
-            });
+            // replace linked images with embedded dataUrls
+            let allEmbeddedImages = await self._embedAllImages(content);
+            //console.log(`allEmbeddedImages: ${allEmbeddedImages}`);
+
+            //
+            let svgWithRenderedInfill = await self.rasterInfill(
+                compSvg,
+                namespaces,
+                wPT,
+                hPT,
+                fillAreas,
+                wMM,
+                hMM,
+                pxPerMM
+            );
+            // console.log(`svgWithRenderedInfill ${svgWithRenderedInfill}}`);
+            const svgStr = self._finalizeBackendSVG(
+                svgWithRenderedInfill,
+                namespaces
+            );
+
+            //
+            const length_summary = self.get_gc_length_summary(compSvg);
+            console.log(length_summary);
+            $("#compSvg").remove();
+
+            // hide spinner
+            const renderEnd = Date.now();
+            console.log(
+                `Frontend rendering finished in ${
+                    renderEnd - renderStart
+                } millis`
+            );
+
+            self.spinnerHide();
+
+            const params = {
+                fillAreas: fillAreas,
+                pxPerMM: pxPerMM,
+                wMM: wMM,
+                hMM: hMM,
+                wPT: wPT,
+                hPT: hPT,
+                gcFlipMatrix: self.flipYMatrix(),
+                gcOptions: self.gc_options(),
+                gcMeta: self.gc_meta,
+            };
+            return {
+                renderedSvg: svgStr,
+                jobTimeEstimationData: length_summary,
+                renderParams: params,
+            };
         };
 
         self._finalizeBackendSVG = function (compSvg, namespaces) {
@@ -3170,8 +3209,13 @@ $(function () {
                         hMM,
                         pxPerMM,
                         renderBBoxMM
-                    ); // returns { dataUrl: fillBitmap, size: size, bbox: bbox, clusterIndex:clusterIndex };
+                    );
+                    // returns { dataUrl: fillBitmap, size: size, bbox: bbox, clusterIndex:clusterIndex };
                     if (rasterResult.dataUrl !== null) {
+                        console.info(
+                            "cluster rastered",
+                            rasterResult.clusterIndex
+                        );
                         const x = rasterResult.bbox.x;
                         const y = rasterResult.bbox.y;
                         const w = rasterResult.bbox.w;
@@ -3183,7 +3227,28 @@ $(function () {
                             w,
                             h
                         );
-                        fillImage.attr("id", `fillRendering${clusterIndex}`);
+
+                        // total path length of engraving line by line
+                        const gcLength = w * h * pxPerMM + h; // contains enlargement of bbox due to webfont loading bug.
+                        fillImage.attr({
+                            id: `fillRendering${clusterIndex}`,
+                            "mb:img_w": w, // for Job Time Estimation 2.0
+                            "mb:img_h": h,
+                            "mb:histogram": rasterResult.analysis.histogram,
+                            "mb:whitePixelRatio":
+                                rasterResult.analysis.whitePixelRatio,
+                            "mb:innerWhitePixelRatio":
+                                rasterResult.analysis.innerWhitePixelRatio,
+                            "mb:whitePixelsOutside":
+                                rasterResult.analysis.whitePixelsAtTheOutside,
+                            "mb:brightnessChanges":
+                                rasterResult.analysis.brightnessChanges,
+                            "mb:totalBrightnessChange":
+                                rasterResult.analysis.totalBrightnessChange,
+                            "mb:gc_length": gcLength,
+                            class: "fillRendering",
+                        });
+                        console.info(`rastered ${fillImage.node}`);
                     }
                     return rasterResult;
                 })
@@ -3209,10 +3274,20 @@ $(function () {
             fillAreas,
             wMM,
             hMM,
-            pxPerMM,
-            callback
+            pxPerMM
         ) {
             let clusters = svg.splitRasterClusters(fillAreas);
+
+            // only render clusters overlapping the working area
+            const waBB = snap.select("#coordGrid").getBBox();
+            clusters = clusters.filter(function (c, idx) {
+                const isInside = Snap.path.isBBoxIntersect(c.bbox, waBB);
+                if (!isInside)
+                    console.info(
+                        `Cluster ${idx} is outside workingArea. Skipping`
+                    );
+                return isInside;
+            });
 
             if (MRBEAM_DEBUG_RENDERING) {
                 debugBase64(
@@ -3256,41 +3331,42 @@ $(function () {
                     }
                 }
             }
-
             if (fillAreas) {
-                self._rasterAndEmbedResult(
-                    svg,
-                    clusters,
-                    svgWidthPT,
-                    svgHeightPT,
-                    wMM,
-                    hMM,
-                    pxPerMM
-                ).then(function (rasterResults) {
-                    // remove filled elements / respectively fillings of elements after embedding raster result
-                    for (let i = 0; i < rasterResults.length; i++) {
-                        const result = rasterResults[i];
-                        const cluster = clusters[result.clusterIndex];
-                        for (let e = 0; e < cluster.elements.length; e++) {
-                            let elem = cluster.elements[e];
-                            elem.unfillOrRemove();
+                let prom = self
+                    ._rasterAndEmbedResult(
+                        svg,
+                        clusters,
+                        svgWidthPT,
+                        svgHeightPT,
+                        wMM,
+                        hMM,
+                        pxPerMM
+                    )
+                    .then(function (rasterResults) {
+                        // remove filled elements / respectively fillings of elements after embedding raster result
+                        for (let i = 0; i < rasterResults.length; i++) {
+                            const result = rasterResults[i];
+                            const cluster = clusters[result.clusterIndex];
+                            for (let e = 0; e < cluster.elements.length; e++) {
+                                let elem = cluster.elements[e];
+                                elem.unfillOrRemove();
+                            }
                         }
-                    }
-                    svg.selectAll(".deleteAfterRendering").remove();
-                    if (typeof callback === "function") {
-                        callback(svg);
+                        svg.selectAll(".deleteAfterRendering").remove();
+
                         if (MRBEAM_DEBUG_RENDERING) {
                             debugBase64(
                                 svg.toDataURL(),
                                 "Step 3: SVG with fill rendering"
                             );
                         }
-                    }
-                    self._cleanup_render_mess();
-                });
-            } else {
-                callback(svg);
+
+                        self._cleanup_render_mess();
+                        return svg;
+                    });
+                return prom;
             }
+            return Promise.resolve(svg);
         };
 
         self._cleanup_render_mess = function () {
