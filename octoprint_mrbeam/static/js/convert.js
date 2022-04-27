@@ -1207,6 +1207,8 @@ $(function () {
                         ).length > 0
                     ) {
                         var hex = "#" + $(el).attr("id").substr(-6);
+                        console.info(`job_row_engr_vec: ${hex}`);
+
                         data.push({
                             color: hex,
                             intensity: intensity,
@@ -1224,8 +1226,8 @@ $(function () {
                 } else {
                     console.log(
                         "Skipping line engrave job (" +
-                        hex +
-                        "), invalid parameters."
+                            hex +
+                            "), invalid parameters."
                     );
                 }
             });
@@ -1266,6 +1268,7 @@ $(function () {
                         .find(".used_color")
                         .each(function (j, col) {
                             var hex = "#" + $(col).attr("id").substr(-6);
+                            // console.info(`job_row_vector ${i}: ${hex}`);
                             data.push({
                                 color: hex,
                                 intensity: intensity,
@@ -1279,8 +1282,13 @@ $(function () {
                             });
                         });
                 } else {
-                    console.log(
-                        "Skipping vector job (" + i + "), invalid parameters."
+                    console.info(
+                        `Skipping vector job ${i}, invalid parameters (${[
+                            intensity_user,
+                            feedrate,
+                            passes,
+                            piercetime,
+                        ]}).`
                     );
                 }
             });

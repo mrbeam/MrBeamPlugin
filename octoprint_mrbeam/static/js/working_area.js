@@ -3174,7 +3174,7 @@ $(function () {
             // TODO... improve selector to catch href & xlink:href (https://stackoverflow.com/questions/23034283/is-it-possible-to-use-htmls-queryselector-to-select-by-xlink-attribute-in-an)
             // var allImages snap.selectAll("#userContent image[*|href]");
             var allImages = svg.selectAll("image");
-            console.log(`embedding Images 0/${allImages.length}}`);
+            console.log(`embedding Images 0/${allImages.length}`);
 
             let pAll = await Promise.all(
                 allImages.items.map(async (elem, idx) => {

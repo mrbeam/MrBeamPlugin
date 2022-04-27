@@ -261,7 +261,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             elem.type !== "tspan" &&
             elem.type !== "image"
         ) {
-            console.warn(`Element ${elem} is not a native type. Skip.`);
+            console.warn(`Element ${elem.type} is not a native type. Skip.`);
             return false;
         }
 
@@ -301,7 +301,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             return Promise.resolve(elem);
         }
         if (url === null || url.startsWith("data:")) {
-            console.info(`embedImage: nothing do to. Url was ${url}`);
+            console.info(`embedImage: nothing do to. Url was "${url}"`);
             return Promise.resolve(elem);
         }
 
