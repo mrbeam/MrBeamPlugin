@@ -281,6 +281,7 @@ $(function () {
         };
 
         self.getUsedColors = function (elem) {
+            // TODO rewrite as snap plugin
             elem = !elem
                 ? snap.select("#userContent")
                 : typeof elem === "string"
@@ -302,6 +303,7 @@ $(function () {
         };
 
         self._getColorsOfSelector = function (
+            // TODO rewrite as snap plugin using is_stroked()
             selector,
             color_attr = "stroke",
             elem = null
@@ -2321,6 +2323,7 @@ $(function () {
             return [destWidthMM, destHeightMM];
         };
 
+        // TODO not used? Check removal
         self.getDocumentDimensionsInPt = function (
             doc_width,
             doc_height,
@@ -2699,6 +2702,7 @@ $(function () {
         };
 
         self._finalizeBackendSVG = function (compSvg, namespaces) {
+            // TODO check if viewbox, naespaces are already handled by getCompositionSVG()
             // set viewBox
             const wMM = self.workingAreaWidthMM();
             const hMM = self.workingAreaHeightMM();
@@ -2980,6 +2984,7 @@ $(function () {
             let out = [];
             for (var i = 0; i < elements.length; i++) {
                 var e = elements[i];
+                // TODO use is_stroked() from render_fills
                 var stroke = e.attr("stroke");
                 var sw = e.attr("stroke-width");
                 if (stroke !== "none" && parseFloat(sw) > 0) {
