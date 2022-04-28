@@ -192,6 +192,14 @@ $(function () {
             console.info("recalc JTE", Date.now());
             self.estimated_job_time_trigger(Date.now());
         };
+        self.showJobTimeEstimation = ko.computed(function () {
+            return (
+                !self.slicing_in_progress() &&
+                self.selected_material() !== null &&
+                self.selected_material_color() !== null &&
+                self.selected_material_thickness() !== null
+            );
+        });
 
         self.expandMaterialSelector = ko.computed(function () {
             return (
