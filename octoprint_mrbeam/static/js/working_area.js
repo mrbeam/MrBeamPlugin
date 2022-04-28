@@ -1276,10 +1276,10 @@ $(function () {
                     // like this: xmlns:x="&ns_extend;"
                     // We replace it to xmlns:x="ENTITYREF_ns_extend"
                     if (attr.value.match(/^&.+;$/)) {
-                        if (attr.name == "xmlns") {
+                        if (attr.name === "xmlns") {
                             namespaces[attr.name] =
                                 "http://www.w3.org/2000/svg";
-                        } else if (attr.name == "xmlns:xlink") {
+                        } else if (attr.name === "xmlns:xlink") {
                             // not sure if this is important
                             namespaces[attr.name] =
                                 "http://www.w3.org/1999/xlink";

@@ -2341,8 +2341,8 @@ $(function () {
         };
 
         self._thickness_sort_function = function (a, b) {
-            t_a = a.thicknessMM < 0 ? 99999 : a.thicknessMM;
-            t_b = b.thicknessMM < 0 ? 99999 : b.thicknessMM;
+            const t_a = a.thicknessMM < 0 ? 99999 : a.thicknessMM;
+            const t_b = b.thicknessMM < 0 ? 99999 : b.thicknessMM;
             return t_a - t_b;
         };
 
