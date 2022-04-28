@@ -132,7 +132,7 @@ $(function () {
             self.softwareUpdate.checking(true);
             OctoPrint.postJson("plugin/mrbeam/info/update", {user:user_clicked})
                 .done(function (response) {
-                    self.fromCheckResponse(response, ignoreSeen, showIfNothingNew);
+                    self.softwareUpdate.fromCheckResponse(response, ignoreSeen, showIfNothingNew);
                 })
                 .fail(function (error) {
                     console.error("Unable to reload update info.");
