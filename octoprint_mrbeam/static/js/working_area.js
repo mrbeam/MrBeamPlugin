@@ -904,7 +904,7 @@ $(function () {
             }
 
             try {
-                // bake() kills gradients because gradient coordinates are not transformed.
+                // bug: bake() kills gradients because gradient coordinates are not transformed.
                 var switches = $.extend(
                     {
                         showTransformHandles: true,
@@ -1084,8 +1084,7 @@ $(function () {
                 "switch",
                 "#adobe_illustrator_pgf",
             ];
-            //			var unsupportedElems = ['flowRoot', 'switch', '#adobe_illustrator_pgf'];
-            //
+
             for (var i = 0; i < unsupportedElems.length; i++) {
                 var myElem = fragment.selectAll(unsupportedElems[i]);
                 if (myElem.length !== 0) {
@@ -3743,26 +3742,6 @@ $(function () {
             $("#qt_round_text_section").removeClass("straight");
             self._qt_setCirclePath(false, 30);
         });
-        //        /**
-        //         * callback/subscription for the circle direction toggler
-        //         */
-        //        $("#quick_text_dialog_clockwise").on("click", function (event) {
-        //            event.target
-        //                .closest(".mini_switch")
-        //                .classList.toggle("counterclockwise");
-        //            if (self.currentQuickTextFile) {
-        //                self.currentQuickTextFile.clockwise = !event.target
-        //                    .closest(".mini_switch")
-        //                    .classList.contains("counterclockwise");
-        //                $("#qt_round_text_section").toggleClass(
-        //                    "clockwise",
-        //                    self.currentQuickTextFile.clockwise
-        //                );
-        //                self.lastQuickTextClockwise =
-        //                    self.currentQuickTextFile.clockwise;
-        //                self._qt_currentQuickTextUpdate();
-        //            }
-        //        });
 
         /**
          * callback for the next font button

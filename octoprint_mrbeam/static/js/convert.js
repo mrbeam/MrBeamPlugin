@@ -1779,19 +1779,11 @@ $(function () {
 
         self.doFrontendRendering = async function (forceRastering = false) {
             const pixPerMM = 1 / self.beamDiameter();
-            //            console.info(
-            //                "### renderInput: do_raster_engrave",
-            //                self.do_raster_engrave()
-            //            );
             const enableRastering = forceRastering || self.do_raster_engrave();
             const renderOutput = await self.workingArea.getCompositionSVG(
                 enableRastering,
                 pixPerMM
             );
-            //            console.info(
-            //                "### renderOutput",
-            //                renderOutput.jobTimeEstimationData
-            //            );
             self.svg = renderOutput.renderedSvg;
             self.gcode_length_summary(renderOutput.jobTimeEstimationData);
         };

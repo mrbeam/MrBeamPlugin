@@ -24,49 +24,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
      * @returns {set} set of elements to be rastered.
      */
 
-    Element.prototype.removeUnfilled = function (fillPaths) {
-        var elem = this;
-        var selection = [];
-        var children = elem.children();
-
-        var goRecursive =
-            elem.type !== "defs" && // ignore these tags
-            elem.type !== "clipPath" &&
-            elem.type !== "metadata" &&
-            elem.type !== "desc" &&
-            elem.type !== "text" &&
-            elem.type !== "rdf:rdf" &&
-            elem.type !== "cc:work" &&
-            elem.type !== "sodipodi:namedview" &&
-            children.length > 0;
-
-        if (goRecursive) {
-            for (var i = 0; i < children.length; i++) {
-                var child = children[i];
-                selection = selection.concat(child.removeUnfilled(fillPaths));
-            }
-        } else {
-            if (
-                elem.type === "image" ||
-                elem.type === "text" ||
-                elem.type === "textPath" //||
-                //                elem.type === "#text"
-            ) {
-                selection.push(elem);
-            } else {
-                if (fillPaths && elem.is_filled()) {
-                    //                    elem.attr("stroke", "none");
-                    selection.push(elem);
-                } else {
-                    if (elem.type !== "#text" && elem.type !== "defs") {
-                        elem.remove();
-                    }
-                }
-            }
-        }
-        return selection;
-    };
-
     Element.prototype.markFilled = function (className, fillPaths) {
         var elem = this;
         var selection = [];
