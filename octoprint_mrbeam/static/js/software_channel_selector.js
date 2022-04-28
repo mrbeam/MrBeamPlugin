@@ -129,6 +129,7 @@ $(function () {
             button.addClass("sticky-footer");
         };
         self.reload_update_info = function(showIfNothingNew, force, ignoreSeen, user_clicked=false){
+            self.softwareUpdate.checking(true);
             OctoPrint.postJson("plugin/mrbeam/info/update", {user:user_clicked})
                 .done(function (response) {
                     self.fromCheckResponse(response, ignoreSeen, showIfNothingNew);
@@ -136,6 +137,9 @@ $(function () {
                 .fail(function (error) {
                     console.error("Unable to reload update info.");
                     self.analytics.send_fontend_event("update_info_call_failure", {error_message: error})
+                })
+                .always(function(){
+                    self.softwareUpdate.checking(false);
                 });
         }
     }
