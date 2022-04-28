@@ -79,7 +79,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             return [];
         }
 
-        if (children.length > 0) {
+        if (children.length > 0 && elem.type !== "text") {
             var goRecursive =
                 elem.type !== "defs" && // ignore these tags
                 elem.type !== "clipPath" &&
@@ -184,95 +184,113 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             clusters = clusters.filter((c) => c !== null);
             if (lastOverlap === -1) {
                 // create new cluster
-                clusters.push({ bbox: bbox, elements: [rasterEl] });
+                clusters.push({
+                    bbox: bbox,
+                    elements: [rasterEl],
+                    idx: clusterCount,
+                });
                 clusterCount++;
             }
         }
 
-        for (let c = 0; c < clusters.length; c++) {
-            let cluster = clusters[c];
+        clusters.forEach((cluster) => {
             cluster.elements.forEach((rasterEl) =>
-                rasterEl.addClass(`rasterCluster${c}`)
+                rasterEl.addClass(`rasterCluster${cluster.idx}`)
             );
-            let tmpSvg = svg.clone();
-            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).forEach((element) => {
-                let elementToBeRemoved = tmpSvg.select('#' + element.attr('id'));
-                let elementsToBeExcluded = ["text", "tspan"]
-                if (elementToBeRemoved && !elementsToBeExcluded.includes(elementToBeRemoved.type)) {
-                    elementToBeRemoved.remove();
-                }
-            });
-            // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
-            tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
-            // DON'T fix IDs of textPath references, they're cloned correct.
-            //tmpSvg.fixIds("defs .quicktext_curve_path", "[mb\\:id]");
-            cluster.svg = tmpSvg;
-        }
-        //console.log("Clusters", clusters);
+        });
         return clusters;
     };
 
     Element.prototype.is_filled = function () {
         var elem = this;
 
-        // TODO text support
-        // TODO opacity support
-        if (
-            elem.type !== "circle" &&
-            elem.type !== "rect" &&
-            elem.type !== "ellipse" &&
-            elem.type !== "line" &&
-            elem.type !== "polygon" &&
-            elem.type !== "polyline" &&
-            elem.type !== "path"
-        ) {
-            return false;
-        }
-
-        var fill = elem.attr("fill");
-        var opacity = elem.attr("fill-opacity");
-
-        if (fill !== "none") {
-            if (opacity === null || opacity > 0) {
-                return true;
+        if (elem.type === "text") {
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                return false;
             }
+            const fill = window.getComputedStyle(elem.node)["fill"];
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["fill-opacity"]
+            );
+            if (fill === "none" || opacity === 0) {
+                return false;
+            }
+            return true;
         }
+
+        if (elem.type === "image") {
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                return false;
+            }
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["opacity"]
+            );
+            if (opacity === 0) {
+                return false;
+            }
+            return true;
+        }
+
+        if (
+            elem.type === "circle" ||
+            elem.type === "rect" ||
+            elem.type === "ellipse" ||
+            elem.type === "line" ||
+            elem.type === "polygon" ||
+            elem.type === "polyline" ||
+            elem.type === "path"
+        ) {
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                return false;
+            }
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["fill-opacity"]
+            );
+            const fill = window.getComputedStyle(elem.node)["fill"];
+            if (fill === "none" || opacity === 0) {
+                return false;
+            }
+            return true;
+        }
+
         return false;
     };
 
-    /**
-     * Removes fill of element. In case element was a filled shape without stroke, element will be removed.
-     * @returns {Boolean} if element was removed completely.
-     */
-    Element.prototype.unfillOrRemove = function () {
-        let elem = this;
+    Element.prototype.is_stroked = function () {
+        var elem = this;
 
-        // TODO opacity support
         if (
-            elem.type !== "circle" &&
-            elem.type !== "rect" &&
-            elem.type !== "ellipse" &&
-            elem.type !== "line" &&
-            elem.type !== "polygon" &&
-            elem.type !== "polyline" &&
-            elem.type !== "path" &&
-            elem.type !== "textPath" &&
-            elem.type !== "text" &&
-            elem.type !== "tspan" &&
-            elem.type !== "image"
+            elem.type === "circle" ||
+            elem.type === "rect" ||
+            elem.type === "ellipse" ||
+            elem.type === "line" ||
+            elem.type === "polygon" ||
+            elem.type === "polyline" ||
+            elem.type === "text" ||
+            elem.type === "path"
         ) {
-            console.warn(`Element ${elem.type} is not a native type. Skip.`);
-            return false;
-        }
-
-        const stroke = elem.attr("stroke");
-        if (stroke !== "none") {
-            elem.attr({ fill: "none" });
-            return false;
-        } else {
-            elem.remove();
+            const opacity = parseFloat(
+                window.getComputedStyle(elem.node)["stroke-opacity"]
+            );
+            const stroke = window.getComputedStyle(elem.node)["stroke"];
+            const width = parseFloat(
+                window.getComputedStyle(elem.node)["stroke-width"]
+            );
+            if (
+                stroke === "none" ||
+                opacity === 0 ||
+                isNaN(width) ||
+                width <= 0
+            ) {
+                return false;
+            }
             return true;
         }
+
+        return false;
     };
 
     /**
@@ -294,215 +312,296 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         } else if (elem.attr("href") !== null) {
             url = elem.attr("href");
         }
+        if (url === null) {
+            console.info(`embedImage, found empty url: ${url}`);
+            return Promise.resolve(elem);
+        }
+        const bb = elem.getBBox();
+        if (bb.w === 0 || bb.h === 0) {
+            console.info(`embedImage, image has no dimensions: ${bb}`);
+            return Promise.resolve(elem);
+        }
         if (url.startsWith("data:")) {
             console.info(
-                `embedImage: nothing do to. Already embedded in dataUrl.`
+                `embedImage: nothing do to. Url started with ${url.substr(
+                    0,
+                    50
+                )}`
             );
             return Promise.resolve(elem);
         }
-        if (url === null || url.startsWith("data:")) {
-            console.info(`embedImage: nothing do to. Url was "${url}"`);
-            return Promise.resolve(elem);
-        }
 
-        let prom = loadImagePromise(url)
-            .then(function (image) {
-                let canvas = document.createElement("canvas");
-                canvas.width = image.naturalWidth; // or 'width' if you want a special/scaled size
-                canvas.height = image.naturalHeight; // or 'height' if you want a special/scaled size
-
-                canvas.getContext("2d").drawImage(image, 0, 0);
-
-                const canvasAnalysis = getCanvasAnalysis(canvas);
-                const histogram = canvasAnalysis.histogram;
-                const whitePxRatio = canvasAnalysis.whitePixelRatio;
-                console.info(
-                    `embedImage() white pixel ratio: ${(
-                        whitePxRatio * 100
-                    ).toFixed(2)}%, total white pixel: ${
-                        canvas.width * canvas.height * whitePxRatio
-                    }, image:${image.src}`
-                );
-
-                const dataUrl = canvas.toDataURL("image/png");
-                elem.attr({ href: dataUrl });
-                canvas.remove();
-                return elem;
-            })
-            .catch(function (error) {
-                console.error(
-                    `Slicing Error - embedImage: error while loading image: ${error}`
-                );
-            });
+        let prom = url2png(url).then((result) => {
+            elem.attr("href", result.dataUrl);
+            return elem;
+        });
         return prom;
     };
 
-    Element.prototype.renderPNG = function (
-        clusterIdx,
-        wPT,
-        hPT,
-        wMM,
-        hMM,
-        pxPerMM,
-        renderBBoxMM = null
-    ) {
-        var elem = this;
-        //console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
-        console.debug(
-            `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM}`
+    Element.prototype.embedAllImages = async function () {
+        const elem = this;
+        const allImages = elem.selectAll("image").items;
+        if (elem.type === "image") {
+            allImages.push(elem);
+        }
+        console.log(`embedding Images 0/${allImages.length}}`);
+
+        let pAll = await Promise.all(
+            allImages.map(async (elem, idx) => {
+                const embedded = await elem.embedImage();
+                console.log(`embedding Image ${idx + 1}/${allImages.length}}`);
+                return embedded;
+            })
         );
 
-        let bbox; // attention, this bbox uses viewBox coordinates (mm)
-        if (renderBBoxMM === null) {
-            // warning: correct result depends upon all resources (img, fonts, ...) have to be fully loaded already.
-            bbox = elem.getBBox();
-            //console.log(`renderPNG(): fetched render bbox from element: ${bbox}`);
-        } else {
-            bbox = renderBBoxMM;
-            //            console.log(
-            //                `renderPNG(): got render bbox from caller: ${bbox}, (elem bbox is ${bboxFromElem})`
-            //            );
-        }
+        return pAll;
+    };
 
-        // TODO only enlarge on images and fonts
-        // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
-        const enlargement_x = 0.4; // percentage of the width added to each side
-        const enlargement_y = 0.4; // percentage of the height added to each side
-        const x1 = Math.max(0, bbox.x - bbox.width * enlargement_x); // clip to working area left bound
-        const x2 = Math.min(wMM, bbox.x2 + bbox.width * enlargement_x); // clip to working area right bound
-        const w = x2 - x1; // TODO: bug! result can be negative. -> adopt to clipping
-        const y1 = Math.max(0, bbox.y - bbox.height * enlargement_y);
-        const y2 = Math.min(wMM, bbox.y2 + bbox.height * enlargement_y);
-        const h = y2 - y1;
-        bbox.x = x1;
-        bbox.y = y1;
-        bbox.w = w;
-        bbox.h = h;
+    Element.prototype._renderPNG2 = async function (
+        pxPerMM,
+        margin = 0,
+        cropBB = null
+    ) {
+        const prom = new Promise((resolve, reject) => {
+            const elem = this;
 
-        //        console.debug(
-        //            `enlarged renderBBox (in mm): ${bbox.w}*${bbox.h} @ ${bbox.x},${bbox.y}`
-        //        );
+            const vb = elem.paper.attr("viewBox");
+            const w = vb.w;
+            const h = vb.h;
 
-        // get svg as dataUrl
-        var svgDataUri = elem.toDataURL();
+            const bbox = elem.get_total_bbox();
+            if (bbox.w === 0 || bbox.h === 0) {
+                const msg = `_renderPNG2: nothing to render. ${elem} has no dimensions.`;
+                console.warn(msg);
+                reject(msg);
+            }
 
-        // init render canvas and attach to page
-        var renderCanvas = document.createElement("canvas");
-        renderCanvas.id = `renderCanvas_${clusterIdx}`;
-        renderCanvas.class = "renderCanvas";
-        renderCanvas.width = bbox.w * pxPerMM;
-        renderCanvas.height = bbox.h * pxPerMM;
-        if (MRBEAM_DEBUG_RENDERING) {
-            renderCanvas.style =
-                "position: fixed; bottom: 0; left: 0; width: 95vw; border: 1px solid red;";
-            renderCanvas.addEventListener("click", function () {
-                this.remove();
-            });
-        }
-        document.getElementsByTagName("body")[0].appendChild(renderCanvas);
-        var renderCanvasContext = renderCanvas.getContext("2d");
-        //        renderCanvasContext.fillStyle = "white"; // avoids one backend rendering step (has to be disabled in the backend)
-        //        renderCanvasContext.fillRect(
-        //            0,
-        //            0,
-        //            renderCanvas.width,
-        //            renderCanvas.height
-        //        );
+            elem.embedAllImages();
+            const fontSet = elem.getUsedFonts();
+            const fontDeclarations = WorkingAreaHelper.getFontDeclarations(
+                fontSet
+            );
 
-        // TODO "preload" the quicktext fonts - otherwise async loading leads to unpredicted results.
-        //        var link = document.createElement('link');
-        //        link.rel = 'stylesheet';
-        //        link.type = 'text/css';
-        //        link.href = 'http://fonts.googleapis.com/css?family=Vast+Shadow';
-        //        document.getElementsByTagName('head')[0].appendChild(link);
-        //
-        //        // Trick from https://stackoverflow.com/questions/2635814/
-        //        var image = new Image();
-        //        image.src = link.href;
-        //        image.onerror = function () {
-        //            ctx.font = '50px "Vast Shadow"';
-        //            ctx.textBaseline = 'top';
-        //            ctx.fillText('Hello!', 20, 10);
-        //        };
+            let bboxMargin = 0;
+            if (margin === null) {
+                bboxMargin = fontSet.size > 0 ? 0.8 : 0;
+            } else {
+                bboxMargin = margin;
+            }
 
-        let prom = loadImagePromise(svgDataUri)
-            .then(
-                function (imgTag) {
-                    try {
-                        const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
-                        const cx = bbox.x * srcScale;
-                        const cy = bbox.y * srcScale;
-                        const cw = bbox.w * srcScale;
-                        const ch = bbox.h * srcScale;
+            const bboxMM = Snap.path.enlarge_bbox(
+                bbox,
+                bboxMargin,
+                bboxMargin,
+                cropBB
+            );
 
-                        //                        console.debug(
-                        //                            `rasterizing: ${cw}*${ch} @ ${cx},${cy} (scale: ${srcScale})`
-                        //                        );
-                        // drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
-                        renderCanvasContext.drawImage(
-                            imgTag,
-                            cx,
-                            cy,
-                            cw,
-                            ch,
-                            0,
-                            0,
-                            renderCanvas.width,
-                            renderCanvas.height
-                        );
-                    } catch (exception) {
-                        console.error(
-                            "renderCanvasContext.drawImage failed:",
-                            exception
-                        );
-                    }
+            // get svg as dataUrl including namespaces, fonts, more
+            const svgDataUrl = elem.toWorkingAreaDataURL(
+                w,
+                h,
+                fontDeclarations
+            );
+            url2png(svgDataUrl, pxPerMM, bboxMM, true).then((result) => {
+                const size = getDataUriSize(result.dataUrl);
 
-                    // place fill bitmap into svg
-                    const fillBitmap = renderCanvas.toDataURL("image/png");
-                    const analysis = getCanvasAnalysis(renderCanvas);
-                    const size = getDataUriSize(fillBitmap);
-                    //                    console.debug("renderPNG rendered dataurl has " + size);
-
-                    renderCanvas.remove();
-                    return {
-                        dataUrl: fillBitmap,
-                        size: size,
-                        bbox: bbox,
-                        clusterIndex: clusterIdx,
-                        analysis: analysis,
-                    };
-                },
-                // after onerror
-                function (e) {
-                    // var len = svgDataUri ? svgDataUri.length : -1;
-                    var len = getDataUriSize(svgDataUri, "B");
-                    var msg =
-                        "Error during conversion: Loading SVG dataUri into image element failed in renderPNG. (dataUri.length: " +
-                        len +
-                        ")";
-                    console.error(msg, e);
-                    console.debug(
-                        "renderPNG ERR: svgDataUri that failed to load: ",
-                        svgDataUri
+                if (MRBEAM_DEBUG_RENDERING) {
+                    console.info(
+                        "MRBEAM_DEBUG_RENDERING",
+                        result.dataUrl,
+                        result.bbox
                     );
-                    new PNotify({
-                        title: gettext("Conversion failed"),
-                        text: msg,
-                        type: "error",
-                        hide: false,
+                    const img = elem.paper.image(
+                        result.dataUrl,
+                        result.bbox.x,
+                        result.bbox.y,
+                        result.bbox.w,
+                        result.bbox.h
+                    );
+                    img.attr("opacity", 0.6);
+                    img.click(function () {
+                        img.remove();
                     });
-                    if (!MRBEAM_DEBUG_RENDERING) {
-                        renderCanvas.remove();
-                    }
+                    const r = elem.paper.rect(result.bbox).attr({
+                        fill: "none",
+                        stroke: "#aa00aa",
+                        strokeWidth: 2,
+                    });
+                    setTimeout(() => r.remove(), 5000);
                 }
-            )
-            .catch(function (error) {
-                console.error(error);
-            });
 
+                resolve({
+                    dataUrl: result.dataUrl,
+                    size: size,
+                    bbox: bboxMM,
+                    analysis: result.analysis,
+                });
+            });
+        });
         return prom;
     };
 
+    Element.prototype.trace = async function (margin) {
+        const pxPerMM = 20;
+        const elem = this;
+        const prom = elem
+            ._renderPNG2(pxPerMM, margin)
+            .then((rasterResult) => {
+                Potrace.loadImageFromUrl(rasterResult.dataUrl);
+                return new Promise((resolve, reject) => {
+                    Potrace.process(function () {
+                        const pathData = Potrace.getSVGPathArray(1 / pxPerMM);
+                        resolve({ paths: pathData, bbox: rasterResult.bbox });
+                    });
+                });
+            })
+            .catch((error) => {
+                console.warn(`Element ${elem.type}.trace() error: ${error}`);
+            });
+
+        const paths = await prom;
+        return paths;
+    };
+
+    Element.prototype.setQuicktextOutline = function (offset = 0, margin = 0) {
+        const elem = this;
+        if (elem.type !== "g" || !elem.hasClass("userText")) {
+            console.warn(
+                "setQuicktextOutline needs to be called on Quicktext group element."
+            );
+        } else {
+            const group = elem.closest(".userText");
+            const target = group.select(".qtOutline");
+            const texts = elem.selectAll("text");
+            texts.forEach((t) => {
+                const bb = t.getBBox();
+                if (bb.w > 0 && bb.h > 0) {
+                    t.getFontOutline(target, offset, margin);
+                    // TODO: one target <path> for multiple <text> elems... bad idea. will be overwritten.
+                    return;
+                }
+            });
+        }
+    };
+
+    Element.prototype.getFontOutline = async function (
+        target,
+        offset = 0,
+        margin = 0
+    ) {
+        const elem = this;
+        const bb = elem.getBBox();
+        if (bb.w === 0 || bb.h === 0) {
+            console.warn(`No expansion of ${elem}. Skip.`);
+            return;
+        }
+        if (elem.type === "text" && elem.is_stroked()) {
+            const colorStr = window.getComputedStyle(elem.node)["stroke"];
+            const hex = WorkingAreaHelper.getHexColorStr(colorStr);
+
+            //  before potrace'ing ...
+            // 1. clone the <text> and set it to black
+            // 2. unapply transform of the QT group to match the origins (centered on baseline)
+            // 3. move it into working area again if 2. has moved it outside
+            // 4. trace it, place the path in the QT group again and unapply the shift of 3.
+            // Due to the same origins, the same transforms are applied on text and outline path.
+            const tr = elem.transform();
+            const invertM = tr.totalMatrix.invert();
+            const invertT = invertM.split();
+
+            // to potrace the font outline, the element has to be black!
+            const rasterElem = elem.clone();
+            const rasterAttr = {
+                fill: "#000000",
+                stroke: "#000000",
+                strokeWidth: offset,
+                class: "hideWhileRastering",
+            };
+            rasterElem.attr(rasterAttr);
+            rasterElem.selectAll("text,textPath").attr(rasterAttr);
+
+            // the potrace'ed raster element needs to have the same origin as elem. Otherwise current transforms are applied twice
+            rasterElem.transform(invertM);
+
+            // just get the offset outside the working area
+            let tmpBB = rasterElem.getBBox(true); // does not contain the stroke (offset)
+
+            const topLeft = { x: tmpBB.x - offset, y: tmpBB.y - offset };
+
+            const mat2 = rasterElem
+                .transform()
+                .localMatrix.translate(-topLeft.x, -topLeft.y);
+            rasterElem.transform(mat2);
+            const result = await rasterElem.trace(margin);
+            rasterElem.remove(); // original is still with stroke? should be removed
+
+            if (result && result.paths) {
+                const d = result.paths.join(" ");
+                const dx = result.bbox.x;
+                const dy = result.bbox.y;
+                const mat = Snap.matrix().translate(
+                    topLeft.x + dx,
+                    topLeft.y + dy
+                );
+
+                target
+                    .attr({
+                        d: d,
+                        // d: `M-5,0h5v-5 ${d}`, // mark the origin for debugging
+                        stroke: hex,
+                        fill: "none",
+                    })
+                    .transform(mat);
+            } else {
+                console.error("getFontOutline(): failed.");
+            }
+        } else {
+            console.log(
+                `getFontOutline(): Skip element "${
+                    elem.type
+                }" with stroke: "${elem.is_stroked()}".`
+            );
+        }
+    };
+
+    /*
+     * rasters an snap svg element into a png bitmap.
+     * if MRBEAM_DEBUG_RENDERING === true, result will be embedded in the elements paper
+     *
+     * @param {Number} pxPerMM rastering resolution (default 10)
+     * @param {Number} margin will be added around elements bbox. (default null (auto), 0 -> bbox will be rendered. 1 -> 0.5*bbox width will be added left and right)
+     *
+     * @returns {Object} keys: dataUrl (encoded png), bbox (real size of the rastered png incl. margin)
+     */
+    //    Element.prototype.raster = function (pxPerMM = 10, margin = null) {
+    //        const elem = this;
+    //        const promise = elem
+    //            ._renderPNG2(pxPerMM, margin)
+    //            .then(function (result) {
+    //                if (MRBEAM_DEBUG_RENDERING) {
+    //                    console.info(
+    //                        "MRBEAM_DEBUG_RENDERING",
+    //                        result.dataUrl,
+    //                        result.bbox
+    //                    );
+    //                    const img = elem.paper.image(
+    //                        result.dataUrl,
+    //                        result.bbox.x,
+    //                        result.bbox.y,
+    //                        result.bbox.w,
+    //                        result.bbox.h
+    //                    );
+    //                    img.attr("opacity", 0.6);
+    //                    img.click(function () {
+    //                        img.remove();
+    //                    });
+    //                }
+    //                return result;
+    //            });
+    //        return promise;
+    //    };
+
+    // TODO use url2png, simplify, check if necessary
     Element.prototype.renderJobTimeEstimationPNG = function (
         wPT,
         hPT,

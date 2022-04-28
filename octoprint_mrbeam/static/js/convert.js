@@ -1290,14 +1290,20 @@ $(function () {
                             });
                         });
                 } else {
-                    console.info(
-                        `Skipping vector job ${i}, invalid parameters (${[
-                            intensity_user,
-                            feedrate,
-                            passes,
-                            piercetime,
-                        ]}).`
-                    );
+                    if (
+                        self.selected_material() !== null &&
+                        self.selected_material_color() !== null &&
+                        self.selected_material_thickness() !== null
+                    ) {
+                        console.info(
+                            `Skipping vector job ${i}, invalid parameters (${[
+                                intensity_user,
+                                feedrate,
+                                passes,
+                                piercetime,
+                            ]}).`
+                        );
+                    }
                 }
             });
 

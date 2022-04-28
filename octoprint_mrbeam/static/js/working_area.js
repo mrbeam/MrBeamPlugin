@@ -42,6 +42,7 @@ $(function () {
         self.availableHeight = ko.observable(undefined);
         self.availableWidth = ko.observable(undefined);
         self.px2mm_factor = 1; // initial value
+        self.workingAreaDPItoMM = 90 / 25.4;
         self.svgDPI = function () {
             return 90;
         }; // initial value, gets overwritten by settings in onAllBound()
@@ -120,7 +121,7 @@ $(function () {
         ];
         self.currentQuickTextFile = undefined;
         self.currentQuickTextAnalyticsData = undefined;
-        self.currentQuickText = ko.observable();
+        self.currentQuickText = ko.observable(); // TODO check removal
         self.quickShapeNames = new Map([
             ["rect", gettext("Rectangle")],
             ["circle", gettext("Circle")],
@@ -131,7 +132,10 @@ $(function () {
         self.currentQuickShapeAnalyticsData = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
-        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
+        self.lastQuickTextStroke = false;
+        self.lastQuickTextFill = true;
+        self.lastQuickTextStrokeColor = "#e25303";
+        self.lastQuickTextFillColor = "#000000";
         self.lastQuickTextCircle = 0;
         self.lastQuickTextClockwise = true;
 
@@ -293,7 +297,7 @@ $(function () {
                 : elem;
             return (
                 elem.selectAll("image").length > 0 ||
-                self.hasFilledVectors(elem)
+                self.hasFilledVectors(elem) // TODO use is_filled()
             );
         };
 
@@ -308,7 +312,10 @@ $(function () {
             let items = root.selectAll(selector + "[" + color_attr + "]");
             for (var i = 0; i < items.length; i++) {
                 let col = items[i].attr()[color_attr];
+                const bb = items[i].getBBox();
                 if (
+                    bb.w > 0 &&
+                    bb.h > 0 && // filters elements without dimension, e.g. <path> without d attrib.
                     col !== "undefined" &&
                     col !== "none" &&
                     col !== null &&
@@ -1036,7 +1043,8 @@ $(function () {
                 });
 
                 snap.select("#userContent").append(newSvg);
-                self._addClickAndHoverHandlers(snap.select("#" + id), fileObj); // after placement ids have changed => select freshly placed fragment via id.
+                // after placement ids have changed => select freshly placed fragment via id.
+                self._addClickAndHoverHandlers(snap.select("#" + id), fileObj);
 
                 return id;
             } catch (e) {
@@ -2589,9 +2597,10 @@ $(function () {
             // create svg to do the rendering within
             var wMM = self.workingAreaWidthMM();
             var hMM = self.workingAreaHeightMM();
-            var wPT = (wMM * 90) / 25.4; // TODO ... switch to 96dpi ? Or even to mm?
-            var hPT = (hMM * 90) / 25.4;
+            var wPT = wMM * self.workingAreaDPItoMM; // TODO ... switch to 96dpi ? Or even to mm?
+            var hPT = hMM * self.workingAreaDPItoMM;
             var compSvg = self.getNewSvg("compSvg", wPT, hPT);
+            compSvg.attr("viewBox", `0 0 ${wMM} ${hMM}`);
             var namespaces = self._getDocumentNamespaceAttributes(snap);
             compSvg.attr(namespaces);
             var attrs = {};
@@ -2612,13 +2621,7 @@ $(function () {
 
             // if text in document embed the fonts as dataUris, copy textPaths and fix id references
             if (userContent.selectAll(".userText").length > 0) {
-                $("#compSvg defs").append(
-                    '<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>'
-                );
-                self._qt_copyFontsToSvg(
-                    compSvg.select(".quickTextFontPlaceholder").node
-                );
-
+                // embed textPaths
                 const allTextPaths = snap.selectAll(
                     "defs>.quicktext_curve_path"
                 );
@@ -2632,6 +2635,13 @@ $(function () {
                         "mb:id": original_id,
                     });
                 }
+
+                const strokedText = userContent.selectAll(
+                    '.userText text[stroke^="#"]'
+                );
+                strokedText.forEach((t) => {
+                    const x = t.trace();
+                });
             }
 
             // for bitmaps: embed filters
@@ -2644,30 +2654,22 @@ $(function () {
                 destFilter.attr({ id: original_id, "mb:id": original_id });
             }
 
-            // replace linked images with embedded dataUrls
-            let allEmbeddedImages = await self._embedAllImages(content);
-            //console.log(`allEmbeddedImages: ${allEmbeddedImages}`);
-
-            //
+            // embed Images
+            const allEmbeddedImages = await content.embedAllImages();
             let svgWithRenderedInfill = await self.rasterInfill(
                 compSvg,
-                namespaces,
-                wPT,
-                hPT,
                 fillAreas,
-                wMM,
-                hMM,
                 pxPerMM
             );
+
             // console.log(`svgWithRenderedInfill ${svgWithRenderedInfill}}`);
             const svgStr = self._finalizeBackendSVG(
                 svgWithRenderedInfill,
                 namespaces
             );
 
-            //
             const length_summary = self.get_gc_length_summary(compSvg);
-            console.log(length_summary);
+            // console.log(length_summary);
             $("#compSvg").remove();
 
             // hide spinner
@@ -2677,7 +2679,6 @@ $(function () {
                     renderEnd - renderStart
                 } millis`
             );
-
             self.spinnerHide();
 
             const params = {
@@ -3042,6 +3043,16 @@ $(function () {
                 "change",
                 self._qs_currentQuickShapeUpdate
             );
+            $("#qt_colorPicker_stroke").tinycolorpicker();
+            $("#qt_colorPicker_stroke").bind(
+                "change",
+                throttle((event) => self._qt_currentQuickTextUpdate(event), 200)
+            );
+            $("#qt_colorPicker_fill").tinycolorpicker();
+            $("#qt_colorPicker_fill").bind(
+                "change",
+                throttle((event) => self._qt_currentQuickTextUpdate(event), 200)
+            );
         };
 
         self.onAllBound = function (allViewModels) {
@@ -3169,208 +3180,104 @@ $(function () {
             }
         };
 
-        self._embedAllImages = async function (svg) {
-            // TODO... improve selector to catch href & xlink:href (https://stackoverflow.com/questions/23034283/is-it-possible-to-use-htmls-queryselector-to-select-by-xlink-attribute-in-an)
-            // var allImages snap.selectAll("#userContent image[*|href]");
-            var allImages = svg.selectAll("image");
-            console.log(`embedding Images 0/${allImages.length}`);
-
-            let pAll = await Promise.all(
-                allImages.items.map(async (elem, idx) => {
-                    const embedded = await elem.embedImage();
-                    console.log(
-                        `embedding Image ${idx + 1}/${allImages.length}}`
-                    );
-                    return embedded;
-                })
-            );
-
-            return pAll;
-        };
-
-        self._rasterAndEmbedResult = async function (
-            targetSvg,
-            rasterClusters,
-            wPT,
-            hPT,
-            wMM,
-            hMM,
-            pxPerMM
-        ) {
-            let pAll = await Promise.all(
-                rasterClusters.map(async (cluster, clusterIndex) => {
-                    const renderBBoxMM = cluster.bbox;
-                    const rasterResult = await cluster.svg.renderPNG(
-                        clusterIndex,
-                        wPT,
-                        hPT,
-                        wMM,
-                        hMM,
-                        pxPerMM,
-                        renderBBoxMM
-                    );
-                    // returns { dataUrl: fillBitmap, size: size, bbox: bbox, clusterIndex:clusterIndex };
-                    if (rasterResult.dataUrl !== null) {
-                        console.info(
-                            "cluster rastered",
-                            rasterResult.clusterIndex
-                        );
-                        const x = rasterResult.bbox.x;
-                        const y = rasterResult.bbox.y;
-                        const w = rasterResult.bbox.w;
-                        const h = rasterResult.bbox.h;
-                        var fillImage = targetSvg.image(
-                            rasterResult.dataUrl,
-                            x,
-                            y,
-                            w,
-                            h
-                        );
-
-                        // total path length of engraving line by line
-                        const gcLength = w * h * pxPerMM + h; // contains enlargement of bbox due to webfont loading bug.
-                        fillImage.attr({
-                            id: `fillRendering${clusterIndex}`,
-                            "mb:img_w": w, // for Job Time Estimation 2.0
-                            "mb:img_h": h,
-                            "mb:histogram": rasterResult.analysis.histogram,
-                            "mb:whitePixelRatio":
-                                rasterResult.analysis.whitePixelRatio,
-                            "mb:innerWhitePixelRatio":
-                                rasterResult.analysis.innerWhitePixelRatio,
-                            "mb:whitePixelsOutside":
-                                rasterResult.analysis.whitePixelsAtTheOutside,
-                            "mb:brightnessChanges":
-                                rasterResult.analysis.brightnessChanges,
-                            "mb:totalBrightnessChange":
-                                rasterResult.analysis.totalBrightnessChange,
-                            "mb:gc_length": gcLength,
-                            class: "fillRendering",
-                        });
-                        console.info(`rastered ${fillImage.node}`);
-                    }
-                    return rasterResult;
-                })
-            );
-
-            if (MRBEAM_DEBUG_RENDERING) {
-                debugBase64(
-                    pAll.map((r) => r.dataUrl),
-                    `Step 2: PNG`
-                );
-            }
-
-            console.log("_rasterAndEmbedResult promise all");
-            return pAll;
-        };
-
         // raster the infill and inject it as an image into the svg
-        self.rasterInfill = function (
+        self.rasterInfill = async function (
             svg, // is compSvg reference
-            namespaces,
-            svgWidthPT,
-            svgHeightPT,
             fillAreas,
-            wMM,
-            hMM,
             pxPerMM
         ) {
             let clusters = svg.splitRasterClusters(fillAreas);
-
             // only render clusters overlapping the working area
             const waBB = snap.select("#coordGrid").getBBox();
             clusters = clusters.filter(function (c, idx) {
-                const isInside = Snap.path.isBBoxIntersect(c.bbox, waBB);
-                if (!isInside)
+                const intersects = Snap.path.isBBoxIntersect(c.bbox, waBB);
+                if (!intersects)
                     console.info(
                         `Cluster ${idx} is outside workingArea. Skipping`
                     );
-                return isInside;
+                return intersects;
+            });
+
+            const whitelist = svg.getUsedFonts();
+            const fontDecl = WorkingAreaHelper.getFontDeclarations(whitelist);
+            clusters = clusters.map((c) => {
+                c.svgDataUrl = svg.toWorkingAreaDataURL(
+                    self.workingAreaWidthMM(),
+                    self.workingAreaHeightMM(),
+                    fontDecl,
+                    `.toRaster.rasterCluster${c.idx}`
+                );
+                return c;
             });
 
             if (MRBEAM_DEBUG_RENDERING) {
                 debugBase64(
-                    clusters.map((c) => c.svg.toDataURL()),
+                    clusters.map((c) => c.svgDataUrl),
                     `Step 1: Raster Cluster SVGs`
                 );
             }
-
-            // get only filled items and embed the images
-            // loop over non overlapping clusters to-raster elements.
-            for (var c = 0; c < clusters.length; c++) {
-                var rasterCluster = clusters[c];
-                var rasterContentSvg = rasterCluster.svg; // Avoids wrapping svg in svg.
-                rasterContentSvg.attr("id", "rasterCluster_" + c);
-                rasterContentSvg.addClass("tmpSvg");
-
-                //console.log("Rastering cluster " + c);
-                var attrs = {};
-                _.merge(attrs, namespaces);
-                attrs.viewBox = "0 0 " + wMM + " " + hMM;
-                rasterContentSvg.attr(attrs);
-
-                var fillings = rasterContentSvg.removeUnfilled(fillAreas);
-                for (var i = 0; i < fillings.length; i++) {
-                    // TODO what is done here?
-                    var item = fillings[i];
-
-                    if (
-                        item.type !== "image" &&
-                        item.type !== "text" &&
-                        item.type !== "#text"
-                    ) {
-                        var style = item.attr("style");
-                        // remove stroke from other elements
-                        var styleNoStroke = "stroke: none;";
-                        if (style !== null) {
-                            styleNoStroke += style.replace(/stroke.+?;/g, "");
-                        }
-                        item.attr("stroke", "none");
-                        item.attr("style", styleNoStroke);
-                    }
-                }
-            }
             if (fillAreas) {
-                let prom = self
-                    ._rasterAndEmbedResult(
-                        svg,
-                        clusters,
-                        svgWidthPT,
-                        svgHeightPT,
-                        wMM,
-                        hMM,
-                        pxPerMM
-                    )
-                    .then(function (rasterResults) {
-                        // remove filled elements / respectively fillings of elements after embedding raster result
-                        for (let i = 0; i < rasterResults.length; i++) {
-                            const result = rasterResults[i];
-                            const cluster = clusters[result.clusterIndex];
-                            for (let e = 0; e < cluster.elements.length; e++) {
-                                let elem = cluster.elements[e];
-                                elem.unfillOrRemove();
-                            }
-                        }
-                        svg.selectAll(".deleteAfterRendering").remove();
-
-                        if (MRBEAM_DEBUG_RENDERING) {
-                            debugBase64(
-                                svg.toDataURL(),
-                                "Step 3: SVG with fill rendering"
+                let pngs = await Promise.all(
+                    clusters.map((c) =>
+                        url2png(c.svgDataUrl, pxPerMM, c.bbox).then(function (
+                            rasterResult
+                        ) {
+                            const fillImage = svg.image(
+                                rasterResult.dataUrl,
+                                c.bbox.x,
+                                c.bbox.y,
+                                c.bbox.w,
+                                c.bbox.h
                             );
-                        }
 
-                        self._cleanup_render_mess();
-                        return svg;
-                    });
-                return prom;
+                            // total path length of engraving line by line
+                            const gcLength =
+                                c.bbox.w * c.bbox.h * pxPerMM + c.bbox.h; // contains enlargement of bbox due to webfont loading bug.
+                            fillImage.attr({
+                                id: `fillRendering${c.idx}`,
+                                "mb:img_w": c.bbox.w, // for Job Time Estimation 2.0
+                                "mb:img_h": c.bbox.h,
+                                "mb:histogram": rasterResult.analysis.histogram,
+                                "mb:whitePixelRatio":
+                                    rasterResult.analysis.whitePixelRatio,
+                                "mb:innerWhitePixelRatio":
+                                    rasterResult.analysis.innerWhitePixelRatio,
+                                "mb:whitePixelsOutside":
+                                    rasterResult.analysis
+                                        .whitePixelsAtTheOutside,
+                                "mb:brightnessChanges":
+                                    rasterResult.analysis.brightnessChanges,
+                                "mb:totalBrightnessChange":
+                                    rasterResult.analysis.totalBrightnessChange,
+                                "mb:gc_length": gcLength,
+                                class: "fillRendering",
+                            });
+
+                            c.elements.forEach((el) => el.remove());
+                            return rasterResult;
+                        })
+                    )
+                );
+
+                if (MRBEAM_DEBUG_RENDERING) {
+                    debugBase64(
+                        pngs.map((r) => r.dataUrl),
+                        `Step 2: PNG of cluster`
+                    );
+                }
+
+                svg.selectAll(".deleteAfterRendering").remove();
+
+                if (MRBEAM_DEBUG_RENDERING) {
+                    debugBase64(
+                        svg.toDataURL(),
+                        "Step 3: SVG with fill rendering"
+                    );
+                }
+                return svg;
+            } else {
+                return Promise.resolve(svg);
             }
-            return Promise.resolve(svg);
-        };
-
-        self._cleanup_render_mess = function () {
-            $("#rasterContentSvg").remove();
-            $(".tmpSvg").remove();
         };
 
         self.onBeforeBinding = function () {
@@ -3725,6 +3632,9 @@ $(function () {
          */
         self.editQuickText = function (file) {
             self.currentQuickTextFile = file;
+            const strokeColor =
+                self.currentQuickTextFile.strokeColor || "#e25303";
+            const fillColor = self.currentQuickTextFile.fillColor || "#000000";
             self._qt_currentQuickTextUpdate();
             $("#quick_text_dialog").one(
                 "hide",
@@ -3739,13 +3649,29 @@ $(function () {
                 $("#quick_text_dialog_text_input").focus();
             });
             $("#quick_text_dialog").modal({ keyboard: true });
+            // hide path during quick text editing. will be rendered on dialog close
+            snap.select(
+                `#${self.currentQuickTextFile.previewId} .qtOutline`
+            ).attr({ d: "" });
             self.showTransformHandles(
                 self.currentQuickTextFile.previewId,
                 false
             );
-            $("#quick_text_dialog_intensity").val(
-                self.currentQuickTextFile.intensity
+            $("#quick_text_stroke").prop(
+                "checked",
+                self.currentQuickTextFile.stroke
             );
+            $("#qt_colorPicker_stroke")
+                .data("plugin_tinycolorpicker")
+                .setColor(strokeColor);
+            $("#quick_text_fill").prop(
+                "checked",
+                self.currentQuickTextFile.fill
+            );
+            $("#qt_colorPicker_fill")
+                .data("plugin_tinycolorpicker")
+                .setColor(fillColor);
+
             // round text radio buttons & slider
             $("#qt_round_text_section div.btn").removeClass("active");
             const cw = self.currentQuickTextFile.clockwise;
@@ -3767,17 +3693,19 @@ $(function () {
             }
             self._qt_currentQuickTextUpdate();
         });
-
-        /**
-         * callback/subscription for the intensity slider
-         */
-        $("#quick_text_dialog_intensity").on("input change", function (e) {
+        $("#quick_text_stroke").on("click", function (e) {
             if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.intensity = e.currentTarget.value;
-                self.lastQuickTextIntensity =
-                    self.currentQuickTextFile.intensity;
-                self._qt_currentQuickTextUpdate();
+                self.currentQuickTextFile.stroke = e.currentTarget.checked;
+                self.lastQuickTextStroke = self.currentQuickTextFile.stroke;
             }
+            self._qt_currentQuickTextUpdate();
+        });
+        $("#quick_text_fill").on("click", function (e) {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.fill = e.currentTarget.checked;
+                self.lastQuickTextFill = self.currentQuickTextFile.fill;
+            }
+            self._qt_currentQuickTextUpdate();
         });
 
         /**
@@ -3884,7 +3812,6 @@ $(function () {
                           );
 
                 // get all parameters
-                const ity = self.currentQuickTextFile.intensity;
                 const font = self.fontMap[self.currentQuickTextFile.fontIndex];
                 const isStraightText = $("#quick_text_straight").hasClass(
                     "active"
@@ -3892,27 +3819,42 @@ $(function () {
                 const counterclockwise = $("#quick_text_ccw").hasClass(
                     "active"
                 );
-                const fill = `rgb(${ity},${ity},${ity})`;
+
+                const isFilled = self.currentQuickTextFile.fill;
+                const fillColor = (self.currentQuickTextFile.fillColor = $(
+                    "#quick_text_fill_brightness"
+                ).val());
+                const ity = rgb_from_hex(fillColor).x;
+                const fill = isFilled ? fillColor : "none";
+                const previewFill = isFilled ? fillColor : "#ffffff";
+                const isStroked = self.currentQuickTextFile.stroke;
+                const strokeColor = (self.currentQuickTextFile.strokeColor = $(
+                    "#quick_text_stroke_color"
+                ).val());
+                const stroke = isStroked ? strokeColor : "none";
+                const fakeStroke = `${strokeColor} 0px 0px 1px,${strokeColor} 0px 0px 1px,${strokeColor} 0px 0px 1px`;
                 const shadowIty = ity > 200 ? (ity - 200) / 100 : 0;
-                const shadow = `rgba(226, 85, 3, ${shadowIty}) 0px 0px 16px`;
+                const shadow = isStroked
+                    ? fakeStroke
+                    : `rgba(226, 85, 3, ${shadowIty}) 0px 0px 16px`;
                 const ligatures = isStraightText ? "initial" : "none";
                 const g = snap.select(
                     "#" + self.currentQuickTextFile.previewId
                 );
 
-                // update straight text DOM node
-                const straightText = g.select(".straightText");
-                straightText.attr({
+                const textAttrs = {
                     "font-family": font,
                     fill: fill,
-                });
+                    stroke: stroke,
+                };
+
+                // update straight text DOM node
+                const straightText = g.select(".straightText");
+                straightText.attr(textAttrs);
 
                 // update curved text DOM nodes
                 const curvedText = g.select(".curvedText");
-                curvedText.attr({
-                    "font-family": font,
-                    fill: fill,
-                });
+                curvedText.attr(textAttrs);
                 const textPathEl = curvedText.select("textPath");
                 const textPathAttr = textPathEl.attr();
                 const path = snap.select(textPathAttr.href);
@@ -3949,16 +3891,27 @@ $(function () {
                 // update font of input field
                 $("#quick_text_dialog_text_input").css({
                     "text-shadow": shadow,
-                    color: fill,
+                    color: previewFill,
                     "font-family": font,
                     "font-variant-ligatures": ligatures,
                 });
                 $("#quick_text_dialog_font_name").text(font);
+                //                $("#quick_text_fill_brightness").val(fillColor);
+                //                $("#quick_text_stroke_color").val(strokeColor);
 
                 // update fileslist title
                 $("#" + self.currentQuickTextFile.id + " .title").text(
                     displayText
                 );
+                // update engrave component color
+                $(`#${self.currentQuickTextFile.id} .engrave_component`).css({
+                    display: isFilled ? "inherit" : "none",
+                });
+                // update stroke component color
+                $(`#${self.currentQuickTextFile.id} .stroke_color`).css({
+                    "background-color": strokeColor,
+                    display: isStroked ? "inherit" : "none",
+                });
                 // update fileslist dimensions by triggering transform
                 setTimeout(function () {
                     g.mbtOnTransform();
@@ -3978,6 +3931,8 @@ $(function () {
                     file_type: "quickText",
                     text_length: self.currentQuickTextFile.name.length,
                     brightness: ity,
+                    fill: fill,
+                    stroke: stroke,
                     font: font,
                     font_index: self.currentQuickTextFile.fontIndex,
                     is_straight: isStraightText,
@@ -4098,7 +4053,10 @@ $(function () {
                 type: "quicktext",
                 typePath: ["quicktext"],
                 fontIndex: self.lastQuickTextFontIndex,
-                intensity: self.lastQuickTextIntensity,
+                stroke: self.lastQuickTextStroke,
+                fill: self.lastQuickTextFill,
+                strokeColor: self.lastQuickTextStrokeColor,
+                fillColor: self.lastQuickTextFillColor,
                 circle: self.lastQuickTextCircle,
                 clockwise: self.lastQuickTextClockwise,
             };
@@ -4128,24 +4086,33 @@ $(function () {
                 })
                 .toDefs();
 
+            const style = [
+                `white-space: pre`,
+                `font-size: ${size}px`,
+                `text-anchor: middle`,
+                `vector-effect: non-scaling-stroke`,
+                `stroke-width: 2px`,
+                `stroke-linejoin: round`,
+                `stroke-linecap: round`,
+            ].join("; ");
             const curvedText = uc.text(0, 0, placeholderText);
             curvedText.attr({
-                style:
-                    "white-space: pre; font-size: " +
-                    size +
-                    "px; font-family: Ubuntu; text-anchor: middle; font-variant-ligatures: none;",
+                style: style + "font-variant-ligatures: none;",
                 textpath: path,
             });
             curvedText.node.classList.add("curvedText");
-            curvedText.textPath.attr({ startOffset: "50%" });
+            curvedText.textPath.attr({ startOffset: "50%", style: style });
 
             const straightText = uc.text(0, 0, placeholderText);
             straightText.attr({
-                style:
-                    "white-space: pre; font-size: " +
-                    size +
-                    "px; font-family: Ubuntu; text-anchor: middle;",
+                style: style,
                 class: "straightText",
+            });
+
+            const textStroke = uc.path().attr({
+                class: "qtOutline vector_outline",
+                fill: "none",
+                stroke: file.strokeColor,
             });
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
@@ -4156,13 +4123,13 @@ $(function () {
                 class: "deleteBeforeRendering",
             });
 
-            var group = uc.group(straightText, curvedText, box);
+            var group = uc.group(straightText, curvedText, textStroke, box);
             group.attr({
                 id: file.previewId,
                 "mb:id": self._normalize_mb_id(file.previewId),
                 class: "userText",
                 transform: `translate(${x},${y})`,
-                "mb:origin": origin, // TODO ??? wtf?
+                "mb:origin": `beamos://quicktext`,
             });
 
             self._addClickAndHoverHandlers(group, file);
@@ -4177,54 +4144,12 @@ $(function () {
             return file;
         };
 
-        /**
-         * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
-         * installed on the system which we can't assume.)
-         * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
-         * contains @font-face entries with wff2 files as dataUrls. Eg:
-         * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
-         * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
-         * AND their fontFamily name must be included in self.fontMap
-         * @private
-         * @param DomElement to add the font definition into
-         */
-        self._qt_copyFontsToSvg = function (elem) {
-            var styleSheets = document.styleSheets;
-            self._qt_removeFontsFromSvg(elem);
-            for (var ss = 0; ss < styleSheets.length; ss++) {
-                if (
-                    styleSheets[ss].href &&
-                    (styleSheets[ss].href.includes("quicktext-fonts.css") ||
-                        styleSheets[ss].href.includes("packed_plugins.css"))
-                ) {
-                    var rules = styleSheets[ss].cssRules;
-                    for (var r = 0; r < rules.length; r++) {
-                        if (rules[r].constructor == CSSFontFaceRule) {
-                            // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
-                            if (rules[r].style) {
-                                var fontName = rules[r].style.getPropertyValue(
-                                    "font-family"
-                                );
-                                fontName = fontName.replace(/["']/g, "").trim();
-                                if (self.fontMap.indexOf(fontName) > -1) {
-                                    $(elem).append(rules[r].cssText);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        /**
-         * removes the fonts added by _qt_copyFontsToSvg()
-         * @private
-         */
-        self._qt_removeFontsFromSvg = function (elem) {
-            $(elem).empty();
-        };
-
         self._qt_dialogClose = function () {
+            // render outline once the dialog is closed
+            const id = self.currentQuickTextFile.previewId;
+            const qtElem = snap.select("#" + id);
+            if (qtElem) qtElem.setQuicktextOutline(0.0, 0); // TODO Margin Bug
+
             if (self.currentQuickTextAnalyticsData.text_length !== 0) {
                 self._analyticsQuickTextUpdate(
                     self.currentQuickTextAnalyticsData
