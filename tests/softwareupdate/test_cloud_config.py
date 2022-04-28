@@ -28,6 +28,7 @@ from octoprint_mrbeam.software_update_information import (
     get_update_information,
     SW_UPDATE_INFO_FILE_NAME,
     SW_UPDATE_TIERS,
+    FALLBACK_UPDATE_CONFIG,
 )
 from octoprint_mrbeam.user_notification_system import UserNotificationSystem
 from octoprint_mrbeam.util import dict_merge
@@ -133,6 +134,10 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
             os.path.join(dirname(realpath(__file__)), "mock_config.json")
         ) as json_file:
             self.mock_config = yaml.safe_load(json_file)
+        with open(
+            os.path.join(dirname(realpath(__file__)), "mock_config_relative_path_missing.json")
+        ) as json_file:
+            self.mock_config_relative_path_missing = yaml.safe_load(json_file)
 
     @patch.object(
         UserNotificationSystem,
@@ -153,51 +158,70 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         Returns:
             None
         """
-        with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
-            get_notification_mock.return_value = None
-            plugin = self.plugin
+        get_notification_mock.return_value = None
+        plugin = self.plugin
+        plugin.set_explicit_update_check()
 
-            with requests_mock.Mocker() as rm:
-                rm.get(
-                    "https://api.github.com/repos/mrbeam/beamos_config/tags",
-                    json={"test": "test"},
-                    status_code=404,
-                )
-                rm.get(
-                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=vNone",
-                    status_code=404,
-                )
-                update_config = get_update_information(plugin)
-                assert update_config == {
-                    "findmymrbeam": {
-                        "displayName": "OctoPrint-FindMyMrBeam",
-                        "displayVersion": "dummy",
-                        "pip": "",
-                        "repo": "",
-                        "type": "github_commit",
-                        "user": "",
-                    },
-                    "mrbeam": {
-                        "displayName": " MrBeam Plugin",
-                        "displayVersion": "dummy",
-                        "pip": "",
-                        "repo": "",
-                        "type": "github_commit",
-                        "user": "",
-                    },
-                    "netconnectd": {
-                        "displayName": "OctoPrint-Netconnectd Plugin",
-                        "displayVersion": "dummy",
-                        "pip": "",
-                        "repo": "",
-                        "type": "github_commit",
-                        "user": "",
-                    },
-                }
+        with requests_mock.Mocker() as rm:
+            rm.get(
+                "https://api.github.com/repos/mrbeam/beamos_config/tags",
+                json={"test": "test"},
+                status_code=404,
+            )
+            rm.get(
+                "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=vNone",
+                status_code=404,
+            )
+            update_config = get_update_information(plugin)
+            assert update_config == FALLBACK_UPDATE_CONFIG
         show_notifications_mock.assert_called_with(
-            notification_id="missing_updateinformation_info", replay=False
+            err_msg=[], notification_id="missing_updateinformation_info", replay=False
         )
         show_notifications_mock.assert_called_once()
+
+
+    @patch.object(
+        UserNotificationSystem,
+        "show_notifications",
+    )
+    @patch.object(
+        UserNotificationSystem,
+        "get_notification",
+    )
+    def test_update_script_relative_path_message(self, show_notifications_mock, get_notification_mock):
+        with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
+            get_notification_mock.return_value = None
+            with requests_mock.Mocker() as rm:
+                plugin = self.plugin
+                plugin.set_explicit_update_check()
+                rm.get(
+                    "https://api.github.com/repos/mrbeam/beamos_config/tags",
+                    status_code=200,
+                    json=[
+                        {
+                            "name": "v{}.0.2-mock".format(self.mock_major_tag_version),
+                        }
+                    ],
+                )
+                rm.get(
+                    "https://api.github.com/repos/mrbeam/beamos_config/contents/docs/sw-update-conf.json?ref=v{}.0.2-mock".format(
+                        self.mock_major_tag_version
+                    ),
+                    status_code=200,
+                    json={
+                        "content": base64.urlsafe_b64encode(
+                            json.dumps(self.mock_config_relative_path_missing)
+                        )
+                    },
+                )
+                update_config = get_update_information(plugin)
+                assert update_config == FALLBACK_UPDATE_CONFIG
+
+        show_notifications_mock.assert_called_with(
+            err_msg=["E-1003"], notification_id="update_fetching_information_err", replay=False
+        )
+        show_notifications_mock.assert_called_once()
+
 
     @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_config_buster_online(self, device_info_mock):
@@ -461,12 +485,13 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 },
             )
             plugin = self.plugin
+            plugin.set_explicit_update_check()
 
             update_config = get_update_information(plugin)
 
-            self.assertIsNone(update_config)
+            self.assertEquals(update_config, FALLBACK_UPDATE_CONFIG)
         user_notification_system_show_mock.assert_called_with(
-            notification_id="write_error_update_info_file_err", replay=False
+            err_msg=[], notification_id="write_error_update_info_file_err", replay=False
         )
         user_notification_system_show_mock.assert_called_once()
 
