@@ -12,7 +12,6 @@ class UpdateRestHandlerMixin:
 
     @octoprint.plugin.BlueprintPlugin.route("/info/update", methods=["POST"])
     def update_update_informations(self):
-        data = None
         clicked_by_user = False
         if hasattr(request, "json") and request.json:
             data = request.json

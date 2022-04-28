@@ -79,6 +79,10 @@ FALLBACK_UPDATE_CONFIG = {
 }
 
 
+class UpdateFetchingInformationException(Exception):
+    pass
+
+
 def get_tag_of_github_repo(repo):
     """
     return the latest tag of a github repository
@@ -173,13 +177,9 @@ def get_update_information(plugin):
         else:
             _logger.warn("no internet connection")
 
-        if plugin.user_checks_for_updates:
-            user_notification_system = plugin.user_notification_system
-            user_notification_system.show_notifications(
-                user_notification_system.get_notification(
-                    notification_id="missing_updateinformation_info", replay=False
-                )
-            )
+        _logger.error("No information about available updates could be retrieved E-1000 explicit check:{}".format(
+            plugin.explicit_update_check))
+        software_update_notify(plugin, notification_id="missing_updateinformation_info")
 
         # mark update config as dirty
         sw_update_plugin = plugin._plugin_manager.get_plugin_info(
@@ -247,7 +247,7 @@ def reload_update_info(plugin, clicked_by_user=False):
         None
     """
     if clicked_by_user:
-        plugin.user_checks_for_updates = True
+        plugin.set_explicit_update_check()
 
     _logger.debug("Reload update info")
 
@@ -304,16 +304,16 @@ def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
                         module_id, module, defaultsettings, tier, beamos_version, plugin
                     )
         except softwareupdate_exceptions.ConfigurationInvalid as e:
-            _logger.exception("ConfigurationInvalid {}".format(e))
-            if plugin.user_checks_for_updates:
-                user_notification_system = plugin.user_notification_system
-                user_notification_system.show_notifications(
-                    user_notification_system.get_notification(
-                        notification_id="update_fetching_information_err",
-                        err_msg=["E-1003"],
-                        replay=False,
-                    )
-                )
+            _logger.exception(
+                "ConfigurationInvalid {}, will use fallback dummy instead E-1003 explicit check:{}".format(e,
+                                                                                                           plugin.explicit_update_check))
+            sw_update_config = FALLBACK_UPDATE_CONFIG
+            software_update_notify(plugin, notification_id="update_fetching_information_err", err_msg=["E-1003"])
+        except UpdateFetchingInformationException as e:
+            _logger.exception(
+                "UpdateFetchingInformationException {}, will use fallback dummy instead - explicit check:{}".format(e,
+                                                                                                                    plugin.explicit_update_check))
+            sw_update_config = FALLBACK_UPDATE_CONFIG
 
         _logger.debug("sw_update_config {}".format(sw_update_config))
 
@@ -324,21 +324,27 @@ def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
             with open(sw_update_file_path, "w") as f:
                 f.write(json.dumps(sw_update_config))
         except (IOError, TypeError):
-            plugin._logger.error("can't create update info file")
-            if plugin.user_checks_for_updates:
-                user_notification_system = plugin.user_notification_system
-                user_notification_system.show_notifications(
-                    user_notification_system.get_notification(
-                        notification_id="write_error_update_info_file_err", replay=False
-                    )
-                )
+            _logger.exception(
+                "can't create update info file, will use fallback dummy instead E-1001 explicit check:{}".format(
+                    plugin.explicit_update_check))
             sw_update_config = FALLBACK_UPDATE_CONFIG
+            software_update_notify(plugin, notification_id="write_error_update_info_file_err")
 
     else:
         sw_update_config = FALLBACK_UPDATE_CONFIG
 
-    plugin.user_checks_for_updates = False
+    plugin.clear_explicit_update_check()
     return sw_update_config
+
+
+def software_update_notify(plugin, notification_id, err_msg=[]):
+    if plugin.explicit_update_check:
+        user_notification_system = plugin.user_notification_system
+        user_notification_system.show_notifications(
+            user_notification_system.get_notification(
+                notification_id=notification_id, replay=False, err_msg=err_msg
+            )
+        )
 
 
 def _generate_config_of_module(
@@ -392,20 +398,10 @@ def _generate_config_of_module(
                 if not os.path.isdir(input_moduleconfig["update_folder"]):
                     os.makedirs(input_moduleconfig["update_folder"])
             except (IOError, OSError) as e:
-                _logger.error(
-                    "could not create folder {} e:{}".format(
-                        input_moduleconfig["update_folder"], e
-                    )
-                )
-                if plugin.user_checks_for_updates:
-                    user_notification_system = plugin.user_notification_system
-                    user_notification_system.show_notifications(
-                        user_notification_system.get_notification(
-                            notification_id="update_fetching_information_err",
-                            err_msg=["E-1002"],
-                            replay=False,
-                        )
-                    )
+                software_update_notify(plugin, notification_id="update_fetching_information_err", err_msg=["E-1002"])
+                raise UpdateFetchingInformationException("could not create folder {} E-1002 e:{}".format(
+                    input_moduleconfig["update_folder"], e
+                ))
             update_script_path = os.path.join(
                 plugin._basefolder, input_moduleconfig["update_script_relative_path"]
             )
