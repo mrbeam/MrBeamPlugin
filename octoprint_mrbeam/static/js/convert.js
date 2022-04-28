@@ -2343,7 +2343,6 @@ $(function () {
 
         // quick hack
         self._update_job_summary = function () {
-            console.info(" #### update_job_summary");
             self.recalcJobTime();
             // var jobs = self.get_current_multicolor_settings(); // TODO remove?
             // self.vectorJobs(jobs);

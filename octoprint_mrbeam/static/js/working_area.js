@@ -2728,7 +2728,9 @@ $(function () {
                 svgStr = WorkingAreaHelper.fix_svg_string(svgStr);
                 return svgStr;
             } else {
-                // TODO raise exception
+                console.error(
+                    "Conversion error! _finalizeBackendSVG was called without content. Should never happen."
+                );
             }
         };
 
