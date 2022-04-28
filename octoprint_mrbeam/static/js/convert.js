@@ -1511,7 +1511,7 @@ $(function () {
             if (
                 self.has_engraving_proposal() &&
                 $("#engrave_job .color_drop_zone").children(":visible").length >
-                0
+                    0
             ) {
                 validEng = true;
             }
@@ -1979,8 +1979,8 @@ $(function () {
             var b = parseInt(hex.substr(5, 2), 16);
             return Math.round(
                 r * self.BRIGHTNESS_VALUE_RED +
-                g * self.BRIGHTNESS_VALUE_GREEN +
-                b * self.BRIGHTNESS_VALUE_BLUE
+                    g * self.BRIGHTNESS_VALUE_GREEN +
+                    b * self.BRIGHTNESS_VALUE_BLUE
             );
         };
 
@@ -2345,8 +2345,8 @@ $(function () {
         self._update_job_summary = function () {
             console.info(" #### update_job_summary");
             self.recalcJobTime();
-            //            var jobs = self.get_current_multicolor_settings();
-            //            self.vectorJobs(jobs);
+            // var jobs = self.get_current_multicolor_settings(); // TODO remove?
+            // self.vectorJobs(jobs);
         };
 
         self._thickness_sort_function = function (a, b) {
