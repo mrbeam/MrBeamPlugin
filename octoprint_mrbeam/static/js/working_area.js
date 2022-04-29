@@ -4367,7 +4367,6 @@ $(function () {
         };
 
         // general modification keys
-        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_down = function (target, ev) {
             console.log("Keydown", target, ev);
             // ctrlKey for PC, metaKey for Mac command key
@@ -4375,7 +4374,6 @@ $(function () {
                 target.classList.add("ctrl");
             }
         };
-        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_up = function (target, ev) {
             // ctrlKey for PC, metaKey for Mac command key
             if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
