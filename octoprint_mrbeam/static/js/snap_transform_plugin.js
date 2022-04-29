@@ -908,6 +908,9 @@
             }
 
             self.transformHandleGroup.node.classList.add("active");
+            self.transformHandleGroup.paper.node.classList.add(
+                "mbtransformActive"
+            );
 
             self.updateCounter = 0;
             self.updateFPS = setInterval(function () {
@@ -918,6 +921,9 @@
         self.deactivate = function () {
             self.updateFPS = null;
             self.transformHandleGroup.node.classList.remove("active");
+            self.transformHandleGroup.paper.node.classList.remove(
+                "mbtransformActive"
+            );
 
             // remove drag handlers
             self.translateHandle.undrag();

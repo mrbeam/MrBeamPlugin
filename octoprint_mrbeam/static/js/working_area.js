@@ -81,6 +81,33 @@ $(function () {
         self.workingAreaHeightMM = ko.computed(function () {
             return self.profile.currentProfileData().volume.depth();
         }, self);
+
+        // QuickShape limits
+        self.rectangleMaxWidth = ko.computed(function () {
+            return self.workingAreaWidthMM();
+        }, self);
+        self.rectangleMaxHeight = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+        self.lineMaxLength = ko.computed(function () {
+            return self.workingAreaWidthMM();
+        }, self);
+        self.circleMaxRadius = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+        // TODO: The limit of the star radius should be calculated differently
+        self.starMaxRadius = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+        // TODO: The limit of the heart width should be calculated differently
+        self.heartMaxWidth = ko.computed(function () {
+            return self.workingAreaWidthMM();
+        }, self);
+        // TODO: The limit of the heart height should be calculated differently
+        self.heartMaxHeight = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+
         self.imgTranslate = ko.computed(function () {
             // Used for the translate transformation of the picture on the work area
             return [-self.workingAreaWidthMM(), -self.workingAreaHeightMM()]
@@ -124,6 +151,7 @@ $(function () {
         self.currentQuickText = ko.observable(); // TODO check removal
         self.quickShapeNames = new Map([
             ["rect", gettext("Rectangle")],
+            ["line", gettext("Line")],
             ["circle", gettext("Circle")],
             ["star", gettext("Star")],
             ["heart", gettext("Heart")],
@@ -317,7 +345,8 @@ $(function () {
                 const bb = items[i].getBBox();
                 if (
                     bb.w > 0 &&
-                    bb.h > 0 && // filters elements without dimension, e.g. <path> without d attrib.
+                    // TODO: the line path has zero height so this should be done in a different manner
+                    // bb.h > 0 && // filters elements without dimension, e.g. <path> without d attrib.
                     col !== "undefined" &&
                     col !== "none" &&
                     col !== null &&
@@ -378,12 +407,7 @@ $(function () {
                 });
             } else {
                 console.warn(
-                    "Move Laser to " +
-                        x +
-                        "," +
-                        y +
-                        " command while machine state not idle: " +
-                        self.state.stateString()
+                    `Move Laser to ${x},${y} command while machine state not idle: ${self.state.stateString()}`
                 );
             }
         };
@@ -2262,6 +2286,11 @@ $(function () {
         };
 
         self.moveSelectedDesign = function (ifX, ifY) {
+            const selection = snap.mbtransform.getSelection();
+            if (selection.length === 0) {
+                console.info("No selection to move.");
+                return;
+            }
             var diff = 2;
             var globalScale = self.scaleMatrix().a;
             var nx = diff * ifX;
@@ -2269,7 +2298,6 @@ $(function () {
             var ntx = nx / globalScale;
             var nty = ny / globalScale;
 
-            const selection = snap.mbtransform.getSelection();
             snap.mbtransform.manualTransform(selection, {
                 tx_rel: ntx,
                 ty_rel: nty,
@@ -3107,6 +3135,8 @@ $(function () {
                     $("#wa_view_settings_body").collapse("toggle");
                 }
             });
+
+            self.initCrossHairDragging();
         };
 
         self.onTabChange = function (current, prev) {
@@ -3353,6 +3383,7 @@ $(function () {
                     rect_w: w,
                     rect_h: h,
                     rect_radius: r,
+                    line_length: w,
                     circle_radius: w,
                     star_radius: w / 2,
                     star_corners: 5,
@@ -3411,6 +3442,7 @@ $(function () {
             $("#quick_shape_rect_w").val(params.rect_w).change();
             $("#quick_shape_rect_h").val(params.rect_h).change();
             $("#quick_shape_rect_radius").val(params.rect_radius).change();
+            $("#quick_shape_line_length").val(params.line_length).change();
             $("#quick_shape_circle_radius").val(params.circle_radius).change();
             $("#quick_shape_star_radius").val(params.star_radius).change();
             $("#quick_shape_star_corners").val(params.star_corners).change();
@@ -3476,17 +3508,20 @@ $(function () {
                 var qs_params = {
                     type: type,
                     color: $("#quick_shape_color").val(),
-                    rect_w: parseFloat($("#quick_shape_rect_w").val()),
-                    rect_h: parseFloat($("#quick_shape_rect_h").val()),
+                    rect_w: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_rect_w").val()), self.rectangleMaxWidth()),
+                    rect_h: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_rect_h").val()), self.rectangleMaxHeight()),
                     rect_radius: parseFloat(
                         $("#quick_shape_rect_radius").val()
                     ),
-                    circle_radius: parseFloat(
+                    line_length: WorkingAreaHelper.limitValue(parseFloat(
+                        $("#quick_shape_line_length").val()
+                    ), self.lineMaxLength()),
+                    circle_radius: WorkingAreaHelper.limitValue(parseFloat(
                         $("#quick_shape_circle_radius").val()
-                    ),
-                    star_radius: parseFloat(
+                    ), self.circleMaxRadius()),
+                    star_radius: WorkingAreaHelper.limitValue(parseFloat(
                         $("#quick_shape_star_radius").val()
-                    ),
+                    ), self.starMaxRadius()),
                     star_corners: parseInt(
                         $("#quick_shape_star_corners").val(),
                         10
@@ -3494,8 +3529,8 @@ $(function () {
                     star_sharpness: parseFloat(
                         $("#quick_shape_star_sharpness").val()
                     ),
-                    heart_w: parseFloat($("#quick_shape_heart_w").val()),
-                    heart_h: parseFloat($("#quick_shape_heart_h").val()),
+                    heart_w: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_heart_w").val()), self.heartMaxWidth()),
+                    heart_h: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_heart_h").val()), self.heartMaxHeight()),
                     heart_lr: parseFloat($("#quick_shape_heart_lr").val()),
                     stroke: $("#quick_shape_stroke").prop("checked"),
                     fill_color: $("#quick_shape_fill_brightness").val(),
@@ -3516,6 +3551,9 @@ $(function () {
                 var shape = g.select("path");
                 var d;
                 switch (qs_params.type) {
+                    case "#line":
+                        d = QuickShapeHelper.getLine(qs_params.line_length);
+                        break;
                     case "#circle":
                         d = QuickShapeHelper.getCircle(qs_params.circle_radius);
                         break;
@@ -4147,8 +4185,188 @@ $(function () {
         //  QUICKTEXT end
         // ***********************************************************
 
+        // ***********************************************************
+        //  move laserhead by crosshair dragging
+        // ***********************************************************
+        self.initCrossHairDragging = function () {
+            const crosshairHandle = snap.select("#crosshair");
+            window.mrbeam.draggableCrosshair = { debug: false };
+
+            // TODO get from https://github.com/mrbeam/MrBeamPlugin/blob/2682b7a2e97373478e6516a98c8ba766d26ff317/octoprint_mrbeam/static/js/lasercutterprofiles.js#L276
+            // once this branch feature/SW-244... is merged.
+            const fx = self.profile.currentProfileData().axes.x.speed();
+            const fy = self.profile.currentProfileData().axes.y.speed();
+            const maxSpeed = Math.min(fx, fy);
+
+            crosshairHandle.mousedown(function (event) {
+                self.abortFreeTransforms();
+                window.mrbeam.draggableCrosshair.origin = self.state.currentPos();
+                window.mrbeam.draggableCrosshair.destination =
+                    window.mrbeam.draggableCrosshair.origin;
+
+                const boundaries = [
+                    0,
+                    0,
+                    self.workingAreaWidthMM(),
+                    self.workingAreaHeightMM(),
+                ];
+
+                // create a dummy crosshair attached to the pointer to visualize what this function does
+                const dummy = crosshairHandle.clone();
+                dummy.attr("id", "crosshairDummy");
+                snap.append(dummy);
+
+                // move our absolutely positioned ball under the pointer
+                const handleBBox = crosshairHandle.getBBox();
+                const initialPos = self._get_pointer_event_position_MM(
+                    event,
+                    snap.node
+                );
+                const handleOffset = {
+                    x: initialPos.x - handleBBox.cx,
+                    y: initialPos.y - handleBBox.cy,
+                };
+                setCrosshairPosMM(initialPos);
+
+                /* This adds the click-offset to the position,
+                 * asserts that the result it in the boundaries of the working area,
+                 * moves the dummy crosshair
+                 * and inverts the y axis for a mm coordinate in our gcode coords system.
+                 *
+                 * @param {object} pos from the event
+                 * @returns {object} corrected position {x: float, y: float}
+                 */
+                function setCrosshairPosMM(pos) {
+                    pos.x -= handleOffset.x;
+                    pos.y -= handleOffset.y;
+                    pos = self._assert_coords_in_boundaries(pos, boundaries);
+                    dummy.transform(Snap.matrix(1, 0, 0, 1, pos.x, pos.y));
+                    return { x: pos.x, y: boundaries[3] - pos.y };
+                }
+
+                function onMouseMove(event) {
+                    if (event.which !== 1) {
+                        // Mouse button released outside target workingArea or outside browser window
+                        stopCrossHairDragging(event);
+                        console.log("onMouseMove stopped", event.which);
+                    } else {
+                        const pos = self._get_pointer_event_position_MM(
+                            event,
+                            snap.node
+                        );
+                        const dest = setCrosshairPosMM(pos);
+                        window.mrbeam.draggableCrosshair.destination = dest;
+                    }
+                }
+
+                /*
+                 * moves the laserhead towards the destination.
+                 * maximum step 30mm
+                 */
+                function updateCrossHairDragging() {
+                    let origin = window.mrbeam.draggableCrosshair.origin;
+                    let dest = window.mrbeam.draggableCrosshair.destination;
+
+                    if (dest === null) {
+                        // drag finished or cancelled
+                        clearInterval(
+                            window.mrbeam.draggableCrosshair.interval
+                        );
+                    } else {
+                        if (self._distance(origin, dest) < 0.01) {
+                            // otherwise setInterval triggers constant gcode sending
+                            return;
+                        }
+                        const intermediatePos = self._getPointOfLineMM(
+                            origin,
+                            dest,
+                            30
+                        );
+
+                        self.move_laser_to_xy(
+                            intermediatePos.x,
+                            intermediatePos.y
+                        );
+
+                        // draw position of the last gcode command sent
+                        if (window.mrbeam.draggableCrosshair.debug) {
+                            const estimatedMoveDurationMS =
+                                (intermediatePos.dist / (maxSpeed / 60)) * 1000; // milliseconds
+                            console.log(
+                                "estimatedMove",
+                                estimatedMoveDurationMS
+                            );
+                            let debugC = snap.circle({
+                                cx: intermediatePos.x,
+                                cy: boundaries[3] - intermediatePos.y,
+                                r: 2,
+                                fill: "#ffff00",
+                            });
+                            setTimeout(function () {
+                                debugC.remove();
+                            }, estimatedMoveDurationMS);
+                        }
+
+                        // reflect current movement for the calculation of the next step towards destination
+                        window.mrbeam.draggableCrosshair.origin = intermediatePos;
+                    }
+                }
+
+                function stopCrossHairDragging(event) {
+                    clearInterval(window.mrbeam.draggableCrosshair.interval);
+                    window.mrbeam.draggableCrosshair.destination = null;
+
+                    const pos = self._get_pointer_event_position_MM(
+                        event,
+                        snap.node
+                    );
+                    const finalPos = setCrosshairPosMM(pos);
+                    self.move_laser_to_xy(finalPos.x, finalPos.y);
+                    console.info("Stop:", finalPos.x, finalPos.y);
+
+                    document.removeEventListener("mousemove", onMouseMove);
+                    document.removeEventListener(
+                        "mouseup",
+                        stopCrossHairDragging
+                    );
+                    setTimeout(function () {
+                        dummy.remove();
+                    }, 3000);
+                }
+
+                // start frequent gcode sending & update
+                window.mrbeam.draggableCrosshair.interval = setInterval(
+                    updateCrossHairDragging,
+                    300
+                );
+
+                // add listeners
+                document.addEventListener("mousemove", onMouseMove);
+                document.addEventListener("mouseup", stopCrossHairDragging);
+            });
+        };
+
+        self._distance = function (p1, p2) {
+            return Math.sqrt(
+                (p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y)
+            );
+        };
+
+        self._getPointOfLineMM = function (p1, p2, mm) {
+            const totalDist = self._distance(p1, p2);
+            const percent = Math.min(1, mm / totalDist);
+            const p = self._getPointOfLinePercent(p1, p2, percent);
+            p.dist = totalDist * percent;
+            return p;
+        };
+
+        self._getPointOfLinePercent = function (p1, p2, percent) {
+            const x = p1.x + percent * (p2.x - p1.x);
+            const y = p1.y + percent * (p2.y - p1.y);
+            return { x: x, y: y };
+        };
+
         // general modification keys
-        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_down = function (target, ev) {
             console.log("Keydown", target, ev);
             // ctrlKey for PC, metaKey for Mac command key
@@ -4156,7 +4374,6 @@ $(function () {
                 target.classList.add("ctrl");
             }
         };
-        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_up = function (target, ev) {
             // ctrlKey for PC, metaKey for Mac command key
             if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
@@ -4175,7 +4392,7 @@ $(function () {
         self.mouse_drag_wa = function (target, ev) {
             if (ev.originalEvent.shiftKey) {
                 var pos = self._get_pointer_event_position_MM(
-                    ev,
+                    ev.originalEvent,
                     ev.currentTarget
                 );
                 var newOffX = self.zoomOffX() - pos.dx;
@@ -4199,7 +4416,7 @@ $(function () {
         self.mouse_drag_monitor = function (target, ev) {
             if (ev.originalEvent.buttons === 1) {
                 var pos = self._get_pointer_event_position_MM(
-                    ev,
+                    ev.originalEvent,
                     ev.currentTarget
                 );
                 var newOffX = self.zoomOffX() + pos.dx;
@@ -4229,9 +4446,15 @@ $(function () {
             var targetBBox = target.getBoundingClientRect();
             var xPerc = (event.clientX - targetBBox.left) / targetBBox.width;
             var yPerc = (event.clientY - targetBBox.top) / targetBBox.height;
-            var dxPerc = event.originalEvent.movementX / targetBBox.width;
-            var dyPerc = event.originalEvent.movementY / targetBBox.height;
+            var dxPerc = event.movementX / targetBBox.width;
+            var dyPerc = event.movementY / targetBBox.height;
             return { x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc };
+        };
+
+        self._assert_coords_in_boundaries = function (p, boundaries) {
+            p.x = Math.max(boundaries[0], Math.min(boundaries[2], p.x));
+            p.y = Math.max(boundaries[1], Math.min(boundaries[3], p.y));
+            return p;
         };
 
         /**
