@@ -151,6 +151,7 @@ $(function () {
         self.currentQuickText = ko.observable(); // TODO check removal
         self.quickShapeNames = new Map([
             ["rect", gettext("Rectangle")],
+            ["line", gettext("Line")],
             ["circle", gettext("Circle")],
             ["star", gettext("Star")],
             ["heart", gettext("Heart")],
@@ -344,7 +345,8 @@ $(function () {
                 const bb = items[i].getBBox();
                 if (
                     bb.w > 0 &&
-                    bb.h > 0 && // filters elements without dimension, e.g. <path> without d attrib.
+                    // TODO: the line path has zero height so this should be done in a different manner
+                    // bb.h > 0 && // filters elements without dimension, e.g. <path> without d attrib.
                     col !== "undefined" &&
                     col !== "none" &&
                     col !== null &&
@@ -3380,6 +3382,7 @@ $(function () {
                     rect_w: w,
                     rect_h: h,
                     rect_radius: r,
+                    line_length: w,
                     circle_radius: w,
                     star_radius: w / 2,
                     star_corners: 5,
@@ -3438,6 +3441,7 @@ $(function () {
             $("#quick_shape_rect_w").val(params.rect_w).change();
             $("#quick_shape_rect_h").val(params.rect_h).change();
             $("#quick_shape_rect_radius").val(params.rect_radius).change();
+            $("#quick_shape_line_length").val(params.line_length).change();
             $("#quick_shape_circle_radius").val(params.circle_radius).change();
             $("#quick_shape_star_radius").val(params.star_radius).change();
             $("#quick_shape_star_corners").val(params.star_corners).change();
@@ -3508,7 +3512,10 @@ $(function () {
                     rect_radius: parseFloat(
                         $("#quick_shape_rect_radius").val()
                     ),
-                    circle_radius: parseFloat(
+                    line_length: WorkingAreaHelper.limitValue(parseFloat(
+                        $("#quick_shape_line_length").val()
+                    ), self.lineMaxLength()),
+                    circle_radius: WorkingAreaHelper.limitValue(parseFloat(
                         $("#quick_shape_circle_radius").val()
                     ), self.circleMaxRadius()),
                     star_radius: WorkingAreaHelper.limitValue(parseFloat(
@@ -3543,6 +3550,9 @@ $(function () {
                 var shape = g.select("path");
                 var d;
                 switch (qs_params.type) {
+                    case "#line":
+                        d = QuickShapeHelper.getLine(qs_params.line_length);
+                        break;
                     case "#circle":
                         d = QuickShapeHelper.getCircle(qs_params.circle_radius);
                         break;
