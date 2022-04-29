@@ -689,6 +689,10 @@ class WorkingAreaHelper {
             });
         return result;
     };
+
+    static limitValue(fieldValue, maxValue) {
+        return fieldValue < maxValue ? fieldValue : maxValue;
+    }
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = "bcdfghjklmnpqrstvwxz";
