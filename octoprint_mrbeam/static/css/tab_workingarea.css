@@ -31,7 +31,7 @@ svg#area_preview {
   top: 0.3em;
 }
 
-svg text {
+svg#area_preview text {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -39,14 +39,14 @@ svg text {
   pointer-events: none;
 }
 
-svg circle.ft_handle {
+svg#area_preview circle.ft_handle {
   fill-opacity: 0.7;
   stroke: #ff0000;
   stroke-width: 2.5px;
   fill: #fff;
   vector-effect: non-scaling-stroke;
 }
-svg rect.ft_bbox_transformed {
+svg#area_preview rect.ft_bbox_transformed {
   stroke: #ff0000;
   stroke-width: 2.5px;
   vector-effect: non-scaling-stroke;
@@ -56,10 +56,22 @@ svg rect.ft_bbox_transformed {
   fill: #999;
 }
 
-svg .vector_outline {
+svg#area_preview .vector_outline {
   vector-effect: non-scaling-stroke;
   stroke-width: 0.8;
+  /*cursor: pointer;*/
+}
+
+svg#area_preview .userSVG,
+svg#area_preview .userIMG,
+svg#area_preview .userText {
   cursor: pointer;
+}
+
+body.ctrlKey svg#area_preview.mbtransformActive .userSVG,
+body.ctrlKey svg#area_preview.mbtransformActive .userIMG,
+body.ctrlKey svg#area_preview.mbtransformActive .userText {
+  cursor: copy;
 }
 
 .userSVG.designHighlight .vector_outline {
@@ -751,8 +763,10 @@ body.ctrlKey #translateHandle {
   transition-timing-function: linear;
 }
 
+#crosshairDummy path,
+#crosshairDummy circle.dot,
 #crosshair path,
-#crosshair circle {
+#crosshair circle.dot {
   stroke: #e25303;
   stroke-width: 2;
   stroke-linecap: round;
@@ -764,6 +778,26 @@ body.ctrlKey #translateHandle {
   pointer-events: none;
 }
 
+#crosshairDummy path,
+#crosshairDummy circle.dot {
+  stroke: #000000;
+  opacity: 0.5;
+  filter: url(#designHighlight);
+}
+
+#crosshairDummy circle.dragger,
+#crosshair circle.dragger {
+  stroke: none;
+  fill: #000000;
+  opacity: 0;
+  cursor: grab;
+}
+#crosshair:hover circle.dragger {
+  opacity: 0.2;
+}
+#crosshairDummy circle.dragger {
+  cursor: grabbing;
+}
 body.activitySpinnerActive #activitySpinnerOverlay {
   opacity: 1;
   pointer-events: auto;
