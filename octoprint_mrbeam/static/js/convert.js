@@ -192,6 +192,14 @@ $(function () {
             console.info("recalc JTE", Date.now());
             self.estimated_job_time_trigger(Date.now());
         };
+        self.showJobTimeEstimation = ko.computed(function () {
+            return (
+                !self.slicing_in_progress() &&
+                self.selected_material() !== null &&
+                self.selected_material_color() !== null &&
+                self.selected_material_thickness() !== null
+            );
+        });
 
         self.expandMaterialSelector = ko.computed(function () {
             return (
@@ -1282,14 +1290,20 @@ $(function () {
                             });
                         });
                 } else {
-                    console.info(
-                        `Skipping vector job ${i}, invalid parameters (${[
-                            intensity_user,
-                            feedrate,
-                            passes,
-                            piercetime,
-                        ]}).`
-                    );
+                    if (
+                        self.selected_material() !== null &&
+                        self.selected_material_color() !== null &&
+                        self.selected_material_thickness() !== null
+                    ) {
+                        console.info(
+                            `Skipping vector job ${i}, invalid parameters (${[
+                                intensity_user,
+                                feedrate,
+                                passes,
+                                piercetime,
+                            ]}).`
+                        );
+                    }
                 }
             });
 
@@ -1497,7 +1511,7 @@ $(function () {
             if (
                 self.has_engraving_proposal() &&
                 $("#engrave_job .color_drop_zone").children(":visible").length >
-                0
+                    0
             ) {
                 validEng = true;
             }
@@ -1765,19 +1779,11 @@ $(function () {
 
         self.doFrontendRendering = async function (forceRastering = false) {
             const pixPerMM = 1 / self.beamDiameter();
-            //            console.info(
-            //                "### renderInput: do_raster_engrave",
-            //                self.do_raster_engrave()
-            //            );
             const enableRastering = forceRastering || self.do_raster_engrave();
             const renderOutput = await self.workingArea.getCompositionSVG(
                 enableRastering,
                 pixPerMM
             );
-            //            console.info(
-            //                "### renderOutput",
-            //                renderOutput.jobTimeEstimationData
-            //            );
             self.svg = renderOutput.renderedSvg;
             self.gcode_length_summary(renderOutput.jobTimeEstimationData);
         };
@@ -1965,8 +1971,8 @@ $(function () {
             var b = parseInt(hex.substr(5, 2), 16);
             return Math.round(
                 r * self.BRIGHTNESS_VALUE_RED +
-                g * self.BRIGHTNESS_VALUE_GREEN +
-                b * self.BRIGHTNESS_VALUE_BLUE
+                    g * self.BRIGHTNESS_VALUE_GREEN +
+                    b * self.BRIGHTNESS_VALUE_BLUE
             );
         };
 
@@ -2329,15 +2335,14 @@ $(function () {
 
         // quick hack
         self._update_job_summary = function () {
-            console.info(" #### update_job_summary");
             self.recalcJobTime();
-            //            var jobs = self.get_current_multicolor_settings();
-            //            self.vectorJobs(jobs);
+            // var jobs = self.get_current_multicolor_settings(); // TODO remove?
+            // self.vectorJobs(jobs);
         };
 
         self._thickness_sort_function = function (a, b) {
-            t_a = a.thicknessMM < 0 ? 99999 : a.thicknessMM;
-            t_b = b.thicknessMM < 0 ? 99999 : b.thicknessMM;
+            const t_a = a.thicknessMM < 0 ? 99999 : a.thicknessMM;
+            const t_b = b.thicknessMM < 0 ? 99999 : b.thicknessMM;
             return t_a - t_b;
         };
 

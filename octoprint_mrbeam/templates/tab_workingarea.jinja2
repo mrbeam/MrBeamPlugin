@@ -651,7 +651,8 @@
                                 <script type="text/html" id="wa_template_quicktext">
                                     <div class="file_list_entry scale_proportional"
                                          data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-                                        <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
+                                        <div class="pull-left wa_used_color engrave_component" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
+										<div class="pull-left wa_used_color stroke_color"></div>
                                         <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
                                         <div class="btn-group action-buttons pull-right">
 											<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
