@@ -107,10 +107,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             let rasterEl = marked[i];
             let bbox;
             try {
-              bbox = rasterEl.get_total_bbox();
-            }
-            catch(error) {
-                console.warn(`Getting bounding box for ${rasterEl} failed.`, error);
+                bbox = rasterEl.get_total_bbox();
+                //              if(MRBEAM_DEBUG_RENDERING){ // enable to debug render bbox
+                //                  const debugBB = svg.paper.rect(bbox).attr({fill: 'none', stroke:"#FF00FF", "stroke-dasharray": "1 1 1 1", class:"debugBBox"});
+                //              }
+            } catch (error) {
+                console.warn(
+                    `Getting bounding box for ${rasterEl} failed.`,
+                    error
+                );
                 continue;
             }
             // find overlaps
