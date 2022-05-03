@@ -939,6 +939,14 @@ $(function () {
 
                 newSvg.unref(true);
 
+                // remove non-visible text elements (no text, TODO: just whitespace)
+                const textElements = newSvg.selectAll("text");
+                textElements.forEach((t) => {
+                    const bb = t.getBBox();
+                    if (bb.width === 0 || bb.height === 0) {
+                        t.remove();
+                    }
+                });
                 // handle texts
                 var hasText = newSvg.selectAll("text,tspan");
                 if (hasText && hasText.length > 0) {

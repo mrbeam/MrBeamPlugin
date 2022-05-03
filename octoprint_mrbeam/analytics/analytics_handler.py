@@ -36,7 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
-    ANALYTICS_LOG_VERSION = 21  # bumped in 0.10.0 - added the laser head model to analytics and added triggerData to session_expired event
+    ANALYTICS_LOG_VERSION = 22  # bumped for SW-653 - added frontend event update_info_call_failure to see when this backend call fails
 
     def __init__(self, plugin):
         self._plugin = plugin
