@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-03-31 16:25+0200\n"
-"PO-Revision-Date: 2022-03-31 16:31+0200\n"
+"POT-Creation-Date: 2022-05-05 09:39+0200\n"
+"PO-Revision-Date: 2022-05-05 09:42+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -746,6 +746,24 @@ msgstr "Edelholzsticker"
 #: octoprint_mrbeam/static/js/material_settings.js:366
 msgid "Solid Wood"
 msgstr "Vollholz"
+
+#: octoprint_mrbeam/static/js/material_settings.js:373
+msgid "Stainless Steel"
+msgstr "Edelstahl"
+
+#: octoprint_mrbeam/static/js/material_settings.js:376
+msgid "Engravings on stainless steel only work with our \"mark solid\" spray."
+msgstr ""
+"Gravuren auf Edelstahl funktionieren nur mit unserm “Mark Solid” Laser "
+"Markierungsspray. "
+
+#: octoprint_mrbeam/static/js/material_settings.js:377
+msgid ""
+"Do not engrave stainless steel without the application of laser marking "
+"color."
+msgstr ""
+"Edelstahl nicht blank gravieren, sonder immer in Verbindung mit unserem "
+"Markierugsspay."
 
 #: octoprint_mrbeam/static/js/mother_viewmodel.js:51
 msgid "Starts the laser job"
