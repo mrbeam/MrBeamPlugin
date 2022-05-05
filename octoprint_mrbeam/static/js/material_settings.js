@@ -373,7 +373,7 @@ $(function () {
                 name: gettext("Stainless Steel"),
                 img: "Stainless-Steel.jpg",
                 description: "",
-                hints: gettext("Engravings on stainless steel only work with our \"mark solid\" spray."),
+                hints: gettext("Engravings on stainless steel only work with our \"mark solid\" spray. Use line distance 0,1mm for the best result."),
                 safety_notes: gettext("Do not engrave stainless steel without the application of laser marking color."),
             },
         };
