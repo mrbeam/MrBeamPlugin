@@ -369,6 +369,13 @@ $(function () {
                 hints: "",
                 safety_notes: "",
             },
+            "Stainless Steel": {
+                name: gettext("Stainless Steel"),
+                img: "Stainless-Steel.jpg",
+                description: "",
+                hints: gettext("Engravings on stainless steel only work with our \"mark solid\" spray."),
+                safety_notes: gettext("Do not engrave stainless steel without the application of laser marking color."),
+            },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
     }
