@@ -123,8 +123,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             elem.type !== "polyline" &&
             elem.type !== "image" &&
             elem.type !== "path" &&
-            elem.type !== "text" &&
-            elem.type !== "tspan"
+            elem.type !== "text" // tspan will be ignored, it does not support presentation attr transform
         ) {
             console.info("Ignoring element ", elem.type);
             ignoredElements.push(elem.type);
@@ -174,7 +173,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
         // text is not supported -> just set a total matrix as surrounding groups will be baked.
         // this makes the text at least engravable and displays it at correct position
-        if (elem.type === "text" || elem.type === "tspan") {
+        if (elem.type === "text") {
             //			if(elem.node.getCTM !== undefined){ // not necessary anymore after not treating #text nodes?
             var transform = elem.transform();
             var matrix = transform["totalMatrix"].add(correctionMatrix);

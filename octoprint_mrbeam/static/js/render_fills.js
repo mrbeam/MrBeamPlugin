@@ -175,18 +175,22 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             );
             let tmpSvg = svg.clone();
             tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
-            // tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).forEach((element) => {
-            //     let elementToBeRemoved = tmpSvg.select('#' + element.attr('id'));
-            //     let elementsToBeExcluded = ["text", "tspan"]
-            //     if (elementToBeRemoved && !elementsToBeExcluded.includes(elementToBeRemoved.type)) {
-            //         elementToBeRemoved.remove();
-            //     }
-            // });
+
             // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
             tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
             // DON'T fix IDs of textPath references, they're cloned correct.
             //tmpSvg.fixIds("defs .quicktext_curve_path", "[mb\\:id]");
             cluster.svg = tmpSvg;
+            if (MRBEAM_DEBUG_RENDERING) {
+                console.debug("cluster.bbox", cluster.bbox);
+                cluster.svg.rect(cluster.bbox).attr({
+                    stroke: "#FF00FF",
+                    strokeDasharray: "3 1",
+                    strokeWidth: "0.4",
+                    fill: "none",
+                    id: `bbox rCluster${c}`,
+                });
+            }
         }
         //console.log("Clusters", clusters);
         return clusters;
@@ -319,9 +323,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         renderBBoxMM = null
     ) {
         var elem = this;
-        //console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
         console.debug(
-            `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM}`
+            `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM.w} * ${renderBBoxMM.h} @ ${renderBBoxMM.x}, ${renderBBoxMM.y}`
         );
 
         let bboxFromElem = elem.getBBox();
