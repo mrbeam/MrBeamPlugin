@@ -201,7 +201,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             );
             let tmpSvg = svg.clone();
             tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
-
+          
             // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
             tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
             // DON'T fix IDs of textPath references, they're cloned correct.

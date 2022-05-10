@@ -16,11 +16,16 @@ from octoprint_mrbeam.migration.migration_base import (
 from octoprint_mrbeam.migration.migration_base import (
     MigrationException as MigrationException,
 )
+from octoprint_mrbeam.migration.migration_base import (
+    MIGRATION_RESTART as MIGRATION_RESTART,
+)
 
 # this is for internal use
 from octoprint_mrbeam.migration.Mig001 import Mig001NetconnectdDisableLogDebugLevel
+from octoprint_mrbeam.migration.Mig002 import Mig002EnableOnlineCheck
 
 # To add migrations they have to be added to this list till we automate it
 list_of_migrations = [
     Mig001NetconnectdDisableLogDebugLevel,
+    Mig002EnableOnlineCheck,
 ]
