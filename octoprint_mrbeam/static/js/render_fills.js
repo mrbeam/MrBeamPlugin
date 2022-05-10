@@ -71,42 +71,68 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         var elem = this;
         var selection = [];
         var children = elem.children();
-        if (elem.type === "desc" || elem.type === "style") {
+        if (
+            elem.type === "desc" ||
+            elem.type === "title" ||
+            elem.type === "style"
+        ) {
             return [];
         }
 
-        if (children.length > 0) {
-            var goRecursive =
-                elem.type !== "defs" && // ignore these tags
-                elem.type !== "clipPath" &&
-                elem.type !== "metadata" &&
-                elem.type !== "rdf:rdf" &&
-                elem.type !== "cc:work" &&
-                elem.type !== "sodipodi:namedview";
+        // TODO: better than checking children.length and a blacklist would be to refer to
+        // Graphic Elements vs. Container Elements (see https://www.w3.org/TR/SVG/struct.html#TermContainerElement)
+        // image is excluded here as <image ...>\n</image> has a child of type #text (== '\n')
+        const goRecursive = ![
+            "image",
+            "defs",
+            "clipPath",
+            "metadata",
+            "rdf:rdf",
+            "cc:work",
+            "sodipodi:namedview",
+        ].includes(elem.type);
 
-            if (goRecursive) {
-                for (var i = 0; i < children.length; i++) {
-                    var child = children[i];
-                    selection = selection.concat(
-                        child.markFilled(className, fillPaths)
-                    );
-                }
+        if (children.length > 0 && goRecursive) {
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i];
+                selection = selection.concat(
+                    child.markFilled(className, fillPaths)
+                );
             }
         } else {
+            if (elem.type === "g") return []; // means empty group
+            if (elem.type === "defs") return []; // means empty defs
             if (
                 elem.type === "image" ||
                 elem.type === "text" ||
                 elem.type === "#text"
             ) {
                 if (elem.type === "#text") {
-                    let parent = elem.parent();
-                    parent.addClass(className);
-                    selection.push(parent);
-                } else {
+                    if (elem.node.nodeValue.trim() !== "") {
+                        let parent = elem.parent();
+                        if (parent.type === "textPath") {
+                            parent = parent.parent();
+                        }
+                        parent.addClass(className);
+                        selection.push(parent);
+                    }
+                } else if (elem.type === "text") {
+                    if (elem.node.nodeValue !== null) {
+                        elem.addClass(className);
+                        selection.push(elem);
+                    }
+                } else if (elem.type === "image") {
                     elem.addClass(className);
                     selection.push(elem);
                 }
             } else {
+                // check for non-dimensional elements and out of working area elements
+                const bb = elem.getBBox();
+                if (bb.w === 0 || bb.h === 0) {
+                    console.warn(`Element did not have expanse: ${elem.type}`);
+                    return [];
+                }
+
                 if (fillPaths && elem.is_filled()) {
                     elem.addClass(className);
                     selection.push(elem);
