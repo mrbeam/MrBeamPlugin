@@ -6,19 +6,21 @@ import shutil
 from datetime import datetime
 from distutils.version import LooseVersion, StrictVersion
 
-from octoprint_mrbeam import IS_X86
+from enum import Enum
+
+from octoprint_mrbeam import IS_X86, __version__
 from octoprint_mrbeam.software_update_information import BEAMOS_LEGACY_DATE
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.util import logExceptions
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.printing.comm_acc2 import MachineCom
-from octoprint_mrbeam.__version import __version__
 from octoprint_mrbeam.materials import materials
 from octoprint_mrbeam.migration import (
     MIGRATION_STATE,
     MigrationBaseClass,
     list_of_migrations,
+    MIGRATION_RESTART,
 )
 
 
@@ -75,6 +77,7 @@ class Migration(object):
         )
         beamos_tier, self.beamos_date = self.plugin._device_info.get_beamos_version()
         self.beamos_version = self.plugin._device_info.get_beamos_version_number()
+        self._restart = MIGRATION_RESTART.NONE
 
     def run(self):
         try:
@@ -336,6 +339,8 @@ class Migration(object):
                     # if migration sucessfull append to executed successfull
                     if migration.state == MIGRATION_STATE.migration_done:
                         migration_executed[migration.id] = True
+                        if migration.restart:
+                            self.restart = migration.restart
                     else:
                         # mark migration as failed and skipp the following ones
                         migration_executed[migration.id] = False
@@ -343,6 +348,8 @@ class Migration(object):
 
             with open(migrations_json_file_path, "w") as f:
                 f.write(json.dumps(migration_executed))
+
+            MigrationBaseClass.execute_restart(self.restart)
         except IOError:
             self._logger.error("migration execution file IO error")
         except MigrationException as e:
@@ -403,6 +410,15 @@ class Migration(object):
                 ["version"], self.version_current, force=True
             )  # force needed to save it if it wasn't there
             self.plugin._settings.save()
+
+    @property
+    def restart(self):
+        return self._restart
+
+    @restart.setter
+    def restart(self, value):
+        if self._restart == 0 or value < self._restart:
+            self._restart = value
 
     ##########################################################
     #####              general stuff                     #####
