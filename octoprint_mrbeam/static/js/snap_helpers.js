@@ -66,19 +66,4 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         const bb = el.getBBox();
         return Snap.path.getBBoxWithTransformation(bb, mat);
     };
-
-    /**
-     * filter method for Snap Set like we know it from Array
-     * @param f function which decides wether to keep or discard set elements
-     * @returns {Set<any>} a new Snap set
-     */
-    Snap.Set.prototype.filter = function (f) {
-        const s = new Snap.Set();
-        this.forEach((e) => {
-            if (f(e)) {
-                s.push(e);
-            }
-        });
-        return s;
-    };
 });

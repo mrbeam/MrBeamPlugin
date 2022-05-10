@@ -127,12 +127,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             let rasterEl = marked[i];
             let bbox;
             try {
-                bbox = rasterEl.get_total_bbox();
-            } catch (error) {
-                console.warn(
-                    `Getting bounding box for ${rasterEl} failed.`,
-                    error
-                );
+              bbox = rasterEl.get_total_bbox();
+            }
+            catch(error) {
+                console.warn(`Getting bounding box for ${rasterEl} failed.`, error);
                 continue;
             }
             // find overlaps
@@ -174,14 +172,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 rasterEl.addClass(`rasterCluster${c}`)
             );
             let tmpSvg = svg.clone();
-            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
-            // tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).forEach((element) => {
-            //     let elementToBeRemoved = tmpSvg.select('#' + element.attr('id'));
-            //     let elementsToBeExcluded = ["text", "tspan"]
-            //     if (elementToBeRemoved && !elementsToBeExcluded.includes(elementToBeRemoved.type)) {
-            //         elementToBeRemoved.remove();
-            //     }
-            // });
+            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).forEach((element) => {
+                let elementToBeRemoved = tmpSvg.select('#' + element.attr('id'));
+                let elementsToBeExcluded = ["text", "tspan"]
+                if (elementToBeRemoved && !elementsToBeExcluded.includes(elementToBeRemoved.type)) {
+                    elementToBeRemoved.remove();
+                }
+            });
             // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
             tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
             // DON'T fix IDs of textPath references, they're cloned correct.
@@ -338,17 +335,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             //            );
         }
 
-        // only enlarge on fonts, images not necessary.
-        const doEnlargeBBox =
-            elem.selectAll("text").filter((e) => {
-                const bb = e.getBBox();
-                // this filter is required, as every quick text creates an empty text element (for switching between curved and straight text)
-                return bb.width > 0 && bb.height > 0;
-            }).length > 0;
-
-        // Quick fix: in some browsers the bbox is too tight, so we just add an extra margin to all the sides, making the height and width larger in total
-        const enlargement_x = doEnlargeBBox ? 0.4 : 0; // percentage of the width added to each side
-        const enlargement_y = doEnlargeBBox ? 0.4 : 0; // percentage of the height added to each side
+        // TODO only enlarge on images and fonts
+        // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
+        const enlargement_x = 0.4; // percentage of the width added to each side
+        const enlargement_y = 0.4; // percentage of the height added to each side
         const x1 = Math.max(0, bbox.x - bbox.width * enlargement_x);
         const x2 = Math.min(wMM, bbox.x2 + bbox.width * enlargement_x);
         const w = x2 - x1;
