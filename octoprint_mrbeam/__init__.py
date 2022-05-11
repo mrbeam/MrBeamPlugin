@@ -31,9 +31,15 @@ from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
-IS_X86 = platform.machine() == "x86_64"
+from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
+from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
 
-from octoprint_mrbeam.__version import __version__
+IS_X86 = platform.machine() == "x86_64"
+from ._version import get_versions
+
+__version__ = get_versions()["version"]
+del get_versions
+
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
@@ -43,6 +49,7 @@ from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.iobeam.hw_malfunction_handler import hwMalfunctionHandler
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from octoprint_mrbeam.iobeam.compressor_handler import compressor_handler
+from octoprint_mrbeam.jinja.filter_loader import FilterLoader
 from octoprint_mrbeam.user_notification_system import user_notification_system
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
@@ -53,6 +60,10 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
+from octoprint_mrbeam.rest_handler.docs_handler import DocsRestHandlerMixin
+from octoprint_mrbeam.services.settings_service import SettingsService
+from octoprint_mrbeam.services.burger_menu_service import BurgerMenuService
+from octoprint_mrbeam.services.document_service import DocumentService
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
@@ -64,10 +75,8 @@ from octoprint_mrbeam.software_update_information import (
     get_update_information,
     switch_software_channel,
     software_channels_available,
-    SW_UPDATE_TIER_PROD,
-    SW_UPDATE_TIER_BETA,
-    SW_UPDATE_TIER_DEV,
     BEAMOS_LEGACY_DATE,
+    SWUpdateTier,
 )
 from octoprint_mrbeam.support import check_support_mode, check_calibration_tool_mode
 from octoprint_mrbeam.cli import get_cli_commands
@@ -110,6 +119,8 @@ class MrBeamPlugin(
     octoprint.plugin.SlicerPlugin,
     octoprint.plugin.ShutdownPlugin,
     octoprint.plugin.EnvironmentDetectionPlugin,
+    UpdateRestHandlerMixin,
+    DocsRestHandlerMixin,
 ):
     # CONSTANTS
     ENV_PROD = "PROD"
@@ -164,6 +175,7 @@ class MrBeamPlugin(
         self._serial_num = None
         self._mac_addrs = dict()
         self._model_id = None
+        self._explicit_update_check = False
         self._grbl_version = None
         self._device_series = self._device_info.get_series()
         self.called_hosts = []
@@ -185,6 +197,9 @@ class MrBeamPlugin(
 
         # MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
         MrBeamEvents.register_with_octoprint()
+
+        # Jinja custom filters need to be loaded already on instance creation
+        FilterLoader.load_custom_jinja_filters()
 
     # inside initialize() OctoPrint is already loaded, not assured during __init__()!
     def initialize(self):
@@ -243,10 +258,10 @@ class MrBeamPlugin(
         self.led_event_listener.set_fps(self._settings.get(["leds", "fps"]))
         # start iobeam socket only once other handlers are already initialized so that we can handle info message
         self.iobeam = ioBeamHandler(self)
-        self.temperature_manager = temperatureManager(self)
         self.dust_manager = dustManager(self)
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
+        self.temperature_manager = temperatureManager(self)
         self.compressor_handler = compressor_handler(self)
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
@@ -255,6 +270,10 @@ class MrBeamPlugin(
         self._logger.info("MrBeamPlugin initialized!")
         self.mrbeam_plugin_initialized = True
         self.fire_event(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
+
+        # move octoprints connectivity checker to a new var so we can use our abstraction
+        self._octoprint_connectivity_checker = self._connectivity_checker
+        self._connectivity_checker = ConnectivityChecker(self)
 
         self._do_initial_log()
 
@@ -368,7 +387,7 @@ class MrBeamPlugin(
                 terminalMaxLines=2000,
                 env=self.ENV_PROD,
                 load_gremlins=False,
-                software_tier=SW_UPDATE_TIER_PROD,
+                software_tier=SWUpdateTier.STABLE.value,
                 iobeam_disable_warnings=False,  # for development on non-MrBeam devices
                 suppress_migrations=False,  # for development on non-MrBeam devices
                 support_mode=False,
@@ -454,7 +473,9 @@ class MrBeamPlugin(
             dev=dict(
                 env=self.get_env(),
                 software_tier=self._settings.get(["dev", "software_tier"]),
-                software_tiers_available=software_channels_available(self),
+                software_tiers_available=[
+                    channel for channel in software_channels_available(self)
+                ],
                 terminalMaxLines=self._settings.get(["dev", "terminalMaxLines"]),
             ),
             gcode_nextgen=dict(
@@ -694,7 +715,7 @@ class MrBeamPlugin(
                 "css/hopscotch.min.css",
                 "css/wizard.css",
                 "css/tab_messages.css",
-                "css/software_update.css"
+                "css/software_update.css",
             ],
             less=["less/mrbeam.less"],
         )
@@ -717,6 +738,16 @@ class MrBeamPlugin(
         ret = check_calibration_tool_mode(self)
         self._fixEmptyUserManager()
         return ret
+
+    @property
+    def explicit_update_check(self):
+        return self._explicit_update_check
+
+    def set_explicit_update_check(self):
+        self._explicit_update_check = True
+
+    def clear_explicit_update_check(self):
+        self._explicit_update_check = False
 
     ##~~ UiPlugin mixin
 
@@ -818,6 +849,10 @@ class MrBeamPlugin(
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
+                settings_model=SettingsService(self._logger, DocumentService(self._logger)).get_template_settings_model(
+                    self.get_model_id()),
+                burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
+                    self.get_model_id()),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
@@ -2957,10 +2992,10 @@ class MrBeamPlugin(
                 timer.start()
 
     def is_beta_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.BETA
 
     def is_develop_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_DEV
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.DEV
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:

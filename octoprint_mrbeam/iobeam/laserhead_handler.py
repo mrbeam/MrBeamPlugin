@@ -3,6 +3,9 @@ import yaml
 import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
+
+LASERHEAD_MAX_TEMP_FALLBACK = 55.0
 
 # singleton
 _instance = None
@@ -30,6 +33,7 @@ class LaserheadHandler(object):
         self._settings = plugin._settings
         self._event_bus = plugin._event_bus
         self._plugin_version = plugin.get_plugin_version()
+        self._iobeam = None
 
         self._lh_cache = {}
         self._last_used_lh_serial = None
@@ -74,6 +78,7 @@ class LaserheadHandler(object):
         _ = event
         _ = payload
         self._analytics_handler = self._plugin.analytics_handler
+        self._iobeam = self._plugin.iobeam
 
     def _get_lh_model(self, lh_data):
         try:
@@ -92,19 +97,25 @@ class LaserheadHandler(object):
             )
 
     def set_current_used_lh_data(self, lh_data):
+        laser_head_model_changed = False
+
         try:
             if self._valid_lh_data(lh_data):
                 self._current_used_lh_serial = lh_data["main"]["serial"]
                 self._current_used_lh_model_id = self._get_lh_model(lh_data)
                 self._current_used_lh_model = self._LASERHEAD_MODEL_STRING_MAP[str(self._current_used_lh_model_id)]
                 # fmt: off
+                if(self._current_used_lh_model_id != self._last_used_lh_model_id) \
+                        and self._current_used_lh_model_id is not None:
+                    laser_head_model_changed = True
+
                 if (self._current_used_lh_serial != self._last_used_lh_serial) and self._last_used_lh_model_id is not None:
                     # fmt: on
                     if self._current_used_lh_model_id == 1:
                         self._settings.set_boolean(["laserheadChanged"], True)
                         self._settings.save()
                     self._logger.info(
-                        "Laserhead changed: s/n:%s model:%s -> s/n:%s model:%s",
+                        "laserhead_handler: Laserhead changed: s/n:%s model:%s -> s/n:%s model:%s",
                         self._last_used_lh_serial,
                         self._last_used_lh_model_id,
                         self._current_used_lh_serial,
@@ -123,6 +134,21 @@ class LaserheadHandler(object):
                         model=self._current_used_lh_model_id,
                     ),
                 )
+
+                if laser_head_model_changed:
+                    # Now all the information about the new laser head should be present Thus we can fire this event
+                    self._logger.info(
+                        "laserhead_handler: Laserhead Model changed: s/n:%s model:%s -> s/n:%s model:%s",
+                        self._last_used_lh_serial,
+                        self._last_used_lh_model_id,
+                        self._current_used_lh_serial,
+                        self._current_used_lh_model_id,
+                    )
+                    # Fire the event
+                    self._iobeam._call_callback(
+                        IoBeamValueEvents.LASERHEAD_CHANGED,
+                        "Laserhead Model changed",
+                    )
 
             # BACKWARD_COMPATIBILITY: This is for detecting mrb_hw_info v0.0.20
             # This part of the code should never by reached, if reached then this means an update for mrb_hw_info did
@@ -407,3 +433,79 @@ class LaserheadHandler(object):
                 self._logger.info("Writing to file: {} ..is successful!".format(laser_heads_file))
         except IOError as e:
             self._logger.error("Can't open file: {} , Due to error: {}: ".format(laser_heads_file, e))
+
+    @property
+    def current_laserhead_max_temperature(self):
+        """
+        Return the current laser head max temperature
+
+        Returns:
+            float: Laser head max temp
+
+        """
+        current_laserhead_properties = self._load_current_laserhead_properties()
+
+        # Handle the exceptions
+        if((isinstance(current_laserhead_properties, dict) is False) or
+                ("max_temperature" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["max_temperature"], float) is False)):
+            # Apply fallback
+            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
+            self._logger.exception(
+                "Current Laserhead Max temp couldn't be retrieved, fallback to the temperature value of: {}".format(
+                    self.default_laserhead_max_temperature))
+            return self.default_laserhead_max_temperature
+        # Reaching here means, everything looks good
+        self._logger.debug("Current Laserhead Max temp:{}".format(current_laserhead_properties["max_temperature"]))
+        return current_laserhead_properties["max_temperature"]
+
+    @property
+    def default_laserhead_max_temperature(self):
+        """
+        Default max temperature for laser head. to be used by other modules at init time
+
+        Returns:
+            float: Laser head default max temp
+        """
+
+        return LASERHEAD_MAX_TEMP_FALLBACK
+
+    def _load_current_laserhead_properties(self):
+        """
+        Loads the current detected laser head related properties and return them
+
+        Returns:
+            dict: current laser head properties, None: otherwise
+
+        """
+        # 1. get the ID of the current laser head
+        laserhead_id = self.get_current_used_lh_model_id()
+
+        # 2. Load the corresponding yaml file and return it's content
+        lh_properties_file_path = os.path.join(self._plugin._basefolder,
+                                               "profiles", "laserhead", "laserhead_id_{}.yaml".format(laserhead_id))
+        if not os.path.isfile(lh_properties_file_path):
+            self._logger.exception(
+                "properties file for current laser head ID: {} doesn't exist or path is invalid. Path: {}".format(
+                    laserhead_id, lh_properties_file_path))
+            return None
+
+        self._logger.debug(
+            "properties file for current laser head ID: {} exists. Path:{}".format(
+                laserhead_id, lh_properties_file_path) )
+        try:
+            with open(lh_properties_file_path) as lh_properties_yaml_file:
+                self._logger.debug(
+                    "properties file for current laser head ID: {} opened successfully".format(
+                        laserhead_id))
+                return yaml.safe_load(lh_properties_yaml_file)
+        except (IOError, yaml.YAMLError) as e:
+            self._logger.exception(
+                "Exception: {} while Opening or loading the properties file for current laser head. Path: {}".format(
+                    e, lh_properties_file_path))
+            return None
+
+
+
+
+

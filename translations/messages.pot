@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-01-24 11:40+0100\n"
+"POT-Creation-Date: 2022-03-31 16:25+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -213,11 +213,11 @@ msgstr ""
 msgid "Cut "
 msgstr ""
 
-#: octoprint_mrbeam/static/js/design_store.js:236
+#: octoprint_mrbeam/static/js/design_store.js:239
 msgid "Could not download design"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/design_store.js:237
+#: octoprint_mrbeam/static/js/design_store.js:240
 msgid "The purchased design could not be downloaded. Please download again."
 msgstr ""
 
@@ -712,42 +712,42 @@ msgstr ""
 msgid "Please confirm to proceed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:273
+#: octoprint_mrbeam/static/js/mrbeam.js:190
 #: octoprint_mrbeam/static/js/wizard_acl.js:177
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:23
 msgid "Invalid e-mail address"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:335
+#: octoprint_mrbeam/static/js/mrbeam.js:252
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:20
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:22
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:21
 msgid "E-mail address"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:500
-#: octoprint_mrbeam/static/js/mrbeam.js:514
-#: octoprint_mrbeam/static/js/mrbeam.js:525
+#: octoprint_mrbeam/static/js/mrbeam.js:417
+#: octoprint_mrbeam/static/js/mrbeam.js:431
+#: octoprint_mrbeam/static/js/mrbeam.js:442
 msgid "Session expired"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:501
+#: octoprint_mrbeam/static/js/mrbeam.js:418
 msgid "Trying to do a re-login..."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:515
+#: octoprint_mrbeam/static/js/mrbeam.js:432
 msgid "Re-login successful.<br/>Please repeat the last action."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:526
+#: octoprint_mrbeam/static/js/mrbeam.js:443
 msgid "Please login again."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:583
+#: octoprint_mrbeam/static/js/mrbeam.js:500
 msgid "Browser not supported."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:585
+#: octoprint_mrbeam/static/js/mrbeam.js:502
 #, python-format
 msgid ""
 "Mr Beam makes use of latest web technologies which might not be fully "
@@ -755,11 +755,11 @@ msgid ""
 "of%(br)s%(open)sGoogle Chrome%(close)s for Mr Beam."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:607
+#: octoprint_mrbeam/static/js/mrbeam.js:524
 msgid "Beta user: Please consider enabling Mr Beam analytics!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:611
+#: octoprint_mrbeam/static/js/mrbeam.js:528
 #, python-format
 msgid ""
 "As you are currently in our Beta channel, you would help us tremendously "
@@ -1255,50 +1255,50 @@ msgstr ""
 msgid "Heart"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1342
+#: octoprint_mrbeam/static/js/working_area.js:1356
 msgid "Limited split result."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1343
+#: octoprint_mrbeam/static/js/working_area.js:1357
 msgid ""
 "Splitting this design would result in too many parts. Here are "
 "${split_result.length} parts. You can split the last one again if "
 "necessary."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1354
+#: octoprint_mrbeam/static/js/working_area.js:1368
 msgid "No different line colors found."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1357
+#: octoprint_mrbeam/static/js/working_area.js:1371
 msgid "No non-intersecting shapes found."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1364
+#: octoprint_mrbeam/static/js/working_area.js:1378
 msgid "Looks like a single path."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1367
+#: octoprint_mrbeam/static/js/working_area.js:1381
 msgid "Element not splittable with this method."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1369
+#: octoprint_mrbeam/static/js/working_area.js:1383
 msgid "Can't split this design."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1909
+#: octoprint_mrbeam/static/js/working_area.js:1923
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements"
 " got removed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1917
+#: octoprint_mrbeam/static/js/working_area.js:1931
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1930
+#: octoprint_mrbeam/static/js/working_area.js:1944
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their"
@@ -1306,44 +1306,44 @@ msgid ""
 " engraved with infill."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1937
+#: octoprint_mrbeam/static/js/working_area.js:1951
 msgid "Text elements found"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1950
+#: octoprint_mrbeam/static/js/working_area.js:1964
 msgid ""
 "The SVG file contained style elements with online references. Since "
 "online references are not supported, we removed them. The image might "
 "look a bit different now."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1955
+#: octoprint_mrbeam/static/js/working_area.js:1969
 msgid "Style elements removed"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1969
+#: octoprint_mrbeam/static/js/working_area.js:1983
 msgid ""
 "The selected design file can not be handled. Please make sure it is a "
 "valid design file."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1975
+#: octoprint_mrbeam/static/js/working_area.js:1989
 msgid "File error."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1989
+#: octoprint_mrbeam/static/js/working_area.js:2003
 msgid "The selected design file does not have any content."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1995
+#: octoprint_mrbeam/static/js/working_area.js:2009
 msgid "Empty File."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2009
+#: octoprint_mrbeam/static/js/working_area.js:2023
 msgid "An unknown error occurred while processing this design file."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2017
+#: octoprint_mrbeam/static/js/working_area.js:2031
 msgid ""
 "Please try reloading this browser window and try again. If this error "
 "remains, contact the Mr Beam Support Team. Make sure you provide the "
@@ -1354,8 +1354,8 @@ msgstr ""
 #: octoprint_mrbeam/static/js/calibration/calibration.js:120
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:124
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:367
-#: octoprint_mrbeam/static/js/working_area.js:2024
-#: octoprint_mrbeam/static/js/working_area.js:2029
+#: octoprint_mrbeam/static/js/working_area.js:2038
+#: octoprint_mrbeam/static/js/working_area.js:2043
 msgid "Error"
 msgstr ""
 
@@ -2132,8 +2132,8 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:51
 msgid ""
-"Then do a homing cycle so that your Mr&nbsp;Beam knows its current "
-"position."
+"Then run a homing cycle so your Mr&nbsp;Beam can detect the position of "
+"the laser head."
 msgstr ""
 
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:54

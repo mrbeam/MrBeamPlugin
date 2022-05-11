@@ -1,0 +1,63 @@
+{
+    "displayName": "OctoPrint-FindMyMrBeam",
+    "repo": "OctoPrint-FindMyMrBeam",
+    "displayVersion": "dummy",
+    "pip": "https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
+    "type": "github_commit",
+    "restart": "octoprint",
+    "user": "mrbeam",
+    "stable_branch": {
+    "branch": "stable",
+    "name": "stable",
+    "commitish": [
+      "stable"
+    ]
+  },
+  "prerelease_branches": [
+    {
+      "name": "alpha",
+      "branch": "alpha",
+      "commitish": [
+        "alpha",
+        "beta",
+        "stable"
+      ]
+    },
+    {
+      "name": "beta",
+      "branch": "beta",
+      "commitish": [
+        "beta",
+        "stable"
+      ]
+    }
+  ],
+  "force_base": false,
+  "release_compare": "python_unequal",
+  "tiers": {
+    "stable": {
+      "branch": "mrbeam2-stable",
+      "branch_default": "mrbeam2-stable",
+      "type": "github_commit"
+    },
+    "beta": {
+      "branch": "mrbeam2-beta",
+      "branch_default": "mrbeam2-beta",
+      "type": "github_commit",
+      "prerelease_channel": "beta",
+      "prerelease": true
+    },
+    "develop": {
+      "type": "github_commit",
+      "branch": "alpha",
+      "branch_default": "alpha"
+    },
+    "alpha": {
+      "branch": "mrbeam2-alpha",
+      "branch_default": "mrbeam2-alpha",
+      "prerelease_channel": "alpha",
+      "prerelease": true,
+      "type": "github_release",
+    }
+  }
+}
