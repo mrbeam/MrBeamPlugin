@@ -98,13 +98,9 @@
                                 <a href="#" id="exit_fullscreen_menu_item"><i class="icon-fullscreen"></i> {{ _('Exit Fullscreen') }}</a>
                             </li>
 							<li class="divider"></li>
-                             {% if model in ["MRBEAM2", "MRBEAM2_DC_R1"] %}
-                                <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('QuickstartGuide_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
-                                <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('UserManual_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
-                            {% else %}
-                                <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('QuickstartGuide_dreamcut_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
-                                <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('UserManual_dreamcut_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
-                            {% endif %}
+                            {% for document in burger_menu_model.documents %}
+                                <li><a href="{{ document.document_link.url }}" target="_blank"><i class="icon-book"></i>{{ document.title }}</a></li>
+                            {% endfor %}
 							<li class="divider"></li>
 							<li><a href="#" onclick="$('#support_overlay').modal('show')" id="support_menu_item"><i class="fa fa-life-ring"></i> {{ _('Support') }}</a></li>
 							<li class="divider show_only_online"></li>
