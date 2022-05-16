@@ -200,8 +200,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 rasterEl.addClass(`rasterCluster${c}`)
             );
             let tmpSvg = svg.clone();
-            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
-          
+            // opacity=0 is the better way to do tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
+            // why? nested tspan elements behave like html span elements and move position if the siblings are removed.
+            tmpSvg
+                .selectAll(`.toRaster:not(.rasterCluster${c})`)
+                .attr({ opacity: "0" });
+
             // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
             tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
             // DON'T fix IDs of textPath references, they're cloned correct.
