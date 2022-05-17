@@ -1,4 +1,4 @@
-FROM ubuntu:22.10
+FROM ubuntu:21.10
 
 ENV TZ=Europe/Berlin
 # Installing python and pip on user level so we need to add it to the PATH
@@ -59,7 +59,7 @@ COPY . /home/mrbeam/MrBeamPlugin/
 RUN source ./venv2/bin/activate \
     && sudo -u mrbeam env "PATH=$PATH" pip install ./MrBeamPlugin
 
-CMD [ "./venv2/bin/python", "-m", "octoprint", "serve", "--debug", "--port", "5000" ]
+CMD [ "./venv2/bin/python", "-m", "octoprint", "serve", "--port", "5000" ]
 
 HEALTHCHECK  --interval=30s --timeout=3s \
     CMD wget --no-verbose --tries=3 --spider http://localhost:5000 || exit 1
