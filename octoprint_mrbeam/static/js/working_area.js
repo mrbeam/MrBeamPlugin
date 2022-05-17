@@ -1201,23 +1201,16 @@ $(function () {
                 if (generator.generator === "inkscape") {
                     let isOldInkscapeVersion = NaN;
                     try {
-                        isOldInkscapeVersion =
-                            window.compareVersions(
-                                // 1.1.2 (1:1.1+202202050950+0a00cf5339) -> 1.1
-                                generator.version
-                                    .split(".")
-                                    .slice(0, 2)
-                                    .join("."),
-                                "0.91"
-                            ) <= 0;
-                    } catch (e) {
+                        isOldInkscapeVersion= window.compareVersions(
+                            // 1.1.2 (1:1.1+202202050950+0a00cf5339) -> 1.1
+                            generator.version.split('.').slice(0,2).join('.'),
+                            "0.91"
+                        ) <= 0;
+                    } catch(e) {
                         let payload = {
                             error: e.message,
                         };
-                        self._sendAnalytics(
-                            "inkscape_version_comparison_error",
-                            payload
-                        );
+                        self._sendAnalytics("inkscape_version_comparison_error", payload);
                         console.log("inkscape_version_comparison_error: ", e);
                         // In case the comparison fails, we assume the version to be above 0.91
                         // This assumption (the scaling) does not have a major impact as it has
@@ -1722,7 +1715,7 @@ $(function () {
                     } else if (
                         event.target.classList.contains("unit_percent")
                     ) {
-                        let newWidth =
+                        const newWidth =
                             ((currentWidth / Math.abs(currentSx)) * value) /
                             100.0;
                         if (Math.abs(newWidth) < 0.1)
@@ -1766,7 +1759,7 @@ $(function () {
                     } else if (
                         event.target.classList.contains("unit_percent")
                     ) {
-                        let newHeight =
+                        const newHeight =
                             ((currentHeight / Math.abs(currentSy)) * value) /
                             100.0;
                         if (Math.abs(newHeight) < 0.1)

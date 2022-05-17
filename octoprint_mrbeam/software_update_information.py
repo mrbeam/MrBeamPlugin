@@ -17,7 +17,7 @@ from urllib3 import Retry
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_merge, logExceptions
-from octoprint_mrbeam.util.github_api import get_file_of_repo_for_tag
+from octoprint_mrbeam.util.github_api import get_file_of_repo_for_tag, REPO_URL
 from util.pip_util import get_version_of_pip_module
 
 
@@ -96,7 +96,8 @@ def get_tag_of_github_repo(repo):
     import json
 
     try:
-        url = "https://api.github.com/repos/mrbeam/{repo}/tags".format(repo=repo)
+        url = "{repo_url}/tags".format(repo_url=REPO_URL.format(repo=repo))
+
         headers = {
             "Accept": "application/json",
         }
