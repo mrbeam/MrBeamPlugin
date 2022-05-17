@@ -36,6 +36,7 @@ nbproject
 .directory
 plugvenv/
 venv/
+**/node_modules
 # Pytest files
 tests/rsc/camera/debug/[^R]*
 tests/rsc/camera/out.jpg
