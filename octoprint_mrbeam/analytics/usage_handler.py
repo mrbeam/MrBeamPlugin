@@ -1,5 +1,7 @@
 import os
 import time
+import unicodedata
+
 import yaml
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -356,27 +358,50 @@ class UsageHandler(object):
                 "Trying to recover from _backup_file file: %s", self._backup_file
             )
             recovery_try = True
-            if os.path.isfile(self._backup_file):
+            try:
+                with open(self._backup_file, "r") as stream:
+                    data = yaml.safe_load(stream)
+                if self._validate_data(data):
+                    data["restored"] = (
+                        data["restored"] + 1 if "restored" in data else 1
+                    )
+                    self._usage_data = data
+                    success = True
+                    self._write_usage_data()
+                    self._logger.info("Recovered from _backup_file file. Yayy!")
+            except yaml.constructor.ConstructorError:
                 try:
-                    data = None
-                    with open(self._backup_file, "r") as stream:
-                        data = yaml.safe_load(stream)
-                    if self._validate_data(data):
-                        data["restored"] = (
-                            data["restored"] + 1 if "restored" in data else 1
-                        )
-                        self._usage_data = data
-                        success = True
-                        self._write_usage_data()
-                        self._logger.info("Recovered from _backup_file file. Yayy!")
-                except:
-                    self._logger.error("Can't read _backup_file file.")
+                    success = self._repair_backup_usage_data()
+                except Exception:
+                    self._logger.error("Repair of the _backup_file failed.")
+            except OSError:
+                self._logger.error("There is no _backup_file file.")
+            except yaml.YAMLError:
+                self._logger.error("There was a YAMLError with the _backup_file file.")
+            except:
+                self._logger.error("Can't read _backup_file file.")
 
         if not success:
             self._logger.warn("Resetting usage data. (marking as incomplete)")
             self._usage_data = self._get_usage_data_template()
             if recovery_try:
                 self._write_usage_data()
+
+    def _repair_backup_usage_data(self):
+        success = False
+        with open(self._backup_file, "r") as stream:
+            data = yaml.load(stream)
+        if self._validate_data(data):
+            if isinstance(data["version"], unicode):
+                data["version"] = unicodedata.normalize('NFKD', data["version"]).encode('ascii', 'ignore')
+            data["restored"] = (
+                data["restored"] + 1 if "restored" in data else 1
+            )
+            self._usage_data = data
+            success = True
+            self._write_usage_data()
+            self._logger.info("Could repair _backup_file file. Yayy!")
+        return success
 
     def _write_usage_data(self, file=None):
         self._usage_data["version"] = self._plugin_version
@@ -385,7 +410,7 @@ class UsageHandler(object):
         file = self._storage_file if file is None else file
         try:
             with open(file, "w") as outfile:
-                yaml.dump(self._usage_data, outfile, default_flow_style=False)
+                yaml.safe_dump(self._usage_data, outfile, default_flow_style=False)
         except:
             self._logger.exception("Can't write file %s due to an exception: ", file)
 
