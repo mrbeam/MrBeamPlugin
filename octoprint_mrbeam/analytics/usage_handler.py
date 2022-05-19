@@ -388,6 +388,12 @@ class UsageHandler(object):
                 self._write_usage_data()
 
     def _repair_backup_usage_data(self):
+        """
+        repairs a broken usage backup file, where the version is saved in unicode
+
+        Returns:
+            boolean: successfull
+        """
         success = False
         with open(self._backup_file, "r") as stream:
             data = yaml.load(stream)
