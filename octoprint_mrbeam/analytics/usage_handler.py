@@ -366,8 +366,8 @@ class UsageHandler(object):
                         data["restored"] + 1 if "restored" in data else 1
                     )
                     self._usage_data = data
-                    success = True
                     self._write_usage_data()
+                    success = True
                     self._logger.info("Recovered from _backup_file file. Yayy!")
             except yaml.constructor.ConstructorError:
                 try:
