@@ -173,16 +173,19 @@ class DustManager(object):
             err = True
         if args["dust"] is not None:
             self._dust = args["dust"]
-
+            self._plugin._printer._addTemperatureData(
+                custom={"dust": (self._dust * 100, 0)}
+            )
             if self._printer.is_printing():
                 self._job_dust_values.append(self._dust)
         else:
             err = True
         if args["rpm"] is not None:
             self._rpm = args["rpm"]
-            self._plugin._printer._addTemperatureData(
-                bed=(self._rpm / 100, self._dust * 100),
-            )
+            # self._plugin._printer._addTemperatureData(
+            #     bed=(self._rpm / 100, self._dust * 100),
+            #     custom={"dust": (self._dust * 100, 0)}
+            # )
         else:
             err = True
 

@@ -136,7 +136,7 @@ class TemperatureManager(object):
             )
         self.temperature_ts = time.time()
         self._plugin._printer._addTemperatureData(
-            tools={0: {0: self.temperature, 1: self.temperature_max}},
+            custom = {"laser_temp": (self.temperature, self.temperature_max)}
         )
         self._check_temp_val()
         self._analytics_handler.collect_laser_temp_value(self.temperature)
