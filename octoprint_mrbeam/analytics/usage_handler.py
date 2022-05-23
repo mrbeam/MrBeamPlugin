@@ -623,6 +623,9 @@ class UsageHandler(object):
             dust_factor = round(
                 self._dust_mapping_m * self._last_dust_value + self._dust_mapping_b, 2
             )
+            #5 * 0.435 + (-0.5) = 1,675
+            #8,33 * 0,435 -0,5 = 3,125
+            #
             if dust_factor < self.MIN_DUST_FACTOR:
                 dust_factor = self.MIN_DUST_FACTOR
 

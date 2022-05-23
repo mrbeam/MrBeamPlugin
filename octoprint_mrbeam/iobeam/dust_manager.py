@@ -178,6 +178,10 @@ class DustManager(object):
             )
             if self._printer.is_printing():
                 self._job_dust_values.append(self._dust)
+            if self.get_mean_job_dust() is not None:
+                self._plugin._printer._addTemperatureData(
+                    custom={"mean_dust": (self.get_mean_job_dust() * 100.1, self._plugin.usage_handler._calculate_dust_factor())}
+                )
         else:
             err = True
         if args["rpm"] is not None:
