@@ -744,9 +744,9 @@ class IoBeamHandler(object):
                 dataset,
                 dict(val=vals[self.MESSAGE_ACTION_FAN_RPM]),
             )
-            self._plugin._printer._addTemperatureData(
-                custom={"fan rpm": (vals[self.MESSAGE_ACTION_FAN_RPM] / 100, 0)}
-            )
+            # self._plugin._printer._addTemperatureData(
+            #     custom={"fan_rpm": (vals[self.MESSAGE_ACTION_FAN_RPM] / 100, 0)}
+            # )
             self._call_callback(
                 IoBeamValueEvents.DUST_VALUE,
                 dataset,
@@ -773,7 +773,7 @@ class IoBeamHandler(object):
                         IoBeamValueEvents.RPM_VALUE, dataset, dict(val=rpm_val)
                     )
                     self._plugin._printer._addTemperatureData(
-                        custom={"fan rpm": (rpm_val / 100, 0)}
+                        custom={"fan_rpm": (rpm_val / 100, 0)}
                     )
 
             if self.MESSAGE_ACTION_FAN_STATE in dataset:
