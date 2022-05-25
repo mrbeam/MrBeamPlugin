@@ -15,3 +15,18 @@ the plugin manager.
 ## Configuration
 
 **TODO:** Describe your plugin's configuration options (if any).
+
+
+## Docker
+
+Build image:
+```shell
+docker build -t mrbeam_plugin .
+```
+Run container:
+```shell
+docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
+```
+Access from the browser:
+
+    http://localhost:5002
