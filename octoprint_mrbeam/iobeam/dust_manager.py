@@ -176,11 +176,15 @@ class DustManager(object):
             self._plugin._printer._addTemperatureData(
                 custom={"dust": (self._dust * 100, self._plugin.usage_handler.MAX_DUST_VALUE*100)}
             )
+            self._plugin._printer._addTemperatureData(
+                #                  pwm_min + pwm_factor * dust / rpm_max_value * 100
+                custom={"fan_pwm": (((50 + 350) * self._dust) / 250 * 100, 0)}
+            )
             if self._printer.is_printing():
                 self._job_dust_values.append(self._dust)
             if self.get_mean_job_dust() is not None:
                 self._plugin._printer._addTemperatureData(
-                    custom={"mean_dust": (self.get_mean_job_dust() * 100.1, self._plugin.usage_handler._calculate_dust_factor())}
+                    custom={"mean_dust": (self.get_mean_job_dust() * 100.0, self._plugin.usage_handler._calculate_dust_factor())}
                 )
         else:
             err = True
