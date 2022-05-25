@@ -71,42 +71,68 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         var elem = this;
         var selection = [];
         var children = elem.children();
-        if (elem.type === "desc" || elem.type === "style") {
+        if (
+            elem.type === "desc" ||
+            elem.type === "title" ||
+            elem.type === "style"
+        ) {
             return [];
         }
 
-        if (children.length > 0) {
-            var goRecursive =
-                elem.type !== "defs" && // ignore these tags
-                elem.type !== "clipPath" &&
-                elem.type !== "metadata" &&
-                elem.type !== "rdf:rdf" &&
-                elem.type !== "cc:work" &&
-                elem.type !== "sodipodi:namedview";
+        // TODO: better than checking children.length and a blacklist would be to refer to
+        // Graphic Elements vs. Container Elements (see https://www.w3.org/TR/SVG/struct.html#TermContainerElement)
+        // image is excluded here as <image ...>\n</image> has a child of type #text (== '\n')
+        const goRecursive = ![
+            "image",
+            "defs",
+            "clipPath",
+            "metadata",
+            "rdf:rdf",
+            "cc:work",
+            "sodipodi:namedview",
+        ].includes(elem.type);
 
-            if (goRecursive) {
-                for (var i = 0; i < children.length; i++) {
-                    var child = children[i];
-                    selection = selection.concat(
-                        child.markFilled(className, fillPaths)
-                    );
-                }
+        if (children.length > 0 && goRecursive) {
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i];
+                selection = selection.concat(
+                    child.markFilled(className, fillPaths)
+                );
             }
         } else {
+            if (elem.type === "g") return []; // means empty group
+            if (elem.type === "defs") return []; // means empty defs
             if (
                 elem.type === "image" ||
                 elem.type === "text" ||
                 elem.type === "#text"
             ) {
                 if (elem.type === "#text") {
-                    let parent = elem.parent();
-                    parent.addClass(className);
-                    selection.push(parent);
-                } else {
+                    if (elem.node.nodeValue.trim() !== "") {
+                        let parent = elem.parent();
+                        if (parent.type === "textPath") {
+                            parent = parent.parent();
+                        }
+                        parent.addClass(className);
+                        selection.push(parent);
+                    }
+                } else if (elem.type === "text") {
+                    if (elem.node.nodeValue !== null) {
+                        elem.addClass(className);
+                        selection.push(elem);
+                    }
+                } else if (elem.type === "image") {
                     elem.addClass(className);
                     selection.push(elem);
                 }
             } else {
+                // check for non-dimensional elements and out of working area elements
+                const bb = elem.getBBox();
+                if (bb.w === 0 || bb.h === 0) {
+                    console.warn(`Element did not have expanse: ${elem.type}`);
+                    return [];
+                }
+
                 if (fillPaths && elem.is_filled()) {
                     elem.addClass(className);
                     selection.push(elem);
@@ -172,18 +198,27 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 rasterEl.addClass(`rasterCluster${c}`)
             );
             let tmpSvg = svg.clone();
-            tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).forEach((element) => {
-                let elementToBeRemoved = tmpSvg.select('#' + element.attr('id'));
-                let elementsToBeExcluded = ["text", "tspan"]
-                if (elementToBeRemoved && !elementsToBeExcluded.includes(elementToBeRemoved.type)) {
-                    elementToBeRemoved.remove();
-                }
-            });
+            // opacity=0 is the better way to do tmpSvg.selectAll(`.toRaster:not(.rasterCluster${c})`).remove();
+            // why? nested tspan elements behave like html span elements and move position if the siblings are removed.
+            tmpSvg
+                .selectAll(`.toRaster:not(.rasterCluster${c})`)
+                .attr({ opacity: "0" });
+          
             // Fix IDs of filter references, those are not cloned correct (probably because reference is in style="..." definition)
             tmpSvg.fixIds("defs filter[mb\\:id]", "mb:id"); // namespace attribute selectors syntax: [ns\\:attrname]
             // DON'T fix IDs of textPath references, they're cloned correct.
             //tmpSvg.fixIds("defs .quicktext_curve_path", "[mb\\:id]");
             cluster.svg = tmpSvg;
+            if (MRBEAM_DEBUG_RENDERING) {
+                console.debug("cluster.bbox", cluster.bbox);
+                cluster.svg.rect(cluster.bbox).attr({
+                    stroke: "#FF00FF",
+                    strokeDasharray: "3 1",
+                    strokeWidth: "0.4",
+                    fill: "none",
+                    id: `bbox rCluster${c}`,
+                });
+            }
         }
         //console.log("Clusters", clusters);
         return clusters;
@@ -316,9 +351,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         renderBBoxMM = null
     ) {
         var elem = this;
-        //console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
         console.debug(
-            `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM}`
+            `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM.w} * ${renderBBoxMM.h} @ ${renderBBoxMM.x}, ${renderBBoxMM.y}`
         );
 
         let bboxFromElem = elem.getBBox();
