@@ -3248,7 +3248,13 @@ $(function () {
 
             if (MRBEAM_DEBUG_RENDERING) {
                 debugBase64(
-                    clusters.map((c) => c.svgDataUrl),
+                    clusters.map((c) => {
+                        c.svg.attr(
+                            "viewBox",
+                            `0 0 ${self.workingAreaWidthMM()} ${self.workingAreaHeightMM()}`
+                        );
+                        return c.svg.toDataURL();
+                    }),
                     `Step 1: Raster Cluster SVGs`
                 );
             }

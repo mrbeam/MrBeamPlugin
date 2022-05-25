@@ -36,22 +36,25 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             return [];
         }
 
-        if (children.length > 0 && elem.type !== "text") {
-            var goRecursive =
-                elem.type !== "defs" && // ignore these tags
-                elem.type !== "clipPath" &&
-                elem.type !== "metadata" &&
-                elem.type !== "rdf:rdf" &&
-                elem.type !== "cc:work" &&
-                elem.type !== "sodipodi:namedview";
+        // TODO: better than checking children.length and a blacklist would be to refer to
+        // Graphic Elements vs. Container Elements (see https://www.w3.org/TR/SVG/struct.html#TermContainerElement)
+        // image is excluded here as <image ...>\n</image> has a child of type #text (== '\n')
+        const goRecursive = ![
+            "image",
+            "defs",
+            "clipPath",
+            "metadata",
+            "rdf:rdf",
+            "cc:work",
+            "sodipodi:namedview",
+        ].includes(elem.type);
 
-            if (goRecursive) {
-                for (var i = 0; i < children.length; i++) {
-                    var child = children[i];
-                    selection = selection.concat(
-                        child.markFilled(className, fillPaths)
-                    );
-                }
+        if (children.length > 0 && goRecursive) {
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i];
+                selection = selection.concat(
+                    child.markFilled(className, fillPaths)
+                );
             }
         } else {
             if (elem.type === "g") return []; // means empty group
@@ -572,7 +575,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     ) {
         var elem = this;
         console.debug(
-            `renderJobTimeEstimationPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm)`
+            `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM.w} * ${renderBBoxMM.h} @ ${renderBBoxMM.x}, ${renderBBoxMM.y}`
         );
 
         // get svg as dataUrl
