@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-03-31 16:25+0200\n"
+"POT-Creation-Date: 2022-05-05 10:33+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -631,6 +631,22 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/material_settings.js:366
 msgid "Solid Wood"
+msgstr ""
+
+#: octoprint_mrbeam/static/js/material_settings.js:373
+msgid "Stainless Steel"
+msgstr ""
+
+#: octoprint_mrbeam/static/js/material_settings.js:376
+msgid ""
+"Engravings on stainless steel only work with our \"mark solid\" spray. "
+"Use line distance 0,1mm for the best result."
+msgstr ""
+
+#: octoprint_mrbeam/static/js/material_settings.js:377
+msgid ""
+"Do not engrave stainless steel without the application of laser marking "
+"color."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/mother_viewmodel.js:51
