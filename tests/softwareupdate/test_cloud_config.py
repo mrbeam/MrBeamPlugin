@@ -28,13 +28,39 @@ from octoprint_mrbeam.software_update_information import (
     get_update_information,
     SW_UPDATE_INFO_FILE_NAME,
     SW_UPDATE_TIERS,
-    FALLBACK_UPDATE_CONFIG,
 )
 from octoprint_mrbeam.user_notification_system import UserNotificationSystem
 from octoprint_mrbeam.util import dict_merge
 from octoprint_mrbeam.util.device_info import DeviceInfo
 
 TMP_BASE_FOLDER_PATH = "/tmp/cloud_config_test/"
+
+FALLBACK_UPDATE_CONFIG_EXPECTED = {
+    "mrbeam": {
+        "displayName": " MrBeam Plugin",
+        "displayVersion": "dummy",
+        "type": "github_commit",
+        "user": "",
+        "repo": "",
+        "pip": "",
+    },
+    "netconnectd": {
+        "displayName": "OctoPrint-Netconnectd Plugin",
+        "displayVersion": "dummy",
+        "type": "github_commit",
+        "user": "",
+        "repo": "",
+        "pip": "",
+    },
+    "findmymrbeam": {
+        "displayName": "OctoPrint-FindMyMrBeam",
+        "displayVersion": "dummy",
+        "type": "github_commit",
+        "user": "",
+        "repo": "",
+        "pip": "",
+    },
+}
 
 
 class SettingsDummy(object):
@@ -173,7 +199,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 status_code=404,
             )
             update_config = get_update_information(plugin)
-            assert update_config == FALLBACK_UPDATE_CONFIG
+            assert update_config == FALLBACK_UPDATE_CONFIG_EXPECTED
         show_notifications_mock.assert_called_with(
             err_msg=[], notification_id="missing_updateinformation_info", replay=False
         )
@@ -215,7 +241,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                     },
                 )
                 update_config = get_update_information(plugin)
-                assert update_config == FALLBACK_UPDATE_CONFIG
+                assert update_config == FALLBACK_UPDATE_CONFIG_EXPECTED
 
         show_notifications_mock.assert_called_with(
             err_msg=["E-1003"], notification_id="update_fetching_information_err", replay=False
@@ -489,7 +515,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
 
             update_config = get_update_information(plugin)
 
-            self.assertEquals(update_config, FALLBACK_UPDATE_CONFIG)
+            self.assertEquals(update_config, FALLBACK_UPDATE_CONFIG_EXPECTED)
         user_notification_system_show_mock.assert_called_with(
             err_msg=[], notification_id="write_error_update_info_file_err", replay=False
         )
