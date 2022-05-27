@@ -56,21 +56,21 @@ BEAMOS_LEGACY_DATE = date(2018, 1, 12)  # still used in the migrations
 
 FALLBACK_UPDATE_CONFIG = {
     "mrbeam": {
-        "name": " MrBeam Plugin",
+        "displayName": " MrBeam Plugin",
         "type": "github_commit",
         "user": "",
         "repo": "",
         "pip": "",
     },
     "netconnectd": {
-        "name": "OctoPrint-Netconnectd Plugin",
+        "displayName": "OctoPrint-Netconnectd Plugin",
         "type": "github_commit",
         "user": "",
         "repo": "",
         "pip": "",
     },
     "findmymrbeam": {
-        "name": "OctoPrint-FindMyMrBeam",
+        "displayName": "OctoPrint-FindMyMrBeam",
         "type": "github_commit",
         "user": "",
         "repo": "",
@@ -335,6 +335,7 @@ def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
         sw_update_config = FALLBACK_UPDATE_CONFIG
 
     plugin.clear_explicit_update_check()
+    sw_update_config = _set_current_version_for_config(sw_update_config, plugin)
     return sw_update_config
 
 
@@ -410,17 +411,12 @@ def _generate_config_of_module(
                 "update_script"
             ].format(update_script=update_script_path)
 
-        current_version = _get_curent_version(input_moduleconfig, module_id, plugin)
+        if (
+                "global_pip_command" in input_moduleconfig
+                and "pip_command" not in input_moduleconfig
+        ):
+            input_moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
 
-        if module_id != "octoprint":
-            _logger.debug(
-                "{module_id} current version: {current_version}".format(
-                    module_id=module_id, current_version=current_version
-                )
-            )
-            input_moduleconfig["displayVersion"] = (
-                current_version if current_version else "-"
-            )
         if "name" in input_moduleconfig:
             input_moduleconfig["displayName"] = input_moduleconfig["name"]
 
@@ -443,7 +439,7 @@ def _generate_config_of_module(
         return input_moduleconfig
 
 
-def _get_curent_version(input_moduleconfig, module_id, plugin):
+def _get_current_version(input_moduleconfig, module_id, plugin):
     """
     returns the version of the given module
 
@@ -457,11 +453,6 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
     """
     # get version number
     current_version = None
-    if (
-        "global_pip_command" in input_moduleconfig
-        and "pip_command" not in input_moduleconfig
-    ):
-        input_moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
     if "pip_command" in input_moduleconfig:
         # get version number of pip modules
         pip_command = input_moduleconfig["pip_command"]
@@ -487,6 +478,20 @@ def _get_curent_version(input_moduleconfig, module_id, plugin):
             current_version = pluginInfo.version
     return current_version
 
+def _set_current_version_for_config(update_info, plugin):
+    for module_id in update_info:
+        module_update_info = update_info.get(module_id)
+        if module_id != "octoprint":
+            current_version = _get_current_version(module_update_info, module_id,plugin)
+            _logger.debug(
+                "{module_id} current version: {current_version}".format(
+                    module_id=module_id, current_version=current_version
+                )
+            )
+            module_update_info["displayVersion"] = (
+                current_version if current_version else "-"
+            )
+    return update_info
 
 class VersionComperator:
     """
