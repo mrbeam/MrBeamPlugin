@@ -2996,10 +2996,10 @@ class MrBeamPlugin(
                 timer.start()
 
     def is_beta_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.BETA
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.BETA.value
 
     def is_develop_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.DEV
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.DEV.value
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:
