@@ -2,10 +2,10 @@ name: Build
 on:
   push:
     branches:
-      - feature/SW-1313-add-sonar-cloud
       - alpha
       - beta
       - stable
+      - mrbeam2-beta
       - mrbeam2-stable
   pull_request:
     types: [opened, synchronize, reopened]
