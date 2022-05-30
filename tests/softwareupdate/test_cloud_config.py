@@ -39,7 +39,7 @@ FALLBACK_UPDATE_CONFIG_EXPECTED = {
     "mrbeam": {
         "displayName": " MrBeam Plugin",
         "displayVersion": "dummy",
-        "type": "github_commit",
+        "type": "github_release",
         "user": "",
         "repo": "",
         "pip": "",
@@ -47,7 +47,7 @@ FALLBACK_UPDATE_CONFIG_EXPECTED = {
     "netconnectd": {
         "displayName": "OctoPrint-Netconnectd Plugin",
         "displayVersion": "dummy",
-        "type": "github_commit",
+        "type": "github_release",
         "user": "",
         "repo": "",
         "pip": "",
@@ -55,7 +55,7 @@ FALLBACK_UPDATE_CONFIG_EXPECTED = {
     "findmymrbeam": {
         "displayName": "OctoPrint-FindMyMrBeam",
         "displayVersion": "dummy",
-        "type": "github_commit",
+        "type": "github_release",
         "user": "",
         "repo": "",
         "pip": "",

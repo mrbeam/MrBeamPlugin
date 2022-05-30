@@ -57,21 +57,21 @@ BEAMOS_LEGACY_DATE = date(2018, 1, 12)  # still used in the migrations
 FALLBACK_UPDATE_CONFIG = {
     "mrbeam": {
         "displayName": " MrBeam Plugin",
-        "type": "github_commit",
+        "type": "github_release",
         "user": "",
         "repo": "",
         "pip": "",
     },
     "netconnectd": {
         "displayName": "OctoPrint-Netconnectd Plugin",
-        "type": "github_commit",
+        "type": "github_release",
         "user": "",
         "repo": "",
         "pip": "",
     },
     "findmymrbeam": {
         "displayName": "OctoPrint-FindMyMrBeam",
-        "type": "github_commit",
+        "type": "github_release",
         "user": "",
         "repo": "",
         "pip": "",
