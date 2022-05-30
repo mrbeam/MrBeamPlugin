@@ -11,27 +11,23 @@
       "repo": "MrBeamLedStrips",
       "pip": "https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
       "global_pip_command": true,
-      "displayVersion": "-",
       "pip_command": "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
     },
     "iobeam": {
       "repo": "iobeam",
       "pip": "git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
       "global_pip_command": true,
-      "displayVersion": "-",
       "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
     },
     "mrb-hw-info": {
       "repo": "mrb_hw_info",
       "pip": "git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
       "global_pip_command": true,
-      "displayVersion": "-",
       "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
     },
     "mrbeamdoc": {
       "pip": "https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
-      "repo": "MrBeamDoc",
-      "displayVersion": "dummy"
+      "repo": "MrBeamDoc"
     }
   },
   "stable_branch": {
