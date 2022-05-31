@@ -145,6 +145,15 @@ class DustManager(object):
         self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
 
     def _handle_exhaust_data(self, args):
+        """
+        hanldes exhaust data comming from iobeam EXHAUST_DYNAMIC_VALUE event
+
+        Args:
+            args: data from the iobeam event
+
+        Returns:
+            None
+        """
         self._logger.debug("last pressure values append {} - {}".format(args["pressure"], self._last_pressure_values))
         if args["pressure"] is not None:
             self._last_pressure_values.append(args["pressure"])

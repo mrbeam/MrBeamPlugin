@@ -1069,7 +1069,6 @@ class IoBeamHandler(object):
         :param dataset:
         :return: error count
         """
-        # EXHAUST_DYNAMIC_VALUE = "iobeam.exhaust.dynamic"
         self._logger.debug("exhaust dataset: '%s'", dataset)
         if "dust" in dataset:
             vals = {
