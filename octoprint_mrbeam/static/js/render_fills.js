@@ -514,7 +514,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                         d: d,
                         // d: `M-5,0h5v-5 ${d}`, // mark the origin for debugging
                         stroke: hex,
-                        fill: "none",
+                        // fill: "none", // removed to fill target path with white fill when no fill exists for easier cursor selection
                     })
                     .transform(mat);
             } else {

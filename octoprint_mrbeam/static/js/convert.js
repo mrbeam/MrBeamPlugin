@@ -989,14 +989,12 @@ $(function () {
         // image engraving stuff
         // preset values are a good start for wood engraving
         self.images_placed = ko.observable(false);
-        self.text_placed = ko.observable(false);
-        self.filled_shapes_placed = ko.observable(false);
+        self.filled_text_or_shapes_placed = ko.observable(false);
 
         self.show_image_parameters = ko.computed(function () {
             return (
                 self.images_placed() ||
-                self.text_placed() ||
-                self.filled_shapes_placed()
+                self.filled_text_or_shapes_placed()
             );
         });
 
@@ -1108,9 +1106,8 @@ $(function () {
             self.workingArea.abortFreeTransforms();
             self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
             self.show_vector_parameters(self.workingArea.hasStrokedVectors());
-            self.filled_shapes_placed(self.workingArea.hasFilledVectors());
+            self.filled_text_or_shapes_placed(self.workingArea.hasFilledVectors());
             self.images_placed(self.workingArea.getPlacedImages().length > 0);
-            self.text_placed(self.workingArea.hasTextItems());
             self.color_key_update();
 
             // Job Time Estimation 2.0
