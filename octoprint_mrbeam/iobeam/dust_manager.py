@@ -72,6 +72,7 @@ class DustManager(object):
         self._just_initialized = False
 
         self._last_rpm_values = deque(maxlen=5)
+        self._last_pressure_values = deque(maxlen=5)
         self._job_dust_values = []
 
         self.extraction_limit = 0.3
@@ -120,6 +121,7 @@ class DustManager(object):
 
     def _subscribe(self):
         self._iobeam.subscribe(IoBeamValueEvents.DYNAMIC_VALUE, self._handle_fan_data)
+        self._iobeam.subscribe(IoBeamValueEvents.EXHAUST_DYNAMIC_VALUE, self._handle_exhaust_data)
         self._iobeam.subscribe(
             IoBeamValueEvents.FAN_ON_RESPONSE, self._on_command_response
         )
@@ -141,6 +143,12 @@ class DustManager(object):
         self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
+
+    def _handle_exhaust_data(self, args):
+        self._logger.debug("last pressure values append {} - {}".format(args["pressure"], self._last_pressure_values))
+        if args["pressure"] is not None:
+            self._last_pressure_values.append(args["pressure"])
+
 
     def _handle_fan_data(self, args):
         err = False
@@ -254,12 +262,19 @@ class DustManager(object):
                 else:
                     rpm_average = -1
 
+                if len(self._last_pressure_values):
+                    pressure_average = sum(self._last_pressure_values) /len(self._last_pressure_values)
+                else:
+                    pressure_average = -1
+                self._logger.debug("pressure values mean {}".format(pressure_average))
+
                 data = dict(
                     rpm_val=rpm_average,
                     fan_state=self._state,
                     usage_count=self._usage_handler.get_total_usage(),
                     prefilter_count=self._usage_handler.get_prefilter_usage(),
                     carbon_filter_count=self._usage_handler.get_carbon_filter_usage(),
+                    pressure_val=pressure_average
                 )
                 self._analytics_handler.add_fan_rpm_test(data)
 
