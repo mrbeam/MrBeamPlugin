@@ -33,6 +33,8 @@ from octoprint.events import Events as OctoPrintEvents
 
 from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
 from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
+from .rest_handler.self_test_handler import SelfTestRestHandlerMixin
+from .selftest import SelfTestMixin
 
 IS_X86 = platform.machine() == "x86_64"
 from ._version import get_versions
@@ -104,6 +106,7 @@ from octoprint_mrbeam import camera
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
 __builtin__.__package_path__ = os.path.dirname(__file__)
+from octoprint_mrbeam.selftest import SelfTestMixin
 
 
 class MrBeamPlugin(
@@ -200,6 +203,7 @@ class MrBeamPlugin(
 
         # Jinja custom filters need to be loaded already on instance creation
         FilterLoader.load_custom_jinja_filters()
+        # self.__self_test = SelfTestMixin()
 
     # inside initialize() OctoPrint is already loaded, not assured during __init__()!
     def initialize(self):
@@ -266,6 +270,7 @@ class MrBeamPlugin(
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
         self.mrb_file_manager = mrbFileManager(self)
+        self.self_test_handler = SelfTestMixin.instance(self)
 
         self._logger.info("MrBeamPlugin initialized!")
         self.mrbeam_plugin_initialized = True
