@@ -1070,6 +1070,7 @@ class IoBeamHandler(object):
         :return: error count
         """
         self._logger.debug("exhaust dataset: '%s'", dataset)
+        # get the pressure sensor reading this will come as dust with the current iobeam version
         if "dust" in dataset:
             vals = {
                 "pressure": dataset["dust"],
