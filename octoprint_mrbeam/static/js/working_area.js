@@ -3916,6 +3916,8 @@ $(function () {
                     y: bb.y,
                     width: bb.width,
                     height: bb.height,
+                    // When quicktext fill is enabled/disabled, the fill-opacity controls the inclusion/exclusion of the filling
+                    "fill-opacity": isFilled ? 1 : 0
                 });
 
                 // update font of input field
