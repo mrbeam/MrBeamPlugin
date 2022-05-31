@@ -3911,6 +3911,14 @@ $(function () {
                     straightText.node.textContent = "";
                     bb = curvedText.getBBox();
                 }
+
+                g.select("path").attr({
+                    // when quicktext outline is disabled, stroke color should be white in order to be ignored
+                    stroke : isStroked ? strokeColor : "#ffffff",
+                    // when quicktext filling is disabled, fill color should be white for easier cursor selection
+                    fill: isFilled ? fill : "#ffffff"
+                });
+
                 g.select("rect").attr({
                     x: bb.x,
                     y: bb.y,
