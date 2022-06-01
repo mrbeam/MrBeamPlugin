@@ -651,7 +651,8 @@
                                 <script type="text/html" id="wa_template_quicktext">
                                     <div class="file_list_entry scale_proportional"
                                          data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-                                        <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
+                                        <div class="pull-left wa_used_color engrave_component" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
+										<div class="pull-left wa_used_color stroke_color"></div>
                                         <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
                                         <div class="btn-group action-buttons pull-right">
 											<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
@@ -847,7 +848,8 @@
 										},
 										event: { wheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
 									 "
-									 xmlns:mb="http://www.mr-beam.org/mbns" onkeydown="this.classList.add('ctrl')">
+									 xmlns:mb="http://www.mr-beam.org/mbns" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                     onkeydown="this.classList.add('ctrl')">
 								<defs>
 									<filter id="grayscale_filter">
 										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
@@ -895,11 +897,6 @@
 											  stroke="none" fill="none"></rect>
 										<g id="userContent"></g>
 
-									</g>
-									<g id="crosshair" transform="matrix(1, 0, 0, 1, -20, -20)"
-									   data-bind="attr: { transform: scaleMatrixCrosshair()}">
-										<circle r="0.5" cy="0" cx="0" />
-										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
 									</g>
 									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5"
 									   data-bind="attr: { class: camera.markerMissedClass() }">
@@ -953,6 +950,13 @@
 												<path id="rotHandle" d="M25,8c4.5,0,8,-3.5,8,-8h-5c0,1.7,-1.4,3,-3,3c0,0,0,0,0,0c0,0,0,0,-0.3,0c-1.6,-0.2,-2.7,-1.5,-2.7,-3.1c0,-1.6,1.4,-3,3,-3v1.7l4,-4.1l-4,-4.1v1.6c-4.5,0,-8,3.6,-8,8c0,4.5,3.6,8,8,8z" />
 											</g>
 										</g>
+									</g>
+									<g id="crosshair" transform="matrix(1, 0, 0, 1, -20, -20)"
+									   data-bind="attr: { transform: scaleMatrixCrosshair()}">
+										<circle class="dot" r="0.5" cy="0" cx="0" />
+										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
+                                        <path d="M-10,0H-7M10,0H7M0,10V7M0,-10V-7" style="transform: rotate(45deg);" />
+										<circle class="dragger" r="13" cy="0" cx="0" />
 									</g>
 									<rect id="selection_bbox" x="0" y="0" width="0" height="0" fill="#00000077"></rect>
 {#									<rect id="scanArea" x="0" y="0" width="0" height="0" ></rect>#}

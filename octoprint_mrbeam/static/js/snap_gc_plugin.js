@@ -128,7 +128,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     "mb:start_y": gcodeObj.begin.y || "",
                     "mb:end_x": gcodeObj.end.x || "",
                     "mb:end_y": gcodeObj.end.y || "",
+                    "mb:gc_length": gcodeObj.gc_length || "",
                 });
+                console.info(`embed_gc done for ${id}`);
             } catch (e) {
                 element.attr({
                     "mb:gc": " ",
@@ -136,6 +138,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     "mb:start_y": "",
                     "mb:end_x": "",
                     "mb:end_y": "",
+                    "mb:gc_length": "",
                 });
                 console.error(
                     "Error in embed_gc(): ",
@@ -149,8 +152,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     };
 
     Element.prototype.clean_gc = function () {
-        // TODO The selector only selects children elements of 'this'. It should work on the element itself as well.
-        var elements = this.selectAll("path");
+        this.attr("mb:gc", "");
+        const elements = this.selectAll("path");
 
         elements.forEach((element) => element.attr("mb:gc", ""));
     };
