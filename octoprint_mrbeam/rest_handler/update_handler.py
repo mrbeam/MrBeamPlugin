@@ -1,4 +1,4 @@
-from octoprint.server import NO_CONTENT
+from flask import request
 
 import octoprint.plugin
 
@@ -12,5 +12,11 @@ class UpdateRestHandlerMixin:
 
     @octoprint.plugin.BlueprintPlugin.route("/info/update", methods=["POST"])
     def update_update_informations(self):
-        reload_update_info(self)
-        return NO_CONTENT
+        clicked_by_user = False
+        if hasattr(request, "json") and request.json:
+            data = request.json
+            clicked_by_user = data.get("user", False)
+        reload_update_info(self, clicked_by_user)
+        return self._plugin_manager.get_plugin_info(
+            "softwareupdate"
+        ).implementation.check_for_update()

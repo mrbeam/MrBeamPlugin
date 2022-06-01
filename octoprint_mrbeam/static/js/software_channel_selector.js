@@ -95,11 +95,12 @@ $(function () {
         // get the hook when softwareUpdate perform the Updatecheck to force the update on the normal button
         self.performCheck_copy = self.softwareUpdate.performCheck;
         self.softwareUpdate.performCheck= function(showIfNothingNew, force, ignoreSeen) {
-            self.reload_update_info();
             if (force !== undefined) {
                 force = true; //only forces the update check if it was disabled ("check for update" button press)
+                self.reload_update_info(showIfNothingNew, force, ignoreSeen, true); //if use clicked update forward to our reload endpoint
+            }else {
+                self.performCheck_copy(showIfNothingNew, force, ignoreSeen);
             }
-            self.performCheck_copy(showIfNothingNew, force, ignoreSeen);
         };
 
         /**
@@ -127,14 +128,18 @@ $(function () {
             );
             button.addClass("sticky-footer");
         };
-        self.reload_update_info = function(){
-            OctoPrint.post("plugin/mrbeam/info/update")
+        self.reload_update_info = function(showIfNothingNew, force, ignoreSeen, user_clicked=false){
+            self.softwareUpdate.checking(true);
+            OctoPrint.postJson("plugin/mrbeam/info/update", {user:user_clicked})
                 .done(function (response) {
+                    self.softwareUpdate.fromCheckResponse(response, ignoreSeen, showIfNothingNew);
                 })
                 .fail(function (error) {
                     console.error("Unable to reload update info.");
                     self.analytics.send_fontend_event("update_info_call_failure", {error_message: error})
-                    console.error("test");
+                })
+                .always(function(){
+                    self.softwareUpdate.checking(false);
                 });
         }
     }

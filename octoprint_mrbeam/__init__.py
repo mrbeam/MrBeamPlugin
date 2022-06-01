@@ -175,6 +175,7 @@ class MrBeamPlugin(
         self._serial_num = None
         self._mac_addrs = dict()
         self._model_id = None
+        self._explicit_update_check = False
         self._grbl_version = None
         self._device_series = self._device_info.get_series()
         self.called_hosts = []
@@ -257,10 +258,10 @@ class MrBeamPlugin(
         self.led_event_listener.set_fps(self._settings.get(["leds", "fps"]))
         # start iobeam socket only once other handlers are already initialized so that we can handle info message
         self.iobeam = ioBeamHandler(self)
-        self.temperature_manager = temperatureManager(self)
         self.dust_manager = dustManager(self)
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
+        self.temperature_manager = temperatureManager(self)
         self.compressor_handler = compressor_handler(self)
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
@@ -739,6 +740,16 @@ class MrBeamPlugin(
         ret = check_calibration_tool_mode(self)
         self._fixEmptyUserManager()
         return ret
+
+    @property
+    def explicit_update_check(self):
+        return self._explicit_update_check
+
+    def set_explicit_update_check(self):
+        self._explicit_update_check = True
+
+    def clear_explicit_update_check(self):
+        self._explicit_update_check = False
 
     ##~~ UiPlugin mixin
 
