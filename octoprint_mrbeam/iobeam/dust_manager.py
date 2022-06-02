@@ -121,7 +121,9 @@ class DustManager(object):
 
     def _subscribe(self):
         self._iobeam.subscribe(IoBeamValueEvents.DYNAMIC_VALUE, self._handle_fan_data)
-        self._iobeam.subscribe(IoBeamValueEvents.EXHAUST_DYNAMIC_VALUE, self._handle_exhaust_data)
+        self._iobeam.subscribe(
+            IoBeamValueEvents.EXHAUST_DYNAMIC_VALUE, self._handle_exhaust_data
+        )
         self._iobeam.subscribe(
             IoBeamValueEvents.FAN_ON_RESPONSE, self._on_command_response
         )
@@ -152,12 +154,11 @@ class DustManager(object):
             args: data from the iobeam event
 
         Returns:
-            None
+
         """
         self._logger.debug("last pressure values append {} - {}".format(args["pressure"], self._last_pressure_values))
         if args["pressure"] is not None:
             self._last_pressure_values.append(args["pressure"])
-
 
     def _handle_fan_data(self, args):
         err = False
@@ -272,7 +273,9 @@ class DustManager(object):
                     rpm_average = -1
 
                 if len(self._last_pressure_values):
-                    pressure_average = sum(self._last_pressure_values) /len(self._last_pressure_values)
+                    pressure_average = sum(self._last_pressure_values) / len(
+                        self._last_pressure_values
+                    )
                 else:
                     pressure_average = -1
                 self._logger.debug("pressure values mean {}".format(pressure_average))
@@ -283,7 +286,7 @@ class DustManager(object):
                     usage_count=self._usage_handler.get_total_usage(),
                     prefilter_count=self._usage_handler.get_prefilter_usage(),
                     carbon_filter_count=self._usage_handler.get_carbon_filter_usage(),
-                    pressure_val=pressure_average
+                    pressure_val=pressure_average,
                 )
                 self._analytics_handler.add_fan_rpm_test(data)
 
@@ -487,12 +490,15 @@ class DustManager(object):
 
         if not result and not self._plugin.is_boot_grace_period():
             msg = "Fan error: {errs}".format(errs=", ".join(errs))
-            log_message = msg + " - Data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
-                state=self._state,
-                rpm=self._rpm,
-                dust=self._dust,
-                connected=self._connected,
-                age=(time.time() - self._data_ts),
+            log_message = (
+                msg
+                + " - Data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
+                    state=self._state,
+                    rpm=self._rpm,
+                    dust=self._dust,
+                    connected=self._connected,
+                    age=(time.time() - self._data_ts),
+                )
             )
             self._pause_laser(
                 trigger=msg, analytics="invalid-old-fan-data", log_message=msg
