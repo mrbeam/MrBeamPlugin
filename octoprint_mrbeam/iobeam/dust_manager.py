@@ -156,9 +156,14 @@ class DustManager(object):
         Returns:
 
         """
-        self._logger.debug("last pressure values append {} - {}".format(args["pressure"], self._last_pressure_values))
-        if args["pressure"] is not None:
-            self._last_pressure_values.append(args["pressure"])
+        pressure = args.get("pressure", None)
+        if pressure is not None:
+            self._logger.debug(
+                "last pressure values append {} - {}".format(
+                    pressure, self._last_pressure_values
+                )
+            )
+            self._last_pressure_values.append(pressure)
 
     def _handle_fan_data(self, args):
         err = False
