@@ -270,28 +270,13 @@ class DustManager(object):
         try:
             # Write to analytics if the values are valid
             if self._validate_values():
-                if len(self._last_rpm_values):
-                    rpm_average = sum(self._last_rpm_values) / len(
-                        self._last_rpm_values
-                    )
-                else:
-                    rpm_average = -1
-
-                if len(self._last_pressure_values):
-                    pressure_average = sum(self._last_pressure_values) / len(
-                        self._last_pressure_values
-                    )
-                else:
-                    pressure_average = -1
-                self._logger.debug("pressure values mean {}".format(pressure_average))
-
                 data = dict(
-                    rpm_val=rpm_average,
+                    rpm_val=list(self._last_rpm_values),
                     fan_state=self._state,
                     usage_count=self._usage_handler.get_total_usage(),
                     prefilter_count=self._usage_handler.get_prefilter_usage(),
                     carbon_filter_count=self._usage_handler.get_carbon_filter_usage(),
-                    pressure_val=pressure_average,
+                    pressure_val=list(self._last_pressure_values),
                 )
                 self._analytics_handler.add_fan_rpm_test(data)
 
