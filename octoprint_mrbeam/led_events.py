@@ -192,9 +192,9 @@ class LedEventListener(CommandTrigger):
             if isinstance(command, (tuple, list, set)):
                 processedCommand = []
                 for c in command:
-                    processedCommand.append(self._processCommand(c, payload))
+                    processedCommand.append(self._processCommand(c, event, payload))
             else:
-                processedCommand = self._processCommand(command, payload)
+                processedCommand = self._processCommand(command, event, payload)
 
             self._logger.debug("LED_EVENT %s: '%s'", event, processedCommand)
             self.executeCommand(processedCommand, commandType, debug=debug)
