@@ -762,6 +762,8 @@ class MrBeamPlugin(
         # template, using the render_kwargs as provided by OctoPrint
         from flask import make_response, render_template, g
 
+        sockjs_connect_timeout = settings().getInt(["devel", "sockJsConnectTimeout"])
+
         firstRun = render_kwargs["firstRun"]
         language = g.locale.language if g.locale else "en"
 
@@ -815,6 +817,7 @@ class MrBeamPlugin(
                 safetyGlasses=safety_glasses,
                 enableTemperatureGraph=False,
                 enableAccessControl=enable_accesscontrol,
+                sockJsConnectTimeout=sockjs_connect_timeout * 1000,
                 accessControlActive=accesscontrol_active,
                 enableSdSupport=False,
                 gcodeMobileThreshold=0,
