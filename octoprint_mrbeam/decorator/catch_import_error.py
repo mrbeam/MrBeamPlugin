@@ -1,8 +1,11 @@
+from functools import wraps
+
 from octoprint_mrbeam.model import EmptyImport
 
 
-def prevent_execution_on_import_error(import_to_check, default_return=None, callable=None,params=None):
+def prevent_execution_on_import_error(import_to_check, default_return=None, callable=None, params=None):
     def decorator(function):
+        @wraps(function)
         def wrapper(*args, **kwargs):
             if is_empty_import(import_to_check):
                 if callable is None:
@@ -10,7 +13,7 @@ def prevent_execution_on_import_error(import_to_check, default_return=None, call
                 elif params is None:
                     return callable()
                 else:
-                    return callable(params)
+                    return callable(*params)
 
             result = function(*args, **kwargs)
             return result
