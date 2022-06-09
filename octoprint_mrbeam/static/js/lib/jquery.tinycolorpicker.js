@@ -112,7 +112,7 @@
             colorPicker.crossOrigin = "Anonymous";
             $track.css("background-image", "none");
 
-            $(colorPicker).load(function () {
+            $(colorPicker).on("load", function () {
                 $canvas.attr("width", this.width);
                 $canvas.attr("height", this.height);
                 context.drawImage(colorPicker, 0, 0, this.width, this.height);
