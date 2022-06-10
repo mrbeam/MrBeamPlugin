@@ -1,0 +1,32 @@
+accessControl:
+  salt: uFXtaVdDFLrL0Kul6h5V54e4bAgluve0
+api:
+  key: 08F036424792493A85A2A82C7E45DFC9
+plugins:
+  discovery:
+    upnpUuid: d4126c5c-4659-4869-a894-dc300e38bdd7
+  mrbeam:
+    _config_version: 2
+    analyticsEnabled: false
+    dev:
+      env: DEV
+      software_tier: ALPHA
+    review:
+      ask: true
+  softwareupdate:
+    _config_version: 6
+    check_providers:
+      findmymrbeam: mrbeam
+      mrbeam: mrbeam
+      netconnectd: mrbeam
+printerProfiles:
+  default: _default
+serial:
+  autoconnect: true
+  baudrate: 115200
+  port: /dev/ttyAMA0
+server:
+  firstRun: false
+  secretKey: qVJcMugtq9U9khQ9pXkKpTfuPUc5HC15
+  seenWizards:
+    mrbeam: 22
