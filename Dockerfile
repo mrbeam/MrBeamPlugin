@@ -56,10 +56,10 @@ RUN source ./venv2/bin/activate \
 
 COPY --chown=mrbeam ./docker-octoprint-config.yaml /home/mrbeam/.octoprint/config.yaml
 
-COPY . /home/mrbeam/MrBeamPlugin/
+COPY --chown=mrbeam . /home/mrbeam/MrBeamPlugin/
 
 RUN source ./venv2/bin/activate \
-    && sudo -u mrbeam env "PATH=$PATH" pip install ./MrBeamPlugin
+    && pip install ./MrBeamPlugin
 
 CMD [ "./venv2/bin/python", "-m", "octoprint", "serve", "--port", "5000" ]
 

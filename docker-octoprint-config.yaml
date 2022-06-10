@@ -3,6 +3,8 @@ accessControl:
 api:
   key: 08F036424792493A85A2A82C7E45DFC9
 plugins:
+  announcements:
+    _config_version: 1
   discovery:
     upnpUuid: d4126c5c-4659-4869-a894-dc300e38bdd7
   mrbeam:
@@ -19,8 +21,10 @@ plugins:
       findmymrbeam: mrbeam
       mrbeam: mrbeam
       netconnectd: mrbeam
-printerProfiles:
-  default: _default
+    checks:
+      octoprint:
+        pip: https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip
+        user: mrbeam
 serial:
   autoconnect: true
   baudrate: 115200
