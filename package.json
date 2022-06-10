@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "cypress": "^10.3.0",
+    "cypress-file-upload": "^5.0.8",
+    "cypress-iframe": "^1.0.1"
+  },
+  "dependencies": {
+    "cypress-real-events": "^1.7.1"
+  },
+  "scripts": {
+    "cypress:open": "cypress open"
+  }
+}
