@@ -9,7 +9,7 @@ class EmptyImport(object):
     def log_error(self):
         try:
             from octoprint_mrbeam import mrb_logger
-            logger = mrb_logger("octoprint.plugins.mrbeam")
+            logger = mrb_logger("octoprint.plugins.mrbeam.model.EmptyImport")
             logger.error(self.error_message)
         except ImportError:
             return False
