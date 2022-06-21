@@ -2,6 +2,7 @@ import os
 import time
 import yaml
 
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -18,7 +19,6 @@ def usageHandler(plugin):
 
 
 class UsageHandler(object):
-    MAX_DUST_FACTOR = 2.0
     MIN_DUST_FACTOR = 0.5
     MAX_DUST_VALUE = 0.5
     MIN_DUST_VALUE = 0.2
@@ -40,12 +40,6 @@ class UsageHandler(object):
         self.start_ntp_synced = None
 
         self._last_dust_value = None
-        self._dust_mapping_m = (self.MAX_DUST_FACTOR - self.MIN_DUST_FACTOR) / (
-            self.MAX_DUST_VALUE - self.MIN_DUST_VALUE
-        )
-        self._dust_mapping_b = (
-            self.MIN_DUST_FACTOR - self._dust_mapping_m * self.MIN_DUST_VALUE
-        )
 
         analyticsfolder = os.path.join(
             self._settings.getBaseFolder("base"),
@@ -78,11 +72,25 @@ class UsageHandler(object):
             self._laser_head_serial = self._lh["serial"]
         else:
             self._laser_head_serial = "no_serial"
-
+        self._calculate_dust_mapping()
         self._init_missing_usage_data()
         self.log_usage()
 
         self._subscribe()
+
+    def _calculate_dust_mapping(self):
+        max_dust_factor = self._laserhead_handler.current_laserhead_max_dust_factor
+        self._dust_mapping_m = (max_dust_factor - self.MIN_DUST_FACTOR) / (
+            self.MAX_DUST_VALUE - self.MIN_DUST_VALUE
+        )
+        self._dust_mapping_b = (
+            self.MIN_DUST_FACTOR - self._dust_mapping_m * self.MIN_DUST_VALUE
+        )
+        self._logger.debug(
+            "new dust mapping -> {} - {} - {}".format(
+                max_dust_factor, self._dust_mapping_m, self._dust_mapping_b
+            )
+        )
 
     def log_usage(self):
         self._logger.info(
@@ -116,6 +124,9 @@ class UsageHandler(object):
         self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self.event_write)
         self._event_bus.subscribe(
             MrBeamEvents.LASER_HEAD_READ, self.event_laser_head_read
+        )
+        self._plugin.iobeam.subscribe(
+            IoBeamValueEvents.LASERHEAD_CHANGED, self._event_laserhead_changed
         )
 
     def event_laser_head_read(self, event, payload):
@@ -163,6 +174,17 @@ class UsageHandler(object):
             self.start_ntp_synced = None
 
             self.write_usage_analytics(action="job_finished")
+
+    def _event_laserhead_changed(self, event):
+        """
+        will be triggered if the laser head changed,
+        refreshes the laserhead max dust factor that will be used for the new laser head
+
+        Returns:
+
+        """
+        self._logger.debug("Laserhead changed recalculate dust mapping")
+        self._calculate_dust_mapping()
 
     def _set_time(self, job_duration):
         if job_duration is not None and job_duration > 0.0:
