@@ -54,10 +54,12 @@ RUN source ./venv2/bin/activate \
 RUN source ./venv2/bin/activate \
     && pip install opencv-python==4.2.0.32
 
-COPY . /home/mrbeam/MrBeamPlugin/
+COPY --chown=mrbeam ./docker-octoprint-config.yaml /home/mrbeam/.octoprint/config.yaml
+
+COPY --chown=mrbeam . /home/mrbeam/MrBeamPlugin/
 
 RUN source ./venv2/bin/activate \
-    && sudo -u mrbeam env "PATH=$PATH" pip install ./MrBeamPlugin
+    && pip install ./MrBeamPlugin
 
 CMD [ "./venv2/bin/python", "-m", "octoprint", "serve", "--port", "5000" ]
 
