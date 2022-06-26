@@ -402,14 +402,14 @@ $(function () {
             self.removeLoadingOverlay();
         };
 
-        self.onEventMrbPluginVersion = function (payload) {
+        self.onEventMrbPluginsVersions = function (payload) {
             if (
-                payload?.version ||
+                payload?.plugins_versions ||
                 payload?.is_first_run ||
                 payload?.mrb_state?.laser_model
             ) {
                 self.force_reload_if_required(
-                    payload["version"],
+                    payload["plugins_versions"],
                     payload["is_first_run"],
                     payload["mrb_state"]["laser_model"]
                 );
@@ -442,25 +442,25 @@ $(function () {
         };
 
         /**
-         * Reloads the frontend bypassing any cache if backend version of mr beam plugin is different from the frontend version
+         * Reloads the frontend bypassing any cache if backend version of any plugin is different from the frontend version
          * or id the firstRunFlag is different.
          * This happens sometimes after a software update or if the user used a reset stick
          * @private
-         * @param backend_version (optional) If no version is given the function reads it from self.settings
+         * @param backend_versions (optional) If versions are not given the function reads it from self.settings
          * @param isFirstRun (optional) If no firstRun flag is given the function reads it from self.settings
          * @param laserHeadModel (optional) If no laserHeadModel flag is given the function reads it from self.settings
          */
         self.force_reload_if_required = function (
-            backend_version,
+            backend_versions,
             isFirstRun,
             laserHeadModel
         ) {
             laserHeadModel = laserHeadModel?.toString();
             if (self.settings.settings?.plugins?.mrbeam) {
                 let mrb_settings = self.settings.settings.plugins.mrbeam;
-                backend_version = backend_version
-                    ? backend_version
-                    : mrb_settings._version();
+                backend_versions = backend_versions
+                    ? backend_versions
+                    : self.parsePluginsVersions(mrb_settings.plugins_versions);
                 isFirstRun = isFirstRun
                     ? isFirstRun
                     : mrb_settings.isFirstRun();
@@ -471,16 +471,17 @@ $(function () {
                 }
             }
             if (
-                backend_version !== BEAMOS_VERSION ||
+                (backend_versions &&
+                    !self.areAllVersionsEqual(backend_versions, JSON.parse(PLUGINS_VERSIONS))) ||
                 isFirstRun !== CONFIG_FIRST_RUN ||
                 (laserHeadModel !== undefined &&
                     laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
             ) {
                 console.log(
-                    "Frontend reload check: RELOAD! (version: frontend=" +
-                        BEAMOS_VERSION +
+                    "Frontend reload check: RELOAD! (versions: frontend=" +
+                        PLUGINS_VERSIONS +
                         ", backend=" +
-                        backend_version +
+                        JSON.stringify(backend_versions) +
                         ", isFirstRun: frontend=" +
                         CONFIG_FIRST_RUN +
                         ", backend=" +
@@ -495,8 +496,8 @@ $(function () {
                 window.location.href = "/?ts=" + Date.now();
             } else {
                 console.log(
-                    "Frontend reload check: OK (version: " +
-                        BEAMOS_VERSION +
+                    "Frontend reload check: OK (versions: " +
+                        PLUGINS_VERSIONS +
                         ", isFirstRun: " +
                         CONFIG_FIRST_RUN +
                         ", laserheadModel: " +
@@ -505,6 +506,28 @@ $(function () {
                 );
             }
         };
+
+        self.parsePluginsVersions = function (plugins_versions) {
+            let result = {};
+            for (let key of Object.keys(plugins_versions)) {
+                result[key] = {
+                    version: plugins_versions[key].version(),
+                    commit_hash: plugins_versions[key].commit_hash()
+                };
+            }
+            return result;
+        }
+
+        self.areAllVersionsEqual = function (backend_versions, frontend_versions) {
+            // if backend_versions was an empty object due to backend failure,
+            // then this will return true and the page will not keep reloading
+            for (let key of Object.keys(backend_versions)) {
+                if(frontend_versions[key]["version"] !== backend_versions[key]["version"]){
+                    return false;
+                }
+            }
+            return true;
+        }
 
         /**
          * controls fullscreen functionality unsing on screenfull.js

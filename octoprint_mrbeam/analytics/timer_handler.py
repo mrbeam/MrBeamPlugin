@@ -9,6 +9,7 @@ from threading import Timer
 from analytics_keys import AnalyticsKeys as ak
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
+from octoprint_mrbeam.util.device_info import deviceInfo
 
 
 class TimerHandler:
@@ -215,7 +216,7 @@ class TimerHandler:
         I do not se any reason any more to run this as a timed and threaded task.
         it made sens when we did a filesystem checksum calculation... _software_versions_and_checksums()
         """
-        sw_versions = self._get_software_versions()
+        sw_versions = deviceInfo(self).get_software_versions()
         self._logger.debug("Software Version info: \n{}".format(sw_versions))
         self._plugin.analytics_handler.add_software_versions(sw_versions)
 
@@ -260,7 +261,7 @@ class TimerHandler:
                     "src_path": "/home/pi/site-packages/",
                 },
             }
-            sw_versions = self._get_software_versions()
+            sw_versions = deviceInfo(self).get_software_versions()
 
             if self._analytics_handler.is_analytics_enabled():
                 for name, conf in folders.iteritems():
@@ -277,42 +278,6 @@ class TimerHandler:
             self._plugin.analytics_handler.add_software_versions(sw_versions)
         except:
             self._logger.exception("Exception in _software_versions_and_checksums(): ")
-
-    def _get_software_versions(self):
-        result = dict()
-        software_info = None
-
-        try:
-            plugin_info = self._plugin._plugin_manager.get_plugin_info("softwareupdate")
-            impl = plugin_info.implementation
-            # using the method get_current_versions() is OK as it is threadsafe
-            software_info, _, _ = impl.get_current_versions()
-            self._logger.debug("Software_info: \n {}".format(software_info))
-        except Exception as e:
-            self._logger.exception(
-                "Exception while reading software_info from softwareupdate plugin. Error:{} ".format(e)
-            )
-            return result
-
-        if isinstance(software_info, dict) is False:
-            self._logger.warn(
-                "get_current_versions() Can't read software version from softwareupdate plugin."
-            )
-            return result
-
-        # Reaching this section means we are OK so far
-        for name, info in software_info.iteritems():
-            commit_hash = info["information"]["local"].get("name", None)
-            if commit_hash is not None:
-                # regex: "Commit 89nhfbffnf7f8fbfgfndhf" --> "89nhfbffnf7f8fbfgfndhf"
-                regex_match = re.match(r"Commit (\S+)", commit_hash)
-                if regex_match is not None:
-                    commit_hash = regex_match.group(1)
-            result[name] = dict(
-                version=info.get("displayVersion", None),
-                commit_hash=commit_hash,
-            )
-        return result
 
     def _num_files(self):
         try:

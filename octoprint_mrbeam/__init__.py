@@ -159,7 +159,7 @@ class MrBeamPlugin(
         self.slicing_progress_last = -1
         self._logger = mrb_logger("octoprint.plugins.mrbeam")
 
-        self._device_info = deviceInfo(use_dummy_values=IS_X86)
+        self._device_info = deviceInfo(self, use_dummy_values=IS_X86)
         self._hostname = None  # see self.getHosetname()
         self._serial_num = None
         self._mac_addrs = dict()
@@ -182,6 +182,8 @@ class MrBeamPlugin(
         self._time_ntp_shift = 0.0
 
         self._gcode_deletion_thread = None
+
+        self._plugins_versions = None
 
         # MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
         MrBeamEvents.register_with_octoprint()
@@ -435,6 +437,7 @@ class MrBeamPlugin(
         )
 
     def on_settings_load(self):
+        self._plugins_versions = self._device_info.get_software_versions()
         return dict(
             svgDPI=self._settings.get(["svgDPI"]),
             dxfScale=self._settings.get(["dxfScale"]),
@@ -477,6 +480,7 @@ class MrBeamPlugin(
             ),
             software_update_branches=self.get_update_branch_info(),
             _version=self._plugin_version,
+            plugins_versions=self._plugins_versions,
             review=dict(
                 given=self.review_handler.is_review_already_given(),
                 ask=self._settings.get(["review", "ask"]),
@@ -792,6 +796,7 @@ class MrBeamPlugin(
                 init_ts_ms=time.time() * 1000,
                 language=language,
                 beamosVersionNumber=self._plugin_version,
+                plugins_versions=json.dumps(self._plugins_versions),
                 beamosVersionBranch=self._branch,
                 beamosVersionDisplayVersion=display_version_string,
                 beamosVersionImage=self._octopi_info,
@@ -2489,9 +2494,9 @@ class MrBeamPlugin(
                 payload.get("remoteAddress", None)
             )
             self.fire_event(
-                MrBeamEvents.MRB_PLUGIN_VERSION,
+                MrBeamEvents.MRB_PLUGINS_VERSIONS,
                 payload=dict(
-                    version=self._plugin_version, is_first_run=self.isFirstRun()
+                    plugins_versions=self._plugins_versions, is_first_run=self.isFirstRun(),
                 ),
             )
 
