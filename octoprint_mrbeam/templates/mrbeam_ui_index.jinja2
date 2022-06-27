@@ -41,8 +41,8 @@
 			<div class="">
 				<div class="navbar-header brand">
 					<a id="mrbeam_logo_link" class="navbar-brand" href="#"><img id="logo_wide" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo_x120.png') }}"><img id="logo_compact" alt="{{ _('Mr Beam Logo') }}" src="{{ url_for('plugin.mrbeam.static', filename='img/mr_x120.png') }}"></a>
-                    {% if beta_label %}
-                        <span style="margin: 6px; vertical-align: -5px; font-size: 14px; font-weight: 400; color: #e25303; text-decoration: none;">{{ beta_label }}</span>
+                    {% if navbar_label %}
+                        <span style="margin: 6px; vertical-align: -5px; font-size: 14px; font-weight: 400; color: #e25303; text-decoration: none;">{{ navbar_label }}</span>
                     {% endif %}
 				</div>
 				<!-- Navbar -->
