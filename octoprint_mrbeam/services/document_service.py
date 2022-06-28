@@ -47,7 +47,7 @@ class DocumentService:
     def _get_title_translated(self, definition):
         title_key = string_util.separate_camelcase_words(definition.mrbeamdoc_type.value)
         title_translated = gettext(title_key)
-        self.__log_error_on_missing_translation(title_key, title_translated)
+        self._log_error_on_missing_translation(title_key, str(title_translated))
         return title_translated
 
     @staticmethod
@@ -58,12 +58,16 @@ class DocumentService:
             'mrbeam_type': definition.mrbeamdoc_type.value,
             'extension': extension}
 
-    def __log_error_on_missing_translation(self, translation_key, translation):
+    def _log_error_on_missing_translation(self, translation_key, translation):
+        """
+        Arguments:
+            translation_key: str
+            translation: str
+        """
         if get_locale() is None:
             self._logger.error('Trying to get Locale failed. Is Flask initialised?')
             return
 
-        translation = str(translation)
         exempted_translations_for_language = EXEMPTED_TRANSLATIONS.get(get_locale().language, {})
         is_not_exempted_key = not any(
             key in exempted_translations_for_language for key in [ALL_EXEMPTED, translation_key])
