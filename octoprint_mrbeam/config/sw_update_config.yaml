@@ -1,0 +1,6 @@
+updateConfigName: "mrbeam"
+repoName: "MrBeamPlugin"
+mainSrcFolderName: "octoprint_mrbeam"
+pluginName: "Mr_Beam"
+defaultOprintVenv: "/home/pi/oprint/bin/pip"
+pipWheelTempFolder: "/tmp/wheelhouse"

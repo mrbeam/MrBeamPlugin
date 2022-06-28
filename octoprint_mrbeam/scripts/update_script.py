@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import json
+import yaml
 import os
 import re
 import shutil
@@ -25,12 +26,20 @@ from urllib3.exceptions import MaxRetryError, ConnectionError
 _logger = mrb_logger("octoprint.plugins.mrbeam.softwareupdate.updatescript")
 
 
-UPDATE_CONFIG_NAME = "mrbeam"
-REPO_NAME = "MrBeamPlugin"
-MAIN_SRC_FOLDER_NAME = "octoprint_mrbeam"
-PLUGIN_NAME = "Mr_Beam"
-DEFAULT_OPRINT_VENV = "/home/pi/oprint/bin/pip"
-PIP_WHEEL_TEMP_FOLDER = "/tmp/wheelhouse"
+with open("../config/sw_update_config.yaml", "r") as stream:
+    sw_update_config = yaml.safe_load(stream)
+    try:
+        sw_update_config = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        sw_update_config = {}
+        _logger.exception(exc)
+
+UPDATE_CONFIG_NAME = sw_update_config.get("updateConfigName")
+REPO_NAME = sw_update_config.get("repoName")
+MAIN_SRC_FOLDER_NAME = sw_update_config.get("mainSrcFolderName")
+PLUGIN_NAME = sw_update_config.get("pluginName")
+DEFAULT_OPRINT_VENV = sw_update_config.get("defaultOprintVenv")
+PIP_WHEEL_TEMP_FOLDER = sw_update_config.get("pipWheelTempFolder")
 
 
 def _parse_arguments():
@@ -126,7 +135,7 @@ def get_dependencies(path):
             mrbeam-ledstrips==0.2.2-alpha.2
     output: [[iobeam][==][0.7.15]]
             [[mrb-hw-info][==][0.0.25]]
-            [[mrbeam-ledstrips][==][0.2.2-alpha.2]]        
+            [[mrbeam-ledstrips][==][0.2.2-alpha.2]]
     """
     try:
         with open(dependencies_path, "r") as f:
