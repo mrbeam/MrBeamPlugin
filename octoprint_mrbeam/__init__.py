@@ -3055,11 +3055,21 @@ def __plugin_load__():
         plugins=dict(
             _disabled=[
                 "announcements",
-                "cura",
                 "pluginmanager",
                 "corewizard",
                 "octopi_support",
                 "virtual_printer",
+                "eventmanager",
+                "tracking",
+                "gcodeviewer",
+                "errortracking",
+                "backup",
+                "appkeys",
+                "action_command_prompt",
+                "action_command_notification",
+                "firmware_check",
+                "file_check",
+                "pi_support",
             ]  # accepts dict | pfad.yml | callable
         ),
         terminalFilters=[
