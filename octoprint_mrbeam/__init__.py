@@ -104,6 +104,7 @@ from octoprint_mrbeam import camera
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
 __builtin__.__package_path__ = os.path.dirname(__file__)
+__plugin_pythoncompat__ = "<2.8"  # ">=2.7,<4"
 
 
 class MrBeamPlugin(
