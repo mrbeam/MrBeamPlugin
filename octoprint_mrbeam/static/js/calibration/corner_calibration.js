@@ -426,7 +426,7 @@ $(function () {
         // USER CLICKS
         self.userClick = function (vm, ev) {
             // check if picture is loaded
-            if (window.location.getAttribute("href").indexOf("localhost") === -1)
+            if (window.location.href.indexOf("localhost") === -1)
                 if (self.cornerCalImgUrl() === STATIC_URL) {
                     console.log("Please wait until camera image is loaded...");
                     return;
