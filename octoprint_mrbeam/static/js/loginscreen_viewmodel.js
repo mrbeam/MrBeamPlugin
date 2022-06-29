@@ -7,7 +7,7 @@ $(function () {
         window.mrbeam.viewModels["loginScreenViewModel"] = self;
 
         self.loginState = parameters[0];
-        self.users = parameters[1];
+        self.access = parameters[1];
 
         self.dialogElement = undefined;
         self.loginButton = undefined;
@@ -32,7 +32,7 @@ $(function () {
 
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             self.loginState.loginUser.extend({ lowercase: true });
-            self.users.editorUsername.extend({ lowercase: true });
+            self.access.users.editor.name.extend({ lowercase: true });
         };
 
         /**
@@ -112,7 +112,7 @@ $(function () {
 
     OCTOPRINT_VIEWMODELS.push([
         LoginScreenViewModel,
-        ["loginStateViewModel", "usersViewModel"],
+        ["loginStateViewModel", "accessViewModel"],
         ["#loginscreen_dialog"],
     ]);
 });
