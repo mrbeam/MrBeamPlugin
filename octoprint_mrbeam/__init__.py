@@ -774,7 +774,7 @@ class MrBeamPlugin(
 
         enable_accesscontrol = self._user_manager.enabled
         accesscontrol_active = (
-            enable_accesscontrol and self._user_manager.hasBeenCustomized()
+            enable_accesscontrol and self._user_manager.has_been_customized()
         )
 
         selectedProfile = self.laserCutterProfileManager.get_current_or_default()
@@ -1011,7 +1011,7 @@ class MrBeamPlugin(
         if not (
             self.isFirstRun()
             and self._user_manager.enabled
-            and not self._user_manager.hasBeenCustomized()
+            and not self._user_manager.has_been_customized()
         ):
             return make_response("Forbidden", 403)
 
