@@ -1,17 +1,13 @@
-from selenium import webdriver
+import unittest
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
 
 import uiUtils
 import webdriverUtils
-import time
 
 
-class TestConvertSvg:
+class TestConvertSvg(unittest.TestCase):
     def setup_method(self, method):
 
         self.resource_base = "https://mrbeam.github.io/test_rsc/critical_designs/"
@@ -36,7 +32,7 @@ class TestConvertSvg:
         wait = WebDriverWait(self.driver, 10)
 
         # load ui
-        url = "localhost:5000"  # should be configurable or static resolved on each dev laptop to the current mr beam
+        url = "http://localhost:5002"  # should be configurable or static resolved on each dev laptop to the current mr beam
         uiUtils.load_webapp(self.driver, url)
 
         # login

@@ -1,22 +1,17 @@
 import logging
+import unittest
+import uiUtils
 
-from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
-from frontend import webdriverUtils
+from tests.frontend import webdriverUtils
 
 selenium_logger = logging.getLogger("selenium.webdriver.remote.remote_connection")
 selenium_logger.setLevel(logging.WARNING)  # Only display possible problems
 
-import uiUtils
-import time
 
-
-class TestConvertQuickShape:
+class TestConvertQuickShape(unittest.TestCase):
     def setup_method(self, method):
         # basics
         self.log = logging.getLogger()
@@ -35,7 +30,7 @@ class TestConvertQuickShape:
         wait = WebDriverWait(self.driver, 10)
 
         # load ui
-        url = "localhost:5000"  # should be configurable or static resolved on each dev laptop to the current mr beam
+        url = "http://localhost:5002"  # should be configurable or static resolved on each dev laptop to the current mr beam
         # url = "http://mrbeam-axel.local"  # should be configurable or static resolved on each dev laptop to the current mr beam
         uiUtils.load_webapp(self.driver, url)
 
