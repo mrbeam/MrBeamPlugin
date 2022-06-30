@@ -83,7 +83,6 @@ additional_setup_parameters = {
             "files/migrate_logrotate/*",
             "files/material_settings/*",
             "files/camera/*",
-            "config/*",
         ]
     },
 }
