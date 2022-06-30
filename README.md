@@ -30,3 +30,15 @@ docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
 Access from the browser:
 
     http://localhost:5002
+
+
+## Running unit tests
+Create a Python 2 virtual environment and activate it:
+```shell
+virtualenv -p /usr/bin/python2.7 tests_req
+```
+
+Run the unit tests:
+```shell
+python -m pytest paht/to/MrBeamPlugin/tests/
+```
