@@ -7,6 +7,7 @@ import uiUtils
 import webdriverUtils
 
 
+@unittest.skip('DEPRECATED')
 class TestConvertSvg(unittest.TestCase):
     def setup_method(self, method):
 

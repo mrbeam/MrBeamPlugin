@@ -10,6 +10,7 @@ from .. import gcodeUtils
 from .. import frontendTestUtils
 
 
+@unittest.skip('DEPRECATED')
 class BaseProcedure(unittest.TestCase):
     def setup_method(self, method):
 

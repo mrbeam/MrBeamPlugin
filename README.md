@@ -38,7 +38,7 @@ Create a Python 2 virtual environment and activate it:
 virtualenv -p /usr/bin/python2.7 tests_req
 ```
 
-Run the unit tests:
+Run the unit tests directly from **Pycharm** or from the command line:
 ```shell
 python -m pytest paht/to/MrBeamPlugin/tests/
 ```

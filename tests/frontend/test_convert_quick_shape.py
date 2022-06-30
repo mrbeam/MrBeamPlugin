@@ -11,6 +11,7 @@ selenium_logger = logging.getLogger("selenium.webdriver.remote.remote_connection
 selenium_logger.setLevel(logging.WARNING)  # Only display possible problems
 
 
+@unittest.skip('DEPRECATED')
 class TestConvertQuickShape(unittest.TestCase):
     def setup_method(self, method):
         # basics
