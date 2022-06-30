@@ -15,6 +15,8 @@ import argparse
 from octoprint.plugins.softwareupdate import exceptions
 
 from octoprint.settings import _default_basedir
+
+from octoprint_mrbeam.config import update_script_config
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 from octoprint_mrbeam.util.pip_util import get_version_of_pip_module, get_pip_caller
@@ -23,14 +25,6 @@ from urllib3 import Retry
 from urllib3.exceptions import MaxRetryError, ConnectionError
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.softwareupdate.updatescript")
-
-
-UPDATE_CONFIG_NAME = "mrbeam"
-REPO_NAME = "MrBeamPlugin"
-MAIN_SRC_FOLDER_NAME = "octoprint_mrbeam"
-PLUGIN_NAME = "Mr_Beam"
-DEFAULT_OPRINT_VENV = "/home/pi/oprint/bin/pip"
-PIP_WHEEL_TEMP_FOLDER = "/tmp/wheelhouse"
 
 
 def _parse_arguments():
@@ -126,7 +120,7 @@ def get_dependencies(path):
             mrbeam-ledstrips==0.2.2-alpha.2
     output: [[iobeam][==][0.7.15]]
             [[mrb-hw-info][==][0.0.25]]
-            [[mrbeam-ledstrips][==][0.2.2-alpha.2]]        
+            [[mrbeam-ledstrips][==][0.2.2-alpha.2]]
     """
     try:
         with open(dependencies_path, "r") as f:
@@ -165,13 +159,13 @@ def build_wheels(build_queue):
 
     """
     try:
-        if not os.path.isdir(PIP_WHEEL_TEMP_FOLDER):
-            os.mkdir(PIP_WHEEL_TEMP_FOLDER)
+        if not os.path.isdir(update_script_config.PIP_WHEEL_TEMP_FOLDER):
+            os.mkdir(update_script_config.PIP_WHEEL_TEMP_FOLDER)
     except OSError as e:
-        raise RuntimeError("can't create wheel tmp folder {} - {}".format(PIP_WHEEL_TEMP_FOLDER, e))
+        raise RuntimeError("can't create wheel tmp folder {} - {}".format(update_script_config.PIP_WHEEL_TEMP_FOLDER, e))
 
     for venv, packages in build_queue.items():
-        tmp_folder = os.path.join(PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
+        tmp_folder = os.path.join(update_script_config.PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
         if os.path.isdir(tmp_folder):
             try:
                 os.system("sudo rm -r {}".format(tmp_folder))
@@ -213,7 +207,7 @@ def install_wheels(install_queue):
         raise RuntimeError("install queue is not a dict")
 
     for venv, packages in install_queue.items():
-        tmp_folder = os.path.join(PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
+        tmp_folder = os.path.join(update_script_config.PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
         pip_args = [
             "install",
             "--disable-pip-version-check",
@@ -254,10 +248,10 @@ def build_queue(update_info, dependencies, plugin_archive):
     install_queue = {}
 
     install_queue.setdefault(
-        update_info.get(UPDATE_CONFIG_NAME).get("pip_command", DEFAULT_OPRINT_VENV), []
+        update_info.get(update_script_config.UPDATE_CONFIG_NAME).get("pip_command", update_script_config.DEFAULT_OPRINT_VENV), []
     ).append(
         {
-            "name": PLUGIN_NAME,
+            "name": update_script_config.PLUGIN_NAME,
             "archive": plugin_archive,
             "target": '',
         }
@@ -265,7 +259,7 @@ def build_queue(update_info, dependencies, plugin_archive):
     print("dependencies - {}".format(dependencies))
     if dependencies:
         for dependency in dependencies:
-            plugin_config = update_info.get(UPDATE_CONFIG_NAME)
+            plugin_config = update_info.get(update_script_config.UPDATE_CONFIG_NAME)
             plugin_dependencies_config = plugin_config.get("dependencies")
             dependency_config = plugin_dependencies_config.get(dependency["name"])
 
@@ -292,12 +286,12 @@ def build_queue(update_info, dependencies, plugin_archive):
 
             installed_version = get_version_of_pip_module(
                 dependency["name"],
-                dependency_config.get("pip_command", DEFAULT_OPRINT_VENV),
+                dependency_config.get("pip_command", update_script_config.DEFAULT_OPRINT_VENV),
             )
 
             if installed_version != version_needed:
                 install_queue.setdefault(
-                    dependency_config.get("pip_command", DEFAULT_OPRINT_VENV), []
+                    dependency_config.get("pip_command", update_script_config.DEFAULT_OPRINT_VENV), []
                 ).append(
                     {
                         "name": dependency["name"],
@@ -389,11 +383,11 @@ def loadPluginTarget(archive, folder):
         )
 
     # unzip repo
-    plugin_extracted_path = os.path.join(folder, UPDATE_CONFIG_NAME)
+    plugin_extracted_path = os.path.join(folder, update_script_config.UPDATE_CONFIG_NAME)
     plugin_extracted_path_folder = os.path.join(
         plugin_extracted_path,
         "{repo_name}-{target}".format(
-            repo_name=REPO_NAME, target=re.sub(r"^v", "", filename.split(".zip")[0])
+            repo_name=update_script_config.REPO_NAME, target=re.sub(r"^v", "", filename.split(".zip")[0])
         ),
     )
     try:
@@ -407,7 +401,7 @@ def loadPluginTarget(archive, folder):
     try:
         shutil.copy2(
             os.path.join(
-                plugin_extracted_path_folder, MAIN_SRC_FOLDER_NAME, "dependencies.txt"
+                plugin_extracted_path_folder, update_script_config.MAIN_SRC_FOLDER_NAME, "dependencies.txt"
             ),
             os.path.join(folder, "dependencies.txt"),
         )
@@ -419,7 +413,7 @@ def loadPluginTarget(archive, folder):
         shutil.copy2(
             os.path.join(
                 plugin_extracted_path_folder,
-                MAIN_SRC_FOLDER_NAME,
+                update_script_config.MAIN_SRC_FOLDER_NAME,
                 "scripts/update_script.py",
             ),
             os.path.join(folder, "update_script.py"),
@@ -457,7 +451,7 @@ def main():
 
         update_info = get_update_info()
         archive = loadPluginTarget(
-            update_info.get(UPDATE_CONFIG_NAME)
+            update_info.get(update_script_config.UPDATE_CONFIG_NAME)
             .get("pip")
             .format(target_version=args.target),
             folder,
