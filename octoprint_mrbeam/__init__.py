@@ -18,7 +18,7 @@ from subprocess import check_output
 import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
-from flask.ext.babel import gettext
+from flask_babel import gettext
 import octoprint.filemanager as op_filemanager
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping, FileManager
 from octoprint.server import NO_CONTENT
@@ -763,6 +763,8 @@ class MrBeamPlugin(
         # template, using the render_kwargs as provided by OctoPrint
         from flask import make_response, render_template, g
 
+        sockjs_connect_timeout = settings().getInt(["devel", "sockJsConnectTimeout"])
+
         firstRun = render_kwargs["firstRun"]
         language = g.locale.language if g.locale else "en"
 
@@ -816,6 +818,7 @@ class MrBeamPlugin(
                 safetyGlasses=safety_glasses,
                 enableTemperatureGraph=False,
                 enableAccessControl=enable_accesscontrol,
+                sockJsConnectTimeout=sockjs_connect_timeout * 1000,
                 accessControlActive=accesscontrol_active,
                 enableSdSupport=False,
                 gcodeMobileThreshold=0,
@@ -1086,7 +1089,7 @@ class MrBeamPlugin(
 
     # simpleApiCommand: lasersafety_confirmation; simpleApiCommand: lasersafety_confirmation;
     def lasersafety_wizard_api(self, data):
-        from flask.ext.login import current_user
+        from flask_login import current_user
 
         # get JSON from request data, or send user back home
         data = request.values
@@ -3150,7 +3153,7 @@ def __plugin_load__():
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
         "octoprint.printer.factory": __plugin_implementation__.laser_factory,
         "octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
-        "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,  # Only used in OP v1.3.11 +
+        "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.cli.commands": get_cli_commands,
     }
