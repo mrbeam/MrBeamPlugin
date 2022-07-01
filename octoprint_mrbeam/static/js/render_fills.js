@@ -67,7 +67,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 if (elem.type === "#text") {
                     if (elem.node.nodeValue.trim() !== "") {
                         let parent = elem.parent();
-                        if (parent.type === "textPath") {
+                        if (parent.type === "textPath" || parent.type === "tspan") {
                             parent = parent.parent();
                         }
                         parent.addClass(className);
