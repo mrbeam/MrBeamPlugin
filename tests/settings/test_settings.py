@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-from os.path import dirname, basename, join, split, realpath
+from os.path import dirname, join, realpath
 import random
 import pytest
-
-from octoprint.settings import settings
 
 # ~ Test camera settings, i.e. pic_settings and lens calibrations
 
@@ -13,9 +11,8 @@ from octoprint_mrbeam.camera.config import (
 )
 from octoprint_mrbeam.camera.definitions import QD_KEYS
 
-sett = settings()  # fix some init bug
 path = dirname(realpath(__file__))
-CAM_SETTINGS_DIR = join(path, "rsc", "camera_settings")
+CAM_SETTINGS_DIR = join(path, "..", "rsc", "camera_settings")
 
 SETTINGS_ALL = "pic_settings_all.yaml"
 SETTINGS_RAW = "pic_settings_raw.yaml"

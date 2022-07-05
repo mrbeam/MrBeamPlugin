@@ -170,7 +170,7 @@ def get_deltas_and_refs(
     """
     pic_settings = get_corner_calibration(settings)
     if pic_settings is None:
-        return None
+        return None, None, None
 
     # Values taken from the calibration file. Used as a reference to warp the image correctly.
     # Legacy devices only have the values for the lensCorrected position.
