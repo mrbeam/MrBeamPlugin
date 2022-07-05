@@ -4,10 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from .. import uiUtils
-from .. import webdriverUtils
-from .. import gcodeUtils
-from .. import frontendTestUtils
+from tests.frontend import webdriverUtils, gcodeUtils, frontendTestUtils, uiUtils
 
 
 @unittest.skip('DEPRECATED')
