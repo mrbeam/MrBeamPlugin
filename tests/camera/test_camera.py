@@ -7,7 +7,7 @@ from octoprint_mrbeam.camera.exc import MrbCameraError
 from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 from octoprint_mrbeam.camera.worker import MrbPicWorker
 from octoprint.settings import settings
-from ..testutils.fetch_resource import fetch
+from tests.testutils.fetch_resource import fetch
 
 sett = settings(init=True)  # fix some init bug
 path = dirname(realpath(__file__))
