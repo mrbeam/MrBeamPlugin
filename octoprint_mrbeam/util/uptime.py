@@ -7,9 +7,11 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 # http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
 def get_uptime():
     try:
-        if platform == 'darwin':
-            p = os.popen("uptime")
-            return p.read()
+        if platform == "darwin":
+            mrb_logger("octoprint.plugins.mrbeam.util.uptime").warn(
+                "The uptime is not supported by this hardware and will be set to 0.0"
+            )
+            return 0.0
         else:
             with open("/proc/uptime", "r") as f:
                 uptime = float(f.readline().split()[0])
