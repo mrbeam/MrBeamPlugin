@@ -183,7 +183,7 @@ def test_result(datafiles):
             {"x": 100, "y": 100, "w": 100, "h": 100},
         ],
     )
-    from ..testutils.draw_gcode import draw_gcode_file
+    from tests.testutils.draw_gcode import draw_gcode_file
 
     draw_gcode_file(str(datafiles / DEFAULT_OUT_GCO), True, False)
 

@@ -1,8 +1,6 @@
 import unittest
 
-from .. import uiUtils
-from .. import webdriverUtils
-from .. import frontendTestUtils
+from tests.frontend import uiUtils, webdriverUtils, frontendTestUtils
 
 
 @unittest.skip('DEPRECATED')
