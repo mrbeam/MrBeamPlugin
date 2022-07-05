@@ -39,6 +39,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         // TODO: better than checking children.length and a blacklist would be to refer to
         // Graphic Elements vs. Container Elements (see https://www.w3.org/TR/SVG/struct.html#TermContainerElement)
         // image is excluded here as <image ...>\n</image> has a child of type #text (== '\n')
+        // text is excluded here as <tspan> cannot be rendered without a <text> parent
         const goRecursive = ![
             "image",
             "defs",
@@ -47,6 +48,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             "rdf:rdf",
             "cc:work",
             "sodipodi:namedview",
+            "text",
         ].includes(elem.type);
 
         if (children.length > 0 && goRecursive) {
@@ -64,17 +66,26 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 elem.type === "text" ||
                 elem.type === "#text"
             ) {
+                // TODO: Check if this is valid for any possible combination otherwise remove
                 if (elem.type === "#text") {
                     if (elem.node.nodeValue.trim() !== "") {
                         let parent = elem.parent();
-                        if (parent.type === "textPath" || parent.type === "tspan") {
+                        if (parent.type === "textPath") {
                             parent = parent.parent();
                         }
                         parent.addClass(className);
                         selection.push(parent);
                     }
                 } else if (elem.type === "text") {
-                    if (elem.node.nodeValue !== null) {
+                    // check if <tspan> elements exist in <text> and if they contain any text
+                    const nonEmptyTspan = (child) =>
+                        child.nodeName === "tspan" &&
+                        child.textContent !== null;
+                    // use node.textContent instead of node.nodeValue as nodeValue returns null regardless of valid fillings
+                    if (
+                        elem.node.textContent !== null ||
+                        Object.values(elem.node.childNodes).some(nonEmptyTspan)
+                    ) {
                         elem.addClass(className);
                         selection.push(elem);
                     }
@@ -343,9 +354,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
             elem.embedAllImages();
             const fontSet = elem.getUsedFonts();
-            const fontDeclarations = WorkingAreaHelper.getFontDeclarations(
-                fontSet
-            );
+            const fontDeclarations =
+                WorkingAreaHelper.getFontDeclarations(fontSet);
 
             let bboxMargin = 0;
             if (margin === null) {
