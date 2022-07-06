@@ -59,52 +59,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 );
             }
         } else {
-            if (elem.type === "g") return []; // means empty group
-            if (elem.type === "defs") return []; // means empty defs
-            if (
-                elem.type === "image" ||
-                elem.type === "text" ||
-                elem.type === "#text"
-            ) {
-                // TODO: Check if this is valid for any possible combination otherwise remove
-                if (elem.type === "#text") {
-                    if (elem.node.nodeValue.trim() !== "") {
-                        let parent = elem.parent();
-                        if (parent.type === "textPath") {
-                            parent = parent.parent();
-                        }
-                        parent.addClass(className);
-                        selection.push(parent);
-                    }
-                } else if (elem.type === "text") {
-                    // check if <tspan> elements exist in <text> and if they contain any text
-                    const nonEmptyTspan = (child) =>
-                        child.nodeName === "tspan" &&
-                        child.textContent !== null;
-                    // use node.textContent instead of node.nodeValue as nodeValue returns null regardless of valid fillings
-                    if (
-                        elem.node.textContent !== null ||
-                        Object.values(elem.node.childNodes).some(nonEmptyTspan)
-                    ) {
-                        elem.addClass(className);
-                        selection.push(elem);
-                    }
-                } else if (elem.type === "image") {
-                    elem.addClass(className);
-                    selection.push(elem);
-                }
+            let processedElem = processElementByType(
+                elem,
+                className,
+                fillPaths
+            );
+            if (Array.isArray(processedElem) && processedElem?.length === 0) {
+                return [];
             } else {
-                // check for non-dimensional elements and out of working area elements
-                const bb = elem.getBBox();
-                if (bb.w === 0 || bb.h === 0) {
-                    console.warn(`Element did not have expanse: ${elem.type}`);
-                    return [];
-                }
-
-                if (fillPaths && elem.is_filled()) {
-                    elem.addClass(className);
-                    selection.push(elem);
-                }
+                selection.push(processedElem);
             }
         }
         return selection;
@@ -709,5 +672,49 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     return Math.floor(bytes / 1024) + " kByte";
                 else return Math.floor(bytes / (1024 * 1024)) + " MByte";
         }
+    }
+
+    function processElementByType(elem, className, fillPaths) {
+        if (elem.type === "g") return []; // means empty group
+        if (elem.type === "defs") return []; // means empty defs
+        // TODO: SW-1446
+        if (elem.type === "#text") {
+            if (elem.node.nodeValue.trim() !== "") {
+                let parent = elem.parent();
+                if (parent.type === "textPath") {
+                    parent = parent.parent();
+                }
+                parent.addClass(className);
+                return parent;
+            }
+        } else if (elem.type === "text") {
+            // check if <tspan> elements exist in <text> and if they contain any text
+            const nonEmptyTspan = (child) =>
+                child.nodeName === "tspan" && child.textContent !== null;
+            // use node.textContent instead of node.nodeValue as nodeValue returns null regardless of valid fillings
+            if (
+                elem.node.textContent !== null ||
+                Object.values(elem.node.childNodes).some(nonEmptyTspan)
+            ) {
+                elem.addClass(className);
+                return elem;
+            }
+        } else if (elem.type === "image") {
+            elem.addClass(className);
+            return elem;
+        } else {
+            // check for non-dimensional elements and out of working area elements
+            const bb = elem.getBBox();
+            if (bb.w === 0 || bb.h === 0) {
+                console.warn(`Element did not have expanse: ${elem.type}`);
+                return [];
+            }
+
+            if (fillPaths && elem.is_filled()) {
+                elem.addClass(className);
+                return elem;
+            }
+        }
+        return [];
     }
 });
