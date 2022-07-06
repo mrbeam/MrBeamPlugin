@@ -4119,6 +4119,7 @@ $(function () {
             // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
             // replaces all code below.
 
+            // TODO: Bug: SW-1445
             // path for curved text
             const path = snap
                 .path()
