@@ -64,7 +64,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 className,
                 fillPaths
             );
-            if (Array.isArray(processedElem) && processedElem?.length === 0) {
+            if (Array.isArray(processedElem) && processedElem.length === 0) {
                 return [];
             } else {
                 selection.push(processedElem);
