@@ -87,7 +87,7 @@
 									<div id="files" >
 										<div class="folder_navigation clearfix">
 											<div class="entry back pull-left" data-bind="visible: currentPath() != ''" style="display: none">
-												<a class="back-arrow btn-link" data-bind="click: function() { $root.cancelSelection(); $root.navigateUp(); }">
+												<a class="back-arrow btn-link" t-id=”library-design-back” data-bind="click: function() { $root.cancelSelection(); $root.navigateUp(); }">
 													<i class="fa fa-arrow-left"></i> {{  _('Back') }}
 												</a>  |
 												<span class="back-path muted">{{ _('Currently in') }} <span data-bind="text: currentPath"></span></span>
