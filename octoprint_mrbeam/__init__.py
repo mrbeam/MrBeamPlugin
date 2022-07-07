@@ -1076,7 +1076,7 @@ class MrBeamPlugin(
                 + "(This might be totally ok since this plugin throws an exception if we were rejected by the "
                 + "wifi for invalid password or other non-exceptional things.)",
                 command,
-                )
+            )
             return make_response(e.message, 500)
 
         self._logger.debug("wifi_wizard_api() result: %s", result)
@@ -1673,10 +1673,10 @@ class MrBeamPlugin(
                 "refs": {
                     "resource": location,
                     "download": url_for("index", _external=True)
-                                + "downloads/files/"
-                                + FileDestinations.LOCAL
-                                + "/"
-                                + file_name,
+                    + "downloads/files/"
+                    + FileDestinations.LOCAL
+                    + "/"
+                    + file_name,
                 },
             }
 
@@ -1862,10 +1862,10 @@ class MrBeamPlugin(
                     "refs": {
                         "resource": location,
                         "download": url_for("index", _external=True)
-                                    + "downloads/files/"
-                                    + FileDestinations.LOCAL
-                                    + "/"
-                                    + gcode_name,
+                        + "downloads/files/"
+                        + FileDestinations.LOCAL
+                        + "/"
+                        + gcode_name,
                     },
                 }
 
@@ -2043,7 +2043,7 @@ class MrBeamPlugin(
                 jsonify(
                     {
                         "alive": self.lid_handler.boardDetectorDaemon is not None
-                                 and self.lid_handler.boardDetectorDaemon.is_alive(),
+                        and self.lid_handler.boardDetectorDaemon.is_alive(),
                     }
                 ),
                 200,
