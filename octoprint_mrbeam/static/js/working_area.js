@@ -3910,11 +3910,14 @@ $(function () {
                 }
 
                 // update text stroke
+                let qtOutlineGroup = g.select(".qtOutlineGroup");
                 if (isStroked) {
                     // create text stroke path if option is enabled and ignore if already added
-                    g.select(".qtOutlineGroup")?.path().attr({
-                        class: "qtOutline vector_outline",
-                    });
+                    if (!qtOutlineGroup.select("path")) {
+                        qtOutlineGroup.path().attr({
+                            class: "qtOutline vector_outline",
+                        });
+                    }
                     // add selected attributes to stroke path
                     g.select("path").attr({
                         stroke: strokeColor,
@@ -3922,7 +3925,7 @@ $(function () {
                         "fill-opacity": isFilled ? 1 : 0,
                     });
                 } else {
-                    g.select("qtOutlineGroup")?.remove();
+                    qtOutlineGroup.select("path")?.remove();
                 }
 
                 // update text rect (rect is for selection only)
