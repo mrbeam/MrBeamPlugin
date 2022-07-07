@@ -3700,10 +3700,6 @@ $(function () {
                 $("#quick_text_dialog_text_input").focus();
             });
             $("#quick_text_dialog").modal({ keyboard: true });
-            // hide path during quick text editing. will be rendered on dialog close
-            snap.select(
-                `#${self.currentQuickTextFile.previewId} .qtOutline`
-            ).attr({ d: "" });
             self.showTransformHandles(
                 self.currentQuickTextFile.previewId,
                 false
@@ -3913,13 +3909,23 @@ $(function () {
                     bb = curvedText.getBBox();
                 }
 
-                g.select("path").attr({
-                    // when quicktext outline is disabled, stroke color should be white in order to be ignored
-                    stroke : isStroked ? strokeColor : "#ffffff",
-                    // when quicktext filling is disabled, fill color should be white for easier cursor selection
-                    fill: isFilled ? fill : "#ffffff"
-                });
+                // update text stroke
+                if (isStroked) {
+                    // create text stroke path if option is enabled and ignore if already added
+                    g.select(".qtOutlineGroup")?.path().attr({
+                        class: "qtOutline vector_outline",
+                    });
+                    // add selected attributes to stroke path
+                    g.select("path").attr({
+                        stroke: strokeColor,
+                        fill: isFilled ? fill : "#ffffff",
+                        "fill-opacity": isFilled ? 1 : 0,
+                    });
+                } else {
+                    g.select("qtOutlineGroup")?.remove();
+                }
 
+                // update text rect (rect is for selection only)
                 g.select("rect").attr({
                     x: bb.x,
                     y: bb.y,
@@ -4114,6 +4120,7 @@ $(function () {
             // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
             // replaces all code below.
 
+            // TODO: Bug: SW-1445
             // path for curved text
             const path = snap
                 .path()
@@ -4150,10 +4157,8 @@ $(function () {
                 class: "straightText",
             });
 
-            const textStroke = uc.path().attr({
-                class: "qtOutline vector_outline",
-                fill: "none",
-                stroke: file.strokeColor,
+            const textStroke = uc.g().attr({
+                class: "qtOutlineGroup",
             });
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
