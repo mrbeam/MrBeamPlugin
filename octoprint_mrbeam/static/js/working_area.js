@@ -3222,7 +3222,9 @@ $(function () {
             fillAreas,
             pxPerMM
         ) {
+            // split SVG and get an array of clusters
             let clusters = svg.splitRasterClusters(fillAreas);
+
             // only render clusters overlapping the working area
             const waBB = snap.select("#coordGrid").getBBox();
             clusters = clusters.filter(function (c, idx) {
@@ -3234,13 +3236,16 @@ $(function () {
                 return intersects;
             });
 
+            // get used fonts in text tags
             const whitelist = svg.getUsedFonts();
+            // get font declarations for quickText fonts
             const fontDecl = WorkingAreaHelper.getFontDeclarations(whitelist);
             clusters = clusters.map((c) => {
                 c.svgDataUrl = svg.toWorkingAreaDataURL(
                     self.workingAreaWidthMM(),
                     self.workingAreaHeightMM(),
                     fontDecl,
+                    svg.select("style")?.node?.innerHTML, // include SVG styling
                     `.toRaster.rasterCluster${c.idx}`
                 );
                 return c;
@@ -3249,11 +3254,7 @@ $(function () {
             if (MRBEAM_DEBUG_RENDERING) {
                 debugBase64(
                     clusters.map((c) => {
-                        c.svg.attr(
-                            "viewBox",
-                            `0 0 ${self.workingAreaWidthMM()} ${self.workingAreaHeightMM()}`
-                        );
-                        return c.svg.toDataURL();
+                        return c.svgDataUrl;
                     }),
                     `Step 1: Raster Cluster SVGs`
                 );
