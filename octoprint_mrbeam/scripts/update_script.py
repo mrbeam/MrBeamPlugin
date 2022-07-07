@@ -22,12 +22,18 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 from urllib3.exceptions import MaxRetryError, ConnectionError
 
-pip_util_mod = import_module("{}.util.pip_util".format(update_script_config.IMPORT_TOP_DIR))
+pip_util_mod = import_module(
+    "{}.util.pip_util".format(update_script_config.IMPORT_TOP_DIR)
+)
 
 get_version_of_pip_module = getattr(pip_util_mod, "get_version_of_pip_module")
 get_pip_caller = getattr(pip_util_mod, "get_pip_caller")
 
-_logger = logging.getLogger("octoprint.plugins.{}.softwareupdate.updatescript".format(update_script_config.PLUGIN_NAME))
+_logger = logging.getLogger(
+    "octoprint.plugins.{}.softwareupdate.updatescript".format(
+        update_script_config.PLUGIN_NAME
+    )
+)
 
 
 def _parse_arguments():
@@ -166,16 +172,23 @@ def build_wheels(build_queue):
             os.mkdir(update_script_config.PIP_WHEEL_TEMP_FOLDER)
     except OSError as e:
         raise RuntimeError(
-            "can't create wheel tmp folder {} - {}".format(update_script_config.PIP_WHEEL_TEMP_FOLDER, e))
+            "can't create wheel tmp folder {} - {}".format(
+                update_script_config.PIP_WHEEL_TEMP_FOLDER, e
+            )
+        )
 
     for venv, packages in build_queue.items():
-        tmp_folder = os.path.join(update_script_config.PIP_WHEEL_TEMP_FOLDER,
-                                  re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
+        tmp_folder = os.path.join(
+            update_script_config.PIP_WHEEL_TEMP_FOLDER,
+            re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0),
+        )
         if os.path.isdir(tmp_folder):
             try:
                 os.system("sudo rm -r {}".format(tmp_folder))
             except Exception as e:
-                raise RuntimeError("can't delete pip wheel temp folder {} - {}".format(tmp_folder, e))
+                raise RuntimeError(
+                    "can't delete pip wheel temp folder {} - {}".format(tmp_folder, e)
+                )
 
         pip_args = [
             "wheel",
@@ -213,8 +226,10 @@ def install_wheels(install_queue):
         raise RuntimeError("install queue is not a dict")
 
     for venv, packages in install_queue.items():
-        tmp_folder = os.path.join(update_script_config.PIP_WHEEL_TEMP_FOLDER,
-                                  re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
+        tmp_folder = os.path.join(
+            update_script_config.PIP_WHEEL_TEMP_FOLDER,
+            re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0),
+        )
         pip_args = [
             "install",
             "--disable-pip-version-check",
@@ -227,11 +242,7 @@ def install_wheels(install_queue):
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
-            pip_args.append(
-                "{package}".format(
-                    package=package["name"]
-                )
-            )
+            pip_args.append("{package}".format(package=package["name"]))
 
         returncode, exec_stdout, exec_stderr = get_pip_caller(venv, _logger).execute(
             *pip_args
@@ -257,13 +268,15 @@ def build_queue(update_info, dependencies, plugin_archive):
     install_queue = {}
 
     install_queue.setdefault(
-        update_info.get(update_script_config.UPDATE_CONFIG_NAME).get("pip_command",
-                                                                     update_script_config.DEFAULT_OPRINT_VENV), []
+        update_info.get(update_script_config.UPDATE_CONFIG_NAME).get(
+            "pip_command", update_script_config.DEFAULT_OPRINT_VENV
+        ),
+        [],
     ).append(
         {
             "name": update_script_config.PLUGIN_NAME,
             "archive": plugin_archive,
-            "target": '',
+            "target": "",
         }
     )
     print("dependencies - {}".format(dependencies))
@@ -296,12 +309,17 @@ def build_queue(update_info, dependencies, plugin_archive):
 
             installed_version = get_version_of_pip_module(
                 dependency["name"],
-                dependency_config.get("pip_command", update_script_config.DEFAULT_OPRINT_VENV),
+                dependency_config.get(
+                    "pip_command", update_script_config.DEFAULT_OPRINT_VENV
+                ),
             )
 
             if installed_version != version_needed:
                 install_queue.setdefault(
-                    dependency_config.get("pip_command", update_script_config.DEFAULT_OPRINT_VENV), []
+                    dependency_config.get(
+                        "pip_command", update_script_config.DEFAULT_OPRINT_VENV
+                    ),
+                    [],
                 ).append(
                     {
                         "name": dependency["name"],
@@ -331,9 +349,7 @@ def run_update():
     # get update config of dependencies
     update_info = get_update_info()
 
-    install_queue = build_queue(
-        update_info, dependencies, args.archive
-    )
+    install_queue = build_queue(update_info, dependencies, args.archive)
 
     print("install_queue", install_queue)
     if install_queue is not None:
@@ -393,11 +409,14 @@ def loadPluginTarget(archive, folder):
         )
 
     # unzip repo
-    plugin_extracted_path = os.path.join(folder, update_script_config.UPDATE_CONFIG_NAME)
+    plugin_extracted_path = os.path.join(
+        folder, update_script_config.UPDATE_CONFIG_NAME
+    )
     plugin_extracted_path_folder = os.path.join(
         plugin_extracted_path,
         "{repo_name}-{target}".format(
-            repo_name=update_script_config.REPO_NAME, target=re.sub(r"^v", "", filename.split(".zip")[0])
+            repo_name=update_script_config.REPO_NAME,
+            target=re.sub(r"^v", "", filename.split(".zip")[0]),
         ),
     )
     try:
@@ -408,21 +427,35 @@ def loadPluginTarget(archive, folder):
         raise RuntimeError("Could not unzip plugin repo - error: {}".format(e))
 
     # copy new dependencies to working directory
-    _copy_file_to_working_dir(folder=folder, plugin_extracted_path_folder=plugin_extracted_path_folder,
-                              origin_file="dependencies.txt", destination_file="dependencies.txt")
+    _copy_file_to_working_dir(
+        folder=folder,
+        plugin_extracted_path_folder=plugin_extracted_path_folder,
+        origin_file="dependencies.txt",
+        destination_file="dependencies.txt",
+    )
 
     # copy new update script to working directory
-    _copy_file_to_working_dir(folder=folder, plugin_extracted_path_folder=plugin_extracted_path_folder,
-                              origin_file="scripts/update_script.py", destination_file="update_script.py")
+    _copy_file_to_working_dir(
+        folder=folder,
+        plugin_extracted_path_folder=plugin_extracted_path_folder,
+        origin_file="scripts/update_script.py",
+        destination_file="update_script.py",
+    )
 
     # copy new update script config to working directory
-    _copy_file_to_working_dir(folder=folder, plugin_extracted_path_folder=plugin_extracted_path_folder,
-                              origin_file="scripts/update_script_config.py", destination_file="update_script_config.py")
+    _copy_file_to_working_dir(
+        folder=folder,
+        plugin_extracted_path_folder=plugin_extracted_path_folder,
+        origin_file="scripts/update_script_config.py",
+        destination_file="update_script_config.py",
+    )
 
     return zip_file_path
 
 
-def _copy_file_to_working_dir(folder, plugin_extracted_path_folder, origin_file, destination_file):
+def _copy_file_to_working_dir(
+    folder, plugin_extracted_path_folder, origin_file, destination_file
+):
     try:
         shutil.copy2(
             os.path.join(
@@ -433,7 +466,9 @@ def _copy_file_to_working_dir(folder, plugin_extracted_path_folder, origin_file,
             os.path.join(folder, destination_file),
         )
     except IOError as ioe:
-        raise RuntimeError("Could not copy {} to working directory: {}".format(origin_file, ioe))
+        raise RuntimeError(
+            "Could not copy {} to working directory: {}".format(origin_file, ioe)
+        )
 
 
 def main():
@@ -448,9 +483,7 @@ def main():
     args = _parse_arguments()
     if args.call:
         if args.archive is None:
-            raise RuntimeError(
-                "Could not run update archive is missing"
-            )
+            raise RuntimeError("Could not run update archive is missing")
         run_update()
     else:
 
@@ -470,10 +503,7 @@ def main():
         )
 
         # call new update script with args
-        sys.argv = [
-                       "--call=true",
-                       "--archive={}".format(archive)
-                   ] + sys.argv[1:]
+        sys.argv = ["--call=true", "--archive={}".format(archive)] + sys.argv[1:]
         try:
             result = subprocess.call(
                 [sys.executable, os.path.join(folder, "update_script.py")] + sys.argv,
