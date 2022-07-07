@@ -14,6 +14,11 @@ def test_get_navbar_label_alpha(mrbeam_plugin, mocker):
     assert mrbeam_plugin.get_navbar_label() == "ALPHA"
 
 
+def test_get_navbar_label_dev(mrbeam_plugin, mocker):
+    mocker.patch('octoprint_mrbeam.MrBeamPlugin.is_develop_channel', return_value=True)
+    assert mrbeam_plugin.get_navbar_label() == "DEV"
+
+
 def test_get_navbar_label_combined(mrbeam_plugin, mocker):
     # Change settings to have an initial value in navbar_label
     initial_label = "abcde"
