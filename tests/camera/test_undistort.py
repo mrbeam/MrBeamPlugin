@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-
-from os.path import dirname, basename, join, split, realpath
-
-# from collections import NoneType
-
-path = dirname(realpath(__file__))
-CAM_DIR = join(path, "rsc", "camera")
+from os.path import dirname, join, realpath
 
 import pytest
 import logging
 import cv2
 import numpy as np
 from octoprint_mrbeam.camera.undistort import prepareImage
+from octoprint_mrbeam.camera.lens import BoardDetectorDaemon
+import octoprint_mrbeam.camera.lens as lens
+import time
+
+
+path = dirname(realpath(__file__))
+CAM_DIR = join(path, "..", "rsc", "camera")
 
 
 @pytest.mark.datafiles(
@@ -42,25 +43,16 @@ def test_undist(datafiles):
     assert res[5]["lens_corrected"]
 
 
-from octoprint_mrbeam.camera.lens import BoardDetectorDaemon
-import octoprint_mrbeam.camera.lens as lens
-import yaml, time
-
 BOARD_IMGS = tuple("tmp_raw_img_0%02i.jpg" % i for i in range(21, 31))
+
 
 BOARDS = pytest.mark.datafiles(
     join(CAM_DIR, "boards", "tmp_raw_img_021.jpg"),
-    join(CAM_DIR, "boards", "tmp_raw_img_021.jpg.npz"),
     join(CAM_DIR, "boards", "tmp_raw_img_022.jpg"),
-    join(CAM_DIR, "boards", "tmp_raw_img_022.jpg.npz"),
     join(CAM_DIR, "boards", "tmp_raw_img_023.jpg"),
     join(CAM_DIR, "boards", "tmp_raw_img_024.jpg"),
     join(CAM_DIR, "boards", "tmp_raw_img_025.jpg"),
     join(CAM_DIR, "boards", "tmp_raw_img_026.jpg"),
-    join(CAM_DIR, "boards", "tmp_raw_img_027.jpg"),
-    join(CAM_DIR, "boards", "tmp_raw_img_028.jpg"),
-    join(CAM_DIR, "boards", "tmp_raw_img_029.jpg"),
-    join(CAM_DIR, "boards", "tmp_raw_img_030.jpg"),
 )
 
 
@@ -127,7 +119,7 @@ def test_lens_calibration_abort(datafiles):
     #     logging.error(timeout_msg)
     #     raise
     logging.info(
-        "Joined the lens calibratior stuff - ret %s, is_alive %s", ret, b.is_alive()
+        "Joined the lens calibratior stuff - ret, is_alive %s", b.is_alive()
     )
 
 
