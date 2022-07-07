@@ -114,6 +114,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     Element.prototype.toWorkingAreaSvgStr = function (
         w,
         h,
+        fontDecl = "",
         styles = "",
         filter = null
     ) {
@@ -124,8 +125,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         const vb = ""; //att.viewBox.split(" ");
         const width = w; //vb[2];
         const height = h; // vb[3];
-        if (Array.isArray(styles)) {
-            styles = styles.join("\n");
+        if (Array.isArray(fontDecl)) {
+            fontDecl = fontDecl.join("\n");
         }
         const namespaces = new Set([
             'xmlns="http://www.w3.org/2000/svg"',
@@ -159,6 +160,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     xxviewBox="${att.viewBox}">
     <defs>
         ${defs}
+        <style>${fontDecl}</style>
         <style>${styles}</style>
     </defs>
     ${cnt}
@@ -171,12 +173,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     Element.prototype.toWorkingAreaDataURL = function (
         w,
         h,
+        fontDecl = "",
         styles = "",
         filter = null
     ) {
         if (window && window.btoa) {
             const elem = this;
-            const svg = elem.toWorkingAreaSvgStr(w, h, styles, filter);
+            const svg = elem.toWorkingAreaSvgStr(
+                w,
+                h,
+                fontDecl,
+                styles,
+                filter
+            );
             const dataurl =
                 "data:image/svg+xml;base64," +
                 btoa(unescape(encodeURIComponent(svg)));
