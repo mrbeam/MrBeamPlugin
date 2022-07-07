@@ -34,3 +34,7 @@ server:
   secretKey: qVJcMugtq9U9khQ9pXkKpTfuPUc5HC15
   seenWizards:
     mrbeam: 22
+  onlineCheck:
+    enabled: true
+    host: find.mr-beam.org
+    port: '80'

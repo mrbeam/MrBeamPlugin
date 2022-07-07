@@ -855,6 +855,7 @@ class MrBeamPlugin(
                     self.get_model_id()),
                 burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
                     self.get_model_id()),
+                isDevelop=self.is_dev_env(),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
