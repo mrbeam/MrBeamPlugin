@@ -6,10 +6,9 @@ from os.path import dirname, join, realpath
 from octoprint_mrbeam.camera.exc import MrbCameraError
 from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 from octoprint_mrbeam.camera.worker import MrbPicWorker
-from octoprint.settings import settings
 from tests.testutils.fetch_resource import fetch
+from tests.conftest import sett
 
-sett = settings(init=True)  # fix some init bug
 path = dirname(realpath(__file__))
 CAM_DIR = join(path, "..", "rsc", "camera")
 
