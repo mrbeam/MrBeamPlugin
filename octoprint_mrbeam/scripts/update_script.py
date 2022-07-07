@@ -456,6 +456,15 @@ def loadPluginTarget(archive, folder):
 def _copy_file_to_working_dir(
     folder, plugin_extracted_path_folder, origin_file, destination_file
 ):
+    """
+    copy a file from the downloaded copy of the plugin to the working directory
+
+    Args:
+        folder: the destination directory
+        plugin_extracted_path_folder: the path to the extracted plugin code
+        origin_file: the path of the original file inside the plugin
+        destination_file: the destination path
+    """
     try:
         shutil.copy2(
             os.path.join(
