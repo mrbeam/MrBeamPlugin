@@ -1,30 +1,33 @@
 from __future__ import absolute_import, division, print_function
 
+import argparse
 import json
+import logging
 import os
 import re
 import shutil
 import subprocess
 import sys
-from io import BytesIO
-
 import zipfile
 import requests
-import argparse
+from importlib import import_module
+from io import BytesIO
 
 from octoprint.plugins.softwareupdate import exceptions
-
 from octoprint.settings import _default_basedir
 
-from octoprint_mrbeam.config import update_script_config
-from octoprint_mrbeam.mrb_logger import mrb_logger
+import update_script_config
 
-from octoprint_mrbeam.util.pip_util import get_version_of_pip_module, get_pip_caller
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 from urllib3.exceptions import MaxRetryError, ConnectionError
 
-_logger = mrb_logger("octoprint.plugins.mrbeam.softwareupdate.updatescript")
+pip_util_mod = import_module("{}.util.pip_util".format(update_script_config.IMPORT_TOP_DIR))
+
+get_version_of_pip_module = getattr(pip_util_mod, "get_version_of_pip_module")
+get_pip_caller = getattr(pip_util_mod, "get_pip_caller")
+
+_logger = logging.getLogger("octoprint.plugins.{}.softwareupdate.updatescript".format(update_script_config.PLUGIN_NAME))
 
 
 def _parse_arguments():
@@ -162,10 +165,12 @@ def build_wheels(build_queue):
         if not os.path.isdir(update_script_config.PIP_WHEEL_TEMP_FOLDER):
             os.mkdir(update_script_config.PIP_WHEEL_TEMP_FOLDER)
     except OSError as e:
-        raise RuntimeError("can't create wheel tmp folder {} - {}".format(update_script_config.PIP_WHEEL_TEMP_FOLDER, e))
+        raise RuntimeError(
+            "can't create wheel tmp folder {} - {}".format(update_script_config.PIP_WHEEL_TEMP_FOLDER, e))
 
     for venv, packages in build_queue.items():
-        tmp_folder = os.path.join(update_script_config.PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
+        tmp_folder = os.path.join(update_script_config.PIP_WHEEL_TEMP_FOLDER,
+                                  re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
         if os.path.isdir(tmp_folder):
             try:
                 os.system("sudo rm -r {}".format(tmp_folder))
@@ -175,7 +180,8 @@ def build_wheels(build_queue):
         pip_args = [
             "wheel",
             "--disable-pip-version-check",
-            "--wheel-dir={}".format(tmp_folder),  # Build wheels into <dir>, where the default is the current working directory.
+            "--wheel-dir={}".format(tmp_folder),
+            # Build wheels into <dir>, where the default is the current working directory.
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
@@ -207,14 +213,17 @@ def install_wheels(install_queue):
         raise RuntimeError("install queue is not a dict")
 
     for venv, packages in install_queue.items():
-        tmp_folder = os.path.join(update_script_config.PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
+        tmp_folder = os.path.join(update_script_config.PIP_WHEEL_TEMP_FOLDER,
+                                  re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
         pip_args = [
             "install",
             "--disable-pip-version-check",
-            "--upgrade",  # Upgrade all specified packages to the newest available version. The handling of dependencies depends on the upgrade-strategy used.
+            "--upgrade",
+            # Upgrade all specified packages to the newest available version. The handling of dependencies depends on the upgrade-strategy used.
             "--force-reinstall",  # Reinstall all packages even if they are already up-to-date.
             "--no-index",  # Ignore package index (only looking at --find-links URLs instead).
-            "--find-links={}".format(tmp_folder),  # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
+            "--find-links={}".format(tmp_folder),
+            # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
@@ -248,7 +257,8 @@ def build_queue(update_info, dependencies, plugin_archive):
     install_queue = {}
 
     install_queue.setdefault(
-        update_info.get(update_script_config.UPDATE_CONFIG_NAME).get("pip_command", update_script_config.DEFAULT_OPRINT_VENV), []
+        update_info.get(update_script_config.UPDATE_CONFIG_NAME).get("pip_command",
+                                                                     update_script_config.DEFAULT_OPRINT_VENV), []
     ).append(
         {
             "name": update_script_config.PLUGIN_NAME,
@@ -398,30 +408,32 @@ def loadPluginTarget(archive, folder):
         raise RuntimeError("Could not unzip plugin repo - error: {}".format(e))
 
     # copy new dependencies to working directory
-    try:
-        shutil.copy2(
-            os.path.join(
-                plugin_extracted_path_folder, update_script_config.MAIN_SRC_FOLDER_NAME, "dependencies.txt"
-            ),
-            os.path.join(folder, "dependencies.txt"),
-        )
-    except IOError:
-        raise RuntimeError("Could not copy dependencies to working directory")
+    _copy_file_to_working_dir(folder=folder, plugin_extracted_path_folder=plugin_extracted_path_folder,
+                              origin_file="dependencies.txt", destination_file="dependencies.txt")
 
     # copy new update script to working directory
+    _copy_file_to_working_dir(folder=folder, plugin_extracted_path_folder=plugin_extracted_path_folder,
+                              origin_file="scripts/update_script.py", destination_file="update_script.py")
+
+    # copy new update script config to working directory
+    _copy_file_to_working_dir(folder=folder, plugin_extracted_path_folder=plugin_extracted_path_folder,
+                              origin_file="scripts/update_script_config.py", destination_file="update_script_config.py")
+
+    return zip_file_path
+
+
+def _copy_file_to_working_dir(folder, plugin_extracted_path_folder, origin_file, destination_file):
     try:
         shutil.copy2(
             os.path.join(
                 plugin_extracted_path_folder,
                 update_script_config.MAIN_SRC_FOLDER_NAME,
-                "scripts/update_script.py",
+                origin_file,
             ),
-            os.path.join(folder, "update_script.py"),
+            os.path.join(folder, destination_file),
         )
-    except IOError:
-        raise RuntimeError("Could not copy update_script to working directory")
-
-    return zip_file_path
+    except IOError as ioe:
+        raise RuntimeError("Could not copy {} to working directory: {}".format(origin_file, ioe))
 
 
 def main():
@@ -459,9 +471,9 @@ def main():
 
         # call new update script with args
         sys.argv = [
-            "--call=true",
-            "--archive={}".format(archive)
-        ] + sys.argv[1:]
+                       "--call=true",
+                       "--archive={}".format(archive)
+                   ] + sys.argv[1:]
         try:
             result = subprocess.call(
                 [sys.executable, os.path.join(folder, "update_script.py")] + sys.argv,
