@@ -11,6 +11,7 @@ opencv-python==4.2.0.32
 Pillow==6.2.2
 pytest==4.6.11
 pytest-datafiles==2.0
+pytest-mock==2.0.0
 requests-mock==1.9.3
 selenium==3.141.0
 webdriver-manager==2.4.0
