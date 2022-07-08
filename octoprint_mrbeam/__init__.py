@@ -15,6 +15,7 @@ import datetime
 import collections
 import logging
 from subprocess import check_output
+import pkg_resources
 
 import octoprint.plugin
 import requests
@@ -834,7 +835,7 @@ class MrBeamPlugin(
                 now=now,
                 init_ts_ms=time.time() * 1000,
                 language=language,
-                beamosVersionNumber=self._plugin_version,
+                mrBeamPluginVersionNumber=self._plugin_version,
                 beamosVersionBranch=self._branch,
                 beamosVersionDisplayVersion=display_version_string,
                 beamosVersionImage=self._octopi_info,
@@ -1305,6 +1306,22 @@ class MrBeamPlugin(
             res = dict(calibration_pattern=destFile, target=FileDestinations.LOCAL)
             return jsonify(res)
 
+    # simpleApiCommand: compare_pep440_versions;
+    def compare_pep440_versions(self, data):
+        self._logger.info("compare_pep440_versions() request: %s", data)
+        try:
+            v1 = pkg_resources.parse_version(data.get("v1", None))
+            v2 = pkg_resources.parse_version(data.get("v2", None))
+            comparator = data.get("operator", None)
+            result = VersionComparator.get_comparator(
+                comparator, self.COMPARISON_OPTIONS
+            ).compare(v1, v2)
+            return make_response(json.dumps(result), 200)
+        except Exception as e:
+            self._logger.exception("Exception while comparing PEP440 versions: %s", e)
+            return make_response("Error while comparing PEP440 versions request.", 500)
+
+
     # ~~ helpers
 
     # helper method to write data to user settings
@@ -1371,7 +1388,7 @@ class MrBeamPlugin(
             locales=dict(),
             supportedExtensions=[],
             # beamOS version
-            beamosVersionNumber=self._plugin_version,
+            mrBeamPluginVersionNumber=self._plugin_version,
             beamosVersionBranch=self._branch,
             beamosVersionDisplayVersion=display_version_string,
             beamosVersionImage=self._octopi_info,
@@ -1937,6 +1954,7 @@ class MrBeamPlugin(
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
+            compare_pep440_versions=[]
         )
 
     def on_api_command(self, command, data):
@@ -2064,6 +2082,8 @@ class MrBeamPlugin(
             )  # TODO move this func to other file
         elif command == "cancel_final_extraction":
             self.dust_manager.set_user_abort_final_extraction()
+        elif command == "compare_pep440_versions":
+            return self.compare_pep440_versions(data)
 
         return NO_CONTENT
 
