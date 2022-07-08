@@ -27,7 +27,7 @@ jobs:
         run: |
             python -m pip install --upgrade pip
             pip install pylint
-            pip install test-requirements.txt
+            pip install -r test-requirements.txt
       #      pip install pytest pytest-cov selenium numpy
       # This step fails as it needs alot of time to fix the dependencies
       - name: Running pytest
