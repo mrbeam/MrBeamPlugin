@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import __builtin__
 import copy
 import json
+import operator
 import os
 import platform
 import pprint
@@ -104,6 +105,7 @@ from octoprint_mrbeam.util.flask import (
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
+from .version_comparator import VersionComparator
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -158,6 +160,14 @@ class MrBeamPlugin(
     TIME_NTP_SYNC_CHECK_FAST_COUNT = 20
     TIME_NTP_SYNC_CHECK_INTERVAL_FAST = 10.0
     TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
+
+    COMPARISON_OPTIONS = [
+        VersionComparator("__eq__", 5, operator.eq),
+        VersionComparator("__le__", 4, operator.le),
+        VersionComparator("__lt__", 3, operator.lt),
+        VersionComparator("__ge__", 2, operator.ge),
+        VersionComparator("__gt__", 1, operator.gt),
+    ]
 
     def __init__(self):
         self.mrbeam_plugin_initialized = False
