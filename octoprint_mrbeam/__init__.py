@@ -837,7 +837,7 @@ class MrBeamPlugin(
                 now=now,
                 init_ts_ms=time.time() * 1000,
                 language=language,
-                beamosVersionNumber=self._plugin_version,
+                mrBeamPluginVersionNumber=self._plugin_version,
                 beamosVersionBranch=self._branch,
                 beamosVersionDisplayVersion=display_version_string,
                 beamosVersionImage=self._octopi_info,
@@ -1388,7 +1388,7 @@ class MrBeamPlugin(
             locales=dict(),
             supportedExtensions=[],
             # beamOS version
-            beamosVersionNumber=self._plugin_version,
+            mrBeamPluginVersionNumber=self._plugin_version,
             beamosVersionBranch=self._branch,
             beamosVersionDisplayVersion=display_version_string,
             beamosVersionImage=self._octopi_info,

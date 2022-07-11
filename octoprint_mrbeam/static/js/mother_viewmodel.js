@@ -489,14 +489,14 @@ $(function () {
                 }
             }
             if (
-                backend_version !== BEAMOS_VERSION ||
+                backend_version !== MRBEAM_PLUGIN_VERSION ||
                 isFirstRun !== CONFIG_FIRST_RUN ||
                 (laserHeadModel !== undefined &&
                     laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
             ) {
                 console.log(
                     "Frontend reload check: RELOAD! (version: frontend=" +
-                        BEAMOS_VERSION +
+                        MRBEAM_PLUGIN_VERSION +
                         ", backend=" +
                         backend_version +
                         ", isFirstRun: frontend=" +
@@ -514,7 +514,7 @@ $(function () {
             } else {
                 console.log(
                     "Frontend reload check: OK (version: " +
-                        BEAMOS_VERSION +
+                        MRBEAM_PLUGIN_VERSION +
                         ", isFirstRun: " +
                         CONFIG_FIRST_RUN +
                         ", laserheadModel: " +
