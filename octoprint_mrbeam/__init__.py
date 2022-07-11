@@ -1302,6 +1302,18 @@ class MrBeamPlugin(
 
     # simpleApiCommand: compare_pep440_versions;
     def compare_pep440_versions(self, data):
+        """
+            returns the PEP440 version comparison Boolean result
+
+            Args:
+                data (dict): Includes the following keys:
+                    v1 (str): First version to be compared
+                    v2 (str): Second version to be compared
+                    operator (str): Comparison operator
+
+            Returns:
+                Boolean: PEP440 version comparison result
+        """
         self._logger.info("compare_pep440_versions() request: %s", data)
         try:
             v1 = pkg_resources.parse_version(data.get("v1", None))
