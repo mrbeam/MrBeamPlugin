@@ -106,7 +106,7 @@ from octoprint_mrbeam.util.flask import (
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
-from .version_comparator import VersionComparator
+from octoprint_mrbeam.util.version_comparator import VersionComparator, COMPARISON_OPTIONS
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -162,13 +162,6 @@ class MrBeamPlugin(
     TIME_NTP_SYNC_CHECK_INTERVAL_FAST = 10.0
     TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
 
-    COMPARISON_OPTIONS = [
-        VersionComparator("__eq__", 5, operator.eq),
-        VersionComparator("__le__", 4, operator.le),
-        VersionComparator("__lt__", 3, operator.lt),
-        VersionComparator("__ge__", 2, operator.ge),
-        VersionComparator("__gt__", 1, operator.gt),
-    ]
 
     def __init__(self):
         self.mrbeam_plugin_initialized = False
@@ -1315,7 +1308,7 @@ class MrBeamPlugin(
             v2 = pkg_resources.parse_version(data.get("v2", None))
             comparator = data.get("operator", None)
             result = VersionComparator.get_comparator(
-                comparator, self.COMPARISON_OPTIONS
+                comparator, COMPARISON_OPTIONS
             ).compare(v1, v2)
             return make_response(json.dumps(result), 200)
         except Exception as e:

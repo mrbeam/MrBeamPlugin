@@ -1,4 +1,4 @@
-from octoprint_mrbeam.mrb_logger import mrb_logger
+import operator
 
 # singleton
 _instance = None
@@ -34,3 +34,12 @@ class VersionComparator:
         for item in comparision_options:
             if item.identifier == comparision_string:
                 return item
+
+
+COMPARISON_OPTIONS = [
+    VersionComparator("__eq__", 5, operator.eq),
+    VersionComparator("__le__", 4, operator.le),
+    VersionComparator("__lt__", 3, operator.lt),
+    VersionComparator("__ge__", 2, operator.ge),
+    VersionComparator("__gt__", 1, operator.gt),
+]

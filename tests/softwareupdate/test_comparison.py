@@ -1,16 +1,10 @@
-import operator
 import unittest
 
-from octoprint_mrbeam.version_comparator import VersionComparator
+from octoprint_mrbeam.util.version_comparator import VersionComparator, COMPARISON_OPTIONS
 from octoprint_mrbeam.software_update_information import (
     _generate_config_of_beamos,
     get_config_for_version,
 )
-from octoprint_mrbeam import MrBeamPlugin
-
-
-def bla(comp1, comparison_options):
-    return VersionComparator.get_comparator(comp1, comparison_options).priority
 
 
 class VersionComparisonTestCase(unittest.TestCase):
@@ -29,15 +23,15 @@ class VersionComparisonTestCase(unittest.TestCase):
         self.config.update(self.ge_element)
         self.config.update(self.le_element)
         self.config.update(self.eq_element)
-        self.comparison_options = MrBeamPlugin.COMPARISON_OPTIONS
+        self.comparison_options = COMPARISON_OPTIONS
 
     def test_sorted(self):
         print(self.config)
         config = sorted(
             self.config,
             cmp=lambda comp1, comp2: cmp(
-                bla(comp1, self.comparison_options),
-                bla(comp2, self.comparison_options),
+                VersionComparator.get_comparator(comp1, self.comparison_options).priority,
+                VersionComparator.get_comparator(comp2, self.comparison_options).priority
             ),
         )
         self.assertEquals(config, ["__ge__", "__le__", "__eq__"]),
@@ -122,9 +116,9 @@ class VersionComparisonTestCase(unittest.TestCase):
         }
 
         self.assertEquals(
-            _generate_config_of_beamos(MrBeamPlugin, config, "0.14.0", "stable").get("version"),
+            _generate_config_of_beamos(config, "0.14.0", "stable").get("version"),
             "0.0.1",
         )
         self.assertEquals(
-            _generate_config_of_beamos(MrBeamPlugin, config, "0.18.0", "stable").get("version"), None
+            _generate_config_of_beamos(config, "0.18.0", "stable").get("version"), None
         )

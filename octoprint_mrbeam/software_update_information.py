@@ -1,6 +1,5 @@
 import copy
 import json
-import operator
 import os
 from datetime import date
 
@@ -18,7 +17,7 @@ from urllib3 import Retry
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_merge, logExceptions
 from octoprint_mrbeam.util.github_api import get_file_of_repo_for_tag, REPO_URL
-from octoprint_mrbeam.version_comparator import VersionComparator
+from octoprint_mrbeam.util.version_comparator import VersionComparator, COMPARISON_OPTIONS
 from util.pip_util import get_version_of_pip_module
 
 
@@ -382,7 +381,7 @@ def _generate_config_of_module(
 
         input_moduleconfig = dict_merge(
             input_moduleconfig,
-            _generate_config_of_beamos(plugin, input_moduleconfig, beamos_version, tierversion),
+            _generate_config_of_beamos(input_moduleconfig, beamos_version, tierversion),
         )
 
         if "branch" in input_moduleconfig and "{tier}" in input_moduleconfig["branch"]:
@@ -479,6 +478,7 @@ def _get_current_version(input_moduleconfig, module_id, plugin):
             current_version = pluginInfo.version
     return current_version
 
+
 def _set_current_version_for_config(update_info, plugin):
     for module_id in update_info:
         module_update_info = update_info.get(module_id)
@@ -494,7 +494,8 @@ def _set_current_version_for_config(update_info, plugin):
             )
     return update_info
 
-def _generate_config_of_beamos(plugin, moduleconfig, beamos_version, tierversion):
+
+def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
     """
     generates the config for the given beamos_version of the tierversion
 
@@ -515,12 +516,12 @@ def _generate_config_of_beamos(plugin, moduleconfig, beamos_version, tierversion
     sorted_config_for_beamos_versions = sorted(
         config_for_beamos_versions.items(),
         key=lambda com: VersionComparator.get_comparator(
-            com[0], plugin.COMPARISON_OPTIONS
+            com[0], COMPARISON_OPTIONS
         ).priority,
     )
 
     config_for_beamos = get_config_for_version(
-        beamos_version, sorted_config_for_beamos_versions, plugin.COMPARISON_OPTIONS
+                                                                                                                                                                                                                    beamos_version, sorted_config_for_beamos_versions, COMPARISON_OPTIONS
     )
 
     if tierversion in config_for_beamos:
