@@ -521,7 +521,7 @@ def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
     )
 
     config_for_beamos = get_config_for_version(
-                                                                                                                                                                                                                    beamos_version, sorted_config_for_beamos_versions, COMPARISON_OPTIONS
+        beamos_version, sorted_config_for_beamos_versions, COMPARISON_OPTIONS
     )
 
     if tierversion in config_for_beamos:
