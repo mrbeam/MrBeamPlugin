@@ -17,7 +17,7 @@ from urllib3 import Retry
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_merge, logExceptions
 from octoprint_mrbeam.util.github_api import get_file_of_repo_for_tag, REPO_URL
-from octoprint_mrbeam.util.version_comparator import VersionComparator, COMPARISON_OPTIONS
+from octoprint_mrbeam.util.version_comparator import VersionComparator, COMPARISON_OPTIONS, compare_pep440_versions
 from util.pip_util import get_version_of_pip_module
 
 
@@ -521,7 +521,7 @@ def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
     )
 
     config_for_beamos = get_config_for_version(
-        beamos_version, sorted_config_for_beamos_versions, COMPARISON_OPTIONS
+        beamos_version, sorted_config_for_beamos_versions
     )
 
     if tierversion in config_for_beamos:
@@ -533,9 +533,9 @@ def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
     return config_for_beamos
 
 
-def get_config_for_version(target_version, config, comparision_options):
+def get_config_for_version(target_version, config):
     config_to_be_updated = {}
-    for comperator, version_config_items in config:
+    for comparator, version_config_items in config:
         # sort the version config items by the version
         sorted_version_config_items = sorted(
             version_config_items.items(),
@@ -545,9 +545,10 @@ def get_config_for_version(target_version, config, comparision_options):
         )
 
         for check_version, version_config in sorted_version_config_items:
-            if VersionComparator.get_comparator(
-                comperator, comparision_options
-            ).compare(target_version, check_version):
+            if compare_pep440_versions(
+                v1=target_version,
+                v2=check_version,
+                comparator=comparator):
                 config_to_be_updated = dict_merge(config_to_be_updated, version_config)
     return config_to_be_updated
 

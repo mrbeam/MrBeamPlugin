@@ -106,7 +106,7 @@ from octoprint_mrbeam.util.flask import (
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
-from octoprint_mrbeam.util.version_comparator import VersionComparator, COMPARISON_OPTIONS
+from octoprint_mrbeam.util.version_comparator import compare_pep440_versions
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -1301,31 +1301,14 @@ class MrBeamPlugin(
             return jsonify(res)
 
     # simpleApiCommand: compare_pep440_versions;
-    def compare_pep440_versions(self, data):
-        """
-            returns the PEP440 version comparison Boolean result
-
-            Args:
-                data (dict): Includes the following keys:
-                    v1 (str): First version to be compared
-                    v2 (str): Second version to be compared
-                    operator (str): Comparison operator
-
-            Returns:
-                Boolean: PEP440 version comparison result
-        """
-        self._logger.info("compare_pep440_versions() request: %s", data)
+    def handle_pep440_comparison_result(self, data):
         try:
-            v1 = pkg_resources.parse_version(data.get("v1", None))
-            v2 = pkg_resources.parse_version(data.get("v2", None))
-            comparator = data.get("operator", None)
-            result = VersionComparator.get_comparator(
-                comparator, COMPARISON_OPTIONS
-            ).compare(v1, v2)
+            result = compare_pep440_versions(data['v1'], data['v2'], data['operator'])
             return make_response(json.dumps(result), 200)
-        except Exception as e:
-            self._logger.exception("Exception while comparing PEP440 versions: %s", e)
+        except KeyError as e:
+            self._logger.error("Key is missing in data: %s", e)
             return make_response(json.dumps(None), 500)
+
 
     # ~~ helpers
 
@@ -2088,7 +2071,7 @@ class MrBeamPlugin(
         elif command == "cancel_final_extraction":
             self.dust_manager.set_user_abort_final_extraction()
         elif command == "compare_pep440_versions":
-            return self.compare_pep440_versions(data)
+            return self.handle_pep440_comparison_result(data)
 
         return NO_CONTENT
 

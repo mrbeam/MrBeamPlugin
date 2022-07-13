@@ -1,6 +1,10 @@
 import operator
 
 # singleton
+import pkg_resources
+
+from octoprint_mrbeam.mrb_logger import mrb_logger
+
 _instance = None
 
 
@@ -22,18 +26,42 @@ class VersionComparator:
         self.compare = compare
 
     @staticmethod
-    def get_comparator(comparision_string, comparision_options):
+    def get_comparator(comparison_string, comparison_options):
         """
-        returns the comperator of the given list of VersionComparator with the matching identifier
+        returns the comparator of the given list of VersionComparator with the matching identifier
         Args:
-            comparision_string (str): identifier to search for
-            comparision_options (list): list of VersionComparator objects
+            comparison_string (str): identifier to search for
+            comparison_options (list): list of VersionComparator objects
         Returns:
             object: matching VersionComparator object
         """
-        for item in comparision_options:
-            if item.identifier == comparision_string:
+        for item in comparison_options:
+            if item.identifier == comparison_string:
                 return item
+
+def compare_pep440_versions(v1, v2, comparator):
+    """
+        returns the PEP440 version comparison Boolean result
+
+        Args:
+            v1 (str): First version to be compared
+            v2 (str): Second version to be compared
+            comparator (str): Comparison operator
+
+        Returns:
+            Boolean: PEP440 version comparison result
+    """
+    _logger = mrb_logger("octoprint.plugins.mrbeam." + __name__ + ".compare_pep440_versions")
+    try:
+        parsed_version_v1 = pkg_resources.parse_version(v1)
+        parsed_version_v2 = pkg_resources.parse_version(v2)
+        result = VersionComparator.get_comparator(
+            comparator, COMPARISON_OPTIONS
+        ).compare(parsed_version_v1, parsed_version_v2)
+        return result
+    except Exception as e:
+        _logger.exception("Exception while comparing PEP440 versions: %s", e)
+        return None
 
 
 COMPARISON_OPTIONS = [

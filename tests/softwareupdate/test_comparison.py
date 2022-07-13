@@ -47,50 +47,50 @@ class VersionComparisonTestCase(unittest.TestCase):
 
         self.assertEquals(
             2,
-            get_config_for_version("0.18.0", config, self.comparison_options).get(
+            get_config_for_version("0.18.0", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             1,
-            get_config_for_version("0.17.1", config, self.comparison_options).get(
+            get_config_for_version("0.17.1", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             3,
-            get_config_for_version("0.16.8", config, self.comparison_options).get(
+            get_config_for_version("0.16.8", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             4,
-            get_config_for_version("0.16.5", config, self.comparison_options).get(
+            get_config_for_version("0.16.5", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             5,
-            get_config_for_version("0.18.2", config, self.comparison_options).get(
+            get_config_for_version("0.18.2", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             6,
-            get_config_for_version("1.0.0", config, self.comparison_options).get(
+            get_config_for_version("1.0.0", config).get(
                 "value"
             ),
         )
         # only support major minor patch so far
         # self.assertEquals(
         #     1,
-        #     get_config_for_version("0.17.5.pre0", config, self.comparison_options).get(
+        #     get_config_for_version("0.17.5.pre0", config).get(
         #         "value"
         #     ),
         # )
         # self.assertEquals(
         #     1,
-        #     get_config_for_version("0.18.0a0", config, self.comparison_options).get(
+        #     get_config_for_version("0.18.0a0", config).get(
         #         "value"
         #     ),
         # )
