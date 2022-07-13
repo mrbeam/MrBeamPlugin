@@ -1,6 +1,14 @@
 from flask_babel import get_locale
-from octoprint_mrbeamdoc.enum.supported_languages import SupportedLanguage
-from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils
+
+from octoprint_mrbeam.decorator.catch_import_error import prevent_execution_on_import_error
+from octoprint_mrbeam.model import EmptyImport
+
+try:
+    from octoprint_mrbeamdoc.enum.supported_languages import SupportedLanguage
+    from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils
+except ImportError:
+    MrBeamDocUtils = EmptyImport("from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils")
+    SupportedLanguage = EmptyImport("from octoprint_mrbeamdoc.enum.supported_languages import SupportedLanguage")
 
 from octoprint_mrbeam.model.burger_menu_model import BurgerMenuModel
 
@@ -14,6 +22,7 @@ class BurgerMenuService:
         self._logger = logger
         self._document_service = document_service
 
+    @prevent_execution_on_import_error(MrBeamDocUtils, default_return=BurgerMenuModel())
     def get_burger_menu_model(self, mrbeam_model):
         """
         mrbeam_model String: Name of the running mrbeam_model

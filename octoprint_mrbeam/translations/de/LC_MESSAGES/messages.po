@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-05-05 10:33+0200\n"
-"PO-Revision-Date: 2022-05-05 10:34+0200\n"
+"POT-Creation-Date: 2022-06-09 17:44+0200\n"
+"PO-Revision-Date: 2022-06-09 17:50+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -183,7 +183,7 @@ msgstr ""
 "für dieses Material nicht unterstützt."
 
 #: octoprint_mrbeam/static/js/convert.js:1839
-#: octoprint_mrbeam/static/js/render_fills.js:458
+#: octoprint_mrbeam/static/js/render_fills.js:492
 msgid "Conversion failed"
 msgstr "Konvertierung fehlgeschlagen"
 
@@ -254,11 +254,11 @@ msgstr "Mehr Disk-Speicherplatz frei machen"
 msgid "Cut "
 msgstr "Schneiden "
 
-#: octoprint_mrbeam/static/js/design_store.js:239
+#: octoprint_mrbeam/static/js/design_store.js:246
 msgid "Could not download design"
 msgstr "Konnte das Design nicht herunterladen"
 
-#: octoprint_mrbeam/static/js/design_store.js:240
+#: octoprint_mrbeam/static/js/design_store.js:247
 msgid "The purchased design could not be downloaded. Please download again."
 msgstr ""
 "Das gekaufte Design konnte nicht heruntergeladen werden. Bitte versuche es "
@@ -772,11 +772,34 @@ msgstr ""
 msgid "Starts the laser job"
 msgstr "Startet den Laserjob"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:384
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:61
+msgid "The laserjob will be cancelled."
+msgstr "Der Laservorgang wird abgebrochen."
+
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:62
+msgid "Do you still want to cancel?"
+msgstr "Willst du immer noch abbrechen?"
+
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:63
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:136
+msgid "No"
+msgstr "Nein"
+
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:64
+#: octoprint_mrbeam/templates/calibration/watterott/tab_calibration_qa.jinja2:42
+#: octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:28
+#: octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:42
+#: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:71
+#: octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:110
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:137
+msgid "Yes"
+msgstr "Ja"
+
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:402
 msgid "File uploaded but not added to the Working Area"
 msgstr "Datei hochgeladen, aber nicht zum Arbeitsbereich hinzugefügt"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:385
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:403
 msgid ""
 "The file you uploaded was not added to the working area because another file "
 "with the same name already exists."
@@ -784,38 +807,38 @@ msgstr ""
 "Die hochgeladene Datei wurde nicht in den Arbeitsbereich hinzugefügt, da "
 "bereits eine andere Datei mit demselben Namen existiert."
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:693
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:704
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:711
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:722
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:2
 msgid "Files"
 msgstr "Dateien"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:703
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:721
 msgid "1 File"
 msgstr "1 Datei"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:713
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:731
 msgid "recent job"
 msgstr "letzter Job"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:715
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:733
 msgid "image"
 msgstr "Bild"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:831
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:849
 msgid "Preparation done"
 msgstr "Vorbereitung abgeschlossen"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:833
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:851
 #, python-format
 msgid "Converted %(stl)s to %(gcode)s, took %(time).2f seconds"
 msgstr "Datei %(stl)s nach %(gcode)s konvertiert. Dauer: %(time).2f Sekunden"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:930
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:948
 msgid "Ready to laser?"
 msgstr "Bereit zum Lasern?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:933
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:951
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:501
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:125
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:118
@@ -827,11 +850,11 @@ msgstr "Bereit zum Lasern?"
 msgid "Cancel"
 msgstr "Abbruch"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:934
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:952
 msgid "Proceed"
 msgstr "Fortfahren"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:935
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:953
 msgid ""
 "The laser will now start. Protect yourself and everybody in the room "
 "appropriately before proceeding!"
@@ -839,16 +862,16 @@ msgstr ""
 "Der Laser wird nun gestartet. Schütze Dich und alle anderen im Raum "
 "angemessen, bevor Du fortfährst!"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:938
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:956
 msgid "Are you sure you want to proceed?"
 msgstr "Möchtest Du wirklich fortfahren?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:942
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:960
 msgid "The laser will now start. Please make sure the lid is closed."
 msgstr ""
 "Der Laser wird nun gestartet. Achte darauf, dass der Deckel geschlossen ist."
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:945
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:963
 msgid "Please confirm to proceed."
 msgstr "Bitte bestätige, um fortzufahren."
 
@@ -944,19 +967,19 @@ msgstr ""
 "Verbindung zu deinem Mr Beam und versuche es erneut."
 
 # Settings > About Screen
-#: octoprint_mrbeam/static/js/software_channel_selector.js:15
+#: octoprint_mrbeam/static/js/software_channel_selector.js:16
 msgid "Stable"
 msgstr "Stabiler Kanal"
 
-#: octoprint_mrbeam/static/js/software_channel_selector.js:16
+#: octoprint_mrbeam/static/js/software_channel_selector.js:17
 msgid "Beta"
 msgstr "Beta"
 
-#: octoprint_mrbeam/static/js/software_channel_selector.js:17
+#: octoprint_mrbeam/static/js/software_channel_selector.js:18
 msgid "Alpha"
 msgstr "Alpha"
 
-#: octoprint_mrbeam/static/js/software_channel_selector.js:18
+#: octoprint_mrbeam/static/js/software_channel_selector.js:19
 msgid "Develop"
 msgstr "Develop"
 
@@ -1324,10 +1347,42 @@ msgstr ""
 "sie wieder startet."
 
 #: octoprint_mrbeam/static/js/user_notification_viewmodel.js:55
+msgid "No update information"
+msgstr "Keine Informationen für Updates"
+
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:56
+msgid ""
+"No information about available updates could be retrieved, please try again "
+"later. Errorcode: E-1000"
+msgstr ""
+"Es konnten keine Informationen über updates ermittelt werden, probiere es "
+"später noch einmal. Errorcode: E-1000"
+
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:63
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:71
+msgid "Error during fetching update information"
+msgstr "Fehler währen der Ermittlung von update Informationen"
+
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:64
+msgid ""
+"There was a error during fetching the update information Errorcode: E-1001"
+msgstr ""
+"Es gab einen Fehler währen der Ermittlung von update Informationen. "
+"Errorcode: E-1001"
+
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:72
+msgid ""
+"There was a error during fetching the update information, please try again "
+"later."
+msgstr ""
+"Es gab einen Fehler währen der Ermittlung von update Informationen, probiere "
+"es später noch einmal."
+
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:79
 msgid "Camera Error"
 msgstr "Kamerafehler"
 
-#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:56
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:80
 msgid ""
 "The camera has had a small issue, please restart your Mr Beam if you need to "
 "use the camera to continue with your work."
@@ -1335,11 +1390,11 @@ msgstr ""
 "Die Kamera hatte ein Problem, bitte starte Deinen Mr Beam neu, um die Kamera "
 "wieder zu nutzen."
 
-#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:67
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:91
 msgid "Thank you"
 msgstr "Danke"
 
-#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:68
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:92
 msgid ""
 "The last image from your camera was submitted to Mr Beam and is going to be "
 "uploaded silently in the background."
@@ -1347,16 +1402,16 @@ msgstr ""
 "Das letzte Bild der Kamera wurde an Mr Beam übermittelt und wird nun still "
 "im Hintergrund hochgeladen."
 
-#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:74
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:98
 msgid "Lens Calibration Over"
 msgstr "Linsenkalibrierung abgeschlossen"
 
-#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:75
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:99
 msgid "A new lens calibration file has been created and is now being used."
 msgstr ""
 "Eine neue Linsenkalibrierungs-Datei wurde erstellt und wird nun verwendet."
 
-#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:153
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:177
 #, python-format
 msgid ""
 "For more information check out this %(opening_tag)sKnowledge Base article"
@@ -1365,12 +1420,12 @@ msgstr ""
 "Weitere Informationen findest Du in diesem %(opening_tag)sKnowledge Base-"
 "Artikel%(closing_tag)s"
 
-#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:170
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:194
 #, python-format
 msgid "Browse our %(opening_tag)sKnowledge Base%(closing_tag)s"
 msgstr "Gehe zu unserer %(opening_tag)sKnowledge Base%(closing_tag)s"
 
-#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:190
+#: octoprint_mrbeam/static/js/user_notification_viewmodel.js:214
 msgid "Error:"
 msgstr "Fehler:"
 
@@ -1471,11 +1526,11 @@ msgstr "Stern"
 msgid "Heart"
 msgstr "Herz"
 
-#: octoprint_mrbeam/static/js/working_area.js:1356
+#: octoprint_mrbeam/static/js/working_area.js:1364
 msgid "Limited split result."
 msgstr "Nur teilweise zerteiltes Ergebnis."
 
-#: octoprint_mrbeam/static/js/working_area.js:1357
+#: octoprint_mrbeam/static/js/working_area.js:1365
 msgid ""
 "Splitting this design would result in too many parts. Here are "
 "${split_result.length} parts. You can split the last one again if necessary."
@@ -1484,27 +1539,27 @@ msgstr ""
 "${split_result.length} Teile. Du kannst den letzten Teil bei Bedarf noch "
 "einmal zerteilen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1368
+#: octoprint_mrbeam/static/js/working_area.js:1376
 msgid "No different line colors found."
 msgstr "Keine unterschiedlichen Linienfarben gefunden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1371
+#: octoprint_mrbeam/static/js/working_area.js:1379
 msgid "No non-intersecting shapes found."
 msgstr "Keine nicht-überlappenden Formen gefunden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1378
+#: octoprint_mrbeam/static/js/working_area.js:1386
 msgid "Looks like a single path."
 msgstr "Sieht nach einem einzigen Pfad aus."
 
-#: octoprint_mrbeam/static/js/working_area.js:1381
+#: octoprint_mrbeam/static/js/working_area.js:1389
 msgid "Element not splittable with this method."
 msgstr "Element is nicht zerteilbar mit dieser Methode."
 
-#: octoprint_mrbeam/static/js/working_area.js:1383
+#: octoprint_mrbeam/static/js/working_area.js:1391
 msgid "Can't split this design."
 msgstr "Dieses Design kann nicht zerteilt werden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1923
+#: octoprint_mrbeam/static/js/working_area.js:1931
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements "
@@ -1513,12 +1568,12 @@ msgstr ""
 "Die SVG-Datei enthält nicht unterstützte Elemente: %(elemName)s' Diese "
 "Elemente wurden entfernt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1931
+#: octoprint_mrbeam/static/js/working_area.js:1939
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr "Nicht unterstützte Elemente in SVG: '%(elemName)s'"
 
-#: octoprint_mrbeam/static/js/working_area.js:1944
+#: octoprint_mrbeam/static/js/working_area.js:1952
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their "
@@ -1529,11 +1584,11 @@ msgstr ""
 "willst,%(br)skonvertiere sie in Pfade.%(br)sAnsonsten werden sie mit Füllung "
 "graviert."
 
-#: octoprint_mrbeam/static/js/working_area.js:1951
+#: octoprint_mrbeam/static/js/working_area.js:1959
 msgid "Text elements found"
 msgstr "Textelemente gefunden"
 
-#: octoprint_mrbeam/static/js/working_area.js:1964
+#: octoprint_mrbeam/static/js/working_area.js:1972
 msgid ""
 "The SVG file contained style elements with online references. Since online "
 "references are not supported, we removed them. The image might look a bit "
@@ -1543,11 +1598,11 @@ msgstr ""
 "Referenzen nicht unterstützt werden, haben wir sie entfernt. Das Bild könnte "
 "jetzt etwas anders aussehen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1969
+#: octoprint_mrbeam/static/js/working_area.js:1977
 msgid "Style elements removed"
 msgstr "Style-Elemente entfernt"
 
-#: octoprint_mrbeam/static/js/working_area.js:1983
+#: octoprint_mrbeam/static/js/working_area.js:1991
 msgid ""
 "The selected design file can not be handled. Please make sure it is a valid "
 "design file."
@@ -1555,25 +1610,25 @@ msgstr ""
 "Die ausgewählte Design-Datei kann nicht bearbeitet werden. Bitte stelle "
 "sicher, dass es sich um eine gültige Design-Datei handelt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1989
+#: octoprint_mrbeam/static/js/working_area.js:1997
 msgid "File error."
 msgstr "Dateifehler."
 
-#: octoprint_mrbeam/static/js/working_area.js:2003
+#: octoprint_mrbeam/static/js/working_area.js:2011
 msgid "The selected design file does not have any content."
 msgstr "Die ausgewählte Design-Datei hat keinen Inhalt."
 
-#: octoprint_mrbeam/static/js/working_area.js:2009
+#: octoprint_mrbeam/static/js/working_area.js:2017
 msgid "Empty File."
 msgstr "Leere Datei."
 
-#: octoprint_mrbeam/static/js/working_area.js:2023
+#: octoprint_mrbeam/static/js/working_area.js:2031
 msgid "An unknown error occurred while processing this design file."
 msgstr ""
 "Ein bekannter Fehler ist während der Verarbeitung dieser Designdatei "
 "aufgetreten."
 
-#: octoprint_mrbeam/static/js/working_area.js:2031
+#: octoprint_mrbeam/static/js/working_area.js:2039
 msgid ""
 "Please try reloading this browser window and try again. If this error "
 "remains, contact the Mr Beam Support Team. Make sure you provide the error "
@@ -1587,8 +1642,8 @@ msgstr ""
 #: octoprint_mrbeam/static/js/calibration/calibration.js:120
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:124
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:367
-#: octoprint_mrbeam/static/js/working_area.js:2038
-#: octoprint_mrbeam/static/js/working_area.js:2043
+#: octoprint_mrbeam/static/js/working_area.js:2046
+#: octoprint_mrbeam/static/js/working_area.js:2051
 msgid "Error"
 msgstr "Fehler"
 
@@ -3078,63 +3133,33 @@ msgstr "Vollbild"
 msgid "Exit Fullscreen"
 msgstr "Vollbild verlassen"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:102
-msgid "QuickstartGuide_en.pdf"
-msgstr "QuickstartGuide_de.pdf"
-
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:102
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:105
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:70
-msgid "Quickstart Guide"
-msgstr "Quickstart Guide"
-
-# URL part. do not translate/modify
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:103
-msgid "UserManual_en.pdf"
-msgstr "UserManual_de.pdf"
-
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:103
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:106
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:80
-msgid "User Manual"
-msgstr "Betriebsanleitung"
-
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:105
-msgid "QuickstartGuide_dreamcut_en.pdf"
-msgstr "QuickstartGuide_dreamcut_de.pdf"
-
-# URL part. do not translate/modify
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:106
-msgid "UserManual_dreamcut_en.pdf"
-msgstr "UserManual_dreamcut_de.pdf"
-
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:109
 #: octoprint_mrbeam/templates/support_standalone.jinja2:5
 msgid "Support"
 msgstr "Support"
 
 # feststehender Begriff
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:111
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:107
 msgid "Find my Mr Beam"
 msgstr "Find my Mr Beam"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:151
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:147
 msgid "Version"
 msgstr "Version"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:154
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:150
 msgid "Homepage"
 msgstr "Startseite"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:155
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:151
 msgid "Sourcecode"
 msgstr "Sourcecode"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:156
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:152
 msgid "Documentation"
 msgstr "Dokumentation"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:157
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:153
 msgid "Bugs and Requests"
 msgstr "Fehler und Anfragen"
 
@@ -3909,7 +3934,7 @@ msgstr ""
 "Mr Beam Lasers wird das Bild weder veröffentlichen noch an Dritte verkaufen."
 
 # URL - do not translate/modify
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:104
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:84
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:10
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:215
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:9
@@ -4468,15 +4493,6 @@ msgstr ""
 "Die gravierten Rechteckkanten sind gerade und parallel zu den grünen "
 "Rechteckkanten"
 
-#: octoprint_mrbeam/templates/calibration/watterott/tab_calibration_qa.jinja2:42
-#: octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:28
-#: octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:42
-#: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:71
-#: octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:110
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:137
-msgid "Yes"
-msgstr "Ja"
-
 # as in laser parameters
 #: octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:1
 msgid "Camera alignment"
@@ -4620,90 +4636,88 @@ msgid "Documentation, Support and Privacy"
 msgstr "Dokumentation, Support und Datenschutz"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:78
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:76
 msgid "get the latest versions"
 msgstr "Bekomme die neuesten Versionen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:78
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:76
 msgid "online"
 msgstr "online"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:100
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:80
 msgid "Online Support Portal"
 msgstr "Online Support Portal"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:101
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:81
 msgid "Privacy Policies"
 msgstr "Datenschutzbestimmungen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:102
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:82
 msgid "Mr Beam Web Site"
 msgstr "Mr Beam Website"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:103
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:126
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:83
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:106
 msgid "find.mr-beam service"
 msgstr "find.mr-beam Service"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:104
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:84
 msgid "Mr Beam Analytics"
 msgstr "Mr Beam Analytics"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:112
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:92
 msgid "Links"
 msgstr "Links"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:115
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:95
 msgid "Website"
 msgstr "Webseite"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:116
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:96
 msgid "Social media"
 msgstr "Soziale Medien"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:125
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:105
 msgid "Official user group"
 msgstr "Offizielle User-Group"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:125
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:105
 msgid "on Facebook"
 msgstr "auf Facebook"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:125
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:105
 msgid "German"
 msgstr "Deutsch"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:127
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:107
 msgid "Online resources"
 msgstr "Online-Ressourcen"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:127
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:107
 msgid "Mr Beam Downloads"
 msgstr "Mr Beam Downloads"
 
 # Settings > About Screen
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:128
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:108
 msgid "Source code"
 msgstr "Quellcode"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:129
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:109
 msgid "Recommend Mr Beam"
 msgstr "Mr Beam weiterempfehlen"
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:129
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:109
 msgid "and earn cashback"
 msgstr "und Cashback verdienen"
 
@@ -5399,10 +5413,6 @@ msgstr ""
 msgid "Please notice that there is no way to undo this operation"
 msgstr "Dies kann nicht rückgängig gemacht werden"
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:136
-msgid "No"
-msgstr "Nein"
-
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
 msgid "Reminders"
 msgstr "Erinnerungen"
@@ -5719,6 +5729,26 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
+
+#~ msgid "QuickstartGuide_en.pdf"
+#~ msgstr "QuickstartGuide_de.pdf"
+
+#~ msgid "Quickstart Guide"
+#~ msgstr "Quickstart Guide"
+
+# URL part. do not translate/modify
+#~ msgid "UserManual_en.pdf"
+#~ msgstr "UserManual_de.pdf"
+
+#~ msgid "User Manual"
+#~ msgstr "Betriebsanleitung"
+
+#~ msgid "QuickstartGuide_dreamcut_en.pdf"
+#~ msgstr "QuickstartGuide_dreamcut_de.pdf"
+
+# URL part. do not translate/modify
+#~ msgid "UserManual_dreamcut_en.pdf"
+#~ msgstr "UserManual_dreamcut_de.pdf"
 
 # ribbon cable =?
 # Flachbandkabel?

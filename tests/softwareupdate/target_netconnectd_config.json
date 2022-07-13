@@ -9,7 +9,6 @@
     "force_base": false,
     "dependencies": {
         "netconnectd": {
-            "displayVersion": "-",
             "repo": "netconnectd_mrbeam",
             "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
             "global_pip_command": true,

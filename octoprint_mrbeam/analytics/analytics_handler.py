@@ -36,7 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
-    ANALYTICS_LOG_VERSION = 22  # bumped for SW-653 - added frontend event update_info_call_failure to see when this backend call fails
+    ANALYTICS_LOG_VERSION = 23  # bumped for SW-1317 - added pressure to test fan rpm event
 
     def __init__(self, plugin):
         self._plugin = plugin
