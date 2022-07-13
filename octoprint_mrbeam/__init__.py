@@ -1325,7 +1325,7 @@ class MrBeamPlugin(
             return make_response(json.dumps(result), 200)
         except Exception as e:
             self._logger.exception("Exception while comparing PEP440 versions: %s", e)
-            return make_response("Error while comparing PEP440 versions request.", 500)
+            return make_response(json.dumps(None), 500)
 
     # ~~ helpers
 
