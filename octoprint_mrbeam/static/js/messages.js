@@ -8,7 +8,7 @@ $(function () {
         self.loginState = parameters[2];
 
         const FIRST_MESSAGE_LOCATION = "/plugin/mrbeam/static/messages/messages.json";
-        const MESSAGES_URL = "https://mr-beam.org/beamos/messages";
+        const MESSAGES_URL = "https://messages.beamos.mr-beam.org/messages.json";
 
         self.messages = ko.observableArray();
         self.messagesIds = ko.observableArray();
