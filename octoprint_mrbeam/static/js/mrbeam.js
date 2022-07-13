@@ -132,20 +132,13 @@ mrbeam.comparePEP440Versions = function (v1, v2, operator) {
         v2: v2,
         operator: operator,
     };
-    return OctoPrint.simpleApiCommand(
-        "mrbeam",
-        "compare_pep440_versions",
-        data,
-        {
-            async: false,
-            error: function (response) {
-                console.error(
-                    "compare_pep440_versions call failed:",
-                    response.responseText
-                );
-            },
-        }
-    ).responseJSON;
+    OctoPrint.simpleApiCommand("mrbeam", "compare_pep440_versions", data)
+        .done(function (response) {
+            return response;
+        })
+        .fail(function (response) {
+            console.error("compare_pep440_versions call failed:", response);
+        });
 };
 
 mrbeam.mrb_state = undefined;
@@ -330,25 +323,9 @@ $(function () {
                     thrownError
                 ) {
                     if (jqXHR.status === 401) {
-                        self._handle_session_expired(
-                            settings.url,
-                            settings.data
-                        );
+                        self._handle_session_expired(settings.url, settings.data);
                         // "self.loginState.loggedIn()" sometimes returns true when the user is actually logged out
-                        console.log(
-                            "401 error - data:",
-                            settings.data,
-                            ", response:",
-                            jqXHR.responseText,
-                            ", loggedIn:",
-                            self.loginState.loggedIn(),
-                            ", loginRemember:",
-                            self.loginState.loginRemember(),
-                            ", api-key:",
-                            settings.headers["X-Api-Key"],
-                            ", settings:",
-                            settings
-                        );
+                        console.log("401 error - data:", settings.data, ", response:", jqXHR.responseText, ", loggedIn:", self.loginState.loggedIn(), ", loginRemember:", self.loginState.loginRemember(), ", api-key:", settings.headers["X-Api-Key"], ", settings:", settings)
                     }
                 });
             }
@@ -411,10 +388,10 @@ $(function () {
             if (self.isCurtainOpened > 0) {
                 self.error401Count++;
                 if (!(triggerUrl in self.triggerUrl)) {
-                    self.triggerUrl[triggerUrl] = { count: 0, data: [] };
+                    self.triggerUrl[triggerUrl] = {'count': 0, 'data': []};
                 }
-                self.triggerUrl[triggerUrl]["count"]++;
-                self.triggerUrl[triggerUrl]["data"].push(requestData);
+                self.triggerUrl[triggerUrl]['count']++;
+                self.triggerUrl[triggerUrl]['data'].push(requestData);
 
                 if (self.error401Count === 1) {
                     setTimeout(() => {
@@ -542,7 +519,8 @@ $(function () {
                         ),
                         {
                             br: "<br/>",
-                            open: "<a href='https://www.google.com/chrome/' target='_blank'>",
+                            open:
+                                "<a href='https://www.google.com/chrome/' target='_blank'>",
                             close: "</a>",
                         }
                     ),
@@ -564,11 +542,12 @@ $(function () {
                     text: _.sprintf(
                         gettext(
                             "As you are currently in our Beta channel, you would help us " +
-                                "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
-                                "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"
+                            "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
+                            "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"
                         ),
                         {
-                            open: '<a href=\'#\' data-toggle="tab" id="beta_notification_analytics_link" class="settings_analytics_link" style="font-weight:bold">',
+                            open:
+                                '<a href=\'#\' data-toggle="tab" id="beta_notification_analytics_link" class="settings_analytics_link" style="font-weight:bold">',
                             close: "</a>",
                             br: "<br>",
                         }
@@ -578,13 +557,12 @@ $(function () {
                 });
 
                 self.set_settings_analytics_links();
-                $("#beta_notification_analytics_link").one(
-                    "click",
-                    function (event) {
-                        // Close notification
-                        $('[title="Close"]')[0].click();
-                    }
-                );
+                $("#beta_notification_analytics_link").one("click", function (
+                    event
+                ) {
+                    // Close notification
+                    $('[title="Close"]')[0].click();
+                });
             }
         };
 
