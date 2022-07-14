@@ -34,7 +34,7 @@ class SettingsService:
         mrbeam_model_found = MrBeamDocUtils.get_mrbeam_model_enum_for(mrbeam_model)
         if mrbeam_model_found is None:
             self._logger.error('MrBeamModel not identified %s', mrbeam_model)
-            return self._empty_settings_model()
+            return _empty_settings_model()
 
         definitions = MrBeamDocUtils.get_mrbeam_definitions_for(mrbeam_model_found)
         settings_model = SettingsModel()

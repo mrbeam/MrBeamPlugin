@@ -173,19 +173,39 @@ $(function () {
                 return false;
             }
             // version
-            if (restrictions.version && restrictions.version.length > 0 && restrictions.version.map(function (x) {
-                return x.trim().toUpperCase();
-            }).includes(BEAMOS_VERSION)) {
+            if (
+                restrictions.version &&
+                restrictions.version.length > 0 &&
+                restrictions.version
+                    .map(function (x) {
+                        return x.trim().toUpperCase();
+                    })
+                    .includes(MRBEAM_PLUGIN_VERSION)
+            ) {
                 return false;
             }
             // version_and_newer
-            if (restrictions.version_and_newer && restrictions.version_and_newer.length > 0 &&
-                window.compareVersions(BEAMOS_VERSION, restrictions.version_and_newer) >= 0) {
+            if (
+                restrictions.version_and_newer &&
+                restrictions.version_and_newer.length > 0 &&
+                mrbeam.comparePEP440Versions(
+                    MRBEAM_PLUGIN_VERSION,
+                    restrictions.version_and_newer,
+                    "__ge__"
+                )
+            ) {
                 return false;
             }
             // version_and_older
-            if (restrictions.version_and_older && restrictions.version_and_older.length > 0 &&
-                window.compareVersions(BEAMOS_VERSION, restrictions.version_and_older) <= 0) {
+            if (
+                restrictions.version_and_older &&
+                restrictions.version_and_older.length > 0 &&
+                mrbeam.comparePEP440Versions(
+                    MRBEAM_PLUGIN_VERSION,
+                    restrictions.version_and_older,
+                    "__le__"
+                )
+            ) {
                 return false;
             }
             // ts_after

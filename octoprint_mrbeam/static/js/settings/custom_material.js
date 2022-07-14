@@ -45,7 +45,7 @@ $(function () {
 
         self.backupDataUrl = ko.computed(function () {
             var payload = {
-                v: BEAMOS_VERSION,
+                v: MRBEAM_PLUGIN_VERSION,
                 ts: Date.now(),
                 custom_materials: self.conversion.custom_materials(),
             };

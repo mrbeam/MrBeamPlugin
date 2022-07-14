@@ -2748,7 +2748,7 @@ $(function () {
                 .gc_options_as_string()
                 .replace(/"/g, '"');
             compSvg.attr({
-                "mb:beamOS_version": BEAMOS_VERSION,
+                "mb:beamOS_version": MRBEAM_PLUGIN_VERSION,
                 "mb:gc_options": gc_options_str,
             });
             if (compSvg.children().length > 1) {

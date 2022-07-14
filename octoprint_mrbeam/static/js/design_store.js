@@ -133,8 +133,10 @@ $(function () {
             // 0.11.78a0    --> 0.11.78 (PEP440)
             // 0+unknown    --> 0       (No version info)
             let regexp = /([0-9]+(?:\.[0-9]+)*)/g;
-            let mrbeamPluginVersion = BEAMOS_VERSION.match(regexp)[0];
-            console.log("Design store: Mr Beam Plugin Version: " + mrbeamPluginVersion );
+            let mrbeamPluginVersion = MRBEAM_PLUGIN_VERSION.match(regexp)[0];
+            console.log(
+                "Design store: Mr Beam Plugin Version: " + mrbeamPluginVersion
+            );
 
             let userData = {
                 email: self.getEmail(),
