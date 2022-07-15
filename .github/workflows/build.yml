@@ -31,7 +31,7 @@ jobs:
       - name: Running pytest
         continue-on-error: true
         run: |
-            pytest -v  --cov --cov-report=xml --cov-report=html --junit-xml=xunit-result.xml
+            pytest -v  --cov --cov-report=xml --cov-report=html --junit-xml=xunit-result.xml --html=pytest-report.html
       # This step fails with error: ./octoprint_mrbeam permission denied
       #- name: GitHub Action for pylint
       #  uses: cclauss/GitHub-Action-for-pylint@0.7.0
@@ -62,3 +62,7 @@ jobs:
         with:
           name: code-coverage
           path: htmlcov
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pytest-report
+          path: pytest-report.html
