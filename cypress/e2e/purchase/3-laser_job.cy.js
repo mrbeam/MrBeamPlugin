@@ -2,16 +2,18 @@ describe("Laser Job", function() {
 
     beforeEach(function() {
         cy.fixture('test-data').then(function(testData){
-            this.testData = testData});  
+            this.testData = testData});
     });
-  
+
     beforeEach(function() {
         cy.visit(this.testData.url_laser);
-        cy.wait(20000);
+        cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
+        cy.visit(this.testData.url_laser);
+        cy.wait(5000);
     });
-  
-    it('Add design', function() {         
+
+    it('Add design', function() {
        cy.get('[id="working_area_tab_file_btn"]').click();
        cy.get('.files_template_model_svg').first().click();
        cy.wait(3000);
@@ -38,7 +40,6 @@ describe("Laser Job", function() {
        cy.get('.alert-success').should('to.exist', 'Preparation done');
        cy.reload();
        cy.wait(10000);
-       cy.get('.modal-footer').find('.btn-danger').last().click({force:true});
        cy.get('[id="designlib_tab_btn"]').click();
        cy.get('[id="design_lib_filter_gcode_radio"]').click();
        cy.get('.files_template_machinecode_gcode').first().click();
@@ -47,7 +48,7 @@ describe("Laser Job", function() {
        cy.logout();
     });
 
-    it('Add texts', function() { 
+    it('Add texts', function() {
        cy.wait(3000);
        cy.get('[id="working_area_tab_text_btn"]').click();
        cy.get('[id="quick_text_dialog_text_input"]').type('project owner');
@@ -80,7 +81,7 @@ describe("Laser Job", function() {
        cy.get('.rotation').eq(2).clear().type('-50.5');
        cy.get('.horizontal').eq(2).clear().type('125.3 mm');
        cy.get('.vertical').eq(2).clear().type('130.3 mm');
-       
+
        cy.get('[id="laser_button"]').click();
        cy.get('[id="laserhead_focus_reminder_modal"]').find('.btn').first().click();
        cy.get('[id="laser_button"]').click();
@@ -99,7 +100,6 @@ describe("Laser Job", function() {
        cy.get('.alert-success').should('to.exist', 'Preparation done');
        cy.reload();
        cy.wait(10000);
-       cy.get('.modal-footer').find('.btn-danger').last().click({force:true});
        cy.get('[id="designlib_tab_btn"]').click();
        cy.get('[id="design_lib_filter_gcode_radio"]').click();
        cy.get('.files_template_machinecode_gcode').first().click();
@@ -108,7 +108,7 @@ describe("Laser Job", function() {
        cy.logout();
     });
 
-    it('Add shapes', function() { 
+    it('Add shapes', function() {
        cy.get('[id="working_area_tab_shape_btn"]').click();
        cy.get('[id="shape_tab_link_heart"]').click();
        cy.get('[id="quick_shape_heart_w"]').clear().type('60');
@@ -129,7 +129,7 @@ describe("Laser Job", function() {
        cy.get('.translation').eq(1).clear().type('200.0, 38.0');
        cy.get('.rotation').eq(1).clear().type('90.5');
        cy.get('.horizontal').eq(1).clear().type('190.3 mm');
-       cy.get('.vertical').eq(1).clear().type('190.3 mm'); 
+       cy.get('.vertical').eq(1).clear().type('190.3 mm');
          // shapes 3
        cy.get('[id="working_area_tab_shape_btn"]').click();
        cy.get('[id="shape_tab_link_star"]').click();
@@ -172,7 +172,6 @@ describe("Laser Job", function() {
        cy.get('.alert-success').should('to.exist', 'Preparation done');
        cy.reload();
        cy.wait(10000);
-       cy.get('.modal-footer').find('.btn-danger').last().click({force:true});
        cy.get('[id="designlib_tab_btn"]').click();
        cy.get('[id="design_lib_filter_gcode_radio"]').click();
        cy.get('.files_template_machinecode_gcode').first().click();
@@ -181,4 +180,4 @@ describe("Laser Job", function() {
        cy.logout();
     });
   });
-  
+

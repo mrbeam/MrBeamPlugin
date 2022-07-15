@@ -2,17 +2,17 @@ describe("Laser Job", function() {
 
     beforeEach(function() {
         cy.fixture('test-data').then(function(testData){
-            this.testData = testData});  
+            this.testData = testData});
     });
-  
+
     beforeEach(function() {
         cy.visit(this.testData.url_laser);
-        cy.wait(20000);
+        cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
     });
-  
-  
-    it('Add design', function() {   
+
+
+    it('Add design', function() {
        cy.get('[id="working_area_tab_file_btn"]').click();
        cy.get('.files_template_model_image').first().click();
        cy.wait(3000);

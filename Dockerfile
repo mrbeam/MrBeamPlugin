@@ -56,6 +56,8 @@ RUN source ./venv2/bin/activate \
 
 COPY --chown=mrbeam ./docker-octoprint-config.yaml /home/mrbeam/.octoprint/config.yaml
 
+COPY --chown=mrbeam ./cypress/downloads ./cypress/fixtures /home/mrbeam/.octoprint/uploads/
+
 COPY --chown=mrbeam docker-beamos_version /etc/beamos_version
 
 COPY --chown=mrbeam . /home/mrbeam/MrBeamPlugin/
