@@ -28,8 +28,6 @@ jobs:
             python -m pip install --upgrade pip
             pip install pylint
             pip install -r test-requirements.txt
-      #      pip install pytest pytest-cov selenium numpy
-      # This step fails as it needs alot of time to fix the dependencies
       - name: Running pytest
         continue-on-error: true
         run: |
@@ -60,3 +58,7 @@ jobs:
         with:
           name: pylint-report.log
           path: ./pylint-report.log
+      - uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage
+          path: htmlcov
