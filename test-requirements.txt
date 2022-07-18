@@ -15,4 +15,6 @@ pytest-mock==2.0.0
 requests-mock==1.9.3
 selenium==3.141.0
 webdriver-manager==2.4.0
+pytest-cov==2.12.1
+pytest-html==1.22.1
 
