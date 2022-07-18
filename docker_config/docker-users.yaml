@@ -1,0 +1,19 @@
+dev@mr-beam.org:
+  active: true
+  apikey: null
+  password: 30a43c6d1c8254420fda5428dd52fbacbd857b71ebc260412c24ca878809e25a252f915ae263f905db7bd34adfe2e5af9e5916f960ad296e06e0f56eb24b3997
+  roles:
+  - user
+  - admin
+  settings:
+    mrbeam:
+      design_store_email: dev@mr-beam.org
+      lasersafety:
+        sent_to_cloud: 1657905749.292876
+        show_again: false
+      messages:
+        lastId: 1
+        unreadIds:
+        - 1
+      ts: 1657905749.312428
+      version: 0.12.0a0.post20.dev0+g2c8c03a5
