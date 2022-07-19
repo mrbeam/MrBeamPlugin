@@ -101,6 +101,13 @@ class AnalyticsHandler(object):
         if self.is_analytics_enabled():
             self._activate_analytics()
 
+        self.dummy_method()
+
+
+    def dummy_method(self):
+        print("Doesn't do anything")
+
+
     def _on_mrbeam_plugin_initialized(self, event, payload):
         self._laserhead_handler = self._plugin.laserhead_handler
         self._dust_manager = self._plugin.dust_manager
