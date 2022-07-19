@@ -14,6 +14,7 @@ $(function () {
         self.CARBON_FILTER_LIFESPAN = 280;
         self.LASER_HEAD_LIFESPAN = 40;
         self.GANTRY_LIFESPAN = 100;
+        self.WARN_IF_CRITICAL_PERCENT = 70;
         self.WARN_IF_USED_PERCENT = 100;
 
         self.totalUsage = ko.observable(0);
@@ -93,7 +94,7 @@ $(function () {
         });
 
         self.prefilterShowWarning = ko.computed(function () {
-            return self.prefilterPercent() >= self.WARN_IF_USED_PERCENT;
+            return self.prefilterPercent() >= self.WARN_IF_CRITICAL_PERCENT;
         });
         self.carbonFilterShowWarning = ko.computed(function () {
             return self.carbonFilterPercent() >= self.WARN_IF_USED_PERCENT;
@@ -111,6 +112,12 @@ $(function () {
                 self.carbonFilterShowWarning() ||
                 self.laserHeadShowWarning() ||
                 self.gantryShowWarning()
+            );
+        });
+
+        self.needsPrefilterMaintenance = ko.computed(function () {
+            return (
+                self.prefilterShowWarning()
             );
         });
 
@@ -134,6 +141,9 @@ $(function () {
         self.onStartupComplete = function () {
             if (self.needsMaintenance()) {
                 self.notifyMaintenanceRequired();
+            }
+            if (self.needsPrefilterMaintenance()) {
+                self.notifyPrefilterMaintenanceRequired();
             }
         };
 
@@ -345,6 +355,17 @@ $(function () {
                 self.analytics.send_fontend_event("link_click", payload);
             });
         };
+
+        self.notifyPrefilterMaintenanceRequired = function () {
+            new PNotify({
+                title: gettext("Filter capacity reached 70%"),
+                text: gettext(
+                "At this Level we highly recommend to have a visual check on the filter, to make sure the sensor is representing the fill level of your filter, as it heavily depends on what material you are processing with your device."
+                ),
+                type: "warn",
+                hide: false,
+            });
+        }
 
         self.updateSettingsAbout = function () {
             $("#settings_mrbeam_about_support_total_usage_hours").html(
