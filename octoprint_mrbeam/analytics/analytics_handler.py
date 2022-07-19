@@ -13,7 +13,7 @@ from threading import Thread, Timer, Lock
 import re
 from octoprint.events import Events as OctoPrintEvents
 
-from octoprint_mrbeam.analytics.analytics_keys import AnalyticsKeys as AnalyticsKeys
+from octoprint_mrbeam.analytics.analytics_keys import AnalyticsKeys
 from octoprint_mrbeam.analytics.cpu import Cpu
 from octoprint_mrbeam.analytics.value_collector import ValueCollector
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -207,7 +207,7 @@ class AnalyticsHandler(object):
 
     def add_frontend_event(self, event, payload=None, header_extension=None):
         try:
-            self._add_frontend_event(event, payload=payload)
+            self._add_frontend_event(event, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
                 "Exception during add_frontend_event: {}".format(e), analytics=True, header_extension=header_extension
@@ -603,7 +603,7 @@ class AnalyticsHandler(object):
         _ = event
         _ = header_extension
         self._add_job_event(
-            AnalyticsKeys.Job.Event.Slicing.FAILED, payload={AnalyticsKeys.Job.ERROR: payload["reason"]}
+            AnalyticsKeys.Job.Event.Slicing.FAILED, payload={AnalyticsKeys.Job.ERROR: payload["reason"]}, header_extension=header_extension
         )
 
     def _event_slicing_cancelled(self, event, payload, header_extension=None):
@@ -711,7 +711,7 @@ class AnalyticsHandler(object):
         self._current_job_final_status = "Done"
         self._add_job_event(AnalyticsKeys.Job.Event.Print.DONE, payload=duration, header_extension=header_extension)
         self._add_collector_details()
-        self._add_cpu_data(dur=payload["time"])
+        self._add_cpu_data(dur=payload["time"], header_extension=header_extension)
 
     def _event_print_failed(self, event, payload, header_extension=None):
         _ = event
@@ -772,7 +772,7 @@ class AnalyticsHandler(object):
                     data[AnalyticsKeys.Log.Component.VERSION] = event_payload.get(
                         "component_version"
                     )
-                    self._add_log_event(AnalyticsKeys.Log.Event.EVENT_LOG, payload=data)
+                    self._add_log_event(AnalyticsKeys.Log.Event.EVENT_LOG, payload=data, header_extension=header_extension)
                 else:
                     self._logger.warn(
                         "Unknown type: '%s' from component %s. payload: %s",
@@ -815,14 +815,13 @@ class AnalyticsHandler(object):
         )
 
     def _add_job_event(self, event, payload=None, header_extension=None):
-        _ = header_extension
-        self._add_event_to_queue(AnalyticsKeys.EventType.JOB, event, payload=payload)
+        self._add_event_to_queue(AnalyticsKeys.EventType.JOB, event, payload=payload, header_extension=header_extension)
 
     def _add_connectivity_event(self, event, payload, header_extension=None):
         self._add_event_to_queue(
             AnalyticsKeys.EventType.CONNECTIVITY, event, payload=payload, header_extension=header_extension)
 
-    def _add_event_to_queue(self, event_type, event_name, payload=None, analytics=True, header_extension=None):
+    def _add_event_to_queue(self, event_type, event_name, payload=None, header_extension=None, analytics=True):
         try:
             data = dict()
             if isinstance(payload, dict):
