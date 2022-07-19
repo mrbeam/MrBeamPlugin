@@ -57,44 +57,35 @@ $(function () {
             return Math.floor(self.gantryUsage() / 3600);
         });
 
+        self.optimizeParameterPercentageValues = function (val){
+            return Math.min(roundDownToNearest10(val), 100);
+        }
         self.prefilterPercent = ko.computed(function () {
-            return Math.min(
-                Math.floor(
-                    (self.prefilterUsageHours() / self.PREFILTER_LIFESPAN) * 100
-                ),
-                100
+            return self.optimizeParameterPercentageValues(
+            (self.prefilterUsageHours() / self.PREFILTER_LIFESPAN) * 100
             );
         });
         self.carbonFilterPercent = ko.computed(function () {
-            return Math.min(
-                Math.floor(
-                    (self.carbonFilterUsageHours() /
-                        self.CARBON_FILTER_LIFESPAN) *
-                        100
-                ),
-                100
+            return self.optimizeParameterPercentageValues(
+            (self.carbonFilterUsageHours() / self.CARBON_FILTER_LIFESPAN) * 100
             );
         });
         self.laserHeadPercent = ko.computed(function () {
-            return Math.min(
-                Math.floor(
-                    (self.laserHeadUsageHours() / self.LASER_HEAD_LIFESPAN) *
-                        100
-                ),
-                100
+            return self.optimizeParameterPercentageValues(
+            (self.laserHeadUsageHours() / self.LASER_HEAD_LIFESPAN) * 100
             );
         });
         self.gantryPercent = ko.computed(function () {
-            return Math.min(
-                Math.floor(
-                    (self.gantryUsageHours() / self.GANTRY_LIFESPAN) * 100
-                ),
-                100
+            return self.optimizeParameterPercentageValues(
+            (self.gantryUsageHours() / self.GANTRY_LIFESPAN) * 100
             );
         });
 
-        self.prefilterShowWarning = ko.computed(function () {
+        self.prefilterShowEarlyWarning = ko.computed(function () {
             return self.prefilterPercent() >= self.WARN_IF_CRITICAL_PERCENT;
+        });
+        self.prefilterShowWarning = ko.computed(function () {
+            return self.prefilterPercent() >= self.WARN_IF_USED_PERCENT;
         });
         self.carbonFilterShowWarning = ko.computed(function () {
             return self.carbonFilterPercent() >= self.WARN_IF_USED_PERCENT;
@@ -117,7 +108,7 @@ $(function () {
 
         self.needsPrefilterMaintenance = ko.computed(function () {
             return (
-                self.prefilterShowWarning()
+                self.prefilterShowEarlyWarning()
             );
         });
 

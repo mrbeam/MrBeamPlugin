@@ -66,4 +66,8 @@ $(function () {
             owner: owner,
         });
     };
+
+    roundDownToNearest10 = function (num) {
+      return Math.floor(num / 10) * 10;
+    }
 });
