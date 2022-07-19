@@ -3921,8 +3921,8 @@ $(function () {
                     // add selected attributes to stroke path
                     g.select("path").attr({
                         stroke: strokeColor,
-                        fill: isFilled ? fill : "#ffffff",
-                        "fill-opacity": isFilled ? 1 : 0,
+                        fill: "#ffffff",
+                        "fill-opacity": 0,
                     });
                 } else {
                     qtOutlineGroup.select("path")?.remove();
