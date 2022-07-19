@@ -26,3 +26,7 @@ def test_get_navbar_label_combined(mrbeam_plugin, mocker):
 
     mocker.patch('octoprint_mrbeam.MrBeamPlugin.is_alpha_channel', return_value=True)
     assert mrbeam_plugin.get_navbar_label() == initial_label + " | ALPHA"
+
+
+def test_dummy():
+    assert False
