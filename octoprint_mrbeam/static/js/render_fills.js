@@ -490,6 +490,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                         // fill: "none", // removed to fill target path with white fill when no fill exists for easier cursor selection
                     })
                     .transform(mat);
+
+                // remove stroke from text element to avoid thick stroke engraving
+                // the .qt_outline element will be used for stroke cutting or engraving
+                elem.attr({
+                    stroke: "none",
+                });
             } else {
                 console.error("getFontOutline(): failed.");
             }
