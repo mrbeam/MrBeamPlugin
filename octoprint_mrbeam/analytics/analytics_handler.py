@@ -827,6 +827,9 @@ class AnalyticsHandler(object):
             if isinstance(payload, dict):
                 data = payload
 
+            if not isinstance(header_extension, dict):
+                header_extension = dict()
+
             event = {
                 AnalyticsKeys.Header.SNR: self._snr,
                 AnalyticsKeys.Header.TYPE: event_type,
@@ -841,13 +844,15 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Header.DATA: data,
                 AnalyticsKeys.Header.UPTIME: get_uptime(),
                 AnalyticsKeys.Header.MODEL: self._plugin.get_model_id(),
+                AnalyticsKeys.Header.FEATURE_ID: header_extension.get(AnalyticsKeys.Header.FEATURE_ID)
             }
 
             if event_type == AnalyticsKeys.EventType.JOB:
                 event[AnalyticsKeys.Job.ID] = self._current_job_id
 
-            if header_extension and isinstance(header_extension, dict):
-                dict_merge(event, header_extension)
+            # todo iratxe: I wouldn't do it this way, then we know what we have exactly in the header
+            # if header_extension and isinstance(header_extension, dict):
+            #     dict_merge(event, header_extension)
 
             self._add_to_queue(event)
 
