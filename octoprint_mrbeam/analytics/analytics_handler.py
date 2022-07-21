@@ -87,7 +87,6 @@ class AnalyticsHandler(object):
         self._compressor_handler = None
         self._laserhead_handler = None
 
-
         self._logger.info(
             "Analytics analyticsEnabled: %s, sid: %s",
             self.is_analytics_enabled(),
@@ -849,10 +848,6 @@ class AnalyticsHandler(object):
 
             if event_type == AnalyticsKeys.EventType.JOB:
                 event[AnalyticsKeys.Job.ID] = self._current_job_id
-
-            # todo iratxe: I wouldn't do it this way, then we know what we have exactly in the header
-            # if header_extension and isinstance(header_extension, dict):
-            #     dict_merge(event, header_extension)
 
             self._add_to_queue(event)
 
