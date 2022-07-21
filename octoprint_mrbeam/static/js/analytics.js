@@ -147,7 +147,7 @@ $(function () {
                     ", curtain_open: " +
                     payload["curtain_open"]
             );
-            self.send_fontend_event("loading_dur", payload);
+            self.send_frontend_event("loading_dur", payload);
         };
 
         self._updateAnalyticsEnabledValue = function () {
@@ -220,7 +220,7 @@ $(function () {
                 tagName: clickableElem.tagName,
             };
             // decouple
-            setTimeout(self.send_fontend_event, 100, "click", payload);
+            setTimeout(self.send_frontend_event, 100, "click", payload);
 
             if (self.enableClickLogs) {
                 console.log(

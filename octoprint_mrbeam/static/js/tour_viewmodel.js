@@ -771,7 +771,7 @@ $(function () {
             let tmp_str = event + JSON.stringify(payload);
             if (self._last_analytics_data_sent !== tmp_str) {
                 self._last_analytics_data_sent = tmp_str;
-                self.analytics.send_fontend_event(event, payload);
+                self.analytics.send_frontend_event(event, payload);
             }
         };
     }

@@ -386,7 +386,7 @@ $(function () {
                             error401Count: error401Count,
                             triggerUrl: triggerUrl,
                         };
-                        self.analytics.send_fontend_event(
+                        self.analytics.send_frontend_event(
                             "expired_session",
                             payload
                         );
@@ -452,7 +452,7 @@ $(function () {
                             setTimeout(function () {
                                 OctoPrint.socket.reconnect();
                                 // Add to analytics to check how often passive logins are used after 401 errors
-                                self.analytics.send_fontend_event(
+                                self.analytics.send_frontend_event(
                                     "passive_login",
                                     {}
                                 );

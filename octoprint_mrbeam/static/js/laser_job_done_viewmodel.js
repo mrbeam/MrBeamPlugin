@@ -115,7 +115,7 @@ $(function () {
             if (self.lastJob !== null) {
                 self.cancel_btn();
                 self.files.startGcodeWithSafetyWarning(self.lastJob);
-                self.analytics.send_fontend_event("repeat_job", {});
+                self.analytics.send_frontend_event("repeat_job", {});
             } else {
                 console.error("Repeat job clicked, but self.lastJob is null.");
             }
@@ -130,7 +130,7 @@ $(function () {
                 self.jobDoneDialog.closed / 1000 -
                     self.jobDoneDialog.shown / 1000
             );
-            self.analytics.send_fontend_event(
+            self.analytics.send_frontend_event(
                 "job_done_dialog",
                 self.jobDoneDialog
             );
