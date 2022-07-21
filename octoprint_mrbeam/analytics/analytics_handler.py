@@ -37,7 +37,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
-    ANALYTICS_LOG_VERSION = 23  # bumped for SW-1115-add-feature-id-column-to-analytics-in-mr-beam
+    ANALYTICS_LOG_VERSION = 24  # bumped for SW-1115 add feature id column to analytics in mr beam
 
     def __init__(self, plugin):
         self._plugin = plugin
