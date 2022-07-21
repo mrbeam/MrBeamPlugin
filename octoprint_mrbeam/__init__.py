@@ -2090,6 +2090,7 @@ class MrBeamPlugin(
             data = request.json
             event = data.get("event")
             payload = data.get("payload", dict())
+            header_extension = data.get("header_extension", dict())
             func = payload.get("function", None)
             f_level = payload.get("level", None)
             stack = None
@@ -2124,7 +2125,7 @@ class MrBeamPlugin(
             )
 
             if level >= logging.WARNING:
-                self.analytics_handler.add_frontend_event("console", payload)
+                self.analytics_handler.add_frontend_event("console", payload, header_extension)
 
         except Exception as e:
             self._logger.exception(
@@ -2142,7 +2143,8 @@ class MrBeamPlugin(
             data = request.json
             event = data.get("event")
             payload = data.get("payload", dict())
-            self.analytics_handler.add_frontend_event(event, payload)
+            header_extension = data.get("payload", dict())
+            self.analytics_handler.add_frontend_event(event, payload, header_extension)
 
         except Exception as e:
             self._logger.exception(
