@@ -12,7 +12,7 @@ import requests
 import json
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.util.github_api")
-
+REPO_URL = "https://api.github.com/repos/mrbeam/{repo}"
 
 def get_file_of_repo_for_tag(file, repo, tag):
     """
@@ -27,8 +27,8 @@ def get_file_of_repo_for_tag(file, repo, tag):
         content of file
     """
     try:
-        url = "https://api.github.com/repos/mrbeam/{repo}/contents/{file}?ref={tag}".format(
-            repo=repo, file=file, tag=tag
+        url = "{repo_url}/contents/{file}?ref={tag}".format(
+            repo_url=REPO_URL.format(repo=repo), file=file, tag=tag
         )
 
         headers = {
@@ -46,7 +46,7 @@ def get_file_of_repo_for_tag(file, repo, tag):
         _logger.warning("timeout while trying to get the  file")
         return None
     except ConnectionError:
-        _logger.warning("connection error while trying to get the file")
+        _logger.warning("connection error while trying to get the file {}".format(url))
         return None
 
     if response:

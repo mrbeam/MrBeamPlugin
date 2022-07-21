@@ -1,7 +1,10 @@
 import os
 import time
+import unicodedata
+
 import yaml
 
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -18,7 +21,6 @@ def usageHandler(plugin):
 
 
 class UsageHandler(object):
-    MAX_DUST_FACTOR = 2.0
     MIN_DUST_FACTOR = 0.5
     MAX_DUST_VALUE = 0.5
     MIN_DUST_VALUE = 0.2
@@ -40,12 +42,6 @@ class UsageHandler(object):
         self.start_ntp_synced = None
 
         self._last_dust_value = None
-        self._dust_mapping_m = (self.MAX_DUST_FACTOR - self.MIN_DUST_FACTOR) / (
-            self.MAX_DUST_VALUE - self.MIN_DUST_VALUE
-        )
-        self._dust_mapping_b = (
-            self.MIN_DUST_FACTOR - self._dust_mapping_m * self.MIN_DUST_VALUE
-        )
 
         analyticsfolder = os.path.join(
             self._settings.getBaseFolder("base"),
@@ -78,11 +74,25 @@ class UsageHandler(object):
             self._laser_head_serial = self._lh["serial"]
         else:
             self._laser_head_serial = "no_serial"
-
+        self._calculate_dust_mapping()
         self._init_missing_usage_data()
         self.log_usage()
 
         self._subscribe()
+
+    def _calculate_dust_mapping(self):
+        max_dust_factor = self._laserhead_handler.current_laserhead_max_dust_factor
+        self._dust_mapping_m = (max_dust_factor - self.MIN_DUST_FACTOR) / (
+            self.MAX_DUST_VALUE - self.MIN_DUST_VALUE
+        )
+        self._dust_mapping_b = (
+            self.MIN_DUST_FACTOR - self._dust_mapping_m * self.MIN_DUST_VALUE
+        )
+        self._logger.debug(
+            "new dust mapping -> {} - {} - {}".format(
+                max_dust_factor, self._dust_mapping_m, self._dust_mapping_b
+            )
+        )
 
     def log_usage(self):
         self._logger.info(
@@ -116,6 +126,9 @@ class UsageHandler(object):
         self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self.event_write)
         self._event_bus.subscribe(
             MrBeamEvents.LASER_HEAD_READ, self.event_laser_head_read
+        )
+        self._plugin.iobeam.subscribe(
+            IoBeamValueEvents.LASERHEAD_CHANGED, self._event_laserhead_changed
         )
 
     def event_laser_head_read(self, event, payload):
@@ -163,6 +176,17 @@ class UsageHandler(object):
             self.start_ntp_synced = None
 
             self.write_usage_analytics(action="job_finished")
+
+    def _event_laserhead_changed(self, event):
+        """
+        will be triggered if the laser head changed,
+        refreshes the laserhead max dust factor that will be used for the new laser head
+
+        Returns:
+
+        """
+        self._logger.debug("Laserhead changed recalculate dust mapping")
+        self._calculate_dust_mapping()
 
     def _set_time(self, job_duration):
         if job_duration is not None and job_duration > 0.0:
@@ -356,27 +380,57 @@ class UsageHandler(object):
                 "Trying to recover from _backup_file file: %s", self._backup_file
             )
             recovery_try = True
-            if os.path.isfile(self._backup_file):
+            try:
+                with open(self._backup_file, "r") as stream:
+                    data = yaml.safe_load(stream)
+                if self._validate_data(data):
+                    data["restored"] = (
+                        data["restored"] + 1 if "restored" in data else 1
+                    )
+                    self._usage_data = data
+                    self._write_usage_data()
+                    success = True
+                    self._logger.info("Recovered from _backup_file file. Yayy!")
+            except yaml.constructor.ConstructorError:
                 try:
-                    data = None
-                    with open(self._backup_file, "r") as stream:
-                        data = yaml.safe_load(stream)
-                    if self._validate_data(data):
-                        data["restored"] = (
-                            data["restored"] + 1 if "restored" in data else 1
-                        )
-                        self._usage_data = data
-                        success = True
-                        self._write_usage_data()
-                        self._logger.info("Recovered from _backup_file file. Yayy!")
-                except:
-                    self._logger.error("Can't read _backup_file file.")
+                    success = self._repair_backup_usage_data()
+                except Exception:
+                    self._logger.error("Repair of the _backup_file failed.")
+            except OSError:
+                self._logger.error("There is no _backup_file file.")
+            except yaml.YAMLError:
+                self._logger.error("There was a YAMLError with the _backup_file file.")
+            except:
+                self._logger.error("Can't read _backup_file file.")
 
         if not success:
             self._logger.warn("Resetting usage data. (marking as incomplete)")
             self._usage_data = self._get_usage_data_template()
             if recovery_try:
                 self._write_usage_data()
+
+    def _repair_backup_usage_data(self):
+        """
+        repairs a broken usage backup file, where the version is saved in unicode
+
+        Returns:
+            boolean: successfull
+        """
+        success = False
+        with open(self._backup_file, "r") as stream:
+            data = yaml.load(stream)
+        if self._validate_data(data):
+            #checks if the version is saved in unicode and converts it into a string see SW-1269
+            if isinstance(data["version"], unicode):
+                data["version"] = unicodedata.normalize('NFKD', data["version"]).encode('ascii', 'ignore')
+            data["restored"] = (
+                data["restored"] + 1 if "restored" in data else 1
+            )
+            self._usage_data = data
+            success = True
+            self._write_usage_data()
+            self._logger.info("Could repair _backup_file file. Yayy!")
+        return success
 
     def _write_usage_data(self, file=None):
         self._usage_data["version"] = self._plugin_version
@@ -385,7 +439,7 @@ class UsageHandler(object):
         file = self._storage_file if file is None else file
         try:
             with open(file, "w") as outfile:
-                yaml.dump(self._usage_data, outfile, default_flow_style=False)
+                yaml.safe_dump(self._usage_data, outfile, default_flow_style=False)
         except:
             self._logger.exception("Can't write file %s due to an exception: ", file)
 

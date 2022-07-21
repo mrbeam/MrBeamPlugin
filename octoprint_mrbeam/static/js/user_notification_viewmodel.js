@@ -164,7 +164,7 @@ $(function () {
                 utm_medium: "beamos",
                 utm_source: "beamos",
                 utm_campaign: "notification",
-                version: BEAMOS_VERSION,
+                version: MRBEAM_PLUGIN_VERSION,
                 env: MRBEAM_ENV_LOCAL,
             };
             // this merges two objects. If both objects have a property with the same name, then the second object property overwrites the first.

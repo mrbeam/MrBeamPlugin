@@ -1,20 +1,13 @@
-import operator
 import unittest
 
-import pkg_resources
-
+from octoprint_mrbeam.util.version_comparator import VersionComparator, COMPARISON_OPTIONS
 from octoprint_mrbeam.software_update_information import (
-    VersionComperator,
     _generate_config_of_beamos,
     get_config_for_version,
 )
 
 
-def bla(comp1, comparision_options):
-    return VersionComperator.get_comperator(comp1, comparision_options).priority
-
-
-class VersionCaomparisionTestCase(unittest.TestCase):
+class VersionComparisonTestCase(unittest.TestCase):
     def setUp(self):
         self.le_element = {"__le__": {"0.17.0": {"value": 3}}}
         self.ge_element = {
@@ -30,21 +23,15 @@ class VersionCaomparisionTestCase(unittest.TestCase):
         self.config.update(self.ge_element)
         self.config.update(self.le_element)
         self.config.update(self.eq_element)
-        self.comparision_options = [
-            VersionComperator("__eq__", 5, operator.eq),
-            VersionComperator("__le__", 4, operator.le),
-            VersionComperator("__lt__", 3, operator.lt),
-            VersionComperator("__ge__", 2, operator.ge),
-            VersionComperator("__gt__", 1, operator.gt),
-        ]
+        self.comparison_options = COMPARISON_OPTIONS
 
     def test_sorted(self):
         print(self.config)
         config = sorted(
             self.config,
             cmp=lambda comp1, comp2: cmp(
-                bla(comp1, self.comparision_options),
-                bla(comp2, self.comparision_options),
+                VersionComparator.get_comparator(comp1, self.comparison_options).priority,
+                VersionComparator.get_comparator(comp2, self.comparison_options).priority
             ),
         )
         self.assertEquals(config, ["__ge__", "__le__", "__eq__"]),
@@ -52,58 +39,58 @@ class VersionCaomparisionTestCase(unittest.TestCase):
     def test_compare(self):
         config = sorted(
             self.config.items(),
-            key=lambda com: VersionComperator.get_comperator(
-                com[0], self.comparision_options
+            key=lambda com: VersionComparator.get_comparator(
+                com[0], self.comparison_options
             ).priority,
         )
         print(config)
 
         self.assertEquals(
             2,
-            get_config_for_version("0.18.0", config, self.comparision_options).get(
+            get_config_for_version("0.18.0", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             1,
-            get_config_for_version("0.17.1", config, self.comparision_options).get(
+            get_config_for_version("0.17.1", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             3,
-            get_config_for_version("0.16.8", config, self.comparision_options).get(
+            get_config_for_version("0.16.8", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             4,
-            get_config_for_version("0.16.5", config, self.comparision_options).get(
+            get_config_for_version("0.16.5", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             5,
-            get_config_for_version("0.18.2", config, self.comparision_options).get(
+            get_config_for_version("0.18.2", config).get(
                 "value"
             ),
         )
         self.assertEquals(
             6,
-            get_config_for_version("1.0.0", config, self.comparision_options).get(
+            get_config_for_version("1.0.0", config).get(
                 "value"
             ),
         )
         # only support major minor patch so far
         # self.assertEquals(
         #     1,
-        #     get_config_for_version("0.17.5.pre0", config, self.comparision_options).get(
+        #     get_config_for_version("0.17.5.pre0", config).get(
         #         "value"
         #     ),
         # )
         # self.assertEquals(
         #     1,
-        #     get_config_for_version("0.18.0a0", config, self.comparision_options).get(
+        #     get_config_for_version("0.18.0a0", config).get(
         #         "value"
         #     ),
         # )

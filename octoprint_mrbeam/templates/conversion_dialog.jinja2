@@ -333,12 +333,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <!--<div class="controls" data-bind="visible: showExpertSettings ">
-									<label class="checkbox">
-										<input type="checkbox" data-bind="checked: engrave_outlines">{{ _('engrave outlines of filled shapes') }}
-									</label>
-								</div>-->
                             </div>
 
                             <div class="control-group" data-bind="visible: showExpertSettings ">
@@ -386,10 +380,10 @@
                                                 {{ _('Clusters are processed successively and each cluster is processed line by line.') }}
                                                 {{ _('This option reduces \'empty rides\' moderately and <b>gives the best precision</b>.') }}
                                         </li>
-									    <li><b>{{ _('Fast:') }}</b>
+<!--									    <li><b>{{ _('Fast:') }}</b>
                                                 {{ _('Aggressive clustering also of smaller objects to reduce \'empty rides\' as much as possible.') }}
 									            {{ _('The higher speed might compromise the precision of some engravings, but <b>works well with text or clip-art design.</b>') }}
-									    </li>
+									    </li>-->
 									    <li><b>{{ _('Basic:') }}</b>
                                                 {{ _('No clustering at all, the engravings are processed line by line. In this mode the laserhead may have a lot of \'empty rides\' making it slower, but the precision is not compromised.') }}
                                                 {{ _('<b>Use this option as fallback</b> if you\'re experiencing issues with the other options.') }}</li>
@@ -402,12 +396,16 @@
                                              data-toggle="buttons-radio">
                                             <button type="button" value="precise"
                                                     id="parameter_assignment_engraving_mode_precise_btn"
+                                                    data-bind="event: {click: updateEngravingMode}"
                                                     class="btn btn-default active">{{ _('Recommended') }}</button>
-                                            <button type="button" value="fast"
+                                            {# TODO: SW-1447 #}
+                                            {#<button type="button" value="fast"
                                                     id="parameter_assignment_engraving_mode_fast_btn"
-                                                    class="btn btn-default">{{ _('Fast') }}</button>
+                                                    data-bind="event: {click: updateEngravingMode}"
+                                                    class="btn btn-default">{{ _('Fast') }}</button>#}
                                             <button type="button" value="basic"
                                                     id="parameter_assignment_engraving_mode_basic_btn"
+                                                    data-bind="event: {click: updateEngravingMode}"
                                                     class="btn btn-default">{{ _('Basic') }}</button>
                                         </div>
                                     </div>
@@ -517,7 +515,7 @@
 									    {{ _('The effect in general is dependent from the material and its color and surface.') }}">
                                     <label class="control-label">{{ _('Speed') }}</label>
                                     <div class="controls"><input class="param_feedrate speed_input" type="number"
-                                                                 data-bind="event: {change: flag_customized_material}"
+                                                                 data-bind="event: {change: function(){flag_customized_material(); recalcJobTime();}}"
                                                                  onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;{{ _('mm/min') }}
                                     </div>
                                 </div>
@@ -552,12 +550,14 @@
                                             </li></ul>">
                                     <label class="control-label">{{ _('Passes') }}</label>
                                     <div class="controls">
-                                        <input data-bind="event: {change: flag_customized_material}"
-                                               class="param_passes passes_input cut_passes_input" type="number"/>&nbsp;&times;&nbsp;&nbsp;
+                                        <input
+                                            data-bind="event: {change: function(){flag_customized_material(); recalcJobTime();}}"
+                                            class="param_passes passes_input cut_passes_input" type="number"/>&nbsp;&times;&nbsp;&nbsp;
                                         <span style="display: inline-block">
                                             <label data-bind="visible: showExpertSettings">
-                                                <input data-bind="event: {change: flag_customized_material}"
-                                                       type="checkbox" class="param_progressive"/>
+                                                <input
+                                                    data-bind="event: {change: function(){flag_customized_material(); recalcJobTime();}}"
+                                                    type="checkbox" class="param_progressive"/>
                                                 {{ _('progressive') }}
                                             </label>
                                         </span>
@@ -572,9 +572,10 @@
                                          {{ _('If you experience that the laser does not cut or engrave first few millimeters of each new line or shape, try to set a pierce time.') }}
                                          <i>{{ _('Try 100ms and adjust if needed.') }}</i>">
                                     <label class="control-label">{{ _('Pierce time') }}</label>
-                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}"
-                                                                 class="param_piercetime pierce_time_input"
-                                                                 type="number"/>&nbsp;{{ _('ms') }}</div>
+                                    <div class="controls"><input
+                                                            data-bind="event: {change: function(){flag_customized_material(); recalcJobTime();}}"
+                                                            class="param_piercetime pierce_time_input"
+                                                            type="number"/>&nbsp;{{ _('ms') }}</div>
                                 </div>
                             </div>
                         </form>
@@ -601,6 +602,27 @@
         <div id="slicing_progress" class="progress progress-striped active" style="width: 100%;"
              data-bind="visible: slicing_in_progress()">
             <div class="bar" style="width: 0%" data-bind="style: {width: slicing_progress() + '%'} "></div>
+        </div>
+    </div>
+    <div style="position: relative; height: 0;">
+        <div id="jobTimeEstimationCard" data-bind="visible: showJobTimeEstimation()">
+            <a href="#" class="dropdown collapsed" data-toggle="collapse" data-target="#job_time_estimation_detailed">
+                <i class="icon-time"></i>
+                <span>{{ _('Estimation:') }} <span data-bind="text: estimated_job_time().humanReadable"></span></span>
+                <b class="caret"></b>
+            </a>
+            <br/>
+            <a href="#" data-toggle="collapse" data-target="#job_time_estimation_detailed" style="color: inherit; text-decoration: none;">
+                <div id="job_time_estimation_detailed" class="collapse" >
+                    <ul data-bind="foreach: estimated_job_time().detailed_list">
+                        <li>
+                            <div class="icon" data-bind="style: {backgroundImage: 'url('+$data.img+')', backgroundColor: $data.bgr}"></div>
+                            <label data-bind="text: $data.label"></label>:
+                            <span class="duration" data-bind="text: $data.duration"></span>
+                        </li>
+                    </ul>
+                </div>
+            </a>
         </div>
     </div>
     <div class="modal-footer">
