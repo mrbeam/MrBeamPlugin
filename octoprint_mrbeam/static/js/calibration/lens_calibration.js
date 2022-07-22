@@ -162,7 +162,7 @@ $(function () {
         };
 
         self.startLensCalibration = function () {
-            self.analytics.send_fontend_event("lens_calibration_start", {});
+            self.analytics.send_frontend_event("lens_calibration_start", {});
             self.lensCalibrationActive(true);
             self.calibration.simpleApiCommand(
                 "calibration_lens_start",
@@ -207,7 +207,7 @@ $(function () {
 
         self.abortLensCalibration = function () {
             // TODO - Axel - Allow to kill the board detection.
-            self.analytics.send_fontend_event("lens_calibration_abort", {});
+            self.analytics.send_frontend_event("lens_calibration_abort", {});
             self.stopLensCalibration();
             self.resetView();
         };
@@ -250,7 +250,7 @@ $(function () {
 
         self.saveLensCalibrationData = function () {
             // TODO Gray out button when calibration state is STATE_PROCESSING
-            self.analytics.send_fontend_event("lens_calibration_finish", {});
+            self.analytics.send_frontend_event("lens_calibration_finish", {});
             self.runLensCalibration();
             self.resetView();
         };

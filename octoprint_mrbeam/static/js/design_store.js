@@ -88,7 +88,7 @@ $(function () {
                                 new PNotify(event.data.payload);
                                 break;
                             case "analytics":
-                                self.analytics.send_fontend_event(
+                                self.analytics.send_frontend_event(
                                     "store",
                                     event.data.payload
                                 );

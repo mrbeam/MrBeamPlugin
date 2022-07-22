@@ -54,7 +54,7 @@ $(function () {
                     let payload = {
                         link: linkId,
                     };
-                    self.analytics.send_fontend_event("link_click", payload);
+                    self.analytics.send_frontend_event("link_click", payload);
                 });
             });
         };

@@ -136,7 +136,7 @@ $(function () {
                 })
                 .fail(function (error) {
                     console.error("Unable to reload update info.");
-                    self.analytics.send_fontend_event("update_info_call_failure", {error_message: error})
+                    self.analytics.send_frontend_event("update_info_call_failure", {error_message: error})
                 })
                 .always(function(){
                     self.softwareUpdate.checking(false);
