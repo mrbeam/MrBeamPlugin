@@ -52,6 +52,24 @@ $(function () {
             "Starts the laser job"
         );
 
+        // override the default octoprint cancel modal
+        self.state.cancel = function() {
+            if (!self.settings.feature_printCancelConfirmation()) {
+                OctoPrint.job.cancel();
+            } else {
+                showConfirmationDialog({
+                    message: gettext("The laserjob will be cancelled."),
+                    question: gettext("Do you still want to cancel?"),
+                    cancel: gettext("No"),
+                    proceed: gettext("Yes"),
+                    proceedClass: "primary",
+                    onproceed: function() {
+                        OctoPrint.job.cancel();
+                    }
+                });
+            }
+        };
+
         self.onStartup = function () {
             // TODO fetch machine profile on start
             //self.requestData();
@@ -471,14 +489,14 @@ $(function () {
                 }
             }
             if (
-                backend_version !== BEAMOS_VERSION ||
+                backend_version !== MRBEAM_PLUGIN_VERSION ||
                 isFirstRun !== CONFIG_FIRST_RUN ||
                 (laserHeadModel !== undefined &&
                     laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
             ) {
                 console.log(
                     "Frontend reload check: RELOAD! (version: frontend=" +
-                        BEAMOS_VERSION +
+                        MRBEAM_PLUGIN_VERSION +
                         ", backend=" +
                         backend_version +
                         ", isFirstRun: frontend=" +
@@ -496,7 +514,7 @@ $(function () {
             } else {
                 console.log(
                     "Frontend reload check: OK (version: " +
-                        BEAMOS_VERSION +
+                        MRBEAM_PLUGIN_VERSION +
                         ", isFirstRun: " +
                         CONFIG_FIRST_RUN +
                         ", laserheadModel: " +

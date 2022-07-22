@@ -25,6 +25,7 @@ $(function () {
         self.is_dust_mode = ko.observable(false);
         self.job_duration = ko.observable(0);
         self.job_duration_formatted = ko.computed(function () {
+            // TODO use utils.js          return formatHHMMSS(self.job_duration());
             if (self.job_duration() < 0) {
                 return "--:--:--";
             }

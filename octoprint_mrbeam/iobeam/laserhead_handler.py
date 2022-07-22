@@ -6,6 +6,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 
 LASERHEAD_MAX_TEMP_FALLBACK = 55.0
+LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
 
 # singleton
 _instance = None
@@ -34,6 +35,7 @@ class LaserheadHandler(object):
         self._event_bus = plugin._event_bus
         self._plugin_version = plugin.get_plugin_version()
         self._iobeam = None
+        self._laserhead_properties = {}
 
         self._lh_cache = {}
         self._last_used_lh_serial = None
@@ -443,7 +445,7 @@ class LaserheadHandler(object):
             float: Laser head max temp
 
         """
-        current_laserhead_properties = self._load_current_laserhead_properties()
+        current_laserhead_properties = self._get_laserhead_properties()
 
         # Handle the exceptions
         if((isinstance(current_laserhead_properties, dict) is False) or
@@ -472,7 +474,7 @@ class LaserheadHandler(object):
 
     def _load_current_laserhead_properties(self):
         """
-        Loads the current detected laser head related properties and return them
+        Loads the current detected laser head related properties from the laser head profile files and return them
 
         Returns:
             dict: current laser head properties, None: otherwise
@@ -505,7 +507,65 @@ class LaserheadHandler(object):
                     e, lh_properties_file_path))
             return None
 
+    def _get_laserhead_properties(self):
+        """
+        returns the current saved laser head properties or load new if the laser head id changed
 
+        Returns:
+            dict: current laser head properties, None: otherwise
+
+        """
+        # 1. get the ID of the current laser head
+        laserhead_id = self.get_current_used_lh_model_id()
+        self._logger.debug("laserhead id compare {} - {}".format(laserhead_id, self._laserhead_properties.get("laserhead_id", None)))
+        if laserhead_id != self._laserhead_properties.get("laserhead_id", None):
+            self._logger.debug("new laserhead_id -> load current laserhead porperties")
+            # 2. Load the corresponding yaml file and return it's content
+            self._laserhead_properties = self._load_current_laserhead_properties()
+            if self._laserhead_properties is not None:
+                self._laserhead_properties.update({'laserhead_id': laserhead_id})
+        else:
+            self._logger.debug("no new laserhead_id -> return current laserhead_properties")
+
+        self._logger.debug(
+            "_laserhead_properties - {}".format(self._laserhead_properties))
+        return self._laserhead_properties
+
+    @property
+    def current_laserhead_max_dust_factor(self):
+        """
+        Return the current laser head max dust factor
+
+        Returns:
+            float: Laser head max dust factor
+
+        """
+        current_laserhead_properties = self._get_laserhead_properties()
+
+        # Handle the exceptions
+        if ((isinstance(current_laserhead_properties, dict) is False) or
+                ("max_dust_factor" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["max_dust_factor"], float) is False)):
+            # Apply fallback
+            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
+            self._logger.exception(
+                "Current Laserhead max dust factor couldn't be retrieved, fallback to the factor value of: {}".format(
+                    self.default_laserhead_max_dust_factor))
+            return self.default_laserhead_max_dust_factor
+        # Reaching here means, everything looks good
+        self._logger.debug("Current Laserhead max dust factor:{}".format(current_laserhead_properties["max_dust_factor"]))
+        return current_laserhead_properties["max_dust_factor"]
+
+    @property
+    def default_laserhead_max_dust_factor(self):
+        """
+        Default max dust factor for laser head. to be used by other modules at init time
+
+        Returns:
+            float: Laser head default max dust factor
+        """
+
+        return LASERHEAD_MAX_DUST_FACTOR_FALLBACK
 
 
 

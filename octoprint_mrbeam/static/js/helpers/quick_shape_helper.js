@@ -1,4 +1,13 @@
 class QuickShapeHelper {
+    static getLine(l) {
+        if (isFinite(l) && l > 0) {
+            const d = `M${-l / 2},0h${l}`;
+            return d;
+        } else {
+            return "";
+        }
+    }
+
     static getCircle(r) {
         if (isFinite(r) && r > 0) {
             return this.getRect(r, r, 100);

@@ -3,6 +3,12 @@ from flask_babel import get_locale, gettext
 from octoprint_mrbeam.model.document_model import DocumentLinkModel, DocumentModel, DocumentSimpleModel
 from octoprint_mrbeam.util import string_util
 
+ALL_EXEMPTED = '*'
+EXEMPTED_TRANSLATIONS = {
+    'en': {ALL_EXEMPTED},
+    'de': {'Quickstart Guide'}
+}
+
 
 class DocumentService:
     """
@@ -41,11 +47,7 @@ class DocumentService:
     def _get_title_translated(self, definition):
         title_key = string_util.separate_camelcase_words(definition.mrbeamdoc_type.value)
         title_translated = gettext(title_key)
-        if get_locale() is not None and get_locale().language != 'en' and title_key == title_translated:
-            self._logger.error(
-                'No key found for title_key=%(title_key)s title_translated=%(title_translated)s' % {
-                    'title_key': title_key,
-                    'title_translated': title_translated})
+        self._log_error_on_missing_translation(title_key, str(title_translated))
         return title_translated
 
     @staticmethod
@@ -55,3 +57,23 @@ class DocumentService:
             'language': language.value,
             'mrbeam_type': definition.mrbeamdoc_type.value,
             'extension': extension}
+
+    def _log_error_on_missing_translation(self, translation_key, translation):
+        """
+        Arguments:
+            translation_key: str
+            translation: str
+        """
+        if get_locale() is None:
+            self._logger.error('Trying to get Locale failed. Is Flask initialised?')
+            return
+
+        exempted_translations_for_language = EXEMPTED_TRANSLATIONS.get(get_locale().language, {})
+        is_not_exempted_key = not any(
+            key in exempted_translations_for_language for key in [ALL_EXEMPTED, translation_key])
+
+        if is_not_exempted_key and translation_key == translation:
+            self._logger.error(
+                'No key found for translation_key=%(translation_key)s translation=%(translation)s' % {
+                    'translation_key': translation_key,
+                    'translation': translation})

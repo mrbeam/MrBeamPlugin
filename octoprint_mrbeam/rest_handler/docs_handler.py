@@ -1,7 +1,16 @@
 import octoprint.plugin
 from flask import abort, send_file
-from octoprint_mrbeamdoc.exception.mrbeam_doc_not_found import MrBeamDocNotFoundException
-from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils
+
+from octoprint_mrbeam.decorator.catch_import_error import prevent_execution_on_import_error
+from octoprint_mrbeam.model import EmptyImport
+
+try:
+    from octoprint_mrbeamdoc.exception.mrbeam_doc_not_found import MrBeamDocNotFoundException
+    from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils
+except ImportError:
+    MrBeamDocUtils = EmptyImport("from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils")
+    MrBeamDocNotFoundException = EmptyImport(
+        "from octoprint_mrbeamdoc.exception.mrbeam_doc_not_found import MrBeamDocNotFoundException")
 
 
 class DocsRestHandlerMixin:
@@ -11,6 +20,7 @@ class DocsRestHandlerMixin:
 
     @octoprint.plugin.BlueprintPlugin.route(
         "/docs/<string:model>/<string:language>/<string:doctype>.<string:extension>", methods=["GET"])
+    @prevent_execution_on_import_error(MrBeamDocUtils, callable=abort, params=[404])
     def get_doc(self, model, doctype, language, extension):
         self._logger.debug(
             'Request to Model: %(model)s Doctype: %(doctype)s Language: %(language)s Extension:%(extension)s',

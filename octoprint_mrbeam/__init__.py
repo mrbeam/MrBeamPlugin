@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import __builtin__
 import copy
 import json
+import operator
 import os
 import platform
 import pprint
@@ -13,7 +14,9 @@ import time
 import datetime
 import collections
 import logging
+import unicodedata
 from subprocess import check_output
+import pkg_resources
 
 import octoprint.plugin
 import requests
@@ -38,6 +41,9 @@ IS_X86 = platform.machine() == "x86_64"
 from ._version import get_versions
 
 __version__ = get_versions()["version"]
+if isinstance(__version__, unicode):
+    __version__ = unicodedata.normalize('NFKD', __version__).encode('ascii', 'ignore')
+
 del get_versions
 
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
@@ -100,6 +106,7 @@ from octoprint_mrbeam.util.flask import (
 from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 from octoprint_mrbeam.util import get_thread
 from octoprint_mrbeam import camera
+from octoprint_mrbeam.util.version_comparator import compare_pep440_versions
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -154,6 +161,7 @@ class MrBeamPlugin(
     TIME_NTP_SYNC_CHECK_FAST_COUNT = 20
     TIME_NTP_SYNC_CHECK_INTERVAL_FAST = 10.0
     TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
+
 
     def __init__(self):
         self.mrbeam_plugin_initialized = False
@@ -376,7 +384,7 @@ class MrBeamPlugin(
         return dict(
             svgDPI=90,
             dxfScale=1,
-            beta_label="",
+            navbar_label="",
             job_time=0.0,
             terminal=False,
             terminal_show_checksums=True,
@@ -636,6 +644,7 @@ class MrBeamPlugin(
                 "js/helpers/element_helper.js",
                 "js/helpers/debug_rendering_helper.js",
                 "js/helpers/working_area_helper.js",
+                "js/lib/potrace.js",
                 "js/lib/jquery.tinycolorpicker.js",
                 "js/lasercutterprofiles.js",
                 "js/mother_viewmodel.js",
@@ -645,6 +654,7 @@ class MrBeamPlugin(
                 "js/working_area.js",
                 "js/camera.js",
                 "js/lib/snap.svg-min.js",
+                "js/snap_bugfixes.js",
                 "js/snap_helpers.js",
                 "js/lib/dxf.js",
                 "js/snap-dxf.js",
@@ -822,7 +832,7 @@ class MrBeamPlugin(
                 now=now,
                 init_ts_ms=time.time() * 1000,
                 language=language,
-                beamosVersionNumber=self._plugin_version,
+                mrBeamPluginVersionNumber=self._plugin_version,
                 beamosVersionBranch=self._branch,
                 beamosVersionDisplayVersion=display_version_string,
                 beamosVersionImage=self._octopi_info,
@@ -845,7 +855,7 @@ class MrBeamPlugin(
                 model=self.get_model_id(),
                 software_tier=self._settings.get(["dev", "software_tier"]),
                 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
-                beta_label=self.get_beta_label(),
+                navbar_label=self.get_navbar_label(),
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
@@ -853,6 +863,7 @@ class MrBeamPlugin(
                     self.get_model_id()),
                 burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
                     self.get_model_id()),
+                isDevelop=self.is_dev_env(),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
@@ -1292,6 +1303,16 @@ class MrBeamPlugin(
             res = dict(calibration_pattern=destFile, target=FileDestinations.LOCAL)
             return jsonify(res)
 
+    # simpleApiCommand: compare_pep440_versions;
+    def handle_pep440_comparison_result(self, data):
+        try:
+            result = compare_pep440_versions(data['v1'], data['v2'], data['operator'])
+            return make_response(json.dumps(result), 200)
+        except KeyError as e:
+            self._logger.error("Key is missing in data: %s", e)
+            return make_response(json.dumps(None), 500)
+
+
     # ~~ helpers
 
     # helper method to write data to user settings
@@ -1358,7 +1379,7 @@ class MrBeamPlugin(
             locales=dict(),
             supportedExtensions=[],
             # beamOS version
-            beamosVersionNumber=self._plugin_version,
+            mrBeamPluginVersionNumber=self._plugin_version,
             beamosVersionBranch=self._branch,
             beamosVersionDisplayVersion=display_version_string,
             beamosVersionImage=self._octopi_info,
@@ -1372,7 +1393,7 @@ class MrBeamPlugin(
             product_name=self._device_info.get_product_name(),
             hostname=self.getHostname(),
             serial=self._serial_num,
-            beta_label=self.get_beta_label(),
+            navbar_label=self.get_navbar_label(),
             e="null",
             gcodeThreshold=0,  # legacy
             gcodeMobileThreshold=0,  # legacy
@@ -1924,6 +1945,7 @@ class MrBeamPlugin(
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
+            compare_pep440_versions=[]
         )
 
     def on_api_command(self, command, data):
@@ -2051,6 +2073,8 @@ class MrBeamPlugin(
             )  # TODO move this func to other file
         elif command == "cancel_final_extraction":
             self.dust_manager.set_user_abort_final_extraction()
+        elif command == "compare_pep440_versions":
+            return self.handle_pep440_comparison_result(data)
 
         return NO_CONTENT
 
@@ -2895,16 +2919,21 @@ class MrBeamPlugin(
         result = result.upper()
         return result
 
-    def get_beta_label(self):
+    def get_navbar_label(self):
         chunks = []
-        if self._settings.get(["beta_label"]):
-            chunks.append(self._settings.get(["beta_label"]))
+        if self._settings.get(["navbar_label"]):
+            chunks.append(self._settings.get(["navbar_label"]))
+
         if self.is_beta_channel():
-            chunks.append(
-                '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">BETA</a>'
+            beta_link = '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">{}</a>'.format(
+                SWUpdateTier.BETA.value
             )
+            chunks.append(beta_link)
+        elif self.is_alpha_channel():
+            chunks.append(SWUpdateTier.ALPHA.value)
         elif self.is_develop_channel():
-            chunks.append("develop")
+            chunks.append(SWUpdateTier.DEV.value)
+
         if self.support_mode:
             chunks.append("SUPPORT")
 
@@ -2994,10 +3023,13 @@ class MrBeamPlugin(
                 timer.start()
 
     def is_beta_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.BETA
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.BETA.value
 
     def is_develop_channel(self):
-        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.DEV
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.DEV.value
+
+    def is_alpha_channel(self):
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.ALPHA.value
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:
