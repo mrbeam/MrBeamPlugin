@@ -209,7 +209,7 @@ class AnalyticsHandler(object):
             self._add_frontend_event(event, payload=payload, header_extension=header_extension)
         except Exception as e:
             self._logger.exception(
-                "Exception during add_frontend_event: {}".format(e), analytics=True, header_extension=header_extension
+                "Exception during add_frontend_event: {}".format(e), analytics=True
             )
 
     # TIMER_HANDLER
