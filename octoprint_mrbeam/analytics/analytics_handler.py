@@ -347,8 +347,8 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Device.Event.LASERHEAD_INFO, payload=laserhead_info, header_extension=header_extension
             )
 
-        except Exception:
-            self._logger.exception("Exception during add_laserhead_info")
+        except Exception as e:
+            self._logger.exception("Exception during add_laserhead_info: {}".format(e))
 
     # LID_HANDLER
     def add_camera_session_details(self, session_details, header_extension=None):
