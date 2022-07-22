@@ -843,7 +843,7 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Header.DATA: data,
                 AnalyticsKeys.Header.UPTIME: get_uptime(),
                 AnalyticsKeys.Header.MODEL: self._plugin.get_model_id(),
-                AnalyticsKeys.Header.FEATURE_ID: header_extension.get(AnalyticsKeys.Header.FEATURE_ID)
+                AnalyticsKeys.Header.FEATURE_ID: header_extension.get(AnalyticsKeys.Header.FEATURE_ID, None)
             }
 
             if event_type == AnalyticsKeys.EventType.JOB:
