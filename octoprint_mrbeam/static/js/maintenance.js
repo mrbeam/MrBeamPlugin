@@ -71,27 +71,28 @@ $(function () {
             return Math.floor(self.gantryUsage() / 3600);
         });
 
-        self.optimizeParameterPercentageValues = function (val){
+        self.optimizeParameterPercentageValues = function (val) {
             return Math.min(roundDownToNearest10(val), 100);
-        }
+        };
         self.prefilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-            (self.prefilterUsageHours() / self.PREFILTER_LIFESPAN) * 100
+                (self.prefilterUsageHours() / self.PREFILTER_LIFESPAN) * 100
             );
         });
         self.carbonFilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-            (self.carbonFilterUsageHours() / self.CARBON_FILTER_LIFESPAN) * 100
+                (self.carbonFilterUsageHours() / self.CARBON_FILTER_LIFESPAN) *
+                    100
             );
         });
         self.laserHeadPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-            (self.laserHeadUsageHours() / self.LASER_HEAD_LIFESPAN) * 100
+                (self.laserHeadUsageHours() / self.LASER_HEAD_LIFESPAN) * 100
             );
         });
         self.gantryPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-            (self.gantryUsageHours() / self.GANTRY_LIFESPAN) * 100
+                (self.gantryUsageHours() / self.GANTRY_LIFESPAN) * 100
             );
         });
 
@@ -366,8 +367,7 @@ $(function () {
                     ),
                     {
                         br: "<br>",
-                        open:
-                            '<a href=\'#\' data-toggle="tab" id="settings_maintenance_link" style="font-weight:bold">',
+                        open: '<a href=\'#\' data-toggle="tab" id="settings_maintenance_link" style="font-weight:bold">',
                         close: "</a>",
                     }
                 ),
