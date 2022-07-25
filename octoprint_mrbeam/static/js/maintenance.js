@@ -5,9 +5,23 @@ $(function () {
 
         self.settings = params[0];
         self.analytics = params[1];
+        self.userSettings = params[2];
+        self.loginState = params[3];
 
         self.PREFILTER = gettext("pre-filter");
+        self.PREFILTER_WARNING_TITLE = gettext(
+            "Pre-Filter capacity reached 70%"
+        );
+        self.PREFILTER_WARNING_TEXT = gettext(
+            "At this Level we highly recommend to have a visual check on the pre-filter, to make sure the estimation is representing the fill level of your filter, as it heavily depends on what material you are processing with your device."
+        );
         self.CARBON_FILTER = gettext("main filter");
+        self.CARBON_FILTER_WARNING_TITLE = gettext(
+            "Main-Filter capacity reached 70%"
+        );
+        self.CARBON_FILTER_WARNING_TEXT = gettext(
+            "At this Level we highly recommend to have a visual check on the main-filter, to make sure the estimation is representing the fill level of your filter, as it heavily depends on what material you are processing with your device."
+        );
         self.LASER_HEAD = gettext("laser head");
         self.GANTRY = gettext("mechanics");
         self.PREFILTER_LIFESPAN = 40;
@@ -84,6 +98,9 @@ $(function () {
         self.prefilterShowEarlyWarning = ko.computed(function () {
             return self.prefilterPercent() >= self.WARN_IF_CRITICAL_PERCENT;
         });
+        self.carbonFilterShowEarlyWarning = ko.computed(function () {
+            return self.carbonFilterPercent() >= self.WARN_IF_CRITICAL_PERCENT;
+        });
         self.prefilterShowWarning = ko.computed(function () {
             return self.prefilterPercent() >= self.WARN_IF_USED_PERCENT;
         });
@@ -105,11 +122,11 @@ $(function () {
                 self.gantryShowWarning()
             );
         });
-
-        self.needsPrefilterMaintenance = ko.computed(function () {
-            return (
-                self.prefilterShowEarlyWarning()
-            );
+        self.needsprefilterEarlyWarning = ko.computed(function () {
+            return self.prefilterShowEarlyWarning();
+        });
+        self.needsCarbonFilterEarlyWarning = ko.computed(function () {
+            return self.carbonFilterShowEarlyWarning();
         });
 
         self.componentResetQuestion = ko.computed(function () {
@@ -129,12 +146,33 @@ $(function () {
             self.loadUsageValues();
         };
 
-        self.onStartupComplete = function () {
+        self.onUserLoggedIn = function (user) {
+            if (
+                self.needsprefilterEarlyWarning() &&
+                !user?.settings?.mrbeam?.filterWarnings?.prefilter
+            ) {
+                self.notifyFilterWarning(
+                    self.PREFILTER_WARNING_TITLE,
+                    self.PREFILTER_WARNING_TEXT
+                );
+                self.saveUserSettings({
+                    prefilter: true,
+                });
+            }
+            if (
+                self.needsCarbonFilterEarlyWarning() &&
+                !user?.settings?.mrbeam?.filterWarnings?.carbonFilter
+            ) {
+                self.notifyFilterWarning(
+                    self.CARBON_FILTER_WARNING_TITLE,
+                    self.CARBON_FILTER_WARNING_TEXT
+                );
+                self.saveUserSettings({
+                    carbonFilter: true,
+                });
+            }
             if (self.needsMaintenance()) {
                 self.notifyMaintenanceRequired();
-            }
-            if (self.needsPrefilterMaintenance()) {
-                self.notifyPrefilterMaintenanceRequired();
             }
         };
 
@@ -160,6 +198,11 @@ $(function () {
         };
 
         self.resetPrefilterUsage = function () {
+            // Set the warning message key to false so that it will show again when the value reaches 70%
+            self.saveUserSettings({
+                prefilter: false,
+            });
+
             // Reset all existing click listeners (in case the user exited the "are you sure" modal before without clicking on Yes)
             $("#reset_counter_are_you_sure").off("click");
 
@@ -188,6 +231,11 @@ $(function () {
         };
 
         self.resetCarbonFilterUsage = function () {
+            // Set the warning message key to false so that it will show again when the value reaches 70%
+            self.saveUserSettings({
+                carbonFilter: false,
+            });
+
             // Reset all existing click listeners (in case the user exited the "are you sure" modal before without clicking on Yes)
             $("#reset_counter_are_you_sure").off("click");
 
@@ -347,16 +395,38 @@ $(function () {
             });
         };
 
-        self.notifyPrefilterMaintenanceRequired = function () {
+        self.notifyFilterWarning = function (
+            NotificationTitle,
+            NotificationText
+        ) {
             new PNotify({
-                title: gettext("Filter capacity reached 70%"),
-                text: gettext(
-                "At this Level we highly recommend to have a visual check on the filter, to make sure the sensor is representing the fill level of your filter, as it heavily depends on what material you are processing with your device."
-                ),
+                title: NotificationTitle,
+                text: NotificationText,
                 type: "warn",
                 hide: false,
             });
-        }
+        };
+
+        self.saveUserSettings = function (earlyWarningShown) {
+            // save to user settings
+            if (self.loginState?.currentUser()) {
+                let mrbSettings = self.loginState.currentUser().settings.mrbeam;
+                if (!("filterWarnings" in mrbSettings)) {
+                    mrbSettings.filterWarnings = {};
+                }
+                if ("prefilter" in earlyWarningShown) {
+                    mrbSettings.filterWarnings.prefilter =
+                        earlyWarningShown.prefilter;
+                } else if ("carbonFilter" in earlyWarningShown) {
+                    mrbSettings.filterWarnings.carbonFilter =
+                        earlyWarningShown.carbonFilter;
+                }
+                let userName = self.loginState.currentUser().name;
+                self.userSettings.updateSettings(userName, {
+                    mrbeam: mrbSettings,
+                });
+            }
+        };
 
         self.updateSettingsAbout = function () {
             $("#settings_mrbeam_about_support_total_usage_hours").html(
@@ -370,7 +440,12 @@ $(function () {
         Maintenance,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel", "analyticsViewModel"],
+        [
+            "settingsViewModel",
+            "analyticsViewModel",
+            "userSettingsViewModel",
+            "loginStateViewModel",
+        ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ["#settings_maintenance"], // This is important!
