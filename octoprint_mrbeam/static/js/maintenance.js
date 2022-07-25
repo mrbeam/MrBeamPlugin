@@ -13,14 +13,14 @@ $(function () {
             "Pre-Filter capacity reached 70%"
         );
         self.PREFILTER_WARNING_TEXT = gettext(
-            "At this Level we highly recommend to have a visual check on the pre-filter, to make sure the estimation is representing the fill level of your filter, as it heavily depends on what material you are processing with your device."
+            "At this level, we highly recommend having a visual check on the pre-filter to make sure the estimation is representing the fill level of your filter. This heavily depends on the material you are processing with your device."
         );
         self.CARBON_FILTER = gettext("main filter");
         self.CARBON_FILTER_WARNING_TITLE = gettext(
             "Main-Filter capacity reached 70%"
         );
         self.CARBON_FILTER_WARNING_TEXT = gettext(
-            "At this Level we highly recommend to have a visual check on the main-filter, to make sure the estimation is representing the fill level of your filter, as it heavily depends on what material you are processing with your device."
+            "At this level, we highly recommend to have a visual check on the main-filter to make sure the estimation is representing the fill level of your filter. This heavily depends on the material you are processing with your device."
         );
         self.LASER_HEAD = gettext("laser head");
         self.GANTRY = gettext("mechanics");
