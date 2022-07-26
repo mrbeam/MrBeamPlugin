@@ -279,6 +279,7 @@ $(function () {
             setTimeout(function () {
                 refreshButtonElement.text(refreshButtonText);
             }, 3000);
+            console.log("Loading design store... ", self.DESIGN_STORE_IFRAME_SRC)
             document.getElementById("design_store_iframe").src =
                 self.DESIGN_STORE_IFRAME_SRC;
         };

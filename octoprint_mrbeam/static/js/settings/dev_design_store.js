@@ -10,16 +10,25 @@ $(function () {
         var self = this;
         window.mrbeam.viewModels["devDesignStoreViewModel"] = self;
 
+        self.PROD = "prod"
+        self.STAGING = "staging"
+        self.DEV = "dev"
+        self.LOCALHOST = "localhost"
+        self.DEFAULT_LOCALHOST_PORT = "8080"
+        self.DEFAULT_VERSION = "1-1-0"
+
         self.DESIGN_STORE_PRODUCTION_IFRAME_SRC = 'https://designs.cloud.mr-beam.org';
-        self.DESIGN_STORE_STAGING_IFRAME_SRC = 'https://1-0-0-staging-dot-design-store-269610.appspot.com';
-        self.DESIGN_STORE_DEVELOPMENT_IFRAME_SRC = 'https://1-0-0-dev-dot-design-store-269610.appspot.com';
+        self.DESIGN_STORE_LOCALHOST_IFRAME_SRC = "http://localhost";
 
         self.designStore = parameters[0];
         self.loginState = parameters[1];
         self.navigation = parameters[2];
 
         self.lastDsMail = null;
+
         self.devDsEmail = ko.observable();
+        self.devDsVersion = ko.observable(self.DEFAULT_VERSION);
+        self.devDsLocalhostPort = ko.observable(self.DEFAULT_LOCALHOST_PORT);
         self.authToken = ko.observable();
         self.devDsEmail.subscribe(function (newValue) {
             if (self.loginState.currentUser?.().settings?.mrbeam) {
@@ -27,7 +36,23 @@ $(function () {
             }
         });
 
-        self.selectedEnv = ko.observable('prod');
+        self.selectedEnv = ko.observable(self.PROD);
+
+        self.isStagingOrDev = ko.computed(function () {
+            return self.selectedEnv() === self.DEV || self.selectedEnv() === self.STAGING;
+        });
+
+        self.isLocalhost = ko.computed(function () {
+            return self.selectedEnv() === self.LOCALHOST;
+        });
+
+        self.design_store_staging_iframe_src = ko.computed(function () {
+            return 'https://' + self.devDsVersion() + '-staging-dot-design-store-269610.appspot.com';
+        });
+
+        self.design_store_development_iframe_src = ko.computed(function () {
+            return 'https://' + self.devDsVersion() + '-dev-dot-design-store-269610.appspot.com';
+        });
 
         self.onUserLoggedIn = function () {
             self.lastDsMail = self.designStore.getEmail();
@@ -66,12 +91,14 @@ $(function () {
         };
 
         self.changeEnv = function () {
-            if (self.selectedEnv() === 'prod') {
+            if (self.selectedEnv() === self.PROD) {
                 self.designStore.DESIGN_STORE_IFRAME_SRC = self.DESIGN_STORE_PRODUCTION_IFRAME_SRC;
-            } else if (self.selectedEnv() === 'staging') {
-                self.designStore.DESIGN_STORE_IFRAME_SRC = self.DESIGN_STORE_STAGING_IFRAME_SRC;
-            } else if (self.selectedEnv() === 'dev') {
-                self.designStore.DESIGN_STORE_IFRAME_SRC = self.DESIGN_STORE_DEVELOPMENT_IFRAME_SRC;
+            } else if (self.selectedEnv() === self.STAGING) {
+                self.designStore.DESIGN_STORE_IFRAME_SRC = self.design_store_staging_iframe_src();
+            } else if (self.selectedEnv() === self.DEV) {
+                self.designStore.DESIGN_STORE_IFRAME_SRC = self.design_store_development_iframe_src();
+            } else if (self.selectedEnv() === self.LOCALHOST) {
+                self.designStore.DESIGN_STORE_IFRAME_SRC = self.DESIGN_STORE_LOCALHOST_IFRAME_SRC + ":" + self.devDsLocalhostPort();
             }
             self.designStore.reloadDesignStoreIframe();
         }

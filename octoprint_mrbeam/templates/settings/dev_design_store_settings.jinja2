@@ -13,7 +13,7 @@
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label" for="settings-mrbeam-design-store-email">Authentication token</label>
+            <label class="control-label" for="settings-mrbeam-design-store-auth-token">Authentication token</label>
             <div class="controls">
                 <p id="settings-mrbeam-design-store-auth-token" data-bind="text: authToken" style="padding-top: 5px;"></p>
             </div>
@@ -26,7 +26,20 @@
                     <option value="dev">Development</option>
                     <option value="staging">Staging</option>
                     <option value="prod">Production</option>
+                    <option value="localhost">Localhost</option>
                 </select>
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: isStagingOrDev()">
+            <label class="control-label" for="settings-mrbeam-design-store-version">Version</label>
+            <div class="controls">
+                <input id="settings-mrbeam-design-store-version" type="text" class="input-block-level" data-bind="value: devDsVersion, event:{ change: changeEnv}">
+            </div>
+        </div>
+        <div class="control-group" data-bind="visible: isLocalhost()">
+            <label class="control-label" for="settings-mrbeam-design-store-localhost-port">Port</label>
+            <div class="controls">
+                <input id="settings-mrbeam-design-store-localhost-port" type="text" class="input-block-level" data-bind="value: devDsLocalhostPort, event:{ change: changeEnv}">
             </div>
         </div>
     </form>
