@@ -40,3 +40,4 @@ venv/
 tests/rsc/camera/debug/[^R]*
 tests/rsc/camera/out.jpg
 tests/logs/*.txt
+*pytest-logs.txt

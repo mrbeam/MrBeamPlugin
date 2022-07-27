@@ -126,6 +126,28 @@ mrbeam.debugSetOfflineState = function (locale) {
     mrbeam.viewModels.mrbeamViewModel.debugSetOfflineState();
 };
 
+mrbeam.comparePEP440Versions = function (v1, v2, operator) {
+    let data = {
+        v1: v1,
+        v2: v2,
+        operator: operator,
+    };
+    return OctoPrint.simpleApiCommand(
+        "mrbeam",
+        "compare_pep440_versions",
+        data,
+        {
+            async: false,
+            error: function (response) {
+                console.error(
+                    "compare_pep440_versions call failed:",
+                    response.responseText
+                );
+            },
+        }
+    ).responseJSON;
+};
+
 mrbeam.mrb_state = undefined;
 mrbeam.isOnline = undefined;
 mrbeam.viewModels = {};

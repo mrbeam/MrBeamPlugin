@@ -41,7 +41,7 @@
             <h5>BeamOS & grbl</h5>
             <div class="controls">
                 <ul>
-                    <div><strong>{{ _('Mr Beam Plugin') }}:</strong> v{{ beamosVersionNumber }}</div>
+                    <div><strong>{{ _('Mr Beam Plugin') }}:</strong> v{{ mrBeamPluginVersionNumber }}</div>
                     <div><strong>OctoPrint:</strong> <span class="version"></span></div>
                     <div><strong>{{ _('Image fingerprint') }}:</strong> {{ beamosVersionImage }}</div>
                     <div><strong>{{ _('Software channel') }}:</strong> {{ software_tier }}</div>
@@ -67,35 +67,15 @@
             <h5>{{ _('Documentation, Support and Privacy') }}</h5>
             <div class="controls">
                 <ul>
-                    <div><strong>{{ _('Quickstart Guide') }}:</strong>
-                        {% if model in ["MRBEAM2", "MRBEAM2_DC_R1"] %}
-                            <a href="/plugin/mrbeamdoc/static/docs/QuickstartGuide_en.pdf" target="_blank"> en </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/QuickstartGuide_de.pdf" target="_blank"> de </a> |
-                        {% else %}
-                             <a href="/plugin/mrbeamdoc/static/docs/QuickstartGuide_dreamcut_en.pdf" target="_blank"> en </a> |
-                             <a href="/plugin/mrbeamdoc/static/docs/QuickstartGuide_dreamcut_de.pdf" target="_blank"> de </a> |
-                        {% endif %}
-                        {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank">{{ _('online') }}</a>
-                    </div>
-                    <div><strong>{{ _('User Manual') }}:</strong>
-                         {% if model in ["MRBEAM2", "MRBEAM2_DC_R1"] %}
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_en.pdf" target="_blank"> en </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_de.pdf" target="_blank"> de </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_es.pdf" target="_blank"> es </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_fr.pdf" target="_blank"> fr </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_it.pdf" target="_blank"> it </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_fi.pdf" target="_blank"> fi </a> |
-                        {% else %}
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_dreamcut_en.pdf" target="_blank"> en </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_dreamcut_de.pdf" target="_blank"> de </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_dreamcut_es.pdf" target="_blank"> es </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_dreamcut_fr.pdf" target="_blank"> fr </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_dreamcut_it.pdf" target="_blank"> it </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_dreamcut_nl.pdf" target="_blank"> nl </a> |
-                            <a href="/plugin/mrbeamdoc/static/docs/UserManual_fi.pdf" target="_blank"> fi </a> |
-                        {% endif %}
-                        {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank">{{ _('online') }}</a>
-                    </div>
+                    {% for document in settings_model.about.support_documents %}
+                        <div>
+                            <strong>{{ document.title }}</strong>
+                            {% for link in document.document_links | sort_enum(attribute='language') %}
+                                <a href="{{ link.url }}" target="_blank"> {{ link.language.value }} </a> |
+                            {% endfor %}
+                            {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank">{{ _('online') }}</a>
+                        </div>
+                    {% endfor %}
 
                     <div><strong>{{ _('Online Support Portal') }}:</strong> <a href="https://www.mr-beam.org/support" target="_blank">mr-beam.org/support</a></div>
                     <div><strong>{{ _('Privacy Policies') }}:</strong>

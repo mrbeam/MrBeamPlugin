@@ -459,7 +459,7 @@ $(function () {
                 "MRBEAM_ENV_SUPPORT_MODE: " + MRBEAM_ENV_SUPPORT_MODE,
                 "BEAMOS_IMAGE: " + BEAMOS_IMAGE,
                 "MRBEAM_LANGUAGE: " + MRBEAM_LANGUAGE,
-                "BEAMOS_VERSION: " + BEAMOS_VERSION,
+                "BEAMOS_VERSION: " + MRBEAM_PLUGIN_VERSION,
                 "MRBEAM_SW_TIER: " + MRBEAM_SW_TIER,
                 "MRBEAM_ENV: " + MRBEAM_ENV,
             ];

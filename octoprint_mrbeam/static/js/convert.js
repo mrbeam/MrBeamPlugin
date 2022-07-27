@@ -312,7 +312,7 @@ $(function () {
                 new_material.laser_model = MRBEAM_LASER_HEAD_MODEL;
                 new_material.device_model = MRBEAM_MODEL;
                 new_material.custom = true;
-                new_material.v = BEAMOS_VERSION;
+                new_material.v = MRBEAM_PLUGIN_VERSION;
                 // Remove compatibility keys
                 delete new_material.compatible;
                 delete new_material.customBeforeElementContent;
@@ -330,7 +330,7 @@ $(function () {
                     laser_model: MRBEAM_LASER_HEAD_MODEL,
                     device_model: MRBEAM_MODEL,
                     custom: true,
-                    v: BEAMOS_VERSION,
+                    v: MRBEAM_PLUGIN_VERSION,
                     colors: {},
                 };
             }

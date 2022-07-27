@@ -1,0 +1,146 @@
+{
+  "develop": {
+    "type": "github_commit",
+    "restart": "environment",
+    "user": "mrbeam",
+    "branch": "alpha",
+    "branch_default": "alpha",
+    "force_base": false,
+    "release_compare": "python_unequal",
+    "stable_branch": {
+      "branch": "stable",
+      "name": "stable",
+      "commitish": [
+        "stable"
+      ]
+    },
+    "prerelease_branches": [
+      {
+        "name": "alpha",
+        "branch": "alpha",
+        "commitish": [
+          "alpha",
+          "beta",
+          "stable"
+        ]
+      },
+      {
+        "name": "beta",
+        "branch": "beta",
+        "commitish": [
+          "beta",
+          "stable"
+        ]
+      }
+    ]
+  },
+  "beta": {
+    "type": "github_commit",
+    "prerelease_channel": "beta",
+    "prerelease": true,
+    "restart": "environment",
+    "user": "mrbeam",
+    "branch": "mrbeam2-beta",
+    "branch_default": "mrbeam2-beta",
+    "force_base": false,
+    "release_compare": "python_unequal",
+    "stable_branch": {
+      "branch": "stable",
+      "name": "stable",
+      "commitish": [
+        "stable"
+      ]
+    },
+    "prerelease_branches": [
+      {
+        "name": "alpha",
+        "branch": "alpha",
+        "commitish": [
+          "alpha",
+          "beta",
+          "stable"
+        ]
+      },
+      {
+        "name": "beta",
+        "branch": "beta",
+        "commitish": [
+          "beta",
+          "stable"
+        ]
+      }
+    ]
+  },
+  "alpha": {
+    "type": "github_release",
+    "prerelease_channel": "alpha",
+    "prerelease": true,
+    "restart": "environment",
+    "user": "mrbeam",
+    "branch": "alpha",
+    "branch_default": "alpha",
+    "force_base": false,
+    "release_compare": "python_unequal",
+    "stable_branch": {
+      "branch": "stable",
+      "name": "stable",
+      "commitish": [
+        "stable"
+      ]
+    },
+    "prerelease_branches": [
+      {
+        "name": "alpha",
+        "branch": "alpha",
+        "commitish": [
+          "alpha",
+          "beta",
+          "stable"
+        ]
+      },
+      {
+        "name": "beta",
+        "branch": "beta",
+        "commitish": [
+          "beta",
+          "stable"
+        ]
+      }
+    ]
+  },
+  "stable": {
+    "type": "github_commit",
+    "restart": "environment",
+    "user": "mrbeam",
+    "branch": "mrbeam2-stable",
+    "branch_default": "mrbeam2-stable",
+    "force_base": false,
+    "release_compare": "python_unequal",
+    "stable_branch": {
+      "branch": "stable",
+      "name": "stable",
+      "commitish": [
+        "stable"
+      ]
+    },
+    "prerelease_branches": [
+      {
+        "name": "alpha",
+        "branch": "alpha",
+        "commitish": [
+          "alpha",
+          "beta",
+          "stable"
+        ]
+      },
+      {
+        "name": "beta",
+        "branch": "beta",
+        "commitish": [
+          "beta",
+          "stable"
+        ]
+      }
+    ]
+  }
+}
