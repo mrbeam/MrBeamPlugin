@@ -96,7 +96,7 @@ $(function () {
                     }
                 }
 
-                if(!self.eventListenerAdded()){
+                if (!self.eventListenerAdded()) {
                     window.addEventListener(
                         "message",
                         receiveMessagesFromDesignStoreIframe,
@@ -104,7 +104,6 @@ $(function () {
                     );
                     self.eventListenerAdded(true);
                 }
-
             });
 
             // Add iframe source
@@ -142,7 +141,7 @@ $(function () {
                 email: self.getEmail(),
                 serial: MRBEAM_SERIAL,
                 user_token: self.getAuthToken(),
-                version:  mrbeamPluginVersion,
+                version: mrbeamPluginVersion,
                 language: MRBEAM_LANGUAGE,
                 last_uploaded: self.getLastUploadedDate(),
             };
@@ -183,9 +182,8 @@ $(function () {
                 currentUserSettings?.mrbeam
             ) {
                 delete currentUserSettings["mrbeam"]["user_token"];
-                currentUserSettings["mrbeam"][
-                    "design_store_auth_token"
-                ] = token;
+                currentUserSettings["mrbeam"]["design_store_auth_token"] =
+                    token;
                 self.navigation.usersettings.updateSettings(
                     self.loginState.currentUser().name,
                     currentUserSettings
@@ -204,9 +202,8 @@ $(function () {
                 delete currentUserSettings["mrbeam"][
                     "design_store_last_uploaded"
                 ];
-                currentUserSettings["mrbeam"][
-                    "design_store_last_uploaded"
-                ] = lastUploaded;
+                currentUserSettings["mrbeam"]["design_store_last_uploaded"] =
+                    lastUploaded;
                 self.navigation.usersettings.updateSettings(
                     self.loginState.currentUser().name,
                     currentUserSettings
@@ -279,6 +276,10 @@ $(function () {
             setTimeout(function () {
                 refreshButtonElement.text(refreshButtonText);
             }, 3000);
+            console.log(
+                "Loading design store... ",
+                self.DESIGN_STORE_IFRAME_SRC
+            );
             document.getElementById("design_store_iframe").src =
                 self.DESIGN_STORE_IFRAME_SRC;
         };
