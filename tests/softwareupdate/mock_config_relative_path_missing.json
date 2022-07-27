@@ -1,0 +1,172 @@
+{
+  "default": {
+    "type": "github_commit",
+    "user": "mrbeam",
+    "release_compare": "python_unequal",
+    "force_base": false,
+    "stable": {
+      "branch": "mrbeam2-stable",
+      "branch_default": "mrbeam2-stable",
+      "type": "github_commit"
+    },
+    "beta": {
+      "branch": "mrbeam2-beta",
+      "branch_default": "mrbeam2-beta",
+      "type": "github_commit",
+      "prerelease_channel": "beta",
+      "prerelease": true
+    },
+    "develop": {
+      "type": "github_commit",
+      "branch": "alpha",
+      "branch_default": "alpha"
+    },
+    "alpha": {
+      "branch": "mrbeam2-alpha",
+      "branch_default": "mrbeam2-alpha",
+      "prerelease_channel": "alpha",
+      "prerelease": true,
+      "type": "github_release"
+    },
+    "restart": "environment",
+    "stable_branch": {
+      "branch": "stable",
+      "name": "stable",
+      "commitish": [
+        "stable"
+      ]
+    },
+    "prerelease_branches": [
+      {
+        "name": "alpha",
+        "branch": "alpha",
+        "commitish": [
+          "alpha",
+          "beta",
+          "stable"
+        ]
+      },
+      {
+        "name": "beta",
+        "branch": "beta",
+        "commitish": [
+          "beta",
+          "stable"
+        ]
+      }
+    ]
+  },
+  "modules": {
+    "octoprint": {
+      "type": "github_release",
+      "develop": {
+        "type": "github_commit",
+        "branch": "alpha",
+        "branch_default": "alpha"
+      },
+      "alpha": {
+        "branch": "alpha",
+        "branch_default": "alpha"
+      }
+    },
+    "mrbeam": {
+      "name": " MrBeam Plugin",
+      "repo": "MrBeamPlugin",
+      "restart": "environment",
+      "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+      "develop": {
+        "update_folder": "/tmp/octoprint/mrbeamplugin",
+        "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
+        "methode": "update_script"
+      },
+      "alpha": {
+        "update_folder": "/tmp/octoprint/mrbeamplugin",
+        "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
+        "methode": "update_script"
+      },
+      "dependencies": {
+        "mrbeam-ledstrips": {
+          "repo": "MrBeamLedStrips",
+          "pip": "https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+          "global_pip_command": true,
+          "beamos_version": {
+            "__ge__": {
+              "0.18.0": {
+                "pip_command": "sudo /usr/local/mrbeam_ledstrips/venv/bin/pip"
+              }
+            }
+          }
+        },
+        "iobeam": {
+          "repo": "iobeam",
+          "pip": "git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
+          "global_pip_command": true,
+          "beamos_version": {
+            "__ge__": {
+              "0.18.0": {
+                "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
+              }
+            }
+          }
+        },
+        "mrb-hw-info": {
+          "repo": "mrb_hw_info",
+          "pip": "git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+          "global_pip_command": true,
+          "beamos_version": {
+            "__ge__": {
+              "0.18.0": {
+                "pip_command": "sudo /usr/local/iobeam/venv/bin/pip"
+              }
+            }
+          }
+        },
+        "mrbeamdoc": {
+          "repo": "MrBeamDoc",
+          "pip": "https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip"
+        }
+      }
+    },
+    "netconnectd": {
+      "name": "OctoPrint-Netconnectd Plugin",
+      "repo": "OctoPrint-Netconnectd",
+      "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
+      "restart": "environment",
+      "dependencies": {
+        "netconnectd": {
+          "repo": "netconnectd_mrbeam",
+          "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
+          "global_pip_command": true,
+          "beamos_version": {
+              "__ge__": {
+                "0.18.0": {
+                  "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip"
+                }
+              },
+              "__le__": {
+                "0.14.0": {
+                  "version": "0.0.1"
+                }
+              }
+            }
+        }
+      },
+      "develop": {
+        "update_folder": "/tmp/octoprint/netconnectd",
+        "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
+        "methode": "update_script"
+      },
+      "alpha": {
+        "update_folder": "/tmp/octoprint/netconnectd",
+        "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
+        "methode": "update_script"
+      }
+    },
+    "findmymrbeam": {
+      "name": "OctoPrint-FindMyMrBeam",
+      "repo": "OctoPrint-FindMyMrBeam",
+      "pip": "https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
+      "restart": "octoprint"
+    }
+  }
+}
