@@ -13,6 +13,9 @@ $(function () {
         self.PROD = "prod";
         self.STAGING = "staging";
         self.DEV = "dev";
+
+        self.PROTOCOL = "https://";
+        self.DS_URL_APPENDIX = "-dot-design-store-269610.appspot.com"
         self.LOCALHOST = "localhost";
         self.DEFAULT_LOCALHOST_PORT = "8080";
         self.DEFAULT_VERSION = "1-1-0";
@@ -50,21 +53,19 @@ $(function () {
             return self.selectedEnv() === self.LOCALHOST;
         });
 
-        self.design_store_staging_iframe_src = ko.computed(function () {
+        self.design_store_staging_or_development_iframe_src = ko.computed(function () {
             return (
-                "https://" +
-                self.devDsVersion() +
-                "-staging-dot-design-store-269610.appspot.com"
+                self.PROTOCOL + self.devDsVersion() + "-" + self.selectedEnv() + self.DS_URL_APPENDIX
             );
         });
 
-        self.design_store_development_iframe_src = ko.computed(function () {
-            return (
-                "https://" +
-                self.devDsVersion() +
-                "-dev-dot-design-store-269610.appspot.com"
-            );
-        });
+        self.dsUrlforEnv = {
+            [self.PROD]: () => self.DESIGN_STORE_PRODUCTION_IFRAME_SRC,
+            [self.STAGING]: () => self.design_store_staging_or_development_iframe_src(),
+            [self.DEV]: () => self.design_store_staging_or_development_iframe_src(),
+            [self.LOCALHOST]: () => self.DESIGN_STORE_LOCALHOST_IFRAME_SRC + ":" + self.devDsLocalhostPort()
+        };
+
 
         self.onUserLoggedIn = function () {
             self.lastDsMail = self.designStore.getEmail();
@@ -103,21 +104,7 @@ $(function () {
         };
 
         self.changeEnv = function () {
-            if (self.selectedEnv() === self.PROD) {
-                self.designStore.DESIGN_STORE_IFRAME_SRC =
-                    self.DESIGN_STORE_PRODUCTION_IFRAME_SRC;
-            } else if (self.selectedEnv() === self.STAGING) {
-                self.designStore.DESIGN_STORE_IFRAME_SRC =
-                    self.design_store_staging_iframe_src();
-            } else if (self.selectedEnv() === self.DEV) {
-                self.designStore.DESIGN_STORE_IFRAME_SRC =
-                    self.design_store_development_iframe_src();
-            } else if (self.selectedEnv() === self.LOCALHOST) {
-                self.designStore.DESIGN_STORE_IFRAME_SRC =
-                    self.DESIGN_STORE_LOCALHOST_IFRAME_SRC +
-                    ":" +
-                    self.devDsLocalhostPort();
-            }
+            self.designStore.DESIGN_STORE_IFRAME_SRC = self.dsUrlforEnv[self.selectedEnv()]()
             self.designStore.reloadDesignStoreIframe();
         };
 
