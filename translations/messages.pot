@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-06-09 17:44+0200\n"
+"POT-Creation-Date: 2022-07-27 14:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.0\n"
+"Generated-By: Babel 2.9.1\n"
 
 #: octoprint_mrbeam/printing/comm_acc2.py:401
 #: octoprint_mrbeam/printing/comm_acc2.py:457
@@ -213,11 +213,11 @@ msgstr ""
 msgid "Cut "
 msgstr ""
 
-#: octoprint_mrbeam/static/js/design_store.js:246
+#: octoprint_mrbeam/static/js/design_store.js:248
 msgid "Could not download design"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/design_store.js:247
+#: octoprint_mrbeam/static/js/design_store.js:249
 msgid "The purchased design could not be downloaded. Please download again."
 msgstr ""
 
@@ -257,51 +257,75 @@ msgstr ""
 msgid "connecting..."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:9
+#: octoprint_mrbeam/static/js/maintenance.js:11
 msgid "pre-filter"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:10
+#: octoprint_mrbeam/static/js/maintenance.js:12
+msgid "Pre-Filter capacity reached 70%"
+msgstr ""
+
+#: octoprint_mrbeam/static/js/maintenance.js:15
+msgid ""
+"At this level, we highly recommend having a visual check on the pre-"
+"filter to make sure the estimation is representing the fill level of your"
+" filter. This heavily depends on the material you are processing with "
+"your device."
+msgstr ""
+
+#: octoprint_mrbeam/static/js/maintenance.js:18
 msgid "main filter"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:11
+#: octoprint_mrbeam/static/js/maintenance.js:19
+msgid "Main-Filter capacity reached 70%"
+msgstr ""
+
+#: octoprint_mrbeam/static/js/maintenance.js:22
+msgid ""
+"At this level, we highly recommend to have a visual check on the main-"
+"filter to make sure the estimation is representing the fill level of your"
+" filter. This heavily depends on the material you are processing with "
+"your device."
+msgstr ""
+
+#: octoprint_mrbeam/static/js/maintenance.js:25
 msgid "laser head"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:12
+#: octoprint_mrbeam/static/js/maintenance.js:26
 msgid "mechanics"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:29
-#: octoprint_mrbeam/static/js/maintenance.js:33
-#: octoprint_mrbeam/static/js/maintenance.js:36
-#: octoprint_mrbeam/static/js/maintenance.js:39
+#: octoprint_mrbeam/static/js/maintenance.js:44
+#: octoprint_mrbeam/static/js/maintenance.js:48
+#: octoprint_mrbeam/static/js/maintenance.js:51
+#: octoprint_mrbeam/static/js/maintenance.js:54
 #, python-format
 msgid "/%(lifespan)s hrs"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:119
+#: octoprint_mrbeam/static/js/maintenance.js:135
 msgid "Did you change the pre-filter?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:121
+#: octoprint_mrbeam/static/js/maintenance.js:137
 msgid "Did you change the main filter?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:123
+#: octoprint_mrbeam/static/js/maintenance.js:139
 msgid "Did you clean the laser head?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:125
+#: octoprint_mrbeam/static/js/maintenance.js:141
 msgid "Did you clean the mechanics?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:313
+#: octoprint_mrbeam/static/js/maintenance.js:363
 msgid "Maintenance required"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/maintenance.js:315
+#: octoprint_mrbeam/static/js/maintenance.js:365
 #, python-format
 msgid ""
 "Regular maintenance on your Mr Beam is due.%(br)s Please check the "
@@ -751,42 +775,42 @@ msgstr ""
 msgid "Please confirm to proceed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:190
+#: octoprint_mrbeam/static/js/mrbeam.js:212
 #: octoprint_mrbeam/static/js/wizard_acl.js:177
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:23
 msgid "Invalid e-mail address"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:252
+#: octoprint_mrbeam/static/js/mrbeam.js:274
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:20
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:22
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:21
 msgid "E-mail address"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:417
-#: octoprint_mrbeam/static/js/mrbeam.js:431
-#: octoprint_mrbeam/static/js/mrbeam.js:442
+#: octoprint_mrbeam/static/js/mrbeam.js:439
+#: octoprint_mrbeam/static/js/mrbeam.js:453
+#: octoprint_mrbeam/static/js/mrbeam.js:464
 msgid "Session expired"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:418
+#: octoprint_mrbeam/static/js/mrbeam.js:440
 msgid "Trying to do a re-login..."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:432
+#: octoprint_mrbeam/static/js/mrbeam.js:454
 msgid "Re-login successful.<br/>Please repeat the last action."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:443
+#: octoprint_mrbeam/static/js/mrbeam.js:465
 msgid "Please login again."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:500
+#: octoprint_mrbeam/static/js/mrbeam.js:522
 msgid "Browser not supported."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:502
+#: octoprint_mrbeam/static/js/mrbeam.js:524
 #, python-format
 msgid ""
 "Mr Beam makes use of latest web technologies which might not be fully "
@@ -794,11 +818,11 @@ msgid ""
 "of%(br)s%(open)sGoogle Chrome%(close)s for Mr Beam."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:524
+#: octoprint_mrbeam/static/js/mrbeam.js:546
 msgid "Beta user: Please consider enabling Mr Beam analytics!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mrbeam.js:528
+#: octoprint_mrbeam/static/js/mrbeam.js:550
 #, python-format
 msgid ""
 "As you are currently in our Beta channel, you would help us tremendously "
