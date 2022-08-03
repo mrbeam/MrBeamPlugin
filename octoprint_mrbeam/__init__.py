@@ -384,7 +384,7 @@ class MrBeamPlugin(
         return dict(
             svgDPI=90,
             dxfScale=1,
-            beta_label="",
+            navbar_label="",
             job_time=0.0,
             terminal=False,
             terminal_show_checksums=True,
@@ -644,6 +644,7 @@ class MrBeamPlugin(
                 "js/helpers/element_helper.js",
                 "js/helpers/debug_rendering_helper.js",
                 "js/helpers/working_area_helper.js",
+                "js/lib/potrace.js",
                 "js/lib/jquery.tinycolorpicker.js",
                 "js/lasercutterprofiles.js",
                 "js/mother_viewmodel.js",
@@ -653,6 +654,7 @@ class MrBeamPlugin(
                 "js/working_area.js",
                 "js/camera.js",
                 "js/lib/snap.svg-min.js",
+                "js/snap_bugfixes.js",
                 "js/snap_helpers.js",
                 "js/lib/dxf.js",
                 "js/snap-dxf.js",
@@ -853,7 +855,7 @@ class MrBeamPlugin(
                 model=self.get_model_id(),
                 software_tier=self._settings.get(["dev", "software_tier"]),
                 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
-                beta_label=self.get_beta_label(),
+                navbar_label=self.get_navbar_label(),
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
@@ -861,6 +863,7 @@ class MrBeamPlugin(
                     self.get_model_id()),
                 burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
                     self.get_model_id()),
+                isDevelop=self.is_dev_env(),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
@@ -1390,7 +1393,7 @@ class MrBeamPlugin(
             product_name=self._device_info.get_product_name(),
             hostname=self.getHostname(),
             serial=self._serial_num,
-            beta_label=self.get_beta_label(),
+            navbar_label=self.get_navbar_label(),
             e="null",
             gcodeThreshold=0,  # legacy
             gcodeMobileThreshold=0,  # legacy
@@ -2914,16 +2917,21 @@ class MrBeamPlugin(
         result = result.upper()
         return result
 
-    def get_beta_label(self):
+    def get_navbar_label(self):
         chunks = []
-        if self._settings.get(["beta_label"]):
-            chunks.append(self._settings.get(["beta_label"]))
+        if self._settings.get(["navbar_label"]):
+            chunks.append(self._settings.get(["navbar_label"]))
+
         if self.is_beta_channel():
-            chunks.append(
-                '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">BETA</a>'
+            beta_link = '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">{}</a>'.format(
+                SWUpdateTier.BETA.value
             )
+            chunks.append(beta_link)
+        elif self.is_alpha_channel():
+            chunks.append(SWUpdateTier.ALPHA.value)
         elif self.is_develop_channel():
-            chunks.append("develop")
+            chunks.append(SWUpdateTier.DEV.value)
+
         if self.support_mode:
             chunks.append("SUPPORT")
 
@@ -3017,6 +3025,9 @@ class MrBeamPlugin(
 
     def is_develop_channel(self):
         return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.DEV.value
+
+    def is_alpha_channel(self):
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.ALPHA.value
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:

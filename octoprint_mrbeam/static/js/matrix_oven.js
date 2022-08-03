@@ -131,43 +131,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         }
 
         if (elem.type === "image") {
-            var x = parseFloat(elem.attr("x")),
-                y = parseFloat(elem.attr("y")),
-                w = parseFloat(elem.attr("width")),
-                h = parseFloat(elem.attr("height"));
-
-            // Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
-            // If 'x' and 'y' are not specified, then set both to default=0. // CorelDraw is creating that sometimes
-            if (!isFinite(x)) {
-                console.log("Image: No x value -> using 0 (SVG default)");
-                x = 0;
-            }
-            if (!isFinite(y)) {
-                console.log("Image: No y value -> using 0 (SVG default)");
-                y = 0;
-            }
+            // just apply total transform matrix which incorporates transforms of parent elements as well.
             var transform = elem.transform();
-            var matrix = transform["totalMatrix"].add(correctionMatrix);
-            var transformedX = matrix.x(x, y);
-            var transformedY = matrix.y(x, y);
-            var transformedW = matrix.x(x + w, y + h) - transformedX;
-            var transformedH = matrix.y(x + w, y + h) - transformedY;
-
-            elem.attr({
-                x: transformedX,
-                y: transformedY,
-                width: transformedW,
-                height: transformedH,
-            });
-            elem.node.removeAttribute("transform"); // prefer less attributes.
-
-            if (transformedH < 0) {
-                elem.attr({
-                    style: "transform: scale(1,-1); transform-origin: top",
-                    height: -transformedH,
-                    y: -transformedY,
-                });
-            }
+            const tm = transform["totalMatrix"].add(correctionMatrix);
+            elem.transform(tm);
             return ignoredElements;
         }
 
