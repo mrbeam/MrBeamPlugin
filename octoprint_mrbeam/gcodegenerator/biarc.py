@@ -25,19 +25,14 @@ def biarc(sp1, sp2, z1, z2, depth=0):
                 zm = z1
             else:
                 zm = z1 + (z2 - z1) * l1 / (l1 + l2)
-            return biarc(sp1, sp2, z1, zm, depth + 1) + biarc(
-                sp2, sp3, zm, z2, depth + 1
-            )
+            return biarc(sp1, sp2, z1, zm, depth + 1) + biarc(sp2, sp3, zm, z2, depth + 1)
         else:
             return [[sp1[1], "line", 0, 0, sp2[1], [z1, z2]]]
 
     P0, P4 = Point(sp1[1]), Point(sp2[1])
     TS, TE, v = (Point(sp1[2]) - P0), -(Point(sp2[0]) - P4), P0 - P4
     tsa, tea, va = TS.angle(), TE.angle(), v.angle()
-    if (
-        TE.mag() < straight_distance_tolerance
-        and TS.mag() < straight_distance_tolerance
-    ):
+    if TE.mag() < straight_distance_tolerance and TS.mag() < straight_distance_tolerance:
         # Both tangents are zerro - line straight
         return [[sp1[1], "line", 0, 0, sp2[1], [z1, z2]]]
     if TE.mag() < straight_distance_tolerance:
@@ -69,7 +64,7 @@ def biarc(sp1, sp2, z1, z2, depth=0):
     c, b, a = v * v, 2 * v * (r * TS + TE), 2 * r * (TS * TE - 1)
     if v.mag() == 0:
         return biarc_split(sp1, sp2, z1, z2, depth)
-    asmall, bsmall, csmall = abs(a) < 10 ** -10, abs(b) < 10 ** -10, abs(c) < 10 ** -10
+    asmall, bsmall, csmall = abs(a) < 10**-10, abs(b) < 10**-10, abs(c) < 10**-10
     if asmall and b != 0:
         beta = -c / b
     elif csmall and a != 0:
@@ -77,12 +72,12 @@ def biarc(sp1, sp2, z1, z2, depth=0):
     elif not asmall:
         discr = b * b - 4 * a * c
         if discr < 0:
-            raise ValueError, (a, b, c, discr)
-        disq = discr ** 0.5
+            raise ValueError((a, b, c, discr))
+        disq = discr**0.5
         beta1 = (-b - disq) / 2 / a
         beta2 = (-b + disq) / 2 / a
         if beta1 * beta2 > 0:
-            raise ValueError, (a, b, c, disq, beta1, beta2)
+            raise ValueError((a, b, c, disq, beta1, beta2))
         beta = max(beta1, beta2)
     elif asmall and bsmall:
         return biarc_split(sp1, sp2, z1, z2, depth)
@@ -127,9 +122,7 @@ def biarc(sp1, sp2, z1, z2, depth=0):
         if R2.mag() * a2 == 0:
             zm = z2
         else:
-            zm = z1 + (z2 - z1) * (abs(R1.mag() * a1)) / (
-                abs(R2.mag() * a2) + abs(R1.mag() * a1)
-            )
+            zm = z1 + (z2 - z1) * (abs(R1.mag() * a1)) / (abs(R2.mag() * a2) + abs(R1.mag() * a1))
         return [
             [sp1[1], "arc", [R1.x, R1.y], a1, [P2.x, P2.y], [z1, zm]],
             [[P2.x, P2.y], "arc", [R2.x, R2.y], a2, [P4.x, P4.y], [zm, z2]],
@@ -138,10 +131,7 @@ def biarc(sp1, sp2, z1, z2, depth=0):
 
 def biarc_curve_segment_length(seg):
     if seg[1] == "arc":
-        return (
-            math.sqrt((seg[0][0] - seg[2][0]) ** 2 + (seg[0][1] - seg[2][1]) ** 2)
-            * seg[3]
-        )
+        return math.sqrt((seg[0][0] - seg[2][0]) ** 2 + (seg[0][1] - seg[2][1]) ** 2) * seg[3]
     elif seg[1] == "line":
         return math.sqrt((seg[0][0] - seg[4][0]) ** 2 + (seg[0][1] - seg[4][1]) ** 2)
     else:
@@ -165,7 +155,7 @@ def biarc_curve_clip_at_l(curve, l, clip_type="strict"):
     lc = 0
     if (subcurve[-1][4][0] - subcurve[0][0][0]) ** 2 + (
         subcurve[-1][4][1] - subcurve[0][0][1]
-    ) ** 2 < 10 ** -7:
+    ) ** 2 < 10**-7:
         subcurve_closed = True
     i = 0
     reverse = False
@@ -196,9 +186,7 @@ def biarc_curve_clip_at_l(curve, l, clip_type="strict"):
                 res += [seg]
             else:
                 if seg[1] == "arc":
-                    r = math.sqrt(
-                        (seg[0][0] - seg[2][0]) ** 2 + (seg[0][1] - seg[2][1]) ** 2
-                    )
+                    r = math.sqrt((seg[0][0] - seg[2][0]) ** 2 + (seg[0][1] - seg[2][1]) ** 2)
                     x, y = seg[0][0] - seg[2][0], seg[0][1] - seg[2][1]
                     a = seg[3] / ls * (l - lc)
                     x, y = (
@@ -261,9 +249,7 @@ def point_to_arc_distance(p, arc):
                 return (d2, [P2.x, P2.y])
 
 
-def csp_to_arc_distance(
-    sp1, sp2, arc1, arc2, tolerance=0.01
-):  # arc = [start,end,center,alpha]
+def csp_to_arc_distance(sp1, sp2, arc1, arc2, tolerance=0.01):  # arc = [start,end,center,alpha]
     n, i = 10, 0
     d, d1, dl = (0, (0, 0)), (0, (0, 0)), 0
     while i < 1 or (abs(d1[0] - dl[0]) > tolerance and i < 4):
