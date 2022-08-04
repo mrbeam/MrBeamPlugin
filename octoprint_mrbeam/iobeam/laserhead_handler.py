@@ -6,7 +6,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 
 LASERHEAD_MAX_TEMP_FALLBACK = 55.0
-LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
+LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0  # selected the highest factor
 
 # singleton
 _instance = None
@@ -24,8 +24,8 @@ class LaserheadHandler(object):
     LASER_POWER_GOAL_MAX = 1300
     LASERHEAD_SERIAL_REGEXP = re.compile("^[0-9a-f-]{36}$")
     _LASERHEAD_MODEL_STRING_MAP = {
-        "0": '0',  # dreamcut, mrbeam2 and mrbeam laserheads
-        "1": 'S',  # dreamcut[S] laserhead
+        "0": "0",  # dreamcut, mrbeam2 and mrbeam laserheads
+        "1": "S",  # dreamcut[S] laserhead
     }
 
     def __init__(self, plugin):
@@ -64,14 +64,22 @@ class LaserheadHandler(object):
         Returns:
             str: laserhead model or None if Model name is not found
         """
-        laser_head_model_str_list = [v for (k, v) in self._LASERHEAD_MODEL_STRING_MAP.items()
-                                     if ((v == str(self._current_used_lh_model)) or
-                                         (k == str(self._current_used_lh_model_id)))]
+        laser_head_model_str_list = [
+            v
+            for (k, v) in self._LASERHEAD_MODEL_STRING_MAP.items()
+            if (
+                (v == str(self._current_used_lh_model))
+                or (k == str(self._current_used_lh_model_id))
+            )
+        ]
         try:
             return laser_head_model_str_list.pop(0)
         except IndexError:
-            self._logger.error("Unknown laserhead model,  name: {} ID: {}".format(
-                self._current_used_lh_model, self._current_used_lh_model_id))
+            self._logger.error(
+                "Unknown laserhead model,  name: {} ID: {}".format(
+                    self._current_used_lh_model, self._current_used_lh_model_id
+                )
+            )
             return str(None)
 
     def _on_mrbeam_plugin_initialized(self, event, payload):
@@ -90,12 +98,16 @@ class LaserheadHandler(object):
             else:
                 model = 0
                 self._logger.warn(
-                    "Laserhead model received is not valid, Model: {} assume default model 0".format(read_model)
+                    "Laserhead model received is not valid, Model: {} assume default model 0".format(
+                        read_model
+                    )
                 )
             return model
         except Exception as e:
             self._logger.error(
-                "Error for Laserhead model, no model found in laserhead data: {}".format(e)
+                "Error for Laserhead model, no model found in laserhead data: {}".format(
+                    e
+                )
             )
 
     def set_current_used_lh_data(self, lh_data):
@@ -105,13 +117,17 @@ class LaserheadHandler(object):
             if self._valid_lh_data(lh_data):
                 self._current_used_lh_serial = lh_data["main"]["serial"]
                 self._current_used_lh_model_id = self._get_lh_model(lh_data)
-                self._current_used_lh_model = self._LASERHEAD_MODEL_STRING_MAP[str(self._current_used_lh_model_id)]
-                # fmt: off
-                if(self._current_used_lh_model_id != self._last_used_lh_model_id) \
-                        and self._current_used_lh_model_id is not None:
+                self._current_used_lh_model = self._LASERHEAD_MODEL_STRING_MAP[
+                    str(self._current_used_lh_model_id)
+                ]
+                if (
+                    self._current_used_lh_model_id != self._last_used_lh_model_id
+                ) and self._current_used_lh_model_id is not None:
                     laser_head_model_changed = True
 
-                if (self._current_used_lh_serial != self._last_used_lh_serial) and self._last_used_lh_model_id is not None:
+                if (
+                    self._current_used_lh_serial != self._last_used_lh_serial
+                ) and self._last_used_lh_model_id is not None:
                     # fmt: on
                     if self._current_used_lh_model_id == 1:
                         self._settings.set_boolean(["laserheadChanged"], True)
@@ -298,7 +314,9 @@ class LaserheadHandler(object):
             return bool(self.LASERHEAD_SERIAL_REGEXP.match(serial))
         except Exception as e:
             self._logger.exception(
-                "_validate_lh_serial() Failed to validate serial due to exception. Serial: {serial} e:{e}".format(serial=serial, e=e),
+                "_validate_lh_serial() Failed to validate serial due to exception. Serial: {serial} e:{e}".format(
+                    serial=serial, e=e
+                ),
                 serial,
             )
             return False
@@ -392,7 +410,9 @@ class LaserheadHandler(object):
         """
         Loads laser head data from a file
         """
-        self._logger.debug("Loading data from  {} started...!".format(self._laser_heads_file))
+        self._logger.debug(
+            "Loading data from  {} started...!".format(self._laser_heads_file)
+        )
         try:
             with open(self._laser_heads_file, "r") as stream:
                 data = yaml.safe_load(stream)
@@ -403,12 +423,21 @@ class LaserheadHandler(object):
                 self._last_used_lh_model_id = data.get("last_used_lh_model_id")
                 self._correction_settings = data.get("correction_settings")
 
-                self._logger.info("Loading data from  {} is successful!".format(self._laser_heads_file))
+                self._logger.info(
+                    "Loading data from  {} is successful!".format(
+                        self._laser_heads_file
+                    )
+                )
             else:
                 self._logger.warn(
-                    "Couldn't load laser head data, file: {} data: {}".format(self._laser_heads_file, data))
+                    "Couldn't load laser head data, file: {} data: {}".format(
+                        self._laser_heads_file, data
+                    )
+                )
         except IOError as e:
-            self._logger.error("Can't open file: {} {}".format(self._laser_heads_file, e))
+            self._logger.error(
+                "Can't open file: {} {}".format(self._laser_heads_file, e)
+            )
 
     def _write_laser_heads_file(self, laser_heads_file=None):
         """
@@ -427,14 +456,20 @@ class LaserheadHandler(object):
             last_used_lh_model=self._current_used_lh_model,
             last_used_lh_model_id=self._current_used_lh_model_id,
         )
-        laser_heads_file = self._laser_heads_file if laser_heads_file is None else laser_heads_file
+        laser_heads_file = (
+            self._laser_heads_file if laser_heads_file is None else laser_heads_file
+        )
         self._logger.info("Writing to file: {} ..started".format(laser_heads_file))
         try:
             with open(laser_heads_file, "w") as outfile:
                 yaml.safe_dump(data, outfile, default_flow_style=False)
-                self._logger.info("Writing to file: {} ..is successful!".format(laser_heads_file))
+                self._logger.info(
+                    "Writing to file: {} ..is successful!".format(laser_heads_file)
+                )
         except IOError as e:
-            self._logger.error("Can't open file: {} , Due to error: {}: ".format(laser_heads_file, e))
+            self._logger.error(
+                "Can't open file: {} , Due to error: {}: ".format(laser_heads_file, e)
+            )
 
     @property
     def current_laserhead_max_temperature(self):
@@ -448,17 +483,30 @@ class LaserheadHandler(object):
         current_laserhead_properties = self._get_laserhead_properties()
 
         # Handle the exceptions
-        if((isinstance(current_laserhead_properties, dict) is False) or
-                ("max_temperature" not in current_laserhead_properties) or
-                (isinstance(current_laserhead_properties["max_temperature"], float) is False)):
+        if (
+            (isinstance(current_laserhead_properties, dict) is False)
+            or ("max_temperature" not in current_laserhead_properties)
+            or (
+                isinstance(current_laserhead_properties["max_temperature"], float)
+                is False
+            )
+        ):
             # Apply fallback
-            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
+            self._logger.debug(
+                "Current laserhead properties: {}".format(current_laserhead_properties)
+            )
             self._logger.exception(
                 "Current Laserhead Max temp couldn't be retrieved, fallback to the temperature value of: {}".format(
-                    self.default_laserhead_max_temperature))
+                    self.default_laserhead_max_temperature
+                )
+            )
             return self.default_laserhead_max_temperature
         # Reaching here means, everything looks good
-        self._logger.debug("Current Laserhead Max temp:{}".format(current_laserhead_properties["max_temperature"]))
+        self._logger.debug(
+            "Current Laserhead Max temp:{}".format(
+                current_laserhead_properties["max_temperature"]
+            )
+        )
         return current_laserhead_properties["max_temperature"]
 
     @property
@@ -484,27 +532,39 @@ class LaserheadHandler(object):
         laserhead_id = self.get_current_used_lh_model_id()
 
         # 2. Load the corresponding yaml file and return it's content
-        lh_properties_file_path = os.path.join(self._plugin._basefolder,
-                                               "profiles", "laserhead", "laserhead_id_{}.yaml".format(laserhead_id))
+        lh_properties_file_path = os.path.join(
+            self._plugin._basefolder,
+            "profiles",
+            "laserhead",
+            "laserhead_id_{}.yaml".format(laserhead_id),
+        )
         if not os.path.isfile(lh_properties_file_path):
             self._logger.exception(
                 "properties file for current laser head ID: {} doesn't exist or path is invalid. Path: {}".format(
-                    laserhead_id, lh_properties_file_path))
+                    laserhead_id, lh_properties_file_path
+                )
+            )
             return None
 
         self._logger.debug(
             "properties file for current laser head ID: {} exists. Path:{}".format(
-                laserhead_id, lh_properties_file_path) )
+                laserhead_id, lh_properties_file_path
+            )
+        )
         try:
             with open(lh_properties_file_path) as lh_properties_yaml_file:
                 self._logger.debug(
                     "properties file for current laser head ID: {} opened successfully".format(
-                        laserhead_id))
+                        laserhead_id
+                    )
+                )
                 return yaml.safe_load(lh_properties_yaml_file)
         except (IOError, yaml.YAMLError) as e:
             self._logger.exception(
                 "Exception: {} while Opening or loading the properties file for current laser head. Path: {}".format(
-                    e, lh_properties_file_path))
+                    e, lh_properties_file_path
+                )
+            )
             return None
 
     def _get_laserhead_properties(self):
@@ -517,18 +577,25 @@ class LaserheadHandler(object):
         """
         # 1. get the ID of the current laser head
         laserhead_id = self.get_current_used_lh_model_id()
-        self._logger.debug("laserhead id compare {} - {}".format(laserhead_id, self._laserhead_properties.get("laserhead_id", None)))
+        self._logger.debug(
+            "laserhead id compare {} - {}".format(
+                laserhead_id, self._laserhead_properties.get("laserhead_id", None)
+            )
+        )
         if laserhead_id != self._laserhead_properties.get("laserhead_id", None):
             self._logger.debug("new laserhead_id -> load current laserhead porperties")
             # 2. Load the corresponding yaml file and return it's content
             self._laserhead_properties = self._load_current_laserhead_properties()
             if self._laserhead_properties is not None:
-                self._laserhead_properties.update({'laserhead_id': laserhead_id})
+                self._laserhead_properties.update({"laserhead_id": laserhead_id})
         else:
-            self._logger.debug("no new laserhead_id -> return current laserhead_properties")
+            self._logger.debug(
+                "no new laserhead_id -> return current laserhead_properties"
+            )
 
         self._logger.debug(
-            "_laserhead_properties - {}".format(self._laserhead_properties))
+            "_laserhead_properties - {}".format(self._laserhead_properties)
+        )
         return self._laserhead_properties
 
     @property
@@ -543,17 +610,30 @@ class LaserheadHandler(object):
         current_laserhead_properties = self._get_laserhead_properties()
 
         # Handle the exceptions
-        if ((isinstance(current_laserhead_properties, dict) is False) or
-                ("max_dust_factor" not in current_laserhead_properties) or
-                (isinstance(current_laserhead_properties["max_dust_factor"], float) is False)):
+        if (
+            (isinstance(current_laserhead_properties, dict) is False)
+            or ("max_dust_factor" not in current_laserhead_properties)
+            or (
+                isinstance(current_laserhead_properties["max_dust_factor"], float)
+                is False
+            )
+        ):
             # Apply fallback
-            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
+            self._logger.debug(
+                "Current laserhead properties: {}".format(current_laserhead_properties)
+            )
             self._logger.exception(
                 "Current Laserhead max dust factor couldn't be retrieved, fallback to the factor value of: {}".format(
-                    self.default_laserhead_max_dust_factor))
+                    self.default_laserhead_max_dust_factor
+                )
+            )
             return self.default_laserhead_max_dust_factor
         # Reaching here means, everything looks good
-        self._logger.debug("Current Laserhead max dust factor:{}".format(current_laserhead_properties["max_dust_factor"]))
+        self._logger.debug(
+            "Current Laserhead max dust factor:{}".format(
+                current_laserhead_properties["max_dust_factor"]
+            )
+        )
         return current_laserhead_properties["max_dust_factor"]
 
     @property
@@ -566,6 +646,3 @@ class LaserheadHandler(object):
         """
 
         return LASERHEAD_MAX_DUST_FACTOR_FALLBACK
-
-
-
