@@ -9,4 +9,4 @@ class FilterLoader:
 
     @staticmethod
     def load_custom_jinja_filters():
-        jinja2.filters.FILTERS["sort_enum"] = sort_enum
+        jinja2.filters.FILTERS['sort_enum'] = sort_enum

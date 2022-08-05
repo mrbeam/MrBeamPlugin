@@ -168,29 +168,20 @@ def build_wheels(build_queue):
         if not os.path.isdir(PIP_WHEEL_TEMP_FOLDER):
             os.mkdir(PIP_WHEEL_TEMP_FOLDER)
     except OSError as e:
-        raise RuntimeError(
-            "can't create wheel tmp folder {} - {}".format(PIP_WHEEL_TEMP_FOLDER, e)
-        )
+        raise RuntimeError("can't create wheel tmp folder {} - {}".format(PIP_WHEEL_TEMP_FOLDER, e))
 
     for venv, packages in build_queue.items():
-        tmp_folder = os.path.join(
-            PIP_WHEEL_TEMP_FOLDER,
-            re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0),
-        )
+        tmp_folder = os.path.join(PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
         if os.path.isdir(tmp_folder):
             try:
                 os.system("sudo rm -r {}".format(tmp_folder))
             except Exception as e:
-                raise RuntimeError(
-                    "can't delete pip wheel temp folder {} - {}".format(tmp_folder, e)
-                )
+                raise RuntimeError("can't delete pip wheel temp folder {} - {}".format(tmp_folder, e))
 
         pip_args = [
             "wheel",
             "--disable-pip-version-check",
-            "--wheel-dir={}".format(
-                tmp_folder
-            ),  # Build wheels into <dir>, where the default is the current working directory.
+            "--wheel-dir={}".format(tmp_folder),  # Build wheels into <dir>, where the default is the current working directory.
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
@@ -222,23 +213,22 @@ def install_wheels(install_queue):
         raise RuntimeError("install queue is not a dict")
 
     for venv, packages in install_queue.items():
-        tmp_folder = os.path.join(
-            PIP_WHEEL_TEMP_FOLDER,
-            re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0),
-        )
+        tmp_folder = os.path.join(PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
         pip_args = [
             "install",
             "--disable-pip-version-check",
             "--upgrade",  # Upgrade all specified packages to the newest available version. The handling of dependencies depends on the upgrade-strategy used.
             "--force-reinstall",  # Reinstall all packages even if they are already up-to-date.
             "--no-index",  # Ignore package index (only looking at --find-links URLs instead).
-            "--find-links={}".format(
-                tmp_folder
-            ),  # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
+            "--find-links={}".format(tmp_folder),  # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
-            pip_args.append("{package}".format(package=package["name"]))
+            pip_args.append(
+                "{package}".format(
+                    package=package["name"]
+                )
+            )
 
         returncode, exec_stdout, exec_stderr = get_pip_caller(venv, _logger).execute(
             *pip_args
@@ -269,7 +259,7 @@ def build_queue(update_info, dependencies, plugin_archive):
         {
             "name": PLUGIN_NAME,
             "archive": plugin_archive,
-            "target": "",
+            "target": '',
         }
     )
     print("dependencies - {}".format(dependencies))
@@ -337,7 +327,9 @@ def run_update():
     # get update config of dependencies
     update_info = get_update_info()
 
-    install_queue = build_queue(update_info, dependencies, args.archive)
+    install_queue = build_queue(
+        update_info, dependencies, args.archive
+    )
 
     print("install_queue", install_queue)
     if install_queue is not None:
@@ -450,7 +442,9 @@ def main():
     args = _parse_arguments()
     if args.call:
         if args.archive is None:
-            raise RuntimeError("Could not run update archive is missing")
+            raise RuntimeError(
+                "Could not run update archive is missing"
+            )
         run_update()
     else:
 
@@ -470,7 +464,10 @@ def main():
         )
 
         # call new update script with args
-        sys.argv = ["--call=true", "--archive={}".format(archive)] + sys.argv[1:]
+        sys.argv = [
+            "--call=true",
+            "--archive={}".format(archive)
+        ] + sys.argv[1:]
         try:
             result = subprocess.call(
                 [sys.executable, os.path.join(folder, "update_script.py")] + sys.argv,

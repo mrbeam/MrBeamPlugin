@@ -161,9 +161,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         ) as json_file:
             self.mock_config = yaml.safe_load(json_file)
         with open(
-            os.path.join(
-                dirname(realpath(__file__)), "mock_config_relative_path_missing.json"
-            )
+            os.path.join(dirname(realpath(__file__)), "mock_config_relative_path_missing.json")
         ) as json_file:
             self.mock_config_relative_path_missing = yaml.safe_load(json_file)
 
@@ -207,6 +205,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         )
         show_notifications_mock.assert_called_once()
 
+
     @patch.object(
         UserNotificationSystem,
         "show_notifications",
@@ -215,9 +214,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         UserNotificationSystem,
         "get_notification",
     )
-    def test_update_script_relative_path_message(
-        self, show_notifications_mock, get_notification_mock
-    ):
+    def test_update_script_relative_path_message(self, show_notifications_mock, get_notification_mock):
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
             get_notification_mock.return_value = None
             with requests_mock.Mocker() as rm:
@@ -247,11 +244,10 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 assert update_config == FALLBACK_UPDATE_CONFIG_EXPECTED
 
         show_notifications_mock.assert_called_with(
-            err_msg=["E-1003"],
-            notification_id="update_fetching_information_err",
-            replay=False,
+            err_msg=["E-1003"], notification_id="update_fetching_information_err", replay=False
         )
         show_notifications_mock.assert_called_once()
+
 
     @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_config_buster_online(self, device_info_mock):

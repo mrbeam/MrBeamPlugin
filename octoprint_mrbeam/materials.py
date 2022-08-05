@@ -48,8 +48,8 @@ class Materials(object):
         res = None
 
         try:
-            if dict_get(material, ["laser_type"]) == "MrBeamII-1.0":
-                material["laser_model"] = "0"
+            if dict_get(material, ['laser_type']) == "MrBeamII-1.0":
+                material["laser_model"] = '0'
                 del material["laser_type"]
             if "model" in material:
                 material["device_model"] = material.pop("model")

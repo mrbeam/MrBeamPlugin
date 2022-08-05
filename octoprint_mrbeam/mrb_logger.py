@@ -137,7 +137,7 @@ class MrbLogger(object):
             exception = " (Exception: {type} - {value})".format(
                 type=(exctype.__name__ if exctype else None), value=value
             )
-        output = "{date} {level}{space}{id}: {msg}{exception}".format(
+        output = u"{date} {level}{space}{id}: {msg}{exception}".format(
             date=date,
             space=(" " if id else ""),
             id=id,

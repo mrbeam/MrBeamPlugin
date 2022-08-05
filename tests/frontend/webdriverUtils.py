@@ -34,10 +34,7 @@ def get_chrome_driver(debugTest=False):
         "chromedriver",
     )
     driver = webdriver.Chrome(
-        executable_path=chromedriver_path,
-        service_log_path=os.devnull,
-        desired_capabilities=caps,
-        options=opt,
+        executable_path=chromedriver_path, service_log_path=os.devnull, desired_capabilities=caps, options=opt
     )
     return driver
 
@@ -51,7 +48,7 @@ def get_console_log_summary(logs):
     d = {}
     for entry in logs:
         # self.log.info(entry[u'message'])
-        level = entry["level"]
+        level = entry[u"level"]
         if not level in d:
             d[level] = 0
 

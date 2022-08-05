@@ -28,9 +28,7 @@ class TemperatureManager(object):
         self._event_bus = plugin._event_bus
         self.temperature = None
         self.temperature_ts = 0
-        self.temperature_max = (
-            plugin.laserhead_handler.current_laserhead_max_temperature
-        )
+        self.temperature_max = plugin.laserhead_handler.current_laserhead_max_temperature
         self.hysteresis_temperature = (
             plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"
@@ -75,6 +73,8 @@ class TemperatureManager(object):
         self._subscribe()
         self._start_temp_timer()
 
+
+
     def _subscribe(self):
         self._iobeam.subscribe(IoBeamValueEvents.LASER_TEMP, self.handle_temp)
 
@@ -89,14 +89,8 @@ class TemperatureManager(object):
         self._shutting_down = True
 
     def reset(self, kwargs):
-        self._logger.info(
-            "TemperatureManager: Reset trigger Received : {}".format(
-                kwargs.get("event", None)
-            )
-        )
-        self.temperature_max = (
-            self._plugin.laserhead_handler.current_laserhead_max_temperature
-        )
+        self._logger.info("TemperatureManager: Reset trigger Received : {}".format(kwargs.get("event", None)))
+        self.temperature_max = self._plugin.laserhead_handler.current_laserhead_max_temperature
         self.hysteresis_temperature = (
             self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"

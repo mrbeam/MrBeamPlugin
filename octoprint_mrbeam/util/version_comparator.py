@@ -39,22 +39,19 @@ class VersionComparator:
             if item.identifier == comparison_string:
                 return item
 
-
 def compare_pep440_versions(v1, v2, comparator):
     """
-    returns the PEP440 version comparison Boolean result
+        returns the PEP440 version comparison Boolean result
 
-    Args:
-        v1 (str): First version to be compared
-        v2 (str): Second version to be compared
-        comparator (str): Comparison operator
+        Args:
+            v1 (str): First version to be compared
+            v2 (str): Second version to be compared
+            comparator (str): Comparison operator
 
-    Returns:
-        Boolean: PEP440 version comparison result
+        Returns:
+            Boolean: PEP440 version comparison result
     """
-    _logger = mrb_logger(
-        "octoprint.plugins.mrbeam." + __name__ + ".compare_pep440_versions"
-    )
+    _logger = mrb_logger("octoprint.plugins.mrbeam." + __name__ + ".compare_pep440_versions")
     try:
         parsed_version_v1 = pkg_resources.parse_version(v1)
         parsed_version_v2 = pkg_resources.parse_version(v2)

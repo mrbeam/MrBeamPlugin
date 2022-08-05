@@ -384,7 +384,9 @@ class UsageHandler(object):
                 with open(self._backup_file, "r") as stream:
                     data = yaml.safe_load(stream)
                 if self._validate_data(data):
-                    data["restored"] = data["restored"] + 1 if "restored" in data else 1
+                    data["restored"] = (
+                        data["restored"] + 1 if "restored" in data else 1
+                    )
                     self._usage_data = data
                     self._write_usage_data()
                     success = True
@@ -418,12 +420,12 @@ class UsageHandler(object):
         with open(self._backup_file, "r") as stream:
             data = yaml.load(stream)
         if self._validate_data(data):
-            # checks if the version is saved in unicode and converts it into a string see SW-1269
+            #checks if the version is saved in unicode and converts it into a string see SW-1269
             if isinstance(data["version"], unicode):
-                data["version"] = unicodedata.normalize("NFKD", data["version"]).encode(
-                    "ascii", "ignore"
-                )
-            data["restored"] = data["restored"] + 1 if "restored" in data else 1
+                data["version"] = unicodedata.normalize('NFKD', data["version"]).encode('ascii', 'ignore')
+            data["restored"] = (
+                data["restored"] + 1 if "restored" in data else 1
+            )
             self._usage_data = data
             success = True
             self._write_usage_data()

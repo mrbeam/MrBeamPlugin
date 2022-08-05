@@ -22,7 +22,7 @@ LEGACY_STILL_RES = RESOLUTIONS[
 DEFAULT_STILL_RES = RESOLUTIONS[
     "2592x1944"
 ]  # Be careful : Resolutions accepted as increments of 32 horizontally and 16 vertically
-DEFAULT_SHUTTER_SPEED = int(1.5 * 10**5)  # (microseconds)
+DEFAULT_SHUTTER_SPEED = int(1.5 * 10 ** 5)  # (microseconds)
 
 N, W, S, E = "N", "W", "S", "E"
 NW, NE, SW, SE = N + W, N + E, S + W, S + E

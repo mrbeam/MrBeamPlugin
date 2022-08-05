@@ -14,18 +14,18 @@ from selenium.webdriver.common.keys import Keys
 from tests.frontend import frontendTestUtils
 
 DEFAULT_ENV = {
-    "BEAMOS_VERSION": "?",
-    "BEAMOS_BRANCH": "?",
-    "BEAMOS_IMAGE": "?",
-    "MRBEAM_ENV": "?",
-    "MRBEAM_MODEL": "?",
-    "MRBEAM_LANGUAGE": "?",
-    "MRBEAM_SERIAL": "?",
-    "MRBEAM_PRODUCT_NAME": "?",
-    "MRBEAM_GRBL_VERSION": "?",
-    "MRBEAM_SW_TIER": "?",
-    "MRBEAM_WIZARD_TO_SHOW": "?",
-    "APIKEY": "?",
+    u"BEAMOS_VERSION": "?",
+    u"BEAMOS_BRANCH": "?",
+    u"BEAMOS_IMAGE": "?",
+    u"MRBEAM_ENV": "?",
+    u"MRBEAM_MODEL": "?",
+    u"MRBEAM_LANGUAGE": "?",
+    u"MRBEAM_SERIAL": "?",
+    u"MRBEAM_PRODUCT_NAME": "?",
+    u"MRBEAM_GRBL_VERSION": "?",
+    u"MRBEAM_SW_TIER": "?",
+    u"MRBEAM_WIZARD_TO_SHOW": "?",
+    u"APIKEY": "?",
 }
 
 SELECTOR_SUCCESS_NOTIFICATION = "body > div.ui-pnotify > div.alert-success"
@@ -397,7 +397,7 @@ def wait_for_conversion_started(driver, log_callback):
         message="Listening on console.log for {} ...".format(pattern),
     )
     if msg:
-        m = regex.match(msg["message"])
+        m = regex.match(msg[u"message"])
         payload = m.group("payload")
         payload = payload.replace("\\", "")
         d = json.loads(payload)
