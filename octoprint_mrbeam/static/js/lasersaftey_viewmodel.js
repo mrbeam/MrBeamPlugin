@@ -191,7 +191,7 @@ $(function () {
                 dialog: dialog,
                 show_again: self.showAgain(),
             };
-            self.analytics.send_fontend_event(event, payload);
+            self.analytics.send_frontend_event(event, payload);
         };
     }
 

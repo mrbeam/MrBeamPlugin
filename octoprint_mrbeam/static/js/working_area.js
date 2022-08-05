@@ -4563,7 +4563,7 @@ $(function () {
         };
 
         self._sendAnalytics = function (event, payload) {
-            self.analytics.send_fontend_event(event, payload);
+            self.analytics.send_frontend_event(event, payload);
         };
     }
 

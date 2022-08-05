@@ -152,7 +152,7 @@ $(function () {
             payload["wizard"] = MRBEAM_WIZARD_TO_SHOW.toLowerCase();
             payload["action"] = action;
 
-            self.analytics.send_fontend_event("wizard", payload);
+            self.analytics.send_frontend_event("wizard", payload);
         };
 
         self._isMandatoryStep = function (currentTab) {

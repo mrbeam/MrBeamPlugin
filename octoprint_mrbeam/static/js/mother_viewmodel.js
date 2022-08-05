@@ -565,7 +565,7 @@ $(function () {
                     screenfull.request();
                     self._updateFullscreenButton(true);
 
-                    self.analytics.send_fontend_event("link_click", {
+                    self.analytics.send_frontend_event("link_click", {
                         link: "go_fullscreen_menu_item",
                     });
                 });

@@ -261,7 +261,7 @@ $(function () {
         };
 
         self.startCornerCalibration = function () {
-            self.analytics.send_fontend_event("corner_calibration_start", {});
+            self.analytics.send_frontend_event("corner_calibration_start", {});
             self.cornerCalibrationActive(true);
             self.picType("raw");
             // self.applySetting('lens_corrected')
@@ -275,7 +275,7 @@ $(function () {
         };
 
         self.abortCornerCalibration = function () {
-            self.analytics.send_fontend_event("corner_calibration_abort", {});
+            self.analytics.send_frontend_event("corner_calibration_abort", {});
             self.stopCornerCalibration();
             self.resetView();
         };
@@ -327,7 +327,7 @@ $(function () {
 
         self._saveMarkersSuccess = function (response) {
             self.cornerCalibrationActive(false);
-            self.analytics.send_fontend_event("corner_calibration_finish", {});
+            self.analytics.send_frontend_event("corner_calibration_finish", {});
             new PNotify({
                 title: gettext("Camera Calibrated."),
                 text: gettext("Camera calibration was successful."),

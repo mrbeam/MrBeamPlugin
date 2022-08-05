@@ -88,7 +88,7 @@ $(function () {
                                 new PNotify(event.data.payload);
                                 break;
                             case "analytics":
-                                self.analytics.send_fontend_event(
+                                self.analytics.send_frontend_event(
                                     "store",
                                     event.data.payload
                                 );
@@ -276,6 +276,10 @@ $(function () {
             setTimeout(function () {
                 refreshButtonElement.text(refreshButtonText);
             }, 3000);
+            console.log(
+                "Loading design store... ",
+                self.DESIGN_STORE_IFRAME_SRC
+            );
             document.getElementById("design_store_iframe").src =
                 self.DESIGN_STORE_IFRAME_SRC;
         };
