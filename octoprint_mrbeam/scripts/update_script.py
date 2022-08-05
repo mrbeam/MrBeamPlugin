@@ -126,7 +126,7 @@ def get_dependencies(path):
             mrbeam-ledstrips==0.2.2-alpha.2
     output: [[iobeam][==][0.7.15]]
             [[mrb-hw-info][==][0.0.25]]
-            [[mrbeam-ledstrips][==][0.2.2-alpha.2]]        
+            [[mrbeam-ledstrips][==][0.2.2-alpha.2]]
     """
     try:
         with open(dependencies_path, "r") as f:

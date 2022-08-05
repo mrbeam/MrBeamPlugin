@@ -317,8 +317,7 @@ $(function () {
                     ),
                     {
                         br: "<br>",
-                        open:
-                            '<a href=\'#\' data-toggle="tab" id="settings_maintenance_link" style="font-weight:bold">',
+                        open: '<a href=\'#\' data-toggle="tab" id="settings_maintenance_link" style="font-weight:bold">',
                         close: "</a>",
                     }
                 ),

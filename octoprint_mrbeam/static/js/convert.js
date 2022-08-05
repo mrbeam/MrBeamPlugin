@@ -143,7 +143,8 @@ $(function () {
             if (summary !== null) {
                 const multicolor_data = self.get_current_multicolor_settings();
                 const engraving_data = self.get_current_engraving_settings();
-                const machinePerformanceData = self.profile.getMechanicalPerformanceData();
+                const machinePerformanceData =
+                    self.profile.getMechanicalPerformanceData();
                 const dur = WorkingAreaHelper.get_estimated_gcode_duration(
                     summary,
                     multicolor_data,
@@ -219,9 +220,11 @@ $(function () {
             if (mat !== null) return mat === null ? "" : mat.img;
         });
         self.selected_material_compatibility = ko.computed(function () {
-                return !(self.selected_material() !== null &&
-                    'compatible' in self.selected_material() &&
-                    !self.selected_material().compatible);
+            return !(
+                self.selected_material() !== null &&
+                "compatible" in self.selected_material() &&
+                !self.selected_material().compatible
+            );
         });
 
         self.load_standard_materials = function () {
@@ -319,12 +322,20 @@ $(function () {
             var key = self._replace_non_ascii(name).toLowerCase();
             // Change key if it overrides incompatible custom materials
             if (self.incompatible_custom_materials_keys().includes(key)) {
-                let targetSavingMaterial = Object.values(self.custom_materials())
-                    .find(element => element.name === name && element.compatible);
+                let targetSavingMaterial = Object.values(
+                    self.custom_materials()
+                ).find(
+                    (element) => element.name === name && element.compatible
+                );
                 if (targetSavingMaterial) {
                     key = targetSavingMaterial.key;
                 } else {
-                    key = self._replace_non_ascii(MRBEAM_LASER_HEAD_SERIAL).toLowerCase() + " " + key;
+                    key =
+                        self
+                            ._replace_non_ascii(MRBEAM_LASER_HEAD_SERIAL)
+                            .toLowerCase() +
+                        " " +
+                        key;
                 }
             }
             var thickness = Math.max(
@@ -448,7 +459,10 @@ $(function () {
                     var fm = self.filteredMaterials();
                     for (var i = 0; i < fm.length; i++) {
                         var my_material = fm[i];
-                        if (my_material.name === new_material.name && my_material.laser_model === MRBEAM_LASER_HEAD_MODEL) {
+                        if (
+                            my_material.name === new_material.name &&
+                            my_material.laser_model === MRBEAM_LASER_HEAD_MODEL
+                        ) {
                             self.selected_material(my_material);
                             self.selected_material_color(color);
                             self._set_available_material_thicknesses(
@@ -718,7 +732,9 @@ $(function () {
             // filter custom materials
             let customs = self.custom_materials();
             // Show material compatibility when different laserhead models are detected
-            let materialCompatibilityDisplay = Object.values(customs).some(item => item?.laser_model !== MRBEAM_LASER_HEAD_MODEL);
+            let materialCompatibilityDisplay = Object.values(customs).some(
+                (item) => item?.laser_model !== MRBEAM_LASER_HEAD_MODEL
+            );
             for (let materialKey in customs) {
                 let m = customs[materialKey];
                 if (m !== null) {
@@ -729,12 +745,15 @@ $(function () {
                         out.push(m);
                     }
                     if (materialCompatibilityDisplay) {
-                        m.compatible = m.laser_model === MRBEAM_LASER_HEAD_MODEL;
-                        if (m.laser_model === 'S') {
-                            m.customBeforeElementContent = '[S]';
+                        m.compatible =
+                            m.laser_model === MRBEAM_LASER_HEAD_MODEL;
+                        if (m.laser_model === "S") {
+                            m.customBeforeElementContent = "[S]";
                         }
                         if (!m.compatible) {
-                            self.incompatible_custom_materials_keys.push(materialKey);
+                            self.incompatible_custom_materials_keys.push(
+                                materialKey
+                            );
                             m.safety_notes = gettext(
                                 "This is a custom setting you made for another laserhead.\n We recommend adjusting your saved custom material settings to your current laserhead.\n This will add a duplicate of your setting specific for the current laserhead model, your\n original ones will stay as they are in case you want to keep them."
                             );
@@ -759,7 +778,7 @@ $(function () {
                 // custom material first
                 if (a.custom && !b.custom) return -1;
                 if (!a.custom && b.custom) return 1;
-                if ('compatible' in a) {
+                if ("compatible" in a) {
                     return a.compatible < b.compatible ? -1 : 1;
                 }
                 // then sort by name
@@ -992,10 +1011,7 @@ $(function () {
         self.filled_text_or_shapes_placed = ko.observable(false);
 
         self.show_image_parameters = ko.computed(function () {
-            return (
-                self.images_placed() ||
-                self.filled_text_or_shapes_placed()
-            );
+            return self.images_placed() || self.filled_text_or_shapes_placed();
         });
 
         // automaticaly parse input value as an int
@@ -1106,7 +1122,9 @@ $(function () {
             self.workingArea.abortFreeTransforms();
             self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
             self.show_vector_parameters(self.workingArea.hasStrokedVectors());
-            self.filled_text_or_shapes_placed(self.workingArea.hasFilledVectors());
+            self.filled_text_or_shapes_placed(
+                self.workingArea.hasFilledVectors()
+            );
             self.images_placed(self.workingArea.getPlacedImages().length > 0);
             self.color_key_update();
 
@@ -1400,8 +1418,8 @@ $(function () {
                 }
 
                 if (format === "svg") {
-                    clip_working_area = self.workingArea.gc_options()
-                        .clip_working_area;
+                    clip_working_area =
+                        self.workingArea.gc_options().clip_working_area;
                 }
 
                 if (format === "quicktext") {
@@ -1836,12 +1854,10 @@ $(function () {
 
                     var filename = self.gcodeFilename();
                     var gcodeFilename = self._sanitize(filename) + ".gco";
-                    var multicolor_data = self.get_current_multicolor_settings(
-                        true
-                    );
-                    var engraving_data = self.get_current_engraving_settings(
-                        true
-                    );
+                    var multicolor_data =
+                        self.get_current_multicolor_settings(true);
+                    var engraving_data =
+                        self.get_current_engraving_settings(true);
                     var advancedSettings = self.is_advanced_settings_checked();
                     var colorStr =
                         "<!--COLOR_PARAMS_START" +
@@ -2146,8 +2162,7 @@ $(function () {
                 html += _.sprintf(
                     gettext("Find more details %(open)sonline%(close)s."),
                     {
-                        open:
-                            '<a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000068441-free-up-disk-space" target="_blank">',
+                        open: '<a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000068441-free-up-disk-space" target="_blank">',
                         close: "</a>",
                     }
                 );
