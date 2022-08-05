@@ -1,6 +1,9 @@
 import unittest
 
-from octoprint_mrbeam.util.version_comparator import VersionComparator, COMPARISON_OPTIONS
+from octoprint_mrbeam.util.version_comparator import (
+    VersionComparator,
+    COMPARISON_OPTIONS,
+)
 from octoprint_mrbeam.software_update_information import (
     _generate_config_of_beamos,
     get_config_for_version,
@@ -30,8 +33,12 @@ class VersionComparisonTestCase(unittest.TestCase):
         config = sorted(
             self.config,
             cmp=lambda comp1, comp2: cmp(
-                VersionComparator.get_comparator(comp1, self.comparison_options).priority,
-                VersionComparator.get_comparator(comp2, self.comparison_options).priority
+                VersionComparator.get_comparator(
+                    comp1, self.comparison_options
+                ).priority,
+                VersionComparator.get_comparator(
+                    comp2, self.comparison_options
+                ).priority,
             ),
         )
         self.assertEquals(config, ["__ge__", "__le__", "__eq__"]),
@@ -47,39 +54,27 @@ class VersionComparisonTestCase(unittest.TestCase):
 
         self.assertEquals(
             2,
-            get_config_for_version("0.18.0", config).get(
-                "value"
-            ),
+            get_config_for_version("0.18.0", config).get("value"),
         )
         self.assertEquals(
             1,
-            get_config_for_version("0.17.1", config).get(
-                "value"
-            ),
+            get_config_for_version("0.17.1", config).get("value"),
         )
         self.assertEquals(
             3,
-            get_config_for_version("0.16.8", config).get(
-                "value"
-            ),
+            get_config_for_version("0.16.8", config).get("value"),
         )
         self.assertEquals(
             4,
-            get_config_for_version("0.16.5", config).get(
-                "value"
-            ),
+            get_config_for_version("0.16.5", config).get("value"),
         )
         self.assertEquals(
             5,
-            get_config_for_version("0.18.2", config).get(
-                "value"
-            ),
+            get_config_for_version("0.18.2", config).get("value"),
         )
         self.assertEquals(
             6,
-            get_config_for_version("1.0.0", config).get(
-                "value"
-            ),
+            get_config_for_version("1.0.0", config).get("value"),
         )
         # only support major minor patch so far
         # self.assertEquals(

@@ -3,7 +3,7 @@ import unittest
 from tests.frontend import uiUtils, webdriverUtils, frontendTestUtils
 
 
-@unittest.skip('DEPRECATED')
+@unittest.skip("DEPRECATED")
 class BaseProcedure(unittest.TestCase):
     def setup_method(self, method):
         # expectations (None means skip)

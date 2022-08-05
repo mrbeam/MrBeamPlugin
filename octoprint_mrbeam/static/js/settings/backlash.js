@@ -44,7 +44,8 @@ $(function () {
 
         // set config values once settings have been loaded.
         self.onAllBound = function (data) {
-            let backlash_x = self.settings.settings.plugins.mrbeam.machine.backlash_compensation_x();
+            let backlash_x =
+                self.settings.settings.plugins.mrbeam.machine.backlash_compensation_x();
             self.backlash_compensation_x(backlash_x);
         };
 

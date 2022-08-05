@@ -903,9 +903,8 @@
                             '" is not a function.'
                     );
                 }
-                el.innerHTML = winHopscotch.templates[tourSpecificRenderer](
-                    opts
-                );
+                el.innerHTML =
+                    winHopscotch.templates[tourSpecificRenderer](opts);
             } else if (customRenderer) {
                 el.innerHTML = customRenderer(opts);
             } else {
@@ -2650,25 +2649,26 @@
             }
 
             if (str == null) return "";
-            return ("" + str).replace(new RegExp("[&<>\"']", "g"), function (
-                match
-            ) {
-                if (match == "&") {
-                    return "&amp;";
+            return ("" + str).replace(
+                new RegExp("[&<>\"']", "g"),
+                function (match) {
+                    if (match == "&") {
+                        return "&amp;";
+                    }
+                    if (match == "<") {
+                        return "&lt;";
+                    }
+                    if (match == ">") {
+                        return "&gt;";
+                    }
+                    if (match == '"') {
+                        return "&quot;";
+                    }
+                    if (match == "'") {
+                        return "&#x27;";
+                    }
                 }
-                if (match == "<") {
-                    return "&lt;";
-                }
-                if (match == ">") {
-                    return "&gt;";
-                }
-                if (match == '"') {
-                    return "&quot;";
-                }
-                if (match == "'") {
-                    return "&#x27;";
-                }
-            });
+            );
         };
 
         this["templates"] = this["templates"] || {};

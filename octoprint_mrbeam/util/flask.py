@@ -21,7 +21,7 @@ def wrap_if(condition=False, decorator=_identity):
 
 
 def abort_if(condition=False, code=401):
-    """ I suspect ``abort`` raises an Exception, in which case this works better. """
+    """I suspect ``abort`` raises an Exception, in which case this works better."""
 
     def wrap(f):
         def puppet(*a, **kw):

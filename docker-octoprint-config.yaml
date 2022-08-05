@@ -37,4 +37,4 @@ server:
   onlineCheck:
     enabled: true
     host: find.mr-beam.org
-    port: '80'
+    port: "80"

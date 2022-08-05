@@ -212,7 +212,7 @@ def rotatePath(p, a, cx=0, cy=0):
             if defs[3][i] == "x":
                 x = params[i] - cx
                 y = params[i + 1] - cy
-                r = math.sqrt((x ** 2) + (y ** 2))
+                r = math.sqrt((x**2) + (y**2))
                 if r != 0:
                     theta = math.atan2(y, x) + a
                     params[i] = (r * math.cos(theta)) + cx

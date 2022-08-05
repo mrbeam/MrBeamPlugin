@@ -94,7 +94,7 @@ def get_pip_caller(venv, _logger=None):
         if strip:
             lines = map(lambda x: x.strip(), lines)
         for line in lines:
-            print(u"{} {}".format(prefix, line))
+            print("{} {}".format(prefix, line))
 
     if _logger is not None:
         pip_caller.on_log_call = _log_call

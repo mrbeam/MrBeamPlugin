@@ -32,7 +32,7 @@ Mr Beam II,,#f49a39,2,100,800,2,0,0,no,
 Mr Beam II,,#a21f25,Engrave,0-100,1500-1150,1,0,0,no,
 Mr Beam II,,#a21f25,3,100,700,3,0,0,no,
 Mr Beam II,,#3e613e,Engrave,0-90,1500-800,1,0,0,no,
-Mr Beam II,,#3e613e,3,100,200,3,0,0,no,Wert Prüfen (auch mit hellem grün) 
+Mr Beam II,,#3e613e,3,100,200,3,0,0,no,Wert Prüfen (auch mit hellem grün)
 Mr Beam II (not validated),,#322f33,Engrave,30,1600,1,0,0,no,
 Mr Beam II (not validated),,#322f33,3,100,400,2,0,0,no,
 Mr Beam II (not validated),,#54392e,Engrave,30,1600,1,0,0,no,
@@ -228,7 +228,7 @@ MrB II Dreamcut,,#c5935f,"0,6",100,750,2,3,0,no,calculated
 Do Not Use,Latex,#ffffff,,,,,3,,,
 MrB II Dreamcut,Plywood Birch,#e8d4bc,Engrave,0-80,1500-1150,1,3,0,no,
 MrB II Dreamcut,,#e8d4bc,"1,5",100,200,3,3,0,no,tested
-MrB II Dreamcut,,#e8d4bc,3,100,100,3,3,0,no,tested 
+MrB II Dreamcut,,#e8d4bc,3,100,100,3,3,0,no,tested
 MrB II Dreamcut,Stamp Rubber,#41c500,Engrave,100,1500-400,2,3,0,no,tested
 MrB II Dreamcut,Sign Material,#dedede,Engrave,0-60,1500-300,1,3,0,no,tested
 MrB II Dreamcut,Sign Material,#dedede,"1,5",100,240,3,3,0,no,tested

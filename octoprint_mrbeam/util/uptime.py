@@ -7,7 +7,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 # http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
 def get_uptime():
     try:
-        if platform == 'darwin':
+        if platform == "darwin":
             p = os.popen("uptime")
             return p.read()
         else:

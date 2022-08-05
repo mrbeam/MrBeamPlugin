@@ -32,27 +32,18 @@
     "stable_branch": {
       "branch": "stable",
       "name": "stable",
-      "commitish": [
-        "stable"
-      ]
+      "commitish": ["stable"]
     },
     "prerelease_branches": [
       {
         "name": "alpha",
         "branch": "alpha",
-        "commitish": [
-          "alpha",
-          "beta",
-          "stable"
-        ]
+        "commitish": ["alpha", "beta", "stable"]
       },
       {
         "name": "beta",
         "branch": "beta",
-        "commitish": [
-          "beta",
-          "stable"
-        ]
+        "commitish": ["beta", "stable"]
       }
     ]
   },
@@ -140,17 +131,17 @@
           "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
           "global_pip_command": true,
           "beamos_version": {
-              "__ge__": {
-                "0.18.0": {
-                  "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip"
-                }
-              },
-              "__le__": {
-                "0.14.0": {
-                  "version": "0.0.1"
-                }
+            "__ge__": {
+              "0.18.0": {
+                "pip_command": "sudo /usr/local/netconnectd/venv/bin/pip"
+              }
+            },
+            "__le__": {
+              "0.14.0": {
+                "version": "0.0.1"
               }
             }
+          }
         }
       },
       "develop": {

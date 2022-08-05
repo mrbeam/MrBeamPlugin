@@ -44,5 +44,5 @@ runsnake my_octoprint.pstats
 
 If working on a remote device, you might want to consider sync that profile file to your desktop.
 
-[RunSnakeRun]: http://www.vrplumber.com/programming/runsnakerun/
+[runsnakerun]: http://www.vrplumber.com/programming/runsnakerun/
 [pyprof2calltree]: https://pypi.org/project/pyprof2calltree/

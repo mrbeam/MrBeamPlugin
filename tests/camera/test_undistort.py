@@ -118,9 +118,7 @@ def test_lens_calibration_abort(datafiles):
     # except TimeoutError:
     #     logging.error(timeout_msg)
     #     raise
-    logging.info(
-        "Joined the lens calibratior stuff - ret, is_alive %s", b.is_alive()
-    )
+    logging.info("Joined the lens calibratior stuff - ret, is_alive %s", b.is_alive())
 
 
 @BOARDS

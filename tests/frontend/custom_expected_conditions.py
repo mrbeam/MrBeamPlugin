@@ -81,7 +81,7 @@ class console_log_contains(object):
         for entry in logs:
             # self.log.debug("__{}: {}".format(entry[u"level"], entry[u"message"]))
 
-            if self.regex.match(entry[u"message"]):
+            if self.regex.match(entry["message"]):
                 return entry
 
         return False

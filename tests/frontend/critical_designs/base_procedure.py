@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from tests.frontend import webdriverUtils, gcodeUtils, frontendTestUtils, uiUtils
 
 
-@unittest.skip('DEPRECATED')
+@unittest.skip("DEPRECATED")
 class BaseProcedure(unittest.TestCase):
     def setup_method(self, method):
 
@@ -78,7 +78,7 @@ class BaseProcedure(unittest.TestCase):
                 payload = uiUtils.wait_for_conversion_started(
                     self.driver, self.append_logs
                 )
-                gcode = payload[u"gcode"]
+                gcode = payload["gcode"]
             else:
                 gcode = uiUtils.wait_for_ready_to_laser_dialog(self.driver)
 

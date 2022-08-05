@@ -1460,174 +1460,18 @@
         else return d;
     }
     var lowprimes = [
-        2,
-        3,
-        5,
-        7,
-        11,
-        13,
-        17,
-        19,
-        23,
-        29,
-        31,
-        37,
-        41,
-        43,
-        47,
-        53,
-        59,
-        61,
-        67,
-        71,
-        73,
-        79,
-        83,
-        89,
-        97,
-        101,
-        103,
-        107,
-        109,
-        113,
-        127,
-        131,
-        137,
-        139,
-        149,
-        151,
-        157,
-        163,
-        167,
-        173,
-        179,
-        181,
-        191,
-        193,
-        197,
-        199,
-        211,
-        223,
-        227,
-        229,
-        233,
-        239,
-        241,
-        251,
-        257,
-        263,
-        269,
-        271,
-        277,
-        281,
-        283,
-        293,
-        307,
-        311,
-        313,
-        317,
-        331,
-        337,
-        347,
-        349,
-        353,
-        359,
-        367,
-        373,
-        379,
-        383,
-        389,
-        397,
-        401,
-        409,
-        419,
-        421,
-        431,
-        433,
-        439,
-        443,
-        449,
-        457,
-        461,
-        463,
-        467,
-        479,
-        487,
-        491,
-        499,
-        503,
-        509,
-        521,
-        523,
-        541,
-        547,
-        557,
-        563,
-        569,
-        571,
-        577,
-        587,
-        593,
-        599,
-        601,
-        607,
-        613,
-        617,
-        619,
-        631,
-        641,
-        643,
-        647,
-        653,
-        659,
-        661,
-        673,
-        677,
-        683,
-        691,
-        701,
-        709,
-        719,
-        727,
-        733,
-        739,
-        743,
-        751,
-        757,
-        761,
-        769,
-        773,
-        787,
-        797,
-        809,
-        811,
-        821,
-        823,
-        827,
-        829,
-        839,
-        853,
-        857,
-        859,
-        863,
-        877,
-        881,
-        883,
-        887,
-        907,
-        911,
-        919,
-        929,
-        937,
-        941,
-        947,
-        953,
-        967,
-        971,
-        977,
-        983,
-        991,
-        997,
+        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67,
+        71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139,
+        149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223,
+        227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293,
+        307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383,
+        389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463,
+        467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547, 557, 563, 569,
+        571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631, 641, 643, 647,
+        653, 659, 661, 673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743,
+        751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839,
+        853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929, 937, 941,
+        947, 953, 967, 971, 977, 983, 991, 997,
     ];
     var lplim = (1 << 26) / lowprimes[lowprimes.length - 1];
     // (public) test primality with certainty >= 1-.5^t
@@ -1991,11 +1835,12 @@
 
     // PolyTree & PolyNode end
 
-    ClipperLib.Math_Abs_Int64 = ClipperLib.Math_Abs_Int32 = ClipperLib.Math_Abs_Double = function (
-        a
-    ) {
-        return Math.abs(a);
-    };
+    ClipperLib.Math_Abs_Int64 =
+        ClipperLib.Math_Abs_Int32 =
+        ClipperLib.Math_Abs_Double =
+            function (a) {
+                return Math.abs(a);
+            };
 
     ClipperLib.Math_Max_Int32_Int32 = function (a, b) {
         return Math.max(a, b);
@@ -2513,66 +2358,71 @@
         return false;
     };
 
-    ClipperLib.ClipperBase.prototype.SlopesEqual = ClipperLib.ClipperBase.SlopesEqual = function () {
-        var a = arguments,
-            alen = a.length;
-        var e1, e2, pt1, pt2, pt3, pt4, UseFullRange;
-        if (alen === 3) {
-            // function (e1, e2, UseFullRange)
-            e1 = a[0];
-            e2 = a[1];
-            UseFullRange = a[2];
-            if (UseFullRange)
-                return Int128.op_Equality(
-                    Int128.Int128Mul(e1.Delta.Y, e2.Delta.X),
-                    Int128.Int128Mul(e1.Delta.X, e2.Delta.Y)
-                );
-            else
-                return (
-                    ClipperLib.Cast_Int64(e1.Delta.Y * e2.Delta.X) ===
-                    ClipperLib.Cast_Int64(e1.Delta.X * e2.Delta.Y)
-                );
-        } else if (alen === 4) {
-            // function (pt1, pt2, pt3, UseFullRange)
-            pt1 = a[0];
-            pt2 = a[1];
-            pt3 = a[2];
-            UseFullRange = a[3];
-            if (UseFullRange)
-                return Int128.op_Equality(
-                    Int128.Int128Mul(pt1.Y - pt2.Y, pt2.X - pt3.X),
-                    Int128.Int128Mul(pt1.X - pt2.X, pt2.Y - pt3.Y)
-                );
-            else
-                return (
-                    ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt2.X - pt3.X)) -
+    ClipperLib.ClipperBase.prototype.SlopesEqual =
+        ClipperLib.ClipperBase.SlopesEqual = function () {
+            var a = arguments,
+                alen = a.length;
+            var e1, e2, pt1, pt2, pt3, pt4, UseFullRange;
+            if (alen === 3) {
+                // function (e1, e2, UseFullRange)
+                e1 = a[0];
+                e2 = a[1];
+                UseFullRange = a[2];
+                if (UseFullRange)
+                    return Int128.op_Equality(
+                        Int128.Int128Mul(e1.Delta.Y, e2.Delta.X),
+                        Int128.Int128Mul(e1.Delta.X, e2.Delta.Y)
+                    );
+                else
+                    return (
+                        ClipperLib.Cast_Int64(e1.Delta.Y * e2.Delta.X) ===
+                        ClipperLib.Cast_Int64(e1.Delta.X * e2.Delta.Y)
+                    );
+            } else if (alen === 4) {
+                // function (pt1, pt2, pt3, UseFullRange)
+                pt1 = a[0];
+                pt2 = a[1];
+                pt3 = a[2];
+                UseFullRange = a[3];
+                if (UseFullRange)
+                    return Int128.op_Equality(
+                        Int128.Int128Mul(pt1.Y - pt2.Y, pt2.X - pt3.X),
+                        Int128.Int128Mul(pt1.X - pt2.X, pt2.Y - pt3.Y)
+                    );
+                else
+                    return (
                         ClipperLib.Cast_Int64(
-                            (pt1.X - pt2.X) * (pt2.Y - pt3.Y)
-                        ) ===
-                    0
-                );
-        } // function (pt1, pt2, pt3, pt4, UseFullRange)
-        else {
-            pt1 = a[0];
-            pt2 = a[1];
-            pt3 = a[2];
-            pt4 = a[3];
-            UseFullRange = a[4];
-            if (UseFullRange)
-                return Int128.op_Equality(
-                    Int128.Int128Mul(pt1.Y - pt2.Y, pt3.X - pt4.X),
-                    Int128.Int128Mul(pt1.X - pt2.X, pt3.Y - pt4.Y)
-                );
-            else
-                return (
-                    ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt3.X - pt4.X)) -
+                            (pt1.Y - pt2.Y) * (pt2.X - pt3.X)
+                        ) -
+                            ClipperLib.Cast_Int64(
+                                (pt1.X - pt2.X) * (pt2.Y - pt3.Y)
+                            ) ===
+                        0
+                    );
+            } // function (pt1, pt2, pt3, pt4, UseFullRange)
+            else {
+                pt1 = a[0];
+                pt2 = a[1];
+                pt3 = a[2];
+                pt4 = a[3];
+                UseFullRange = a[4];
+                if (UseFullRange)
+                    return Int128.op_Equality(
+                        Int128.Int128Mul(pt1.Y - pt2.Y, pt3.X - pt4.X),
+                        Int128.Int128Mul(pt1.X - pt2.X, pt3.Y - pt4.Y)
+                    );
+                else
+                    return (
                         ClipperLib.Cast_Int64(
-                            (pt1.X - pt2.X) * (pt3.Y - pt4.Y)
-                        ) ===
-                    0
-                );
-        }
-    };
+                            (pt1.Y - pt2.Y) * (pt3.X - pt4.X)
+                        ) -
+                            ClipperLib.Cast_Int64(
+                                (pt1.X - pt2.X) * (pt3.Y - pt4.Y)
+                            ) ===
+                        0
+                    );
+            }
+        };
 
     ClipperLib.ClipperBase.SlopesEqual3 = function (e1, e2, UseFullRange) {
         if (UseFullRange)
@@ -6650,9 +6500,10 @@
                 k
             );
         else {
-            var ip = this.m_polyNodes.Childs()[this.m_lowest.X].m_polygon[
-                this.m_lowest.Y
-            ];
+            var ip =
+                this.m_polyNodes.Childs()[this.m_lowest.X].m_polygon[
+                    this.m_lowest.Y
+                ];
             if (
                 newNode.m_polygon[k].Y > ip.Y ||
                 (newNode.m_polygon[k].Y === ip.Y &&

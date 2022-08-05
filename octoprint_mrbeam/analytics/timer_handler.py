@@ -290,7 +290,9 @@ class TimerHandler:
             self._logger.debug("Software_info: \n {}".format(software_info))
         except Exception as e:
             self._logger.exception(
-                "Exception while reading software_info from softwareupdate plugin. Error:{} ".format(e)
+                "Exception while reading software_info from softwareupdate plugin. Error:{} ".format(
+                    e
+                )
             )
             return result
 

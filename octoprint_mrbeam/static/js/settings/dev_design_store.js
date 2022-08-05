@@ -10,9 +10,12 @@ $(function () {
         var self = this;
         window.mrbeam.viewModels["devDesignStoreViewModel"] = self;
 
-        self.DESIGN_STORE_PRODUCTION_IFRAME_SRC = 'https://designs.cloud.mr-beam.org';
-        self.DESIGN_STORE_STAGING_IFRAME_SRC = 'https://1-0-0-staging-dot-design-store-269610.appspot.com';
-        self.DESIGN_STORE_DEVELOPMENT_IFRAME_SRC = 'https://1-0-0-dev-dot-design-store-269610.appspot.com';
+        self.DESIGN_STORE_PRODUCTION_IFRAME_SRC =
+            "https://designs.cloud.mr-beam.org";
+        self.DESIGN_STORE_STAGING_IFRAME_SRC =
+            "https://1-0-0-staging-dot-design-store-269610.appspot.com";
+        self.DESIGN_STORE_DEVELOPMENT_IFRAME_SRC =
+            "https://1-0-0-dev-dot-design-store-269610.appspot.com";
 
         self.designStore = parameters[0];
         self.loginState = parameters[1];
@@ -27,7 +30,7 @@ $(function () {
             }
         });
 
-        self.selectedEnv = ko.observable('prod');
+        self.selectedEnv = ko.observable("prod");
 
         self.onUserLoggedIn = function () {
             self.lastDsMail = self.designStore.getEmail();
@@ -66,15 +69,18 @@ $(function () {
         };
 
         self.changeEnv = function () {
-            if (self.selectedEnv() === 'prod') {
-                self.designStore.DESIGN_STORE_IFRAME_SRC = self.DESIGN_STORE_PRODUCTION_IFRAME_SRC;
-            } else if (self.selectedEnv() === 'staging') {
-                self.designStore.DESIGN_STORE_IFRAME_SRC = self.DESIGN_STORE_STAGING_IFRAME_SRC;
-            } else if (self.selectedEnv() === 'dev') {
-                self.designStore.DESIGN_STORE_IFRAME_SRC = self.DESIGN_STORE_DEVELOPMENT_IFRAME_SRC;
+            if (self.selectedEnv() === "prod") {
+                self.designStore.DESIGN_STORE_IFRAME_SRC =
+                    self.DESIGN_STORE_PRODUCTION_IFRAME_SRC;
+            } else if (self.selectedEnv() === "staging") {
+                self.designStore.DESIGN_STORE_IFRAME_SRC =
+                    self.DESIGN_STORE_STAGING_IFRAME_SRC;
+            } else if (self.selectedEnv() === "dev") {
+                self.designStore.DESIGN_STORE_IFRAME_SRC =
+                    self.DESIGN_STORE_DEVELOPMENT_IFRAME_SRC;
             }
             self.designStore.reloadDesignStoreIframe();
-        }
+        };
 
         self.showAuthToken = function () {
             if (self.designStore.getAuthToken()) {

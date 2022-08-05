@@ -4899,4 +4899,3 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr ""
-

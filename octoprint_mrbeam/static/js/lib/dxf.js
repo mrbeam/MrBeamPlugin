@@ -504,78 +504,80 @@
                                                     rotation: insert.rotation,
                                                 }; // Add the insert transform and recursively add entities
 
-                                                var transforms2 = transforms.slice(
-                                                    0
-                                                );
+                                                var transforms2 =
+                                                    transforms.slice(0);
                                                 transforms2.push(t); // Use the insert layer
 
-                                                var blockEntities = block.entities.map(
-                                                    function (be) {
-                                                        var be2 = (0,
-                                                        _lodash.cloneDeep)(be);
-                                                        be2.layer =
-                                                            insert.layer; // https://github.com/bjnortier/dxf/issues/52
-                                                        // See Issue 52. If we don't modify the
-                                                        // entity coordinates here it creates an issue with the
-                                                        // transformation matrices (which are only applied AFTER
-                                                        // block insertion modifications has been applied).
+                                                var blockEntities =
+                                                    block.entities.map(
+                                                        function (be) {
+                                                            var be2 = (0,
+                                                            _lodash.cloneDeep)(
+                                                                be
+                                                            );
+                                                            be2.layer =
+                                                                insert.layer; // https://github.com/bjnortier/dxf/issues/52
+                                                            // See Issue 52. If we don't modify the
+                                                            // entity coordinates here it creates an issue with the
+                                                            // transformation matrices (which are only applied AFTER
+                                                            // block insertion modifications has been applied).
 
-                                                        switch (be2.type) {
-                                                            case "LINE": {
-                                                                be2.start.x -=
-                                                                    block.x;
-                                                                be2.start.y -=
-                                                                    block.y;
-                                                                be2.end.x -=
-                                                                    block.x;
-                                                                be2.end.y -=
-                                                                    block.y;
-                                                                break;
+                                                            switch (be2.type) {
+                                                                case "LINE": {
+                                                                    be2.start.x -=
+                                                                        block.x;
+                                                                    be2.start.y -=
+                                                                        block.y;
+                                                                    be2.end.x -=
+                                                                        block.x;
+                                                                    be2.end.y -=
+                                                                        block.y;
+                                                                    break;
+                                                                }
+
+                                                                case "LWPOLYLINE":
+                                                                case "POLYLINE": {
+                                                                    be2.vertices.forEach(
+                                                                        function (
+                                                                            v
+                                                                        ) {
+                                                                            v.x -=
+                                                                                block.x;
+                                                                            v.y -=
+                                                                                block.y;
+                                                                        }
+                                                                    );
+                                                                    break;
+                                                                }
+
+                                                                case "CIRCLE":
+                                                                case "ELLIPSE":
+                                                                case "ARC": {
+                                                                    be2.x -=
+                                                                        block.x;
+                                                                    be2.y -=
+                                                                        block.y;
+                                                                    break;
+                                                                }
+
+                                                                case "SPLINE": {
+                                                                    be2.controlPoints.forEach(
+                                                                        function (
+                                                                            cp
+                                                                        ) {
+                                                                            cp.x -=
+                                                                                block.x;
+                                                                            cp.y -=
+                                                                                block.y;
+                                                                        }
+                                                                    );
+                                                                    break;
+                                                                }
                                                             }
 
-                                                            case "LWPOLYLINE":
-                                                            case "POLYLINE": {
-                                                                be2.vertices.forEach(
-                                                                    function (
-                                                                        v
-                                                                    ) {
-                                                                        v.x -=
-                                                                            block.x;
-                                                                        v.y -=
-                                                                            block.y;
-                                                                    }
-                                                                );
-                                                                break;
-                                                            }
-
-                                                            case "CIRCLE":
-                                                            case "ELLIPSE":
-                                                            case "ARC": {
-                                                                be2.x -=
-                                                                    block.x;
-                                                                be2.y -=
-                                                                    block.y;
-                                                                break;
-                                                            }
-
-                                                            case "SPLINE": {
-                                                                be2.controlPoints.forEach(
-                                                                    function (
-                                                                        cp
-                                                                    ) {
-                                                                        cp.x -=
-                                                                            block.x;
-                                                                        cp.y -=
-                                                                            block.y;
-                                                                    }
-                                                                );
-                                                                break;
-                                                            }
+                                                            return be2;
                                                         }
-
-                                                        return be2;
-                                                    }
-                                                );
+                                                    );
                                                 current = current.concat(
                                                     gatherEntities(
                                                         blockEntities,
@@ -1207,9 +1209,8 @@
                             var contentTuples = tuples.slice(1);
 
                             if (handlers[entityType] !== undefined) {
-                                var e = handlers[entityType].process(
-                                    contentTuples
-                                ); // "POLYLINE" cannot be parsed in isolation, it is followed by
+                                var e =
+                                    handlers[entityType].process(contentTuples); // "POLYLINE" cannot be parsed in isolation, it is followed by
                                 // N "VERTEX" entities and ended with a "SEQEND" entity.
                                 // Essentially we convert POLYLINE to LWPOLYLINE - the extra
                                 // vertex flags are not supported
@@ -1267,9 +1268,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -1351,9 +1353,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -1488,9 +1491,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -1576,9 +1580,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -1688,9 +1693,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -1770,9 +1776,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -1849,9 +1856,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -1956,9 +1964,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -2024,9 +2033,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -2089,9 +2099,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -2194,9 +2205,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -2308,9 +2320,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
 
                     var _common = _interopRequireDefault(require("./common"));
 
@@ -2409,9 +2422,10 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.process = exports.TYPE = void 0;
+                    exports["default"] =
+                        exports.process =
+                        exports.TYPE =
+                            void 0;
                     var TYPE = "VERTEX";
                     exports.TYPE = TYPE;
 
@@ -2976,45 +2990,43 @@
                         }
                     }; // Content lines are alternate lines of type and value
 
-                    var convertToTypesAndValues = function convertToTypesAndValues(
-                        contentLines
-                    ) {
-                        var state = "type";
-                        var type;
-                        var typesAndValues = [];
+                    var convertToTypesAndValues =
+                        function convertToTypesAndValues(contentLines) {
+                            var state = "type";
+                            var type;
+                            var typesAndValues = [];
 
-                        var _iterator = _createForOfIteratorHelper(
-                                contentLines
-                            ),
-                            _step;
+                            var _iterator =
+                                    _createForOfIteratorHelper(contentLines),
+                                _step;
 
-                        try {
-                            for (
-                                _iterator.s();
-                                !(_step = _iterator.n()).done;
+                            try {
+                                for (
+                                    _iterator.s();
+                                    !(_step = _iterator.n()).done;
 
-                            ) {
-                                var line = _step.value;
+                                ) {
+                                    var line = _step.value;
 
-                                if (state === "type") {
-                                    type = parseInt(line, 10);
-                                    state = "value";
-                                } else {
-                                    typesAndValues.push([
-                                        type,
-                                        parseValue(type, line),
-                                    ]);
-                                    state = "type";
+                                    if (state === "type") {
+                                        type = parseInt(line, 10);
+                                        state = "value";
+                                    } else {
+                                        typesAndValues.push([
+                                            type,
+                                            parseValue(type, line),
+                                        ]);
+                                        state = "type";
+                                    }
                                 }
+                            } catch (err) {
+                                _iterator.e(err);
+                            } finally {
+                                _iterator.f();
                             }
-                        } catch (err) {
-                            _iterator.e(err);
-                        } finally {
-                            _iterator.f();
-                        }
 
-                        return typesAndValues;
-                    };
+                            return typesAndValues;
+                        };
 
                     var separateSections = function separateSections(tuples) {
                         var sectionTuples;
@@ -3263,16 +3275,18 @@
                         require("./util/toPiecewiseBezier")
                     );
 
-                    var _transformBoundingBoxAndElement = _interopRequireDefault(
-                        require("./util/transformBoundingBoxAndElement")
-                    );
+                    var _transformBoundingBoxAndElement =
+                        _interopRequireDefault(
+                            require("./util/transformBoundingBoxAndElement")
+                        );
 
                     function _getRequireWildcardCache() {
                         if (typeof WeakMap !== "function") return null;
                         var cache = new WeakMap();
-                        _getRequireWildcardCache = function _getRequireWildcardCache() {
-                            return cache;
-                        };
+                        _getRequireWildcardCache =
+                            function _getRequireWildcardCache() {
+                                return cache;
+                            };
                         return cache;
                     }
 
@@ -3412,10 +3426,11 @@
                                         x: -bbox.max.x,
                                         y: bbox.max.y,
                                     }),
-                                element: '<g transform="matrix(-1 0 0 1 0 0)">\n        '.concat(
-                                    element,
-                                    "\n      </g>"
-                                ),
+                                element:
+                                    '<g transform="matrix(-1 0 0 1 0 0)">\n        '.concat(
+                                        element,
+                                        "\n      </g>"
+                                    ),
                             };
                         } else {
                             return {
@@ -3826,49 +3841,48 @@
                      * produce native SVG elements, the rest produce interpolated polylines.
                      */
 
-                    var entityToBoundsAndElement = function entityToBoundsAndElement(
-                        entity
-                    ) {
-                        switch (entity.type) {
-                            case "CIRCLE":
-                                return circle(entity);
+                    var entityToBoundsAndElement =
+                        function entityToBoundsAndElement(entity) {
+                            switch (entity.type) {
+                                case "CIRCLE":
+                                    return circle(entity);
 
-                            case "ELLIPSE":
-                                return ellipse(entity);
+                                case "ELLIPSE":
+                                    return ellipse(entity);
 
-                            case "ARC":
-                                return arc(entity);
+                                case "ARC":
+                                    return arc(entity);
 
-                            case "SPLINE": {
-                                if (
-                                    entity.degree === 2 ||
-                                    entity.degree === 3
-                                ) {
-                                    try {
-                                        return bezier(entity);
-                                    } catch (err) {
+                                case "SPLINE": {
+                                    if (
+                                        entity.degree === 2 ||
+                                        entity.degree === 3
+                                    ) {
+                                        try {
+                                            return bezier(entity);
+                                        } catch (err) {
+                                            return polyline(entity);
+                                        }
+                                    } else {
                                         return polyline(entity);
                                     }
-                                } else {
+                                }
+
+                                case "LINE":
+                                case "LWPOLYLINE":
+                                case "POLYLINE": {
                                     return polyline(entity);
                                 }
+
+                                default:
+                                    _logger["default"].warn(
+                                        "entity type not supported in SVG rendering:",
+                                        entity.type
+                                    );
+
+                                    return null;
                             }
-
-                            case "LINE":
-                            case "LWPOLYLINE":
-                            case "POLYLINE": {
-                                return polyline(entity);
-                            }
-
-                            default:
-                                _logger["default"].warn(
-                                    "entity type not supported in SVG rendering:",
-                                    entity.type
-                                );
-
-                                return null;
-                        }
-                    };
+                        };
 
                     var _default = function _default(parsed) {
                         var entities = (0, _denormalise["default"])(parsed);
@@ -3879,9 +3893,8 @@
                                         parsed.tables.layers,
                                         entity
                                     );
-                                    var boundsAndElement = entityToBoundsAndElement(
-                                        entity
-                                    ); // Ignore entities like MTEXT that don't produce SVG elements
+                                    var boundsAndElement =
+                                        entityToBoundsAndElement(entity); // Ignore entities like MTEXT that don't produce SVG elements
 
                                     if (boundsAndElement) {
                                         var _bbox = boundsAndElement.bbox,
@@ -4048,29 +4061,28 @@
                      * Switcth the appropriate function on entity type. All elements will be interpolated polylines.
                      */
 
-                    var entityToBoundsAndPathAttr = function entityToBoundsAndPathAttr(
-                        entity
-                    ) {
-                        switch (entity.type) {
-                            case "CIRCLE":
-                            case "ELLIPSE":
-                            case "ARC":
-                            case "SPLINE":
-                            case "LINE":
-                            case "LWPOLYLINE":
-                            case "POLYLINE": {
-                                return pathdata(entity);
+                    var entityToBoundsAndPathAttr =
+                        function entityToBoundsAndPathAttr(entity) {
+                            switch (entity.type) {
+                                case "CIRCLE":
+                                case "ELLIPSE":
+                                case "ARC":
+                                case "SPLINE":
+                                case "LINE":
+                                case "LWPOLYLINE":
+                                case "POLYLINE": {
+                                    return pathdata(entity);
+                                }
+
+                                default:
+                                    _logger["default"].warn(
+                                        "entity type not supported in SVG rendering:",
+                                        entity.type
+                                    );
+
+                                    return null;
                             }
-
-                            default:
-                                _logger["default"].warn(
-                                    "entity type not supported in SVG rendering:",
-                                    entity.type
-                                );
-
-                                return null;
-                        }
-                    };
+                        };
 
                     var _default = function _default(parsed) {
                         var entities = (0, _denormalise["default"])(parsed);
@@ -4085,9 +4097,8 @@
                                         parsed.tables.layers,
                                         entity
                                     );
-                                    var boundsAndPathAttr = entityToBoundsAndPathAttr(
-                                        entity
-                                    ); // Ignore entities like MTEXT that don't produce SVG elements
+                                    var boundsAndPathAttr =
+                                        entityToBoundsAndPathAttr(entity); // Ignore entities like MTEXT that don't produce SVG elements
 
                                     if (boundsAndPathAttr) {
                                         var _bbox = boundsAndPathAttr.bbox,
@@ -4114,10 +4125,11 @@
                                                 pathStart.x === lastEnd.x &&
                                                 pathStart.y === lastEnd.y
                                             ) {
-                                                var stripped = _pathdata.replace(
-                                                    stripMovetoRegex,
-                                                    ""
-                                                );
+                                                var stripped =
+                                                    _pathdata.replace(
+                                                        stripMovetoRegex,
+                                                        ""
+                                                    );
 
                                                 dAttr += stripped;
                                             } else {
@@ -5076,9 +5088,11 @@
                     Object.defineProperty(exports, "__esModule", {
                         value: true,
                     });
-                    exports[
-                        "default"
-                    ] = exports.computeInsertions = exports.multiplicity = exports.checkPinned = void 0;
+                    exports["default"] =
+                        exports.computeInsertions =
+                        exports.multiplicity =
+                        exports.checkPinned =
+                            void 0;
 
                     var _insertKnot = _interopRequireDefault(
                         require("./insertKnot")
@@ -5528,7 +5542,8 @@
                             /** Used to match empty string literals in compiled template source. */
                             var reEmptyStringLeading = /\b__p \+= '';/g,
                                 reEmptyStringMiddle = /\b(__p \+=) '' \+/g,
-                                reEmptyStringTrailing = /(__e\(.*?\)|\b__t\)) \+\n'';/g;
+                                reEmptyStringTrailing =
+                                    /(__e\(.*?\)|\b__t\)) \+\n'';/g;
 
                             /** Used to match HTML entities and HTML characters. */
                             var reEscapedHtml = /&(?:amp|lt|gt|quot|#39);/g,
@@ -5544,9 +5559,11 @@
                                 reInterpolate = /<%=([\s\S]+?)%>/g;
 
                             /** Used to match property names within property paths. */
-                            var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
+                            var reIsDeepProp =
+                                    /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
                                 reIsPlainProp = /^\w*$/,
-                                rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
+                                rePropName =
+                                    /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
 
                             /**
                              * Used to match `RegExp`
@@ -5561,12 +5578,15 @@
                                 reTrimEnd = /\s+$/;
 
                             /** Used to match wrap detail comments. */
-                            var reWrapComment = /\{(?:\n\/\* \[wrapped with .+\] \*\/)?\n?/,
-                                reWrapDetails = /\{\n\/\* \[wrapped with (.+)\] \*/,
+                            var reWrapComment =
+                                    /\{(?:\n\/\* \[wrapped with .+\] \*\/)?\n?/,
+                                reWrapDetails =
+                                    /\{\n\/\* \[wrapped with (.+)\] \*/,
                                 reSplitDetails = /,? & /;
 
                             /** Used to match words composed of alphanumeric characters. */
-                            var reAsciiWord = /[^\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]+/g;
+                            var reAsciiWord =
+                                /[^\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]+/g;
 
                             /** Used to match backslashes in property paths. */
                             var reEscapeChar = /\\(\\)?/g;
@@ -5575,7 +5595,8 @@
                              * Used to match
                              * [ES template delimiters](http://ecma-international.org/ecma-262/7.0/#sec-template-literal-lexical-components).
                              */
-                            var reEsTemplate = /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g;
+                            var reEsTemplate =
+                                /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g;
 
                             /** Used to match `RegExp` flags from their coerced string values. */
                             var reFlags = /\w*$/;
@@ -5596,7 +5617,8 @@
                             var reIsUint = /^(?:0|[1-9]\d*)$/;
 
                             /** Used to match Latin Unicode letters (excluding mathematical operators). */
-                            var reLatin = /[\xc0-\xd6\xd8-\xf6\xf8-\xff\u0100-\u017f]/g;
+                            var reLatin =
+                                /[\xc0-\xd6\xd8-\xf6\xf8-\xff\u0100-\u017f]/g;
 
                             /** Used to ensure capturing order of template delimiters. */
                             var reNoMatch = /($^)/;
@@ -5767,7 +5789,8 @@
                             );
 
                             /** Used to detect strings that need a more robust regexp to match words. */
-                            var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
+                            var reHasUnicodeWord =
+                                /[a-z][A-Z]|[A-Z]{2}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
 
                             /** Used to assign default `context` object properties. */
                             var contextProps = [
@@ -5808,61 +5831,62 @@
 
                             /** Used to identify `toStringTag` values of typed arrays. */
                             var typedArrayTags = {};
-                            typedArrayTags[float32Tag] = typedArrayTags[
-                                float64Tag
-                            ] = typedArrayTags[int8Tag] = typedArrayTags[
-                                int16Tag
-                            ] = typedArrayTags[int32Tag] = typedArrayTags[
-                                uint8Tag
-                            ] = typedArrayTags[
-                                uint8ClampedTag
-                            ] = typedArrayTags[uint16Tag] = typedArrayTags[
-                                uint32Tag
-                            ] = true;
-                            typedArrayTags[argsTag] = typedArrayTags[
-                                arrayTag
-                            ] = typedArrayTags[arrayBufferTag] = typedArrayTags[
-                                boolTag
-                            ] = typedArrayTags[dataViewTag] = typedArrayTags[
-                                dateTag
-                            ] = typedArrayTags[errorTag] = typedArrayTags[
-                                funcTag
-                            ] = typedArrayTags[mapTag] = typedArrayTags[
-                                numberTag
-                            ] = typedArrayTags[objectTag] = typedArrayTags[
-                                regexpTag
-                            ] = typedArrayTags[setTag] = typedArrayTags[
-                                stringTag
-                            ] = typedArrayTags[weakMapTag] = false;
+                            typedArrayTags[float32Tag] =
+                                typedArrayTags[float64Tag] =
+                                typedArrayTags[int8Tag] =
+                                typedArrayTags[int16Tag] =
+                                typedArrayTags[int32Tag] =
+                                typedArrayTags[uint8Tag] =
+                                typedArrayTags[uint8ClampedTag] =
+                                typedArrayTags[uint16Tag] =
+                                typedArrayTags[uint32Tag] =
+                                    true;
+                            typedArrayTags[argsTag] =
+                                typedArrayTags[arrayTag] =
+                                typedArrayTags[arrayBufferTag] =
+                                typedArrayTags[boolTag] =
+                                typedArrayTags[dataViewTag] =
+                                typedArrayTags[dateTag] =
+                                typedArrayTags[errorTag] =
+                                typedArrayTags[funcTag] =
+                                typedArrayTags[mapTag] =
+                                typedArrayTags[numberTag] =
+                                typedArrayTags[objectTag] =
+                                typedArrayTags[regexpTag] =
+                                typedArrayTags[setTag] =
+                                typedArrayTags[stringTag] =
+                                typedArrayTags[weakMapTag] =
+                                    false;
 
                             /** Used to identify `toStringTag` values supported by `_.clone`. */
                             var cloneableTags = {};
-                            cloneableTags[argsTag] = cloneableTags[
-                                arrayTag
-                            ] = cloneableTags[arrayBufferTag] = cloneableTags[
-                                dataViewTag
-                            ] = cloneableTags[boolTag] = cloneableTags[
-                                dateTag
-                            ] = cloneableTags[float32Tag] = cloneableTags[
-                                float64Tag
-                            ] = cloneableTags[int8Tag] = cloneableTags[
-                                int16Tag
-                            ] = cloneableTags[int32Tag] = cloneableTags[
-                                mapTag
-                            ] = cloneableTags[numberTag] = cloneableTags[
-                                objectTag
-                            ] = cloneableTags[regexpTag] = cloneableTags[
-                                setTag
-                            ] = cloneableTags[stringTag] = cloneableTags[
-                                symbolTag
-                            ] = cloneableTags[uint8Tag] = cloneableTags[
-                                uint8ClampedTag
-                            ] = cloneableTags[uint16Tag] = cloneableTags[
-                                uint32Tag
-                            ] = true;
-                            cloneableTags[errorTag] = cloneableTags[
-                                funcTag
-                            ] = cloneableTags[weakMapTag] = false;
+                            cloneableTags[argsTag] =
+                                cloneableTags[arrayTag] =
+                                cloneableTags[arrayBufferTag] =
+                                cloneableTags[dataViewTag] =
+                                cloneableTags[boolTag] =
+                                cloneableTags[dateTag] =
+                                cloneableTags[float32Tag] =
+                                cloneableTags[float64Tag] =
+                                cloneableTags[int8Tag] =
+                                cloneableTags[int16Tag] =
+                                cloneableTags[int32Tag] =
+                                cloneableTags[mapTag] =
+                                cloneableTags[numberTag] =
+                                cloneableTags[objectTag] =
+                                cloneableTags[regexpTag] =
+                                cloneableTags[setTag] =
+                                cloneableTags[stringTag] =
+                                cloneableTags[symbolTag] =
+                                cloneableTags[uint8Tag] =
+                                cloneableTags[uint8ClampedTag] =
+                                cloneableTags[uint16Tag] =
+                                cloneableTags[uint32Tag] =
+                                    true;
+                            cloneableTags[errorTag] =
+                                cloneableTags[funcTag] =
+                                cloneableTags[weakMapTag] =
+                                    false;
 
                             /** Used to map Latin Unicode letters to basic Latin letters. */
                             var deburredLetters = {
@@ -6555,16 +6579,15 @@
                                 eachFunc
                             ) {
                                 var result;
-                                eachFunc(collection, function (
-                                    value,
-                                    key,
-                                    collection
-                                ) {
-                                    if (predicate(value, key, collection)) {
-                                        result = key;
-                                        return false;
+                                eachFunc(
+                                    collection,
+                                    function (value, key, collection) {
+                                        if (predicate(value, key, collection)) {
+                                            result = key;
+                                            return false;
+                                        }
                                     }
-                                });
+                                );
                                 return result;
                             }
 
@@ -6719,20 +6742,19 @@
                                 initAccum,
                                 eachFunc
                             ) {
-                                eachFunc(collection, function (
-                                    value,
-                                    index,
-                                    collection
-                                ) {
-                                    accumulator = initAccum
-                                        ? ((initAccum = false), value)
-                                        : iteratee(
-                                              accumulator,
-                                              value,
-                                              index,
-                                              collection
-                                          );
-                                });
+                                eachFunc(
+                                    collection,
+                                    function (value, index, collection) {
+                                        accumulator = initAccum
+                                            ? ((initAccum = false), value)
+                                            : iteratee(
+                                                  accumulator,
+                                                  value,
+                                                  index,
+                                                  collection
+                                              );
+                                    }
+                                );
                                 return accumulator;
                             }
 
@@ -7177,9 +7199,8 @@
                              * @param {string} chr The matched character to unescape.
                              * @returns {string} Returns the unescaped character.
                              */
-                            var unescapeHtmlChar = basePropertyOf(
-                                htmlUnescapes
-                            );
+                            var unescapeHtmlChar =
+                                basePropertyOf(htmlUnescapes);
 
                             /**
                              * Gets the size of a Unicode `string`.
@@ -7306,9 +7327,8 @@
                                 var nativeObjectToString = objectProto.toString;
 
                                 /** Used to infer the `Object` constructor. */
-                                var objectCtorString = funcToString.call(
-                                    Object
-                                );
+                                var objectCtorString =
+                                    funcToString.call(Object);
 
                                 /** Used to restore the original `_` reference in `_.noConflict`. */
                                 var oldDash = root._;
@@ -7682,7 +7702,8 @@
                                 LodashWrapper.prototype = baseCreate(
                                     baseLodash.prototype
                                 );
-                                LodashWrapper.prototype.constructor = LodashWrapper;
+                                LodashWrapper.prototype.constructor =
+                                    LodashWrapper;
 
                                 /*------------------------------------------------------------------------*/
 
@@ -8232,7 +8253,8 @@
                                 }
 
                                 // Add methods to `SetCache`.
-                                SetCache.prototype.add = SetCache.prototype.push = setCacheAdd;
+                                SetCache.prototype.add =
+                                    SetCache.prototype.push = setCacheAdd;
                                 SetCache.prototype.has = setCacheHas;
 
                                 /*------------------------------------------------------------------------*/
@@ -8522,18 +8544,17 @@
                                     iteratee,
                                     accumulator
                                 ) {
-                                    baseEach(collection, function (
-                                        value,
-                                        key,
-                                        collection
-                                    ) {
-                                        setter(
-                                            accumulator,
-                                            value,
-                                            iteratee(value),
-                                            collection
-                                        );
-                                    });
+                                    baseEach(
+                                        collection,
+                                        function (value, key, collection) {
+                                            setter(
+                                                accumulator,
+                                                value,
+                                                iteratee(value),
+                                                collection
+                                            );
+                                        }
+                                    );
                                     return accumulator;
                                 }
 
@@ -8788,28 +8809,28 @@
                                     var props = isArr
                                         ? undefined
                                         : keysFunc(value);
-                                    arrayEach(props || value, function (
-                                        subValue,
-                                        key
-                                    ) {
-                                        if (props) {
-                                            key = subValue;
-                                            subValue = value[key];
-                                        }
-                                        // Recursively populate clone (susceptible to call stack limits).
-                                        assignValue(
-                                            result,
-                                            key,
-                                            baseClone(
-                                                subValue,
-                                                bitmask,
-                                                customizer,
+                                    arrayEach(
+                                        props || value,
+                                        function (subValue, key) {
+                                            if (props) {
+                                                key = subValue;
+                                                subValue = value[key];
+                                            }
+                                            // Recursively populate clone (susceptible to call stack limits).
+                                            assignValue(
+                                                result,
                                                 key,
-                                                value,
-                                                stack
-                                            )
-                                        );
-                                    });
+                                                baseClone(
+                                                    subValue,
+                                                    bitmask,
+                                                    customizer,
+                                                    key,
+                                                    value,
+                                                    stack
+                                                )
+                                            );
+                                        }
+                                    );
                                     return result;
                                 }
 
@@ -8992,18 +9013,17 @@
                                  */
                                 function baseEvery(collection, predicate) {
                                     var result = true;
-                                    baseEach(collection, function (
-                                        value,
-                                        index,
-                                        collection
-                                    ) {
-                                        result = !!predicate(
-                                            value,
-                                            index,
-                                            collection
-                                        );
-                                        return result;
-                                    });
+                                    baseEach(
+                                        collection,
+                                        function (value, index, collection) {
+                                            result = !!predicate(
+                                                value,
+                                                index,
+                                                collection
+                                            );
+                                            return result;
+                                        }
+                                    );
                                     return result;
                                 }
 
@@ -9087,17 +9107,20 @@
                                  */
                                 function baseFilter(collection, predicate) {
                                     var result = [];
-                                    baseEach(collection, function (
-                                        value,
-                                        index,
-                                        collection
-                                    ) {
-                                        if (
-                                            predicate(value, index, collection)
-                                        ) {
-                                            result.push(value);
+                                    baseEach(
+                                        collection,
+                                        function (value, index, collection) {
+                                            if (
+                                                predicate(
+                                                    value,
+                                                    index,
+                                                    collection
+                                                )
+                                            ) {
+                                                result.push(value);
+                                            }
                                         }
-                                    });
+                                    );
                                     return result;
                                 }
 
@@ -9459,18 +9482,17 @@
                                     iteratee,
                                     accumulator
                                 ) {
-                                    baseForOwn(object, function (
-                                        value,
-                                        key,
-                                        object
-                                    ) {
-                                        setter(
-                                            accumulator,
-                                            iteratee(value),
-                                            key,
-                                            object
-                                        );
-                                    });
+                                    baseForOwn(
+                                        object,
+                                        function (value, key, object) {
+                                            setter(
+                                                accumulator,
+                                                iteratee(value),
+                                                key,
+                                                object
+                                            );
+                                        }
+                                    );
                                     return accumulator;
                                 }
 
@@ -9957,17 +9979,16 @@
                                             ? Array(collection.length)
                                             : [];
 
-                                    baseEach(collection, function (
-                                        value,
-                                        key,
-                                        collection
-                                    ) {
-                                        result[++index] = iteratee(
-                                            value,
-                                            key,
-                                            collection
-                                        );
-                                    });
+                                    baseEach(
+                                        collection,
+                                        function (value, key, collection) {
+                                            result[++index] = iteratee(
+                                                value,
+                                                key,
+                                                collection
+                                            );
+                                        }
+                                    );
                                     return result;
                                 }
 
@@ -10177,16 +10198,14 @@
                                         ) {
                                             newValue = objValue;
                                             if (isArguments(objValue)) {
-                                                newValue = toPlainObject(
-                                                    objValue
-                                                );
+                                                newValue =
+                                                    toPlainObject(objValue);
                                             } else if (
                                                 !isObject(objValue) ||
                                                 isFunction(objValue)
                                             ) {
-                                                newValue = initCloneObject(
-                                                    srcValue
-                                                );
+                                                newValue =
+                                                    initCloneObject(srcValue);
                                             }
                                         } else {
                                             isCommon = false;
@@ -10268,34 +10287,33 @@
                                         baseUnary(getIteratee())
                                     );
 
-                                    var result = baseMap(collection, function (
-                                        value,
-                                        key,
-                                        collection
-                                    ) {
-                                        var criteria = arrayMap(
-                                            iteratees,
-                                            function (iteratee) {
-                                                return iteratee(value);
-                                            }
-                                        );
-                                        return {
-                                            criteria: criteria,
-                                            index: ++index,
-                                            value: value,
-                                        };
-                                    });
+                                    var result = baseMap(
+                                        collection,
+                                        function (value, key, collection) {
+                                            var criteria = arrayMap(
+                                                iteratees,
+                                                function (iteratee) {
+                                                    return iteratee(value);
+                                                }
+                                            );
+                                            return {
+                                                criteria: criteria,
+                                                index: ++index,
+                                                value: value,
+                                            };
+                                        }
+                                    );
 
-                                    return baseSortBy(result, function (
-                                        object,
-                                        other
-                                    ) {
-                                        return compareMultiple(
-                                            object,
-                                            other,
-                                            orders
-                                        );
-                                    });
+                                    return baseSortBy(
+                                        result,
+                                        function (object, other) {
+                                            return compareMultiple(
+                                                object,
+                                                other,
+                                                orders
+                                            );
+                                        }
+                                    );
                                 }
 
                                 /**
@@ -10308,12 +10326,13 @@
                                  * @returns {Object} Returns the new object.
                                  */
                                 function basePick(object, paths) {
-                                    return basePickBy(object, paths, function (
-                                        value,
-                                        path
-                                    ) {
-                                        return hasIn(object, path);
-                                    });
+                                    return basePickBy(
+                                        object,
+                                        paths,
+                                        function (value, path) {
+                                            return hasIn(object, path);
+                                        }
+                                    );
                                 }
 
                                 /**
@@ -10490,9 +10509,8 @@
                                         result = Array(length);
 
                                     while (length--) {
-                                        result[
-                                            fromRight ? length : ++index
-                                        ] = start;
+                                        result[fromRight ? length : ++index] =
+                                            start;
                                         start += step;
                                     }
                                     return result;
@@ -10728,18 +10746,17 @@
                                 function baseSome(collection, predicate) {
                                     var result;
 
-                                    baseEach(collection, function (
-                                        value,
-                                        index,
-                                        collection
-                                    ) {
-                                        result = predicate(
-                                            value,
-                                            index,
-                                            collection
-                                        );
-                                        return !result;
-                                    });
+                                    baseEach(
+                                        collection,
+                                        function (value, index, collection) {
+                                            result = predicate(
+                                                value,
+                                                index,
+                                                collection
+                                            );
+                                            return !result;
+                                        }
+                                    );
                                     return !!result;
                                 }
 
@@ -12275,9 +12292,8 @@
                                             args[index] = arguments[index];
                                         }
                                         if (isCurried) {
-                                            var placeholder = getHolder(
-                                                    wrapper
-                                                ),
+                                            var placeholder =
+                                                    getHolder(wrapper),
                                                 holdersCount = countHolders(
                                                     args,
                                                     placeholder
@@ -13074,30 +13090,33 @@
                                         // Recursively compare arrays (susceptible to call stack limits).
                                         if (seen) {
                                             if (
-                                                !arraySome(other, function (
-                                                    othValue,
-                                                    othIndex
-                                                ) {
-                                                    if (
-                                                        !cacheHas(
-                                                            seen,
-                                                            othIndex
-                                                        ) &&
-                                                        (arrValue ===
-                                                            othValue ||
-                                                            equalFunc(
-                                                                arrValue,
-                                                                othValue,
-                                                                bitmask,
-                                                                customizer,
-                                                                stack
-                                                            ))
+                                                !arraySome(
+                                                    other,
+                                                    function (
+                                                        othValue,
+                                                        othIndex
                                                     ) {
-                                                        return seen.push(
-                                                            othIndex
-                                                        );
+                                                        if (
+                                                            !cacheHas(
+                                                                seen,
+                                                                othIndex
+                                                            ) &&
+                                                            (arrValue ===
+                                                                othValue ||
+                                                                equalFunc(
+                                                                    arrValue,
+                                                                    othValue,
+                                                                    bitmask,
+                                                                    customizer,
+                                                                    stack
+                                                                ))
+                                                        ) {
+                                                            return seen.push(
+                                                                othIndex
+                                                            );
+                                                        }
                                                     }
-                                                })
+                                                )
                                             ) {
                                                 result = false;
                                                 break;
@@ -13572,9 +13591,8 @@
                                         var unmasked = true;
                                     } catch (e) {}
 
-                                    var result = nativeObjectToString.call(
-                                        value
-                                    );
+                                    var result =
+                                        nativeObjectToString.call(value);
                                     if (unmasked) {
                                         if (isOwn) {
                                             value[symToStringTag] = tag;
@@ -14526,21 +14544,24 @@
                                     if (string.charCodeAt(0) === 46 /* . */) {
                                         result.push("");
                                     }
-                                    string.replace(rePropName, function (
-                                        match,
-                                        number,
-                                        quote,
-                                        subString
-                                    ) {
-                                        result.push(
-                                            quote
-                                                ? subString.replace(
-                                                      reEscapeChar,
-                                                      "$1"
-                                                  )
-                                                : number || match
-                                        );
-                                    });
+                                    string.replace(
+                                        rePropName,
+                                        function (
+                                            match,
+                                            number,
+                                            quote,
+                                            subString
+                                        ) {
+                                            result.push(
+                                                quote
+                                                    ? subString.replace(
+                                                          reEscapeChar,
+                                                          "$1"
+                                                      )
+                                                    : number || match
+                                            );
+                                        }
+                                    );
                                     return result;
                                 });
 
@@ -16577,17 +16598,18 @@
                                         return [];
                                     }
                                     var length = 0;
-                                    array = arrayFilter(array, function (
-                                        group
-                                    ) {
-                                        if (isArrayLikeObject(group)) {
-                                            length = nativeMax(
-                                                group.length,
-                                                length
-                                            );
-                                            return true;
+                                    array = arrayFilter(
+                                        array,
+                                        function (group) {
+                                            if (isArrayLikeObject(group)) {
+                                                length = nativeMax(
+                                                    group.length,
+                                                    length
+                                                );
+                                                return true;
+                                            }
                                         }
-                                    });
+                                    );
                                     return baseTimes(length, function (index) {
                                         return arrayMap(
                                             array,
@@ -18843,7 +18865,11 @@
                                             clearTimeout(timerId);
                                         }
                                         lastInvokeTime = 0;
-                                        lastArgs = lastCallTime = lastThis = timerId = undefined;
+                                        lastArgs =
+                                            lastCallTime =
+                                            lastThis =
+                                            timerId =
+                                                undefined;
                                     }
 
                                     function flush() {
@@ -22085,9 +22111,8 @@
                                         value != null &&
                                         typeof value.toString != "function"
                                     ) {
-                                        value = nativeObjectToString.call(
-                                            value
-                                        );
+                                        value =
+                                            nativeObjectToString.call(value);
                                     }
 
                                     result[value] = key;
@@ -22129,9 +22154,8 @@
                                         value != null &&
                                         typeof value.toString != "function"
                                     ) {
-                                        value = nativeObjectToString.call(
-                                            value
-                                        );
+                                        value =
+                                            nativeObjectToString.call(value);
                                     }
 
                                     if (hasOwnProperty.call(result, value)) {
@@ -22250,17 +22274,16 @@
                                     var result = {};
                                     iteratee = getIteratee(iteratee, 3);
 
-                                    baseForOwn(object, function (
-                                        value,
-                                        key,
-                                        object
-                                    ) {
-                                        baseAssignValue(
-                                            result,
-                                            iteratee(value, key, object),
-                                            value
-                                        );
-                                    });
+                                    baseForOwn(
+                                        object,
+                                        function (value, key, object) {
+                                            baseAssignValue(
+                                                result,
+                                                iteratee(value, key, object),
+                                                value
+                                            );
+                                        }
+                                    );
                                     return result;
                                 }
 
@@ -22296,17 +22319,16 @@
                                     var result = {};
                                     iteratee = getIteratee(iteratee, 3);
 
-                                    baseForOwn(object, function (
-                                        value,
-                                        key,
-                                        object
-                                    ) {
-                                        baseAssignValue(
-                                            result,
-                                            key,
-                                            iteratee(value, key, object)
-                                        );
-                                    });
+                                    baseForOwn(
+                                        object,
+                                        function (value, key, object) {
+                                            baseAssignValue(
+                                                result,
+                                                key,
+                                                iteratee(value, key, object)
+                                            );
+                                        }
+                                    );
                                     return result;
                                 }
 
@@ -22525,12 +22547,13 @@
                                         }
                                     );
                                     predicate = getIteratee(predicate);
-                                    return basePickBy(object, props, function (
-                                        value,
-                                        path
-                                    ) {
-                                        return predicate(value, path[0]);
-                                    });
+                                    return basePickBy(
+                                        object,
+                                        props,
+                                        function (value, path) {
+                                            return predicate(value, path[0]);
+                                        }
+                                    );
                                 }
 
                                 /**
@@ -23980,52 +24003,56 @@
                                               "]") +
                                         "\n";
 
-                                    string.replace(reDelimiters, function (
-                                        match,
-                                        escapeValue,
-                                        interpolateValue,
-                                        esTemplateValue,
-                                        evaluateValue,
-                                        offset
-                                    ) {
-                                        interpolateValue ||
-                                            (interpolateValue = esTemplateValue);
+                                    string.replace(
+                                        reDelimiters,
+                                        function (
+                                            match,
+                                            escapeValue,
+                                            interpolateValue,
+                                            esTemplateValue,
+                                            evaluateValue,
+                                            offset
+                                        ) {
+                                            interpolateValue ||
+                                                (interpolateValue =
+                                                    esTemplateValue);
 
-                                        // Escape characters that can't be included in string literals.
-                                        source += string
-                                            .slice(index, offset)
-                                            .replace(
-                                                reUnescapedString,
-                                                escapeStringChar
-                                            );
+                                            // Escape characters that can't be included in string literals.
+                                            source += string
+                                                .slice(index, offset)
+                                                .replace(
+                                                    reUnescapedString,
+                                                    escapeStringChar
+                                                );
 
-                                        // Replace delimiters with snippets.
-                                        if (escapeValue) {
-                                            isEscaping = true;
-                                            source +=
-                                                "' +\n__e(" +
-                                                escapeValue +
-                                                ") +\n'";
-                                        }
-                                        if (evaluateValue) {
-                                            isEvaluating = true;
-                                            source +=
-                                                "';\n" +
-                                                evaluateValue +
-                                                ";\n__p += '";
-                                        }
-                                        if (interpolateValue) {
-                                            source +=
-                                                "' +\n((__t = (" +
-                                                interpolateValue +
-                                                ")) == null ? '' : __t) +\n'";
-                                        }
-                                        index = offset + match.length;
+                                            // Replace delimiters with snippets.
+                                            if (escapeValue) {
+                                                isEscaping = true;
+                                                source +=
+                                                    "' +\n__e(" +
+                                                    escapeValue +
+                                                    ") +\n'";
+                                            }
+                                            if (evaluateValue) {
+                                                isEvaluating = true;
+                                                source +=
+                                                    "';\n" +
+                                                    evaluateValue +
+                                                    ";\n__p += '";
+                                            }
+                                            if (interpolateValue) {
+                                                source +=
+                                                    "' +\n((__t = (" +
+                                                    interpolateValue +
+                                                    ")) == null ? '' : __t) +\n'";
+                                            }
+                                            index = offset + match.length;
 
-                                        // The JS engine embedded in Adobe products needs `match` returned in
-                                        // order to produce the correct `offset` value.
-                                        return match;
-                                    });
+                                            // The JS engine embedded in Adobe products needs `match` returned in
+                                            // order to produce the correct `offset` value.
+                                            return match;
+                                        }
+                                    );
 
                                     source += "';\n";
 
@@ -24041,12 +24068,13 @@
                                             "with (obj) {\n" + source + "\n}\n";
                                     }
                                     // Cleanup code by stripping empty strings.
-                                    source = (isEvaluating
-                                        ? source.replace(
-                                              reEmptyStringLeading,
-                                              ""
-                                          )
-                                        : source
+                                    source = (
+                                        isEvaluating
+                                            ? source.replace(
+                                                  reEmptyStringLeading,
+                                                  ""
+                                              )
+                                            : source
                                     )
                                         .replace(reEmptyStringMiddle, "$1")
                                         .replace(reEmptyStringTrailing, "$1;");
@@ -24374,9 +24402,8 @@
                                             }
                                             separator.lastIndex = 0;
                                             while (
-                                                (match = separator.exec(
-                                                    substring
-                                                ))
+                                                (match =
+                                                    separator.exec(substring))
                                             ) {
                                                 var newEnd = match.index;
                                             }
@@ -24393,9 +24420,8 @@
                                             end
                                         ) != end
                                     ) {
-                                        var index = result.lastIndexOf(
-                                            separator
-                                        );
+                                        var index =
+                                            result.lastIndexOf(separator);
                                         if (index > -1) {
                                             result = result.slice(0, index);
                                         }
@@ -25060,42 +25086,48 @@
                                             ) || !!options.chain,
                                         isFunc = isFunction(object);
 
-                                    arrayEach(methodNames, function (
-                                        methodName
-                                    ) {
-                                        var func = source[methodName];
-                                        object[methodName] = func;
-                                        if (isFunc) {
-                                            object.prototype[
-                                                methodName
-                                            ] = function () {
-                                                var chainAll = this.__chain__;
-                                                if (chain || chainAll) {
-                                                    var result = object(
-                                                            this.__wrapped__
-                                                        ),
-                                                        actions = (result.__actions__ = copyArray(
-                                                            this.__actions__
-                                                        ));
+                                    arrayEach(
+                                        methodNames,
+                                        function (methodName) {
+                                            var func = source[methodName];
+                                            object[methodName] = func;
+                                            if (isFunc) {
+                                                object.prototype[methodName] =
+                                                    function () {
+                                                        var chainAll =
+                                                            this.__chain__;
+                                                        if (chain || chainAll) {
+                                                            var result = object(
+                                                                    this
+                                                                        .__wrapped__
+                                                                ),
+                                                                actions =
+                                                                    (result.__actions__ =
+                                                                        copyArray(
+                                                                            this
+                                                                                .__actions__
+                                                                        ));
 
-                                                    actions.push({
-                                                        func: func,
-                                                        args: arguments,
-                                                        thisArg: object,
-                                                    });
-                                                    result.__chain__ = chainAll;
-                                                    return result;
-                                                }
-                                                return func.apply(
-                                                    object,
-                                                    arrayPush(
-                                                        [this.value()],
-                                                        arguments
-                                                    )
-                                                );
-                                            };
+                                                            actions.push({
+                                                                func: func,
+                                                                args: arguments,
+                                                                thisArg: object,
+                                                            });
+                                                            result.__chain__ =
+                                                                chainAll;
+                                                            return result;
+                                                        }
+                                                        return func.apply(
+                                                            object,
+                                                            arrayPush(
+                                                                [this.value()],
+                                                                arguments
+                                                            )
+                                                        );
+                                                    };
+                                            }
                                         }
-                                    });
+                                    );
 
                                     return object;
                                 }
@@ -26267,19 +26299,19 @@
                                     lodash,
                                     (function () {
                                         var source = {};
-                                        baseForOwn(lodash, function (
-                                            func,
-                                            methodName
-                                        ) {
-                                            if (
-                                                !hasOwnProperty.call(
-                                                    lodash.prototype,
-                                                    methodName
-                                                )
-                                            ) {
-                                                source[methodName] = func;
+                                        baseForOwn(
+                                            lodash,
+                                            function (func, methodName) {
+                                                if (
+                                                    !hasOwnProperty.call(
+                                                        lodash.prototype,
+                                                        methodName
+                                                    )
+                                                ) {
+                                                    source[methodName] = func;
+                                                }
                                             }
-                                        });
+                                        );
                                         return source;
                                     })(),
                                     { chain: false }
@@ -26312,52 +26344,55 @@
                                 );
 
                                 // Add `LazyWrapper` methods for `_.drop` and `_.take` variants.
-                                arrayEach(["drop", "take"], function (
-                                    methodName,
-                                    index
-                                ) {
-                                    LazyWrapper.prototype[
-                                        methodName
-                                    ] = function (n) {
-                                        n =
-                                            n === undefined
-                                                ? 1
-                                                : nativeMax(toInteger(n), 0);
+                                arrayEach(
+                                    ["drop", "take"],
+                                    function (methodName, index) {
+                                        LazyWrapper.prototype[methodName] =
+                                            function (n) {
+                                                n =
+                                                    n === undefined
+                                                        ? 1
+                                                        : nativeMax(
+                                                              toInteger(n),
+                                                              0
+                                                          );
 
-                                        var result =
-                                            this.__filtered__ && !index
-                                                ? new LazyWrapper(this)
-                                                : this.clone();
+                                                var result =
+                                                    this.__filtered__ && !index
+                                                        ? new LazyWrapper(this)
+                                                        : this.clone();
 
-                                        if (result.__filtered__) {
-                                            result.__takeCount__ = nativeMin(
-                                                n,
-                                                result.__takeCount__
-                                            );
-                                        } else {
-                                            result.__views__.push({
-                                                size: nativeMin(
-                                                    n,
-                                                    MAX_ARRAY_LENGTH
-                                                ),
-                                                type:
-                                                    methodName +
-                                                    (result.__dir__ < 0
-                                                        ? "Right"
-                                                        : ""),
-                                            });
-                                        }
-                                        return result;
-                                    };
+                                                if (result.__filtered__) {
+                                                    result.__takeCount__ =
+                                                        nativeMin(
+                                                            n,
+                                                            result.__takeCount__
+                                                        );
+                                                } else {
+                                                    result.__views__.push({
+                                                        size: nativeMin(
+                                                            n,
+                                                            MAX_ARRAY_LENGTH
+                                                        ),
+                                                        type:
+                                                            methodName +
+                                                            (result.__dir__ < 0
+                                                                ? "Right"
+                                                                : ""),
+                                                    });
+                                                }
+                                                return result;
+                                            };
 
-                                    LazyWrapper.prototype[
-                                        methodName + "Right"
-                                    ] = function (n) {
-                                        return this.reverse()
-                                            [methodName](n)
-                                            .reverse();
-                                    };
-                                });
+                                        LazyWrapper.prototype[
+                                            methodName + "Right"
+                                        ] = function (n) {
+                                            return this.reverse()
+                                                [methodName](n)
+                                                .reverse();
+                                        };
+                                    }
+                                );
 
                                 // Add `LazyWrapper` methods that accept an `iteratee` value.
                                 arrayEach(
@@ -26368,55 +26403,55 @@
                                                 type == LAZY_FILTER_FLAG ||
                                                 type == LAZY_WHILE_FLAG;
 
-                                        LazyWrapper.prototype[
-                                            methodName
-                                        ] = function (iteratee) {
-                                            var result = this.clone();
-                                            result.__iteratees__.push({
-                                                iteratee: getIteratee(
-                                                    iteratee,
-                                                    3
-                                                ),
-                                                type: type,
-                                            });
-                                            result.__filtered__ =
-                                                result.__filtered__ || isFilter;
-                                            return result;
-                                        };
+                                        LazyWrapper.prototype[methodName] =
+                                            function (iteratee) {
+                                                var result = this.clone();
+                                                result.__iteratees__.push({
+                                                    iteratee: getIteratee(
+                                                        iteratee,
+                                                        3
+                                                    ),
+                                                    type: type,
+                                                });
+                                                result.__filtered__ =
+                                                    result.__filtered__ ||
+                                                    isFilter;
+                                                return result;
+                                            };
                                     }
                                 );
 
                                 // Add `LazyWrapper` methods for `_.head` and `_.last`.
-                                arrayEach(["head", "last"], function (
-                                    methodName,
-                                    index
-                                ) {
-                                    var takeName =
-                                        "take" + (index ? "Right" : "");
+                                arrayEach(
+                                    ["head", "last"],
+                                    function (methodName, index) {
+                                        var takeName =
+                                            "take" + (index ? "Right" : "");
 
-                                    LazyWrapper.prototype[
-                                        methodName
-                                    ] = function () {
-                                        return this[takeName](1).value()[0];
-                                    };
-                                });
+                                        LazyWrapper.prototype[methodName] =
+                                            function () {
+                                                return this[takeName](
+                                                    1
+                                                ).value()[0];
+                                            };
+                                    }
+                                );
 
                                 // Add `LazyWrapper` methods for `_.initial` and `_.tail`.
-                                arrayEach(["initial", "tail"], function (
-                                    methodName,
-                                    index
-                                ) {
-                                    var dropName =
-                                        "drop" + (index ? "" : "Right");
+                                arrayEach(
+                                    ["initial", "tail"],
+                                    function (methodName, index) {
+                                        var dropName =
+                                            "drop" + (index ? "" : "Right");
 
-                                    LazyWrapper.prototype[
-                                        methodName
-                                    ] = function () {
-                                        return this.__filtered__
-                                            ? new LazyWrapper(this)
-                                            : this[dropName](1);
-                                    };
-                                });
+                                        LazyWrapper.prototype[methodName] =
+                                            function () {
+                                                return this.__filtered__
+                                                    ? new LazyWrapper(this)
+                                                    : this[dropName](1);
+                                            };
+                                    }
+                                );
 
                                 LazyWrapper.prototype.compact = function () {
                                     return this.filter(identity);
@@ -26485,107 +26520,127 @@
                                     return result;
                                 };
 
-                                LazyWrapper.prototype.takeRightWhile = function (
-                                    predicate
-                                ) {
-                                    return this.reverse()
-                                        .takeWhile(predicate)
-                                        .reverse();
-                                };
+                                LazyWrapper.prototype.takeRightWhile =
+                                    function (predicate) {
+                                        return this.reverse()
+                                            .takeWhile(predicate)
+                                            .reverse();
+                                    };
 
                                 LazyWrapper.prototype.toArray = function () {
                                     return this.take(MAX_ARRAY_LENGTH);
                                 };
 
                                 // Add `LazyWrapper` methods to `lodash.prototype`.
-                                baseForOwn(LazyWrapper.prototype, function (
-                                    func,
-                                    methodName
-                                ) {
-                                    var checkIteratee = /^(?:filter|find|map|reject)|While$/.test(
-                                            methodName
-                                        ),
-                                        isTaker = /^(?:head|last)$/.test(
-                                            methodName
-                                        ),
-                                        lodashFunc =
-                                            lodash[
-                                                isTaker
-                                                    ? "take" +
-                                                      (methodName == "last"
-                                                          ? "Right"
-                                                          : "")
-                                                    : methodName
-                                            ],
-                                        retUnwrapped =
-                                            isTaker || /^find/.test(methodName);
+                                baseForOwn(
+                                    LazyWrapper.prototype,
+                                    function (func, methodName) {
+                                        var checkIteratee =
+                                                /^(?:filter|find|map|reject)|While$/.test(
+                                                    methodName
+                                                ),
+                                            isTaker = /^(?:head|last)$/.test(
+                                                methodName
+                                            ),
+                                            lodashFunc =
+                                                lodash[
+                                                    isTaker
+                                                        ? "take" +
+                                                          (methodName == "last"
+                                                              ? "Right"
+                                                              : "")
+                                                        : methodName
+                                                ],
+                                            retUnwrapped =
+                                                isTaker ||
+                                                /^find/.test(methodName);
 
-                                    if (!lodashFunc) {
-                                        return;
+                                        if (!lodashFunc) {
+                                            return;
+                                        }
+                                        lodash.prototype[methodName] =
+                                            function () {
+                                                var value = this.__wrapped__,
+                                                    args = isTaker
+                                                        ? [1]
+                                                        : arguments,
+                                                    isLazy =
+                                                        value instanceof
+                                                        LazyWrapper,
+                                                    iteratee = args[0],
+                                                    useLazy =
+                                                        isLazy ||
+                                                        isArray(value);
+
+                                                var interceptor = function (
+                                                    value
+                                                ) {
+                                                    var result =
+                                                        lodashFunc.apply(
+                                                            lodash,
+                                                            arrayPush(
+                                                                [value],
+                                                                args
+                                                            )
+                                                        );
+                                                    return isTaker && chainAll
+                                                        ? result[0]
+                                                        : result;
+                                                };
+
+                                                if (
+                                                    useLazy &&
+                                                    checkIteratee &&
+                                                    typeof iteratee ==
+                                                        "function" &&
+                                                    iteratee.length != 1
+                                                ) {
+                                                    // Avoid lazy use if the iteratee has a "length" value other than `1`.
+                                                    isLazy = useLazy = false;
+                                                }
+                                                var chainAll = this.__chain__,
+                                                    isHybrid =
+                                                        !!this.__actions__
+                                                            .length,
+                                                    isUnwrapped =
+                                                        retUnwrapped &&
+                                                        !chainAll,
+                                                    onlyLazy =
+                                                        isLazy && !isHybrid;
+
+                                                if (!retUnwrapped && useLazy) {
+                                                    value = onlyLazy
+                                                        ? value
+                                                        : new LazyWrapper(this);
+                                                    var result = func.apply(
+                                                        value,
+                                                        args
+                                                    );
+                                                    result.__actions__.push({
+                                                        func: thru,
+                                                        args: [interceptor],
+                                                        thisArg: undefined,
+                                                    });
+                                                    return new LodashWrapper(
+                                                        result,
+                                                        chainAll
+                                                    );
+                                                }
+                                                if (isUnwrapped && onlyLazy) {
+                                                    return func.apply(
+                                                        this,
+                                                        args
+                                                    );
+                                                }
+                                                result = this.thru(interceptor);
+                                                return isUnwrapped
+                                                    ? isTaker
+                                                        ? result.value()[0]
+                                                        : result.value()
+                                                    : result;
+                                            };
                                     }
-                                    lodash.prototype[methodName] = function () {
-                                        var value = this.__wrapped__,
-                                            args = isTaker ? [1] : arguments,
-                                            isLazy =
-                                                value instanceof LazyWrapper,
-                                            iteratee = args[0],
-                                            useLazy = isLazy || isArray(value);
-
-                                        var interceptor = function (value) {
-                                            var result = lodashFunc.apply(
-                                                lodash,
-                                                arrayPush([value], args)
-                                            );
-                                            return isTaker && chainAll
-                                                ? result[0]
-                                                : result;
-                                        };
-
-                                        if (
-                                            useLazy &&
-                                            checkIteratee &&
-                                            typeof iteratee == "function" &&
-                                            iteratee.length != 1
-                                        ) {
-                                            // Avoid lazy use if the iteratee has a "length" value other than `1`.
-                                            isLazy = useLazy = false;
-                                        }
-                                        var chainAll = this.__chain__,
-                                            isHybrid = !!this.__actions__
-                                                .length,
-                                            isUnwrapped =
-                                                retUnwrapped && !chainAll,
-                                            onlyLazy = isLazy && !isHybrid;
-
-                                        if (!retUnwrapped && useLazy) {
-                                            value = onlyLazy
-                                                ? value
-                                                : new LazyWrapper(this);
-                                            var result = func.apply(
-                                                value,
-                                                args
-                                            );
-                                            result.__actions__.push({
-                                                func: thru,
-                                                args: [interceptor],
-                                                thisArg: undefined,
-                                            });
-                                            return new LodashWrapper(
-                                                result,
-                                                chainAll
-                                            );
-                                        }
-                                        if (isUnwrapped && onlyLazy) {
-                                            return func.apply(this, args);
-                                        }
-                                        result = this.thru(interceptor);
-                                        return isUnwrapped
-                                            ? isTaker
-                                                ? result.value()[0]
-                                                : result.value()
-                                            : result;
-                                    };
-                                });
+                                );
 
                                 // Add `Array` methods to `lodash.prototype`.
                                 arrayEach(
@@ -26599,60 +26654,68 @@
                                     ],
                                     function (methodName) {
                                         var func = arrayProto[methodName],
-                                            chainName = /^(?:push|sort|unshift)$/.test(
-                                                methodName
-                                            )
-                                                ? "tap"
-                                                : "thru",
-                                            retUnwrapped = /^(?:pop|shift)$/.test(
-                                                methodName
-                                            );
+                                            chainName =
+                                                /^(?:push|sort|unshift)$/.test(
+                                                    methodName
+                                                )
+                                                    ? "tap"
+                                                    : "thru",
+                                            retUnwrapped =
+                                                /^(?:pop|shift)$/.test(
+                                                    methodName
+                                                );
 
-                                        lodash.prototype[
-                                            methodName
-                                        ] = function () {
-                                            var args = arguments;
-                                            if (
-                                                retUnwrapped &&
-                                                !this.__chain__
-                                            ) {
-                                                var value = this.value();
-                                                return func.apply(
-                                                    isArray(value) ? value : [],
-                                                    args
+                                        lodash.prototype[methodName] =
+                                            function () {
+                                                var args = arguments;
+                                                if (
+                                                    retUnwrapped &&
+                                                    !this.__chain__
+                                                ) {
+                                                    var value = this.value();
+                                                    return func.apply(
+                                                        isArray(value)
+                                                            ? value
+                                                            : [],
+                                                        args
+                                                    );
+                                                }
+                                                return this[chainName](
+                                                    function (value) {
+                                                        return func.apply(
+                                                            isArray(value)
+                                                                ? value
+                                                                : [],
+                                                            args
+                                                        );
+                                                    }
                                                 );
-                                            }
-                                            return this[chainName](function (
-                                                value
-                                            ) {
-                                                return func.apply(
-                                                    isArray(value) ? value : [],
-                                                    args
-                                                );
-                                            });
-                                        };
+                                            };
                                     }
                                 );
 
                                 // Map minified method names to their real names.
-                                baseForOwn(LazyWrapper.prototype, function (
-                                    func,
-                                    methodName
-                                ) {
-                                    var lodashFunc = lodash[methodName];
-                                    if (lodashFunc) {
-                                        var key = lodashFunc.name + "";
-                                        if (
-                                            !hasOwnProperty.call(realNames, key)
-                                        ) {
-                                            realNames[key] = [];
+                                baseForOwn(
+                                    LazyWrapper.prototype,
+                                    function (func, methodName) {
+                                        var lodashFunc = lodash[methodName];
+                                        if (lodashFunc) {
+                                            var key = lodashFunc.name + "";
+                                            if (
+                                                !hasOwnProperty.call(
+                                                    realNames,
+                                                    key
+                                                )
+                                            ) {
+                                                realNames[key] = [];
+                                            }
+                                            realNames[key].push({
+                                                name: methodName,
+                                                func: lodashFunc,
+                                            });
                                         }
-                                        realNames[key].push({
-                                            name: methodName,
-                                            func: lodashFunc,
-                                        });
                                     }
-                                });
+                                );
 
                                 realNames[
                                     createHybrid(
@@ -26678,15 +26741,17 @@
                                 lodash.prototype.next = wrapperNext;
                                 lodash.prototype.plant = wrapperPlant;
                                 lodash.prototype.reverse = wrapperReverse;
-                                lodash.prototype.toJSON = lodash.prototype.valueOf = lodash.prototype.value = wrapperValue;
+                                lodash.prototype.toJSON =
+                                    lodash.prototype.valueOf =
+                                    lodash.prototype.value =
+                                        wrapperValue;
 
                                 // Add lazy aliases.
                                 lodash.prototype.first = lodash.prototype.head;
 
                                 if (symIterator) {
-                                    lodash.prototype[
-                                        symIterator
-                                    ] = wrapperToIterator;
+                                    lodash.prototype[symIterator] =
+                                        wrapperToIterator;
                                 }
                                 return lodash;
                             };

@@ -985,14 +985,17 @@
             S = " ",
             objectToString = Object.prototype.toString,
             ISURL = /^url\(['"]?([^\)]+?)['"]?\)$/i,
-            colourRegExp = /^\s*((#[a-f\d]{6})|(#[a-f\d]{3})|rgba?\(\s*([\d\.]+%?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+%?(?:\s*,\s*[\d\.]+%?)?)\s*\)|hsba?\(\s*([\d\.]+(?:deg|\xb0|%)?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+(?:%?\s*,\s*[\d\.]+)?%?)\s*\)|hsla?\(\s*([\d\.]+(?:deg|\xb0|%)?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+(?:%?\s*,\s*[\d\.]+)?%?)\s*\))\s*$/i,
+            colourRegExp =
+                /^\s*((#[a-f\d]{6})|(#[a-f\d]{3})|rgba?\(\s*([\d\.]+%?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+%?(?:\s*,\s*[\d\.]+%?)?)\s*\)|hsba?\(\s*([\d\.]+(?:deg|\xb0|%)?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+(?:%?\s*,\s*[\d\.]+)?%?)\s*\)|hsla?\(\s*([\d\.]+(?:deg|\xb0|%)?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+(?:%?\s*,\s*[\d\.]+)?%?)\s*\))\s*$/i,
             bezierrg = /^(?:cubic-)?bezier\(([^,]+),([^,]+),([^,]+),([^\)]+)\)/,
             separator = (Snap._.separator = /[,\s]+/),
             whitespace = /[\s]/g,
             commaSpaces = /[\s]*,[\s]*/,
             hsrg = { hs: 1, rg: 1 },
-            pathCommand = /([a-z])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?[\s]*,?[\s]*)+)/gi,
-            tCommand = /([rstm])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?[\s]*,?[\s]*)+)/gi,
+            pathCommand =
+                /([a-z])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?[\s]*,?[\s]*)+)/gi,
+            tCommand =
+                /([rstm])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?[\s]*,?[\s]*)+)/gi,
             pathValues = /(-?\d*\.?\d*(?:e[\-+]?\d+)?)[\s]*,?[\s]*/gi,
             idgen = 0,
             idprefix = "S" + (+new Date()).toString(36),
@@ -1138,24 +1141,24 @@
 \*/
         Snap.format = (function () {
             var tokenRegex = /\{([^\}]+)\}/g,
-                objNotationRegex = /(?:(?:^|\.)(.+?)(?=\[|\.|$|\()|\[('|")(.+?)\2\])(\(\))?/g, // matches .xxxxx or ["xxxxx"] to run over object properties
+                objNotationRegex =
+                    /(?:(?:^|\.)(.+?)(?=\[|\.|$|\()|\[('|")(.+?)\2\])(\(\))?/g, // matches .xxxxx or ["xxxxx"] to run over object properties
                 replacer = function (all, key, obj) {
                     var res = obj;
-                    key.replace(objNotationRegex, function (
-                        all,
-                        name,
-                        quote,
-                        quotedName,
-                        isFunc
-                    ) {
-                        name = name || quotedName;
-                        if (res) {
-                            if (name in res) {
-                                res = res[name];
+                    key.replace(
+                        objNotationRegex,
+                        function (all, name, quote, quotedName, isFunc) {
+                            name = name || quotedName;
+                            if (res) {
+                                if (name in res) {
+                                    res = res[name];
+                                }
+                                typeof res == "function" &&
+                                    isFunc &&
+                                    (res = res());
                             }
-                            typeof res == "function" && isFunc && (res = res());
                         }
-                    });
+                    );
                     res = (res == null || res == obj ? all : res) + "";
                     return res;
                 };
@@ -2094,34 +2097,49 @@
         });
         function svgTransform2string(tstr) {
             var res = [];
-            tstr = tstr.replace(/(?:^|\s)(\w+)\(([^)]+)\)/g, function (
-                all,
-                name,
-                params
-            ) {
-                params = params.split(/\s*,\s*|\s+/);
-                if (name == "rotate" && params.length == 1) {
-                    params.push(0, 0);
-                }
-                if (name == "scale") {
-                    if (params.length > 2) {
-                        params = params.slice(0, 2);
-                    } else if (params.length == 2) {
+            tstr = tstr.replace(
+                /(?:^|\s)(\w+)\(([^)]+)\)/g,
+                function (all, name, params) {
+                    params = params.split(/\s*,\s*|\s+/);
+                    if (name == "rotate" && params.length == 1) {
                         params.push(0, 0);
                     }
-                    if (params.length == 1) {
-                        params.push(params[0], 0, 0);
+                    if (name == "scale") {
+                        if (params.length > 2) {
+                            params = params.slice(0, 2);
+                        } else if (params.length == 2) {
+                            params.push(0, 0);
+                        }
+                        if (params.length == 1) {
+                            params.push(params[0], 0, 0);
+                        }
                     }
+                    if (name == "skewX") {
+                        res.push([
+                            "m",
+                            1,
+                            0,
+                            math.tan(rad(params[0])),
+                            1,
+                            0,
+                            0,
+                        ]);
+                    } else if (name == "skewY") {
+                        res.push([
+                            "m",
+                            1,
+                            math.tan(rad(params[0])),
+                            0,
+                            1,
+                            0,
+                            0,
+                        ]);
+                    } else {
+                        res.push([name.charAt(0)].concat(params));
+                    }
+                    return all;
                 }
-                if (name == "skewX") {
-                    res.push(["m", 1, 0, math.tan(rad(params[0])), 1, 0, 0]);
-                } else if (name == "skewY") {
-                    res.push(["m", 1, math.tan(rad(params[0])), 0, 1, 0, 0]);
-                } else {
-                    res.push([name.charAt(0)].concat(params));
-                }
-                return all;
-            });
+            );
             return res;
         }
         Snap._.svgTransform2string = svgTransform2string;
@@ -6324,32 +6342,12 @@
             var z2 = z / 2,
                 n = 12,
                 Tvalues = [
-                    -0.1252,
-                    0.1252,
-                    -0.3678,
-                    0.3678,
-                    -0.5873,
-                    0.5873,
-                    -0.7699,
-                    0.7699,
-                    -0.9041,
-                    0.9041,
-                    -0.9816,
-                    0.9816,
+                    -0.1252, 0.1252, -0.3678, 0.3678, -0.5873, 0.5873, -0.7699,
+                    0.7699, -0.9041, 0.9041, -0.9816, 0.9816,
                 ],
                 Cvalues = [
-                    0.2491,
-                    0.2491,
-                    0.2335,
-                    0.2335,
-                    0.2032,
-                    0.2032,
-                    0.1601,
-                    0.1601,
-                    0.1069,
-                    0.1069,
-                    0.0472,
-                    0.0472,
+                    0.2491, 0.2491, 0.2335, 0.2335, 0.2032, 0.2032, 0.1601,
+                    0.1601, 0.1069, 0.1069, 0.0472, 0.0472,
                 ],
                 sum = 0;
             for (var i = 0; i < n; i++) {

@@ -30,7 +30,9 @@ def parseTransform(transf, mat=[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]):
     if transf == "" or transf == None:
         return mat
     stransf = transf.strip()
-    result = re.match("(translate|scale|rotate|skewX|skewY|matrix)\s*\(([^)]*)\)\s*,?", stransf)
+    result = re.match(
+        "(translate|scale|rotate|skewX|skewY|matrix)\s*\(([^)]*)\)\s*,?", stransf
+    )
     # -- translate --
     if result.group(1) == "translate":
         args = result.group(2).replace(",", " ").split()
@@ -136,7 +138,9 @@ def applyTransformToPath(mat, path):
 def fuseTransform(node):
     if node.get("d") == None:
         # FIXME: how do you raise errors?
-        raise AssertionError('can not fuse "transform" of elements that have no "d" attribute')
+        raise AssertionError(
+            'can not fuse "transform" of elements that have no "d" attribute'
+        )
     t = node.get("transform")
     if t == None:
         return
@@ -284,7 +288,16 @@ def computeBBox(aList, mat=[[1, 0, 0], [0, 1, 0]]):
                 + node.get("width")
             )
         elif node.tag in [_add_ns("line", "svg"), "line"]:
-            d = "M" + node.get("x1") + "," + node.get("y1") + " " + node.get("x2") + "," + node.get("y2")
+            d = (
+                "M"
+                + node.get("x1")
+                + ","
+                + node.get("y1")
+                + " "
+                + node.get("x2")
+                + ","
+                + node.get("y2")
+            )
         elif node.tag in [
             _add_ns("circle", "svg"),
             "circle",

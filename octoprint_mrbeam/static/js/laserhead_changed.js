@@ -7,25 +7,34 @@ $(function () {
         self.loginState = params[1];
 
         self.onUserLoggedIn = function () {
-            if (
-                self.loginState.currentUser?.()?.active
-            ) {
+            if (self.loginState.currentUser?.()?.active) {
                 if (self.settings.settings.plugins.mrbeam.laserheadChanged()) {
                     $("#laserhead_changed").modal("show");
                 }
             }
         };
 
-        self.laserheadChangeAcknowledged = function (){
-            OctoPrint.simpleApiCommand("mrbeam", "laserhead_change_acknowledged", {})
+        self.laserheadChangeAcknowledged = function () {
+            OctoPrint.simpleApiCommand(
+                "mrbeam",
+                "laserhead_change_acknowledged",
+                {}
+            )
                 .done(function () {
-                    console.log("simpleApiCall response for saving laserhead change detection: ");
+                    console.log(
+                        "simpleApiCall response for saving laserhead change detection: "
+                    );
                 })
                 .fail(function () {
                     self.settings.requestData();
-                    console.error("Unable to save laserhead change detection state: ", data);
+                    console.error(
+                        "Unable to save laserhead change detection state: ",
+                        data
+                    );
                     new PNotify({
-                        title: gettext("Error while saving laserhead change detection!"),
+                        title: gettext(
+                            "Error while saving laserhead change detection!"
+                        ),
                         text: _.sprintf(
                             gettext(
                                 "Unable to save laserhead change detection at the moment.%(br)sCheck connection to Mr Beam and try again."
@@ -36,7 +45,7 @@ $(function () {
                         hide: true,
                     });
                 });
-        }
+        };
     }
 
     // view model class, parameters for constructor, container to bind to

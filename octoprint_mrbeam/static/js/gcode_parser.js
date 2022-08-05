@@ -27,7 +27,8 @@ $(function () {
             var withinPixelCode = false;
 
             var gcode_lines = gcode.split(/\n/);
-            var gcode_regex = /^(G0|G00|G1|G01|G2|G02|G3|G03|G90|G91|G92|G28|\$H|M3|M03|M5|M05)\s*(.*)/;
+            var gcode_regex =
+                /^(G0|G00|G1|G01|G2|G02|G3|G03|G90|G91|G92|G28|\$H|M3|M03|M5|M05)\s*(.*)/;
 
             var model = [];
             for (var i = 0; i < gcode_lines.length; i++) {
@@ -35,7 +36,8 @@ $(function () {
                 if (l.match(/; ?Image/) && !window.MRBEAM_DEBUG_RENDERING) {
                     withinPixelCode = true;
                     // ;Image: 24.71x18.58 @ 2.59,1.70|http://localhost:5000/serve/files/local/filename.png
-                    var re = /; ?Image: ([-+]?[0-9]*\.?[0-9]+)x([-+]?[0-9]*\.?[0-9]+) @ ([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)\|(.*)$/;
+                    var re =
+                        /; ?Image: ([-+]?[0-9]*\.?[0-9]+)x([-+]?[0-9]*\.?[0-9]+) @ ([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)\|(.*)$/;
                     var match = l.match(re);
                     if (match) {
                         var w = parseFloat(match[1]);
