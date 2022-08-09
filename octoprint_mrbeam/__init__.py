@@ -666,7 +666,7 @@ class MrBeamPlugin(
                 "js/app/snap-plugins/gcode.js",
                 "js/app/helpers/gcode-parser.js",
                 "js/app/snap-plugins/gridify.js",
-                "js/app/snap-plugins/svg_cleaner.js",
+                "js/app/snap-plugins/svg-cleaner.js",
                 "js/app/view-models/modal/loginscreen.js",
                 "js/app/view-models/wizard/wizard-acl.js",
                 "js/app/view-models/wizard/netconnectd-wrapper.js",
