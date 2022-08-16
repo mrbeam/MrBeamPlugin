@@ -122,7 +122,8 @@ $(function () {
 
         self.markerDetectionMode = function () {
             // retrieve the detection mode from the back end
-            remember = self.settings.plugins.mrbeam.cam.remember_markers_across_sessions();
+            remember =
+                self.settings.plugins.mrbeam.cam.remember_markers_across_sessions();
             if (remember === undefined) return "reliable";
             else return remember ? "reliable" : "accurate";
         };
@@ -197,9 +198,7 @@ $(function () {
 
         self.onAllBound = function () {
             self.setMarkerDetectionMode();
-            new MutationObserver(
-                self._testCameraSettingsActive
-            ).observe(
+            new MutationObserver(self._testCameraSettingsActive).observe(
                 document.getElementById("settings_plugin_mrbeam_camera"),
                 { attributes: true }
             );

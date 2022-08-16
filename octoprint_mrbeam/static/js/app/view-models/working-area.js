@@ -718,12 +718,10 @@ $(function () {
                 file.misfit = false;
 
                 // get scale matrix
-                var generator_info = WorkingAreaHelper.getGeneratorInfo(
-                    fragment
-                );
-                var doc_dimensions = self._getDocumentDimensionAttributes(
-                    fragment
-                );
+                var generator_info =
+                    WorkingAreaHelper.getGeneratorInfo(fragment);
+                var doc_dimensions =
+                    self._getDocumentDimensionAttributes(fragment);
                 var unitScaleX = self._getDocumentScaleToMM(
                     doc_dimensions.units_x,
                     generator_info
@@ -796,9 +794,8 @@ $(function () {
 
                 var tx = 0;
                 var ty = 0;
-                var doc_dimensions = self._getDocumentDimensionAttributes(
-                    fragment
-                );
+                var doc_dimensions =
+                    self._getDocumentDimensionAttributes(fragment);
                 var viewbox = doc_dimensions.viewbox.split(" ");
                 var origin_left = parseFloat(viewbox[0]);
                 var origin_top = parseFloat(viewbox[1]);
@@ -917,9 +914,8 @@ $(function () {
                             ? fontFam.replace(/"/g, "").replace(/'/g, "")
                             : null;
                         if (!fontFam || !Boolean(fontFam.trim())) {
-                            fontFam = allNodes[i].node.getAttribute(
-                                "font-family"
-                            );
+                            fontFam =
+                                allNodes[i].node.getAttribute("font-family");
                         }
                         fontFam = fontFam
                             ? fontFam.replace(/"/g, "").replace(/'/g, "")
@@ -1240,16 +1236,23 @@ $(function () {
                 if (generator.generator === "inkscape") {
                     let isOldInkscapeVersion = NaN;
                     try {
-                        isOldInkscapeVersion= window.compareVersions(
-                            // 1.1.2 (1:1.1+202202050950+0a00cf5339) -> 1.1
-                            generator.version.split('.').slice(0,2).join('.'),
-                            "0.91"
-                        ) <= 0;
-                    } catch(e) {
+                        isOldInkscapeVersion =
+                            window.compareVersions(
+                                // 1.1.2 (1:1.1+202202050950+0a00cf5339) -> 1.1
+                                generator.version
+                                    .split(".")
+                                    .slice(0, 2)
+                                    .join("."),
+                                "0.91"
+                            ) <= 0;
+                    } catch (e) {
                         let payload = {
                             error: e.message,
                         };
-                        self._sendAnalytics("inkscape_version_comparison_error", payload);
+                        self._sendAnalytics(
+                            "inkscape_version_comparison_error",
+                            payload
+                        );
                         console.log("inkscape_version_comparison_error: ", e);
                         // In case the comparison fails, we assume the version to be above 0.91
                         // This assumption (the scaling) does not have a major impact as it has
@@ -3100,11 +3103,16 @@ $(function () {
                 return {
                     beamOS: BEAMOS_DISPLAY_VERSION,
                     gc_nextgen: mrbeam.path.version,
-                    enabled: self.settings.settings.plugins.mrbeam.gcode_nextgen.enabled(),
-                    precision: self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
-                    optimize_travel: self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),
-                    small_paths_first: self.settings.settings.plugins.mrbeam.gcode_nextgen.small_paths_first(),
-                    clip_working_area: self.settings.settings.plugins.mrbeam.gcode_nextgen.clip_working_area(),
+                    enabled:
+                        self.settings.settings.plugins.mrbeam.gcode_nextgen.enabled(),
+                    precision:
+                        self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
+                    optimize_travel:
+                        self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),
+                    small_paths_first:
+                        self.settings.settings.plugins.mrbeam.gcode_nextgen.small_paths_first(),
+                    clip_working_area:
+                        self.settings.settings.plugins.mrbeam.gcode_nextgen.clip_working_area(),
                     clipRect: [
                         0,
                         0,
@@ -3124,9 +3132,10 @@ $(function () {
             // opens preview pane on the left if hovered over one of the pink markers on the working area
             $("#camera_markers circle").mouseenter(function (e) {
                 // If found is undefined, we do not show the markers
-                found = self.camera.markersFound[
-                    $(e.target).attr("id").replace("marker", "")
-                ]();
+                found =
+                    self.camera.markersFound[
+                        $(e.target).attr("id").replace("marker", "")
+                    ]();
                 if (
                     !$("#wa_view_settings_body").hasClass("in") &&
                     found !== undefined &&
@@ -3515,20 +3524,29 @@ $(function () {
                 var qs_params = {
                     type: type,
                     color: $("#quick_shape_color").val(),
-                    rect_w: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_rect_w").val()), self.rectangleMaxWidth()),
-                    rect_h: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_rect_h").val()), self.rectangleMaxHeight()),
+                    rect_w: WorkingAreaHelper.limitValue(
+                        parseFloat($("#quick_shape_rect_w").val()),
+                        self.rectangleMaxWidth()
+                    ),
+                    rect_h: WorkingAreaHelper.limitValue(
+                        parseFloat($("#quick_shape_rect_h").val()),
+                        self.rectangleMaxHeight()
+                    ),
                     rect_radius: parseFloat(
                         $("#quick_shape_rect_radius").val()
                     ),
-                    line_length: WorkingAreaHelper.limitValue(parseFloat(
-                        $("#quick_shape_line_length").val()
-                    ), self.lineMaxLength()),
-                    circle_radius: WorkingAreaHelper.limitValue(parseFloat(
-                        $("#quick_shape_circle_radius").val()
-                    ), self.circleMaxRadius()),
-                    star_radius: WorkingAreaHelper.limitValue(parseFloat(
-                        $("#quick_shape_star_radius").val()
-                    ), self.starMaxRadius()),
+                    line_length: WorkingAreaHelper.limitValue(
+                        parseFloat($("#quick_shape_line_length").val()),
+                        self.lineMaxLength()
+                    ),
+                    circle_radius: WorkingAreaHelper.limitValue(
+                        parseFloat($("#quick_shape_circle_radius").val()),
+                        self.circleMaxRadius()
+                    ),
+                    star_radius: WorkingAreaHelper.limitValue(
+                        parseFloat($("#quick_shape_star_radius").val()),
+                        self.starMaxRadius()
+                    ),
                     star_corners: parseInt(
                         $("#quick_shape_star_corners").val(),
                         10
@@ -3536,8 +3554,14 @@ $(function () {
                     star_sharpness: parseFloat(
                         $("#quick_shape_star_sharpness").val()
                     ),
-                    heart_w: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_heart_w").val()), self.heartMaxWidth()),
-                    heart_h: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_heart_h").val()), self.heartMaxHeight()),
+                    heart_w: WorkingAreaHelper.limitValue(
+                        parseFloat($("#quick_shape_heart_w").val()),
+                        self.heartMaxWidth()
+                    ),
+                    heart_h: WorkingAreaHelper.limitValue(
+                        parseFloat($("#quick_shape_heart_h").val()),
+                        self.heartMaxHeight()
+                    ),
                     heart_lr: parseFloat($("#quick_shape_heart_lr").val()),
                     stroke: $("#quick_shape_stroke").prop("checked"),
                     fill_color: $("#quick_shape_fill_brightness").val(),
@@ -3843,9 +3867,8 @@ $(function () {
                 const isStraightText = $("#quick_text_straight").hasClass(
                     "active"
                 );
-                const counterclockwise = $("#quick_text_ccw").hasClass(
-                    "active"
-                );
+                const counterclockwise =
+                    $("#quick_text_ccw").hasClass("active");
 
                 const isFilled = self.currentQuickTextFile.fill;
                 const fillColor = (self.currentQuickTextFile.fillColor = $(
@@ -3935,7 +3958,7 @@ $(function () {
                     width: bb.width,
                     height: bb.height,
                     // When quicktext fill is enabled/disabled, the fill-opacity controls the inclusion/exclusion of the filling
-                    "fill-opacity": isFilled ? 1 : 0
+                    "fill-opacity": isFilled ? 1 : 0,
                 });
 
                 // update font of input field
@@ -4225,7 +4248,8 @@ $(function () {
 
             crosshairHandle.mousedown(function (event) {
                 self.abortFreeTransforms();
-                window.mrbeam.draggableCrosshair.origin = self.state.currentPos();
+                window.mrbeam.draggableCrosshair.origin =
+                    self.state.currentPos();
                 window.mrbeam.draggableCrosshair.destination =
                     window.mrbeam.draggableCrosshair.origin;
 
@@ -4333,7 +4357,8 @@ $(function () {
                         }
 
                         // reflect current movement for the calculation of the next step towards destination
-                        window.mrbeam.draggableCrosshair.origin = intermediatePos;
+                        window.mrbeam.draggableCrosshair.origin =
+                            intermediatePos;
                     }
                 }
 
