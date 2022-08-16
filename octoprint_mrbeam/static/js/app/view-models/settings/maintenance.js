@@ -192,7 +192,7 @@ $(function () {
                     let payload = {
                         link: linkId,
                     };
-                    self.analytics.send_fontend_event("link_click", payload);
+                    self.analytics.send_frontend_event("link_click", payload);
                 });
             });
             self.updateSettingsAbout();
@@ -391,7 +391,7 @@ $(function () {
                 let payload = {
                     link: "settings_maintenance_link",
                 };
-                self.analytics.send_fontend_event("link_click", payload);
+                self.analytics.send_frontend_event("link_click", payload);
             });
         };
 

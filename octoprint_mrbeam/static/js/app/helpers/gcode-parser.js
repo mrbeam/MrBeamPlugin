@@ -460,7 +460,7 @@ $(function () {
                 sb += "Radius to end of arc differs from radius to start:\n";
                 sb += "r1=" + radius + "\n";
                 sb += "r2=" + r2 + "\n";
-                console.warn("gcode_parser.js convertG2G3", sb);
+                console.warn("gcode-parser.js convertG2G3", sb);
             }
 
             // this is the real line calculation.

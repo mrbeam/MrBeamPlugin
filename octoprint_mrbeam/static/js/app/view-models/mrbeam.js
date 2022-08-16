@@ -272,6 +272,19 @@ $(function () {
             $(
                 "#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > label"
             ).text(gettext("E-mail address"));
+
+            // Settings menu
+            let settingsElement = $(
+                "#settings_dialog #settings_dialog_menu ul li"
+            );
+            settingsElement.hover(
+                function () {
+                    $(this).prev().addClass("prev");
+                },
+                function () {
+                    $(this).prev().removeClass("prev");
+                }
+            );
         };
 
         self.onAllBound = function () {
@@ -408,7 +421,7 @@ $(function () {
                             error401Count: error401Count,
                             triggerUrl: triggerUrl,
                         };
-                        self.analytics.send_fontend_event(
+                        self.analytics.send_frontend_event(
                             "expired_session",
                             payload
                         );
@@ -474,7 +487,7 @@ $(function () {
                             setTimeout(function () {
                                 OctoPrint.socket.reconnect();
                                 // Add to analytics to check how often passive logins are used after 401 errors
-                                self.analytics.send_fontend_event(
+                                self.analytics.send_frontend_event(
                                     "passive_login",
                                     {}
                                 );

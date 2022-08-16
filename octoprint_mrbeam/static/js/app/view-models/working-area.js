@@ -650,7 +650,7 @@ $(function () {
                 },
                 error: function () {
                     console.error(
-                        "working_area.js placeGcode: unable to load ",
+                        "working-area.js placeGcode: unable to load ",
                         url
                     );
                 },
@@ -4538,7 +4538,7 @@ $(function () {
         };
 
         self._sendAnalytics = function (event, payload) {
-            self.analytics.send_fontend_event(event, payload);
+            self.analytics.send_frontend_event(event, payload);
         };
     }
 

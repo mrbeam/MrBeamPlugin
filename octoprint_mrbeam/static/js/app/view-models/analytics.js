@@ -69,24 +69,24 @@ $(function () {
             self._handleClick(e);
         });
 
-        self.send_fontend_event = function (event, payload) {
+        self.send_frontend_event = function (event, payload, header_extension=null) {
             if (self.isStartupComplete && !self.analyticsEnabled()) {
                 return {};
             }
 
-            return self._send(event, payload, "analytics");
+            return self._send(event, payload, "analytics", header_extension);
         };
 
-        self.send_console_event = function (logData) {
+        self.send_console_event = function (logData, header_extension=null) {
             // copies logData to not pollute console.everything
             logData = { ...logData };
             if (logData.level == "error" || logData.level == "warn") {
                 logData.error_sqeuence = self.error_sqeuence++;
             }
-            return self._send("console", logData, "console");
+            return self._send("console", logData, "console", header_extension);
         };
 
-        self._send = function (event, payload, endpoint) {
+        self._send = function (event, payload, endpoint, header_extension=null) {
             payload = payload || {};
             payload["ts"] = payload["ts"] || new Date().getTime();
             payload["browser_time"] = new Date().toLocaleString("en-GB"); //GB so that we don't get AM/PM
@@ -94,6 +94,7 @@ $(function () {
             let data = {
                 event: event,
                 payload: payload,
+                header_extension: header_extension || {},
             };
 
             return $.ajax({
@@ -147,7 +148,7 @@ $(function () {
                     ", curtain_open: " +
                     payload["curtain_open"]
             );
-            self.send_fontend_event("loading_dur", payload);
+            self.send_frontend_event("loading_dur", payload);
         };
 
         self._updateAnalyticsEnabledValue = function () {
@@ -220,7 +221,7 @@ $(function () {
                 tagName: clickableElem.tagName,
             };
             // decouple
-            setTimeout(self.send_fontend_event, 100, "click", payload);
+            setTimeout(self.send_frontend_event, 100, "click", payload);
 
             if (self.enableClickLogs) {
                 console.log(

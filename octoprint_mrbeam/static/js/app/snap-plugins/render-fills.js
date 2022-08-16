@@ -1,4 +1,4 @@
-//    render_fills.js - a snapsvg.io plugin to render the infill of svg files into a bitmap.
+//    render-fills.js - a snapsvg.io plugin to render the infill of svg files into a bitmap.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
 //
 //    based on work by http://davidwalsh.name/convert-canvas-image

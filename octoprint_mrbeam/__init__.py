@@ -640,77 +640,73 @@ class MrBeamPlugin(
         assets = dict(
             js=[
                 "js/lib/compare-versions.js",
-                "js/helpers/quick_shape_helper.js",
-                "js/helpers/element_helper.js",
-                "js/helpers/debug_rendering_helper.js",
-                "js/helpers/working_area_helper.js",
+                "js/app/helpers/quick-shape.js",
+                "js/app/helpers/working-area.js",
                 "js/lib/potrace.js",
                 "js/lib/jquery.tinycolorpicker.js",
-                "js/lasercutterprofiles.js",
-                "js/mother_viewmodel.js",
-                "js/folder_list_viewmodel.js",
-                "js/mrbeam.js",
-                "js/color_classifier.js",
-                "js/working_area.js",
-                "js/camera.js",
+                "js/app/view-models/lasercutter-profiles.js",
+                "js/app/view-models/mother.js",
+                "js/app/view-models/folder-list.js",
+                "js/app/view-models/mrbeam.js",
+                "js/app/helpers/color-classifier.js",
+                "js/app/view-models/working-area.js",
+                "js/app/view-models/camera.js",
                 "js/lib/snap.svg-min.js",
-                "js/snap_bugfixes.js",
-                "js/snap_helpers.js",
+                "js/app/snap-plugins/bugfixes.js",
+                "js/app/snap-plugins/helpers.js",
                 "js/lib/dxf.js",
-                "js/snap-dxf.js",
-                "js/render_fills.js",
-                "js/path_convert.js",
-                "js/matrix_oven.js",
-                "js/snap_separate.js",
-                "js/unref.js",
-                "js/snap_transform_plugin.js",
-                "js/convert.js",
-                "js/snap_gc_plugin.js",
-                "js/gcode_parser.js",
-                "js/gridify.js",
-                # "js/lib/photobooth_min.js",
-                "js/svg_cleaner.js",
-                "js/loginscreen_viewmodel.js",
-                "js/wizard_acl.js",
-                "js/netconnectd_wrapper.js",
-                "js/lasersaftey_viewmodel.js",
-                "js/ready_to_laser_viewmodel.js",
+                "js/app/snap-plugins/dxf.js",
+                "js/app/snap-plugins/render-fills.js",
+                "js/app/snap-plugins/path-convert.js",
+                "js/app/snap-plugins/matrix-oven.js",
+                "js/app/snap-plugins/separate.js",
+                "js/app/snap-plugins/unref.js",
+                "js/app/snap-plugins/transform.js",
+                "js/app/view-models/convert.js",
+                "js/app/snap-plugins/gcode.js",
+                "js/app/helpers/gcode-parser.js",
+                "js/app/snap-plugins/gridify.js",
+                "js/app/snap-plugins/svg-cleaner.js",
+                "js/app/view-models/modal/loginscreen.js",
+                "js/app/view-models/wizard/wizard-acl.js",
+                "js/app/view-models/wizard/netconnectd-wrapper.js",
+                "js/app/view-models/modal/lasersaftey.js",
+                "js/app/view-models/modal/ready-to-laser.js",
                 "js/lib/screenfull.min.js",
-                "js/settings/camera_settings.js",
-                "js/settings/backlash.js",
-                "js/settings/leds.js",
-                "js/path_magic.js",
+                "js/app/view-models/settings/camera.js",
+                "js/app/view-models/settings/backlash.js",
+                "js/app/view-models/settings/leds.js",
+                "js/app/helpers/path-magic.js",
                 "js/lib/simplify.js",
                 "js/lib/clipper.js",
-                "js/lib/Color.js",
-                "js/laser_job_done_viewmodel.js",
-                "js/loadingoverlay_viewmodel.js",
-                "js/wizard_general.js",
-                "js/wizard_analytics.js",
-                "js/wizard_gcode_deletion.js",
-                "js/software_channel_selector.js",
+                "js/lib/color.js",
+                "js/app/view-models/modal/laser-job-done.js",
+                "js/app/view-models/loadingoverlay.js",
+                "js/app/view-models/wizard/wizard-general.js",
+                "js/app/view-models/wizard/wizard-analytics.js",
+                "js/app/view-models/wizard/wizard-gcode-deletion.js",
+                "js/app/view-models/settings/software-channel-selector.js",
                 "js/lib/hopscotch.js",
-                "js/tour_viewmodel.js",
-                "js/feedback_widget.js",
-                "js/laserhead_changed.js",
-                "js/material_settings.js",
-                "js/analytics.js",
-                "js/maintenance.js",
-                "js/review.js",
-                "js/util.js",
-                "js/user_notification_viewmodel.js",
+                "js/app/view-models/tour.js",
+                "js/app/view-models/feedback-widget.js",
+                "js/app/view-models/modal/laserhead-changed.js",
+                "js/app/view-models/modal/material-settings.js",
+                "js/app/view-models/analytics.js",
+                "js/app/view-models/settings/maintenance.js",
+                "js/app/view-models/review.js",
+                "js/app/helpers/util.js",
+                "js/app/view-models/user-notification.js",
                 "js/lib/load-image.all.min.js",  # to load custom material images
-                "js/settings/custom_material.js",
-                "js/messages.js",
-                "js/design_store.js",
-                "js/settings/dev_design_store.js",
-                "js/settings_menu_navigation.js",
-                "js/calibration/calibration.js",
-                "js/calibration/corner_calibration.js",
-                "js/calibration/lens_calibration.js",
-                "js/calibration/watterott/camera_alignment.js",
-                "js/calibration/watterott/calibration_qa.js",
-                "js/calibration/watterott/label_printer.js",
+                "js/app/view-models/settings/custom-material.js",
+                "js/app/view-models/messages.js",
+                "js/app/view-models/design-store.js",
+                "js/app/view-models/settings/dev-design-store.js",
+                "js/app/view-models/settings/calibration/calibration.js",
+                "js/app/view-models/settings/calibration/corner-calibration.js",
+                "js/app/view-models/settings/calibration/lens-calibration.js",
+                "js/app/view-models/settings/calibration/watterott/camera-alignment.js",
+                "js/app/view-models/settings/calibration/watterott/calibration-qa.js",
+                "js/app/view-models/settings/calibration/watterott/label-printer.js",
             ],
             css=[
                 "css/mrbeam.css",
@@ -2114,6 +2110,7 @@ class MrBeamPlugin(
             data = request.json
             event = data.get("event")
             payload = data.get("payload", dict())
+            header_extension = data.get("header_extension", dict())
             func = payload.get("function", None)
             f_level = payload.get("level", None)
             stack = None
@@ -2148,7 +2145,7 @@ class MrBeamPlugin(
             )
 
             if level >= logging.WARNING:
-                self.analytics_handler.add_frontend_event("console", payload)
+                self.analytics_handler.add_frontend_event(event="console", payload=payload, header_extension=header_extension)
 
         except Exception as e:
             self._logger.exception(
@@ -2166,7 +2163,8 @@ class MrBeamPlugin(
             data = request.json
             event = data.get("event")
             payload = data.get("payload", dict())
-            self.analytics_handler.add_frontend_event(event, payload)
+            header_extension = data.get("header_extension", dict())
+            self.analytics_handler.add_frontend_event(event=event, payload=payload, header_extension=header_extension)
 
         except Exception as e:
             self._logger.exception(
