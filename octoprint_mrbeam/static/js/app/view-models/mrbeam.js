@@ -272,6 +272,19 @@ $(function () {
             $(
                 "#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > label"
             ).text(gettext("E-mail address"));
+
+            // Settings menu
+            let settingsElement = $(
+                "#settings_dialog #settings_dialog_menu ul li"
+            );
+            settingsElement.hover(
+                function () {
+                    $(this).prev().addClass("prev");
+                },
+                function () {
+                    $(this).prev().removeClass("prev");
+                }
+            );
         };
 
         self.onAllBound = function () {
