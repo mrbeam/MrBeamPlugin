@@ -261,6 +261,10 @@ $(function () {
         );
     };
     // End of Debug Rendering
+
+    roundDownToNearest10 = function (num) {
+        return Math.floor(num / 10) * 10;
+    };
 });
 
 // Start of Render debugging utilities
