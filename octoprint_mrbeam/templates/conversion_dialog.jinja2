@@ -635,7 +635,7 @@
 
         <a href="#" class="btn" aria-hidden="true"
            data-bind="click: $root.cancel_conversion(), visible: !slicing_in_progress()">{{ _('Back') }}</a>
-        <a href="#" class="btn btn-primary" id="start_job_btn"
+        <a href="#" class="btn btn-primary" id="start_job_btn" data-cy=”laser-job-start-button”
            data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } },
 					enabled: enableConvertButton,
 					visible: !slicing_in_progress(),
