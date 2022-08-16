@@ -225,6 +225,9 @@ $(function () {
         };
     };
 
+    roundDownToNearest10 = function (num) {
+        return Math.floor(num / 10) * 10;
+    };
     // Get value of element style property
     jQuery.fn.inlineStyle = function (prop) {
         return this.prop("style")[$.camelCase(prop)];
