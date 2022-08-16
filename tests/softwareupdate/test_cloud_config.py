@@ -255,6 +255,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         show_notifications_mock.assert_called_once()
 
     @patch.object(DeviceInfo, "get_beamos_version_number")
+    @unittest.skip("only makes sense for manual testing")
     def test_cloud_config_buster_online(self, device_info_mock):
         """
         Testcase to test the buster config with the online available cloud config
@@ -298,6 +299,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 )
 
     @patch.object(DeviceInfo, "get_beamos_version_number")
+    @unittest.skip("only makes sense for manual testing")
     def test_cloud_confg_legacy_online(self, device_info_mock):
         """
         Testcase to test the leagcy image config with the online available cloud config
