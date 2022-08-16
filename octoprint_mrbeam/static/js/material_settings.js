@@ -33,7 +33,7 @@ $(function () {
                                 materialImportedSettings[materialKey].colors;
                             self.materialSettingsDatabase[
                                 materialKey
-                            ].custom = false;
+                                ].custom = false;
                             self.materialSettingsDatabase[materialKey].img =
                                 "/plugin/mrbeam/static/img/materials/" +
                                 self.materialSettingsDatabase[materialKey].img;
@@ -54,13 +54,11 @@ $(function () {
                         );
                         console.error(
                             "Unable to load material settings. Retrying in " +
-                                self.MATERIAL_SETTINGS_RETRY_TIME / 1000 +
-                                " seconds."
+                            self.MATERIAL_SETTINGS_RETRY_TIME / 1000 +
+                            " seconds."
                         );
                     } else {
-                        console.log(
-                            "Unable to load material settings. Not retrying because user is not logged in."
-                        );
+                        console.log("Unable to load material settings. Not retrying because user is not logged in.");
                     }
                 });
         };
@@ -375,12 +373,8 @@ $(function () {
                 name: gettext("Stainless Steel"),
                 img: "Stainless-Steel.jpg",
                 description: "",
-                hints: gettext(
-                    'Engravings on stainless steel only work with our "mark solid" spray. Use line distance 0,1mm for the best result.'
-                ),
-                safety_notes: gettext(
-                    "Do not engrave stainless steel without the application of laser marking color."
-                ),
+                hints: gettext("Engravings on stainless steel only work with our \"mark solid\" spray. Use line distance 0,1mm for the best result."),
+                safety_notes: gettext("Do not engrave stainless steel without the application of laser marking color."),
             },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`

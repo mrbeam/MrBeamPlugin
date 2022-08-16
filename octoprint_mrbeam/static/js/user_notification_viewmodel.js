@@ -15,7 +15,8 @@ $(function () {
                 type: "error",
                 hide: false,
                 knowledgebase: {
-                    url: "https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#lhnotfound",
+                    url:
+                        "https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#lhnotfound",
                 },
             },
             err_bottom_open: {
@@ -26,7 +27,8 @@ $(function () {
                 type: "error",
                 hide: false,
                 knowledgebase: {
-                    url: "https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#bottomplate",
+                    url:
+                        "https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#bottomplate",
                 },
             },
             err_hardware_malfunction: {
@@ -37,7 +39,8 @@ $(function () {
                 type: "error",
                 hide: false,
                 knowledgebase: {
-                    url: "https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#hwmalfunction",
+                    url:
+                        "https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#hwmalfunction",
                 },
             },
             warn_cam_conn_err: {
@@ -80,7 +83,8 @@ $(function () {
                 type: "error",
                 hide: false,
                 knowledgebase: {
-                    url: "https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#cameraerror",
+                    url:
+                        "https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#cameraerror",
                 },
             },
             msg_cam_image_analytics_sent: {

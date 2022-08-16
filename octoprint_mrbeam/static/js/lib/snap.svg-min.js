@@ -156,72 +156,71 @@
         (eve.nts = function () {
             return o(b) ? b : b.split(f);
         }),
-        (eve.off = eve.unbind =
-            function (a, b) {
-                if (!a) return void (eve._events = j = { n: {} });
-                var c = o(a) ? (o(a[0]) ? a : [a]) : n(a).split(g);
-                if (c.length > 1)
-                    for (var d = 0, i = c.length; i > d; d++) eve.off(c[d], b);
-                else {
-                    c = o(a) ? a : n(a).split(f);
-                    var k,
-                        l,
-                        m,
-                        d,
-                        i,
-                        p,
-                        q,
-                        r = [j],
-                        s = [];
-                    for (d = 0, i = c.length; i > d; d++)
-                        for (p = 0; p < r.length; p += m.length - 2) {
-                            if (((m = [p, 1]), (k = r[p].n), c[d] != h))
-                                k[c[d]] &&
-                                    (m.push(k[c[d]]),
-                                    s.unshift({ n: k, name: c[d] }));
-                            else
-                                for (l in k)
-                                    k[e](l) &&
-                                        (m.push(k[l]),
-                                        s.unshift({ n: k, name: l }));
-                            r.splice.apply(r, m);
-                        }
-                    for (d = 0, i = r.length; i > d; d++)
-                        for (k = r[d]; k.n; ) {
-                            if (b) {
-                                if (k.f) {
-                                    for (p = 0, q = k.f.length; q > p; p++)
-                                        if (k.f[p] == b) {
-                                            k.f.splice(p, 1);
+        (eve.off = eve.unbind = function (a, b) {
+            if (!a) return void (eve._events = j = { n: {} });
+            var c = o(a) ? (o(a[0]) ? a : [a]) : n(a).split(g);
+            if (c.length > 1)
+                for (var d = 0, i = c.length; i > d; d++) eve.off(c[d], b);
+            else {
+                c = o(a) ? a : n(a).split(f);
+                var k,
+                    l,
+                    m,
+                    d,
+                    i,
+                    p,
+                    q,
+                    r = [j],
+                    s = [];
+                for (d = 0, i = c.length; i > d; d++)
+                    for (p = 0; p < r.length; p += m.length - 2) {
+                        if (((m = [p, 1]), (k = r[p].n), c[d] != h))
+                            k[c[d]] &&
+                                (m.push(k[c[d]]),
+                                s.unshift({ n: k, name: c[d] }));
+                        else
+                            for (l in k)
+                                k[e](l) &&
+                                    (m.push(k[l]),
+                                    s.unshift({ n: k, name: l }));
+                        r.splice.apply(r, m);
+                    }
+                for (d = 0, i = r.length; i > d; d++)
+                    for (k = r[d]; k.n; ) {
+                        if (b) {
+                            if (k.f) {
+                                for (p = 0, q = k.f.length; q > p; p++)
+                                    if (k.f[p] == b) {
+                                        k.f.splice(p, 1);
+                                        break;
+                                    }
+                                !k.f.length && delete k.f;
+                            }
+                            for (l in k.n)
+                                if (k.n[e](l) && k.n[l].f) {
+                                    var t = k.n[l].f;
+                                    for (p = 0, q = t.length; q > p; p++)
+                                        if (t[p] == b) {
+                                            t.splice(p, 1);
                                             break;
                                         }
-                                    !k.f.length && delete k.f;
+                                    !t.length && delete k.n[l].f;
                                 }
-                                for (l in k.n)
-                                    if (k.n[e](l) && k.n[l].f) {
-                                        var t = k.n[l].f;
-                                        for (p = 0, q = t.length; q > p; p++)
-                                            if (t[p] == b) {
-                                                t.splice(p, 1);
-                                                break;
-                                            }
-                                        !t.length && delete k.n[l].f;
-                                    }
-                            } else {
-                                delete k.f;
-                                for (l in k.n)
-                                    k.n[e](l) && k.n[l].f && delete k.n[l].f;
-                            }
-                            k = k.n;
+                        } else {
+                            delete k.f;
+                            for (l in k.n)
+                                k.n[e](l) && k.n[l].f && delete k.n[l].f;
                         }
-                    a: for (d = 0, i = s.length; i > d; d++) {
-                        k = s[d];
-                        for (l in k.n[k.name].f) continue a;
-                        for (l in k.n[k.name].n) continue a;
-                        delete k.n[k.name];
+                        k = k.n;
                     }
+                a: for (d = 0, i = s.length; i > d; d++) {
+                    k = s[d];
+                    for (l in k.n[k.name].f) continue a;
+                    for (l in k.n[k.name].n) continue a;
+                    delete k.n[k.name];
                 }
-            }),
+            }
+        }),
         (eve.once = function (a, b) {
             var c = function () {
                 return eve.off(a, c), b.apply(this, arguments);
@@ -570,44 +569,43 @@
                 function m(a) {
                     var b = [];
                     return (
-                        (a = a.replace(
-                            /(?:^|\s)(\w+)\(([^)]+)\)/g,
-                            function (a, c, d) {
-                                return (
-                                    (d = d.split(/\s*,\s*|\s+/)),
-                                    "rotate" == c &&
-                                        1 == d.length &&
-                                        d.push(0, 0),
-                                    "scale" == c &&
-                                        (d.length > 2
-                                            ? (d = d.slice(0, 2))
-                                            : 2 == d.length && d.push(0, 0),
-                                        1 == d.length && d.push(d[0], 0, 0)),
-                                    "skewX" == c
-                                        ? b.push([
-                                              "m",
-                                              1,
-                                              0,
-                                              D.tan(k(d[0])),
-                                              1,
-                                              0,
-                                              0,
-                                          ])
-                                        : "skewY" == c
-                                        ? b.push([
-                                              "m",
-                                              1,
-                                              D.tan(k(d[0])),
-                                              0,
-                                              1,
-                                              0,
-                                              0,
-                                          ])
-                                        : b.push([c.charAt(0)].concat(d)),
-                                    a
-                                );
-                            }
-                        )),
+                        (a = a.replace(/(?:^|\s)(\w+)\(([^)]+)\)/g, function (
+                            a,
+                            c,
+                            d
+                        ) {
+                            return (
+                                (d = d.split(/\s*,\s*|\s+/)),
+                                "rotate" == c && 1 == d.length && d.push(0, 0),
+                                "scale" == c &&
+                                    (d.length > 2
+                                        ? (d = d.slice(0, 2))
+                                        : 2 == d.length && d.push(0, 0),
+                                    1 == d.length && d.push(d[0], 0, 0)),
+                                "skewX" == c
+                                    ? b.push([
+                                          "m",
+                                          1,
+                                          0,
+                                          D.tan(k(d[0])),
+                                          1,
+                                          0,
+                                          0,
+                                      ])
+                                    : "skewY" == c
+                                    ? b.push([
+                                          "m",
+                                          1,
+                                          D.tan(k(d[0])),
+                                          0,
+                                          1,
+                                          0,
+                                          0,
+                                      ])
+                                    : b.push([c.charAt(0)].concat(d)),
+                                a
+                            );
+                        })),
                         b
                     );
                 }
@@ -888,14 +886,11 @@
                     H = (D.pow, D.PI),
                     I = (D.round, ""),
                     J = Object.prototype.toString,
-                    K =
-                        /^\s*((#[a-f\d]{6})|(#[a-f\d]{3})|rgba?\(\s*([\d\.]+%?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+%?(?:\s*,\s*[\d\.]+%?)?)\s*\)|hsba?\(\s*([\d\.]+(?:deg|\xb0|%)?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+(?:%?\s*,\s*[\d\.]+)?%?)\s*\)|hsla?\(\s*([\d\.]+(?:deg|\xb0|%)?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+(?:%?\s*,\s*[\d\.]+)?%?)\s*\))\s*$/i,
+                    K = /^\s*((#[a-f\d]{6})|(#[a-f\d]{3})|rgba?\(\s*([\d\.]+%?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+%?(?:\s*,\s*[\d\.]+%?)?)\s*\)|hsba?\(\s*([\d\.]+(?:deg|\xb0|%)?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+(?:%?\s*,\s*[\d\.]+)?%?)\s*\)|hsla?\(\s*([\d\.]+(?:deg|\xb0|%)?\s*,\s*[\d\.]+%?\s*,\s*[\d\.]+(?:%?\s*,\s*[\d\.]+)?%?)\s*\))\s*$/i,
                     L = ((c._.separator = /[,\s]+/), /[\s]*,[\s]*/),
                     M = { hs: 1, rg: 1 },
-                    N =
-                        /([a-z])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?[\s]*,?[\s]*)+)/gi,
-                    O =
-                        /([rstm])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?[\s]*,?[\s]*)+)/gi,
+                    N = /([a-z])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?[\s]*,?[\s]*)+)/gi,
+                    O = /([rstm])[\s,]*((-?\d*\.?\d*(?:e[\-+]?\d+)?[\s]*,?[\s]*)+)/gi,
                     P = /(-?\d*\.?\d*(?:e[\-+]?\d+)?)[\s]*,?[\s]*/gi,
                     Q = 0,
                     R = "S" + (+new Date()).toString(36),
@@ -914,8 +909,7 @@
                     (c._.id = S),
                     (c.format = (function () {
                         var a = /\{([^\}]+)\}/g,
-                            b =
-                                /(?:(?:^|\.)(.+?)(?=\[|\.|$|\()|\[('|")(.+?)\2\])(\(\))?/g,
+                            b = /(?:(?:^|\.)(.+?)(?=\[|\.|$|\()|\[('|")(.+?)\2\])(\(\))?/g,
                             c = function (a, c, d) {
                                 var e = d;
                                 return (
@@ -1242,14 +1236,7 @@
                                     (b = c.rgb2hsb(a)),
                                     (a.v = b.b))
                                   : ((a = { hex: "none" }),
-                                    (a.r =
-                                        a.g =
-                                        a.b =
-                                        a.h =
-                                        a.s =
-                                        a.v =
-                                        a.l =
-                                            -1),
+                                    (a.r = a.g = a.b = a.h = a.s = a.v = a.l = -1),
                                     (a.error = 1))),
                         (a.toString = Z),
                         a
@@ -1880,10 +1867,9 @@
                             b = b.original;
                         else {
                             var e = b.attr("xlink:href");
-                            b = b.original =
-                                b.node.ownerDocument.getElementById(
-                                    e.substring(e.indexOf("#") + 1)
-                                );
+                            b = b.original = b.node.ownerDocument.getElementById(
+                                e.substring(e.indexOf("#") + 1)
+                            );
                         }
                     var f = b._,
                         g = c.path.get[b.type] || c.path.get.deflt;
@@ -1957,24 +1943,23 @@
                     (k.parent = function () {
                         return s(this.node.parentNode);
                     }),
-                    (k.append = k.add =
-                        function (a) {
-                            if (a) {
-                                if ("set" == a.type) {
-                                    var b = this;
-                                    return (
-                                        a.forEach(function (a) {
-                                            b.add(a);
-                                        }),
-                                        this
-                                    );
-                                }
-                                (a = s(a)),
-                                    this.node.appendChild(a.node),
-                                    (a.paper = this.paper);
+                    (k.append = k.add = function (a) {
+                        if (a) {
+                            if ("set" == a.type) {
+                                var b = this;
+                                return (
+                                    a.forEach(function (a) {
+                                        b.add(a);
+                                    }),
+                                    this
+                                );
                             }
-                            return this;
-                        }),
+                            (a = s(a)),
+                                this.node.appendChild(a.node),
+                                (a.paper = this.paper);
+                        }
+                        return this;
+                    }),
                     (k.appendTo = function (a) {
                         return a && ((a = s(a)), a.append(this)), this;
                     }),
@@ -2133,30 +2118,29 @@
                         var a = q(this);
                         return a.appendChild(this.node), this;
                     }),
-                    (k.pattern = k.toPattern =
-                        function (a, b, c, d) {
-                            var e = p("pattern", q(this));
-                            return (
-                                null == a && (a = this.getBBox()),
-                                l(a, "object") &&
-                                    "x" in a &&
-                                    ((b = a.y),
-                                    (c = a.width),
-                                    (d = a.height),
-                                    (a = a.x)),
-                                o(e.node, {
-                                    x: a,
-                                    y: b,
-                                    width: c,
-                                    height: d,
-                                    patternUnits: "userSpaceOnUse",
-                                    id: e.id,
-                                    viewBox: [a, b, c, d].join(" "),
-                                }),
-                                e.node.appendChild(this.node),
-                                e
-                            );
-                        }),
+                    (k.pattern = k.toPattern = function (a, b, c, d) {
+                        var e = p("pattern", q(this));
+                        return (
+                            null == a && (a = this.getBBox()),
+                            l(a, "object") &&
+                                "x" in a &&
+                                ((b = a.y),
+                                (c = a.width),
+                                (d = a.height),
+                                (a = a.x)),
+                            o(e.node, {
+                                x: a,
+                                y: b,
+                                width: c,
+                                height: d,
+                                patternUnits: "userSpaceOnUse",
+                                id: e.id,
+                                viewBox: [a, b, c, d].join(" "),
+                            }),
+                            e.node.appendChild(this.node),
+                            e
+                        );
+                    }),
                     (k.marker = function (a, b, c, d, e, f) {
                         var g = p("marker", q(this));
                         return (
@@ -3200,22 +3184,18 @@
                             this.el("path", b)
                         );
                     }),
-                    (h.group = h.g =
-                        function (a) {
-                            var b = this.el("g");
-                            return (
-                                1 == arguments.length && a && !a.type
-                                    ? b.attr(a)
-                                    : arguments.length &&
-                                      b.add(
-                                          Array.prototype.slice.call(
-                                              arguments,
-                                              0
-                                          )
-                                      ),
-                                b
-                            );
-                        }),
+                    (h.group = h.g = function (a) {
+                        var b = this.el("g");
+                        return (
+                            1 == arguments.length && a && !a.type
+                                ? b.attr(a)
+                                : arguments.length &&
+                                  b.add(
+                                      Array.prototype.slice.call(arguments, 0)
+                                  ),
+                            b
+                        );
+                    }),
                     (h.svg = function (a, b, c, d, e, f, g, h) {
                         var j = {};
                         return (
@@ -3745,13 +3725,32 @@
                         var j = i / 2,
                             k = 12,
                             l = [
-                                -0.1252, 0.1252, -0.3678, 0.3678, -0.5873,
-                                0.5873, -0.7699, 0.7699, -0.9041, 0.9041,
-                                -0.9816, 0.9816,
+                                -0.1252,
+                                0.1252,
+                                -0.3678,
+                                0.3678,
+                                -0.5873,
+                                0.5873,
+                                -0.7699,
+                                0.7699,
+                                -0.9041,
+                                0.9041,
+                                -0.9816,
+                                0.9816,
                             ],
                             m = [
-                                0.2491, 0.2491, 0.2335, 0.2335, 0.2032, 0.2032,
-                                0.1601, 0.1601, 0.1069, 0.1069, 0.0472, 0.0472,
+                                0.2491,
+                                0.2491,
+                                0.2335,
+                                0.2335,
+                                0.2032,
+                                0.2032,
+                                0.1601,
+                                0.1601,
+                                0.1069,
+                                0.1069,
+                                0.0472,
+                                0.0472,
                             ],
                             n = 0,
                             p = 0;
@@ -4751,8 +4750,7 @@
                                 a[b] &&
                                     ((this[this.items.length] = this.items[
                                         this.items.length
-                                    ] =
-                                        a[b]),
+                                    ] = a[b]),
                                     this.length++);
                     },
                     j = i.prototype;
@@ -5278,51 +5276,46 @@
 
                 )
                     !(function (b) {
-                        (a[b] = f[b] =
-                            function (c, d) {
-                                if (a.is(c, "function"))
-                                    (this.events = this.events || []),
-                                        this.events.push({
-                                            name: b,
-                                            f: c,
-                                            unbind: n(
-                                                this.node || document,
-                                                b,
-                                                c,
-                                                d || this
-                                            ),
-                                        });
-                                else
-                                    for (
-                                        var e = 0, f = this.events.length;
-                                        f > e;
-                                        e++
-                                    )
-                                        if (this.events[e].name == b)
-                                            try {
-                                                this.events[e].f.call(this);
-                                            } catch (g) {}
-                                return this;
-                            }),
-                            (a["un" + b] = f["un" + b] =
-                                function (a) {
-                                    for (
-                                        var c = this.events || [], d = c.length;
-                                        d--;
+                        (a[b] = f[b] = function (c, d) {
+                            if (a.is(c, "function"))
+                                (this.events = this.events || []),
+                                    this.events.push({
+                                        name: b,
+                                        f: c,
+                                        unbind: n(
+                                            this.node || document,
+                                            b,
+                                            c,
+                                            d || this
+                                        ),
+                                    });
+                            else
+                                for (
+                                    var e = 0, f = this.events.length;
+                                    f > e;
+                                    e++
+                                )
+                                    if (this.events[e].name == b)
+                                        try {
+                                            this.events[e].f.call(this);
+                                        } catch (g) {}
+                            return this;
+                        }),
+                            (a["un" + b] = f["un" + b] = function (a) {
+                                for (
+                                    var c = this.events || [], d = c.length;
+                                    d--;
 
-                                    )
-                                        if (
-                                            c[d].name == b &&
-                                            (c[d].f == a || !a)
-                                        )
-                                            return (
-                                                c[d].unbind(),
-                                                c.splice(d, 1),
-                                                !c.length && delete this.events,
-                                                this
-                                            );
-                                    return this;
-                                });
+                                )
+                                    if (c[d].name == b && (c[d].f == a || !a))
+                                        return (
+                                            c[d].unbind(),
+                                            c.splice(d, 1),
+                                            !c.length && delete this.events,
+                                            this
+                                        );
+                                return this;
+                            });
                     })(i[r]);
                 (f.hover = function (a, b, c, d) {
                     return this.mouseover(a, c).mouseout(b, d || c);

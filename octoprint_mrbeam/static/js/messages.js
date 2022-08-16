@@ -1,16 +1,14 @@
 $(function () {
     function MessagesViewModel(parameters) {
         let self = this;
-        window.mrbeam.viewModels["messagesViewModel"] = self;
+        window.mrbeam.viewModels['messagesViewModel'] = self;
 
         self.settings = parameters[0];
         self.userSettings = parameters[1];
         self.loginState = parameters[2];
 
-        const FIRST_MESSAGE_LOCATION =
-            "/plugin/mrbeam/static/messages/messages.json";
-        const MESSAGES_URL =
-            "https://messages.beamos.mr-beam.org/messages.json";
+        const FIRST_MESSAGE_LOCATION = "/plugin/mrbeam/static/messages/messages.json";
+        const MESSAGES_URL = "https://messages.beamos.mr-beam.org/messages.json";
 
         self.messages = ko.observableArray();
         self.messagesIds = ko.observableArray();
@@ -24,14 +22,13 @@ $(function () {
         self.onStartup = function () {
             // Hide Messaging icon
             $("li a#messages_nav_tab").hide();
-        };
+        }
 
         self.onUserLoggedIn = function (user) {
             // get user messages details
             if (user?.settings?.mrbeam?.messages) {
                 self.lastMessageId = user.settings.mrbeam.messages.lastId;
-                self.oldUnreadMessageIds =
-                    user.settings.mrbeam.messages.unreadIds;
+                self.oldUnreadMessageIds = user.settings.mrbeam.messages.unreadIds;
             }
             // load remote messages
             if (!self.messagesLoaded) {
@@ -41,21 +38,16 @@ $(function () {
 
         self.loadRemoteMessages = function (messageUrl) {
             fetch(messageUrl, {
-                method: "GET",
-            })
-                .then(function (response) {
-                    return response.json();
-                })
-                .then(function (json) {
-                    console.log("Remote Messages loaded: ", json);
-                    self.saveNewMessages(json);
-                })
-                .catch(function (exception) {
-                    console.log(
-                        "Remote Messages loading failed! Loading Local Messages"
-                    );
-                    self.loadLocalMessages();
-                });
+                method: 'GET'
+            }).then(function (response) {
+                return response.json();
+            }).then(function (json) {
+                console.log("Remote Messages loaded: ", json);
+                self.saveNewMessages(json);
+            }).catch(function (exception) {
+                console.log("Remote Messages loading failed! Loading Local Messages");
+                self.loadLocalMessages();
+            });
         };
 
         self.saveNewMessages = function (data) {
@@ -68,7 +60,7 @@ $(function () {
             }
             let postData = {
                 put: messages,
-                delete: [],
+                delete: []
             };
             // save remotely fetched messages
             OctoPrint.simpleApiCommand("mrbeam", "messages", postData)
@@ -77,9 +69,7 @@ $(function () {
                     self.handleMessages(response);
                 })
                 .fail(function (response) {
-                    console.log(
-                        "Saving Remote Messages failed! Loading Local Messages"
-                    );
+                    console.log("Saving Remote Messages failed! Loading Local Messages");
                     self.loadLocalMessages();
                 });
         };
@@ -87,10 +77,7 @@ $(function () {
         self.loadLocalMessages = function () {
             OctoPrint.simpleApiCommand("mrbeam", "messages", {})
                 .done(function (data) {
-                    if (
-                        Object.keys(data.messages).length === 0 &&
-                        data.messages.constructor === Object
-                    ) {
+                    if (Object.keys(data.messages).length === 0 && data.messages.constructor === Object) {
                         // Load First Generic Message
                         console.log("Loading First Message");
                         self.loadRemoteMessages(FIRST_MESSAGE_LOCATION);
@@ -124,50 +111,35 @@ $(function () {
                             content: null,
                             images: myMessage.content.images || [],
                             notification: null,
-                            read: false,
+                            read: false
                         };
-                        let myLocale =
-                            LOCALE in myMessage.content ? LOCALE : "en";
+                        let myLocale = LOCALE in myMessage.content ? LOCALE : 'en';
                         // content
                         if (myMessage.content && myMessage.content[myLocale]) {
                             msgObj.content = {
                                 title: myMessage.content[myLocale].title,
-                                body: myMessage.content[myLocale].body,
+                                body: myMessage.content[myLocale].body
                             };
                             if (myMessage.content[myLocale].cta) {
-                                msgObj.content.cta_url =
-                                    myMessage.content[myLocale].cta.url;
-                                msgObj.content.cta_label =
-                                    myMessage.content[myLocale].cta.label;
+                                msgObj.content.cta_url = myMessage.content[myLocale].cta.url;
+                                msgObj.content.cta_label = myMessage.content[myLocale].cta.label;
                             }
                         }
                         // notification
-                        if (
-                            myMessage.notification &&
-                            myMessage.notification[myLocale]
-                        ) {
-                            if (
-                                self.checkRestriction(
-                                    myMessage.notification.restrictions
-                                )
-                            ) {
+                        if (myMessage.notification && myMessage.notification[myLocale]) {
+                            if (self.checkRestriction(myMessage.notification.restrictions)) {
                                 msgObj.notification = {
                                     sticky: myMessage.notification.sticky,
                                     type: myMessage.notification.type,
-                                    title: myMessage.notification[myLocale]
-                                        .title,
-                                    body: myMessage.notification[myLocale].body,
+                                    title: myMessage.notification[myLocale].title,
+                                    body: myMessage.notification[myLocale].body
                                 };
                             }
                         }
-                        if (
-                            self.lastMessageId === -1 ||
+                        if (self.lastMessageId === -1 ||
                             myMessage.id > self.lastMessageId ||
                             (self.oldUnreadMessageIds != null &&
-                                self
-                                    .getArray(self.oldUnreadMessageIds)
-                                    .includes(myMessage.id))
-                        ) {
+                                self.getArray(self.oldUnreadMessageIds).includes(myMessage.id))) {
                             messageIds.push(myMessage.id);
                         } else {
                             msgObj.read = true;
@@ -195,15 +167,9 @@ $(function () {
                 return true;
             }
             // channel
-            if (
-                restrictions.channels &&
-                restrictions.channels.length > 0 &&
-                restrictions.channels
-                    .map(function (x) {
-                        return x.trim().toUpperCase();
-                    })
-                    .includes(MRBEAM_SW_TIER)
-            ) {
+            if (restrictions.channels && restrictions.channels.length > 0 && restrictions.channels.map(function (x) {
+                return x.trim().toUpperCase();
+            }).includes(MRBEAM_SW_TIER)) {
                 return false;
             }
             // version
@@ -244,30 +210,22 @@ $(function () {
             }
             // ts_after
             if (restrictions.ts_after) {
-                if (
-                    typeof restrictions.ts_after === "number" &&
-                    Date.now() > restrictions.ts_after
-                ) {
+                if (typeof (restrictions.ts_after) === 'number' &&
+                    Date.now() > restrictions.ts_after) {
                     return false;
-                } else if (
-                    typeof restrictions.ts_after === "string" &&
+                } else if (typeof (restrictions.ts_after) === 'string' &&
                     // Date: '2011-10-10T14:48:00'
-                    Date.now() > Date.parse(restrictions.ts_after)
-                ) {
+                    Date.now() > Date.parse(restrictions.ts_after)) {
                     return false;
                 }
             }
             // ts_before
             if (restrictions.ts_before) {
-                if (
-                    typeof restrictions.ts_before === "number" &&
-                    Date.now() < restrictions.ts_before
-                ) {
+                if (typeof (restrictions.ts_before) === 'number' &&
+                    Date.now() < restrictions.ts_before) {
                     return false;
-                } else if (
-                    typeof restrictions.ts_before === "string" &&
-                    Date.now() < Date.parse(restrictions.ts_before)
-                ) {
+                } else if (typeof (restrictions.ts_before) === 'string' &&
+                    Date.now() < Date.parse(restrictions.ts_before)) {
                     return false;
                 }
             }
@@ -283,26 +241,17 @@ $(function () {
                 var lmid = -1;
                 self.messages().forEach(function (myMessage) {
                     lmid = Math.max(lmid, myMessage.id);
-                    if (
-                        myMessage.notification &&
-                        myMessage.id > self.lastMessageId
-                    ) {
+                    if (myMessage.notification && myMessage.id > self.lastMessageId) {
                         try {
                             new PNotify({
-                                title: myMessage.notification.title || "",
-                                text: myMessage.notification.body || "",
-                                type: myMessage.notification.type || "info",
+                                title: myMessage.notification.title || '',
+                                text: myMessage.notification.body || '',
+                                type: myMessage.notification.type || 'info',
                                 hide: false,
-                                delay:
-                                    myMessage.notification.delay || 10 * 1000,
+                                delay: myMessage.notification.delay || 10 * 1000,
                             });
                         } catch (e) {
-                            console.error(
-                                "Error showing notification for message id " +
-                                    myMessage.id +
-                                    ": ",
-                                e
-                            );
+                            console.error("Error showing notification for message id " + myMessage.id + ": ", e);
                         }
                     }
                 });
@@ -328,12 +277,9 @@ $(function () {
                 var mrbSettings = self.loginState.currentUser().settings.mrbeam;
                 mrbSettings.messages = {
                     lastId: self.lastMessageId,
-                    unreadIds: unreadIds,
+                    unreadIds: unreadIds
                 };
-                self.userSettings.updateSettings(
-                    self.loginState.currentUser().name,
-                    { mrbeam: mrbSettings }
-                );
+                self.userSettings.updateSettings(self.loginState.currentUser().name, {mrbeam: mrbSettings});
             }
         };
 
@@ -343,10 +289,7 @@ $(function () {
             // update selected index
             this.selectedIndex(index);
             // update user read message data
-            let UnreadMessageIds = self.arrayRemove(
-                self.getArray(self.messagesIds()),
-                self.messages()[index].id
-            );
+            let UnreadMessageIds = self.arrayRemove(self.getArray(self.messagesIds()), self.messages()[index].id);
             self.messagesIds(UnreadMessageIds);
             self.saveUserSettings();
         };
@@ -355,11 +298,7 @@ $(function () {
             setTimeout(() => {
                 let thumbnailWidth = $("#messages .thumbnails").width();
                 let imageCount = self.messages()[result].images.length;
-                $("#messages .thumbnails  li").width(
-                    Math.floor(
-                        (thumbnailWidth - 10 * (imageCount - 1)) / imageCount
-                    ) - 1
-                );
+                $("#messages .thumbnails  li").width(Math.floor(((thumbnailWidth - 10 * (imageCount - 1)) / imageCount)) - 1);
             }, 100);
         });
 
@@ -381,6 +320,7 @@ $(function () {
                 return ele !== value;
             });
         };
+
     }
 
     // view model class, parameters for constructor, container to bind to
@@ -391,6 +331,6 @@ $(function () {
         ["settingsViewModel", "userSettingsViewModel", "loginStateViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-        ["#messages", "#messages_nav_tab", "#messages_burger_menu"],
+        ["#messages", "#messages_nav_tab", "#messages_burger_menu"]
     ]);
 });

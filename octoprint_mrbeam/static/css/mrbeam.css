@@ -2651,7 +2651,7 @@ input.search-query,
 hides the force update buttons
  */
 #settings_plugin_softwareupdate_scroll_wrapper div:nth-of-type(4) {
-  display: none;
+  display:none;
 }
 
 /*

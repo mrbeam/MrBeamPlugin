@@ -95,8 +95,9 @@ class WorkingAreaHelper {
                     // check for comment
                     if (node.textContent.indexOf("Illustrator") > -1) {
                         gen = "illustrator";
-                        var matches =
-                            node.textContent.match(/\d+\.\d+(\.\d+)*/g);
+                        var matches = node.textContent.match(
+                            /\d+\.\d+(\.\d+)*/g
+                        );
                         version = matches.join("_");
                         //						console.log("Generator:", gen, version);
                         return { generator: gen, version: version };
@@ -401,13 +402,12 @@ class WorkingAreaHelper {
                     vd.pierce_time
                 );
                 // Time for positioning moves between paths of the same color
-                duration +=
-                    WorkingAreaHelper.get_gcode_path_duration_in_seconds(
-                        gcLengthSummary.vectors[color].positioningInMM,
-                        maxFeedrate,
-                        1,
-                        0
-                    );
+                duration += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    gcLengthSummary.vectors[color].positioningInMM,
+                    maxFeedrate,
+                    1,
+                    0
+                );
             }
             gcLengthSummary.vectors[color].duration = { raw: duration };
             sumVectorDur += duration;
@@ -441,13 +441,12 @@ class WorkingAreaHelper {
                 const linefeedLength =
                     b.h +
                     lineCount * (engravingData.extra_overshoot ? 3 * 2 : 1); // assumption: extra overshoot move is 6mm per line, standard 1mm
-                const linefeedPathDur =
-                    WorkingAreaHelper.get_gcode_path_duration_in_seconds(
-                        linefeedLength,
-                        maxFeedrate,
-                        engravingData.eng_passes,
-                        0
-                    );
+                const linefeedPathDur = WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                    linefeedLength,
+                    maxFeedrate,
+                    engravingData.eng_passes,
+                    0
+                );
 
                 const linefeedAccelerationDur =
                     lineCount *
@@ -465,11 +464,10 @@ class WorkingAreaHelper {
                 const deltaV =
                     (b.totalBrightnessChange * Math.abs(maxSpeed - minSpeed)) /
                     255; // feedrate difference of one brightness step
-                const accelerationDur =
-                    WorkingAreaHelper.get_acceleration_duration_in_seconds(
-                        deltaV,
-                        maxAcceleration
-                    );
+                const accelerationDur = WorkingAreaHelper.get_acceleration_duration_in_seconds(
+                    deltaV,
+                    maxAcceleration
+                );
 
                 // histogram duration
                 let histogramDur = 0;
@@ -489,13 +487,12 @@ class WorkingAreaHelper {
                     }
                     const length = pixelAmount * engravingData.beam_diameter;
                     histogramLength += length;
-                    histogramDur +=
-                        WorkingAreaHelper.get_gcode_path_duration_in_seconds(
-                            length,
-                            speed,
-                            engravingData.eng_passes,
-                            engravingData.pierce_time
-                        );
+                    histogramDur += WorkingAreaHelper.get_gcode_path_duration_in_seconds(
+                        length,
+                        speed,
+                        engravingData.eng_passes,
+                        engravingData.pierce_time
+                    );
                 }
                 // engraving mode correction factor
                 let modeCorrection = 1; // default: engraving_mode === "precise"
@@ -511,8 +508,9 @@ class WorkingAreaHelper {
                     histogramDur * modeCorrection;
                 sumBitmapDur += bitmapDur;
                 gcLengthSummary.bitmaps[idx].duration = { raw: bitmapDur };
-                gcLengthSummary.bitmaps[idx].histogramLengthInMM =
-                    histogramLength;
+                gcLengthSummary.bitmaps[
+                    idx
+                ].histogramLengthInMM = histogramLength;
             });
         }
 

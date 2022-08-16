@@ -15,7 +15,7 @@ $(function () {
         self.DEV = "dev";
 
         self.PROTOCOL = "https://";
-        self.DS_URL_APPENDIX = "-dot-design-store-269610.appspot.com";
+        self.DS_URL_APPENDIX = "-dot-design-store-269610.appspot.com"
         self.LOCALHOST = "localhost";
         self.DEFAULT_LOCALHOST_PORT = "8080";
         self.DEFAULT_VERSION = "1-1-0";
@@ -53,29 +53,19 @@ $(function () {
             return self.selectedEnv() === self.LOCALHOST;
         });
 
-        self.design_store_staging_or_development_iframe_src = ko.computed(
-            function () {
-                return (
-                    self.PROTOCOL +
-                    self.devDsVersion() +
-                    "-" +
-                    self.selectedEnv() +
-                    self.DS_URL_APPENDIX
-                );
-            }
-        );
+        self.design_store_staging_or_development_iframe_src = ko.computed(function () {
+            return (
+                self.PROTOCOL + self.devDsVersion() + "-" + self.selectedEnv() + self.DS_URL_APPENDIX
+            );
+        });
 
         self.dsUrlforEnv = {
             [self.PROD]: () => self.DESIGN_STORE_PRODUCTION_IFRAME_SRC,
-            [self.STAGING]: () =>
-                self.design_store_staging_or_development_iframe_src(),
-            [self.DEV]: () =>
-                self.design_store_staging_or_development_iframe_src(),
-            [self.LOCALHOST]: () =>
-                self.DESIGN_STORE_LOCALHOST_IFRAME_SRC +
-                ":" +
-                self.devDsLocalhostPort(),
+            [self.STAGING]: () => self.design_store_staging_or_development_iframe_src(),
+            [self.DEV]: () => self.design_store_staging_or_development_iframe_src(),
+            [self.LOCALHOST]: () => self.DESIGN_STORE_LOCALHOST_IFRAME_SRC + ":" + self.devDsLocalhostPort()
         };
+
 
         self.onUserLoggedIn = function () {
             self.lastDsMail = self.designStore.getEmail();
@@ -114,8 +104,7 @@ $(function () {
         };
 
         self.changeEnv = function () {
-            self.designStore.DESIGN_STORE_IFRAME_SRC =
-                self.dsUrlforEnv[self.selectedEnv()]();
+            self.designStore.DESIGN_STORE_IFRAME_SRC = self.dsUrlforEnv[self.selectedEnv()]()
             self.designStore.reloadDesignStoreIframe();
         };
 

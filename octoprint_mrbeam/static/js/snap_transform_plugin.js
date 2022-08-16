@@ -676,15 +676,14 @@
             };
 
             self.session.type = calledBy;
-            self.session.originMatrix =
-                self.translateHandle.transform().totalMatrix;
+            self.session.originMatrix = self.translateHandle.transform().totalMatrix;
             self.session.originTransform = self.session.originMatrix.split();
             self.session.originInvert = self.session.originMatrix.invert();
 
-            self.session.bboxWithoutTransform =
-                self.translateHandle.getBBox(true);
-            self.session.initialMatrix =
-                self.translateHandle.transform().totalMatrix; // stack of scale, rotate, translate matrices
+            self.session.bboxWithoutTransform = self.translateHandle.getBBox(
+                true
+            );
+            self.session.initialMatrix = self.translateHandle.transform().totalMatrix; // stack of scale, rotate, translate matrices
 
             self.session.bb = self._transformBBox(
                 self.session.bboxWithoutTransform,
@@ -1475,7 +1474,8 @@
                     y: 0,
                     text: label,
                     fill: color,
-                    style: "font-size:8px; font-family:monospace; transform:translate(2px,-2px);",
+                    style:
+                        "font-size:8px; font-family:monospace; transform:translate(2px,-2px);",
                 });
                 pointEl = self.paper.group(pointMarker, pointLabel);
                 pointEl.attr({ id: id, class: "_dbg_" });
@@ -1529,7 +1529,8 @@
                     y: 0,
                     text: label,
                     fill: color,
-                    style: "vector-effect: non-scaling-stroke; font-size:8px; font-family:monospace; transform:translate(2px,-2px); vector-effect:non-scaling-stroke;",
+                    style:
+                        "vector-effect: non-scaling-stroke; font-size:8px; font-family:monospace; transform:translate(2px,-2px); vector-effect:non-scaling-stroke;",
                 });
                 const start = self.paper.circle({
                     cx: x1,
@@ -1564,7 +1565,8 @@
             let axesEl = self.paper.select("#" + id);
             if (!axesEl) {
                 const axesPath = self.paper.path({
-                    d: "M-100,0h200l-5,-5v10l5,-5 m-100,-100v200l-5,-5h10l-5,5 M0,10v5 M0,20v5 M0,30v5 M0,40v5 M0,50v10 M10,0h5 M20,0h5 M30,0h5 M40,0h5 M50,0h10",
+                    d:
+                        "M-100,0h200l-5,-5v10l5,-5 m-100,-100v200l-5,-5h10l-5,5 M0,10v5 M0,20v5 M0,30v5 M0,40v5 M0,50v10 M10,0h5 M20,0h5 M30,0h5 M40,0h5 M50,0h10",
                     stroke: color,
                     strokeWidth: 1,
                     fill: "none",
@@ -1574,21 +1576,24 @@
                     x: 0,
                     y: 0,
                     fill: color,
-                    style: "font-size:8px; font-family:monospace; transform:translate(2px,-2px);",
+                    style:
+                        "font-size:8px; font-family:monospace; transform:translate(2px,-2px);",
                 });
                 const xLabel = self.paper.text({
                     x: 100,
                     y: 0,
                     text: "x",
                     fill: color,
-                    style: "font-size:8px; font-family:monospace; transform:translate(2px,-2px);",
+                    style:
+                        "font-size:8px; font-family:monospace; transform:translate(2px,-2px);",
                 });
                 const yLabel = self.paper.text({
                     x: 0,
                     y: 100,
                     text: "y",
                     fill: color,
-                    style: "font-size:8px; font-family:monospace; transform:translate(2px,-2px);",
+                    style:
+                        "font-size:8px; font-family:monospace; transform:translate(2px,-2px);",
                 });
                 axesEl = self.paper.group(axesPath, coordLabel, xLabel, yLabel);
                 axesEl.attr({ id: id, class: "_dbg_" });
@@ -1622,7 +1627,8 @@
                     y: y,
                     dy: 8,
                     fill: color,
-                    style: "font-size:8px; font-family:monospace; vector-effect:non-scaling-stroke;",
+                    style:
+                        "font-size:8px; font-family:monospace; vector-effect:non-scaling-stroke;",
                 });
                 self.positions += 1;
             }

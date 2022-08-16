@@ -70,7 +70,8 @@ $(function () {
                 var contents = null;
                 try {
                     contents = JSON.parse(e.target.result);
-                } catch (e) {}
+                } catch (e) {
+                }
                 if (callback) {
                     callback(contents);
                 }

@@ -53,7 +53,7 @@ $(function () {
         );
 
         // override the default octoprint cancel modal
-        self.state.cancel = function () {
+        self.state.cancel = function() {
             if (!self.settings.feature_printCancelConfirmation()) {
                 OctoPrint.job.cancel();
             } else {
@@ -63,9 +63,9 @@ $(function () {
                     cancel: gettext("No"),
                     proceed: gettext("Yes"),
                     proceedClass: "primary",
-                    onproceed: function () {
+                    onproceed: function() {
                         OctoPrint.job.cancel();
-                    },
+                    }
                 });
             }
         };
@@ -331,8 +331,7 @@ $(function () {
             ).attr("href");
 
             // terminal stuff
-            terminalMaxLines =
-                self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
+            terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
             self.terminal.upperLimit(terminalMaxLines * 2);
             self.terminal.buffer(terminalMaxLines);
 
@@ -349,18 +348,13 @@ $(function () {
 
         // Mutation Observer to show a spinner in working area when file upload is in progress
         // since there are no events detecting the start of a the file upload process
-        const uploadProgressMutationNode = document.getElementById(
-            "gcode_upload_progress"
-        );
+        const uploadProgressMutationNode = document.getElementById("gcode_upload_progress");
         const uploadProgressMutationConfig = {
             childList: true,
             attributes: true,
             subtree: true,
         };
-        const uploadProgressMutationCallback = function (
-            mutationsList,
-            uploadProgressObserver
-        ) {
+        const uploadProgressMutationCallback = function (mutationsList, uploadProgressObserver) {
             for (let mutation of mutationsList) {
                 if (OctoPrint.coreui.selectedTab === "#workingarea") {
                     let width = $(mutation.target).inlineStyle("width");
@@ -372,14 +366,10 @@ $(function () {
                 }
             }
         };
-        const uploadProgressObserver = new MutationObserver(
-            uploadProgressMutationCallback
-        );
-        uploadProgressObserver.observe(
-            uploadProgressMutationNode,
-            uploadProgressMutationConfig
-        );
+        const uploadProgressObserver = new MutationObserver(uploadProgressMutationCallback);
+        uploadProgressObserver.observe(uploadProgressMutationNode, uploadProgressMutationConfig);
         // End of Mutation Observer
+
 
         // event fired (once for each file) after onEventFileAdded, but only on upload (not on filecopy)
         self.onEventUpload = async function (payload) {
@@ -404,24 +394,15 @@ $(function () {
                 }
 
                 if (file) {
-                    const fileAlreadyPlaced = (element) =>
-                        element.path === path;
-                    if (
-                        !self.workingArea
-                            .placedDesigns()
-                            .some(fileAlreadyPlaced)
-                    ) {
+                    const fileAlreadyPlaced = (element) => element.path === path;
+                    if(!self.workingArea.placedDesigns().some(fileAlreadyPlaced)){
                         self.workingArea.placeUpload(file);
                     } else {
                         new PNotify({
-                            title: gettext(
-                                "File uploaded but not added to the Working Area"
-                            ),
-                            text: gettext(
-                                "The file you uploaded was not added to the working area because another file with the same name already exists."
-                            ),
+                            title: gettext("File uploaded but not added to the Working Area"),
+                            text: gettext("The file you uploaded was not added to the working area because another file with the same name already exists."),
                             type: "warn",
-                            hide: false,
+                            hide: false
                         });
                     }
                 } else {

@@ -69,11 +69,7 @@ $(function () {
             self._handleClick(e);
         });
 
-        self.send_frontend_event = function (
-            event,
-            payload,
-            header_extension = null
-        ) {
+        self.send_frontend_event = function (event, payload, header_extension=null) {
             if (self.isStartupComplete && !self.analyticsEnabled()) {
                 return {};
             }
@@ -81,7 +77,7 @@ $(function () {
             return self._send(event, payload, "analytics", header_extension);
         };
 
-        self.send_console_event = function (logData, header_extension = null) {
+        self.send_console_event = function (logData, header_extension=null) {
             // copies logData to not pollute console.everything
             logData = { ...logData };
             if (logData.level == "error" || logData.level == "warn") {
@@ -90,12 +86,7 @@ $(function () {
             return self._send("console", logData, "console", header_extension);
         };
 
-        self._send = function (
-            event,
-            payload,
-            endpoint,
-            header_extension = null
-        ) {
+        self._send = function (event, payload, endpoint, header_extension=null) {
             payload = payload || {};
             payload["ts"] = payload["ts"] || new Date().getTime();
             payload["browser_time"] = new Date().toLocaleString("en-GB"); //GB so that we don't get AM/PM

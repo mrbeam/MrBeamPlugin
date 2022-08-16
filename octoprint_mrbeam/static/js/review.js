@@ -28,14 +28,10 @@ $(function () {
                 self.loginState.currentUser() &&
                 self.loginState.currentUser().active
             ) {
-                let totalUsage =
-                    self.settings.settings.plugins.mrbeam.usage.totalUsage();
-                let shouldAsk =
-                    self.settings.settings.plugins.mrbeam.review.ask();
-                let doNotAskAgain =
-                    self.settings.settings.plugins.mrbeam.review.doNotAskAgain();
-                let reviewGiven =
-                    self.settings.settings.plugins.mrbeam.review.given();
+                let totalUsage = self.settings.settings.plugins.mrbeam.usage.totalUsage();
+                let shouldAsk = self.settings.settings.plugins.mrbeam.review.ask();
+                let doNotAskAgain = self.settings.settings.plugins.mrbeam.review.doNotAskAgain();
+                let reviewGiven = self.settings.settings.plugins.mrbeam.review.given();
 
                 return (
                     totalUsage >= self.SHOW_AFTER_USAGE_H &&
@@ -162,7 +158,7 @@ $(function () {
 
         self.exitXBtn = function () {
             // "x" button in the corner: we send the review but show it again in the next session
-            if (self.rating() !== 0 && self.ratingGiven) {
+            if(self.rating() !== 0 && self.ratingGiven) {
                 self.ratingGiven = false;
                 self.justGaveReview(true); // We show it only once per session
                 self.sendReviewToServer();
@@ -171,7 +167,7 @@ $(function () {
         };
 
         self.exitReview = function () {
-            if (self.rating() !== 0) {
+            if(self.rating() !== 0) {
                 self.ratingGiven = false;
                 self.justGaveReview(true); // We show it only once per session
                 self.sendReviewToServer();
@@ -191,7 +187,7 @@ $(function () {
                 $("#close_review_modal")
                     .removeClass("review_hidden_part")
                     .css("width", "20%");
-            } else {
+            }else{
                 self.sendReviewToServer();
                 self.closeReview();
             }

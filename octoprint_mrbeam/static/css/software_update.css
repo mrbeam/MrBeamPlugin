@@ -5,6 +5,8 @@
 #settings_plugin_softwareupdate_workingdialog_output .stderr,
 #settings_plugin_softwareupdate_workingdialog_output .call,
 #settings_plugin_softwareupdate_workingdialog_output .stdout,
-#settings_plugin_softwareupdate_workingdialog_output .message {
-  color: #333 !important;
+#settings_plugin_softwareupdate_workingdialog_output .message
+{
+    color: #333 !important;
 }
+

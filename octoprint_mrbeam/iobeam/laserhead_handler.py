@@ -566,3 +566,6 @@ class LaserheadHandler(object):
         """
 
         return LASERHEAD_MAX_DUST_FACTOR_FALLBACK
+
+
+

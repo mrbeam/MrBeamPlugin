@@ -30,8 +30,7 @@ $(function () {
             // remove warnings about OctoPrint unreleased version
             $("#settings_plugin_softwareupdate .alert").remove();
 
-            let channels =
-                self.settings.settings.plugins.mrbeam.dev.software_tiers_available();
+            let channels = self.settings.settings.plugins.mrbeam.dev.software_tiers_available();
             for (let i = 0; i < channels.length; i++) {
                 let obj = {
                     id: channels[i],
@@ -95,20 +94,11 @@ $(function () {
 
         // get the hook when softwareUpdate perform the Updatecheck to force the update on the normal button
         self.performCheck_copy = self.softwareUpdate.performCheck;
-        self.softwareUpdate.performCheck = function (
-            showIfNothingNew,
-            force,
-            ignoreSeen
-        ) {
+        self.softwareUpdate.performCheck= function(showIfNothingNew, force, ignoreSeen) {
             if (force !== undefined) {
                 force = true; //only forces the update check if it was disabled ("check for update" button press)
-                self.reload_update_info(
-                    showIfNothingNew,
-                    force,
-                    ignoreSeen,
-                    true
-                ); //if use clicked update forward to our reload endpoint
-            } else {
+                self.reload_update_info(showIfNothingNew, force, ignoreSeen, true); //if use clicked update forward to our reload endpoint
+            }else {
                 self.performCheck_copy(showIfNothingNew, force, ignoreSeen);
             }
         };
@@ -138,51 +128,35 @@ $(function () {
             );
             button.addClass("sticky-footer");
         };
-        self.reload_update_info = function (
-            showIfNothingNew,
-            force,
-            ignoreSeen,
-            user_clicked = false
-        ) {
+        self.reload_update_info = function(showIfNothingNew, force, ignoreSeen, user_clicked=false){
             self.softwareUpdate.checking(true);
-            OctoPrint.postJson("plugin/mrbeam/info/update", {
-                user: user_clicked,
-            })
+            OctoPrint.postJson("plugin/mrbeam/info/update", {user:user_clicked})
                 .done(function (response) {
-                    self.softwareUpdate.fromCheckResponse(
-                        response,
-                        ignoreSeen,
-                        showIfNothingNew
-                    );
+                    self.softwareUpdate.fromCheckResponse(response, ignoreSeen, showIfNothingNew);
                 })
                 .fail(function (error) {
                     console.error("Unable to reload update info.");
-                    self.analytics.send_frontend_event(
-                        "update_info_call_failure",
-                        { error_message: error }
-                    );
+                    self.analytics.send_frontend_event("update_info_call_failure", {error_message: error})
                 })
-                .always(function () {
+                .always(function(){
                     self.softwareUpdate.checking(false);
                 });
-        };
+        }
     }
 
+
     let DOM_ELEMENT_TO_BIND_TO = "software_channel_selector";
+
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
         SoftwareChannelSelector,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [
-            "loginStateViewModel",
-            "settingsViewModel",
-            "softwareUpdateViewModel",
-            "analyticsViewModel",
-        ],
+        ["loginStateViewModel", "settingsViewModel", "softwareUpdateViewModel", "analyticsViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [document.getElementById(DOM_ELEMENT_TO_BIND_TO)],
     ]);
 });
+

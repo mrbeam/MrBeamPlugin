@@ -450,8 +450,7 @@ $(function () {
         };
 
         self._getClickPos = function (ev) {
-            var bbox =
-                ev.target.parentElement.parentElement.getBoundingClientRect();
+            var bbox = ev.target.parentElement.parentElement.getBoundingClientRect();
             var clickpos = {
                 xScreenPx: ev.clientX - bbox.left,
                 yScreenPx: ev.clientY - bbox.top,

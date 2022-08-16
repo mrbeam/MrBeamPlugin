@@ -592,19 +592,174 @@
         this.reduce(b);
     };
     var w = [
-            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
-            67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137,
-            139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199,
-            211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
-            281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359,
-            367, 373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439,
-            443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521,
-            523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599, 601, 607,
-            613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683,
-            691, 701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773,
-            787, 797, 809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863,
-            877, 881, 883, 887, 907, 911, 919, 929, 937, 941, 947, 953, 967,
-            971, 977, 983, 991, 997,
+            2,
+            3,
+            5,
+            7,
+            11,
+            13,
+            17,
+            19,
+            23,
+            29,
+            31,
+            37,
+            41,
+            43,
+            47,
+            53,
+            59,
+            61,
+            67,
+            71,
+            73,
+            79,
+            83,
+            89,
+            97,
+            101,
+            103,
+            107,
+            109,
+            113,
+            127,
+            131,
+            137,
+            139,
+            149,
+            151,
+            157,
+            163,
+            167,
+            173,
+            179,
+            181,
+            191,
+            193,
+            197,
+            199,
+            211,
+            223,
+            227,
+            229,
+            233,
+            239,
+            241,
+            251,
+            257,
+            263,
+            269,
+            271,
+            277,
+            281,
+            283,
+            293,
+            307,
+            311,
+            313,
+            317,
+            331,
+            337,
+            347,
+            349,
+            353,
+            359,
+            367,
+            373,
+            379,
+            383,
+            389,
+            397,
+            401,
+            409,
+            419,
+            421,
+            431,
+            433,
+            439,
+            443,
+            449,
+            457,
+            461,
+            463,
+            467,
+            479,
+            487,
+            491,
+            499,
+            503,
+            509,
+            521,
+            523,
+            541,
+            547,
+            557,
+            563,
+            569,
+            571,
+            577,
+            587,
+            593,
+            599,
+            601,
+            607,
+            613,
+            617,
+            619,
+            631,
+            641,
+            643,
+            647,
+            653,
+            659,
+            661,
+            673,
+            677,
+            683,
+            691,
+            701,
+            709,
+            719,
+            727,
+            733,
+            739,
+            743,
+            751,
+            757,
+            761,
+            769,
+            773,
+            787,
+            797,
+            809,
+            811,
+            821,
+            823,
+            827,
+            829,
+            839,
+            853,
+            857,
+            859,
+            863,
+            877,
+            881,
+            883,
+            887,
+            907,
+            911,
+            919,
+            929,
+            937,
+            941,
+            947,
+            953,
+            967,
+            971,
+            977,
+            983,
+            991,
+            997,
         ],
         W = 67108864 / w[w.length - 1];
     k.prototype.chunkSize = function (a) {
@@ -1213,12 +1368,9 @@
         return a;
     };
     v(d.PolyTree, d.PolyNode);
-    d.Math_Abs_Int64 =
-        d.Math_Abs_Int32 =
-        d.Math_Abs_Double =
-            function (a) {
-                return Math.abs(a);
-            };
+    d.Math_Abs_Int64 = d.Math_Abs_Int32 = d.Math_Abs_Double = function (a) {
+        return Math.abs(a);
+    };
     d.Math_Max_Int32_Int32 = function (a, b) {
         return Math.max(a, b);
     };
@@ -1385,14 +1537,7 @@
         this.PolyTyp = d.PolyType.ptSubject;
         this.Side = d.EdgeSide.esLeft;
         this.OutIdx = this.WindCnt2 = this.WindCnt = this.WindDelta = 0;
-        this.PrevInSEL =
-            this.NextInSEL =
-            this.PrevInAEL =
-            this.NextInAEL =
-            this.NextInLML =
-            this.Prev =
-            this.Next =
-                null;
+        this.PrevInSEL = this.NextInSEL = this.PrevInAEL = this.NextInAEL = this.NextInLML = this.Prev = this.Next = null;
     };
     d.IntersectNode = function () {
         this.Edge2 = this.Edge1 = null;
@@ -1479,47 +1624,46 @@
         }
         return !1;
     };
-    d.ClipperBase.prototype.SlopesEqual = d.ClipperBase.SlopesEqual =
-        function () {
-            var a = arguments,
-                b = a.length;
-            if (3 === b) {
-                b = a[0];
-                var c = a[1];
-                return (a = a[2])
-                    ? k.op_Equality(
-                          k.Int128Mul(b.Delta.Y, c.Delta.X),
-                          k.Int128Mul(b.Delta.X, c.Delta.Y)
-                      )
-                    : d.Cast_Int64(b.Delta.Y * c.Delta.X) ===
-                          d.Cast_Int64(b.Delta.X * c.Delta.Y);
-            }
-            if (4 === b) {
-                b = a[0];
-                c = a[1];
-                var e = a[2];
-                return (a = a[3])
-                    ? k.op_Equality(
-                          k.Int128Mul(b.Y - c.Y, c.X - e.X),
-                          k.Int128Mul(b.X - c.X, c.Y - e.Y)
-                      )
-                    : 0 ===
-                          d.Cast_Int64((b.Y - c.Y) * (c.X - e.X)) -
-                              d.Cast_Int64((b.X - c.X) * (c.Y - e.Y));
-            }
+    d.ClipperBase.prototype.SlopesEqual = d.ClipperBase.SlopesEqual = function () {
+        var a = arguments,
+            b = a.length;
+        if (3 === b) {
+            b = a[0];
+            var c = a[1];
+            return (a = a[2])
+                ? k.op_Equality(
+                      k.Int128Mul(b.Delta.Y, c.Delta.X),
+                      k.Int128Mul(b.Delta.X, c.Delta.Y)
+                  )
+                : d.Cast_Int64(b.Delta.Y * c.Delta.X) ===
+                      d.Cast_Int64(b.Delta.X * c.Delta.Y);
+        }
+        if (4 === b) {
             b = a[0];
             c = a[1];
-            e = a[2];
-            var f = a[3];
-            return (a = a[4])
+            var e = a[2];
+            return (a = a[3])
                 ? k.op_Equality(
-                      k.Int128Mul(b.Y - c.Y, e.X - f.X),
-                      k.Int128Mul(b.X - c.X, e.Y - f.Y)
+                      k.Int128Mul(b.Y - c.Y, c.X - e.X),
+                      k.Int128Mul(b.X - c.X, c.Y - e.Y)
                   )
                 : 0 ===
-                      d.Cast_Int64((b.Y - c.Y) * (e.X - f.X)) -
-                          d.Cast_Int64((b.X - c.X) * (e.Y - f.Y));
-        };
+                      d.Cast_Int64((b.Y - c.Y) * (c.X - e.X)) -
+                          d.Cast_Int64((b.X - c.X) * (c.Y - e.Y));
+        }
+        b = a[0];
+        c = a[1];
+        e = a[2];
+        var f = a[3];
+        return (a = a[4])
+            ? k.op_Equality(
+                  k.Int128Mul(b.Y - c.Y, e.X - f.X),
+                  k.Int128Mul(b.X - c.X, e.Y - f.Y)
+              )
+            : 0 ===
+                  d.Cast_Int64((b.Y - c.Y) * (e.X - f.X)) -
+                      d.Cast_Int64((b.X - c.X) * (e.Y - f.Y));
+    };
     d.ClipperBase.SlopesEqual3 = function (a, b, c) {
         return c
             ? k.op_Equality(
@@ -2037,23 +2181,13 @@
         "undefined" === typeof a && (a = 0);
         this.m_PolyOuts = null;
         this.m_ClipType = d.ClipType.ctIntersection;
-        this.m_IntersectNodeComparer =
-            this.m_IntersectList =
-            this.m_SortedEdges =
-            this.m_ActiveEdges =
-            this.m_Maxima =
-            this.m_Scanbeam =
-                null;
+        this.m_IntersectNodeComparer = this.m_IntersectList = this.m_SortedEdges = this.m_ActiveEdges = this.m_Maxima = this.m_Scanbeam = null;
         this.m_ExecuteLocked = !1;
         this.m_SubjFillType = this.m_ClipFillType = d.PolyFillType.pftEvenOdd;
         this.m_GhostJoins = this.m_Joins = null;
         this.StrictlySimple = this.ReverseSolution = this.m_UsingPolyTree = !1;
         d.ClipperBase.call(this);
-        this.m_SortedEdges =
-            this.m_ActiveEdges =
-            this.m_Maxima =
-            this.m_Scanbeam =
-                null;
+        this.m_SortedEdges = this.m_ActiveEdges = this.m_Maxima = this.m_Scanbeam = null;
         this.m_IntersectList = [];
         this.m_IntersectNodeComparer = d.MyIntersectNodeSort.Compare;
         this.m_UsingPolyTree = this.m_ExecuteLocked = !1;
@@ -4249,13 +4383,7 @@
         this.m_srcPoly = new d.Path();
         this.m_destPoly = new d.Path();
         this.m_normals = [];
-        this.m_StepsPerRad =
-            this.m_miterLim =
-            this.m_cos =
-            this.m_sin =
-            this.m_sinA =
-            this.m_delta =
-                0;
+        this.m_StepsPerRad = this.m_miterLim = this.m_cos = this.m_sin = this.m_sinA = this.m_delta = 0;
         this.m_lowest = new d.IntPoint0();
         this.m_polyNodes = new d.PolyNode();
         this.MiterLimit = a;
@@ -4298,10 +4426,9 @@
                         b
                     );
                 else if (
-                    ((a =
-                        this.m_polyNodes.Childs()[this.m_lowest.X].m_polygon[
-                            this.m_lowest.Y
-                        ]),
+                    ((a = this.m_polyNodes.Childs()[this.m_lowest.X].m_polygon[
+                        this.m_lowest.Y
+                    ]),
                     f.m_polygon[b].Y > a.Y ||
                         (f.m_polygon[b].Y === a.Y && f.m_polygon[b].X < a.X))
                 )
