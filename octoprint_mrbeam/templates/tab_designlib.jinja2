@@ -18,8 +18,8 @@
 										</div>
 										<div class="action_btns">
 											<div class="btn-group">
-												<a class="btn btn-danger" t-id=”library-design-delete-selection” href="#" data-bind="click: function() { if ($root.enableRemove($data)) { $root.deleteSelection(); } else { console.warn('Insufficient permissions to delete files!'); return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon icon-trash"></i> {{ _('Delete Selection') }}</a>
-												<a class="btn btn-link" t-id=”library-design-unselect-all” href="#" data-bind="click: $root.cancelSelection"><i class="icon icon-remove"></i> {{ _('Unselect all') }}</a>
+												<a class="btn btn-danger" data-cy=”library-design-delete-selection” href="#" data-bind="click: function() { if ($root.enableRemove($data)) { $root.deleteSelection(); } else { console.warn('Insufficient permissions to delete files!'); return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon icon-trash"></i> {{ _('Delete Selection') }}</a>
+												<a class="btn btn-link" data-cy=”library-design-unselect-all” href="#" data-bind="click: $root.cancelSelection"><i class="icon icon-remove"></i> {{ _('Unselect all') }}</a>
 											</div>
 										</div>
 									</div>
@@ -87,12 +87,12 @@
 									<div id="files" >
 										<div class="folder_navigation clearfix">
 											<div class="entry back pull-left" data-bind="visible: currentPath() != ''" style="display: none">
-												<a class="back-arrow btn-link" t-id=”library-design-back” data-bind="click: function() { $root.cancelSelection(); $root.navigateUp(); }">
+												<a class="back-arrow btn-link" data-cy=”library-design-back” data-bind="click: function() { $root.cancelSelection(); $root.navigateUp(); }">
 													<i class="fa fa-arrow-left"></i> {{  _('Back') }}
 												</a>  |
 												<span class="back-path muted">{{ _('Currently in') }} <span data-bind="text: currentPath"></span></span>
 											</div>
-											<a class="btn-link addfolder-button pull-right" t-id=”library-design-add-folder” data-bind="
+											<a class="btn-link addfolder-button pull-right" data-cy=”library-design-add-folder” data-bind="
 												click: function() { if ($root.loginState.isUser()) { $root.showAddFolderDialog(); } },
 												css: {disabled: !$root.loginState.isUser()}">
 												{{ _('Add Folder') }} <i class="icon icon-plus-sign"></i>
