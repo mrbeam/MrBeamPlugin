@@ -104,7 +104,8 @@ $(function () {
             self.webCamImageElem = $("#beamcam_image_svg");
             self.cameraMarkerElem = $("#camera_markers");
             // self.webCamImageElem.removeAttr('onerror');
-            self.croppedUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
+            self.croppedUrl =
+                self.settings.settings.plugins.mrbeam.cam.frontendUrl();
 
             if (window.mrbeam.browser.is_safari) {
                 // svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
