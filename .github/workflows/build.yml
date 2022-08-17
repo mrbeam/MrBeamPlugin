@@ -11,25 +11,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  pytest:
-    name: pytest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up Python 2.7
-        uses: actions/setup-python@v2
-        with:
-          python-version: 2.7
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pylint
-          pip install -r test-requirements.txt
-      - name: Running pytest
-        run: |
-          pytest -v  --cov --cov-report=xml --cov-report=html --junit-xml=xunit-result.xml --html=pytest-report.html
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
