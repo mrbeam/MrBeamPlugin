@@ -7,9 +7,9 @@
             <h3 data-bind='visible: !is_rtl_mode()'>{{ _('Pause') }}</h3>
         </div>
         <div class="modal-body">
-            <img data-bind='visible: !is_fan_connected()' src="/plugin/mrbeam/static/img/airfilter.jpg">
-            <img data-bind='visible: !state.interlocksClosed() && is_fan_connected()' src="/plugin/mrbeam/static/img/closelid.jpg">
-            <img data-bind='visible: state.interlocksClosed() && is_fan_connected()' src="/plugin/mrbeam/static/img/onebutton.jpg">
+            <img loading="lazy" data-bind='visible: !is_fan_connected()' src="/plugin/mrbeam/static/img/airfilter.jpg">
+            <img loading="lazy" data-bind='visible: !state.interlocksClosed() && is_fan_connected()' src="/plugin/mrbeam/static/img/closelid.jpg">
+            <img loading="lazy" data-bind='visible: state.interlocksClosed() && is_fan_connected()' src="/plugin/mrbeam/static/img/onebutton.jpg">
             <h5 data-bind='visible: !is_fan_connected()'>{{ _('Can not detect air filter system. Is it plugged in?') }}</h5>
             <h5 data-bind='visible: !state.interlocksClosed() && is_fan_connected()'>{{ _('Please close the lid completely before we can proceed.') }}</h5>
             <h5 data-bind='visible: state.interlocksClosed() && is_fan_connected()'>{{ _('Everything is ready to go.') }}</h5>
@@ -38,7 +38,7 @@
             <h3 >{{ _('Cooling') }}</h3>
         </div>
         <div class="modal-body">
-            <img src="/plugin/mrbeam/static/img/cooling.jpg">
+            <img loading="lazy" src="/plugin/mrbeam/static/img/cooling.jpg">
 {#  Mr Beam macht eine Kühlpause. Der Laserjob wird so bald wie möglich fortgesetzt. Sollten die Kühlpausen häufiger auftreten, reinige bitte deinen Laserkopf. Falls du den Laserkopf gerade gereinigt haben, überprüfe, ob dieser wieder richtig zusammengebaut ist.          #}
             <h5 >{{ _('Mr Beam is pausing for a cooling break. The laser job will resume as soon as possible.') }}</h5>
             <small class="muted">{{ _('If cooling pauses occur regularly, please clean your laser head. If you have just cleaned the laser head, please check if it is reassembled correctly.') }}</small>
