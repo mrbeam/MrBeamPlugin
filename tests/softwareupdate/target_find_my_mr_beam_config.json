@@ -1,35 +1,26 @@
 {
-    "displayName": "OctoPrint-FindMyMrBeam",
-    "repo": "OctoPrint-FindMyMrBeam",
-    "displayVersion": "dummy",
-    "pip": "https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
-    "type": "github_commit",
-    "restart": "octoprint",
-    "user": "mrbeam",
-    "stable_branch": {
+  "displayName": "OctoPrint-FindMyMrBeam",
+  "repo": "OctoPrint-FindMyMrBeam",
+  "displayVersion": "dummy",
+  "pip": "https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
+  "type": "github_commit",
+  "restart": "octoprint",
+  "user": "mrbeam",
+  "stable_branch": {
     "branch": "stable",
     "name": "stable",
-    "commitish": [
-      "stable"
-    ]
+    "commitish": ["stable"]
   },
   "prerelease_branches": [
     {
       "name": "alpha",
       "branch": "alpha",
-      "commitish": [
-        "alpha",
-        "beta",
-        "stable"
-      ]
+      "commitish": ["alpha", "beta", "stable"]
     },
     {
       "name": "beta",
       "branch": "beta",
-      "commitish": [
-        "beta",
-        "stable"
-      ]
+      "commitish": ["beta", "stable"]
     }
   ],
   "force_base": false,
@@ -57,7 +48,7 @@
       "branch_default": "mrbeam2-alpha",
       "prerelease_channel": "alpha",
       "prerelease": true,
-      "type": "github_release",
+      "type": "github_release"
     }
   }
 }

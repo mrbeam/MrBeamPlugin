@@ -10,27 +10,18 @@
     "stable_branch": {
       "branch": "stable",
       "name": "stable",
-      "commitish": [
-        "stable"
-      ]
+      "commitish": ["stable"]
     },
     "prerelease_branches": [
       {
         "name": "alpha",
         "branch": "alpha",
-        "commitish": [
-          "alpha",
-          "beta",
-          "stable"
-        ]
+        "commitish": ["alpha", "beta", "stable"]
       },
       {
         "name": "beta",
         "branch": "beta",
-        "commitish": [
-          "beta",
-          "stable"
-        ]
+        "commitish": ["beta", "stable"]
       }
     ]
   },
@@ -47,27 +38,18 @@
     "stable_branch": {
       "branch": "stable",
       "name": "stable",
-      "commitish": [
-        "stable"
-      ]
+      "commitish": ["stable"]
     },
     "prerelease_branches": [
       {
         "name": "alpha",
         "branch": "alpha",
-        "commitish": [
-          "alpha",
-          "beta",
-          "stable"
-        ]
+        "commitish": ["alpha", "beta", "stable"]
       },
       {
         "name": "beta",
         "branch": "beta",
-        "commitish": [
-          "beta",
-          "stable"
-        ]
+        "commitish": ["beta", "stable"]
       }
     ]
   },
@@ -84,27 +66,18 @@
     "stable_branch": {
       "branch": "stable",
       "name": "stable",
-      "commitish": [
-        "stable"
-      ]
+      "commitish": ["stable"]
     },
     "prerelease_branches": [
       {
         "name": "alpha",
         "branch": "alpha",
-        "commitish": [
-          "alpha",
-          "beta",
-          "stable"
-        ]
+        "commitish": ["alpha", "beta", "stable"]
       },
       {
         "name": "beta",
         "branch": "beta",
-        "commitish": [
-          "beta",
-          "stable"
-        ]
+        "commitish": ["beta", "stable"]
       }
     ]
   },
@@ -119,27 +92,18 @@
     "stable_branch": {
       "branch": "stable",
       "name": "stable",
-      "commitish": [
-        "stable"
-      ]
+      "commitish": ["stable"]
     },
     "prerelease_branches": [
       {
         "name": "alpha",
         "branch": "alpha",
-        "commitish": [
-          "alpha",
-          "beta",
-          "stable"
-        ]
+        "commitish": ["alpha", "beta", "stable"]
       },
       {
         "name": "beta",
         "branch": "beta",
-        "commitish": [
-          "beta",
-          "stable"
-        ]
+        "commitish": ["beta", "stable"]
       }
     ]
   }
