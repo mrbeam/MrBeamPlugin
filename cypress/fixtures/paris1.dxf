@@ -1221,7 +1221,7 @@ DashDot
  49
 -0.04
  74
-     0	
+     0
   0
 LTYPE
   5
@@ -1259,7 +1259,7 @@ Dot
  49
 -0.04
  74
-     0	
+     0
   0
 ENDTAB
   0
@@ -1271,7 +1271,7 @@ LAYER
 100
 AcDbSymbolTable
  70
-9              
+9
   0
 LAYER
   5
@@ -1427,7 +1427,7 @@ STYLE
 100
 AcDbSymbolTable
  70
-1              
+1
  0
 STYLE
  5

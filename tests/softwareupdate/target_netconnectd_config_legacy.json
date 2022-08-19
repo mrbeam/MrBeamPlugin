@@ -1,45 +1,36 @@
 {
-    "displayVersion": "dummy",
-    "displayName": "OctoPrint-Netconnectd Plugin",
-    "user": "mrbeam",
-    "repo": "OctoPrint-Netconnectd",
-    "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
-    "restart": "environment",
-    "type": "github_commit",
-    "force_base": false,
-    "dependencies": {
-        "netconnectd": {
-            "repo": "netconnectd_mrbeam",
-            "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
-            "global_pip_command": true,
-            "pip_command": "sudo /usr/local/bin/pip",
-            "version": "0.0.1"
-        }
-    },
-    "stable_branch": {
+  "displayVersion": "dummy",
+  "displayName": "OctoPrint-Netconnectd Plugin",
+  "user": "mrbeam",
+  "repo": "OctoPrint-Netconnectd",
+  "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
+  "restart": "environment",
+  "type": "github_commit",
+  "force_base": false,
+  "dependencies": {
+    "netconnectd": {
+      "repo": "netconnectd_mrbeam",
+      "pip": "https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
+      "global_pip_command": true,
+      "pip_command": "sudo /usr/local/bin/pip",
+      "version": "0.0.1"
+    }
+  },
+  "stable_branch": {
     "branch": "stable",
     "name": "stable",
-    "commitish": [
-      "stable"
-    ]
+    "commitish": ["stable"]
   },
   "prerelease_branches": [
     {
       "name": "alpha",
       "branch": "alpha",
-      "commitish": [
-        "alpha",
-        "beta",
-        "stable"
-      ]
+      "commitish": ["alpha", "beta", "stable"]
     },
     {
       "name": "beta",
       "branch": "beta",
-      "commitish": [
-        "beta",
-        "stable"
-      ]
+      "commitish": ["beta", "stable"]
     }
   ],
   "release_compare": "python_unequal",

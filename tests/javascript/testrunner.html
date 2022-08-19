@@ -2,23 +2,24 @@
 <html>
   <head>
     <title>Mocha Tests</title>
-    <link rel="stylesheet" href="node_modules/mocha/mocha.css">
-    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
-    <meta content="utf-8" http-equiv="encoding">
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="stylesheet" href="node_modules/mocha/mocha.css" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
   </head>
   <body>
     <div id="mocha"></div>
     <script src="node_modules/mocha/mocha.js"></script>
     <script src="node_modules/chai/chai.js"></script>
-    <script>mocha.setup('bdd')</script>
+    <script>
+      mocha.setup("bdd");
+    </script>
 
     <!-- load code you want to test here -->
-    <script src="/octoprint_mrbeam/static/js/helpers/quick_shape_helper.js"></script>
-
+    <script src="/octoprint_mrbeam/static/js/app/helpers/quick-shape.js"></script>
 
     <!-- load your test files here -->
-    <script src="helpers/test_quick_shape_helper.js"></script>
+    <script src="app/helpers/quick-shape-test.js"></script>
 
     <script>
       mocha.run();
