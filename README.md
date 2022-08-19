@@ -31,20 +31,7 @@ Access from the browser:
 
     http://localhost:5002
 
-
-## Running unit tests
-Create a Python 2 virtual environment and activate it:
-```shell
-virtualenv -p /usr/bin/python2.7 tests_venv
-source tests_venv/bin/activate
-```
-
-Install test requirements:
-```shell
-pip install -r test-requirements.txt
-```
-
-Run the unit tests directly from **Pycharm** or from the command line:
-```shell
-python -m pytest tests/
-```
+## Set up local dev environment
+Just run the `dev-setup.sh` script, that will:
+- Create a virtual environment with all the requirements to run tests
+- Install the pre-commit configuration for the auto formatting
