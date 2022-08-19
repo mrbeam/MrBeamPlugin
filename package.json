@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "@4tw/cypress-drag-drop": "^2.2.1",
+    "cypress": "^10.4.0",
+    "cypress-file-upload": "^5.0.8",
+    "cypress-iframe": "^1.0.1"
+  },
+  "dependencies": {
+    "cypress-real-events": "^1.7.1"
+  },
+  "scripts": {
+    "cypress:open": "cypress open"
+  }
+}
