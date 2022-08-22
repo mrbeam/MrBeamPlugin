@@ -45,3 +45,7 @@ tests/logs/*.txt
 
 # node modules
 node_modules
+
+# Cypress
+cypress/screenshots
+cypress/videos
