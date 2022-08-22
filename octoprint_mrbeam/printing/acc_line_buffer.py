@@ -93,18 +93,6 @@ class AccLineBuffer(object):
         self._lock.writer_release()
         return self._last_responded
 
-    def get_first_item(self):
-        """
-        Returns the first (oldest) item. This is the one to be removed next.
-        :return: item dict(cmd="", i=1, f=23) or None if empty
-        """
-        if self.is_empty():
-            return None
-        self._lock.reader_acquire()
-        res = self.buffer_cmds[0]
-        self._lock.reader_release()
-        return res
-
     def get_last_responded(self):
         """
         returns the last acknowledged command

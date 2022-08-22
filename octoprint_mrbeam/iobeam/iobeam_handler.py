@@ -4,6 +4,7 @@ import threading
 import time
 import datetime
 import collections
+import logging
 import json
 from distutils.version import LooseVersion
 
@@ -63,6 +64,8 @@ class IoBeamValueEvents(object):
     COMPRESSOR_STATIC = "iobeam.compressor.static"
     COMPRESSOR_DYNAMIC = "iobeam.compressor.dynamic"
 
+IOBEAM_SOCKET_TIMEOUT = 10 # seconds
+"""Timeout in seconds when reading the iobeam socket. Connection is reset if the read times out."""
 
 class IoBeamHandler(object):
 
@@ -157,15 +160,15 @@ class IoBeamHandler(object):
     DATASET_REED_SWITCH = "reed_switch"
     DATASET_ANALYTICS = "analytics"
 
-    def __init__(self, plugin):
+    def __init__(self, plugin, socket_file=SOCKET_FILE):
         self._plugin = plugin
         self._event_bus = plugin._event_bus
-        self._socket_file = plugin._settings.get(["dev", "sockets", "iobeam"])
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam")
 
+        self.socket_file = plugin._settings.get(["dev", "sockets", "iobeam"]) or socket_file
+        self._my_socket = None # The actual socket object
         self._shutdown_signaled = False
         self._isConnected = False
-        self._my_socket = None
         self._errors = 0
         self._unknown_datasets = []
         self._callbacks = dict()
@@ -199,10 +202,9 @@ class IoBeamHandler(object):
 
         self._subscribe()
 
-        # We only start the iobeam listener now
-        iobeam_worker = threading.Timer(1.0, self._initWorker, [self._socket_file])
-        iobeam_worker.daemon = True
-        iobeam_worker.start()
+        self._worker = threading.Thread(target=self._work, name="iobeamHandler")
+        self._worker.daemon = True
+        self._worker.start()
 
     def isRunning(self):
         return self._worker.is_alive()
@@ -225,18 +227,9 @@ class IoBeamHandler(object):
     def open_interlocks(self):
         return self._interlocks.keys()
 
-    def send_temperature_request(self):
-        """
-        Request a single temperature value from iobeam.
-        :return: True if the command was sent sucessfully.
-        """
-        return self._send_command(
-            self.get_request_msg([self.MESSAGE_DEVICE_LASER + "_temp"])
-        )
-
     def send_fan_command(self, action, value=None):
         """
-        Send the specified command as fan:<command>
+        Send the specified command as the json api allows
         :param command: One of the three values (ON:<0-100>/OFF/AUTO)
         :return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
         """
@@ -264,7 +257,7 @@ class IoBeamHandler(object):
         """
         Sends a command to iobeam
         :param command: Must not be None. May or may not end with a new line.
-        :return: Boolean success
+        :return bool: success
         """
         if command is None:
             raise ValueError("Command must not be None in send_command().")
@@ -342,7 +335,7 @@ class IoBeamHandler(object):
                 self._callbacks[event].append(callback)
             else:
                 self._callbacks[event] = [callback]
-        except:
+        except Exception:
             self._logger.exception(
                 "Exception while subscribing to event '{}': ".format(event)
             )
@@ -371,7 +364,7 @@ class IoBeamHandler(object):
                 # my_thread = threading.Thread(**thread_params)
                 # my_thread.daemon = True
                 # my_thread.start()
-        except:
+        except Exception:
             self._logger.exception(
                 "Exception in _call_callback() _trigger_event: %s, message: %s, kwargs: %s",
                 _trigger_event,
@@ -396,7 +389,7 @@ class IoBeamHandler(object):
                     self._logger.exception(
                         "Exception in a callback for event: %s : ", _trigger_event
                     )
-        except:
+        except Exception:
             self._logger.exception(
                 "Exception in __execute_callback_called_by_new_thread() for event: %s : ",
                 _trigger_event,
@@ -418,23 +411,12 @@ class IoBeamHandler(object):
         )
         self._event_bus.subscribe(OctoPrintEvents.ERROR, self.send_analytics_request)
 
-    def _initWorker(self, socket_file=None):
-        self._logger.debug("initializing worker thread")
-
-        # this is needed for unit tests
-        if socket_file is not None:
-            self.SOCKET_FILE = socket_file
-
-        # this si executed on a TimerThread. let's start a plain thread, just to have it "clean"
-        self._worker = threading.Thread(target=self._work, name="iobeamHandler")
-        self._worker.daemon = True
-        self._worker.start()
-
     def _work(self):
+        self._logger.debug("Worker thread started")
         try:
             threading.current_thread().name = self.__class__.__name__
             self._logger.debug(
-                "Worker thread starting, connecting to socket: %s", self.SOCKET_FILE
+                "Connecting to socket: %s", self.socket_file
             )
 
             while not self._shutdown_signaled:
@@ -442,9 +424,13 @@ class IoBeamHandler(object):
                 self._isConnected = False
                 try:
                     temp_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                    temp_socket.settimeout(10)
-                    # self._logger.debug("Connecting to socket...")
-                    temp_socket.connect(self.SOCKET_FILE)
+                    # NOTE: When iobeam does not send back changes to the operational data,
+                    #       the reads will continuously timeout and connection will reset.
+                    #       This can happen when the i2c bus is broken. Otherwise iobeam usually
+                    #       reports back changes in dust values from the dust sensor.
+                    #       Consider increasing the timeout or change the handling of the connection.
+                    temp_socket.settimeout(IOBEAM_SOCKET_TIMEOUT)
+                    temp_socket.connect(self.socket_file)
                     self._my_socket = temp_socket
                 except socket.error as e:
                     self._isConnected = False
@@ -452,14 +438,14 @@ class IoBeamHandler(object):
                         if not self._connectionException == str(e):
                             self._logger.error(
                                 "IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.",
-                                self.SOCKET_FILE,
+                                self.socket_file,
                                 e,
                             )
                             self._connectionException = str(e)
                     else:
                         self._logger.error(
                             "IoBeamHandler not able to connect to socket %s, reason: %s. ",
-                            self.SOCKET_FILE,
+                            self.socket_file,
                             e,
                         )
 
@@ -471,10 +457,7 @@ class IoBeamHandler(object):
                 self._connectionException = None
 
                 client_msg = self._send_identification()
-                self._logger.info(
-                    "iobeam connection established. Identified ourselves as '%s'",
-                    client_msg["client"],
-                )
+                self._logger.info("iobeam connection established.")
                 self._fireEvent(IoBeamEvents.CONNECT)
 
                 temp_buffer = b""
@@ -536,7 +519,7 @@ class IoBeamHandler(object):
                                     "Received invalid message, error_count=%s",
                                     self._errors,
                                 )
-                    except:
+                    except Exception:
                         self._logger.exception(
                             "Exception in socket loop. Not sure what to do, resetting connection..."
                         )
@@ -556,12 +539,14 @@ class IoBeamHandler(object):
                     time.sleep(0.1)
 
             self._logger.debug("Worker thread stopped.")
-        except:
+        except Exception:
             self._logger.exception("Exception in _work(): ")
 
     def _handle_messages(self, messages):
         """
         Handles incoming list of messages from the socket.
+        Will also log any datasets that took a "long" time to process.
+
         :param messages: list of incoming dict messages
         :return: int: number of invalid messages 0 means all messages were handled correctly
         """
@@ -571,36 +556,37 @@ class IoBeamHandler(object):
             for json_data in messages:
                 if len(json_data) > 0:
 
-                    message_count = +1
+                    message_count += 1
+
+                    processing_start = time.time()
 
                     try:
                         # self._logger.info("ANDYTEST _handle_messages()  %s", json_data)
 
-                        json_dict = json.loads(json_data)
-                        # Now there could be "data" and "response"
-                        if "data" in json_dict:
-                            _data = json_dict["data"]
-                            if self.MESSAGE_ERROR not in _data:
-                                # Process all data sets
-                                if isinstance(_data, dict):
-                                    # We have to process the iobeam dataset first, because we need the iobeam version for analytics
-                                    if "iobeam" in _data.keys():
-                                        error_count += self._handle_dataset(
-                                            "iobeam", _data.pop("iobeam", None)
-                                        )
+                        _data = json.loads(json_data)
+                        if not isinstance(_data, collections.Mapping):
+                            raise ValueError("Given data is invalid")
+                        if _data.get("response"):
+                            error_count += self._handle_response(_data.pop("response"))
+                        # Process all data sets
+                        datasets = _data.get("data", {})
+                        # We have to process the iobeam dataset first, because we need the iobeam version for analytics
+                        if "iobeam" in datasets.keys():
+                            error_count += self._handle_dataset(
+                                "iobeam", datasets.pop("iobeam", None)
+                            )
 
-                                    for data_id, dataset in _data.items():
-                                        error_count += self._handle_dataset(
-                                            data_id, dataset
-                                        )
-                            else:
-                                self._logger.debug(
-                                    "Received error in data '%s'",
-                                    _data[self.MESSAGE_ERROR],
-                                )
-                                error_count += 1
-                        elif "response" in json_dict:
-                            error_count += self._handle_response(json_dict)
+                        for data_id, dataset in datasets.items():
+                            error_count += self._handle_dataset(
+                                data_id, dataset
+                            )
+                        # If any error is reported at the root level of the reply, handle it here
+                        if self.MESSAGE_ERROR in _data:
+                            self._logger.debug(
+                                "Received error in data '%s'",
+                                _data[self.MESSAGE_ERROR],
+                            )
+                            error_count += 1
 
                     except ValueError as ve:
                         # Check if we communicate with an older version of iobeam, iobeam:version:0.6.0
@@ -633,8 +619,13 @@ class IoBeamHandler(object):
                             )
                     except Exception as e2:
                         self._logger.debug("Some error with data '%s'", json_data)
-                        self._logger.error(e2)
+                        self._logger.exception(e2)
                         error_count += 1
+
+                    else:
+                        processing_time = time.time() - processing_start
+                        self._handle_processing_time(processing_time, _data)
+
 
         except Exception as e:
             self._logger.exception(e)
@@ -646,150 +637,102 @@ class IoBeamHandler(object):
         Handle dataset
         :param name: name of the dataset
         :param dataset: the contents of the dataset
-        :return: error count
+        :return int: error count
         """
-        # self._logger.info("ANDYTEST _handle_dataset() %s: %s", name, dataset)
-        error_count = 0
-        processing_start = time.time()
-
-        err = -1
-        try:
-            if len(name) <= 0:
-                err = self._handle_invalid_dataset(name, dataset)
-            elif self.MESSAGE_ERROR in dataset:
-                self._logger.debug(
-                    "Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR]
-                )
-                err += 1
-            # # elif len(dataset) == 0:
-            # # 	self._logger.debug("Received empty dataset %s", name)
+        err = 0
+        if len(name) <= 0:
+            err = self._handle_invalid_dataset(name, dataset)
+        elif self.MESSAGE_ERROR in dataset:
+            self._logger.debug(
+                "Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR]
+            )
+            err = 1
+        else:
+            if name == self.DATASET_FAN_DYNAMIC:
+                err = self._handle_fan_dynamic(dataset)
+            elif name == self.DATASET_FAN_STATIC:
+                err = self._handle_fan_static(dataset)
+            elif name == self.DATASET_COMPRESSOR_STATIC:
+                err = self._handle_compressor_static(dataset)
+            elif name == self.DATASET_COMPRESSOR_DYNAMIC:
+                err = self._handle_compressor_dynamic(dataset)
+            elif name == self.DATASET_LASER:
+                err = self._handle_laser(dataset)
+            elif name == self.DATASET_LASERHEAD:
+                err = self._handle_laserhead(dataset)
+            elif name == self.DATASET_LASERHEAD_SHORT:
+                pass
+                # err = self._handle_laserhead(dataset)
+            elif name == self.DATASET_IOBEAM:
+                err = self._handle_iobeam(dataset)
+            elif name == self.DATASET_PCF:
+                err = self._handle_pcf(dataset)
+            elif name == self.DATASET_FAN_LINK_QUALITY:
+                err = self._handle_link_quality(dataset)
+            elif name == self.DATASET_FAN_EXHAUST:
+                err = self._handle_exhaust(dataset)
+            elif name == self.DATASET_HW_MALFUNCTION:
+                err = self._handle_hw_malfunction(dataset)
+            elif name == self.DATASET_I2C:
+                err = self._handle_i2c(dataset)
+            elif name == self.DATASET_I2C_MONITORING:
+                err = self._handle_i2c_monitoring(dataset)
+            elif name == self.DATASET_REED_SWITCH:
+                err = self._handle_reed_switch(dataset)
+            elif name == self.DATASET_ANALYTICS:
+                err = self._handle_analytics_dataset(dataset)
+            elif name == self.MESSAGE_DEVICE_UNUSED:
+                pass
+            elif name == self.MESSAGE_ERROR:
+                err = self._handle_error_message(dataset)
             else:
-                if name == self.DATASET_FAN_DYNAMIC:
-                    err = self._handle_fan_dynamic(dataset)
-                elif name == self.DATASET_FAN_STATIC:
-                    err = self._handle_fan_static(dataset)
-                elif name == self.DATASET_COMPRESSOR_STATIC:
-                    err = self._handle_compressor_static(dataset)
-                elif name == self.DATASET_COMPRESSOR_DYNAMIC:
-                    err = self._handle_compressor_dynamic(dataset)
-                elif name == self.DATASET_LASER:
-                    err = self._handle_laser(dataset)
-                elif name == self.DATASET_LASERHEAD:
-                    err = self._handle_laserhead(dataset)
-                elif name == self.DATASET_LASERHEAD_SHORT:
-                    pass
-                    # err = self._handle_laserhead(dataset)
-                elif name == self.DATASET_IOBEAM:
-                    err = self._handle_iobeam(dataset)
-                elif name == self.DATASET_PCF:
-                    err = self._handle_pcf(dataset)
-                elif name == self.DATASET_FAN_LINK_QUALITY:
-                    err = self._handle_link_quality(dataset)
-                elif name == self.DATASET_FAN_EXHAUST:
-                    err = self._handle_exhaust(dataset)
-                elif name == self.DATASET_HW_MALFUNCTION:
-                    err = self._handle_hw_malfunction(dataset)
-                elif name == self.DATASET_I2C:
-                    err = self._handle_i2c(dataset)
-                elif name == self.DATASET_I2C_MONITORING:
-                    err = self._handle_i2c_monitoring(dataset)
-                elif name == self.DATASET_REED_SWITCH:
-                    err = self._handle_reed_switch(dataset)
-                elif name == self.DATASET_ANALYTICS:
-                    err = self._handle_analytics_dataset(dataset)
-                elif name == self.MESSAGE_DEVICE_UNUSED:
-                    pass
-                elif name == self.MESSAGE_ERROR:
-                    err = self._handle_error_message(dataset)
-                else:
-                    err = self._handle_unknown_dataset(name, dataset)
-        except:
-            self._logger.exception("Error handling dataset '%s': %s", name, dataset)
+                err = self._handle_unknown_dataset(name, dataset)
+        if err is None:
+            self._logger.warning("err None : name %s - data %s", name, dataset)
+        return err
 
-        if err >= 0:
-            error_count += err
+    #~ Dataset handlers ~#
 
-        processing_time = time.time() - processing_start
-        self._handle_processing_time(processing_time, dataset, err)
+    def _do_not_handle(self, dataset=None, *args, **kwargs):
+        """Does nothing, returns no errors"""
+        return 0
 
-        return error_count
+    def _just_log_dataset(data_name, level=logging.INFO):
+        def handler(elm, dataset):
+            """Only logs the provided data at a certain level"""
+            elm._logger.log(level, "%s: %s", data_name, dataset)
+            return 0
+        return handler
 
     def _handle_fan_dynamic(self, dataset):
         """
         Handle dynamic fan data
+        If a key is not present, the previous value is assumed
         :param dataset:
         :return: error count
         """
-        if isinstance(dataset, dict) and len(dataset) > 3:
-            vals = dict(
-                state=self._as_number(dataset[self.MESSAGE_ACTION_FAN_STATE]),
-                rpm=self._as_number(dataset[self.MESSAGE_ACTION_FAN_RPM]),
-                dust=self._as_number(dataset[self.MESSAGE_ACTION_DUST_VALUE]),
-                connected=self._get_connected_val(
-                    dataset[self.MESSAGE_ACTION_FAN_CONNECTED]
-                ),
-            )
-            # if token[4] == 'error':
-            # 	self._logger.warn("Received fan connection error: %s", message)
+        vals = {}
+        fields = {
+            # data key (string) : [ sanitize function (callable) , callback trigger key (string) ]
+            self.MESSAGE_ACTION_FAN_STATE: [self._as_number, IoBeamValueEvents.STATE_VALUE],
+            self.MESSAGE_ACTION_FAN_RPM: [self._as_number, IoBeamValueEvents.RPM_VALUE],
+            self.MESSAGE_ACTION_DUST_VALUE: [self._as_number, IoBeamValueEvents.DUST_VALUE],
+            self.MESSAGE_ACTION_FAN_CONNECTED: [self._get_connected_val, IoBeamValueEvents.CONNECTED_VALUE],
+
+        }
+        for field, (sanitize, trigger_key) in fields.items():
+            if field in dataset:
+                sanitized_val = sanitize(dataset[field])
+                vals.update({field: sanitized_val})
+                if sanitized_val is not None:
+                    self._call_callback(trigger_key, dataset, dict(val=sanitized_val))
+        if vals:
             self._call_callback(IoBeamValueEvents.DYNAMIC_VALUE, dataset, vals)
-            self._call_callback(
-                IoBeamValueEvents.STATE_VALUE,
-                dataset,
-                dict(val=vals[self.MESSAGE_ACTION_FAN_STATE]),
-            )
-            self._call_callback(
-                IoBeamValueEvents.RPM_VALUE,
-                dataset,
-                dict(val=vals[self.MESSAGE_ACTION_FAN_RPM]),
-            )
-            self._call_callback(
-                IoBeamValueEvents.DUST_VALUE,
-                dataset,
-                dict(val=vals[self.MESSAGE_ACTION_DUST_VALUE]),
-            )
-            self._call_callback(
-                IoBeamValueEvents.CONNECTED_VALUE,
-                dataset,
-                dict(val=vals[self.MESSAGE_ACTION_FAN_CONNECTED]),
-            )
-        else:
-            # Handle values one by one
-            if self.MESSAGE_ACTION_DUST_VALUE in dataset:
-                dust_val = self._as_number(dataset[self.MESSAGE_ACTION_DUST_VALUE])
-                if dust_val is not None:
-                    self._call_callback(
-                        IoBeamValueEvents.DUST_VALUE, dataset, dict(val=dust_val)
-                    )
-
-            if self.MESSAGE_ACTION_FAN_RPM in dataset:
-                rpm_val = self._as_number(dataset[self.MESSAGE_ACTION_FAN_RPM])
-                if rpm_val is not None:
-                    self._call_callback(
-                        IoBeamValueEvents.RPM_VALUE, dataset, dict(val=rpm_val)
-                    )
-
-            if self.MESSAGE_ACTION_FAN_STATE in dataset:
-                state = self._as_number(dataset[self.MESSAGE_ACTION_FAN_STATE])
-                if state is not None:
-                    self._call_callback(
-                        IoBeamValueEvents.STATE_VALUE, dataset, dict(val=state)
-                    )
-
-            if self.MESSAGE_ACTION_FAN_CONNECTED in dataset:
-                self._call_callback(
-                    IoBeamValueEvents.CONNECTED_VALUE,
-                    dataset,
-                    dict(
-                        val=self._get_connected_val(
-                            dataset[self.MESSAGE_ACTION_FAN_CONNECTED]
-                        )
-                    ),
-                )
-                if self.MESSAGE_ERROR in dataset[self.MESSAGE_ACTION_FAN_CONNECTED]:
-                    self._logger.warn(
-                        "Received fan connection error: %s",
-                        dataset[self.MESSAGE_ACTION_FAN_CONNECTED][self.MESSAGE_ERROR],
-                    )
+        fan_conn = dataset.get(self.MESSAGE_ACTION_FAN_CONNECTED)
+        if isinstance(fan_conn, collections.Mapping):
+            conn_err = fan_conn.get(self.MESSAGE_ERROR)
+            if conn_err:
+                self._logger.warn("Received fan connection error: %s", conn_err)
         return 0
 
     def _handle_fan_static(self, dataset):
@@ -822,14 +765,14 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_i2c_monitoring(self, dataset):
-        if not dataset.get("state", None) == "ok":
+        if not dataset.get("state") == "ok":
             self._logger.error(
                 "i2c_monitoring state change reported: %s", dataset, analytics=False
             )
             if (
                 not self._last_i2c_monitoring_dataset is None
-                and not self._last_i2c_monitoring_dataset.get("state", None)
-                == dataset.get("state", None)
+                and not self._last_i2c_monitoring_dataset.get("state")
+                == dataset.get("state")
             ):
                 dataset_data = dataset.get("data", dict())
                 params = dict(
@@ -841,10 +784,9 @@ class IoBeamHandler(object):
                 )
 
                 self.send_iobeam_analytics(eventname="i2c_monitoring", data=params)
+            self._last_i2c_monitoring_dataset = dataset
+            return 1
         self._last_i2c_monitoring_dataset = dataset
-
-    def _handle_reed_switch(self, dataset):
-        self._logger.info("reed_switch: %s", dataset)
         return 0
 
     def _handle_laser(self, dataset):
@@ -871,7 +813,7 @@ class IoBeamHandler(object):
         """
         try:
             self._laserhead_handler.set_current_used_lh_data(dataset)
-        except:
+        except Exception:
             self._logger.exception("laserhead: exception while handling head:data: ")
         return 0
 
@@ -906,7 +848,7 @@ class IoBeamHandler(object):
             if "duration" in dataset and dataset["duration"]:
                 try:
                     duration = self._as_number(dataset["duration"])
-                except:
+                except Exception:
                     self._logger.debug(
                         "Received invalid onebtn duration: %s", dataset["duration"]
                     )
@@ -984,9 +926,6 @@ class IoBeamHandler(object):
             return self._handle_invalid_message(action)
         return 0
 
-    def _handle_steprun(self, dataset):
-        return 0
-
     def _handle_iobeam(self, dataset):
         """
         Handle iobeam dataset
@@ -1025,7 +964,7 @@ class IoBeamHandler(object):
                 # Add request id to the command
                 self._send_command(self.get_request_msg(["debug"]))
 
-                self._hw_malfunction_handler.show_hw_malfunction_notification(dataset)
+                self._hw_malfunction_handler.show_hw_malfunction_notification()
         return 0
 
     def _handle_hw_malfunction(self, dataset):
@@ -1037,12 +976,15 @@ class IoBeamHandler(object):
         try:
             if dataset:
                 self._hw_malfunction_handler.report_hw_malfunction(dataset)
-        except:
+        except Exception:
             self._logger.exception("Exception in _handle_hw_malfunction")
         return 0
 
-    def _handle_i2c(self, dataset):
-        self._logger.info("i2c_state: %s", dataset)
+    _handle_reed_switch = _just_log_dataset("reed_switch")
+
+    _handle_steprun = _do_not_handle
+
+    _handle_i2c = _just_log_dataset("i2c_state")
 
     def _handle_analytics_dataset(self, dataset):
         if dataset.get("communication_errors", None):
@@ -1052,42 +994,34 @@ class IoBeamHandler(object):
             )
         return 0
 
-    def _handle_debug(self, dataset):
-        """
-        Handle debug dataset
-        :param dataset:
-        :return: error count
-        """
-        self._logger.info("iobeam debug dataset: '%s'", dataset)
-        return 0
+    _handle_debug = _just_log_dataset("debug")
+    """
+    Handle debug dataset
+    :param dataset:
+    :return: error count
+    """
 
-    def _handle_exhaust(self, dataset):
-        """
-        Handle exhaust dataset
-        :param dataset:
-        :return: error count
-        """
-        # self._logger.info("exhaust dataset: '%s'", dataset)
-        return 0
+    _handle_exhaust = _do_not_handle
+    """
+    Handle exhaust dataset
+    :param dataset:
+    :return: error count
+    """
 
-    def _handle_link_quality(self, dataset):
-        """
-        Handle link quality dataset
-        :param dataset:
-        :return: error count
-        """
-        # self._logger.info("link quality dataset: '%s'", dataset)
-        return 0
+    _handle_link_quality = _do_not_handle
+    """
+    Handle link quality dataset
+    :param dataset:
+    :return: error count
+    """
 
-    def _handle_invalid_dataset(self, name, dataset):
-        """
-        Handle datasets of an invalid format, or datasets which have some missing data
-        :param name:
-        :param dataset:
-        :return:
-        """
-        # self._logger.debug("Received invalid dataset %s: '%s'", name, dataset)
-        return 0
+    _handle_invalid_dataset = _do_not_handle
+    """
+    Handle datasets of an invalid format, or datasets which have some missing data
+    :param name:
+    :param dataset:
+    :return:
+    """
 
     def _handle_unknown_dataset(self, name, dataset):
         """
@@ -1122,21 +1056,15 @@ class IoBeamHandler(object):
             raise Exception("ioBeam requested to reconnect. Now doing so...")
         return 1
 
-    def _handle_response(self, message):
+    def _handle_response(self, response):
         """
         Handle response, which is typically a response to a command sent earlier
-        :param message: response message, e.g. {"response": {"command": {"device": "fan", ...}, "state": "ok"}}
+        :param response: response message, e.g. {"command": {"device": "fan", ...}, "state": "ok"}
         :return: error count
         """
         # self._logger.info("ANDYTEST _handle_response(): %s", message)
-        error_count = 0
-        processing_start = time.time()
+        err = 0
 
-        err = -1
-
-        response = message["response"]
-        if "request_id" in message:
-            message["response"]["request_id"] = message["request_id"]
         if "state" in response:
             value = response["state"]
             # check if OK otherwise it's an error
@@ -1145,7 +1073,7 @@ class IoBeamHandler(object):
             if not success:
                 try:
                     msg = response.get(self.MESSAGE_ERROR).get("msg")
-                except:
+                except Exception:
                     msg = response["state"]
                 payload["error"] = msg
                 err += 1
@@ -1179,22 +1107,16 @@ class IoBeamHandler(object):
                     else:
                         self._logger.debug("Received response: %s", response)
                 elif device == self.MESSAGE_DEVICE_COMPRESSOR:
-                    self._logger.debug("handling compressor response: %s", message)
+                    self._logger.debug("handling compressor response: %s", response)
                 else:
                     self._logger.debug(
                         "_handle_response() receives response for unknow device: %s",
                         response,
                     )
 
-        if err >= 0:
-            error_count += err
+        return err
 
-        processing_time = time.time() - processing_start
-        self._handle_processing_time(processing_time, message, err)
-
-        return error_count
-
-    def _handle_processing_time(self, processing_time, message, err, log_stats=False):
+    def _handle_processing_time(self, processing_time, message, err=0, log_stats=False):
         self.processing_times_log.append(
             dict(
                 ts=time.time(),
@@ -1252,23 +1174,42 @@ class IoBeamHandler(object):
             )
 
     def _send_identification(self):
-        client_msg = self.get_client_msg()
+        """
+        Make and return client identification message in required format
+        This message will also ask iobeam to return the initial dataset
+        :return: client identification message
+        """
+        client_msg = {
+            "client": {
+                "name": self.CLIENT_NAME,
+                "version": self._plugin.get_plugin_version(),
+                "config": {"send_initial_data": True, "update_interval": True},
+            }
+        }
         return client_msg if self._send_command(client_msg) else False
 
     def _fireEvent(self, event, payload=None):
         self._event_bus.fire(event, payload)
 
-    def _as_number(self, str):
-        if str is None:
+    def _as_number(self, string):
+        if string is None:
             return None
         try:
-            return float(str)
-        except:
+            return float(string)
+        except Exception:
             return None
 
     def get_command_msg(self, device, action, value=None):
         """
-        Make and return command in required format
+        Make and return command in JSON format as understood by the iobeam server
+
+        Example:
+            >>> io_handler = IoBeamHandler(None)
+            >>> io_handler.get_command_msg("fan", "off")
+            {"command": {"device": "fan", "action": "on"}, "request_id": 0}
+            >>> io_handler.get_command_msg("fan", "on", 70)
+            {"command": {"device": "fan", "action": "on"}, "request_id": 1, "value": 70}
+
         :param device: device for which command should be executed
         :param action: action to be executed for given device
         :param value: additional value (optional, but required for some commands like fan:on:50)
@@ -1284,24 +1225,19 @@ class IoBeamHandler(object):
 
     def get_request_msg(self, datasets):
         """
-        Make and return data request message in required format
+        Make and return command in JSON format as understood by the iobeam server
+
+        Example:
+            >>> io_handler = IoBeamHandler(None)
+            >>> io_handler.get_request_msg(["fan"])
+            {"request": [fan"], request_id": 0}
+            >>> io_handler.get_request_msg(["fan", "laser"])
+            {"request": [fan", "laser"], "request_id": 1, "value": 70}
+
         :param datasets:
         :return: data request message
         """
         return {self.MESSAGE_REQUEST: datasets, "request_id": self.next_request_id()}
-
-    def get_client_msg(self):
-        """
-        Make and return client identification message in required format
-        :return: client identification message
-        """
-        return {
-            "client": {
-                "name": self.CLIENT_NAME,
-                "version": self._plugin.get_plugin_version(),
-                "config": {"send_initial_data": True, "update_interval": True},
-            }
-        }
 
     def next_request_id(self):
         """

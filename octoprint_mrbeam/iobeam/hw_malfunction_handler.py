@@ -91,7 +91,16 @@ class HwMalfunctionHandler(object):
         )
 
         for malfunction_id, data in messages_sorted:
-            if malfunction_id == self.MALFUNCTION_ID_BOTTOM_OPEN:
+            if malfunction_id == "i2c_bus_malfunction":
+                notifications.append(
+                    self._user_notification_system.get_notification(
+                        notification_id=malfunction_id,
+                        err_msg=data.get("msg", None),
+                        replay=True,
+                    )
+                )
+
+            elif malfunction_id == self.MALFUNCTION_ID_BOTTOM_OPEN:
                 notifications.append(
                     self._user_notification_system.get_notification(
                         notification_id="err_bottom_open", replay=True
@@ -117,7 +126,8 @@ class HwMalfunctionHandler(object):
                 )
             )
 
-        self._user_notification_system.show_notifications(notifications)
+        # Only send a single error message at a time
+        self._user_notification_system.show_notifications(notifications[0])
 
     def get_messages_to_show(self):
         return self._messages_to_show

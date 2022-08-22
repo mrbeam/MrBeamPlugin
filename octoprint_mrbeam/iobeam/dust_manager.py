@@ -143,37 +143,35 @@ class DustManager(object):
         self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
 
     def _handle_fan_data(self, args):
-        err = False
-        if args["state"] is not None:
-            self._state = args["state"]
-        else:
-            err = True
-        if args["dust"] is not None:
-            self._dust = args["dust"]
+        self._state = args.get("state", self._state)
+        self._dust = args.get("dust", self._dust)
+        if args.get("dust") and self._printer.is_printing():
+            self._job_dust_values.append(self._dust)
+        self._rpm = args.get("rpm", self._rpm)
 
-            if self._printer.is_printing():
-                self._job_dust_values.append(self._dust)
-        else:
-            err = True
-        if args["rpm"] is not None:
-            self._rpm = args["rpm"]
-        else:
-            err = True
-
-        self._connected = args["connected"]
+        self._connected = args.get("connected", self._connected)
 
         if self._connected is not None:
             self._unboost_timer_interval()
 
-        if not err:
+        if self._connected:
+            # as long as iobeam does not report the fan missing,
+            # the latest data is good.
+            # This will not trigger if the data didn't change, even if the fan is connected.
+            # However, the values should constantly change during a laserjob. If they don't,
+            # then this is a safeguard to stop the laser job as we don't detect exhaust
+            self._logger.warning("UPDATING")
             self._data_ts = time.time()
 
         self._validate_values()
-        self._send_dust_to_analytics(self._dust)
+        if args.get("dust"):
+            self._send_dust_to_analytics(self._dust)
 
-        self._last_rpm_values.append(self._rpm)
+        if args.get("rpm"):
+            self._last_rpm_values.append(self._rpm)
 
     def _on_command_response(self, args):
+        # This does not seem to be helpful... - Axel
         self._logger.debug("Fan command response: %s", args)
         if args["success"]:
             if (
@@ -474,7 +472,7 @@ class DustManager(object):
                 trigger=msg, analytics="invalid-old-fan-data", log_message=msg
             )
 
-        elif self._connected == False:
+        elif not self._connected:
             result = False
             msg = "Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
                 state=self._state,
