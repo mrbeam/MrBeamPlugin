@@ -27,14 +27,14 @@
   "release_compare": "python_unequal",
   "tiers": {
     "stable": {
-      "branch": "mrbeam2-stable",
-      "branch_default": "mrbeam2-stable",
-      "type": "github_commit"
+      "branch": "stable",
+      "branch_default": "stable",
+      "type": "github_release"
     },
     "beta": {
-      "branch": "mrbeam2-beta",
-      "branch_default": "mrbeam2-beta",
-      "type": "github_commit",
+      "branch": "beta",
+      "branch_default": "beta",
+      "type": "github_release",
       "prerelease_channel": "beta",
       "prerelease": true
     },
@@ -44,8 +44,8 @@
       "branch_default": "alpha"
     },
     "alpha": {
-      "branch": "mrbeam2-alpha",
-      "branch_default": "mrbeam2-alpha",
+      "branch": "alpha",
+      "branch_default": "alpha",
       "prerelease_channel": "alpha",
       "prerelease": true,
       "type": "github_release"

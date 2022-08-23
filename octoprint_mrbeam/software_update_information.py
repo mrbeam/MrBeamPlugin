@@ -17,7 +17,11 @@ from urllib3 import Retry
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import dict_merge, logExceptions
 from octoprint_mrbeam.util.github_api import get_file_of_repo_for_tag, REPO_URL
-from octoprint_mrbeam.util.version_comparator import VersionComparator, COMPARISON_OPTIONS, compare_pep440_versions
+from octoprint_mrbeam.util.version_comparator import (
+    VersionComparator,
+    COMPARISON_OPTIONS,
+    compare_pep440_versions,
+)
 from util.pip_util import get_version_of_pip_module
 
 
@@ -47,9 +51,7 @@ _logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
 # GLOBAL_PY_BIN = "/usr/bin/python2.7"
 # VENV_PY_BIN = sys.executable
 GLOBAL_PIP_BIN = "/usr/local/bin/pip"
-GLOBAL_PIP_COMMAND = (
-    "sudo {}".format(GLOBAL_PIP_BIN) if os.path.isfile(GLOBAL_PIP_BIN) else None
-)
+GLOBAL_PIP_COMMAND = "sudo {}".format(GLOBAL_PIP_BIN)
 
 BEAMOS_LEGACY_VERSION = "0.14.0"
 BEAMOS_LEGACY_DATE = date(2018, 1, 12)  # still used in the migrations
@@ -178,8 +180,11 @@ def get_update_information(plugin):
         else:
             _logger.warn("no internet connection")
 
-        _logger.error("No information about available updates could be retrieved E-1000 explicit check:{}".format(
-            plugin.explicit_update_check))
+        _logger.error(
+            "No information about available updates could be retrieved E-1000 explicit check:{}".format(
+                plugin.explicit_update_check
+            )
+        )
         software_update_notify(plugin, notification_id="missing_updateinformation_info")
 
         # mark update config as dirty
@@ -306,14 +311,22 @@ def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
                     )
         except softwareupdate_exceptions.ConfigurationInvalid as e:
             _logger.exception(
-                "ConfigurationInvalid {}, will use fallback dummy instead E-1003 explicit check:{}".format(e,
-                                                                                                           plugin.explicit_update_check))
+                "ConfigurationInvalid {}, will use fallback dummy instead E-1003 explicit check:{}".format(
+                    e, plugin.explicit_update_check
+                )
+            )
             sw_update_config = FALLBACK_UPDATE_CONFIG
-            software_update_notify(plugin, notification_id="update_fetching_information_err", err_msg=["E-1003"])
+            software_update_notify(
+                plugin,
+                notification_id="update_fetching_information_err",
+                err_msg=["E-1003"],
+            )
         except UpdateFetchingInformationException as e:
             _logger.exception(
-                "UpdateFetchingInformationException {}, will use fallback dummy instead - explicit check:{}".format(e,
-                                                                                                                    plugin.explicit_update_check))
+                "UpdateFetchingInformationException {}, will use fallback dummy instead - explicit check:{}".format(
+                    e, plugin.explicit_update_check
+                )
+            )
             sw_update_config = FALLBACK_UPDATE_CONFIG
 
         _logger.debug("sw_update_config {}".format(sw_update_config))
@@ -327,9 +340,13 @@ def _set_info_from_cloud_config(plugin, tier, beamos_version, cloud_config):
         except (IOError, TypeError):
             _logger.exception(
                 "can't create update info file, will use fallback dummy instead E-1001 explicit check:{}".format(
-                    plugin.explicit_update_check))
+                    plugin.explicit_update_check
+                )
+            )
             sw_update_config = FALLBACK_UPDATE_CONFIG
-            software_update_notify(plugin, notification_id="write_error_update_info_file_err")
+            software_update_notify(
+                plugin, notification_id="write_error_update_info_file_err"
+            )
 
     else:
         sw_update_config = FALLBACK_UPDATE_CONFIG
@@ -400,10 +417,16 @@ def _generate_config_of_module(
                 if not os.path.isdir(input_moduleconfig["update_folder"]):
                     os.makedirs(input_moduleconfig["update_folder"])
             except (IOError, OSError) as e:
-                software_update_notify(plugin, notification_id="update_fetching_information_err", err_msg=["E-1002"])
-                raise UpdateFetchingInformationException("could not create folder {} E-1002 e:{}".format(
-                    input_moduleconfig["update_folder"], e
-                ))
+                software_update_notify(
+                    plugin,
+                    notification_id="update_fetching_information_err",
+                    err_msg=["E-1002"],
+                )
+                raise UpdateFetchingInformationException(
+                    "could not create folder {} E-1002 e:{}".format(
+                        input_moduleconfig["update_folder"], e
+                    )
+                )
             update_script_path = os.path.join(
                 plugin._basefolder, input_moduleconfig["update_script_relative_path"]
             )
@@ -412,8 +435,8 @@ def _generate_config_of_module(
             ].format(update_script=update_script_path)
 
         if (
-                "global_pip_command" in input_moduleconfig
-                and "pip_command" not in input_moduleconfig
+            "global_pip_command" in input_moduleconfig
+            and "pip_command" not in input_moduleconfig
         ):
             input_moduleconfig["pip_command"] = GLOBAL_PIP_COMMAND
 
@@ -483,7 +506,9 @@ def _set_current_version_for_config(update_info, plugin):
     for module_id in update_info:
         module_update_info = update_info.get(module_id)
         if module_id != "octoprint":
-            current_version = _get_current_version(module_update_info, module_id,plugin)
+            current_version = _get_current_version(
+                module_update_info, module_id, plugin
+            )
             _logger.debug(
                 "{module_id} current version: {current_version}".format(
                     module_id=module_id, current_version=current_version
@@ -546,9 +571,8 @@ def get_config_for_version(target_version, config):
 
         for check_version, version_config in sorted_version_config_items:
             if compare_pep440_versions(
-                v1=target_version,
-                v2=check_version,
-                comparator=comparator):
+                v1=target_version, v2=check_version, comparator=comparator
+            ):
                 config_to_be_updated = dict_merge(config_to_be_updated, version_config)
     return config_to_be_updated
 

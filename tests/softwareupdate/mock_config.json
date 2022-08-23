@@ -1,18 +1,16 @@
 {
   "default": {
-    "type": "github_commit",
+    "type": "github_release",
     "user": "mrbeam",
     "release_compare": "python_unequal",
     "force_base": false,
     "stable": {
-      "branch": "mrbeam2-stable",
-      "branch_default": "mrbeam2-stable",
-      "type": "github_commit"
+      "branch": "stable",
+      "branch_default": "stable"
     },
     "beta": {
-      "branch": "mrbeam2-beta",
-      "branch_default": "mrbeam2-beta",
-      "type": "github_commit",
+      "branch": "beta",
+      "branch_default": "beta",
       "prerelease_channel": "beta",
       "prerelease": true
     },
@@ -22,11 +20,10 @@
       "branch_default": "alpha"
     },
     "alpha": {
-      "branch": "mrbeam2-alpha",
-      "branch_default": "mrbeam2-alpha",
+      "branch": "alpha",
+      "branch_default": "alpha",
       "prerelease_channel": "alpha",
-      "prerelease": true,
-      "type": "github_release"
+      "prerelease": true
     },
     "restart": "environment",
     "stable_branch": {
@@ -57,26 +54,22 @@
       },
       "alpha": {
         "branch": "alpha",
-        "branch_default": "alpha"
-      }
+        "branch_default": "alpha",
+        "type": "github_commit"
+      },
+      "pip": "https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip",
+      "user": "mrbeam",
+      "prerelease": false
     },
     "mrbeam": {
       "name": " MrBeam Plugin",
       "repo": "MrBeamPlugin",
       "restart": "environment",
       "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-      "develop": {
-        "update_folder": "/tmp/octoprint/mrbeamplugin",
-        "update_script_relative_path": "scripts/update_script.py",
-        "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
-        "methode": "update_script"
-      },
-      "alpha": {
-        "update_folder": "/tmp/octoprint/mrbeamplugin",
-        "update_script_relative_path": "scripts/update_script.py",
-        "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
-        "methode": "update_script"
-      },
+      "update_folder": "/tmp/octoprint/mrbeamplugin",
+      "update_script_relative_path": "scripts/update_script.py",
+      "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
+      "methode": "update_script",
       "dependencies": {
         "mrbeam-ledstrips": {
           "repo": "MrBeamLedStrips",
@@ -125,6 +118,10 @@
       "repo": "OctoPrint-Netconnectd",
       "pip": "https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
       "restart": "environment",
+      "update_folder": "/tmp/octoprint/netconnectd",
+      "update_script_relative_path": "../octoprint_netconnectd/scripts/update_script.py",
+      "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
+      "methode": "update_script",
       "dependencies": {
         "netconnectd": {
           "repo": "netconnectd_mrbeam",
@@ -143,18 +140,6 @@
             }
           }
         }
-      },
-      "develop": {
-        "update_folder": "/tmp/octoprint/netconnectd",
-        "update_script_relative_path": "../octoprint_netconnectd/scripts/update_script.py",
-        "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
-        "methode": "update_script"
-      },
-      "alpha": {
-        "update_folder": "/tmp/octoprint/netconnectd",
-        "update_script_relative_path": "../octoprint_netconnectd/scripts/update_script.py",
-        "update_script": "{{python}} '{update_script}' --branch={{branch}} --force={{force}} '{{folder}}' {{target}}",
-        "methode": "update_script"
       }
     },
     "findmymrbeam": {
