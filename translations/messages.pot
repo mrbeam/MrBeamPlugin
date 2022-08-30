@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-07-27 14:19+0200\n"
+"POT-Creation-Date: 2022-08-30 11:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2624,6 +2624,14 @@ msgid ""
 " Support Team to reset your device.\n"
 "        You can find more about this in our %(tag_open)sKnowledge "
 "Base%(tag_close)s."
+msgstr ""
+
+#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:1
+msgid "Quickstart Guide"
+msgstr ""
+
+#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:2
+msgid "User Manual"
 msgstr ""
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:43
