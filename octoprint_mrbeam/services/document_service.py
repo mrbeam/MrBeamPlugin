@@ -47,7 +47,10 @@ class DocumentService:
     def _get_title_translated(self, definition):
         title_key = string_util.separate_camelcase_words(definition.mrbeamdoc_type.value)
         title_translated = gettext(title_key)
-        self._log_error_on_missing_translation(title_key, str(title_translated))
+        if title_translated:
+            self._log_error_on_missing_translation(title_key, title_translated.encode('utf-8', 'ignore'))
+        else:
+            self._logger.error('title_translated is None. This should never be the case. Please check me.')
         return title_translated
 
     @staticmethod
