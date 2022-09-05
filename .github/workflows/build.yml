@@ -1,14 +1,5 @@
 name: Build
 on:
-  push:
-    branches:
-      - alpha
-      - beta
-      - stable
-      - mrbeam2-beta
-      - mrbeam2-stable
-  pull_request:
-    types: [opened, synchronize, reopened]
   workflow_call:
     inputs:
       python_v:
