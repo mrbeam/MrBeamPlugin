@@ -1,0 +1,17 @@
+name: Build
+on:
+  workflow_dispatch:
+#  push:
+#    branches:
+#      - alpha
+#      - beta
+#      - stable
+#      - mrbeam2-beta
+#      - mrbeam2-stable
+#  pull_request:
+#    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    uses: mrbeam/MrBeamPlugin/.github/workflows/build.yml@feature/SW-274-github-actions-setup-and-test
+    with:
+      python_v: 2.7

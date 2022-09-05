@@ -10,12 +10,21 @@ on:
       - mrbeam2-stable
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_call:
+    inputs:
+      python_v:
+        required: true
+        type: number
+
+
 jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
 
     steps:
+      - name: Echo python version
+        run: echo "### Python version ${{ inputs.python_v }}"
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
