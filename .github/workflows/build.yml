@@ -12,6 +12,8 @@ on:
   workflow_call:
     inputs:
       python_v:
+        description: "Python version needed to run the code, eg. 3.10"
+        default: "3.10"
         required: true
         type: string
 
@@ -22,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Echo python version
-        run: echo "### Python version ${{ inputs.python_v }}"
+        run: echo Python version ${{ inputs.python_v }}
 
 #  sonarcloud:
 #    name: SonarCloud
