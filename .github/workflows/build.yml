@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Echo python version
-        run: echo Python version ${{ inputs.python_v }}
+        run: echo The username is ${{ inputs.python_v }}
 
 #  sonarcloud:
 #    name: SonarCloud
