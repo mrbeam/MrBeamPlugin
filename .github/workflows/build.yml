@@ -14,7 +14,7 @@ on:
     inputs:
       python_v:
         required: true
-        type: number
+        type: string
 
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Echo python version
-        run: echo "### Python version ${{ inputs.python_v }}"
+        run: echo "### Python version ${{inputs.python_v}}"
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
