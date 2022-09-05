@@ -14,20 +14,18 @@ on:
       python_v:
         description: "Python version needed to run the code, eg. 3.10"
         default: "3.10"
-        required: true
+        required: false
         type: string
 
 
 jobs:
   test:
-    name: Test
+    name: Test Build
     runs-on: ubuntu-latest
     steps:
-      - name: Echo python version
+      - name: Echo python version build
         run: |
           echo The username is ${{ inputs.python_v }}
-          echo "inputs.allowed_features: ${{ inputs.allowed_features }}"
-        shell: bash
 
 #  sonarcloud:
 #    name: SonarCloud
