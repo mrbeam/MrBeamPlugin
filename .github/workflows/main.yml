@@ -12,14 +12,6 @@ on:
     types: [ opened, synchronize, reopened ]
 
 jobs:
-  testmain:
-    name: Test Main
-    runs-on: ubuntu-latest
-    steps:
-      - name: Echo python version main
-        run: |
-          echo LALALALA ${{ inputs.python_v }}
-
   build:
     uses: mrbeam/MrBeamPlugin/.github/workflows/build.yml@feature/SW-274-github-actions-setup-and-test
     with:
