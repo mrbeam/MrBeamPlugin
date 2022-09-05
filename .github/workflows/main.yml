@@ -10,15 +10,7 @@ on:
       - mrbeam2-stable
   pull_request:
     types: [ opened, synchronize, reopened ]
-#  push:
-#    branches:
-#      - alpha
-#      - beta
-#      - stable
-#      - mrbeam2-beta
-#      - mrbeam2-stable
-#  pull_request:
-#    types: [opened, synchronize, reopened]
+
 jobs:
   testmain:
     name: Test Main

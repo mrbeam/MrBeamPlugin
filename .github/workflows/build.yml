@@ -11,12 +11,12 @@ on:
 
 jobs:
   test:
-    name: Test Build
+    name: Python version
     runs-on: ubuntu-latest
     steps:
-      - name: Echo python version build
+      - name: Echo python version
         run: |
-          echo The username is ${{ inputs.python_v }}
+          echo Running for python version ${{ inputs.python_v }}
 
 #  sonarcloud:
 #    name: SonarCloud
