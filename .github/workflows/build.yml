@@ -18,21 +18,8 @@ jobs:
         run: |
           echo Running for python version ${{ inputs.python_v }}
 
-#  pre-commit:
-#    name: Pre-commit
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Set PY
-#        run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
-#      - name: Run Pre-commit all files
-#        run: pre-commit run --all-files --show-diff-on-failure
-#      - uses: actions/cache@v1
-#        with:
-#          path: ~/.cache/pre-commit
-#          key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
-  sonarcloud:
-    name: SonarCloud
+  softwareqa:
+    name: Software QA
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -42,11 +29,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
             python-version: 2.7
-#            cache: 'pip' # caching pip dependencies
-#            cache-dependency-path: |
-#              **/setup.cfg
-#              **/requirements*.txt
-      - uses: actions/cache@v3
+      - uses: actions/cache@v3  # Cache dependencies to speed up process
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
@@ -56,9 +39,9 @@ jobs:
         run: |
             python -m pip install --upgrade pip
             pip install -r requirements-dev.txt
-      - name: Running pre-commit
+      - name: Run pre-commit (all files)
         run: pre-commit run --all-files --show-diff-on-failure
-      - name: Running pytest
+      - name: Run pytest
         continue-on-error: true
         run: |
             pytest -v  --cov --cov-report=xml --cov-report=html --junit-xml=xunit-result.xml --html=pytest-report.html
