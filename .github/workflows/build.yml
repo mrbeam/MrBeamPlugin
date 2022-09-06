@@ -4,9 +4,9 @@ on:
     inputs:
       python_v:
         description: "Python version needed to run the code, eg. 3.10"
-        default: "3.10"
+        default: 3.10
         required: false
-        type: string
+        type: number
 
 
 jobs:
@@ -18,17 +18,17 @@ jobs:
         run: |
           echo Running for python version ${{ inputs.python_v }}
 
-  softwareqa:
-    name: Software QA
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up Python 2.7
+      - name: Set up Python ${{ inputs.python_v }}
         uses: actions/setup-python@v2
         with:
-            python-version: 2.7
+            python-version: ${{ inputs.python_v }}
       - uses: actions/cache@v3  # Cache dependencies to speed up process
         with:
           path: ~/.cache/pip

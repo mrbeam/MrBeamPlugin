@@ -16,4 +16,4 @@ jobs:
     uses: mrbeam/MrBeamPlugin/.github/workflows/build.yml@feature/SW-274-github-actions-setup-and-test
     secrets: inherit
     with:
-      python_v: "2.7"
+      python_v: 2.7
