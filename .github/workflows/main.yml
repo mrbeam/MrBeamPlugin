@@ -13,7 +13,7 @@ on:
 
 jobs:
   build:
-    uses: mrbeam/MrBeamPlugin/.github/workflows/build.yml@feature/SW-274-github-actions-setup-and-test
+    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
     secrets: inherit
     with:
       python_v: 2.7
