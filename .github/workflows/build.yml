@@ -28,6 +28,7 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
+        run: pre-commit run --all-files --show-diff-on-failure
 
 #  sonarcloud:
 #    name: SonarCloud
