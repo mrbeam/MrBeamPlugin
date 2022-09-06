@@ -591,11 +591,13 @@ $(function () {
                 });
 
                 self.set_settings_analytics_links();
-                $("#beta_notification_analytics_link").one("click",
+                $("#beta_notification_analytics_link").one(
+                    "click",
                     function (event) {
                         // Close notification
                         $('[title="Close"]')[0].click();
-                    });
+                    }
+                );
             }
         };
         self.presetLoginUser = function () {

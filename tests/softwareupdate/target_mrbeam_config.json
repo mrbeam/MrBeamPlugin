@@ -55,7 +55,7 @@
   "tiers": {
     "stable": {
       "branch": "stable",
-      "branch_default": "stable",
+      "branch_default": "stable"
     },
     "beta": {
       "branch": "beta",
