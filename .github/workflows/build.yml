@@ -50,7 +50,7 @@ jobs:
             pip install -r requirements-dev.txt
       - name: Set PY (pre-commit)
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
-      - uses: actions/cache@v1 (pre-commit)
+      - uses: actions/cache@v1
         with:
           path: ~/.cache/pre-commit
           key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
