@@ -42,7 +42,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
             python-version: 2.7
-            cache: "pip"
       - name: Install dependencies
         run: |
             python -m pip install --upgrade pip
@@ -50,6 +49,7 @@ jobs:
       - name: Set PY (pre-commit)
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
       - uses: actions/cache@v1
+        id: cache
         with:
           path: ~/.cache/pre-commit
           key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
