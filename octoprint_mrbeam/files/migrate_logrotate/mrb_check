@@ -1,10 +1,12 @@
 /var/log/mrb_check.log {
     size 5M
-    rotate 4
+    rotate 3
     compress
     delaycompress
     missingok
     notifempty
     copytruncate
     create 644 root root
+    dateext
+    dateformat .%Y-%m-%d
 }
