@@ -12,7 +12,7 @@ class Mig003EnableLogrotateBuster(MigrationBaseClass):
 
     MIGRATE_LOGROTATE_FOLDER = "files/migrate_logrotate/"
     BEAMOS_VERSION_LOW = "0.14.0"
-    BEAMOS_VERSION_HIGH = "0.19.0"
+    BEAMOS_VERSION_HIGH = "0.18.2"
 
     def __init__(self, plugin):
         super(Mig003EnableLogrotateBuster, self).__init__(plugin)
@@ -23,7 +23,7 @@ class Mig003EnableLogrotateBuster(MigrationBaseClass):
 
     def _run(self):
         self._logger.debug("delete wrong iobeam logrotate")
-        self.exec_cmd("sudo rm /etc/logrotate.d/iobeam.logrotate")
+        self.exec_cmd("sudo rm /etc/logrotate.d/iobeam.logrotate", optional=True)
 
         logrotates = [
             "analytics",
