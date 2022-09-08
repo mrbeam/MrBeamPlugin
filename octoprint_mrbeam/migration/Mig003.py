@@ -12,7 +12,7 @@ class Mig003EnableLogrotateBuster(MigrationBaseClass):
 
     MIGRATE_LOGROTATE_FOLDER = "files/migrate_logrotate/"
     BEAMOS_VERSION_LOW = "0.14.0"
-    BEAMOS_VERSION_HIGH = "0.18.1"
+    BEAMOS_VERSION_HIGH = "0.19.0"
 
     def __init__(self, plugin):
         super(Mig003EnableLogrotateBuster, self).__init__(plugin)
