@@ -40,7 +40,9 @@ class Mig003EnableLogrotateBuster(MigrationBaseClass):
             dst = os.path.join("/etc/logrotate.d/" + logrotate)
             self.exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
 
-        self._logger.debug("restart of logrotate so changed config will take affect")
+        self._logger.debug(
+            "restarting logrotate in order for the changed config to take effect"
+        )
         self.exec_cmd("sudo logrotate /etc/logrotate.conf")
         super(Mig003EnableLogrotateBuster, self)._run()
 
