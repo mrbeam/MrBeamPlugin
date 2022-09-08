@@ -3,9 +3,11 @@
 
 /home/pi/.octoprint/analytics/analytics_log.json {
     size 100M
-    rotate 2
+    rotate 3
     compress
     delaycompress
     missingok
     notifempty
+    dateext
+    dateformat .%Y-%m-%d
 }

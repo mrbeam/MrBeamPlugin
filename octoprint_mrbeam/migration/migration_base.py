@@ -201,7 +201,7 @@ class MigrationBaseClass:
         """
         return self._state
 
-    def exec_cmd(self, command):
+    def exec_cmd(self, command, optional=False):
         """
         wrapper of exec_cmd to change to errorstate in case of a error
         Args:
@@ -210,9 +210,14 @@ class MigrationBaseClass:
         Returns:
             None
         Raises:
-            MigrationException: if the execution of the command ended with a errorcode different to 0
+            MigrationException: if the execution of the command was not successful
         """
-        if not exec_cmd(command):
+        command_success = exec_cmd(command)
+        if command_success:
+            return
+        if optional and not command_success:
+            self._logger.warn("optional command failed - cmd: {}".format(command))
+        else:
             raise MigrationException("error during migration for cmd:", command)
 
     @staticmethod
