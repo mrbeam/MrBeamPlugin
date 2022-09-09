@@ -8,7 +8,7 @@ git+https://github.com/mrbeam/OctoPrint.git@v1.3.6.9#egg=OctoPrint
 mock==3.0.5
 numpy==1.16.6
 opencv-python==4.2.0.32
-Pillow==6.2.2
+Pillow==9.0.1
 pre-commit==1.21.0
 pylint==1.9.5
 pytest==4.6.11
