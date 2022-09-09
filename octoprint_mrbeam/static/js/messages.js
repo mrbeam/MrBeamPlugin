@@ -241,7 +241,12 @@ $(function () {
                 var lmid = -1;
                 self.messages().forEach(function (myMessage) {
                     lmid = Math.max(lmid, myMessage.id);
-                    if (myMessage.notification && myMessage.id > self.lastMessageId) {
+                    if (myMessage.notification && (myMessage.id > self.lastMessageId
+                    // The below condition is only added to keep the 0.11.0 2-step update message notification showing
+                    // if the user stayed on the 0.11.0rc1 version and didn't execute the 2nd software update
+                    // Message ID '3' should always be assigned to this specific 2-step update message
+                    // TODO: SW-1845: Should be removed after 0.11.0 stable release
+                    || (myMessage.id === 3 && MRBEAM_PLUGIN_VERSION === "0.11.0rc1"))) {
                         try {
                             new PNotify({
                                 title: myMessage.notification.title || '',
