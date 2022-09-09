@@ -1,0 +1,16 @@
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - alpha
+      - beta
+      - stable
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  build:
+    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
+    secrets: inherit
+    with:
+      python_v: 2.7

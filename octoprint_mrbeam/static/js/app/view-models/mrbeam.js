@@ -600,7 +600,6 @@ $(function () {
                 );
             }
         };
-
         self.presetLoginUser = function () {
             if (MRBEAM_ENV_SUPPORT_MODE) {
                 self.loginState.loginUser(
@@ -614,7 +613,6 @@ $(function () {
                 self.loginState.loginPass("a");
             }
         };
-
         /**
          * MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
          * Hides the option "Restart OctoPrint in safe mode"
@@ -625,7 +623,6 @@ $(function () {
                 return c.action === "restart_safe";
             });
         };
-
         // Backdrop Temporary Solution - start
         // Todo: should be removed once OctoPrint is updated
         const mutationTargetNode = document.body;
