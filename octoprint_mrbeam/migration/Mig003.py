@@ -31,6 +31,7 @@ class Mig003EnableLogrotateBuster(MigrationBaseClass):
             "mount_manager",
             "mrb_check",
             "mrbeam_ledstrips",
+            "netconnectd",
         ]
         for logrotate in logrotates:
             self._logger.debug("enable logrotate of " + logrotate)
