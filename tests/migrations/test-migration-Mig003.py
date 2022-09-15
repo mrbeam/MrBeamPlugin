@@ -38,8 +38,6 @@ class TestMigrationMig003(unittest.TestCase):
     )
     def test_commands_executed(self, exec_cmd_mock):
         self.m003.run()
-        calls = []
-        # self.assertTrue()
         exec_cmd_mock.assert_any_call(
             "sudo rm /etc/logrotate.d/iobeam.logrotate", optional=True
         )

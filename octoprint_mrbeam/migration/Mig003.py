@@ -44,7 +44,9 @@ class Mig003EnableLogrotateBuster(MigrationBaseClass):
         self._logger.debug(
             "restarting logrotate in order for the changed config to take effect"
         )
-        self.exec_cmd("sudo logrotate /etc/logrotate.conf")
+
+        # needs to be optional for legacy image, as this is returning 1 instead of 0
+        self.exec_cmd("sudo logrotate /etc/logrotate.conf", optional=True)
         super(Mig003EnableLogrotateBuster, self)._run()
 
     def _rollback(self):

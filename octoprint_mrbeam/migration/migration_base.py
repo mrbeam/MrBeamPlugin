@@ -218,7 +218,11 @@ class MigrationBaseClass:
         if optional and not command_success:
             self._logger.warn("optional command failed - cmd: {}".format(command))
         else:
-            raise MigrationException("error during migration for cmd:", command)
+            raise MigrationException(
+                "error during migration for cmd: {} - return: {}".format(
+                    command, command_success
+                )
+            )
 
     @staticmethod
     def execute_restart(restart):
