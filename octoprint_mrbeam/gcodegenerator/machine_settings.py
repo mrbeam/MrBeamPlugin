@@ -1,5 +1,6 @@
 def gcode_before_job(color="#000000", compressor=100):
     gcode = []
+    gcode.append("M3S0")
     if compressor is not None:
         gcode.append("; gcode_before_job - color: {color}".format(color=color))
         gcode.append("M100P{p} ; mrbeam_compressor: {p}".format(p=compressor))
@@ -25,7 +26,7 @@ def gcode_before_path_color(color="#000000", intensity=0):
 
 
 def gcode_after_path():
-    return "M05"
+    return "M3S0"
 
 
 # TODO remove this or fetch machine settings from settings. (G92 X0 Y0 Z0 looks badly wrong for Mr Beam II machines.)
