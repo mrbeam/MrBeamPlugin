@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-07-27 14:19+0200\n"
-"PO-Revision-Date: 2022-07-27 14:24+0200\n"
+"POT-Creation-Date: 2022-08-30 11:31+0200\n"
+"PO-Revision-Date: 2022-08-30 11:32+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -3124,6 +3124,14 @@ msgstr ""
 "Support Team kontaktieren um Dein Gerät zurückzusetzen. Mehr dazu findest Du "
 "in der %(tag_open)sKnowledge Base%(tag_close)s."
 
+#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:1
+msgid "Quickstart Guide"
+msgstr "Quickstart Guide"
+
+#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:2
+msgid "User Manual"
+msgstr "Betriebsanleitung"
+
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:43
 msgid "Mr Beam Logo"
 msgstr "Mr Beam Logo"
@@ -5763,15 +5771,9 @@ msgstr "Dämon zurücksetzen"
 #~ msgid "QuickstartGuide_en.pdf"
 #~ msgstr "QuickstartGuide_de.pdf"
 
-#~ msgid "Quickstart Guide"
-#~ msgstr "Quickstart Guide"
-
 # URL part. do not translate/modify
 #~ msgid "UserManual_en.pdf"
 #~ msgstr "UserManual_de.pdf"
-
-#~ msgid "User Manual"
-#~ msgstr "Betriebsanleitung"
 
 #~ msgid "QuickstartGuide_dreamcut_en.pdf"
 #~ msgstr "QuickstartGuide_dreamcut_de.pdf"

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from unittest import TestCase
 
 from mock import patch, MagicMock
@@ -52,3 +53,36 @@ class TestBurgerMenuService(TestCase):
         self.assertIsNot(len(burger_menu_model.documents), 0)
         for document in burger_menu_model.documents:
             self.assertEquals(document.document_link.language, SupportedLanguage.GERMAN)
+
+    @patch('octoprint_mrbeam.services.burger_menu_service.MrBeamDocUtils.get_mrbeam_definitions_for')
+    @patch('octoprint_mrbeam.services.document_service.gettext')
+    @patch('octoprint_mrbeam.services.burger_menu_service.get_locale')
+    def test_get_burger_menu_model__with_unicode_translation__should_work(self, get_locale_mock, get_text_mock,
+                                                                          get_mrbeam_definitions_for_mock):
+        get_locale_mock.return_value = MagicMock(language='es')
+        get_text_mock.return_value = u'Guía de usuário äëïöü l\'ecole très Garçon sûr'
+        MOCK_DEFINITION = MrBeamDocDefinition(MrBeamDocType.USER_MANUAL, MrBeamModel.MRBEAM2,
+                                              [SupportedLanguage.ENGLISH, SupportedLanguage.SPANISH])
+        get_mrbeam_definitions_for_mock.return_value = [MOCK_DEFINITION]
+        burger_menu_model = self._burger_menu_service.get_burger_menu_model(MrBeamModel.MRBEAM2.value)
+        self.assertIsNot(len(burger_menu_model.documents), 0)
+        for document in burger_menu_model.documents:
+            self.assertEquals(document.document_link.language, SupportedLanguage.SPANISH)
+
+    @patch('octoprint_mrbeam.services.burger_menu_service.MrBeamDocUtils.get_mrbeam_definitions_for')
+    @patch('octoprint_mrbeam.services.document_service.gettext')
+    @patch('octoprint_mrbeam.services.burger_menu_service.get_locale')
+    def test_get_burger_menu_model__with_null_translation__should_not_crash_and_return_title_as_None(self,
+                                                                                                     get_locale_mock,
+                                                                                                     get_text_mock,
+                                                                                                     get_mrbeam_definitions_for_mock):
+        get_locale_mock.return_value = MagicMock(language='es')
+        get_text_mock.return_value = None
+        MOCK_DEFINITION = MrBeamDocDefinition(MrBeamDocType.USER_MANUAL, MrBeamModel.MRBEAM2,
+                                              [SupportedLanguage.ENGLISH, SupportedLanguage.SPANISH])
+        get_mrbeam_definitions_for_mock.return_value = [MOCK_DEFINITION]
+        burger_menu_model = self._burger_menu_service.get_burger_menu_model(MrBeamModel.MRBEAM2.value)
+        self.assertIsNot(len(burger_menu_model.documents), 0)
+        for document in burger_menu_model.documents:
+            self.assertEquals(document.document_link.language, SupportedLanguage.SPANISH)
+            self.assertEquals(document.title, None)

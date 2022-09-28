@@ -19,7 +19,7 @@ def exec_cmd(cmd, log=True, shell=True, loglvl=DEBUG):
     try:
         code = subprocess.call(cmd, shell=shell)
     except Exception as e:
-        _logger.debug(
+        _logger.error(
             "Failed to execute command '%s', return code: %s, Exception: %s",
             cmd,
             code,
@@ -27,7 +27,7 @@ def exec_cmd(cmd, log=True, shell=True, loglvl=DEBUG):
         )
         return None
     if code != 0 and log:
-        _logger.info("cmd= '%s', return code: '%s'", code)
+        _logger.error("cmd= '{}', return code: {}".format(cmd, code))
     return code == 0
 
 
