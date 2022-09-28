@@ -1012,7 +1012,6 @@ $(function () {
             "navigationViewModel",
             "appearanceViewModel",
             "loadingOverlayViewModel",
-            "softwareUpdateViewModel",
             "analyticsViewModel",
             "mrbStateViewModel",
         ],

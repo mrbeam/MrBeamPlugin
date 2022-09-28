@@ -282,14 +282,17 @@ class TimerHandler:
         software_info = None
 
         try:
-            plugin_info = self._plugin._plugin_manager.get_plugin_info("softwareupdate")
-            impl = plugin_info.implementation
-            # using the method get_current_versions() is OK as it is threadsafe
-            software_info, _, _ = impl.get_current_versions()
+            # TODO SW-1860 send software or system version again
+            # pluginInfo = plugin._plugin_manager.get_plugin_info(module_id) for plugins or ->
+            # get_version_of_pip_module(
+            #             package_name, pip_command
+            #         ) for packages
             self._logger.debug("Software_info: \n {}".format(software_info))
         except Exception as e:
             self._logger.exception(
-                "Exception while reading software_info from softwareupdate plugin. Error:{} ".format(e)
+                "Exception while reading software_info from softwareupdate plugin. Error:{} ".format(
+                    e
+                )
             )
             return result
 

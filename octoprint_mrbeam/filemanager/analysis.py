@@ -52,5 +52,5 @@ def beam_analysis_queue_factory(callback=None, *args, **kwargs):
     import logging
 
     return dict(
-        gcode=GcodeAnalysisQueue(finished_callback=callback),
+        gcode=GcodeAnalysisQueue,
     )

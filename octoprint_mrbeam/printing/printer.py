@@ -5,7 +5,6 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.notifications import NotificationIds
 from octoprint_mrbeam.printing import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
 from octoprint_mrbeam.util import dict_merge
 from octoprint_mrbeam.util.errors import ErrorCodes
 
@@ -14,14 +13,7 @@ class Laser(Printer):
     HOMING_POSITION = [-1.0, -1.0, 0]
 
     def __init__(self, fileManager, analysisQueue, printerProfileManager):
-        # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS -- start --
-        # TODO OP v1.4 : Remove the followingline - see octoprint_mrbeam.__plugin_load__
-        # The necessary lines for this to keep working are already written as a hook.
-        analysisQueue._queues.update(
-            beam_analysis_queue_factory(callback=analysisQueue._analysis_finished)
-        )
-        # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS -- end --
-        Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
+        super(Laser, self).__init__(fileManager, analysisQueue, printerProfileManager)
         self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.printer")
         self._stateMonitor = LaserStateMonitor(
             interval=0.5,
@@ -30,7 +22,9 @@ class Laser(Printer):
             on_add_log=self._sendAddLogCallbacks,
             on_add_message=self._sendAddMessageCallbacks,
             on_get_progress=self._updateProgressDataCallback,
+            on_get_resends=self._updateResendDataCallback,
         )
+
         self._stateMonitor.reset(
             state={"text": self.get_state_string(), "flags": self._getStateFlags()},
             job_data={
@@ -61,11 +55,10 @@ class Laser(Printer):
         self._user_notification_system = user_notification_system
 
     # overwrite connect to use comm_acc2
-    def connect(self, port=None, baudrate=None, profile=None):
-        """Connects to the printer.
-
-        If port and/or baudrate is provided, uses these settings,
-        otherwise autodetection will be attempted.
+    def connect(self, port=None, baudrate=None, profile=None, *args, **kwargs):
+        """
+        Connects to the printer. If port and/or baudrate is provided, uses these settings, otherwise autodetection
+        will be attempted.
         """
         self._init_terminal()
 
@@ -92,7 +85,7 @@ class Laser(Printer):
         self._comm.setColors(currentFileName, value)
 
     # extend commands: home, position, increase_passes, decrease_passes
-    def home(self, axes):
+    def home(self, axes, *args, **kwargs):
         printer_profile = self._printerProfileManager.get_current_or_default()
         params = dict(
             x=printer_profile["volume"]["width"]
@@ -108,8 +101,10 @@ class Laser(Printer):
     def is_homed(self):
         return self._stateMonitor._machinePosition == self.HOMING_POSITION
 
-    def cancel_print(self):
-        """Cancel the current printjob and do homing."""
+    def cancel_print(self, user=None, *args, **kwargs):
+        """
+        Cancel the current printjob and do homing.
+        """
         super(Laser, self).cancel_print()
         time.sleep(0.5)
         self.home(axes="wtf")
@@ -166,15 +161,23 @@ class Laser(Printer):
             return
         self._comm.decreasePasses()
 
-    def pause_print(self, force=False, trigger=None):
-        """Pause the current printjob."""
+    def pause_print(self, force=False, trigger=None, user=None, *args, **kwargs):
+        """
+        Pause the current printjob.
+        """
         if self._comm is None:
             return
 
         if not force and self._comm.isPaused():
             return
 
-        self._comm.setPause(True, send_cmd=True, trigger=trigger)
+        self._comm.setPause(
+            True,
+            send_cmd=True,
+            trigger=trigger,
+            user=user,
+            tags=kwargs.get("tags", set()) | {"trigger:printer.pause_print"},
+        )
 
     def resume_print(self, trigger=None):
         """Resume the current laser job."""
@@ -205,16 +208,16 @@ class Laser(Printer):
 
     def _getStateFlags(self):
         # Extra gymnastics in case state flags are a frozen dict
-        flags = Printer._getStateFlags(self)
-        _dict = flags.__class__
-        flags = dict_merge(
-            {
-                "locked": self.is_locked(),
-                "flashing": self.is_flashing(),
-            },
-            flags,
+        superflags = dict(super(Laser, self)._getStateFlags())
+        customflags = dict(
+            locked=self.is_locked(),
+            flashing=self.is_flashing(),
         )
-        return _dict(flags)
+        flags = dict_merge(
+            superflags,
+            customflags,
+        )
+        return self._dict(flags)
 
     # position update callbacks
     def on_comm_pos_update(self, MPos, WPos):

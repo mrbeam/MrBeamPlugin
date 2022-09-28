@@ -178,18 +178,14 @@
   opacity: 0.2;
 }
 
-#designlib #files .entry.files_template_model_svg,
-#designlib #files .entry.files_template_model_dxf,
-#designlib #files .entry.files_template_model_image,
-#designlib #files .entry.files_template_recentjob_svg,
-#designlib #files .entry.files_template_machinecode_gcode {
+#designlib #files .entry.model,
+#designlib #files .entry.recentjob,
+#designlib #files .entry.machinecode {
   display: none;
 }
-#designlib.show_design #files .entry.files_template_model_svg,
-#designlib.show_design #files .entry.files_template_model_dxf,
-#designlib.show_design #files .entry.files_template_model_image,
-#designlib.show_recentjob #files .entry.files_template_recentjob_svg,
-#designlib.show_machinecode #files .entry.files_template_machinecode_gcode {
+#designlib.show_design #files .entry.model,
+#designlib.show_recentjob #files .entry.recentjob,
+#designlib.show_machinecode #files .entry.machinecode {
   display: block;
 }
 
@@ -275,7 +271,7 @@
 }
 
 /* Hack to hide our own special folders. Collateral damage: user can't create folders with those names' */
-#files .files_template_folder[mrb_name="cam"],
-#files .files_template_folder[mrb_name="local"] {
+#designlib #files .entry.folder[mrb_name="cam"],
+#designlib #files .entry.folder[mrb_name="local"] {
   display: none;
 }

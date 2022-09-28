@@ -67,7 +67,7 @@ $(function () {
         self.isStartupComplete = false;
         self.error_sqeuence = 0;
 
-        $(window).load(function () {
+        $(window).on("load", function () {
             self.window_load_ts = new Date().getTime();
         });
 

@@ -1612,34 +1612,6 @@ ul.dropdown-menu li a {
   opacity: 0.2;
 }
 
-#designlib #files .entry.files_template_model_svg,
-#designlib #files .entry.files_template_model_dxf,
-#designlib #files .entry.files_template_model_image,
-#designlib #files .entry.files_template_recentjob_svg,
-#designlib #files .entry.files_template_machinecode_gcode {
-  display: none;
-}
-
-#designlib.show_design #files .entry.files_template_model_svg,
-#designlib.show_design #files .entry.files_template_model_dxf,
-#designlib.show_design #files .entry.files_template_model_image,
-#designlib.show_recentjob #files .entry.files_template_recentjob_svg,
-#designlib.show_machinecode #files .entry.files_template_machinecode_gcode {
-  display: block;
-}
-
-#designlib #files_filter li.filter.design a i,
-#designlib #files_filter li.filter.machinecode a i,
-#designlib #files_filter li.filter.recentjob a i {
-  visibility: hidden;
-}
-
-#designlib.show_design #files_filter li.filter.design a i,
-#designlib.show_machinecode #files_filter li.filter.machinecode a i,
-#designlib.show_recentjob #files_filter li.filter.recentjob a i {
-  visibility: visible;
-}
-
 /** Control tab */
 #control {
   overflow: hidden;

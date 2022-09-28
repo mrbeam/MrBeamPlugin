@@ -1,4 +1,5 @@
 import threading
+import sys
 from distutils.version import LooseVersion
 from octoprint.events import Events, CommandTrigger, GenericEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -20,7 +21,7 @@ class LedEventListener(CommandTrigger):
     LED_EVENTS[
         MrBeamEvents.READY_TO_LASER_CANCELED
     ] = "mrbeam_ledstrips_cli ReadyToPrintCancel"
-    # print job
+    # Laser job
     LED_EVENTS[Events.PRINT_STARTED] = "mrbeam_ledstrips_cli PrintStarted"
     LED_EVENTS[Events.PRINT_DONE] = "mrbeam_ledstrips_cli PrintDone"
     LED_EVENTS[Events.PRINT_CANCELLED] = "mrbeam_ledstrips_cli PrintCancelled"
@@ -143,25 +144,19 @@ class LedEventListener(CommandTrigger):
             command = self.COMMAND_SET_EDGEBRIGHTNESS.replace(
                 "{__brightness}", str(brightness)
             )
-            commandType = "system"
-            debug = False
-            self._execute_command(command, commandType, debug)
+            self._execute_command(command)
 
     def set_inside_brightness(self, brightness):
         if isinstance(brightness, int) and brightness > 0 and brightness <= 255:
             command = self.COMMAND_SET_INSIDEBRIGHTNESS.replace(
                 "{__brightness}", str(brightness)
             )
-            commandType = "system"
-            debug = False
-            self._execute_command(command, commandType, debug)
+            self._execute_command(command)
 
     def set_fps(self, fps):
         if isinstance(fps, int) and fps >= 15 and fps <= 45:
             command = self.COMMAND_SET_FPS.replace("{__fps}", str(fps))
-            commandType = "system"
-            debug = False
-            self._execute_command(command, commandType, debug)
+            self._execute_command(command)
 
     def _on_mrbeam_plugin_initialized(self, event, payload):
         from octoprint_mrbeam import IS_X86
@@ -172,11 +167,11 @@ class LedEventListener(CommandTrigger):
 
         self._initSubscriptions()
         # We need to re-play the Startup Event for the LED system....
-        self.eventCallback(Events.STARTUP)
+        self.eventCallback(Events.STARTUP, payload)
 
     def _initSubscriptions(self):
         for event in self.LED_EVENTS:
-            if not event in self._subscriptions.keys():
+            if event not in self._subscriptions.keys():
                 self._subscriptions[event] = []
             self._subscriptions[event].append((self.LED_EVENTS[event], "system", False))
 
@@ -212,22 +207,24 @@ class LedEventListener(CommandTrigger):
             command = self._handleStartupCommand(command)
             self._execute_command(command, commandType, debug, event, payload)
 
-    def _execute_command(self, command, commandType, debug, event=None, payload=None):
-        try:
-            if isinstance(command, (tuple, list, set)):
-                processedCommand = []
-                for c in command:
-                    processedCommand.append(self._processCommand(c, payload))
-            else:
-                processedCommand = self._processCommand(command, payload)
+    def _execute_command(self, cmd, cmd_type="system"):
+        """
 
-            self._logger.debug("LED_EVENT %s: '%s'", event, processedCommand)
-            self.executeCommand(processedCommand, commandType, debug=debug)
-        except KeyError as e:
-            self._logger.warn(
-                "There was an error processing one or more placeholders in the following command: %s"
-                % command
-            )
+        Args:
+            cmd (str): command to be sent
+            cmd_type (str): type of the command, system or gcode
+
+        Returns:
+            None
+
+        """
+        # Check if debug mode is enabled
+        gettrace = getattr(sys, 'gettrace', None)
+        if gettrace():
+            # debug mode is enabled
+            self.executeCommand(cmd, cmd_type, debug=True)
+        else:
+            self.executeCommand(cmd, cmd_type)
 
     def _handleStartupCommand(self, command):
         if command in (
@@ -244,12 +241,12 @@ class LedEventListener(CommandTrigger):
     def get_listening_state(self):
         res = dict(wifi=None, ap=None, wired=None, findmrbeam=None)
         try:
-            pluginInfo = self._plugin._plugin_manager.get_plugin_info("findmymrbeam")
+            plugin_info = self._plugin._plugin_manager.get_plugin_info("findmymrbeam")
             if (
-                pluginInfo is not None
-                and LooseVersion(pluginInfo.version) >= self.VERSION_MIN_FINDMRBEAM
+                plugin_info is not None
+                and LooseVersion(plugin_info.version) >= self.VERSION_MIN_FINDMRBEAM
             ):
-                res["findmrbeam"] = pluginInfo.implementation.is_registered()
+                res["findmrbeam"] = plugin_info.implementation.is_registered()
             else:
                 # we know we can't read find state, so we must assume false
                 res["findmrbeam"] = False
@@ -259,9 +256,9 @@ class LedEventListener(CommandTrigger):
             )
 
         try:
-            pluginInfo = self._plugin._plugin_manager.get_plugin_info("netconnectd")
-            if pluginInfo is not None:
-                status = pluginInfo.implementation._get_status()
+            plugin_info = self._plugin._plugin_manager.get_plugin_info("netconnectd")
+            if plugin_info is not None:
+                status = plugin_info.implementation._get_status()
                 if "wifi" in status["connections"]:
                     res["wifi"] = status["connections"]["wifi"]
                 if "ap" in status["connections"]:
@@ -327,5 +324,5 @@ class LedEventListener(CommandTrigger):
         if current_listening_state != self._listening_state:
             self._listening_state = current_listening_state
             command = self._get_listening_command()
-            self._execute_command(command, "system", False)
+            self._execute_command(command)
         self._start_wifi_watcher(force=True)

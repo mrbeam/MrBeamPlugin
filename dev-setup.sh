@@ -10,6 +10,9 @@ pip install -r requirements-dev.txt
 nvm install 18.7.0
 npm install
 
+#for sass
+npm install -g sass
+
 # for JS unit tests
 cd tests/javascript/
 npm install

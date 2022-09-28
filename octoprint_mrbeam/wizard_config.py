@@ -1,4 +1,4 @@
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
@@ -244,9 +244,7 @@ class WizardConfig:
         return required
 
     def _is_acl_wizard_required(self):
-        required = (
-            self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
-        )
+        required = not self._user_manager.has_been_customized()
         self._logger.debug("_is_acl_wizard_required() %s", required)
         return required
 

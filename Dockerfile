@@ -42,7 +42,7 @@ RUN sudo apt-get upgrade -y \
 RUN source ./venv2/bin/activate \
     && git clone https://github.com/mrbeam/OctoPrint.git \
     && cd OctoPrint \
-    && git checkout mrbeam2-stable \
+    && git checkout feature/SW-1030-octoprint-upgrade-to-latest-v-1-x \
     && pip install .
 
 RUN source ./venv2/bin/activate \

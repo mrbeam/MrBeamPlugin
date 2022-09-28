@@ -4,7 +4,7 @@
 import threading
 import urllib
 
-from flask.ext.babel import gettext
+from flask_babel import gettext
 
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger

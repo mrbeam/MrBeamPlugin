@@ -21,15 +21,22 @@ the plugin manager.
 
 Build image: (Add the following flag for Apple M1: `--platform linux/x86_64`)
 ```shell
-docker build -t mrbeam_plugin .
+docker build -t mrb3-core-plugin .
 ```
 Run container: (Add the following flag for Apple M1: `--platform linux/x86_64`)
 ```shell
-docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
+docker run --name mrb3-core-plugin -d -p5003:5000 mrb3-core-plugin
 ```
 Access from the browser:
 
     http://localhost:5002
+
+## SCSS
+compile the css for the login UI
+
+```shell
+sass ./scss/loginui.scss octoprint_mrbeam/static/css/loginui.css
+```
 
 ## Set up local dev environment
 Just run the `dev-setup.sh` script, that will:

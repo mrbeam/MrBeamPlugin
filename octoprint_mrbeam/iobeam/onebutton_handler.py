@@ -7,7 +7,7 @@ from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from octoprint_mrbeam.printing.comm_acc2 import PrintingGcodeFromMemoryInformation
 
 # singleton
@@ -320,7 +320,7 @@ class OneButtonHandler(object):
                 )
                 try:
                     # OctoPrint 1.3.4 doesn't provide the file name anymore
-                    path = payload["path"] if "path" in payload else None
+                    path = payload["file"] if "file" in payload else None
                     self.set_ready_to_laser(path)
                 except Exception as e:
                     self._logger.exception(

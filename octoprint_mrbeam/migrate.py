@@ -728,32 +728,34 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
 
     def change_usernames_tolower(self):
-        self._logger.info("change_usernames_tolower() ")
-        if not self.plugin._user_manager.hasBeenCustomized():
-            self._logger.info(
-                "change_usernames_tolower() _user_manager not hasBeenCustomized(): skip"
-            )
-            return
-
-        users = self.plugin._user_manager._users
-        self._logger.info("{numUsers} users:".format(numUsers=len(users)))
-
-        for key, value in users.iteritems():
-            username = value.get_name()
-
-            if any(c.isupper() for c in username):
-                lower_username = username.lower()
-                users[lower_username] = users.pop(key)
-                users[lower_username]._username = lower_username
-                self._logger.info(
-                    "- User {upper} changed to {lower}".format(
-                        upper=username, lower=lower_username
-                    )
-                )
-            else:
-                self._logger.info("- User {user} not changed".format(user=username))
-
-        self.plugin._user_manager._save(force=True)
+        # deactivate as this will be removed and is using private _users of user_manager
+        # self._logger.info("change_usernames_tolower() ")
+        # if not self.plugin._user_manager.has_been_customized():
+        #     self._logger.info(
+        #         "change_usernames_tolower() _user_manager not has_been_customized(): skip"
+        #     )
+        #     return
+        #
+        # users = self.plugin._user_manager._users
+        # self._logger.info("{numUsers} users:".format(numUsers=len(users)))
+        #
+        # for key, value in users.iteritems():
+        #     username = value.get_name()
+        #
+        #     if any(c.isupper() for c in username):
+        #         lower_username = username.lower()
+        #         users[lower_username] = users.pop(key)
+        #         users[lower_username]._username = lower_username
+        #         self._logger.info(
+        #             "- User {upper} changed to {lower}".format(
+        #                 upper=username, lower=lower_username
+        #             )
+        #         )
+        #     else:
+        #         self._logger.info("- User {user} not changed".format(user=username))
+        #
+        # self.plugin._user_manager._save(force=True)
+        pass
 
     def update_etc_initd_netconnectd(self):
         self._logger.info("update_etc_initd_netconnectd() ")

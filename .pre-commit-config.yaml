@@ -25,3 +25,7 @@ repos:
 #        args: [
 #          --in-place,
 #        ]
+
+# TODO Add scss generation, need PYthon 3
+# see https://pypi.org/project/scss-compile/
+# https://mr-beam.atlassian.net/browse/SW-1849

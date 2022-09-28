@@ -103,13 +103,13 @@
 											<!-- ko allowBindings: false -->
 											<div class="only_folders clearfix">
 												<div id='onlyFoldersList' class="gcode_files" data-bind="foreach: foldersOnlyABCList()" >
-													<div class="entry" data-bind="attr: { id: $root.getEntryId($data), mrb_name: name }, template: { name: $root.templateFor($data), data: $data }, css:$root.templateFor($data)"></div>
+													<div class="entry" data-bind="attr: { id: $root.getEntryId($data), mrb_name: name }, template: { name: $root.templateFor($data), data: $data }, css: $data.type"></div>
 												</div>
 											</div>
 											<!-- /ko -->
 											<div class="only_files">
 												<div class="gcode_files" data-bind="foreach: filesOnlyList" >
-													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }, css:$root.templateFor($data)"></div>
+                                                    <div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }, css: $data.type"></div>
 												</div>
 
 													<script type="text/html" id="files_template_machinecode_gcode" data-test="tab-designlib-mechinecode-file-id">

@@ -7,9 +7,9 @@ from octoprint.events import eventManager, Events
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.filemanager.file_storage import MrBeamFileStorage
 
-
 # singleton
 _instance = None
+_logger = mrb_logger("octoprint.plugins.mrbeam.filemanager")
 
 
 def mrbFileManager(plugin):
@@ -45,12 +45,10 @@ class MrbFileManager(FileManager):
         storage_managers[FileDestinations.LOCAL] = MrBeamFileStorage(
             self._plugin._settings.getBaseFolder("uploads")
         )
-
-        FileManager.__init__(
-            self,
-            self._plugin._analysis_queue,
-            self._plugin._slicing_manager,
-            self._plugin.laserCutterProfileManager,
+        super(MrbFileManager, self).__init__(
+            plugin._analysis_queue,
+            plugin._slicing_manager,
+            plugin.laserCutterProfileManager,
             initial_storage_managers=storage_managers,
         )
 
@@ -84,14 +82,14 @@ class MrbFileManager(FileManager):
             raise e
 
     def delete_old_history_files(self):
-        mrb_filter_func = lambda entry, entry_data: self._is_history_file(entry)
+        mrb_filter_func = lambda entry: self._is_history_file(entry)
         resp = self.list_files(path="", filter=mrb_filter_func, recursive=True)
         files = resp[FileDestinations.LOCAL]
 
         self._delete_files_by_age(files, self.MAX_HISTORY_FILES)
 
     def delete_old_gcode_files(self):
-        mrb_filter_func = lambda entry, entry_data: self._is_gcode_file(entry)
+        mrb_filter_func = lambda entry: self._is_gcode_file(entry)
         resp = self.list_files(path="", filter=mrb_filter_func, recursive=True)
         files = resp[FileDestinations.LOCAL]
 
@@ -126,15 +124,33 @@ class MrbFileManager(FileManager):
 
     @staticmethod
     def _is_history_file(entry):
-        _, extension = os.path.splitext(entry)
-        extension = extension[1:].lower()
-        return extension in MrbFileManager.FILE_EXTENSIONS_HISTORY
+        if type(entry) is dict:
+            path = entry.get("path")
+            if path is not None:
+                _, extension = os.path.splitext(path)
+                extension = extension[1:].lower()
+                return extension in MrbFileManager.FILE_EXTENSIONS_HISTORY
+            else:
+                _logger.warn("path value is not part of the entry")
+                return False
+        else:
+            _logger.warn("entry value should be a dict")
+            return False
 
     @staticmethod
     def _is_gcode_file(entry):
-        _, extension = os.path.splitext(entry)
-        extension = extension[1:].lower()
-        return extension in MrbFileManager.FILE_EXTENSIONS_GCODE
+        if type(entry) is dict:
+            path = entry.get("path")
+            if path is not None:
+                _, extension = os.path.splitext(path)
+                extension = extension[1:].lower()
+                return extension in MrbFileManager.FILE_EXTENSIONS_GCODE
+            else:
+                _logger.warn("path value is not part of the entry")
+                return False
+        else:
+            _logger.warn("entry value should be a dict")
+            return False
 
     @staticmethod
     def _sanitize_content(file_name, content):

@@ -21,7 +21,7 @@ import pkg_resources
 import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
-from flask.ext.babel import gettext
+from flask_babel import gettext
 import octoprint.filemanager as op_filemanager
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping, FileManager
 from octoprint.server import NO_CONTENT
@@ -34,7 +34,6 @@ from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
-from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
 from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
 from octoprint_mrbeam.fsm.high_temperature_fsm import HighTemperatureFSM
 
@@ -80,7 +79,6 @@ from octoprint_mrbeam.printing.profile import (
     Profile,
 )
 from octoprint_mrbeam.software_update_information import (
-    get_update_information,
     switch_software_channel,
     software_channels_available,
     BEAMOS_LEGACY_DATE,
@@ -113,6 +111,7 @@ from octoprint_mrbeam.util.version_comparator import compare_pep440_versions
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
 __builtin__.__package_path__ = os.path.dirname(__file__)
+__plugin_pythoncompat__ = "<2.8"  # ">=2.7,<4"
 
 
 class MrBeamPlugin(
@@ -128,7 +127,6 @@ class MrBeamPlugin(
     octoprint.plugin.SlicerPlugin,
     octoprint.plugin.ShutdownPlugin,
     octoprint.plugin.EnvironmentDetectionPlugin,
-    UpdateRestHandlerMixin,
     DocsRestHandlerMixin,
 ):
     # CONSTANTS
@@ -246,8 +244,6 @@ class MrBeamPlugin(
             migrate(self)
 
         self.set_serial_setting()
-
-        self._fixEmptyUserManager()
 
         try:
             pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
@@ -550,7 +546,6 @@ class MrBeamPlugin(
                     ["machine", "backlash_compensation_x"]
                 )
             ),
-            software_update_branches=self.get_update_branch_info(),
             _version=self._plugin_version,
             review=dict(
                 given=self.review_handler.is_review_already_given(),
@@ -735,7 +730,6 @@ class MrBeamPlugin(
                 "js/app/view-models/wizard/wizard-general.js",
                 "js/app/view-models/wizard/wizard-analytics.js",
                 "js/app/view-models/wizard/wizard-gcode-deletion.js",
-                "js/app/view-models/settings/software-channel-selector.js",
                 "js/lib/hopscotch.js",
                 "js/app/view-models/tour.js",
                 "js/app/view-models/feedback-widget.js",
@@ -826,6 +820,8 @@ class MrBeamPlugin(
         # template, using the render_kwargs as provided by OctoPrint
         from flask import make_response, render_template, g
 
+        sockjs_connect_timeout = settings().getInt(["devel", "sockJsConnectTimeout"])
+
         firstRun = render_kwargs["firstRun"]
         language = g.locale.language if g.locale else "en"
 
@@ -835,10 +831,9 @@ class MrBeamPlugin(
         ):
             self._track_ui_render_calls(request, language)
 
-        enable_accesscontrol = self._user_manager.enabled
         accesscontrol_active = (
-            enable_accesscontrol and self._user_manager.hasBeenCustomized()
-        )
+            self._user_manager.has_been_customized()
+        )  # checks if the user file is present
 
         selectedProfile = self.laserCutterProfileManager.get_current_or_default()
         enable_focus = selectedProfile["focus"]
@@ -878,7 +873,8 @@ class MrBeamPlugin(
                 enableFocus=enable_focus,
                 safetyGlasses=safety_glasses,
                 enableTemperatureGraph=False,
-                enableAccessControl=enable_accesscontrol,
+                enableAccessControl=True,
+                sockJsConnectTimeout=sockjs_connect_timeout * 1000,
                 accessControlActive=accesscontrol_active,
                 enableSdSupport=False,
                 gcodeMobileThreshold=0,
@@ -1077,11 +1073,10 @@ class MrBeamPlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
     def acl_wizard_api(self):
-        if not (
-            self.isFirstRun()
-            and self._user_manager.enabled
-            and not self._user_manager.hasBeenCustomized()
-        ):
+        from octoprint.access import ADMIN_GROUP, USER_GROUP
+
+        # if user file is present or the first run flag is not set return Forbidden
+        if self._user_manager.has_been_customized() or not self.isFirstRun():
             return make_response("Forbidden", 403)
 
         data = request.values
@@ -1099,9 +1094,13 @@ class MrBeamPlugin(
             # configure access control
             self._logger.debug("acl_wizard_api() creating admin user: %s", data["user"])
             self._settings.global_set_boolean(["accessControl", "enabled"], True)
-            self._user_manager.enable()
-            self._user_manager.addUser(
-                data["user"], data["pass1"], True, ["user", "admin"], overwrite=True
+            self._user_manager.add_user(
+                data["user"],
+                data["pass1"],
+                True,
+                [],
+                [USER_GROUP, ADMIN_GROUP],
+                overwrite=True,
             )
 
             # We activate the flag to ask for a review for new users
@@ -1155,7 +1154,7 @@ class MrBeamPlugin(
 
     # simpleApiCommand: lasersafety_confirmation; simpleApiCommand: lasersafety_confirmation;
     def lasersafety_wizard_api(self, data):
-        from flask.ext.login import current_user
+        from flask_login import current_user
 
         # get JSON from request data, or send user back home
         data = request.values
@@ -1399,18 +1398,26 @@ class MrBeamPlugin(
     def setUserSetting(self, username, key, value):
         if not isinstance(key, list):
             key = [key]
-        self._user_manager.changeUserSetting(
-            username, [self.USER_SETTINGS_KEY_MRBEAM] + key, value
+        self._user_manager.change_user_settings(
+            username, {[self.USER_SETTINGS_KEY_MRBEAM] + key: value}
         )
-        self._user_manager.changeUserSetting(
+        self._user_manager.change_user_settings(
             username,
-            [self.USER_SETTINGS_KEY_MRBEAM, self.USER_SETTINGS_KEY_TIMESTAMP],
-            time.time(),
+            {
+                [
+                    self.USER_SETTINGS_KEY_MRBEAM,
+                    self.USER_SETTINGS_KEY_TIMESTAMP,
+                ]: time.time()
+            },
         )
-        self._user_manager.changeUserSetting(
+        self._user_manager.change_user_settings(
             username,
-            [self.USER_SETTINGS_KEY_MRBEAM, self.USER_SETTINGS_KEY_VERSION],
-            self._plugin_version,
+            {
+                [
+                    self.USER_SETTINGS_KEY_MRBEAM,
+                    self.USER_SETTINGS_KEY_VERSION,
+                ]: self._plugin_version
+            },
         )
 
     # reads a value from usersettings mrbeam category
@@ -1419,7 +1426,7 @@ class MrBeamPlugin(
         if username:
             if not isinstance(key, list):
                 key = [key]
-            result = self._user_manager.getUserSetting(
+            result = self._user_manager.get_user_setting(
                 username, [self.USER_SETTINGS_KEY_MRBEAM] + key
             )
 
@@ -1743,6 +1750,14 @@ class MrBeamPlugin(
             ("POST", r"/convert", 100 * 1024 * 1024),
             ("POST", r"/save_store_bought_svg", 100 * 1024 * 1024),
         ]
+
+    def loginui_theming(self):
+        """
+        See [here](https://docs.octoprint.org/en/master/plugins/hooks.html?highlight=theming#octoprint-theming-dialog).
+        """
+        from flask import url_for
+
+        return [url_for("plugin.mrbeam.static", filename="css/loginui.css")]
 
     @octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
     @restricted_access
@@ -2748,43 +2763,6 @@ class MrBeamPlugin(
             payload = dict(progress=self.slicing_progress_last)
             self._event_bus.fire(MrBeamEvents.SLICING_PROGRESS, payload)
 
-    ##~~ Softwareupdate hook
-
-    def get_update_information(self):
-        # calling from .software_update_information import get_update_information
-        return get_update_information(self)
-
-    def get_update_branch_info(self):
-        """Gets you a list of plugins which are currently not configured to be
-        updated from their default branch.
-
-        Why do we need this? Frontend injects these data into SWupdate settings. So we can see if we put
-        a component like Mr Beam Plugin to a special branch (for development.)
-        :return: dict
-        """
-        result = dict()
-        configured_checks = None
-        try:
-            pluginInfo = self._plugin_manager.get_plugin_info("softwareupdate")
-            if pluginInfo is not None:
-                impl = pluginInfo.implementation
-                configured_checks = impl._configured_checks
-            else:
-                self._logger.error(
-                    "get_branch_info() Can't get pluginInfo.implementation"
-                )
-        except Exception as e:
-            self._logger.exception(
-                "Exception while reading configured_checks from softwareupdate plugin. "
-            )
-
-        for name, config in configured_checks.iteritems():
-            if name == "octoprint":
-                continue
-            if config.get("branch", None) != config.get("branch_default", None):
-                result[name] = config["branch"]
-        return result
-
     # inject a Laser object instead the original Printer from standard.py
     def laser_factory(self, components, *args, **kwargs):
         from octoprint_mrbeam.printing.printer import Laser
@@ -2885,8 +2863,8 @@ class MrBeamPlugin(
     def _fixEmptyUserManager(self):
         if (
             hasattr(self, "_user_manager")
-            and len(self._user_manager._users) <= 0
-            and (self._user_manager._customized or not self.isFirstRun())
+            and len(self._user_manager.get_all_users()) <= 0
+            and (self._user_manager.has_been_customized() or not self.isFirstRun())
         ):
             self._logger.debug("_fixEmptyUserManager")
             self._user_manager._customized = False
@@ -3211,11 +3189,22 @@ def __plugin_load__():
         plugins=dict(
             _disabled=[
                 "announcements",
-                "cura",
                 "pluginmanager",
                 "corewizard",
                 "octopi_support",
                 "virtual_printer",
+                "eventmanager",
+                "tracking",
+                "gcodeviewer",
+                "errortracking",
+                "backup",
+                "appkeys",
+                "action_command_prompt",
+                "action_command_notification",
+                "firmware_check",
+                "file_check",
+                "pi_support",
+                "softwareupdate",
             ]  # accepts dict | pfad.yml | callable
         ),
         terminalFilters=[
@@ -3293,10 +3282,10 @@ def __plugin_load__():
 
     global __plugin_hooks__
     __plugin_hooks__ = {
-        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
         "octoprint.printer.factory": __plugin_implementation__.laser_factory,
+        "octoprint.theming.login": __plugin_implementation__.loginui_theming,
         "octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
-        "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,  # Only used in OP v1.3.11 +
+        "octoprint.filemanager.analysis.factory": beam_analysis_queue_factory,
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.cli.commands": get_cli_commands,
     }
