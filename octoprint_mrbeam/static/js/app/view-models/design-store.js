@@ -255,6 +255,7 @@ $(function () {
         };
 
         self.goToStore = function () {
+            $("#design_store_iframe").attr('loading', 'eager');
             $("#designstore_tab_btn > span.red-dot").remove();
             if ($("#designstore_tab_btn").parent().hasClass("active")) {
                 self.sendMessageToDesignStoreIframe("goToStore", {});
