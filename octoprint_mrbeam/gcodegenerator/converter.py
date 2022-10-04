@@ -2,20 +2,20 @@ import re
 import shutil
 import os
 import time
-import machine_settings
+from . import machine_settings
 
-from biarc import biarc
-from point import Point
+from .biarc import biarc
+from .point import Point
 import numpy
 
-import simplestyle
-import simpletransform
-import cubicsuperpath
+from . import simplestyle
+from . import simpletransform
+from . import cubicsuperpath
 
-from profiler import Profiler
-from job_params import JobParams
-from img2gcode import ImageProcessor
-from svg_util import get_path_d, _add_ns, unittouu
+from .profiler import Profiler
+from .job_params import JobParams
+from .img2gcode import ImageProcessor
+from .svg_util import get_path_d, _add_ns, unittouu
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
@@ -849,7 +849,7 @@ class Converter:
         p = self._transform_csp(p, layer)
 
         ### Sort to reduce Rapid distance
-        k = range(1, len(p))
+        k = list(range(1, len(p)))
         keys = [0]
         while len(k) > 0:
             end = p[keys[-1]][-1][1]
@@ -888,9 +888,9 @@ class Converter:
             ]
             for i in range(len(csp_))
         ]
-        for i in xrange(len(csp)):
-            for j in xrange(len(csp[i])):
-                for k in xrange(len(csp[i][j])):
+        for i in range(len(csp)):
+            for j in range(len(csp[i])):
+                for k in range(len(csp[i][j])):
                     csp[i][j][k] = self._transform(csp[i][j][k], layer, reverse)
         return csp
 

@@ -15,6 +15,7 @@ path = dirname(realpath(__file__))
 CAM_DIR = join(path, "..", "rsc", "camera")
 
 
+@pytest.mark.skip(reason="SW-1270, camera disabled")
 @pytest.mark.datafiles(
     join(CAM_DIR, "raw.jpg"),
     join(CAM_DIR, "lens_calib_bad.npz"),
@@ -56,6 +57,7 @@ BOARDS = pytest.mark.datafiles(
 )
 
 
+@pytest.mark.skip(reason="SW-1270, camera disabled")
 def inspectState(data):
     """Inspect the state each time it changes."""
     if isinstance(data, dict):
@@ -71,6 +73,7 @@ def inspectState(data):
         assert isinstance(data, dict)
 
 
+@pytest.mark.skip(reason="SW-1270, camera disabled")
 @BOARDS
 def test_lens_calibration_abort(datafiles):
     out_file = str(datafiles / "out.npz")
@@ -123,6 +126,7 @@ def test_lens_calibration_abort(datafiles):
     )
 
 
+@pytest.mark.skip(reason="SW-1270, camera disabled")
 @BOARDS
 @pytest.mark.skip("skipping full lens calibration")
 def test_lens_calibration(datafiles):

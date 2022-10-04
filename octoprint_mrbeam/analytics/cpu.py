@@ -133,7 +133,7 @@ class Cpu(object):
             # 	return []
             throttled_binary = bin(t_int)[2:].zfill(16)
 
-            for position, message in self.MESSAGES.iteritems():
+            for position, message in self.MESSAGES.items():
                 # Check for the binary digits to be "on" for each warning message
                 if (
                     len(throttled_binary) > position

@@ -181,8 +181,8 @@ def parseStyle(s):
 
 
 def formatStyle(a):
-    """Format an inline style attribute from a dictionary."""
-    return ";".join([att + ":" + str(val) for att, val in a.iteritems()])
+    """Format an inline style attribute from a dictionary"""
+    return ";".join([att + ":" + str(val) for att, val in a.items()])
 
 
 def isColor(c):
@@ -214,7 +214,7 @@ def parseColor(c):
         if len(numbers) == 3:
             for num in numbers:
                 if num.endswith(r"%"):
-                    converted_numbers.append(int(float(num[0:-1]) * 255 / 100))
+                    converted_numbers.append(float(int(num[0:-1]) * 255 / 100))
                 else:
                     converted_numbers.append(int(num))
             return tuple(converted_numbers)

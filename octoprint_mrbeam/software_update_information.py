@@ -2,7 +2,7 @@ import copy
 from datetime import date
 from enum import Enum
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from util.pip_util import get_version_of_pip_module
+from .util.pip_util import get_version_of_pip_module
 
 
 class SWUpdateTier(Enum):

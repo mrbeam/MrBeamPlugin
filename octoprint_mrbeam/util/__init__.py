@@ -1,4 +1,5 @@
-from collections import Iterable, Mapping
+from collections.abc import Iterable, Mapping
+
 from copy import copy, deepcopy
 from functools import wraps
 from itertools import chain, repeat, cycle
@@ -11,11 +12,6 @@ import threading
 
 from .log import logExceptions, logtime, logme
 from . import github_api
-
-if sys.version_info >= (3,):
-    _basestring = str
-else:
-    _basestring = basestring
 
 
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):

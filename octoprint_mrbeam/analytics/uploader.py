@@ -48,10 +48,10 @@ class FileUploader:
         self._start_uploader_thread()
 
     def is_active(self):
-        return self.worker is not None and self.worker.isAlive()
+        return self.worker is not None and self.worker.is_alive()
 
     def _start_uploader_thread(self):
-        if self.worker is None or not self.worker.isAlive():
+        if self.worker is None or not self.worker.is_alive():
             self.worker = threading.Thread(target=self._upload_and_delete_file)
             self.worker.name = (
                 self.__class__.__name__

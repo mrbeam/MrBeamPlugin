@@ -13,12 +13,12 @@ def debug_image(gcode, pixelsize=0.15):
     import string, sys, re
 
     lines = string.split(gcode, "\n")
-    xmin = sys.maxint
-    xmax = -sys.maxint
-    ymin = sys.maxint
-    ymax = -sys.maxint
-    fmin = sys.maxint
-    fmax = -sys.maxint
+    xmin = sys.maxsize
+    xmax = -sys.maxsize
+    ymin = sys.maxsize
+    ymax = -sys.maxsize
+    fmin = sys.maxsize
+    fmax = -sys.maxsize
     regex = re.compile("((?P<letter>[GFSMXYZPIJK])\s*(?P<value>[0-9-.]+))")
     pixelsize_regex = re.compile(";\s*self.beam = (?P<value>[0-9-.]+)")
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-from __future__ import absolute_import, print_function, unicode_literals, division
 import time
-from collections import Mapping
 import numpy as np
 import json
 import logging
@@ -14,9 +12,9 @@ def logtime(logger=None):
     def _logtime(f):
         @wraps(f)
         def timed_f(*args, **kw):
-            start = time.clock()
+            start = time.perf_counter()
             ret = f(*args, **kw)
-            debug_logger(f).debug("Elapsed time : %f seconds", time.clock() - start)
+            debug_logger(f).debug("Elapsed time : %f seconds", time.perf_counter() - start)
             return ret
 
         return timed_f
@@ -51,7 +49,7 @@ def json_serialisor(elm):
             return elm.tolist()
         else:  # max(shape) < 10:
             _e = elm.reshape((np.prod(shape),))
-            _e = np.asarray(map(json_serialisor, _e))
+            _e = np.asarray(list(map(json_serialisor, _e)))
             return _e.reshape(shape).tolist()
         # else:
         #     return "numpy array with shape %s and type %s " % (elm.shape, elm.dtype)

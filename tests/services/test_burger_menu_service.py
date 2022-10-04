@@ -29,7 +29,7 @@ class TestBurgerMenuService(TestCase):
         burger_menu_model = self._burger_menu_service.get_burger_menu_model(MrBeamModel.MRBEAM2.value)
         self.assertIsNot(len(burger_menu_model.documents), 0)
         for document in burger_menu_model.documents:
-            self.assertEquals(document.document_link.language, SupportedLanguage.ENGLISH)
+            self.assertEqual(document.document_link.language, SupportedLanguage.ENGLISH)
 
     @patch('octoprint_mrbeam.services.burger_menu_service.MrBeamDocUtils.get_mrbeam_definitions_for')
     @patch('octoprint_mrbeam.services.burger_menu_service.get_locale')
@@ -43,7 +43,7 @@ class TestBurgerMenuService(TestCase):
         burger_menu_model = self._burger_menu_service.get_burger_menu_model(MrBeamModel.MRBEAM2.value)
         self.assertIsNot(len(burger_menu_model.documents), 0)
         for document in burger_menu_model.documents:
-            self.assertEquals(document.document_link.language, SupportedLanguage.ENGLISH)
+            self.assertEqual(document.document_link.language, SupportedLanguage.ENGLISH)
 
     @patch('octoprint_mrbeam.services.burger_menu_service.get_locale')
     def test_get_burger_menu_model__with_supported_language__should_return_documents_in_that_language(self,
@@ -52,7 +52,7 @@ class TestBurgerMenuService(TestCase):
         burger_menu_model = self._burger_menu_service.get_burger_menu_model(MrBeamModel.MRBEAM2.value)
         self.assertIsNot(len(burger_menu_model.documents), 0)
         for document in burger_menu_model.documents:
-            self.assertEquals(document.document_link.language, SupportedLanguage.GERMAN)
+            self.assertEqual(document.document_link.language, SupportedLanguage.GERMAN)
 
     @patch('octoprint_mrbeam.services.burger_menu_service.MrBeamDocUtils.get_mrbeam_definitions_for')
     @patch('octoprint_mrbeam.services.document_service.gettext')

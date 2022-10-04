@@ -2,7 +2,7 @@ import os
 import json
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from uploader import ReviewFileUploader
+from .uploader import ReviewFileUploader
 from threading import Lock
 
 try:

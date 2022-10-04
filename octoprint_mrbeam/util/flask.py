@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from __future__ import absolute_import
 import functools
 from flask import abort
 from octoprint.server.util.flask import restricted_access, make_response

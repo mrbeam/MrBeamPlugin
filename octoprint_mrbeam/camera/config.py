@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from __future__ import absolute_import
 
-from collections import Mapping
+
+from collections.abc import Mapping
 import numpy as np
 from octoprint_mrbeam.util import dict_map, dict_get
 import yaml
@@ -29,7 +29,7 @@ def is_lens_calibration_file(path):
     except (IOError, ValueError):
         return False
     else:
-        return all(k in _conf.keys() for k in ("mtx", "dist"))
+        return all(k in list(_conf.keys()) for k in ("mtx", "dist"))
 
 
 def is_corner_calibration_map(_map):

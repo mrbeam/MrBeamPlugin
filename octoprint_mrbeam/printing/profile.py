@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import
 
 __author__ = "Gina Häußge <osd@foosel.net>"
 __license__ = "GNU Affero General Public License http://www.gnu.org/licenses/agpl.html"
@@ -99,10 +98,10 @@ LASER_PROFILES = tuple(chain(
 LASER_PROFILE_IDENTIFIERS = tuple(pr["id"] for pr in LASER_PROFILES)
 
 LASER_PROFILE_MAP = dict(
-    zip(
+    list(zip(
         LASER_PROFILE_IDENTIFIERS,
         LASER_PROFILES,
-    )
+    ))
 )
 
 
@@ -432,7 +431,7 @@ class Profile(object):
         if value is None:
             return default
 
-        if isinstance(value, (str, unicode, basestring)):
+        if isinstance(value, str):
             value = value.replace(",", ".").strip()
 
         try:
@@ -440,14 +439,14 @@ class Profile(object):
         except ValueError:
             return default
 
-    def get_boolean(self, key, default=None):
+    def get_boolean(self, key: str, default=None) -> bool:
         value = self.get(key)
         if value is None:
             return default
 
         if isinstance(value, bool):
             return value
-        elif isinstance(value, (str, unicode, basestring)):
+        elif isinstance(value, str):
             return (
                 value.lower() == "true"
                 or value.lower() == "yes"

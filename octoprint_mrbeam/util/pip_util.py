@@ -1,7 +1,7 @@
 from octoprint.plugins.softwareupdate.updaters.pip import _get_pip_caller
 from octoprint.util.pip import PipCaller
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from cmd_exec import exec_cmd_output
+from .cmd_exec import exec_cmd_output
 
 DISABLE_PIP_CHECK = "--disable-pip-version-check"
 DISABLE_PY_WARNING = "--no-python-version-warning"
@@ -90,10 +90,10 @@ def get_pip_caller(venv, _logger=None):
         _log(lines, prefix="!", stream="stderr")
 
     def _log(lines, prefix=None, stream=None, strip=True):
-        if strip:
-            lines = map(lambda x: x.strip(), lines)
         for line in lines:
-            print(u"{} {}".format(prefix, line))
+            if strip:
+                line = line.strip()
+            print(f"{prefix} {line}")
 
     if _logger is not None:
         pip_caller.on_log_call = _log_call

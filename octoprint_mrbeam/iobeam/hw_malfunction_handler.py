@@ -2,7 +2,7 @@
 
 
 import threading
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from flask_babel import gettext
 

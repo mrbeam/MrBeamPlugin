@@ -85,15 +85,14 @@ class MrbLogger(object):
         """
 
         try:
-            if isinstance(msg, unicode):
+            if isinstance(msg, str):
                 # If it's already Unicode, no decoding is needed
                 pass
             else:
-                # If it's a byte string, convert it to Unicode using "utf-8" encoding
                 msg = unicode(msg, "utf-8")
         except TypeError:
-            # If it's already unicode we get this TypeError
-            pass
+            # If it's a byte string, convert it to Unicode using "utf-8" encoding
+            msg = unicode(msg, "utf-8")
         except Exception as exc:
             self.log(logging.ERROR, "Error in MrbLogger.log: %s - %s", msg, exc)
         if kwargs.pop("terminal", True if level >= logging.WARN else False):
@@ -113,7 +112,7 @@ class MrbLogger(object):
             kwargs["terminal_dump"] = terminal_dump
 
             # Analytics can be a boolean or a string. If it's a string, we use it as the analytics_id
-            if isinstance(analytics, basestring):
+            if isinstance(analytics, str):
                 analytics_id = analytics
             else:
                 analytics_id = None
@@ -135,7 +134,7 @@ class MrbLogger(object):
         date = self._getDateString()
         id = kwargs.pop("id", self.id_short)
 
-        level = logging._levelNames[level] if level in logging._levelNames else level
+        level = logging._nameToLevel[level] if level in logging._nameToLevel else level
 
         msg = msg % args if args and msg else msg
         exception = ""

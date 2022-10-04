@@ -1,6 +1,6 @@
 import argparse
 import textwrap
-from collections import Mapping
+from collections.abc import Mapping
 from threading import Event
 from multiprocessing import Pool
 from octoprint_mrbeam.camera.definitions import (
@@ -223,7 +223,7 @@ def prepareImage(
         % tuple(
             map(
                 np.ndarray.tolist,
-                map(workspaceCorners.__getitem__, ["NW", "NE", "SW", "SE"]),
+                list(map(workspaceCorners.__getitem__, ["NW", "NE", "SW", "SE"])),
             )
         )
     )
@@ -433,13 +433,13 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
     unique_labels, counts_elements = np.unique(labels, return_counts=True)
     # The filter also filters out the black background
     _filter = lambda args: max_pix > args[0] > min_pix
-    filtered_elm = filter(_filter, zip(counts_elements, unique_labels))
+    filtered_elm = list(filter(_filter, list(zip(counts_elements, unique_labels))))
     for count, label in sorted(filtered_elm, reverse=True):
         bool_connected_spot = labels == label
         # get the geometrical center of that blob
         non_zeros = np.transpose(np.nonzero(bool_connected_spot))
         start, stop = np.min(non_zeros, axis=0), np.max(non_zeros, axis=0)
-        center = (start + stop) / 2
+        center = (start + stop) // 2
         yield bool_connected_spot, center[::-1], start[::-1], stop[::-1], count
 
 
@@ -451,7 +451,7 @@ def _debug_drawMarkers(raw_img, markers):
     for qd, pos in markers.items():
         if pos is None:
             continue
-        (mw, mh) = map(int, pos)
+        (mw, mh) = list(map(int, pos))
         cv2.circle(img, (mw, mh), 15, (255, 255, 255), 4)
         cv2.putText(
             img,
@@ -470,7 +470,7 @@ def _debug_drawCorners(raw_img, corners):
     """Draw the corners onto an image."""
     img = raw_img.copy()
     for qd in corners:
-        (cx, cy) = map(int, corners[qd])
+        (cx, cy) = list(map(int, corners[qd]))
         cv2.circle(img, (cx, cy), 15, (150, 0, 0), 4)
         cv2.putText(
             img,

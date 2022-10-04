@@ -325,8 +325,7 @@ class AnalyticsHandler(object):
                 __package_path__ + "/", ""
             )
 
-            if event_details["level"] in logging._levelNames:
-                event_details["level"] = logging._levelNames[event_details["level"]]
+            event_details["level"] = logging.getLevelName(event_details["level"])
 
             if event_details["exception_str"]:
                 event_details["level"] = AnalyticsKeys.Log.Level.EXCEPTION

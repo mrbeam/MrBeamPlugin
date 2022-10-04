@@ -235,10 +235,10 @@ class AccLineBuffer(object):
         )
 
     @staticmethod
-    def get_cmd_from_item(cmd_obj):
+    def get_cmd_from_item(cmd_obj: bytes | dict) -> bytes:
         my_cmd = None
         if cmd_obj is not None:
-            if isinstance(cmd_obj, basestring):
+            if isinstance(cmd_obj, bytes):
                 my_cmd = cmd_obj
             else:
                 my_cmd = cmd_obj.get("cmd", None) if cmd_obj else None

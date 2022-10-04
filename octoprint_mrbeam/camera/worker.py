@@ -1,5 +1,5 @@
 from collections import deque
-from definitions import SUCCESS_WRITE_RETVAL
+from .definitions import SUCCESS_WRITE_RETVAL
 import cv2
 import io
 import logging

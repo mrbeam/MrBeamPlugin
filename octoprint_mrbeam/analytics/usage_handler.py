@@ -416,11 +416,8 @@ class UsageHandler(object):
         """
         success = False
         with open(self._backup_file, "r") as stream:
-            data = yaml.load(stream)
+            data = yaml.safe_load(stream)
         if self._validate_data(data):
-            #checks if the version is saved in unicode and converts it into a string see SW-1269
-            if isinstance(data["version"], unicode):
-                data["version"] = unicodedata.normalize('NFKD', data["version"]).encode('ascii', 'ignore')
             data["restored"] = (
                 data["restored"] + 1 if "restored" in data else 1
             )

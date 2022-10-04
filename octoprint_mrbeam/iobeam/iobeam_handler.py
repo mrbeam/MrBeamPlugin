@@ -87,7 +87,7 @@ class IoBeamHandler(object):
     I2C_STATE_REQUEST_INTERVAL = 10 * 60  # 10 minutes if no job is running
 
     MESSAGE_LENGTH_MAX = 4096
-    MESSAGE_NEWLINE = "\n"
+    MESSAGE_NEWLINE = b"\n"
     MESSAGE_SEPARATOR = ":"
     MESSAGE_OK = "ok"
     MESSAGE_ERROR = "error"
@@ -227,7 +227,7 @@ class IoBeamHandler(object):
         return len(self._interlocks.keys()) == 0
 
     def open_interlocks(self):
-        return self._interlocks.keys()
+        return list(self._interlocks.keys())
 
     def send_temperature_request(self):
         """Request a single temperature value from iobeam.
@@ -300,7 +300,7 @@ class IoBeamHandler(object):
             return False
 
         try:
-            self._my_socket.sendall("{}\n".format(json.dumps(command)))
+            self._my_socket.sendall(f"{json.dumps(command)}\n".encode())
         except Exception as e:
             self._errors += 1
             if IS_X86:
@@ -600,7 +600,7 @@ class IoBeamHandler(object):
                                 # Process all data sets
                                 if isinstance(_data, dict):
                                     # We have to process the iobeam dataset first, because we need the iobeam version for analytics
-                                    if "iobeam" in _data.keys():
+                                    if "iobeam" in _data:
                                         error_count += self._handle_dataset(
                                             "iobeam", _data.pop("iobeam", None)
                                         )
@@ -632,16 +632,14 @@ class IoBeamHandler(object):
 
                     except ValueError as ve:
                         # Check if we communicate with an older version of iobeam, iobeam:version:0.6.0
-                        if isinstance(json_data, basestring) and json_data.startswith(
+                        if isinstance(json_data, str) and json_data.startswith(
                             "iobeam:version:"
                         ):
                             tokens = json_data.split(":")
                             try:
                                 self.iobeam_version = tokens[2]
-                                version_obj = LooseVersion(tokens[2])
                             except ValueError:
                                 self.iobeam_version = None
-                                version_obj = None
                                 self._logger.debug(
                                     "Could not parse iobeam version and data '%s' as JSON",
                                     json_data,
@@ -871,6 +869,7 @@ class IoBeamHandler(object):
 
                 self.send_iobeam_analytics(eventname="i2c_monitoring", data=params)
         self._last_i2c_monitoring_dataset = dataset
+        return 0
 
     def _handle_reed_switch(self, dataset):
         self._logger.info("reed_switch: %s", dataset)
@@ -1074,6 +1073,7 @@ class IoBeamHandler(object):
 
     def _handle_i2c(self, dataset):
         self._logger.info("i2c_state: %s", dataset)
+        return 0
 
     def _handle_analytics_dataset(self, dataset):
         if dataset.get("communication_errors", None):
@@ -1273,7 +1273,7 @@ class IoBeamHandler(object):
         # TODO: find a way to trigger this manually for debugging and general curiosity.
         :return:
         """
-        min = sys.maxint
+        min = sys.maxsize
         max = 0
         sum = 0
         count = 0

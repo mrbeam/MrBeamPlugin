@@ -41,10 +41,10 @@ def get_file_of_repo_for_tag(file, repo, tag):
         s.keep_alive = False
 
         response = s.request("GET", url, headers=headers)
-    except MaxRetryError:
+    except MaxRetryError as e:
         _logger.warning("timeout while trying to get the  file")
         return None
-    except ConnectionError:
+    except ConnectionError as e:
         _logger.warning("connection error while trying to get the file {}".format(url))
         return None
 

@@ -1,5 +1,6 @@
 from . import device_info
-import sys, os, csv, json, collections
+import sys, os, csv, json
+from collections.abc import Mapping
 
 MRBEAM = "Mr Beam II"
 MRB_DREAMCUT = "MrB II Dreamcut"
@@ -50,11 +51,11 @@ def dict_merge(dct, merge_dct):
     :param merge_dct: dct merged into dct
     :return: None
     """
-    for k, v in merge_dct.iteritems():
+    for k, v in merge_dct.items():
         if (
             k in dct.keys()
             and isinstance(dct[k], dict)
-            and isinstance(merge_dct[k], collections.Mapping)
+            and isinstance(merge_dct[k], Mapping)
         ):
             dict_merge(dct[k], merge_dct[k])
         elif k in dct.keys() and type(dct[k]) is list and type(merge_dct[k]) is list:
@@ -78,7 +79,7 @@ def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0"):
     dictionary = {}
     with open(path, "r") as f:
         reader = csv.reader(f)
-        fields = reader.next()
+        fields = next(reader)
         prev_vals = None
         current_material = None
         current_color = None

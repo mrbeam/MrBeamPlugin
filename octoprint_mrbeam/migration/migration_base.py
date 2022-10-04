@@ -82,7 +82,7 @@ class MigrationBaseClass:
         Returns:
             bool: True if this migration should run
         """
-        if not isinstance(beamos_version, basestring):
+        if not isinstance(beamos_version, str):
             mrb_logger(
                 "octoprint.plugins.mrbeam.migrate.{}".format(cls.__name__)
             ).error("beamos_version is not a string: {}".format(beamos_version))

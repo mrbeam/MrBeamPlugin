@@ -485,7 +485,7 @@ class LidHandler(object):
         finally:
             self.boardDetectorDaemon.remove(path)
         return (
-            self.boardDetectorDaemon.state.keys()
+            list(self.boardDetectorDaemon.state.keys())
         )  # TODO necessary? Frontend update now happens via plugin message
 
     def removeAllTmpPictures(self):
@@ -1062,7 +1062,7 @@ class PhotoCreator(object):
             # Conform to the legacy result to be sent to frontend
             savedPics["raw"] = rawSaved
             correction_result = {
-                "markers_found": list(filter(lambda q: q not in missed, QD_KEYS)),
+                "markers_found": [q for q in QD_KEYS if q not in missed],
                 # {k: v.astype(int) for k, v in markers.items()},
                 "markers_recognised": 4 - len(missed),
                 "corners_calculated": None
@@ -1072,7 +1072,7 @@ class PhotoCreator(object):
                 "markers_pos": dict_map(list, self.last_markers),
                 "successful_correction": success,
                 "undistorted_saved": True,
-                "workspace_corner_ratio": float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
+                "workspace_corner_ratio": MAX_OBJ_HEIGHT / CAMERA_HEIGHT / 2,
                 "avg_color": color,
                 "marker_px_size": marker_size,
                 "error": err,

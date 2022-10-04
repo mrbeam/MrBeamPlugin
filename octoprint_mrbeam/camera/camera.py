@@ -5,7 +5,7 @@ import logging
 from threading import Thread, Lock, Event
 import time
 
-from exc import MrbCameraError
+from .exc import MrbCameraError
 
 from octoprint.settings import settings
 from .definitions import (
@@ -121,13 +121,13 @@ class BaseCamera(object):
         )
         if _minb < min_bright and _maxb > max_bright:
             self._logger.debug("Outside brightness bounds.")
-            compensate = float(max_bright) / _maxb
+            compensate = max_bright / _maxb
         elif _minb >= min_bright and _maxb > max_bright:
             self._logger.debug("Brghtness over compensated")
-            compensate = float(max_bright) / _maxb
+            compensate = max_bright / _maxb
         elif _minb < min_bright and _maxb <= max_bright:
             self._logger.debug("Brightness under compensated")
-            compensate = float(min_bright) / _minb
+            compensate = min_bright / _minb
         else:
             return
         # change the speed of compensation
@@ -192,7 +192,7 @@ class DummyCamera(BaseCamera):
         if not output:
             output = self.worker
         _input = self._input_files[0]
-        if isinstance(output, basestring):
+        if isinstance(output, str):
             os.copy2(_input, output)
         elif "write" in dir(output):
             with open(_input, "rb") as f:

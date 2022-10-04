@@ -1,5 +1,5 @@
 import json
-from collections import Iterable, Sized, Mapping
+from collections.abc import Iterable, Sized, Mapping
 import os
 import re
 import shutil
@@ -697,7 +697,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         exec_cmd("sudo resize2fs -p /dev/mmcblk0p2")
 
     def prefill_software_update_for_mrb_hw_info(self):
-        from software_update_information import get_version_of_pip_module
+        from .software_update_information import get_version_of_pip_module
 
         try:
             vers = get_version_of_pip_module("mrb-hw-info", "/usr/local/bin/pip")

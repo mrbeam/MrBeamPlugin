@@ -78,7 +78,7 @@ class UserNotificationSystem(object):
 
     def replay_notifications(self, *args, **kwargs):
         if self._stored_notifications:
-            self._send(self._stored_notifications.values())
+            self._send(list(self._stored_notifications.values()))
 
     def _send(self, notifications):
         self._plugin_manager.send_plugin_message(

@@ -3,7 +3,7 @@ try:
     from picamera.exc import PiCameraMMALError as _ConnErr
     from picamera.exc import PiCameraValueError as _ValueErr
     from picamera.exc import PiCameraRuntimeError as _RuntimeErr
-except ImportError, OSError:
+except (ImportError, OSError):
     import logging
 
     logging.warning("Could not import picamera")

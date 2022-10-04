@@ -26,14 +26,14 @@ import numpy as np
 from PIL import Image
 from PIL import ImageEnhance
 import base64
-import cStringIO
+import io
 import os.path
 import time
 import sys
 import re
-from img_separator import ImageSeparator
-from profiler import Profiler
-from job_params import JobParams
+from .img_separator import ImageSeparator
+from .profiler import Profiler
+from .job_params import JobParams
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
@@ -787,9 +787,9 @@ class ImageProcessor:
 
         # iterate over juicy pixels
         if direction_positive:
-            pixelrange = range(line_info["left"], line_info["right"] + 1)
+            pixelrange = list(range(line_info["left"], line_info["right"] + 1))
         else:
-            pixelrange = range(line_info["right"], line_info["left"] - 1, -1)
+            pixelrange = list(range(line_info["right"], line_info["left"] - 1, -1))
 
         row = line_info["row"]
 
@@ -973,7 +973,7 @@ class ImageProcessor:
             return value, ""
 
     def _join_gc_comments(self, *args):
-        l = filter(None, args)
+        l = [_f for _f in args if _f]
         if len(l) > 0:
             return "; " + ", ".join(l)
         else:
@@ -1027,7 +1027,7 @@ class ImageProcessor:
                 commaidx = dataUrl.find(",")
                 base64str = "\n" + dataUrl[commaidx:]
 
-            image_string = cStringIO.StringIO(base64.b64decode(base64str))
+            image_string = io.BytesIO(base64.b64decode(base64str))
             return Image.open(image_string)
         except:
             self.log.exception(
@@ -1039,9 +1039,9 @@ class ImageProcessor:
             return None
 
     def imgurl_to_gcode(self, url, w, h, x, y, file_id):
-        import urllib, cStringIO
+        import urllib.request, urllib.parse, urllib.error, io
 
-        file = cStringIO.StringIO(urllib.urlopen(url).read())
+        file = io.StringIO(urllib.request.urlopen(url).read())
         img = Image.open(file)
         imgArray = self.img_prepare(img, w, h)
         gcode = self.generate_gcode(imgArray, x, y, w, h, file_id)
@@ -1295,7 +1295,7 @@ if __name__ == "__main__":
         gcodefile = filename + ".gco"
 
     image = Image.open(path)
-    buffer = cStringIO.StringIO()
+    buffer = io.StringIO()
     image.save(buffer, format="PNG")
     img_str = base64.b64encode(buffer.getvalue())
     datauri = "data:image/png;base64," + img_str

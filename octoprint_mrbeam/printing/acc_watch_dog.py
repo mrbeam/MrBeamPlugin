@@ -62,9 +62,7 @@ class AccWatchDog(object):
             if self._commands
             else "unknown"
         )
-        self._logger.info(
-            "Log state. trigger: %s\n%s", trigger, t, self._get_state_str()
-        )
+        self._logger.info(f"Log state. trigger: {trigger}\n{t}\n{self._get_state_str()}")
 
     def do_regular_check(self):
         """
@@ -153,7 +151,7 @@ class AccWatchDog(object):
         for c, t in reversed(self._commands):
             cmd_str = (
                 c
-                if isinstance(c, basestring) or (isinstance(c, dict) and len(c) > 1)
+                if isinstance(c, str) or (isinstance(c, dict) and len(c) > 1)
                 else c.get("cmd", None)
             )
             cmds.append(
@@ -212,7 +210,7 @@ class AccWatchDog(object):
             )
             return []
 
-        for position, message in MESSAGES.iteritems():
+        for position, message in MESSAGES.items():
             # Check for the binary digits to be "on" for each warning message
             if (
                 len(throttled_binary) > position

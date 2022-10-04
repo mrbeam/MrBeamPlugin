@@ -59,8 +59,9 @@ def rootWrapper(a, b, c, d):
     return ()
 
 
-def bezierparameterize(((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))):
+def bezierparameterize(coordinates):
     # parametric bezier
+    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)) = coordinates
     x0 = bx0
     y0 = by0
     cx = 3 * (bx1 - x0)
@@ -74,10 +75,10 @@ def bezierparameterize(((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))):
     # ax,ay,bx,by,cx,cy,x0,y0=bezierparameterize(((bx0,by0),(bx1,by1),(bx2,by2),(bx3,by3)))
 
 
-def linebezierintersect(
-    ((lx1, ly1), (lx2, ly2)), ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))
-):
+def linebezierintersect(l_coordinates, b_coordinates):
     # parametric line
+    ((lx1, ly1), (lx2, ly2)) = l_coordinates
+    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)) = b_coordinates
     dd = lx1
     cc = lx2 - lx1
     bb = ly1
@@ -111,7 +112,8 @@ def linebezierintersect(
     return retval
 
 
-def bezierpointatt(((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)), t):
+def bezierpointatt(coordinates, t):
+    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)) = coordinates
     ax, ay, bx, by, cx, cy, x0, y0 = bezierparameterize(
         ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))
     )
@@ -120,7 +122,8 @@ def bezierpointatt(((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)), t):
     return x, y
 
 
-def bezierslopeatt(((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)), t):
+def bezierslopeatt(coordinates, t):
+    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)) = coordinates
     ax, ay, bx, by, cx, cy, x0, y0 = bezierparameterize(
         ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))
     )
@@ -129,7 +132,9 @@ def bezierslopeatt(((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)), t):
     return dx, dy
 
 
-def beziertatslope(((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)), (dy, dx)):
+def beziertatslope(b_coordinates, d_coordinates):
+    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)) = b_coordinates
+    (dy, dx) = d_coordinates
     ax, ay, bx, by, cx, cy, x0, y0 = bezierparameterize(
         ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))
     )
@@ -157,11 +162,15 @@ def beziertatslope(((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)), (dy, dx)):
     return retval
 
 
-def tpoint((x1, y1), (x2, y2), t):
-    return x1 + t * (x2 - x1), y1 + t * (y2 - y1)
+def tpoint(starting_coordinate, amplitude_coordinate, t):
+    (x1, y1) = starting_coordinate
+    (x2, y2) = amplitude_coordinate
+    ending_coordinate = x1 + t * (x2 - x1), y1 + t * (y2 - y1)
+    return ending_coordinate
 
 
-def beziersplitatt(((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)), t):
+def beziersplitatt(coordinates, t):
+    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)) = coordinates
     m1 = tpoint((bx0, by0), (bx1, by1), t)
     m2 = tpoint((bx1, by1), (bx2, by2), t)
     m3 = tpoint((bx2, by2), (bx3, by3), t)
@@ -193,7 +202,9 @@ University of Denmark.
 """
 
 
-def pointdistance((x1, y1), (x2, y2)):
+def pointdistance(coordinate_1, coordinate_2):
+    (x1, y1) = coordinate_1
+    (x2, y2) = coordinate_2
     return math.sqrt(((x2 - x1) ** 2) + ((y2 - y1) ** 2))
 
 
@@ -244,16 +255,15 @@ def Simpson(f, a, b, n_limit, tolerance):
         asum += bsum
         bsum = 0.0
         est0 = est1
-        for i in xrange(1, n, 2):
+        for i in range(1, n, 2):
             bsum += f(a + (i * interval))
             est1 = multiplier * (endsum + (2.0 * asum) + (4.0 * bsum))
     # print multiplier, endsum, interval, asum, bsum, est1, est0
     return est1
 
 
-def bezierlengthSimpson(
-    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)), tolerance=0.001
-):
+def bezierlengthSimpson(coordinates, tolerance=0.001):
+    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)) = coordinates
     global balfax, balfbx, balfcx, balfay, balfby, balfcy
     ax, ay, bx, by, cx, cy, x0, y0 = bezierparameterize(
         ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))
@@ -269,9 +279,8 @@ def bezierlengthSimpson(
     return Simpson(balf, 0.0, 1.0, 4096, tolerance)
 
 
-def beziertatlength(
-    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)), l=0.5, tolerance=0.001
-):
+def beziertatlength(coordinates, l=0.5, tolerance=0.001):
+    ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3)) = coordinates
     global balfax, balfbx, balfcx, balfay, balfby, balfcy
     ax, ay, bx, by, cx, cy, x0, y0 = bezierparameterize(
         ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))
@@ -332,7 +341,7 @@ if __name__ == "__main__":
 		print s, st
 	"""
     for curve in curves:
-        print beziertatlength(curve, 0.5)
+        print(beziertatlength(curve, 0.5))
 
 
 # vim: expandtab shiftwidth=4 tabstop=8 softtabstop=4 encoding=utf-8 textwidth=99

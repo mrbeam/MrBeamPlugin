@@ -86,7 +86,7 @@ class LaserheadHandler(object):
         Returns:
             str: laserhead model or None if Model name is not found
         """
-        laser_head_model_str_list = [v for (k, v) in self._LASERHEAD_MODEL_STRING_MAP.items()
+        laser_head_model_str_list = [v for (k, v) in list(self._LASERHEAD_MODEL_STRING_MAP.items())
                                      if ((v == str(self._current_used_lh_model)) or
                                          (k == str(self._current_used_lh_model_id)))]
         try:

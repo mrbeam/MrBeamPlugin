@@ -55,7 +55,7 @@ class WizardConfig:
         elif self._is_beta_news_wizard:
             self._current_wizard_config = self._beta_news_wizard_config()
 
-        for wizard, config in self._current_wizard_config.iteritems():
+        for wizard, config in self._current_wizard_config.items():
             required = config.get("required", False)
             if required:
                 config.pop("required", None)
@@ -76,7 +76,7 @@ class WizardConfig:
         elif self._is_beta_news_wizard:
             wizard_tabs = self._beta_news_wizard_config()
 
-        for tab, data in wizard_tabs.iteritems():
+        for tab, data in wizard_tabs.items():
             link_ids.append(data["div"] + "_link")
 
         return link_ids

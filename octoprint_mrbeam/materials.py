@@ -81,7 +81,7 @@ class Materials(object):
         res = True
 
         key_list = key
-        if isinstance(key_list, basestring):
+        if isinstance(key_list, str):
             key_list = [key_list]
 
         if key_list:
@@ -144,12 +144,12 @@ class Materials(object):
             raise Exception("You need to load custom_materials before trying to save.")
         try:
             data = dict(custom_materials=self.custom_materials)
-            with open(self.custom_materials_file, "wb") as new_yaml:
+            with open(self.custom_materials_file, "w") as new_yaml:
                 yaml.safe_dump(
                     data,
                     new_yaml,
                     default_flow_style=False,
-                    indent="  ",
+                    indent=2,
                     allow_unicode=True,
                 )
             self.custom_materials_loaded = True

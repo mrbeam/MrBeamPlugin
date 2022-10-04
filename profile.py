@@ -9,7 +9,7 @@ except ImportError:
     exit("Please install cProfile and pstats.")
 
 from threading import Timer
-import StringIO
+import io
 import time
 
 BENCH_FILE = "octoprint.pstats"
@@ -132,7 +132,7 @@ def dump_stats(
     if filename:
         profiler.dump_stats(filename)
     if lines:
-        s = StringIO.StringIO()
+        s = io.StringIO()
         stats = pstats.Stats(profiler, stream=s).sort_stats(sortby)
         stats.print_stats(lines)
         print(s.getvalue())
@@ -143,7 +143,7 @@ def read_bench(filename, sortby="tottime", lines=60, regex=None):
 
     Poor man's analysis tool - It is recommended to use RunSnakeRun.
     """
-    s = StringIO.StringIO()
+    s = io.StringIO()
     stats = pstats.Stats(filename, stream=s).sort_stats(sortby)
     if regex is None:
         stats.print_stats(lines)

@@ -95,8 +95,8 @@ class Laser(Printer):
             z=0,
         )
         self._comm.rescue_from_home_pos()
-        command = "G92X{x}Y{y}Z{z}".format(**params)
-        self.commands(["$H", command, "G90", "G21"])
+        command = "G92X{x}Y{y}Z{z}".format(**params).encode()
+        self.commands([b"$H", command, b"G90", b"G21"])
 
     def is_homed(self):
         return self._stateMonitor._machinePosition == self.HOMING_POSITION
@@ -142,7 +142,7 @@ class Laser(Printer):
         movement_speed = min(
             printer_profile["axes"]["x"]["speed"], printer_profile["axes"]["y"]["speed"]
         )
-        self.commands(["G90", "G0 X%.3f Y%.3f F%d" % (x, y, movement_speed)])
+        self.commands([b"G90", b"G0 X%.3f Y%.3f F%d" % (x, y, movement_speed)])
 
     def increase_passes(self):
         """increase the number of passes by one."""

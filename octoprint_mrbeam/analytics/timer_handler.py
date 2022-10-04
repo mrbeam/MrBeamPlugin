@@ -6,7 +6,7 @@ import requests
 import os
 from threading import Timer
 
-from analytics_keys import AnalyticsKeys as ak
+from .analytics_keys import AnalyticsKeys as ak
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 
@@ -262,7 +262,7 @@ class TimerHandler:
             sw_versions = self._get_software_versions()
 
             if self._analytics_handler.is_analytics_enabled():
-                for name, conf in folders.iteritems():
+                for name, conf in folders.items():
                     cmd = 'find "{folder}" -type f -exec md5sum {{}} \; | sort -k 2 | md5sum'.format(
                         folder=conf.get("src_path")
                     )
@@ -303,7 +303,7 @@ class TimerHandler:
             return result
 
         # Reaching this section means we are OK so far
-        for name, info in software_info.iteritems():
+        for name, info in software_info.items():
             commit_hash = info["information"]["local"].get("name", None)
             if commit_hash is not None:
                 # regex: "Commit 89nhfbffnf7f8fbfgfndhf" --> "89nhfbffnf7f8fbfgfndhf"
@@ -323,7 +323,7 @@ class TimerHandler:
             ]
 
             file_counter = {}
-            for name, info in all_files.iteritems():
+            for name, info in all_files.items():
 
                 file_type = info.get("type", None)
                 # All the design files are called model (everything's that not gcode) but we want to know the exact type

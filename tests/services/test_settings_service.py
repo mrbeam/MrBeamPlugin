@@ -175,7 +175,7 @@ class TestSettingsService(TestCase):
         self.assertIsNotNone(settings_model)
         self.assertIsNotNone(settings_model.about)
         self.assertIsNotNone(settings_model.about.support_documents)
-        self.assertEquals(settings_model.about.support_documents, [])
+        self.assertEqual(settings_model.about.support_documents, [])
 
     def _validate_settings_model(self, settings_model):
         self.assertIsNotNone(settings_model)
@@ -189,14 +189,14 @@ class TestSettingsService(TestCase):
                 self.assertIsNotNone(document_link)
                 self.assertIsNotNone(document_link.language)
                 self.assertIsNotNone(document_link.language.name)
-                self.assertNotEquals(document_link.language.name, '')
-                self.assertNotEquals(document_link.language.name, ' ')
+                self.assertNotEqual(document_link.language.name, '')
+                self.assertNotEqual(document_link.language.name, ' ')
                 self.assertIsNotNone(document_link.language.value)
-                self.assertNotEquals(document_link.language.value, '')
-                self.assertNotEquals(document_link.language.value, ' ')
+                self.assertNotEqual(document_link.language.value, '')
+                self.assertNotEqual(document_link.language.value, ' ')
                 self.assertIsNotNone(document_link.url)
-                self.assertNotEquals(document_link.url, '')
-                self.assertNotEquals(document_link.url, ' ')
+                self.assertNotEqual(document_link.url, '')
+                self.assertNotEqual(document_link.url, ' ')
 
     def _validate_empty_material_store_settings(self, settings_model):
         self.assertIsNotNone(settings_model)

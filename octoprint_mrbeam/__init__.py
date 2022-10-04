@@ -1,7 +1,8 @@
 # coding=utf-8
-from __future__ import absolute_import
+import shutil
 
-import __builtin__
+from . import cv2_override
+import builtins
 import copy
 import json
 import operator
@@ -41,8 +42,6 @@ IS_X86 = platform.machine() == "x86_64"
 from ._version import get_versions
 
 __version__ = get_versions()["version"]
-if isinstance(__version__, unicode):
-    __version__ = unicodedata.normalize("NFKD", __version__).encode("ascii", "ignore")
 
 del get_versions
 
@@ -109,9 +108,9 @@ from octoprint_mrbeam import camera
 from octoprint_mrbeam.util.version_comparator import compare_pep440_versions
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
-__builtin__._mrbeam_plugin_implementation = None
-__builtin__.__package_path__ = os.path.dirname(__file__)
-__plugin_pythoncompat__ = "<2.8"  # ">=2.7,<4"
+builtins._mrbeam_plugin_implementation = None
+builtins.__package_path__ = os.path.dirname(__file__)
+__plugin_pythoncompat__ = ">=3.10"  # ">=2.7,<4"
 
 
 class MrBeamPlugin(
@@ -1286,7 +1285,7 @@ class MrBeamPlugin(
                 materials(self).delete_custom_material(data["delete"])
 
             if "put" in data and isinstance(data["put"], dict):
-                for key, m in data["put"].iteritems():
+                for key, m in data["put"].items():
                     materials(self).put_custom_material(key, m)
 
             res["custom_materials"] = materials(self).get_custom_materials()
@@ -1305,7 +1304,7 @@ class MrBeamPlugin(
 
         try:
             if "put" in data and isinstance(data["put"], dict):
-                for key, m in data["put"].iteritems():
+                for key, m in data["put"].items():
                     messages(self).put_custom_message(key, m)
 
             res["messages"] = messages(self).get_custom_messages()
@@ -1346,7 +1345,7 @@ class MrBeamPlugin(
     # simpleApiCommand: generate_backlash_compenation_pattern_gcode
     def generate_backlash_compenation_pattern_gcode(self, data):
         srcFile = (
-            __builtin__.__package_path__
+            builtins.__package_path__
             + "/static/gcode/backlash_compensation_x@cardboard.gco"
         )
         with open(srcFile, "r") as fh:
@@ -1920,12 +1919,12 @@ class MrBeamPlugin(
                                 path = self.mrb_file_manager.path_on_disk(
                                     f["origin"], f["name"]
                                 )
-                                wfd.write("\n; " + f["name"] + "\n")
+                                wfd.write(f"\n; {f['name']}\n".encode())
 
                                 with open(path, "rb") as fd:
                                     shutil.copyfileobj(fd, wfd, 1024 * 1024 * 10)
 
-                                wfd.write("\nM05\n")  # ensure that the laser is off.
+                                wfd.write(b"\nM05\n")  # ensure that the laser is off.
                                 self._logger.info("Slicing finished: %s" % path)
 
                         if select_after_slicing or print_after_slicing:
@@ -2048,8 +2047,8 @@ class MrBeamPlugin(
 
     def on_api_command(self, command, data):
         if command == "position":
-            if isinstance(data["x"], (int, long, float)) and isinstance(
-                data["y"], (int, long, float)
+            if isinstance(data["x"], (int, float)) and isinstance(
+                data["y"], (int, float)
             ):
                 self._printer.position(data["x"], data["y"])
             else:
@@ -2611,10 +2610,8 @@ class MrBeamPlugin(
                 self._logger.exception("Conversion failed: {0}".format(msg))
                 return False, msg
             except Exception as e:
-                print(e.__doc__)
-                print(e.message)
                 self._logger.exception(
-                    "Conversion error ({0}): {1}".format(e.__doc__, e.message)
+                    "Conversion error ({0}): {1}".format(e.__doc__, e)
                 )
                 return False, "Unknown error, please consult the log file"
 
@@ -2653,8 +2650,8 @@ class MrBeamPlugin(
     def _save_profile(self, path, profile, allow_overwrite=True):
         import yaml
 
-        with open(path, "wb") as f:
-            yaml.safe_dump(profile, f, indent="  ", allow_unicode=True)
+        with open(path, "w") as f:
+            yaml.safe_dump(profile, f, indent=2, allow_unicode=True)
 
     @logExceptions
     def _convert_to_engine(self, profile_path):
@@ -2961,7 +2958,7 @@ class MrBeamPlugin(
 
         if not branch:
             try:
-                command = "cd /home/pi/MrBeamPlugin/; git branch | grep '*'"
+                command = "cd /home/pi/mrb3-core-plugin/; git branch | grep '*'"
                 output = check_output(command, shell=True)
                 branch = output[1:].strip()
             except Exception as e:
@@ -3181,7 +3178,7 @@ __plugin_name__ = "Mr Beam Laser Cutter"
 def __plugin_load__():
     global __plugin_implementation__
     __plugin_implementation__ = MrBeamPlugin()
-    __builtin__._mrbeam_plugin_implementation = __plugin_implementation__
+    builtins._mrbeam_plugin_implementation = __plugin_implementation__
     # MRBEAM_PLUGIN_IMPLEMENTATION = __plugin_implementation__
 
     global __plugin_settings_overlay__

@@ -1,6 +1,6 @@
 import math
-import bezmisc
-from point import Point
+from . import bezmisc
+from .point import Point
 
 ################################################################################
 ###
@@ -77,12 +77,12 @@ def biarc(sp1, sp2, z1, z2, depth=0):
     elif not asmall:
         discr = b * b - 4 * a * c
         if discr < 0:
-            raise ValueError, (a, b, c, discr)
+            raise ValueError(a, b, c, discr)
         disq = discr ** 0.5
         beta1 = (-b - disq) / 2 / a
         beta2 = (-b + disq) / 2 / a
         if beta1 * beta2 > 0:
-            raise ValueError, (a, b, c, disq, beta1, beta2)
+            raise ValueError(a, b, c, disq, beta1, beta2)
         beta = max(beta1, beta2)
     elif asmall and bsmall:
         return biarc_split(sp1, sp2, z1, z2, depth)

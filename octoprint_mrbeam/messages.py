@@ -93,12 +93,12 @@ class Messages(object):
             raise Exception("You need to load custom_messages before trying to save.")
         try:
             data = dict(messages=self.messages)
-            with open(self.custom_messages_file, "wb") as new_yaml:
+            with open(self.custom_messages_file, "w") as new_yaml:
                 yaml.safe_dump(
                     data,
                     new_yaml,
                     default_flow_style=False,
-                    indent="  ",
+                    indent=2,
                     allow_unicode=True,
                 )
             self.custom_messages_loaded = True

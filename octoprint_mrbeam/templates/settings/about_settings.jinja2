@@ -27,7 +27,7 @@
                     {% if mac_addrs %}
                     <div><strong>{{ _('Network interfaces') }}:</strong>
 						<ul class="list-unstyled">
-							{% for ifc, mac in mac_addrs.iteritems() %}
+							{% for ifc, mac in mac_addrs.items() %}
 							<li>{{ ifc }} (MAC: {{ mac }})</li>
 							{% endfor %}
 						</ul>

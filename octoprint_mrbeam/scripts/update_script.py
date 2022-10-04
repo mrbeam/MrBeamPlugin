@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import json
 import os
 import re
@@ -28,7 +26,7 @@ _logger = mrb_logger("octoprint.plugins.mrbeam.softwareupdate.updatescript")
 
 
 UPDATE_CONFIG_NAME = "mrbeam"
-REPO_NAME = "MrBeamPlugin"
+REPO_NAME = "mrb3-core-plugin"
 MAIN_SRC_FOLDER_NAME = "octoprint_mrbeam"
 PLUGIN_NAME = "Mr_Beam"
 DEFAULT_OPRINT_VENV = "/home/pi/oprint/bin/pip"

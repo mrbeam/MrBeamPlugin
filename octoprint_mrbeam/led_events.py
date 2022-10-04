@@ -175,7 +175,7 @@ class LedEventListener(CommandTrigger):
                 self._subscriptions[event] = []
             self._subscriptions[event].append((self.LED_EVENTS[event], "system", False))
 
-        self.subscribe(self.LED_EVENTS.keys())
+        self.subscribe(list(self.LED_EVENTS.keys()))
 
     def eventCallback(self, event, payload=None):
         # really, just copied this one from OctoPrint to add my debug log line.

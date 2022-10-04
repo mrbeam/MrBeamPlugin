@@ -57,20 +57,20 @@ class Profiler:
 
     def getSummary(self):
         self.stopAll()
-        summary = map(lambda x: "%f %s %s: %.4fs" % x, self.eventlog)
+        summary = ["%f %s %s: %.4fs" % x for x in self.eventlog]
         return (
             "Profiling session %s (total: %.4f):\n" % (self.name, self.sessionDuration)
         ) + "\n".join(summary)
 
     def getShortSummary(self):
         self.stopAll()
-        summary = map(
-            lambda x: ("% 6.2f%% %s" % (100 * x[0] / self.sessionDuration, x[1]))
-            if (x[2] == "stop")
-            else None,
-            self.eventlog,
-        )
-        summary = filter(None, summary)
+
+        summary = []
+        for x in self.eventlog:
+            if x[2] == "stop":
+                val = 100 * x[0] / self.sessionDuration
+                summary.append(f"{val:6.2f}% {x[1]}")
+
         return (
             ("Profiling session %s:\n" % self.name)
             + "\n".join(summary)

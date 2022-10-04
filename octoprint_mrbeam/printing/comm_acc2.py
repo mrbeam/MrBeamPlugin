@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import
 
 __author__ = (
     "Florian Becker <florian@mr-beam.org> based on work by Gina Häußge and David Braam"
@@ -17,7 +16,7 @@ import glob
 import time
 import serial
 import re
-import Queue
+import queue
 import random
 
 from flask_babel import gettext
@@ -130,13 +129,13 @@ class MachineCom(oprintMachineCom):
     GRBL_STATE_IDLE = "Idle"
     GRBL_STATE_RUN = "Run"
 
-    COMMAND_STATUS = "?"
-    COMMAND_HOLD = "!"
-    COMMAND_RESUME = "~"
+    COMMAND_STATUS = b"?"
+    COMMAND_HOLD = b"!"
+    COMMAND_RESUME = b"~"
     COMMAND_RESET = b"\x18"
-    COMMAND_FLUSH = "FLUSH"
-    COMMAND_SYNC = "SYNC"
-    COMMAND_RESET_ALARM = "$X"
+    COMMAND_FLUSH = b"FLUSH"
+    COMMAND_SYNC = b"SYNC"
+    COMMAND_RESET_ALARM = b"$X"
 
     STATUS_POLL_FREQUENCY_OPERATIONAL = 2.0
     STATUS_POLL_FREQUENCY_PRINTING = 1.0  # set back top 1.0 if it's not causing gcode24
@@ -213,7 +212,7 @@ class MachineCom(oprintMachineCom):
         self._lines_recoverd_total = 0
         self._pauseWaitStartTime = None
         self._pauseWaitTimeLost = 0.0
-        self._commandQueue = Queue.Queue()
+        self._commandQueue = queue.Queue()
         self._send_event = CountedEvent(max=50)
         self._finished_currentFile = False
         self._pause_delay_time = 0
@@ -415,23 +414,23 @@ class MachineCom(oprintMachineCom):
                     line = self._readline()
                     if line is None:
                         break
-                    if line.strip() is not "":
+                    if line.strip() != b"":
                         self._timeout = get_new_timeout("communication")
-                    if line.startswith("<"):  # status report
+                    if line.startswith(b"<"):  # status report
                         self._handle_status_report(line)
-                    elif line.startswith("ok"):  # ok message :)
+                    elif line.startswith(b"ok"):  # ok message :)
                         self._handle_ok_message(line)
-                    elif line.startswith("err"):  # error message
+                    elif line.startswith(b"err"):  # error message
                         self._handle_error_message(line)
-                    elif line.startswith("ALA"):  # ALARM message
+                    elif line.startswith(b"ALA"):  # ALARM message
                         self._handle_alarm_message(line)
-                    elif line.startswith("["):  # feedback message
+                    elif line.startswith(b"["):  # feedback message
                         self._handle_feedback_message(line)
-                    elif line.startswith("Grb"):  # Grbl startup message
+                    elif line.startswith(b"Grb"):  # Grbl startup message
                         self._handle_startup_message(line)
-                    elif line.startswith("Corru"):  # Corrupted line:
+                    elif line.startswith(b"Corru"):  # Corrupted line:
                         self._handle_g24avoided_corrupted_line(line)
-                    elif line.startswith("$"):  # Grbl settings
+                    elif line.startswith(b"$"):  # Grbl settings
                         self._handle_settings_message(line)
                     elif not line and (
                         self._state is self.STATE_CONNECTING
@@ -545,7 +544,7 @@ class MachineCom(oprintMachineCom):
                 return
             elif self._cmd is None:
                 tmp = self._commandQueue.get()
-                if isinstance(tmp, basestring):
+                if isinstance(tmp, str):
                     self._cmd = {"cmd": tmp}
                 elif isinstance(tmp, dict):
                     self._cmd = tmp
@@ -725,7 +724,7 @@ class MachineCom(oprintMachineCom):
                     )
                     self._logger.error(msg, analytics=True)
                     self._handle_alarm_message(
-                        "Command too long to send to GRBL.",
+                        b"Command too long to send to GRBL.",
                         code=self.ALARM_CODE_COMMAND_TOO_LONG,
                     )
                     self._cmd.pop("cmd", None)
@@ -742,7 +741,7 @@ class MachineCom(oprintMachineCom):
                         self._acc_line_buffer.set_clean()
                     self._log("Send: %s" % (my_cmd), is_command=True)
                     self._acc_line_buffer.add(
-                        my_cmd + "\n",
+                        my_cmd + b"\n",
                         intensity=self._current_intensity,
                         feedrate=self._current_feedrate,
                         pos_x=self._current_pos_x,
@@ -769,7 +768,7 @@ class MachineCom(oprintMachineCom):
                                 terminal_as_comm=True,
                             )
                     try:
-                        self._serial.write(bytes(my_cmd + "\n"))
+                        self._serial.write(my_cmd + b"\n")
                         self._process_command_phase("sent", my_cmd)
                         self._cmd.pop("cmd", None)
                     # except serial.SerialException:
@@ -790,7 +789,7 @@ class MachineCom(oprintMachineCom):
             my_cmd = cmd_obj.get("cmd", "")
             self._log("Send: %s" % my_cmd)
             try:
-                self._serial.write(bytes(my_cmd))
+                self._serial.write(my_cmd)
                 self._process_command_phase("sent", my_cmd)
             except serial.SerialException:
                 self._logger.info(
@@ -801,20 +800,20 @@ class MachineCom(oprintMachineCom):
                 self._errorValue = get_exception_string()
                 self.close(True)
 
-    def _calc_checksum(self, cmd):
+    def _calc_checksum(self, cmd: bytes) -> int:
         checksum = 0
-        for c in list(cmd):
+        for c in list(cmd.decode()):
             # whitespaces are ignored for checksum!
             if c != " ":
                 checksum += ord(c)
         checksum = checksum % 256
         return checksum
 
-    def _add_checksum_to_cmd(self, cmd):
+    def _add_checksum_to_cmd(self, cmd: bytes) -> bytes | None:
         if cmd is None:
             return None
-        if cmd.find("*") < 0 and cmd not in (self.COMMAND_FLUSH, self.COMMAND_SYNC):
-            cmd = "{cmd}*{chk}".format(cmd=cmd, chk=self._calc_checksum(cmd))
+        if cmd.find(b"*") < 0 and cmd not in (self.COMMAND_FLUSH, self.COMMAND_SYNC):
+            cmd = f"{cmd.decode()}*{self._calc_checksum(cmd)}".encode()
         return cmd
 
     def _process_rt_commands(self):
@@ -831,10 +830,9 @@ class MachineCom(oprintMachineCom):
             self._sendCommand(self.COMMAND_RESET)
             self._real_time_commands["soft_reset"] = False
 
-    def _handle_rt_command(self, cmd):
-        """If cmd is a RT command, the RT command is sent and True is returned,
-        False otherwise.
-
+    def _handle_rt_command(self, cmd: bytes) -> bool:
+        """
+        If cmd is a RT command, the RT command is sent and True is returned, False otherwise.
         :param cmd:
         :return:
         """
@@ -901,7 +899,7 @@ class MachineCom(oprintMachineCom):
             ser.open()
             return ser
 
-        serial_factories = self._serial_factory_hooks.items() + [("default", default)]
+        serial_factories = list(self._serial_factory_hooks.items()) + [("default", default)]
         for name, factory in serial_factories:
             try:
                 serial_obj = factory(
@@ -939,7 +937,7 @@ class MachineCom(oprintMachineCom):
                 return True
         return False
 
-    def _readline(self):
+    def _readline(self) -> bytes | None:
         if self._serial is None:
             return None
         ret = None
@@ -950,12 +948,12 @@ class MachineCom(oprintMachineCom):
         try:
             ret = self._serial.readline()
             self._send_event.set()
-            if "ok" in ret:
+            if "ok" in ret.decode():
                 cmd = self._acc_line_buffer.acknowledge_cmd()
                 if self._recovery_ignore_further_alarm_responses:
                     recovery_str = "RECOVERY END"
             elif (
-                "err" in ret or "ALARM" in ret
+                "err" in ret.decode() or "ALARM" in ret.decode()
             ):  # TODO: are all ALARM messages to be counted?
                 cmd = self._acc_line_buffer.decline_cmd()
             cmd = AccLineBuffer.get_cmd_from_item(cmd)
@@ -980,7 +978,7 @@ class MachineCom(oprintMachineCom):
             )
             pass
         if ret is None or ret == "":
-            return ""
+            return b""
         try:
             if cmd:
                 self._log(
@@ -1023,18 +1021,18 @@ class MachineCom(oprintMachineCom):
 
     def _move_home(self):
         self._logger.debug("_move_home() called")
-        self.sendCommand("M5")
+        self.sendCommand(b"M5")
         h_pos = self.get_home_position()
         command = "G0X{x}Y{y}".format(x=h_pos[0], y=h_pos[1])
-        self.sendCommand(command)
-        self.sendCommand("M9")
+        self.sendCommand(command.encode())
+        self.sendCommand(b"M9")
 
-    def _handle_status_report(self, line):
+    def _handle_status_report(self, line: bytes):
         match = None
         if self._grbl_version == self.GRBL_VERSION_20170919_22270fa:
-            match = self.pattern_grbl_status_legacy.match(line)
+            match = self.pattern_grbl_status_legacy.match(line.decode())
         else:
-            match = self.pattern_grbl_status.match(line)
+            match = self.pattern_grbl_status.match(line.decode())
         if not match:
             self._logger.warn(
                 "GRBL status string did not match pattern. GRBL version: %s, status string: %s",
@@ -1167,23 +1165,23 @@ class MachineCom(oprintMachineCom):
         # 	# ideally we never poll statuses during engravings
         # 	self._reset_status_polling_waittime()
 
-    def _handle_error_message(self, line):
-        """Handles error messages from GRBL.
-
-        :param line: GRBL error respnse
+    def _handle_error_message(self, line: bytes):
+        """
+        Handles error messages from GRBL
+        :param line: GRBL error response
         """
         line = line.rstrip() if line else line
         # grbl repots an error if there was never any data written to it's eeprom.
         # it's going to write default values to eeprom and everything is fine then....
-        if "EEPROM read fail" in line:
+        if b"EEPROM read fail" in line:
             self._logger.debug(
                 "_handle_error_message() Ignoring this error message: '%s'", line
             )
             return
-        if "Alarm lock" in line and self._recovery_ignore_further_alarm_responses:
+        if b"Alarm lock" in line and self._recovery_ignore_further_alarm_responses:
             # During a recovery we can simply ignore these.
             return
-        if "Line overflow" in line:
+        if b"Line overflow" in line:
             # If we get this from grbl we can assume that some newline-characters got lost
             # and we can treat this as an MRB_CHECKSUM_ERROR.
             # We can safely assume this because we filter too long commands before sending them.
@@ -1200,12 +1198,12 @@ class MachineCom(oprintMachineCom):
         self._fire_print_failed()
         self._changeState(self.STATE_LOCKED)
 
-    def _handle_alarm_message(self, line, code=None):
+    def  _handle_alarm_message(self, line: bytes, code=None):
         line = line.rstrip() if line else line
         errorMsg = None
         throwErrorMessage = True
         dumpTerminal = True
-        if "MRB_CHECKSUM_ERROR" in line:
+        if b"MRB_CHECKSUM_ERROR" in line:
             self._start_recovery_thread()
             # no need to stop lasering and report it to the user, we want to recover this
             return
@@ -1213,12 +1211,12 @@ class MachineCom(oprintMachineCom):
             # this is not really a GRBL alarm state. Hackey to have it handled as one...
             errorMsg = line or str(self.ALARM_CODE_COMMAND_TOO_LONG)
             dumpTerminal = False
-        elif "Hard/soft limit" in line:
+        elif b"Hard/soft limit" in line:
             errorMsg = "GRBL: Machine Limit Hit. Please reset the machine and do a homing cycle"
-        elif "Abort during cycle" in line:
+        elif b"Abort during cycle" in line:
             errorMsg = "GRBL: Soft-reset detected. Please do a homing cycle"
             throwErrorMessage = False
-        elif "Probe fail" in line:
+        elif b"Probe fail" in line:
             errorMsg = "GRBL: Probing has failed. Please reset the machine and do a homing cycle"
         else:
             errorMsg = "GRBL: alarm message: '{}'".format(line)
@@ -1246,11 +1244,11 @@ class MachineCom(oprintMachineCom):
         self._openSerial()
 
     def _handle_feedback_message(self, line):
-        if line[1:].startswith("Res"):  # [Reset to continue]
+        if line[1:].startswith(b"Res"):  # [Reset to continue]
             # send ctrl-x back immediately '\x18' == ctrl-x
             self._serial.write(list(bytearray("\x18")))
             pass
-        elif line[1:].startswith("'$H"):  # ['$H'|'$X' to unlock]
+        elif line[1:].startswith(b"'$H"):  # ['$H'|'$X' to unlock]
             self._changeState(self.STATE_LOCKED)
             if self.isOperational():
                 errorMsg = "GRBL: Machine reset."
@@ -1271,18 +1269,18 @@ class MachineCom(oprintMachineCom):
                     dict(error=self.getErrorString(), analytics=False),
                 )
                 self._fire_print_failed()
-        elif line[1:].startswith("G24"):  # [G24_AVOIDED]
+        elif line[1:].startswith(b"G24"):  # [G24_AVOIDED]
             self.g24_avoided_message = []
             self._logger.warn("G24_AVOIDED (Corrupted line data will follow)")
-        elif line[1:].startswith("Cau"):  # [Caution: Unlocked]
+        elif line[1:].startswith(b"Cau"):  # [Caution: Unlocked]
             pass
-        elif line[1:].startswith("Ena"):  # [Enabled]
+        elif line[1:].startswith(b"Ena"):  # [Enabled]
             pass
-        elif line[1:].startswith("Dis"):  # [Disabled]
+        elif line[1:].startswith(b"Dis"):  # [Disabled]
             pass
 
-    def _handle_startup_message(self, line):
-        match = self.pattern_grbl_version.match(line)
+    def _handle_startup_message(self, line: bytes):
+        match = self.pattern_grbl_version.match(line.decode())
         if match:
             self._grbl_version = match.group("version")
         else:
@@ -1357,12 +1355,12 @@ class MachineCom(oprintMachineCom):
                 "G24_AVOIDED Exception in _handle_g24_avoided_message(): "
             )
 
-    def _handle_settings_message(self, line):
-        """Handles grbl settings message like '$130=515.1'.
-
+    def _handle_settings_message(self, line: bytes):
+        """
+        Handles grbl settings message like '$130=515.1'
         :param line:
         """
-        match = self.pattern_grbl_setting.match(line)
+        match = self.pattern_grbl_setting.match(line.decode())
         # there are a bunch of responses that do not match and it's ok.
         if match:
             id = int(match.group("id"))
@@ -1435,7 +1433,7 @@ class MachineCom(oprintMachineCom):
             time.sleep(1.0)
             cmd_obj = self._acc_line_buffer.get_last_responded()
             restart_commands = [
-                " ",  # send a new line before $X to make sure, grbl regards it as a new command.
+                b" ",  # send a new line before $X to make sure, grbl regards it as a new command.
                 self._add_checksum_to_cmd(self.COMMAND_RESET_ALARM),
             ]
             if cmd_obj and cmd_obj["i"] is not None:
@@ -1444,7 +1442,7 @@ class MachineCom(oprintMachineCom):
                 # This is the intensity value which was current BEFORE this command. It might be different from
                 # a S-value within the command causing the checksum error.
                 restart_commands.append(
-                    self._add_checksum_to_cmd("S{}".format(int(cmd_obj["i"])))
+                    self._add_checksum_to_cmd(f"S{int(cmd_obj['i'])}".encode())
                 )
 
             recover_cmd = restart_commands.pop(0)
@@ -1498,14 +1496,14 @@ class MachineCom(oprintMachineCom):
 
     def _refresh_grbl_settings(self):
         self._grbl_settings = dict()
-        self.sendCommand("$$")
+        self.sendCommand(b"$$")
 
     def _get_string_loaded_grbl_settings(self, settings=None):
         my_grbl_settings = (
             settings or self._grbl_settings.copy()
         )  # to avoid race conditions
         log = []
-        for id, data in sorted(my_grbl_settings.iteritems()):
+        for id, data in sorted(my_grbl_settings.items()):
             log.append(
                 "${id}={val} ({comment})".format(
                     id=id, val=data["value"], comment=data["comment"]
@@ -1548,17 +1546,17 @@ class MachineCom(oprintMachineCom):
                     len(my_grbl_settings),
                     settings_count,
                 )
-                for id, value in sorted(settings_expected.iteritems()):
-                    commands.append("${id}={val}".format(id=id, val=value))
+                for id, value in sorted(settings_expected.items()):
+                    commands.append(f"${id}={value}".encode())
             else:
-                for id, value in sorted(settings_expected.iteritems()):
+                for id, value in sorted(settings_expected.items()):
                     if not id in my_grbl_settings:
                         self._logger.error(
                             "GRBL Settings $%s - Missing entry! Should be: %s",
                             id,
                             value,
                         )
-                        commands.append("${id}={val}".format(id=id, val=value))
+                        commands.append("${id}={val}".format(id=id, val=value).encode())
                     elif my_grbl_settings[id]["value"] != value:
                         self._logger.error(
                             "GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
@@ -1567,7 +1565,7 @@ class MachineCom(oprintMachineCom):
                             my_grbl_settings[id]["comment"],
                             value,
                         )
-                        commands.append("${id}={val}".format(id=id, val=value))
+                        commands.append("${id}={val}".format(id=id, val=value).encode())
 
             if len(commands) > 0:
                 msg = "GRBL Settings - Verification: FAILED"
@@ -1612,10 +1610,10 @@ class MachineCom(oprintMachineCom):
                 self._log(msg)
 
     def _process_command_phase(
-        self, phase, command, command_type=None, gcode=None, subcode=None, tags=None
-    ):
+        self, phase: str, command: bytes, command_type=None, gcode: str | None = None, subcode=None, tags=None
+    ) -> dict:
         cmd_obj = command
-        if isinstance(command, basestring):
+        if isinstance(command, bytes):
             cmd_obj = {"cmd": command}
         if phase not in ("queuing", "queued", "sending", "sent"):
             return cmd_obj
@@ -1628,12 +1626,12 @@ class MachineCom(oprintMachineCom):
             gcodeHandler = "_gcode_" + gcode + "_" + phase
             if hasattr(self, gcodeHandler):
                 handler_result = getattr(self, gcodeHandler)(
-                    command, cmd_type=command_type
+                    command.decode(), cmd_type=command_type
                 )
                 if handler_result is None:
                     cmd_obj = {"cmd": command}
-                elif isinstance(handler_result, basestring):
-                    cmd_obj["cmd"] = handler_result
+                elif isinstance(handler_result, str):
+                    cmd_obj["cmd"] = handler_result.encode()
                 elif isinstance(handler_result, dict):
                     cmd_obj = handler_result
 
@@ -1648,12 +1646,12 @@ class MachineCom(oprintMachineCom):
             colors,
         )
 
-    def _gcode_command_for_cmd(self, cmd):
-        """Tries to parse the provided ``cmd`` and extract the GCODE command
-        identifier from it (e.g. "G0" for "G0 X10.0").
+    def _gcode_command_for_cmd(self, cmd: bytes) -> str | None:
+        """
+        Tries to parse the provided ``cmd`` and extract the GCODE command identifier from it (e.g. "G0" for "G0 X10.0").
 
         Arguments:
-            cmd (str): The command to try to parse.
+            cmd: The command to try to parse.
 
         Returns:
             str or None: The GCODE command identifier if it could be parsed, or None if not.
@@ -1666,7 +1664,7 @@ class MachineCom(oprintMachineCom):
         if cmd == self.COMMAND_RESUME:
             return "Resume"
 
-        gcode = self._regex_command.search(cmd)
+        gcode = self._regex_command.search(cmd.decode())
         if not gcode:
             return None
 
@@ -1706,7 +1704,7 @@ class MachineCom(oprintMachineCom):
         else:
             self._changeState(nextState)
 
-        if self.sending_thread is None or not self.sending_thread.isAlive():
+        if self.sending_thread is None or not self.sending_thread.is_alive():
             self._start_sending_thread()
 
         payload = dict(
@@ -1928,7 +1926,7 @@ class MachineCom(oprintMachineCom):
 
             if (
                 self.monitoring_thread is not None
-                and not self.monitoring_thread.isAlive()
+                and not self.monitoring_thread.is_alive()
             ):
                 # will open serial connection
                 self._start_monitoring_thread()
@@ -2058,15 +2056,15 @@ class MachineCom(oprintMachineCom):
             "rescue_from_home_pos() Rescuing laserhead from home position... (retry: %s)",
             retry,
         )
-        self.sendCommand("$X")
+        self.sendCommand(b"$X")
         self.sendCommand(self.COMMAND_FLUSH)
-        self.sendCommand("G91")
+        self.sendCommand(b"G91")
         self.sendCommand(
             "G1X{x}Y{y}F500S0".format(
                 x="-5" if self.limit_x > 0 else "0", y="-5" if self.limit_y > 0 else "0"
-            )
+            ).encode()
         )
-        self.sendCommand("G90")
+        self.sendCommand(b"G90")
         self.sendCommand(self.COMMAND_FLUSH)
         time.sleep(1)  # turns out we need this :-/
 
@@ -2124,7 +2122,7 @@ class MachineCom(oprintMachineCom):
     # 	gcode = self._gcode_command_for_cmd(command)
     # 	return command, command_type, gcode
 
-    def _replace_feedrate(self, cmd):
+    def _replace_feedrate(self, cmd: str) -> str:
         obj = self._regex_feedrate.search(cmd)
         if obj is not None:
             feedrate_cmd = cmd[obj.start() : obj.end()]
@@ -2140,7 +2138,7 @@ class MachineCom(oprintMachineCom):
 
         return cmd
 
-    def _replace_intensity(self, cmd):
+    def _replace_intensity(self, cmd: str) -> str:
         obj = self._regex_intensity.search(cmd)
         if obj is not None:
             intensity_limit = int(self._laserCutterProfile["laser"]["intensity_limit"])
@@ -2190,7 +2188,7 @@ class MachineCom(oprintMachineCom):
             res.append("0" + tmp if len(tmp) <= 1 else tmp)
         return " ".join(res)
 
-    def _parse_vals_from_gcode(self, cmd):
+    def _parse_vals_from_gcode(self, cmd: str):
         data = dict(
             x=None,
             y=None,
@@ -2223,39 +2221,39 @@ class MachineCom(oprintMachineCom):
     ##~~ command handlers
     # hooks are called by self._process_command_phase()
     ##~~
-    def _gcode_G0_sending(self, cmd, cmd_type=None):
+    def _gcode_G0_sending(self, cmd: str, cmd_type=None) -> str:
         self._remember_pos(self._parse_vals_from_gcode(cmd))
         return cmd
 
-    def _gcode_G1_sending(self, cmd, cmd_type=None):
-        self._remember_pos(self._parse_vals_from_gcode(cmd))
-        cmd = self._replace_feedrate(cmd)
-        cmd = self._replace_intensity(cmd)
-        return cmd
-
-    def _gcode_G2_sending(self, cmd, cmd_type=None):
+    def _gcode_G1_sending(self, cmd: str, cmd_type=None) -> str:
         self._remember_pos(self._parse_vals_from_gcode(cmd))
         cmd = self._replace_feedrate(cmd)
         cmd = self._replace_intensity(cmd)
         return cmd
 
-    def _gcode_G3_sending(self, cmd, cmd_type=None):
+    def _gcode_G2_sending(self, cmd: str, cmd_type=None) -> str:
         self._remember_pos(self._parse_vals_from_gcode(cmd))
         cmd = self._replace_feedrate(cmd)
         cmd = self._replace_intensity(cmd)
         return cmd
 
-    def _gcode_M3_sending(self, cmd, cmd_type=None):
+    def _gcode_G3_sending(self, cmd: str, cmd_type=None) -> str:
+        self._remember_pos(self._parse_vals_from_gcode(cmd))
+        cmd = self._replace_feedrate(cmd)
+        cmd = self._replace_intensity(cmd)
+        return cmd
+
+    def _gcode_M3_sending(self, cmd: str, cmd_type=None) -> str:
         self._current_laser_on = True
         cmd = self._replace_feedrate(cmd)
         cmd = self._replace_intensity(cmd)
         return cmd
 
-    def _gcode_M5_sending(self, cmd, cmd_type=None):
+    def _gcode_M5_sending(self, cmd: str, cmd_type=None) -> str:
         self._current_laser_on = False
         return cmd
 
-    def _gcode_M100_sending(self, cmd, cmd_type=None):
+    def _gcode_M100_sending(self, cmd: str, cmd_type=None) -> str:
         val = None
         matches = self._regex_compressor.findall(cmd)
         if matches:
@@ -2273,49 +2271,47 @@ class MachineCom(oprintMachineCom):
             nu_cmd = {"compressor": val, "sync": True, "cmd": None}
             return nu_cmd
 
-    def _gcode_G01_sending(self, cmd, cmd_type=None):
+    def _gcode_G01_sending(self, cmd: str, cmd_type=None) -> str:
         return self._gcode_G1_sending(cmd, cmd_type)
 
-    def _gcode_G02_sending(self, cmd, cmd_type=None):
+    def _gcode_G02_sending(self, cmd: str, cmd_type=None) -> str:
         return self._gcode_G2_sending(cmd, cmd_type)
 
-    def _gcode_G03_sending(self, cmd, cmd_type=None):
+    def _gcode_G03_sending(self, cmd: str, cmd_type=None) -> str:
         return self._gcode_G3_sending(cmd, cmd_type)
 
-    def _gcode_M03_sending(self, cmd, cmd_type=None):
+    def _gcode_M03_sending(self, cmd: str, cmd_type=None) -> str:
         return self._gcode_M3_sending(cmd, cmd_type)
 
-    def _gcode_M05_sending(self, cmd, cmd_type=None):
+    def _gcode_M05_sending(self, cmd: str, cmd_type=None) -> str:
         return self._gcode_M5_sending(cmd, cmd_type)
 
-    def _gcode_X_sent(self, cmd, cmd_type=None):
+    def _gcode_X_sent(self, cmd: str, cmd_type=None) -> str:
         # since we use $X to rescue from homeposition, we don't want this to trigger homing
         # self._changeState(self.STATE_HOMING)  # TODO: maybe change to seperate $X mode
         return cmd
 
-    def _gcode_H_sent(self, cmd, cmd_type=None):
+    def _gcode_H_sent(self, cmd: str, cmd_type=None) -> str:
         self._changeState(self.STATE_HOMING)
         return cmd
 
-    def _gcode_Hold_sent(self, cmd, cmd_type=None):
+    def _gcode_Hold_sent(self, cmd: str, cmd_type=None) -> str:
         self._changeState(self.STATE_PAUSED)
         return cmd
 
-    def _gcode_Resume_sent(self, cmd, cmd_type=None):
-        if self.isPaused():
-            # only change state to printing if it was in pause state before
-            self._changeState(self.STATE_PRINTING)
+    def _gcode_Resume_sent(self, cmd: str, cmd_type=None) -> str:
+        self._changeState(self.STATE_PRINTING)
         return cmd
 
-    def _gcode_F_sending(self, cmd, cmd_type=None):
+    def _gcode_F_sending(self, cmd: str, cmd_type=None) -> str:
         return self._replace_feedrate(cmd)
 
-    def _gcode_S_sending(self, cmd, cmd_type=None):
+    def _gcode_S_sending(self, cmd: str, cmd_type=None) -> str:
         return self._replace_intensity(cmd)
 
     def sendCommand(
         self,
-        cmd,
+        cmd: bytes,
         cmd_type=None,
         part_of_job=False,
         processed=False,
@@ -2323,7 +2319,11 @@ class MachineCom(oprintMachineCom):
         on_sent=None,
         tags=None,
     ):
-        if cmd is not None and cmd.strip().startswith("/"):
+
+        if isinstance(cmd, str):  # Might be necessary for user entered commands
+            cmd = cmd.encode()
+
+        if cmd is not None and cmd.strip().startswith(b"/"):
             self._handle_user_command(cmd)
         elif self._handle_rt_command(cmd):
             pass
@@ -2331,7 +2331,7 @@ class MachineCom(oprintMachineCom):
             if processed:
                 cmd_obj = {"cmd": cmd}
             else:
-                cmd.encode("ascii", "replace")
+                cmd = cmd.decode().encode("ascii", "replace")
                 cmd = process_gcode_line(cmd)
                 if not cmd:
                     return
@@ -2344,7 +2344,7 @@ class MachineCom(oprintMachineCom):
                     cmd_obj["cmd"] = self._add_checksum_to_cmd(cmd_obj["cmd"])
 
             if cmd_obj.get("cmd", None) is not None:
-                eepromCmd = re.search("^\$[0-9]+=.+$", cmd_obj.get("cmd"))
+                eepromCmd = re.search("^\$[0-9]+=.+$", cmd_obj.get("cmd").decode())
                 if eepromCmd and self.isPrinting():
                     self._log(
                         "Warning: Configuration changes during print are not allowed!"
@@ -2355,42 +2355,43 @@ class MachineCom(oprintMachineCom):
             self._send_event.set()
             self.watch_dog.notify_command(cmd_obj)
 
-    def _handle_user_command(self, cmd):
-        """Handles commands the user can enter on the terminal starting with
-        /"""
+    def _handle_user_command(self, cmd: bytes):
+        """
+        Handles commands the user can enter on the terminal starting with /
+        """
         try:
             cmd = cmd.strip()
             self._log("Command: %s" % cmd)
             self._logger.info("Terminal user command: %s", cmd)
-            tokens = cmd.split(" ")
+            tokens = cmd.split(b" ")
             specialcmd = tokens[0].lower()
-            if specialcmd.startswith("/togglestatusreport"):
+            if specialcmd.startswith(b"/togglestatusreport"):
                 if self._status_polling_interval <= 0:
                     self._set_status_polling_interval_for_state()
                 else:
                     self._status_polling_interval = 0
-            elif specialcmd.startswith("/setstatusfrequency"):
+            elif specialcmd.startswith(b"/setstatusfrequency"):
                 try:
                     self._status_polling_interval = float(tokens[1])
                 except ValueError:
                     self._log("No frequency setting found! No change")
-            elif specialcmd.startswith("/disconnect"):
+            elif specialcmd.startswith(b"/disconnect"):
                 self.close()
-            elif specialcmd.startswith("/feedrate"):
+            elif specialcmd.startswith(b"/feedrate"):
                 if len(tokens) > 1:
                     self._set_feedrate_override(int(tokens[1]))
                 else:
                     self._log("no feedrate given")
-            elif specialcmd.startswith("/intensity"):
+            elif specialcmd.startswith(b"/intensity"):
                 if len(tokens) > 1:
                     data = specialcmd[8:]
                     self._set_intensity_override(int(tokens[1]))
                 else:
                     self._log("no intensity given")
-            elif specialcmd.startswith("/reset"):
+            elif specialcmd.startswith(b"/reset"):
                 self._log("Reset initiated")
                 self._serial.write(list(bytearray("\x18")))
-            elif specialcmd.startswith("/flash_grbl"):
+            elif specialcmd.startswith(b"/flash_grbl"):
                 # if no file given: flash default grbl version
                 file = self.get_grbl_file_name()
                 if len(tokens) > 1:
@@ -2411,7 +2412,7 @@ class MachineCom(oprintMachineCom):
                 else:
                     self._log("Flashing GRBL '%s'..." % file)
                     self.flash_grbl(file)
-            elif specialcmd.startswith("/verify_grbl"):
+            elif specialcmd.startswith(b"/verify_grbl"):
                 # if no file given: verify to currently installed
                 file = self.get_grbl_file_name(self._grbl_version)
                 if len(tokens) > 1:
@@ -2432,10 +2433,10 @@ class MachineCom(oprintMachineCom):
                 else:
                     self._log("Verifying GRBL '%s'..." % file)
                     self.flash_grbl(file, verify_only=True)
-            elif specialcmd.startswith("/correct_settings"):
+            elif specialcmd.startswith(b"/correct_settings"):
                 self._log("Correcting GRBL settings...")
                 self.correct_grbl_settings()
-            elif specialcmd.startswith("/power_correction"):
+            elif specialcmd.startswith(b"/power_correction"):
                 if len(tokens) > 1:
                     token = int(tokens[1])
                     if token == 1:
@@ -2453,7 +2454,7 @@ class MachineCom(oprintMachineCom):
                     )
                 else:
                     self._log("No parameter given (0 or 1)")
-            elif specialcmd.startswith("/show_checksums"):
+            elif specialcmd.startswith(b"/show_checksums"):
                 if len(tokens) > 1:
                     token = int(tokens[1])
                     if token == 1:
@@ -2556,7 +2557,7 @@ class MachineCom(oprintMachineCom):
             self.watch_dog.start(self._currentFile)
 
             # ensure fan is on whatever gcode follows.
-            self.sendCommand("M08")
+            self.sendCommand(b"M08")
 
             self._currentFile.start()
             self._finished_currentFile = False
@@ -2884,9 +2885,7 @@ class PrintingFileInformation(oprintPrintingFileInformation):
         """
         if self._size is None or not self._size > 0:
             return -1
-        return float(self._pos - self._comment_size) / float(
-            self._size - self._comment_size
-        )
+        return (self._pos - self._comment_size) / (self._size - self._comment_size)
 
 
 class PrintingGcodeFileInformation(oprintPrintingGcodeFileInformation):
@@ -2970,9 +2969,12 @@ class PrintingGcodeFileInformation(oprintPrintingGcodeFileInformation):
                     self._lines_read += 1
                     self._lines_read_bak += 1
                     # self._logger.debug("getNext() increased self._lines_read to %s", self._lines_read)
-                processed = process_gcode_line(line)
+                if line:
+                    processed = process_gcode_line(line.encode())
                 if processed is None:
                     self._comment_size += len(line)
+                else:
+                    processed = processed.decode()
             self._pos = self._handle.tell()
 
             return processed
@@ -3042,8 +3044,10 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
         self._pos = 0
         self._comment_size = 0
 
-    def getNext(self):
-        """Retrieves the next line for printing."""
+    def getNext(self) -> bytes | None:
+        """
+        Retrieves the next line for printing.
+        """
         if self._gcode is None:
             raise ValueError("Line buffer is not filled")
 
@@ -3070,9 +3074,11 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
                     self.close()
 
                 if line != None:
-                    processed = process_gcode_line(line)
+                    processed = process_gcode_line(line.encode())
                     if processed is None:
                         self._comment_size += len(line)
+                    else:
+                        processed = processed.decode()
 
             return processed
         except Exception as e:
@@ -3113,26 +3119,26 @@ def convert_pause_triggers(configured_triggers):
     return result
 
 
-def process_gcode_line(line):
+def process_gcode_line(line: bytes) -> bytes | None:
     line = strip_comment(line).strip()
-    line = line.replace(" ", "")
+    line = line.replace(b" ", b"")
     if not len(line):
         return None
     return line
 
 
-def strip_comment(line):
-    if not ";" in line:
+def strip_comment(line: bytes) -> bytes:
+    if b";" not in line:
         # shortcut
         return line
     escaped = False
     result = []
-    for c in line:
+    for c in line.decode():
         if c == ";" and not escaped:
             break
         result += c
         escaped = (c == "\\") and not escaped
-    return "".join(result)
+    return "".join(result).encode()
 
 
 def get_new_timeout(t):
@@ -3170,7 +3176,7 @@ def serialList():
         baselist.insert(0, prev)
     if settings().getBoolean(["devel", "virtualPrinter", "enabled"]):
         baselist.append("VIRTUAL")
-    return filter(None, baselist)
+    return [_f for _f in baselist if _f]
 
 
 def baudrateList():

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from collections import Mapping
+from collections.abc import Mapping
 import yaml
 
 from .definitions import (
@@ -46,7 +46,7 @@ def warpImgByCorners(image, corners, zoomed_out=False):
     maxHeight = max(int(height1), int(height2))
 
     if zoomed_out:
-        factor = float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2
+        factor = MAX_OBJ_HEIGHT / CAMERA_HEIGHT / 2
         min_dst_x = factor * maxWidth
         max_dst_x = (1 + factor) * maxWidth
         min_dst_y = factor * maxHeight
@@ -122,8 +122,8 @@ def write_corner_calibration(pic_settings, path):
     )
     _logger.debug("Saving new corner calibration: {}".format(pic_settings))
     makedirs(path, parent=True, exist_ok=True)
-    with open(path, "wb") as f:
-        yaml.safe_dump(pic_settings, f, indent="  ", allow_unicode=True)
+    with open(path, "w") as f:
+        yaml.safe_dump(pic_settings, f, indent=2, allow_unicode=True)
     _logger.info("New corner calibration has been saved")
 
 
