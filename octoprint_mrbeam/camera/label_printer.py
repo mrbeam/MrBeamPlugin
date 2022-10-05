@@ -1,4 +1,3 @@
-
 import datetime
 from octoprint.server.util.flask import get_json_command_from_request
 from octoprint_mrbeam.util.device_info import (
@@ -153,9 +152,7 @@ class LabelPrinter(object):
             ok = True
             out = []
             if self.EAN_NUMBERS.get(model, None):
-                for prod_string, ean_num in self.EAN_NUMBERS.get(
-                    model, dict()
-                ).items():
+                for prod_string, ean_num in self.EAN_NUMBERS.get(model, dict()).items():
                     self._logger.info("Printing ean label '%s' to %s", prod_string, ip)
                     zpl = self._get_zpl_ean_label(prod_string, ean_num)
                     _ok, _output = self._print(ip, zpl)

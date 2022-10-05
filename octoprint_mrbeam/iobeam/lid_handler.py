@@ -484,8 +484,8 @@ class LidHandler(object):
             self._logger.warning("Error trying to delete file: %s\n%s" % (path, e))
         finally:
             self.boardDetectorDaemon.remove(path)
-        return (
-            list(self.boardDetectorDaemon.state.keys())
+        return list(
+            self.boardDetectorDaemon.state.keys()
         )  # TODO necessary? Frontend update now happens via plugin message
 
     def removeAllTmpPictures(self):

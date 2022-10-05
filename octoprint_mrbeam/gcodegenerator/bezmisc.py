@@ -24,9 +24,9 @@ def rootWrapper(a, b, c, d):
     if a:
         # Monics formula see http://en.wikipedia.org/wiki/Cubic_function#Monic_formula_of_roots
         a, b, c = (b / a, c / a, d / a)
-        m = 2.0 * a ** 3 - 9.0 * a * b + 27.0 * c
-        k = a ** 2 - 3.0 * b
-        n = m ** 2 - 4.0 * k ** 3
+        m = 2.0 * a**3 - 9.0 * a * b + 27.0 * c
+        k = a**2 - 3.0 * b
+        n = m**2 - 4.0 * k**3
         w1 = -0.5 + 0.5 * cmath.sqrt(-3.0)
         w2 = -0.5 - 0.5 * cmath.sqrt(-3.0)
         if n < 0:
@@ -46,7 +46,7 @@ def rootWrapper(a, b, c, d):
         x3 = -1.0 / 3 * (a + w2 * m1 + w1 * n1)
         return (x1, x2, x3)
     elif b:
-        det = c ** 2.0 - 4.0 * b * d
+        det = c**2.0 - 4.0 * b * d
         if det:
             return (
                 (-c + cmath.sqrt(det)) / (2.0 * b),
@@ -117,8 +117,8 @@ def bezierpointatt(coordinates, t):
     ax, ay, bx, by, cx, cy, x0, y0 = bezierparameterize(
         ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))
     )
-    x = ax * (t ** 3) + bx * (t ** 2) + cx * t + x0
-    y = ay * (t ** 3) + by * (t ** 2) + cy * t + y0
+    x = ax * (t**3) + bx * (t**2) + cx * t + x0
+    y = ay * (t**3) + by * (t**2) + cy * t + y0
     return x, y
 
 
@@ -127,8 +127,8 @@ def bezierslopeatt(coordinates, t):
     ax, ay, bx, by, cx, cy, x0, y0 = bezierparameterize(
         ((bx0, by0), (bx1, by1), (bx2, by2), (bx3, by3))
     )
-    dx = 3 * ax * (t ** 2) + 2 * bx * t + cx
-    dy = 3 * ay * (t ** 2) + 2 * by * t + cy
+    dx = 3 * ax * (t**2) + 2 * bx * t + cx
+    dy = 3 * ay * (t**2) + 2 * by * t + cy
     return dx, dy
 
 
@@ -232,8 +232,8 @@ balfax, balfbx, balfcx, balfay, balfby, balfcy = 0, 0, 0, 0, 0, 0
 
 
 def balf(t):
-    retval = (balfax * (t ** 2) + balfbx * t + balfcx) ** 2 + (
-        balfay * (t ** 2) + balfby * t + balfcy
+    retval = (balfax * (t**2) + balfbx * t + balfcx) ** 2 + (
+        balfay * (t**2) + balfby * t + balfcy
     ) ** 2
     return math.sqrt(retval)
 

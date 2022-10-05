@@ -382,9 +382,7 @@ class UsageHandler(object):
                 with open(self._backup_file, "r") as stream:
                     data = yaml.safe_load(stream)
                 if self._validate_data(data):
-                    data["restored"] = (
-                        data["restored"] + 1 if "restored" in data else 1
-                    )
+                    data["restored"] = data["restored"] + 1 if "restored" in data else 1
                     self._usage_data = data
                     self._write_usage_data()
                     success = True
@@ -418,9 +416,7 @@ class UsageHandler(object):
         with open(self._backup_file, "r") as stream:
             data = yaml.safe_load(stream)
         if self._validate_data(data):
-            data["restored"] = (
-                data["restored"] + 1 if "restored" in data else 1
-            )
+            data["restored"] = data["restored"] + 1 if "restored" in data else 1
             self._usage_data = data
             success = True
             self._write_usage_data()

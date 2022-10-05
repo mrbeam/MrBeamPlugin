@@ -14,7 +14,9 @@ def logtime(logger=None):
         def timed_f(*args, **kw):
             start = time.perf_counter()
             ret = f(*args, **kw)
-            debug_logger(f).debug("Elapsed time : %f seconds", time.perf_counter() - start)
+            debug_logger(f).debug(
+                "Elapsed time : %f seconds", time.perf_counter() - start
+            )
             return ret
 
         return timed_f

@@ -1,22 +1,20 @@
 class SettingsModel:
-    """Data object containing information about the settings to be used on the
-    jinja2 templates."""
+    """
+    Data object containing information about the settings to be used on the jinja2 templates
+    """
 
     def __init__(self):
         self.material_store = None
         self.about = None
 
     def __repr__(self):
-        return "SettingsModel(material_store=%s, about=%s)" % (
-            repr(self.material_store),
-            repr(self.about),
-        )
+        return "SettingsModel(about=%s)" % (repr(self.about))
 
 
 class AboutModel:
     """
-    Data object containing information corresponding to the about section to
-    be used on the jinja2 templates"""
+    Data object containing information corresponding to the about section to be used on the jinja2 templates
+    """
 
     def __init__(self, support_documents=[]):
         self.support_documents = support_documents

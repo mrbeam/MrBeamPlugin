@@ -137,7 +137,9 @@ def applyTransformToPath(mat, path):
 def fuseTransform(node):
     if node.get("d") == None:
         # FIXME: how do you raise errors?
-        raise AssertionError('can not fuse "transform" of elements that have no "d" attribute')
+        raise AssertionError(
+            'can not fuse "transform" of elements that have no "d" attribute'
+        )
     t = node.get("transform")
     if t == None:
         return

@@ -69,7 +69,7 @@ def biarc(sp1, sp2, z1, z2, depth=0):
     c, b, a = v * v, 2 * v * (r * TS + TE), 2 * r * (TS * TE - 1)
     if v.mag() == 0:
         return biarc_split(sp1, sp2, z1, z2, depth)
-    asmall, bsmall, csmall = abs(a) < 10 ** -10, abs(b) < 10 ** -10, abs(c) < 10 ** -10
+    asmall, bsmall, csmall = abs(a) < 10**-10, abs(b) < 10**-10, abs(c) < 10**-10
     if asmall and b != 0:
         beta = -c / b
     elif csmall and a != 0:
@@ -78,7 +78,7 @@ def biarc(sp1, sp2, z1, z2, depth=0):
         discr = b * b - 4 * a * c
         if discr < 0:
             raise ValueError(a, b, c, discr)
-        disq = discr ** 0.5
+        disq = discr**0.5
         beta1 = (-b - disq) / 2 / a
         beta2 = (-b + disq) / 2 / a
         if beta1 * beta2 > 0:
@@ -165,7 +165,7 @@ def biarc_curve_clip_at_l(curve, l, clip_type="strict"):
     lc = 0
     if (subcurve[-1][4][0] - subcurve[0][0][0]) ** 2 + (
         subcurve[-1][4][1] - subcurve[0][0][1]
-    ) ** 2 < 10 ** -7:
+    ) ** 2 < 10**-7:
         subcurve_closed = True
     i = 0
     reverse = False

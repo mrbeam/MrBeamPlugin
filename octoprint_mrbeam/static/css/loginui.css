@@ -18,7 +18,9 @@ button:focus {
   outline: 0 !important;
 }
 
-.btn:focus, .btn:active, .btn.active {
+.btn:focus,
+.btn:active,
+.btn.active {
   box-shadow: none;
 }
 .btn-primary {
@@ -29,7 +31,9 @@ button:focus {
   color: #ffffff;
   font-weight: 900;
 }
-.btn-primary:focus, .btn-primary:active, .btn-primary.active {
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active {
   background: #e25303;
   border: 2px solid #ffffff;
   border-radius: 8px;
@@ -39,7 +43,8 @@ button:focus {
   background: #e25303;
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
 }
-.btn-primary.disabled, .btn-primary[disabled] {
+.btn-primary.disabled,
+.btn-primary[disabled] {
   cursor: default;
   background: #e4e4e4;
   border-color: #e4e4e4;

@@ -91,9 +91,5 @@ class MrBeamEvents(object):
         this has to be called during plugin's Constructor
         """
         for k, v in vars(MrBeamEvents).items():
-            if (
-                isinstance(k, str)
-                and isinstance(v, str)
-                and k[0].isupper()
-            ):
+            if isinstance(k, str) and isinstance(v, str) and k[0].isupper():
                 setattr(OctoPrintEvents, k, v)

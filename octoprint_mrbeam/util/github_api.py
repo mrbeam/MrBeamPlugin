@@ -13,6 +13,7 @@ import json
 _logger = mrb_logger("octoprint.plugins.mrbeam.util.github_api")
 REPO_URL = "https://api.github.com/repos/mrbeam/{repo}"
 
+
 def get_file_of_repo_for_tag(file, repo, tag):
     """return the content of the <file> of the repo <repo> for the given
     tag/branch/hash <tag>

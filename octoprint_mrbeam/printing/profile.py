@@ -98,10 +98,12 @@ LASER_PROFILES = tuple(chain(
 LASER_PROFILE_IDENTIFIERS = tuple(pr["id"] for pr in LASER_PROFILES)
 
 LASER_PROFILE_MAP = dict(
-    list(zip(
-        LASER_PROFILE_IDENTIFIERS,
-        LASER_PROFILES,
-    ))
+    list(
+        zip(
+            LASER_PROFILE_IDENTIFIERS,
+            LASER_PROFILES,
+        )
+    )
 )
 
 

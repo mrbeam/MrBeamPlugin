@@ -62,7 +62,9 @@ class AccWatchDog(object):
             if self._commands
             else "unknown"
         )
-        self._logger.info(f"Log state. trigger: {trigger}\n{t}\n{self._get_state_str()}")
+        self._logger.info(
+            f"Log state. trigger: {trigger}\n{t}\n{self._get_state_str()}"
+        )
 
     def do_regular_check(self):
         """

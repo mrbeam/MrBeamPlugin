@@ -255,7 +255,7 @@ $(function () {
             if (currentUser === undefined) {
                 // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
                 // For "Add User" set the Admin checked by default
-                self.access.users.editor.toggleGroup("admins")
+                self.access.users.editor.toggleGroup("admins");
             }
         });
 

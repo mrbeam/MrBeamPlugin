@@ -315,9 +315,7 @@ class BoardDetectorDaemon(Thread):
     @property
     def detectedBoards(self):
         # return len(list(filter(lambda x: x.ready() and x.get()[1] is not None, self.tasks)))
-        return len(
-            [x for x in self.state.values() if x["state"] == STATE_SUCCESS]
-        )
+        return len([x for x in self.state.values() if x["state"] == STATE_SUCCESS])
 
         # Suggestion to change to: sum(x["state"] == STATE_SUCCESS for x in self.state.values())
 
@@ -785,7 +783,11 @@ class CalibrationState(dict):
     def get_from_timestamp(self, timestamp):
         with self.lock:
             return dict(
-                [_s for _s in self.items() if _s[1]["timestamp"].strftime(DATE_FORMAT) == timestamp]
+                [
+                    _s
+                    for _s in self.items()
+                    if _s[1]["timestamp"].strftime(DATE_FORMAT) == timestamp
+                ]
             )
 
     def getSuccesses(self):

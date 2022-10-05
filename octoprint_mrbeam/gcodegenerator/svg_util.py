@@ -18,13 +18,7 @@ NSS = {
 
 def _add_ns(tag, ns=None):
     val = tag
-    if (
-        ns != None
-        and len(ns) > 0
-        and ns in NSS
-        and len(tag) > 0
-        and tag[0] != "{"
-    ):
+    if ns != None and len(ns) > 0 and ns in NSS and len(tag) > 0 and tag[0] != "{":
         val = "{%s}%s" % (NSS[ns], tag)
     return val
 

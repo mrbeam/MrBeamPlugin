@@ -899,7 +899,9 @@ class MachineCom(oprintMachineCom):
             ser.open()
             return ser
 
-        serial_factories = list(self._serial_factory_hooks.items()) + [("default", default)]
+        serial_factories = list(self._serial_factory_hooks.items()) + [
+            ("default", default)
+        ]
         for name, factory in serial_factories:
             try:
                 serial_obj = factory(
@@ -1198,7 +1200,7 @@ class MachineCom(oprintMachineCom):
         self._fire_print_failed()
         self._changeState(self.STATE_LOCKED)
 
-    def  _handle_alarm_message(self, line: bytes, code=None):
+    def _handle_alarm_message(self, line: bytes, code=None):
         line = line.rstrip() if line else line
         errorMsg = None
         throwErrorMessage = True
@@ -1610,7 +1612,13 @@ class MachineCom(oprintMachineCom):
                 self._log(msg)
 
     def _process_command_phase(
-        self, phase: str, command: bytes, command_type=None, gcode: str | None = None, subcode=None, tags=None
+        self,
+        phase: str,
+        command: bytes,
+        command_type=None,
+        gcode: str | None = None,
+        subcode=None,
+        tags=None,
     ) -> dict:
         cmd_obj = command
         if isinstance(command, bytes):

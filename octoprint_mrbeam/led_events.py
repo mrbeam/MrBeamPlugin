@@ -219,7 +219,7 @@ class LedEventListener(CommandTrigger):
 
         """
         # Check if debug mode is enabled
-        gettrace = getattr(sys, 'gettrace', None)
+        gettrace = getattr(sys, "gettrace", None)
         if gettrace():
             # debug mode is enabled
             self.executeCommand(cmd, cmd_type, debug=True)

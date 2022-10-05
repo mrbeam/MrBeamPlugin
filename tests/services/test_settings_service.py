@@ -19,20 +19,32 @@ class TestSettingsService(TestCase):
         logger = LoggerMock()
         self._settings_service = SettingsService(logger, DocumentService(logger))
 
-    def test_get_template_settings_model_with_none__then_return_settings_empty_object(self):
+    def test_get_template_settings_model_with_none__then_return_settings_empty_object(
+        self,
+    ):
         settings_model = self._settings_service.get_template_settings_model(None)
         self._validate_empty_settings_model(settings_model)
 
-    def test_get_template_settings_model_with_unknown__then_return_settings_empty_object(self):
-        settings_model = self._settings_service.get_template_settings_model('unknown')
+    def test_get_template_settings_model_with_unknown__then_return_settings_empty_object(
+        self,
+    ):
+        settings_model = self._settings_service.get_template_settings_model("unknown")
         self._validate_empty_settings_model(settings_model)
 
-    def test_get_template_settings_model_with_mrbeam2__then_return_settings_with_about_and_nonempty_documents(self):
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.MRBEAM2.value)
+    def test_get_template_settings_model_with_mrbeam2__then_return_settings_with_about_and_nonempty_documents(
+        self,
+    ):
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.MRBEAM2.value
+        )
         self._validate_settings_model(settings_model)
 
-    def test_get_template_settings_model_with_dreamcut__then_return_settings_with_about_and_nonempty_documents(self):
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+    def test_get_template_settings_model_with_dreamcut__then_return_settings_with_about_and_nonempty_documents(
+        self,
+    ):
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
 
     @patch('octoprint_mrbeam.services.settings_service.requests.get',
@@ -189,14 +201,14 @@ class TestSettingsService(TestCase):
                 self.assertIsNotNone(document_link)
                 self.assertIsNotNone(document_link.language)
                 self.assertIsNotNone(document_link.language.name)
-                self.assertNotEqual(document_link.language.name, '')
-                self.assertNotEqual(document_link.language.name, ' ')
+                self.assertNotEqual(document_link.language.name, "")
+                self.assertNotEqual(document_link.language.name, " ")
                 self.assertIsNotNone(document_link.language.value)
-                self.assertNotEqual(document_link.language.value, '')
-                self.assertNotEqual(document_link.language.value, ' ')
+                self.assertNotEqual(document_link.language.value, "")
+                self.assertNotEqual(document_link.language.value, " ")
                 self.assertIsNotNone(document_link.url)
-                self.assertNotEqual(document_link.url, '')
-                self.assertNotEqual(document_link.url, ' ')
+                self.assertNotEqual(document_link.url, "")
+                self.assertNotEqual(document_link.url, " ")
 
     def _validate_empty_material_store_settings(self, settings_model):
         self.assertIsNotNone(settings_model)
