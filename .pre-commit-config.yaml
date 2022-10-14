@@ -25,6 +25,14 @@ repos:
 #          --in-place,
 #        ]
 
-# TODO Add scss generation, need PYthon 3
-# see https://pypi.org/project/scss-compile/
-# https://mr-beam.atlassian.net/browse/SW-1849
+  - repo: https://github.com/executablebooks/web-compile
+    rev: v0.2.3
+    hooks:
+      - id: web-compile
+        args: [ --config=web-compile-config.yaml ]
+        # Only execute on config or scss changes
+        files: >-
+          (?x)^(
+              web-compile-config.yaml|
+              scss/.*
+          )$

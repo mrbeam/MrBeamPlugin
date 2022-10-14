@@ -1,0 +1,5 @@
+web-compile:
+  sass:
+    encoding: utf8
+    files:  # Add here the scss files that need to be compiled
+      scss/loginui.scss: octoprint_mrbeam/static/css/loginui.css
