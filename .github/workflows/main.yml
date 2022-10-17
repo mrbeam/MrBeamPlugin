@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
+    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@feature/SW-1335-github-actions-evaluate-code-against-last-release
     secrets: inherit
     with:
       python_v: 2.7
