@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@python2.7
+    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
     secrets: inherit
     with:
       source_dir: octoprint_mrbeam
