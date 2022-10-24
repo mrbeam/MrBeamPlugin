@@ -14,3 +14,5 @@ jobs:
     secrets: inherit
     with:
       python_v: 2.7
+      source_dir: octoprint_mrbeam
+      exclude_from_coverage: octoprint_mrbeam/static/**/*
