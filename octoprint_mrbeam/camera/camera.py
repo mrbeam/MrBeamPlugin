@@ -135,13 +135,9 @@ class BaseCamera(object):
         #     /!\ Can add instability in the case of smoothe > 1
         # smoothe = 1.4/2
         # compensate = compensate ** smoothe
-        if self.shutter_speed == 0 and self.exposure_speed > 0:
-            self.shutter_speed = self.exposure_speed
-        elif self.shutter_speed == 0:
-            self.shutter_speed = DEFAULT_SHUTTER_SPEED
-        self.shutter_speed = int(self.shutter_speed * compensate)
-        if self.shutter_speed > MAX_SHUTTER_SPEED:
-            self.shutter_speed = MAX_SHUTTER_SPEED
+        if self._shutter_speed in [0, None]:
+            self._shutter_speed = DEFAULT_SHUTTER_SPEED
+        self._shutter_speed = int(self._shutter_speed * compensate)
 
 
 from octoprint_mrbeam.camera.worker import MrbPicWorker
@@ -186,7 +182,7 @@ class DummyCamera(BaseCamera):
             raise MrbCameraError("Camera already busy taking a picture")
         self._busy.acquire()
         if self._shutter_speed and self._shutter_speed > 0:
-            time.sleep(1 / _shutter_speed)
+            time.sleep(1 / self._shutter_speed)
         else:
             time.sleep(0.3)
         if not output:

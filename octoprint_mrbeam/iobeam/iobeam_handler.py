@@ -517,9 +517,9 @@ class IoBeamHandler(object):
                             # 	continue
                             # else:
                             self._logger.warn(
-                                "Exception while sockect.recv(): %s (message: %s) - Resetting connection...",
-                                e,
-                                e.message,
+                                "Exception while sockect.recv(): {} - Resetting connection...".format(
+                                    e
+                                )
                             )
                             break
 

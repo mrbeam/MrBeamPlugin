@@ -190,7 +190,7 @@ class ServerThread(threading.Thread):
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.socket.bind(self._socket_file)
 
-        while self.alive.isSet():
+        while self.alive.is_set():
             self._logger.info(
                 "Listening for incoming connections on " + self._socket_file
             )
@@ -200,7 +200,7 @@ class ServerThread(threading.Thread):
             self.conn, addr = self.socket.accept()
             self._logger.info("Client connected.")
 
-            while self.alive.isSet():
+            while self.alive.is_set():
                 self.socket.settimeout(3)
                 try:
                     data = self.conn.recv(1024)

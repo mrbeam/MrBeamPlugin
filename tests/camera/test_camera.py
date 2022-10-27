@@ -21,7 +21,6 @@ fetch(RESOURCES)
 @pytest.mark.datafiles(
     join(CAM_DIR, "raw.jpg"),
 )
-@pytest.mark.skip(reason="SW-1270, camera disabled")
 def test_normal_use(datafiles):
     sett.set(
         ["mrbeam", "mock", "img_static"],
@@ -29,7 +28,7 @@ def test_normal_use(datafiles):
         force=True,
     )
     worker = MrbPicWorker()
-    with MrbCamera(worker, shutter_speed=0.5) as cam:
+    with MrbCamera(worker, shutter_speed=500) as cam:
         cam.capture()
         cam.async_capture()
         cam.wait()
@@ -37,7 +36,6 @@ def test_normal_use(datafiles):
         assert cam.lastPic() is not None
 
 
-@pytest.mark.skip(reason="SW-1270, camera disabled")
 def test_open_multiple_cams():
     worker = MrbPicWorker()
     try:
@@ -48,7 +46,6 @@ def test_open_multiple_cams():
         return
 
 
-@pytest.mark.skip(reason="SW-1270, camera disabled")
 def test_concurrent_captures():
     with patch(
         "octoprint_mrbeam.camera.camera.settings",

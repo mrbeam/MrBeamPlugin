@@ -107,7 +107,7 @@ def calibration_needed_from_file(
 ):
     try:
         with open(config_path) as f:
-            corner_conf = get_corner_calibration(yaml.load(f))
+            corner_conf = get_corner_calibration(yaml.safe_load(f))
     except IOError:
         return True
     else:

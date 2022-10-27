@@ -1248,7 +1248,7 @@ class MachineCom(oprintMachineCom):
     def _handle_feedback_message(self, line):
         if line[1:].startswith(b"Res"):  # [Reset to continue]
             # send ctrl-x back immediately '\x18' == ctrl-x
-            self._serial.write(list(bytearray("\x18")))
+            self._serial.write(list(bytearray(b"\x18")))
             pass
         elif line[1:].startswith(b"'$H"):  # ['$H'|'$X' to unlock]
             self._changeState(self.STATE_LOCKED)
@@ -2398,7 +2398,7 @@ class MachineCom(oprintMachineCom):
                     self._log("no intensity given")
             elif specialcmd.startswith(b"/reset"):
                 self._log("Reset initiated")
-                self._serial.write(list(bytearray("\x18")))
+                self._serial.write(list(bytearray(b"\x18")))
             elif specialcmd.startswith(b"/flash_grbl"):
                 # if no file given: flash default grbl version
                 file = self.get_grbl_file_name()

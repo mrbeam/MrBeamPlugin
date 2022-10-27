@@ -266,7 +266,7 @@ class DustManager(object):
         self._boost_timer_interval()
 
         t = threading.Timer(self.FAN_TEST_DURATION, self._finish_test_fan_rpm)
-        t.setName("DustManager:_finish_test_fan_rpm")
+        t.name = "DustManager:_finish_test_fan_rpm"
         t.daemon = True
         t.start()
         self._fan_timers.append(t)
@@ -438,7 +438,7 @@ class DustManager(object):
             value=self.FINAL_DUSTING_PHASE2_INTENSITY, cancel_all_timers=False
         )
         my_timer = threading.Timer(value, self._final_extraction_phase2_timed)
-        my_timer.setName("DustManager:final_extraction_phase2")
+        my_timer.name = "DustManager:final_extraction_phase2"
         my_timer.daemon = True
         my_timer.start()
         self._fan_timers.append(my_timer)
@@ -544,7 +544,7 @@ class DustManager(object):
                 self._validation_timer = threading.Timer(
                     delay, self._validation_timer_callback
                 )
-                self._validation_timer.setName("DustManager:_validation_timer")
+                self._validation_timer.name = "DustManager:_validation_timer"
                 self._validation_timer.daemon = True
                 self._validation_timer.start()
         else:

@@ -160,10 +160,10 @@ def prepareImage(
     for qd, val in outputPoints.items():
         if val is None:
             if last_markers is not None and qd in last_markers.keys():
-                markers[qd] = last_markers[qd]
+                markers[qd] = list(last_markers[qd])
             missed.append(qd)
         else:
-            markers[qd] = val["pos"]
+            markers[qd] = list(positem.item() for positem in val["pos"])
     if len(missed) > 1 and len(markers) == 4:
         err = "Missed marker %s" % missed
         logger.warning(err)

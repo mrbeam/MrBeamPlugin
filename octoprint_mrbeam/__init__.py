@@ -1,7 +1,6 @@
 # coding=utf-8
 import shutil
 
-from . import cv2_override
 import builtins
 import copy
 import json
@@ -1144,7 +1143,7 @@ class MrBeamPlugin(
                 + "wifi for invalid password or other non-exceptional things.)",
                 command,
             )
-            return make_response(e.message, 500)
+            return make_response(str(e), 500)
 
         self._logger.debug("wifi_wizard_api() result: %s", result)
         if result is None:

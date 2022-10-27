@@ -95,9 +95,7 @@ class LidHandler(object):
         self._laserCutterProfile = (
             plugin.laserCutterProfileManager.get_current_or_default()
         )
-        self._logger = mrb_logger(
-            "octoprint.plugins.mrbeam.iobeam.lidhandler", logging.INFO
-        )
+        self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler")
         self._lid_closed = True
         self._interlock_closed = True
         self._is_slicing = False
@@ -352,7 +350,7 @@ class LidHandler(object):
     def tell_client_calibration_status(self):
         try:
             with open(self._settings.get(["cam", "correctionSettingsFile"])) as f:
-                pic_settings = yaml.load(f)
+                pic_settings = yaml.safe_load(f)
         except IOError:
             need_corner_calibration = True
             need_raw_camera_calibration = True
@@ -525,7 +523,7 @@ class LidHandler(object):
 
     def takeNewPic(self):
         """Forces agent to take a new picture."""
-        if self.force_taking_picture.isSet():
+        if self.force_taking_picture.is_set():
             self._logger.info("Already analysing a picture, please wait")
             return False
         else:
@@ -673,7 +671,7 @@ class PhotoCreator(object):
 
     @property
     def active(self):
-        return not self.stopEvent.isSet()
+        return not self.stopEvent.is_set()
 
     @active.setter
     def active(self, val):
@@ -719,7 +717,7 @@ class PhotoCreator(object):
 
     @property
     def stopping(self):
-        return self.stopEvent.isSet()
+        return self.stopEvent.is_set()
 
     def restart(
         self, pic_settings=None, cam_params=None, out_pic_size=None, blocking=True
@@ -883,9 +881,9 @@ class PhotoCreator(object):
         min_pix_amount = self._settings.get(["cam", "markerRecognitionMinPixel"])
         pic_counter = 0
         while not self.stopping:
-            while self.pause.isSet():
+            while self.pause.is_set():
                 time.sleep(0.5)
-            if self.refresh_pic_settings.isSet():
+            if self.refresh_pic_settings.is_set():
                 self.refresh_pic_settings.clear()
                 path_to_pic_settings = self._settings.get(
                     ["cam", "correctionSettingsFile"]
@@ -981,7 +979,7 @@ class PhotoCreator(object):
 
             # Compare previous image with the current one.
             if (
-                self.forceNewPic.isSet()
+                self.forceNewPic.is_set()
                 or prev is None
                 or gaussBlurDiff(latest, prev, resize=0.5)
             ):
@@ -1005,7 +1003,7 @@ class PhotoCreator(object):
                     prev = latest
                 elif (
                     nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_REFRESH == 0
-                    and not self._front_ready.isSet()
+                    and not self._front_ready.is_set()
                 ):
                     # Try to send a picture despite the client not responding / being ready
                     prev = latest
@@ -1267,7 +1265,7 @@ class PhotoCreator(object):
         dist = ""
         path_to_cam_params = self._plugin.lid_handler.get_calibration_file()
         try:
-            with open(path_to_cam_params, "r") as f:
+            with open(path_to_cam_params, "rb") as f:
                 dist = base64.b64encode(f.read())
         except:
             self._logger.warning(
@@ -1312,7 +1310,7 @@ class PhotoCreator(object):
         self.send_pic_asap(force=force)
 
     def send_pic_asap(self, force=False):
-        if force or self._pic_available.isSet() and self._front_ready.isSet():
+        if force or self._pic_available.is_set() and self._front_ready.is_set():
             # Both front and backend sould be ready to send/receive a new picture
             self._send_frontend_picture_metadata(self.last_correction_result)
             self._pic_available.clear()
