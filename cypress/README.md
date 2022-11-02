@@ -22,3 +22,17 @@ npm run cypress:open
 
 5. click E2E Testing
 6. Start E2E Testing in {selected browser}
+
+
+## How to generate JUnit reports
+1. Run cypress
+    ```shell
+    npm run cypress:run
+    ```
+    This will generate a xml report per test file
+
+2. Merge all the xml reports into one
+    ```shell
+    npm run merge-reports
+    ```
+3. Import the merged results xml to Jira
