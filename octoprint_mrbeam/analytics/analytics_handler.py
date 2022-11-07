@@ -578,7 +578,7 @@ class AnalyticsHandler(object):
         self._add_job_event(ak.Job.Event.Slicing.STARTED)
         self._current_cpu_data = Cpu(state="slicing", repeat=False)
 
-    def _event_slicing_done(self, event, payload, header_extension=None):
+    def _event_slicing_done(self, event, payload):
         _ = event
         if self._current_cpu_data:
             self._current_cpu_data.record_cpu_data()
