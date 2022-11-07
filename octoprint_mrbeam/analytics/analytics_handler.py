@@ -36,7 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
-    ANALYTICS_LOG_VERSION = 23  # bumped for SW-1317 - added pressure to test fan rpm event
+    ANALYTICS_LOG_VERSION = 24  # bumped for SW-1345 - added analytics for new features
 
     def __init__(self, plugin):
         self._plugin = plugin
