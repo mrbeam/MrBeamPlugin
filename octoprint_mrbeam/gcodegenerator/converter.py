@@ -155,14 +155,6 @@ class Converter:
                 )
 
     def _save_job_time_estimation_v2_analytics(self, estimation):
-        """Saves the v2 of the job time estimation in the analytics handler for later usage.
-
-        Args:
-            estimation: The job time estimation in seconds
-
-        Returns: None
-
-        """
         _mrbeam_plugin_implementation.analytics_handler.current_job_time_estimation_v2 = estimation
 
     def init_output_file(self):
