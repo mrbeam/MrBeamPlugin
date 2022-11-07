@@ -55,7 +55,7 @@ class JobTimeEstimation:
         self._settings = plugin._settings
         self._logger = mrb_logger("octoprint.plugins.mrbeam.job_time_estimation")
 
-        self._last_estimation = -1
+        self._last_estimation = {}
         self._meta = dict()
 
         self._event_bus.subscribe(
@@ -96,7 +96,7 @@ class JobTimeEstimation:
             estimation_thread.daemon = True
             estimation_thread.start()
 
-        if event == OctoPrintEvents.CLIENT_OPENED and self._last_estimation != -1:
+        if event == OctoPrintEvents.CLIENT_OPENED and self._last_estimation:
             self._send_estimate_to_frontend()
 
     def _calculate_estimation_threaded(self, file_name):
@@ -114,7 +114,7 @@ class JobTimeEstimation:
             path = self._settings.getBaseFolder("uploads")
             gcode_file = "{path}/{file}".format(file=file_name, path=path)
 
-            self._last_estimation, self._meta = self.estimate_job_duration(gcode_file)
+            self._last_estimation = self.estimate_job_duration(gcode_file)
             self._send_estimate_to_frontend()
         except:
             self._logger.exception("Error when calculating the job duration estimation")
@@ -122,10 +122,11 @@ class JobTimeEstimation:
     def _send_estimate_to_frontend(self):
         try:
             payload = dict()
-            payload["job_time_estimation"] = self._last_estimation
-            payload["calc_duration_total"] = self._meta.get("calc_duration_total", -1)
-            payload["calc_duration_woke"] = self._meta.get("calc_duration_woke", -1)
-            payload["calc_lines"] = self._meta.get("calc_lines", -1)
+            payload["job_time_estimation_rounded"] = self._last_estimation.get("total_duration_rounded", -1)
+            payload["job_time_estimation_raw"] = self._last_estimation.get("total_duration_raw", -1)
+            payload["calc_duration_total"] = self._last_estimation.get("calc_duration_total", -1)
+            payload["calc_duration_woke"] = self._last_estimation.get("calc_duration_woke", -1)
+            payload["calc_lines"] = self._last_estimation.get("calc_lines", -1)
             self._plugin.fire_event(MrBeamEvents.JOB_TIME_ESTIMATED, payload)
         except:
             self._logger.exception("Error when sending JobTimeEstimated event.")
@@ -334,11 +335,10 @@ class JobTimeEstimation:
         calc_duration_woke += time.time() - start_wake_ts
         calc_duration_total = time.time() - start_all_ts
 
-        return (
-            total_duration_rounded,
-            dict(
-                calc_duration_woke=calc_duration_woke,
-                calc_duration_total=calc_duration_total,
-                calc_lines=calc_lines,
-            ),
+        return dict(
+            total_duration_rounded=total_duration_rounded,
+            total_duration_raw=total_duration,
+            calc_duration_woke=calc_duration_woke,
+            calc_duration_total=calc_duration_total,
+            calc_lines=calc_lines,
         )

@@ -200,7 +200,7 @@ $(function () {
         }; // end onStartupComplete
 
         self.onEventJobTimeEstimated = function (payload) {
-            self.formatJobTimeEstimation(payload["job_time_estimation"]);
+            self.formatJobTimeEstimation(payload["job_time_estimation_rounded"]);
             self._fromData(payload);
         };
 

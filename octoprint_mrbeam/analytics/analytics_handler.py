@@ -579,7 +579,6 @@ class AnalyticsHandler(object):
         self._current_cpu_data = Cpu(state="slicing", repeat=False)
 
     def _event_slicing_done(self, event, payload):
-        _ = event
         if self._current_cpu_data:
             self._current_cpu_data.record_cpu_data()
             self._add_cpu_data(dur=payload["time"])
@@ -720,7 +719,7 @@ class AnalyticsHandler(object):
         self.upload()  # delay of 5.0 s
 
     def _event_job_time_estimated(self, event, payload):
-        self._current_job_time_estimation = payload["job_time_estimation"]
+        self._current_job_time_estimation = payload["job_time_estimation_raw"]
 
         if self._current_job_id:
             payload = {
