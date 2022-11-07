@@ -4338,8 +4338,11 @@ $(function () {
                 }
 
                 function stopCrossHairDragging(event) {
+                    // todo iratxe
                     clearInterval(window.mrbeam.draggableCrosshair.interval);
                     window.mrbeam.draggableCrosshair.destination = null;
+
+                    self._sendAnalytics("workingarea_crosshair_dragging", {})
 
                     const pos = self._get_pointer_event_position_MM(
                         event,
