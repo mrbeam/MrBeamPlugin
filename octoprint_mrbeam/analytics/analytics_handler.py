@@ -73,6 +73,7 @@ class AnalyticsHandler(object):
         # Job-specific data
         self._current_job_id = None
         self._current_job_time_estimation = -1
+        self.current_job_time_estimation_v2 = -1
         self._current_job_final_status = None
         self._current_job_compressor_data = None
         self._current_dust_collector = None
@@ -577,7 +578,8 @@ class AnalyticsHandler(object):
         self._add_job_event(ak.Job.Event.Slicing.STARTED)
         self._current_cpu_data = Cpu(state="slicing", repeat=False)
 
-    def _event_slicing_done(self, event, payload):
+    def _event_slicing_done(self, event, payload, header_extension=None):
+        _ = event
         if self._current_cpu_data:
             self._current_cpu_data.record_cpu_data()
             self._add_cpu_data(dur=payload["time"])
@@ -682,6 +684,7 @@ class AnalyticsHandler(object):
         duration = {
             ak.Job.Duration.CURRENT: int(round(payload["time"])),
             ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+            ak.Job.Duration.ESTIMATION_V2: int(round(self.current_job_time_estimation_v2)),
         }
         self._current_job_final_status = "Done"
         self._add_job_event(ak.Job.Event.Print.DONE, payload=duration)
@@ -723,6 +726,9 @@ class AnalyticsHandler(object):
             payload = {
                 ak.Job.Duration.ESTIMATION: int(
                     round(self._current_job_time_estimation)
+                ),
+                ak.Job.Duration.ESTIMATION_V2: int(
+                    round(self.current_job_time_estimation_v2)
                 ),
                 ak.Job.Duration.CALC_DURATION_TOTAL: payload["calc_duration_total"],
                 ak.Job.Duration.CALC_DURATION_WOKE: payload["calc_duration_woke"],
@@ -899,6 +905,7 @@ class AnalyticsHandler(object):
         self._current_lasertemp_collector = None
         self._current_cpu_data = None
         self._current_job_time_estimation = -1
+        self.current_job_time_estimation_v2 = -1
         self._current_job_final_status = None
         self._current_job_compressor_data = None
 

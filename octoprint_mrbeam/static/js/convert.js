@@ -1859,7 +1859,8 @@ $(function () {
                         material: material,
                         design_files: design_files,
                         advanced_settings: advancedSettings,
-                        job_time_estimation: self.estimated_job_time(),
+                        job_time_estimation_v2:
+                            self.estimated_job_time().val.total.sum.val, // estimation in s
                     };
 
                     if (self.svg !== undefined) {
