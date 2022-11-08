@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: cypress-io/github-action@v4
         with:
-          start: npm run docker:run
+          start: npm run docker:build-and-run
           wait-on: "http://localhost:5002/"
           wait-on-timeout: 360
           browser: chrome
