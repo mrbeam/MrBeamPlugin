@@ -19,11 +19,11 @@ the plugin manager.
 
 ## Docker
 
-Build image:
+Build image: (Add the following flag for Apple M1: `--platform linux/x86_64`)
 ```shell
 docker build -t mrbeam_plugin .
 ```
-Run container:
+Run container: (Add the following flag for Apple M1: `--platform linux/x86_64`)
 ```shell
 docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
 ```
