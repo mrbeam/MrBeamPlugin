@@ -19,7 +19,7 @@ jobs:
           wait-on: "http://localhost:5002/"
           wait-on-timeout: 360
           browser: chrome
-          record: true
+#          record: true
         env:
           # pass GitHub token to detect new build vs re-run build
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
