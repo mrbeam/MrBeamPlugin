@@ -1,14 +1,21 @@
 {
   "devDependencies": {
     "@4tw/cypress-drag-drop": "^2.2.1",
-    "cypress": "^10.4.0",
+    "cypress": "^10.11.0",
     "cypress-file-upload": "^5.0.8",
-    "cypress-iframe": "^1.0.1"
+    "cypress-iframe": "^1.0.1",
+    "junit-report-merger": "^4.0.0",
+    "mocha": "^5.2.0",
+    "mochawesome": "^3.1.2",
+    "mochawesome-merge": "^1.0.7",
+    "mochawesome-report-generator": "^3.1.5"
   },
   "dependencies": {
-    "cypress-real-events": "^1.7.1"
+    "cypress-real-events": "^1.7.2"
   },
   "scripts": {
-    "cypress:open": "cypress open"
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run --reporter junit --config-file cypress.config.js",
+    "merge-reports": "jrm cypress/results/combined.xml 'cypress/results/*.xml'"
   }
 }

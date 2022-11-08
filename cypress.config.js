@@ -16,4 +16,9 @@ module.exports = defineConfig({
         },
         baseUrl: "http://localhost:5002/",
     },
+    reporter: "junit",
+    reporterOptions: {
+        mochaFile: "cypress/results/test-results-[hash].xml",
+        testCaseSwitchClassnameAndName: false,
+    },
 });
