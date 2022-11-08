@@ -17,19 +17,21 @@ $(function () {
             }
 
         };
+        //can be used with newer octoprint version
         self.onEventplugin_softwareupdate_update_succeeded = function () {
             document.cookie = "f.u.extra=true"
         }
+        // needs to be used for oprint 1.3.6
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             console.log("hard_refresh", plugin, data);
             if (plugin === "softwareupdate") {
                 if ("type" in data && (data["type"] === "success" || data["type"] === "restarting" || data["type"] === "restart_manually")) {
-                    document.cookie = "f.u.extra=true";
+                    document.cookie = "f.u.extra=true"; // add cookie
                 }
             }
         }
         self.setUserHardRefreshed = function () {
-            // document.cookie = "f.u.extra= ; expires = Thu, 01 Jan 1970 00:00:00 GMT"//delete cookie
+            document.cookie = "f.u.extra= ; expires = Thu, 01 Jan 1970 00:00:00 GMT" // delete cookie
         }
     }
 
