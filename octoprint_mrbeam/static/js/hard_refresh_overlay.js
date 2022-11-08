@@ -23,7 +23,6 @@ $(function () {
         }
         // needs to be used for oprint 1.3.6
         self.onDataUpdaterPluginMessage = function (plugin, data) {
-            console.log("hard_refresh", plugin, data);
             if (plugin === "softwareupdate") {
                 if ("type" in data && (data["type"] === "success" || data["type"] === "restarting" || data["type"] === "restart_manually")) {
                     document.cookie = "f.u.extra=true"; // add cookie
