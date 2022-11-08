@@ -25,7 +25,7 @@ npm run cypress:open
 
 
 ## How to generate JUnit reports
-1. Run cypress
+1. Run cypress (Docker should be running for Cypress to execute the tests)
     ```shell
     npm run cypress:run
     ```
