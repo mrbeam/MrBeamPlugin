@@ -1,0 +1,22 @@
+name: E2E on Chrome
+on: [push]
+#  push:
+#    branches:
+#      - alpha
+#      - beta
+#      - stable
+#      - mrbeam2-beta
+#      - mrbeam2-stable
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    name: E2E on Chrome
+    steps:
+      - uses: actions/checkout@v3
+      - uses: cypress-io/github-action@v4
+        with:
+          browser: chrome
+          record: true
+        env:
+          # pass GitHub token to detect new build vs re-run build
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
