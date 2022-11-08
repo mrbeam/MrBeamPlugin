@@ -69,5 +69,5 @@ RUN source ./venv2/bin/activate \
 
 CMD [ "./venv2/bin/python", "-m", "octoprint", "serve", "--port", "5000" ]
 
-HEALTHCHECK  --interval=30s --timeout=6s \
-    CMD wget --no-verbose --tries=3 --spider http://localhost:5000 || exit 1
+HEALTHCHECK  --interval=30s --timeout=3s \
+    CMD wget --no-verbose --tries=6 --spider http://localhost:5000 || exit 1
