@@ -9,6 +9,7 @@
     "cypress-real-events": "^1.7.1"
   },
   "scripts": {
+    "start": "docker build -t mrbeam_plugin .\n && docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin",
     "cypress:open": "cypress open"
   }
 }
