@@ -17,6 +17,7 @@ jobs:
         with:
           start: npm run docker:run
           wait-on: "http://localhost:5002/"
+          wait-on-timeout: 360
           browser: chrome
           record: true
         env:
