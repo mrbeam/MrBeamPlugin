@@ -709,6 +709,7 @@ class MrBeamPlugin(
                 "js/calibration/watterott/camera_alignment.js",
                 "js/calibration/watterott/calibration_qa.js",
                 "js/calibration/watterott/label_printer.js",
+                "js/hard_refresh_overlay.js",
             ],
             css=[
                 "css/mrbeam.css",

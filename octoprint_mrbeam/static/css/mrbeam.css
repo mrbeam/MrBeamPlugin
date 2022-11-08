@@ -3407,3 +3407,15 @@ button#terminal-send {
 #support_overlay > div.modal-body.scrollable > table {
   margin: 20px auto;
 }
+
+.hard_refresh_overlay {
+  width: 60%;
+  margin-left: -30%;
+}
+.hard_refresh_overlay .image_description {
+  padding: 40px;
+}
+.hard_refresh_overlay .modal-header {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}

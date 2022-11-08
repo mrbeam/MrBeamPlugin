@@ -1,0 +1,23 @@
+<div id="hard_refresh_overlay" class="modal hide fade hard_refresh_overlay" data-backdrop="static">
+    <div class="modal-header">
+        <h3><i class="icon icon-warning-sign"></i> {{ _('Refresh is needed after the last Software Update') }}</h3>
+    </div>
+    <div class="modal-body">
+        <div class="row-fluid">
+            <div class="span5 image_description">
+                <p>{{ _("An update has been installed on this Mr Beam. To use the new functions, the user interace must be completely reloaded.") }}</p>
+                <p> {{ _("We call this a hard refresh. To do this, press the three keys at the same time, depending on your operating system, as shown in the graphic:") }}</p>
+            </div>
+            <div class="span7">
+                <b>{{ _("Windows | Strg + Shift + R") }}</b>
+                <img src="/plugin/mrbeam/static/img/windows_refresh.png">
+                <b>{{ _("Mac | Command + Shift + R") }}</b>
+                <img src="/plugin/mrbeam/static/img/mac_refresh.png">
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" id="#hard_refresh_confirmed" data-dismiss="modal"
+                aria-hidden="true" data-bind="click: $root.setUserHardRefreshed">{{ _('Yes, I will reload the page') }}</button>
+    </div>
+</div>
