@@ -3416,6 +3416,9 @@ button#terminal-send {
   padding: 40px;
 }
 .hard_refresh_overlay .modal-header {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.hard_refresh_overlay .icon-warning-sign{
+  color: #e25303;
 }
