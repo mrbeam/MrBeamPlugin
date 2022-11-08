@@ -30,7 +30,9 @@ jobs:
           # pass GitHub token to detect new build vs re-run build
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Merge reports
+        if: always()
         run: npm run merge-reports
       - name: Import reports in Xray
+        if: always()
         run: echo todo
 
