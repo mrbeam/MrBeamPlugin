@@ -4343,7 +4343,6 @@ $(function () {
                 }
 
                 function stopCrossHairDragging(event) {
-                    // todo iratxe
                     clearInterval(window.mrbeam.draggableCrosshair.interval);
                     window.mrbeam.draggableCrosshair.destination = null;
 
