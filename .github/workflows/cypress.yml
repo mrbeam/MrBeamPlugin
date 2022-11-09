@@ -63,6 +63,7 @@ jobs:
           docker load --input /tmp/image.tar
           npm run docker:run
           docker image ls -a
+          sleep(90)
           docker ps -a
           docker logs mrbeam-plugin
       - name: UI Tests - Chrome
@@ -71,7 +72,7 @@ jobs:
           install: false
 #          start: npm run docker:run
           wait-on: "http://127.0.0.1:5002/"
-          wait-on-timeout: 300
+#          wait-on-timeout: 300
           browser: chrome
           config-file: cypress.config.js
           parallel: true
