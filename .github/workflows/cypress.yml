@@ -7,7 +7,12 @@ jobs:
     container: cypress/browsers:node12.18.3-chrome87-ff82
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - run: curl --unix-socket /var/run/docker.sock http://localhost/version
+      - run: |
+          docker run -v /var/run/docker.sock:/var/run/docker.sock \
+           -ti docker
 
       - name: Cypress install
         uses: cypress-io/github-action@v4
