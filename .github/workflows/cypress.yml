@@ -14,9 +14,11 @@ jobs:
         with:
           push: false
           context: .
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           file: ./Dockerfile
           tags: mrbeam_plugin:latest
-          outputs: type=oci,dest=/tmp/image.tar
+          outputs: type=docker,dest=/tmp/image.tar
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
