@@ -27,9 +27,7 @@ jobs:
 
   ui-chrome-tests:
     runs-on: ubuntu-latest
-    container:
-      image: cypress/browsers:node12.18.3-chrome87-ff82
-      options: --network ${{ job.container.network }}
+    container: cypress/browsers:node12.18.3-chrome87-ff82
     needs: mrb-docker
     strategy:
       fail-fast: false
@@ -50,7 +48,7 @@ jobs:
           apt-get install docker.io -y
           docker load --input /tmp/image.tar
           echo ${{ job.container.network }}
-          docker run --name mrbeam-plugin -d -p5002:5000 --network ${{ job.container.network }} mrbeam_plugin
+          docker run --name mrbeam-plugin -d -p5002:5000 --network ${{ ui-chrome-tests.container.network }} mrbeam_plugin
           docker image ls -a
           sleep 95
           docker ps -a
