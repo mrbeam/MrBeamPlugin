@@ -48,7 +48,7 @@ jobs:
           apt-get install docker.io -y
           docker load --input /tmp/image.tar
           echo ${{ job.container.network }}
-          docker run --name mrbeam-plugin -d -p5002:5000 --network ${{ ui-chrome-tests.container.network }} mrbeam_plugin
+          docker run --name mrbeam-plugin -d -p5002:5000 --network ${{ jobs.ui-chrome-tests.container.network }} mrbeam_plugin
           docker image ls -a
           sleep 95
           docker ps -a
