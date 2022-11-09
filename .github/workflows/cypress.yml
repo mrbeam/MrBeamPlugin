@@ -6,8 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: cypress/browsers:node12.18.3-chrome87-ff82
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
+#      volumes:
+#        - /var/run/docker.sock:/var/run/docker.sock
     steps:
       - name: Checkout
         uses: actions/checkout@v3
