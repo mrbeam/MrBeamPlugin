@@ -1,42 +1,63 @@
-name: E2E on Chrome
+name: Cypress Tests
 on: [push]
-#  push:
-#    branches:
-#      - alpha
-#      - beta
-#      - stable
-#      - mrbeam2-beta
-#      - mrbeam2-stable
+
 jobs:
-  cypress-run:
+  install:
     runs-on: ubuntu-latest
-    name: E2E on Chrome
+    container: cypress/browsers:node12.18.3-chrome87-ff82
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3  # Cache dependencies to speed up process
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cypress install
+        uses: cypress-io/github-action@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - uses: cypress-io/github-action@v4
+          # Disable running of tests within install job
+          runTests: false
+          build: npm run docker:build
+
+      - name: Save build folder
+        uses: actions/upload-artifact@v2
         with:
-          start: npm run docker:build-and-run
+          name: build
+          if-no-files-found: error
+          path: build
+
+  ui-chrome-tests:
+    runs-on: ubuntu-latest
+    container: cypress/browsers:node12.18.3-chrome87-ff82
+    needs: install
+    strategy:
+      fail-fast: false
+      matrix:
+        # run copies of the current job in parallel
+        containers: [ 1, 2, 3, 4, 5 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Download the build folders
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build
+
+      - name: UI Tests - Chrome
+        uses: cypress-io/github-action@v4.x.x # use the explicit version number
+        with:
+          # we have already installed all dependencies above
+          install: false
+          start: npm run docker:run
           wait-on: "http://localhost:5002/"
-          wait-on-timeout: 360
+#          wait-on-timeout: 300
           browser: chrome
           config-file: cypress.config.js
+          parallel: true
+          group: 'UI - Chrome'
+          spec: cypress/e2e/*
         env:
-          # pass GitHub token to detect new build vs re-run build
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: Merge reports
-        if: always()
-        run: npm run merge-reports
-      - name: Submit results to Xray
-        env:
-          JIRA_SERVER_URL: ${{ secrets.jira_server_url }}
-          JIRA_USERNAME: ${{ secrets.jira_username }}
-          JIRA_PASSWORD: ${{ secrets.jira_password }}
-        run: 'curl -H "Content-Type: multipart/form-data" -u $JIRA_USERNAME:$JIRA_PASSWORD -F "file=@cypress/results/combined.xml" "$JIRA_SERVER_URL/rest/raven/1.0/import/execution/junit?projectKey=CALC"'
+          # Recommended: pass the GitHub token lets this action correctly
+          # determine the unique run id necessary to re-run the checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
