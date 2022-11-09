@@ -10,8 +10,8 @@ jobs:
         uses: actions/checkout@v3
 
       - run: |
-          sudo apt-get update
-          sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+          apt-get update
+          apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
       - name: Cypress install
         uses: cypress-io/github-action@v4
