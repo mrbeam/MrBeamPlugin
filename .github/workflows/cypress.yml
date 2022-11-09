@@ -2,38 +2,46 @@ name: Cypress Tests
 on: [push]
 
 jobs:
-  install:
+  mrb-docker:
     runs-on: ubuntu-latest
-    container:
-      image: cypress/browsers:node12.18.3-chrome87-ff82
-#      volumes:
-#        - /var/run/docker.sock:/var/run/docker.sock
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-
-      - run: |
-          apt-get --allow-releaseinfo-change update
-          apt-get install docker.io -y
-
-      - name: Cypress install
-        uses: cypress-io/github-action@v4
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build and export
+        uses: docker/build-push-action@v3
         with:
-          # Disable running of tests within install job
-          runTests: false
-          build: npm run docker:build
-
-      - name: Save build folder
+          push: false
+          context: .
+          file: ./Dockerfile
+          tags: mrbeam_plugin:latest
+          outputs: type=oci,dest=/tmp/image.tar
+      - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: build
-          if-no-files-found: error
-          path: build
+          name: mrbeam_plugin
+          path: /tmp/image.tar
+
+#  install:
+#    runs-on: ubuntu-latest
+#    needs:
+#    container:
+#      image: cypress/browsers:node12.18.3-chrome87-ff82
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#      - name: Cypress install
+#        uses: cypress-io/github-action@v4
+#        with:
+#          # Disable running of tests within install job
+#          runTests: false
+#          build:
 
   ui-chrome-tests:
     runs-on: ubuntu-latest
     container: cypress/browsers:node12.18.3-chrome87-ff82
-    needs: install
+    needs: mrb-docker
     strategy:
       fail-fast: false
       matrix:
@@ -42,17 +50,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Download the build folders
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: build
-          path: build
-
+          name: mrbeam_plugin
+          path: /tmp
+      - name: Load Docker image
+        run: |
+          docker load --input /tmp/image.tar
+          docker image ls -a
       - name: UI Tests - Chrome
-        uses: cypress-io/github-action@v4.x.x # use the explicit version number
+        uses: cypress-io/github-action@v4
         with:
-          # we have already installed all dependencies above
           install: false
           start: npm run docker:run
           wait-on: "http://localhost:5002/"
