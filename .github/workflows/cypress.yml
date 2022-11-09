@@ -32,7 +32,11 @@ jobs:
       - name: Merge reports
         if: always()
         run: npm run merge-reports
-      - name: Import reports in Xray
-        if: always()
-        run: echo todo
+      - name: Submit results to Xray
+        env:
+          JIRA_SERVER_URL: ${{ secrets.jira_server_url }}
+          JIRA_USERNAME: ${{ secrets.jira_username }}
+          JIRA_PASSWORD: ${{ secrets.jira_password }}
+        run: 'curl -H "Content-Type: multipart/form-data" -u $JIRA_USERNAME:$JIRA_PASSWORD -F "file=@cypress/results/combined.xml" "$JIRA_SERVER_URL/rest/raven/1.0/import/execution/junit?projectKey=CALC"'
+
 
