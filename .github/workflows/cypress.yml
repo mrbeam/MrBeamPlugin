@@ -25,24 +25,24 @@ jobs:
           name: mrbeam_plugin
           path: /tmp/image.tar
 
-  install:
-    runs-on: ubuntu-latest
-    needs: mrb-docker
-    container:
-      image: cypress/browsers:node12.18.3-chrome87-ff82
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Cypress install
-        uses: cypress-io/github-action@v4
-        with:
-          # Disable running of tests within install job
-          runTests: false
+#  install:
+#    runs-on: ubuntu-latest
+#    needs: mrb-docker
+#    container:
+#      image: cypress/browsers:node12.18.3-chrome87-ff82
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#      - name: Cypress install
+#        uses: cypress-io/github-action@v4
+#        with:
+#          # Disable running of tests within install job
+#          runTests: false
 
   ui-chrome-tests:
     runs-on: ubuntu-latest
     container: cypress/browsers:node12.18.3-chrome87-ff82
-    needs: install
+    needs: mrb-docker
     strategy:
       fail-fast: false
       matrix:
@@ -61,13 +61,15 @@ jobs:
           apt-get --allow-releaseinfo-change update
           apt-get install docker.io -y
           docker load --input /tmp/image.tar
+          npm run docker:run
           docker image ls -a
+          docker ps -a
       - name: UI Tests - Chrome
         uses: cypress-io/github-action@v4
         with:
           install: false
-          start: npm run docker:run
-          wait-on: "http://localhost:5002/"
+#          start: npm run docker:run
+          wait-on: "http://127.0.0.1:5002/"
           wait-on-timeout: 300
           browser: chrome
           config-file: cypress.config.js
