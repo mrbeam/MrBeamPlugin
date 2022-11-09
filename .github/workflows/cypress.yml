@@ -25,25 +25,24 @@ jobs:
           name: mrbeam_plugin
           path: /tmp/image.tar
 
-#  install:
-#    runs-on: ubuntu-latest
-#    needs:
-#    container:
-#      image: cypress/browsers:node12.18.3-chrome87-ff82
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v3
-#      - name: Cypress install
-#        uses: cypress-io/github-action@v4
-#        with:
-#          # Disable running of tests within install job
-#          runTests: false
-#          build:
+  install:
+    runs-on: ubuntu-latest
+    needs: mrb-docker
+    container:
+      image: cypress/browsers:node12.18.3-chrome87-ff82
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Cypress install
+        uses: cypress-io/github-action@v4
+        with:
+          # Disable running of tests within install job
+          runTests: false
 
   ui-chrome-tests:
     runs-on: ubuntu-latest
     container: cypress/browsers:node12.18.3-chrome87-ff82
-    needs: mrb-docker
+    needs: install
     strategy:
       fail-fast: false
       matrix:
