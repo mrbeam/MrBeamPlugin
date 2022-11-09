@@ -52,8 +52,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v1
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
@@ -71,7 +69,7 @@ jobs:
           install: false
           start: npm run docker:run
           wait-on: "http://localhost:5002/"
-#          wait-on-timeout: 300
+          wait-on-timeout: 300
           browser: chrome
           config-file: cypress.config.js
           parallel: true
