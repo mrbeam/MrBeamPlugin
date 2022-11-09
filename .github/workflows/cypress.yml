@@ -63,7 +63,7 @@ jobs:
           docker load --input /tmp/image.tar
           npm run docker:run
           docker image ls -a
-          sleep(95)
+          sleep 95
           docker ps -a
           docker logs mrbeam-plugin
       - name: UI Tests - Chrome
