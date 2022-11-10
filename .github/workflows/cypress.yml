@@ -55,6 +55,8 @@ jobs:
           sleep 95
           docker ps -a
           docker logs mrbeam-plugin
+          docker inspect mrbeam-plugin -f "{{json .NetworkSettings.Networks }}"
+          docker inspect cypress/browsers:node12.18.3-chrome87-ff82 -f "{{json .NetworkSettings.Networks }}"
       - name: UI Tests - Chrome
         uses: cypress-io/github-action@v4
         with:
