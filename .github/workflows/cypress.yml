@@ -52,12 +52,10 @@ jobs:
           echo $BRIDGE_NETWORK_ID
           docker run --name mrbeam-plugin -d -p5002:5000 --network $BRIDGE_NETWORK_ID mrbeam_plugin
           docker image ls -a
+          docker inspect -f '{{ .NetworkSettings.IPAddress }}' $(docker ps -q)
           sleep 95
           docker ps -a
-          docker image
           docker logs mrbeam-plugin
-          docker inspect mrbeam-plugin -f "{{json .NetworkSettings.Networks }}"
-          docker inspect 9c55ad422f9c49f6b817ec7a9ca50182_cypressbrowsersnode12183chrome87ff82_c6c0da -f "{{json .NetworkSettings.Networks }}"
       - name: UI Tests - Chrome
         uses: cypress-io/github-action@v4
         with:
