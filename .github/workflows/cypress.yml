@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: cypress/browsers:node12.18.3-chrome87-ff82
-      options: --add-host=host.docker.internal:host-gateway
+      options: --net bridge
     needs: mrb-docker
     strategy:
       fail-fast: false
@@ -52,7 +52,7 @@ jobs:
           docker network ls
           BRIDGE_NETWORK_ID=$(docker network ls --filter=name=github_network_ --format="{{.ID}}")
           echo $BRIDGE_NETWORK_ID
-          docker run --name mrbeam-plugin -d -p5002:5000 --net $BRIDGE_NETWORK_ID --add-host=host.docker.internal:host-gateway mrbeam_plugin
+          docker run --name mrbeam-plugin -d -p5002:5000 --net bridge mrbeam_plugin
           docker image ls -a
           docker network inspect $BRIDGE_NETWORK_ID -f "{{json .Containers }}"
           docker network inspect bridge -f "{{json .Containers }}"
