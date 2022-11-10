@@ -69,8 +69,7 @@ jobs:
       - name: UI Tests - Chrome
         uses: cypress-io/github-action@v4
         with:
-          install: false
-          start: npm install
+#          install: false
           wait-on: "http://mrbeam-plugin.org:5002/"
 #          wait-on-timeout: 300
           browser: chrome
