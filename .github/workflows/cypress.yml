@@ -27,6 +27,7 @@ jobs:
 
   ui-chrome-tests:
     runs-on: ubuntu-latest
+    permissions: read-all|write-all
     container:
       image: cypress/browsers:node12.18.3-chrome87-ff82
       # options: --add-host=host.docker.internal:host-gateway
