@@ -30,6 +30,7 @@ jobs:
     container:
       image: cypress/browsers:node12.18.3-chrome87-ff82
       # options: --add-host=host.docker.internal:host-gateway
+      options: --privileged=true
     needs: mrb-docker
     strategy:
       fail-fast: false
