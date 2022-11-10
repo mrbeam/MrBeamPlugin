@@ -66,6 +66,8 @@ jobs:
           sleep 15
           docker ps -a
           docker logs mrbeam-plugin
+#      - run: |
+#          envsubst < ./cypress/fixtures/test-data.template.json > ./cypress/fixtures/test-data.json
       - name: UI Tests - Chrome
         uses: cypress-io/github-action@v4
         with:

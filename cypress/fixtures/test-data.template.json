@@ -1,0 +1,7 @@
+{
+  "email": "${CYPRESS_TEST_USER_EMAIL}",
+  "verify_code": "7fd76efb-9ac4-4627-b0b3-3de6a01d07fb",
+  "url": "${MRBEAM_PLUGIN_URL}",
+  "url_laser": "${MRBEAM_PLUGIN_URL}/?enableLaserButton#",
+  "password": "${CYPRESS_TEST_USER_PASSWORD}"
+}
