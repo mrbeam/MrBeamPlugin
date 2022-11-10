@@ -70,7 +70,7 @@ jobs:
         uses: cypress-io/github-action@v4
         with:
           install: false
-#          start: npm run docker:run
+          start: npm install
           wait-on: "http://mrbeam-plugin.org:5002/"
 #          wait-on-timeout: 300
           browser: chrome
