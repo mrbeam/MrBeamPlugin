@@ -30,7 +30,7 @@ jobs:
     permissions: write-all
     container:
       image: cypress/browsers:node12.18.3-chrome87-ff82
-      options: --net=host #--add-host=host.docker.internal:host-gateway
+      options: --add-host=host.docker.internal:host-gateway
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
     needs: mrb-docker
@@ -53,11 +53,12 @@ jobs:
         run: |
           apt-get --allow-releaseinfo-change update
           apt-get install docker.io -y
+          cat /etc/hosts
           docker load --input /tmp/image.tar
           docker network ls
           BRIDGE_NETWORK_ID=$(docker network ls --filter=name=github_network_ --format="{{.ID}}")
           echo $BRIDGE_NETWORK_ID
-          docker run --name mrbeam-plugin --net=host -d -p5002:5000 mrbeam_plugin
+          docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
           docker image ls -a
           docker inspect -f '{{ .NetworkSettings.Networks }}' $(docker ps -q)
           docker inspect -f '{{ .NetworkSettings.IPAddress }}' $(docker ps -q)
