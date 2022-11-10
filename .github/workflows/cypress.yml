@@ -52,6 +52,8 @@ jobs:
           echo $BRIDGE_NETWORK_ID
           docker run --name mrbeam-plugin -d -p5002:5000 --network $BRIDGE_NETWORK_ID mrbeam_plugin
           docker image ls -a
+          docker network inspect $BRIDGE_NETWORK_ID -f "{{json .Containers }}"
+          docker network inspect bridge -f "{{json .Containers }}"
           docker inspect -f '{{ .NetworkSettings.IPAddress }}' $(docker ps -q)
           sleep 95
           docker ps -a
