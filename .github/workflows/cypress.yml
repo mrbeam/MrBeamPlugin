@@ -50,7 +50,7 @@ jobs:
           docker network ls
           BRIDGE_NETWORK_ID=$(docker network ls --filter=name=github_network_ --format="{{.ID}}")
           echo $BRIDGE_NETWORK_ID
-          docker run --name mrbeam-plugin -d -p5002:5000 --network $BRIDGE_NETWORK_ID mrbeam_plugin
+          docker run --name mrbeam-plugin -d -p5002:5000 --net $BRIDGE_NETWORK_ID mrbeam_plugin
           docker image ls -a
           docker network inspect $BRIDGE_NETWORK_ID -f "{{json .Containers }}"
           docker network inspect bridge -f "{{json .Containers }}"
