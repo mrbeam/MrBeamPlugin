@@ -3,7 +3,7 @@
 // cypress-spec-split.ts
 
 // import fs from 'fs/promises';
-import * as fs from 'fs/promises';
+import { promises as fs } from 'fs';
 // import globby from 'globby';
 import { globby } from 'globby';
 // import minimatch from 'minimatch';
