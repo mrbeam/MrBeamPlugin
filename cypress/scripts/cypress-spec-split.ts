@@ -5,7 +5,7 @@
 // import fs from 'fs/promises';
 import * as fs from 'fs/promises';
 // import globby from 'globby';
-import * as globby from 'globby';
+import { globby } from 'globby';
 // import minimatch from 'minimatch';
 import * as minimatch from 'minimatch';
 
