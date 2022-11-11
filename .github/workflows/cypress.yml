@@ -40,8 +40,6 @@ jobs:
         # run copies of the current job in parallel
         containers: [ 1, 2, 3, 4, 5 ]
     steps:
-      - run: |
-          node -v
       - name: Checkout
         uses: actions/checkout@v2
       - name: Download artifact
@@ -68,7 +66,7 @@ jobs:
           docker logs mrbeam-plugin
 #      - run: |
 #          envsubst < ./cypress/fixtures/test-data.template.json > ./cypress/fixtures/test-data.json
-      - name: UI Tests - Chrome
+      - name: Run Cypress e2e - Chrome
         uses: cypress-io/github-action@v4
         with:
 #          install: false
@@ -79,9 +77,34 @@ jobs:
 #          parallel: true
 #          group: 'UI - Chrome'
 #          spec: cypress/e2e/*
+          command: yarn ts-node scripts/cypress-ci-run.ts
         env:
+          TOTAL_RUNNERS: 5
+          THIS_RUNNER: ${{ matrix.containers }}
           # Recommended: pass the GitHub token lets this action correctly
           # determine the unique run id necessary to re-run the checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Run Cypress e2e tests
+#        uses: cypress-io/github-action@v4
+#        with:
+#          # we have already installed all dependencies above
+#          install: false
+#          # build: yarn build
+#          start: yarn test:server
+#          wait-on: 'http://localhost:3001'
+#          command: yarn ts-node scripts/cypress-ci-run.ts
+#        env:
+#          # the number of containers in the job matrix
+#          TOTAL_RUNNERS: 5
+#          THIS_RUNNER: ${{ matrix.containers }}
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload JUnit reports
+        uses: actions/upload-artifact@v1
+        # Only capture images on failure
+        if: failure()
+        with:
+          name: cypress-report
+          path: cypress/results
 
 
