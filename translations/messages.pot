@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-08-30 11:31+0200\n"
+"POT-Creation-Date: 2022-11-11 08:54+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2214,6 +2214,34 @@ msgstr ""
 msgid "It's focused!"
 msgstr ""
 
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:3
+msgid "Refresh is needed after the last Software Update"
+msgstr ""
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:9
+msgid ""
+"An update has been installed on this Mr Beam. To use the new functions, "
+"the user interace must be completely reloaded."
+msgstr ""
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:10
+msgid ""
+"We call this a hard refresh. To do this, press the three keys at the same"
+" time, depending on your operating system, as shown in the graphic:"
+msgstr ""
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:14
+msgid "Windows | Ctrl + Shift + R"
+msgstr ""
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:16
+msgid "Mac | Command + Shift + R"
+msgstr ""
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:23
+msgid "Yes, I will reload the page"
+msgstr ""
+
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:50
 msgid "Make sure your Mr Beam is empty."
 msgstr ""
@@ -2626,11 +2654,11 @@ msgid ""
 "Base%(tag_close)s."
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:1
+#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:2
 msgid "Quickstart Guide"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:2
+#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:3
 msgid "User Manual"
 msgstr ""
 

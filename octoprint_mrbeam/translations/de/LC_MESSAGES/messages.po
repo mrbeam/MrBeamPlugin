@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-08-30 11:31+0200\n"
-"PO-Revision-Date: 2022-08-30 11:32+0200\n"
+"POT-Creation-Date: 2022-11-11 08:54+0100\n"
+"PO-Revision-Date: 2022-11-11 08:58+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -2576,6 +2576,38 @@ msgstr "Über das Material fahren"
 msgid "It's focused!"
 msgstr "Fokussiert!"
 
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:3
+msgid "Refresh is needed after the last Software Update"
+msgstr "Nach dem letzten Software-Update ist eine Aktualisierung erforderlich"
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:9
+msgid ""
+"An update has been installed on this Mr Beam. To use the new functions, the "
+"user interace must be completely reloaded."
+msgstr ""
+"Auf dem Mr Beam wurde ein update installiert. Um die neuen Funktionen nutzen "
+"zu können muss die Benutzeroberfläche komplett neu geladen werden."
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:10
+msgid ""
+"We call this a hard refresh. To do this, press the three keys at the same "
+"time, depending on your operating system, as shown in the graphic:"
+msgstr ""
+"Wir nennen das einen hard refresh. Drücke dafür gleichzeitig die drei "
+"Tasten, passend zu deinem Betriebssystem, wie in der Grafik dargestellt."
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:14
+msgid "Windows | Ctrl + Shift + R"
+msgstr "Windows | Strg + Shift + R"
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:16
+msgid "Mac | Command + Shift + R"
+msgstr "Mac | Command + Shift + R"
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:23
+msgid "Yes, I will reload the page"
+msgstr "Ja, ich werde die Seite neu laden"
+
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:50
 msgid "Make sure your Mr Beam is empty."
 msgstr "Stelle sicher, dass Dein Mr Beam leer ist."
@@ -3124,11 +3156,11 @@ msgstr ""
 "Support Team kontaktieren um Dein Gerät zurückzusetzen. Mehr dazu findest Du "
 "in der %(tag_open)sKnowledge Base%(tag_close)s."
 
-#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:1
+#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:2
 msgid "Quickstart Guide"
 msgstr "Quickstart Guide"
 
-#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:2
+#: octoprint_mrbeam/templates/mrbeam_doc_translation_placeholders.jinja2:3
 msgid "User Manual"
 msgstr "Betriebsanleitung"
 
@@ -6376,10 +6408,6 @@ msgstr "Dämon zurücksetzen"
 #~ "Das Modul „MrBeam Plugin“ ist veraltet. Bitte führe das Software-Update "
 #~ "über 'Einstellungen' > 'Software-Update' aus, bevor Du einen Laserjob "
 #~ "startest."
-
-#~ msgid "iobeam version is outdated. Please try Software update."
-#~ msgstr ""
-#~ "Die iobeam-Version ist veraltet. Bitte versuche ein Software-Update."
 
 #~ msgid "beamOS is reloading..."
 #~ msgstr "beamOS lädt neu..."
