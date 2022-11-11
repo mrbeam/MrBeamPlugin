@@ -2,9 +2,12 @@
 
 // cypress-spec-split.ts
 
-import fs from 'fs/promises';
-import globby from 'globby';
-import minimatch from 'minimatch';
+// import fs from 'fs/promises';
+import * as fs from 'fs/promises';
+// import globby from 'globby';
+import * as globby from 'globby';
+// import minimatch from 'minimatch';
+import * as minimatch from 'minimatch';
 
 // These are the same properties that are set in cypress.config.
 // In practice, it's better to export these from another file, and
