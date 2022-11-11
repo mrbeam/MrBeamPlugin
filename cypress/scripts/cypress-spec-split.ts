@@ -7,7 +7,8 @@ import * as fs from 'fs/promises';
 // import globby from 'globby';
 import { globby } from 'globby';
 // import minimatch from 'minimatch';
-import * as minimatch from 'minimatch';
+// import * as minimatch from 'minimatch';
+import { Minimatch } from 'minimatch';
 
 // These are the same properties that are set in cypress.config.
 // In practice, it's better to export these from another file, and
@@ -71,7 +72,7 @@ async function getSpecFilePaths(): Promise<string[]> {
     // match against the basename of the file
     const MINIMATCH_OPTIONS = { dot: true, matchBase: true };
     return ignorePatterns.every((pattern) => {
-      return !minimatch(file, pattern, MINIMATCH_OPTIONS);
+      return !new Minimatch(pattern, MINIMATCH_OPTIONS).match(file);
     });
   };
 
