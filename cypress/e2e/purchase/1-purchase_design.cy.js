@@ -41,7 +41,7 @@ describe("Purchase", function () {
         cy.logout();
     });
 
-    it("Buy design - failed", function () {
+    xit("Buy design - failed", function () {
         cy.iframe('[id="design_store_iframe"]')
             .find('[id="price_desc"]')
             .click();
@@ -56,7 +56,7 @@ describe("Purchase", function () {
         cy.logout();
     });
 
-    it("Download design", function () {
+    xit("Download design", function () {
         cy.iframe('[id="design_store_iframe"]')
             .find(".btn-go-to-purchases-page")
             .click();
