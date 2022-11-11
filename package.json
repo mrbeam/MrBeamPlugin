@@ -14,6 +14,7 @@
     "cypress-real-events": "^1.7.2",
     "globby": "^13.1.2",
     "ts-node": "^10.9.1",
+    "ts-node-debug": "^1.1.0",
     "typescript": "^4.8.4"
   },
   "scripts": {

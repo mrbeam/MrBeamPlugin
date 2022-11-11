@@ -51,27 +51,14 @@ jobs:
         run: |
           apt-get --allow-releaseinfo-change update
           apt-get install docker.io -y
-          cat /etc/hosts
           docker load --input /tmp/image.tar
-          docker network ls
-          BRIDGE_NETWORK_ID=$(docker network ls --filter=name=github_network_ --format="{{.ID}}")
-          echo $BRIDGE_NETWORK_ID
           docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
-          docker image ls -a
-          docker inspect -f '{{ .NetworkSettings.Networks }}' $(docker ps -q)
-          docker inspect -f '{{ .NetworkSettings.IPAddress }}' $(docker ps -q)
-
-          sleep 15
-          docker ps -a
-          docker logs mrbeam-plugin
 #      - run: |
 #          envsubst < ./cypress/fixtures/test-data.template.json > ./cypress/fixtures/test-data.json
       - name: Run Cypress e2e - Chrome
         uses: cypress-io/github-action@v4
         with:
-#          install: false
           wait-on: "http://mrbeam-plugin.org:5002/"
-#          wait-on-timeout: 300
           browser: chrome
           config-file: cypress.config.js
 #          parallel: true
