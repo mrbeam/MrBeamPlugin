@@ -14,7 +14,7 @@
   "dependencies": {
     "cypress-real-events": "^1.7.2",
     "fs.promises": "^0.1.2",
-    "globby": "^13.1.2",
+    "globby": "11.0.4",
     "minimatch": "^5.1.0",
     "ts-node": "^10.9.1",
     "ts-node-debug": "^1.1.0",

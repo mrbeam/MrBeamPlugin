@@ -47,8 +47,6 @@ jobs:
         with:
           name: mrbeam_plugin
           path: /tmp
-      - run : |
-          npm upgrade
       - name: Load Docker image
         run: |
           apt-get --allow-releaseinfo-change update
