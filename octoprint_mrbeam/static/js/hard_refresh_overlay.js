@@ -11,7 +11,7 @@ $(function () {
                 self.loginState.currentUser?.()?.active
             ) {
                 let x = document.cookie.split('; ').find((row) => row.startsWith('f.u.extra='))?.split('=')[1]; // get cookie
-                if (x !== undefined && x === 'true') {
+                if (x && x === 'true') {
                     $("#hard_refresh_overlay").modal("show");
                 }
             }
@@ -19,7 +19,7 @@ $(function () {
         };
         //can be used with newer octoprint version
         self.onEventplugin_softwareupdate_update_succeeded = function () {
-            document.cookie = "f.u.extra=true"
+            document.cookie = "f.u.extra=true" // add cookie
         }
         // needs to be used for oprint 1.3.6
         self.onDataUpdaterPluginMessage = function (plugin, data) {
@@ -30,7 +30,7 @@ $(function () {
             }
         }
         self.setUserHardRefreshed = function () {
-            document.cookie = "f.u.extra= ; expires = Thu, 01 Jan 1970 00:00:00 GMT" // delete cookie
+            document.cookie = "f.u.extra=false; max-age=0" // delete cookie
         }
     }
 

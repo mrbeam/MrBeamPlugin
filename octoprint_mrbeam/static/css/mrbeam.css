@@ -3407,6 +3407,9 @@ button#terminal-send {
 #support_overlay > div.modal-body.scrollable > table {
   margin: 20px auto;
 }
+/* Support Standalone */
+
+/* Hard refresh overlay */
 
 #hard_refresh_overlay {
   width: 60%;
@@ -3422,3 +3425,5 @@ button#terminal-send {
 #hard_refresh_overlay .icon-warning-sign{
   color: #e25303;
 }
+
+/* Hard refresh overlay */
