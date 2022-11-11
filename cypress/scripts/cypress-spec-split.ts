@@ -5,7 +5,7 @@
 // import fs from 'fs/promises';
 import { promises as fs } from 'fs';
 // import globby from 'globby';
-import { globby } from 'globby';
+import globby = require("globby");
 // import minimatch from 'minimatch';
 // import * as minimatch from 'minimatch';
 import { Minimatch } from 'minimatch';
