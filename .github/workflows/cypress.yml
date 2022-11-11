@@ -61,9 +61,6 @@ jobs:
           wait-on: "http://mrbeam-plugin.org:5002/"
           browser: chrome
           config-file: cypress.config.js
-#          parallel: true
-#          group: 'UI - Chrome'
-#          spec: cypress/e2e/*
           command: yarn ts-node cypress/scripts/cypress-ci-run.ts
         env:
           TOTAL_RUNNERS: 5
@@ -71,22 +68,9 @@ jobs:
           # Recommended: pass the GitHub token lets this action correctly
           # determine the unique run id necessary to re-run the checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#      - name: Run Cypress e2e tests
-#        uses: cypress-io/github-action@v4
-#        with:
-#          # we have already installed all dependencies above
-#          install: false
-#          # build: yarn build
-#          start: yarn test:server
-#          wait-on: 'http://localhost:3001'
-#          command: yarn ts-node scripts/cypress-ci-run.ts
-#        env:
-#          # the number of containers in the job matrix
-#          TOTAL_RUNNERS: 5
-#          THIS_RUNNER: ${{ matrix.containers }}
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload JUnit reports
+        if: always()
         uses: actions/upload-artifact@v1
         # Only capture images on failure
         with:
