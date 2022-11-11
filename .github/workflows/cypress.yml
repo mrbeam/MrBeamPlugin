@@ -89,7 +89,6 @@ jobs:
       - name: Upload JUnit reports
         uses: actions/upload-artifact@v1
         # Only capture images on failure
-        if: failure()
         with:
           name: cypress-report
           path: cypress/results
