@@ -78,7 +78,7 @@ jobs:
           config-file: cypress.config.js
 #          parallel: true
 #          group: 'UI - Chrome'
-          spec: cypress/e2e/*
+#          spec: cypress/e2e/*
         env:
           # Recommended: pass the GitHub token lets this action correctly
           # determine the unique run id necessary to re-run the checks
