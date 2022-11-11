@@ -77,7 +77,7 @@ jobs:
 #          parallel: true
 #          group: 'UI - Chrome'
 #          spec: cypress/e2e/*
-          command: yarn ts-node scripts/cypress-ci-run.ts
+          command: yarn ts-node cypress/scripts/cypress-ci-run.ts
         env:
           TOTAL_RUNNERS: 5
           THIS_RUNNER: ${{ matrix.containers }}

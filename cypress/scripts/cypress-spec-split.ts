@@ -11,7 +11,7 @@ import minimatch from 'minimatch';
 // import them here and in cypress.config, so that both files use
 // the same values.
 const specPatterns = {
-  specPattern: 'tests/e2e/**/*.cy.{ts,tsx,js,jsx}',
+  specPattern: 'cypress/e2e/**/*.cy.{ts,tsx,js,jsx}',
   excludeSpecPattern: ['tsconfig.json'],
 };
 
