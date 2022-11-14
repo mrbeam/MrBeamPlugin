@@ -3622,11 +3622,14 @@ $(function () {
                 );
 
                 // analytics
-                var analyticsData = {
+                let analyticsData = {
                     id: self.currentQuickShapeFile.id,
                     file_type: "quickShape",
                     type: type.substr(1),
-                    color: qs_params.color,
+                    stroke: qs_params.stroke,
+                    stroke_color: qs_params.color,
+                    fill: qs_params.fill,
+                    fill_color: qs_params.fill_color,
                     name: name,
                 };
                 for (let myKey in qs_params) {
@@ -3981,8 +3984,10 @@ $(function () {
                     file_type: "quickText",
                     text_length: self.currentQuickTextFile.name.length,
                     brightness: ity,
-                    fill: fill,
-                    stroke: stroke,
+                    fill: self.currentQuickTextFile.fill,
+                    fill_color: self.currentQuickTextFile.fillColor,
+                    stroke: self.currentQuickTextFile.stroke,
+                    stroke_color: self.currentQuickTextFile.strokeColor,
                     font: font,
                     font_index: self.currentQuickTextFile.fontIndex,
                     is_straight: isStraightText,
@@ -4340,6 +4345,8 @@ $(function () {
                 function stopCrossHairDragging(event) {
                     clearInterval(window.mrbeam.draggableCrosshair.interval);
                     window.mrbeam.draggableCrosshair.destination = null;
+
+                    self._sendAnalytics("workingarea_crosshair_dragging", {})
 
                     const pos = self._get_pointer_event_position_MM(
                         event,
