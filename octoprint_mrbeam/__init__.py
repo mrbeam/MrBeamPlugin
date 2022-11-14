@@ -704,6 +704,7 @@ class MrBeamPlugin(
                 "js/messages.js",
                 "js/design_store.js",
                 "js/settings/dev_design_store.js",
+                                "js/material-store.js",
                 "js/settings_menu_navigation.js",
                 "js/calibration/calibration.js",
                 "js/calibration/corner_calibration.js",

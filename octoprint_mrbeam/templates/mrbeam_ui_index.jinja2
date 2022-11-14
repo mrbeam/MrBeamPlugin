@@ -52,7 +52,7 @@
                     {# Translatots: Name of the tab #}
 					<li><a href="#designlib" data-toggle="tab" id="designlib_tab_btn">{{ _('design library') }}</a></li>
                     <li><a href="#designstore" data-toggle="tab" id="designstore_tab_btn" onclick="window.mrbeam.viewModels.designStoreViewModel.goToStore()">{{ _('design store') }}</a></li>
-                    <li><a href="#material_store_content" data-toggle="tab" id="materialsotre_tab_btn">{{ _('material store') }}</a></li>
+                    <li><a href="#material_store_content" data-toggle="tab" id="materialsotre_tab_btn" onclick="window.mrbeam.viewModels.materialStoreViewModel.initialiseStore()">{{ _('material store') }}</a></li>
                     {% if not enableFocus %}
 					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">{{ _('focus') }}</a></li>
                     {% endif %}
