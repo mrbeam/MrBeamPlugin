@@ -14,7 +14,7 @@ module.exports = defineConfig({
         setupNodeEvents(on, config) {
             return require("./cypress/plugins/index.js")(on, config);
         },
-        baseUrl: "http://localhost:5002/",
+        baseUrl: "${MRBEAM_PLUGIN_URL}",
     },
     reporter: "junit",
     reporterOptions: {
