@@ -1,4 +1,4 @@
-describe("Laser Job", function () {
+describe("Laser Job - quick text", function () {
     beforeEach(function () {
         cy.fixture("test-data").then(function (testData) {
             this.testData = testData;
@@ -17,10 +17,12 @@ describe("Laser Job", function () {
         cy.get('[id="working_area_tab_text_btn"]').click();
         cy.get('[id="quick_text_dialog_text_input"]').type("MrBeam");
         cy.get('[id="quick_text_cw"]').click();
-        cy.get('[id="quick_text_fill"]').click();
+        cy.get('[id="qt_colorPicker_fill"]').click();
+        cy.get('#qt_colorPicker_fill > .track > canvas').realClick({ position: "top" });
+        cy.get('[id="quick_text_stroke"]').click('center');
+        cy.get('#qt_colorPicker_stroke > .track > canvas').realClick({ position: "left" });
         cy.get('[id="quick_text_dialog_circle"]').trigger("right");
         cy.get(".quicktext-font-button").last().click();
-        cy.get('[id="quick_text_stroke"]').click();
         cy.get('[id="quick_text_text_done_btn"]').click();
         cy.get('[id="translateHandle"]').move({
             deltaX: 433.9689,
@@ -66,6 +68,10 @@ describe("Laser Job", function () {
         cy.get('[id="working_area_tab_text_btn"]').click();
         cy.get('[id="quick_text_dialog_text_input"]').type("Lasers");
         cy.get('[id="quick_text_ccw"]').click();
+        cy.get('[id="qt_colorPicker_fill"]').click();
+        cy.get('#qt_colorPicker_fill > .track > canvas').realClick({ position: "bottom" });
+        cy.get('[id="quick_text_stroke"]').click('center');
+        cy.get('#qt_colorPicker_stroke > .track > canvas').realClick({ position: "right" });
         cy.get('[id="quick_text_dialog_circle"]').trigger("right");
         cy.get(".quicktext-font-button").last().click();
         cy.get('[id="quick_text_text_done_btn"]').click();
@@ -104,7 +110,10 @@ describe("Laser Job", function () {
         cy.get('[id="quick_text_dialog_text_input"]').type("MrBeam Lasers");
         cy.get(".quicktext-font-button").last().dblclick();
         cy.get('[id="quick_text_straight"]').click();
-        cy.get('[id="quick_text_stroke"]').click();
+        cy.get('[id="qt_colorPicker_fill"]').click();
+        cy.get('#qt_colorPicker_fill > .track > canvas').realClick({ position: "top" });
+        cy.get('[id="quick_text_stroke"]').click('center');
+        cy.get('#qt_colorPicker_stroke > .track > canvas').realClick({ position: "bottom" });
         cy.get('[id="quick_text_text_done_btn"]').click();
         cy.get(".translation").clear().type("235.0, 138.0");
         cy.get(".rotation").clear().type("-50.5");
@@ -133,6 +142,14 @@ describe("Laser Job", function () {
         cy.get(".files_template_machinecode_gcode").first().click();
         cy.get('[id="laser_button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
+        cy.logout();
+    });
+
+    it("Add text - ok button", function () {
+        cy.get('[id="working_area_tab_text_btn"]').click();
+        cy.get('[id="quick_text_dialog"]').should('to.visible');
+        cy.get('[id="quick_text_text_done_btn"]').click();
+        cy.get('[id="quick_text_dialog"]').should('not.visible');
         cy.logout();
     });
 });
