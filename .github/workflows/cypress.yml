@@ -53,8 +53,9 @@ jobs:
           apt-get install docker.io -y
           docker load --input /tmp/image.tar
           docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
-#      - run: |
-#          envsubst < ./cypress/fixtures/test-data.template.json > ./cypress/fixtures/test-data.json
+      - run: |
+          envsubst < ./cypress/fixtures/test-data.template.json > ./cypress/fixtures/test-data.json
+          envsubst < ./cypress.config-template.js > ./cypress.config.js
       - name: Run Cypress e2e - Chrome
         uses: cypress-io/github-action@v4
         with:
@@ -72,7 +73,6 @@ jobs:
       - name: Upload JUnit reports
         if: always()
         uses: actions/upload-artifact@v1
-        # Only capture images on failure
         with:
           name: cypress-report
           path: cypress/results
