@@ -1,6 +1,9 @@
 """
 This script takes a gcode file as an input and calculates an estimated job duration time.
 
+This was the first job time estimation, in the code will be referred as "v1". Later another v2 estimation was introduced,
+calculated in the frontend, that is referred as "v2"
+
 It reads the gcode line by line extracting the coordinates and feed rates, and with those values calculates the duration
 of each of the ways. Finally it sums up all the durations to get the total duration.
 The
@@ -97,7 +100,7 @@ class JobTimeEstimation:
             estimation_thread.start()
 
         if event == OctoPrintEvents.CLIENT_OPENED and self._last_estimation:
-            self._send_estimate_to_frontend()
+            self._send_v1_estimate_to_frontend()
 
     def _calculate_estimation_threaded(self, file_name):
         """Calculate the job time estimation from the gcode file.
@@ -115,11 +118,11 @@ class JobTimeEstimation:
             gcode_file = "{path}/{file}".format(file=file_name, path=path)
 
             self._last_estimation = self.estimate_job_duration(gcode_file)
-            self._send_estimate_to_frontend()
+            self._send_v1_estimate_to_frontend()
         except:
             self._logger.exception("Error when calculating the job duration estimation")
 
-    def _send_estimate_to_frontend(self):
+    def _send_v1_estimate_to_frontend(self):
         try:
             payload = dict()
             payload["job_time_estimation_rounded"] = self._last_estimation.get("total_duration_rounded", -1)

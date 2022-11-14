@@ -72,7 +72,7 @@ class AnalyticsHandler(object):
 
         # Job-specific data
         self._current_job_id = None
-        self._current_job_time_estimation = -1
+        self._current_job_time_estimation_v1 = -1
         self.current_job_time_estimation_v2 = -1
         self._current_job_final_status = None
         self._current_job_compressor_data = None
@@ -682,7 +682,7 @@ class AnalyticsHandler(object):
     def _event_print_done(self, event, payload):
         duration = {
             ak.Job.Duration.CURRENT: int(round(payload["time"])),
-            ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+            ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation_v1)),
             ak.Job.Duration.ESTIMATION_V2: int(round(self.current_job_time_estimation_v2)),
         }
         self._current_job_final_status = "Done"
@@ -719,12 +719,12 @@ class AnalyticsHandler(object):
         self.upload()  # delay of 5.0 s
 
     def _event_job_time_estimated(self, event, payload):
-        self._current_job_time_estimation = payload["job_time_estimation_raw"]
+        self._current_job_time_estimation_v1 = payload["job_time_estimation_raw"]
 
         if self._current_job_id:
             payload = {
                 ak.Job.Duration.ESTIMATION: int(
-                    round(self._current_job_time_estimation)
+                    round(self._current_job_time_estimation_v1)
                 ),
                 ak.Job.Duration.ESTIMATION_V2: int(
                     round(self.current_job_time_estimation_v2)
@@ -903,7 +903,7 @@ class AnalyticsHandler(object):
         self._current_intensity_collector = None
         self._current_lasertemp_collector = None
         self._current_cpu_data = None
-        self._current_job_time_estimation = -1
+        self._current_job_time_estimation_v1 = -1
         self.current_job_time_estimation_v2 = -1
         self._current_job_final_status = None
         self._current_job_compressor_data = None

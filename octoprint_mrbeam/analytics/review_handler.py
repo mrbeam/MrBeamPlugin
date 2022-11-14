@@ -40,7 +40,7 @@ class ReviewHandler:
         self.review_file = os.path.join(self.review_folder, REVIEW_FILE)
         self._review_lock = Lock()
 
-        self._current_job_time_estimation = -1
+        self._current_job_time_estimation_v1 = -1
 
         # sync given value from settings to usage_handler
         self._sync_given_val_to_usage_handler()
