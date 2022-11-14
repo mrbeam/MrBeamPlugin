@@ -1,4 +1,6 @@
 
 <div class="tab-pane" id="material_store_content">
-    <iframe id="material_store_iframe" src="http://localhost:3000" style="width: 100%;height: 90vh;overflow: hidden;" scrolling="auto" frameBorder="0"></iframe>
+    <div id="loading_spinner">Loading</div>
+    <iframe id="material_store_iframe" loading="lazy" src="http://localhost:3000" style="width: 100%;height: 90vh;overflow: hidden;" scrolling="auto" frameBorder="0"></iframe>
+    <div id="connection_error" class="hidden">No internet</div>
 </div>

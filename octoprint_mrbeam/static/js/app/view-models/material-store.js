@@ -1,14 +1,46 @@
 $(function () {
     function MaterialStoreViewModel(params) {
         let self = this;
-        window.mrbeam.viewModels["designStoreViewModel"] = self;
+
+        const MATERIAL_STORE_EVENT_TYPE = {
+            MR_BEAM_LOAD: "loadedFromMrBeamDevice",
+            DISPLAY_PRODUCT: "displayProduct",
+        };
+
+        window.mrbeam.viewModels["materialStoreViewModel"] = self;
         self.material_store_iframe_src = "http://localhost:3000";
-        $("#material_store_iframe").attr("src", self.material_store_iframe_src);
 
         self.loginState = params[0];
         self.navigation = params[1];
         self.analytics = params[2];
         self.settings = params[3];
+
+        self.initialiseStore = function () {
+            $("#material_store_iframe").attr("loading", "eager");
+        };
+
+        self.sendInitDetailsToMaterialStoreIframe = function () {
+            self.sendMessageToMaterialStoreIframe(
+                MATERIAL_STORE_EVENT_TYPE.MR_BEAM_LOAD
+            );
+        };
+
+        self.onLoadMaterialStore = function () {
+            self.sendInitDetailsToMaterialStoreIframe();
+            $("#loading_spinner").addClass("hidden");
+        };
+
+        self.showConnectionError = function () {
+            $("#connection_error").removeClass("hidden");
+            $("#loading_spinner").addClass("hidden");
+        };
+
+        self.displayDetailedProduct = function (url) {
+            self.sendMessageToMaterialStoreIframe(
+                MATERIAL_STORE_EVENT_TYPE.DISPLAY_PRODUCT,
+                url
+            );
+        };
 
         self.sendMessageToMaterialStoreIframe = function (event, payload) {
             let data = {
@@ -23,6 +55,10 @@ $(function () {
                     self.material_store_iframe_src
                 );
         };
+
+        $("#material_store_iframe").attr("src", self.material_store_iframe_src);
+        $("#material_store_iframe").on("load", self.onLoadMaterialStore);
+        $("#material_store_iframe").on("error", self.showConnectionError);
     }
 
     OCTOPRINT_VIEWMODELS.push({

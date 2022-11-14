@@ -701,6 +701,7 @@ class MrBeamPlugin(
                 "js/app/view-models/messages.js",
                 "js/app/view-models/design-store.js",
                 "js/app/view-models/settings/dev-design-store.js",
+                "js/app/view-models/material-store.js",
                 "js/app/view-models/settings/calibration/calibration.js",
                 "js/app/view-models/settings/calibration/corner-calibration.js",
                 "js/app/view-models/settings/calibration/lens-calibration.js",
