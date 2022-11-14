@@ -58,8 +58,7 @@ class LaserheadHandler(object):
 
     @property
     def _current_used_lh_model_string(self):
-        """
-        Returns the laserhead model name
+        """Returns the laserhead model name.
 
         Returns:
             str: laserhead model or None if Model name is not found
@@ -252,8 +251,7 @@ class LaserheadHandler(object):
         self._lh_cache[self._current_used_lh_serial] = lh_data
 
     def get_current_used_lh_data(self):
-        """
-        Retrieves the current used laserhead data
+        """Retrieves the current used laserhead data.
 
         Returns:
             dict: current laserhead data if exists or default data otherwise
@@ -389,9 +387,7 @@ class LaserheadHandler(object):
         return correction_factor
 
     def _load_laser_heads_file(self):
-        """
-        Loads laser head data from a file
-        """
+        """Loads laser head data from a file."""
         self._logger.debug("Loading data from  {} started...!".format(self._laser_heads_file))
         try:
             with open(self._laser_heads_file, "r") as stream:
@@ -411,8 +407,8 @@ class LaserheadHandler(object):
             self._logger.error("Can't open file: {} {}".format(self._laser_heads_file, e))
 
     def _write_laser_heads_file(self, laser_heads_file=None):
-        """
-        Overwrites the file containing the laser heads info and creates the file if it doesn't exist
+        """Overwrites the file containing the laser heads info and creates the
+        file if it doesn't exist.
 
         Args:
             laser_heads_file (Yaml): path to the file to be used
@@ -438,12 +434,10 @@ class LaserheadHandler(object):
 
     @property
     def current_laserhead_max_temperature(self):
-        """
-        Return the current laser head max temperature
+        """Return the current laser head max temperature.
 
         Returns:
             float: Laser head max temp
-
         """
         current_laserhead_properties = self._get_laserhead_properties()
 
@@ -463,8 +457,8 @@ class LaserheadHandler(object):
 
     @property
     def default_laserhead_max_temperature(self):
-        """
-        Default max temperature for laser head. to be used by other modules at init time
+        """Default max temperature for laser head. to be used by other modules
+        at init time.
 
         Returns:
             float: Laser head default max temp
@@ -473,12 +467,11 @@ class LaserheadHandler(object):
         return LASERHEAD_MAX_TEMP_FALLBACK
 
     def _load_current_laserhead_properties(self):
-        """
-        Loads the current detected laser head related properties from the laser head profile files and return them
+        """Loads the current detected laser head related properties from the
+        laser head profile files and return them.
 
         Returns:
             dict: current laser head properties, None: otherwise
-
         """
         # 1. get the ID of the current laser head
         laserhead_id = self.get_current_used_lh_model_id()
@@ -508,12 +501,11 @@ class LaserheadHandler(object):
             return None
 
     def _get_laserhead_properties(self):
-        """
-        returns the current saved laser head properties or load new if the laser head id changed
+        """returns the current saved laser head properties or load new if the
+        laser head id changed.
 
         Returns:
             dict: current laser head properties, None: otherwise
-
         """
         # 1. get the ID of the current laser head
         laserhead_id = self.get_current_used_lh_model_id()
@@ -533,12 +525,10 @@ class LaserheadHandler(object):
 
     @property
     def current_laserhead_max_dust_factor(self):
-        """
-        Return the current laser head max dust factor
+        """Return the current laser head max dust factor.
 
         Returns:
             float: Laser head max dust factor
-
         """
         current_laserhead_properties = self._get_laserhead_properties()
 
@@ -558,8 +548,8 @@ class LaserheadHandler(object):
 
     @property
     def default_laserhead_max_dust_factor(self):
-        """
-        Default max dust factor for laser head. to be used by other modules at init time
+        """Default max dust factor for laser head. to be used by other modules
+        at init time.
 
         Returns:
             float: Laser head default max dust factor

@@ -18,9 +18,9 @@ FIND_INT = r"S" + FLOAT_NUMBER
 
 
 def read(gcode, init_x=HOMED_X, init_y=HOMED_Y, init_intensity=-1):
-    """
-    Iterate through all of the relevent lines of gcode.
-    Yields a tuple giving the nex position, speed and laser strength.
+    """Iterate through all of the relevent lines of gcode. Yields a tuple
+    giving the nex position, speed and laser strength.
+
     :param gcode: Iterable object containing the gcode lines
     """
     line_counter = 0

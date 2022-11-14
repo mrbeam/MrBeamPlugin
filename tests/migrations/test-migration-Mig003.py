@@ -7,9 +7,7 @@ import unittest
 
 
 class TestMigrationMig003(unittest.TestCase):
-    """
-    Testclass for the migration Mig001
-    """
+    """Testclass for the migration Mig001."""
 
     def setUp(self):
         self.m003 = Mig003EnableLogrotateBuster(None)

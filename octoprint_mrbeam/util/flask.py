@@ -11,9 +11,7 @@ def _identity(x):
 
 
 def wrap_if(condition=False, decorator=_identity):
-    """
-    Run a decorator function` if ``condition`` is met.
-    """
+    """Run a decorator function` if ``condition`` is met."""
     if condition:
         return decorator
     else:
@@ -21,7 +19,8 @@ def wrap_if(condition=False, decorator=_identity):
 
 
 def abort_if(condition=False, code=401):
-    """ I suspect ``abort`` raises an Exception, in which case this works better. """
+    """I suspect ``abort`` raises an Exception, in which case this works
+    better."""
 
     def wrap(f):
         def puppet(*a, **kw):
@@ -43,9 +42,8 @@ def calibration_tool_mode_only(func):
 
 
 def restricted_access_if(condition=False):
-    """
-    This uses :py:func:`octoprint.server.util.flask.restricted_access` if ``condition`` is met.
-    """
+    """This uses :py:func:`octoprint.server.util.flask.restricted_access` if
+    ``condition`` is met."""
     if condition:
         return restricted_access
     else:

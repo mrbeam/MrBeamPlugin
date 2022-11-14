@@ -16,8 +16,9 @@ USB_MOUNT_DIR = "/media/"
 
 
 def check_support_mode(plugin):
-    """
-    Enables support_mode IF support file from USB stick is present or if support_mode is enabled in dev settings
+    """Enables support_mode IF support file from USB stick is present or if
+    support_mode is enabled in dev settings.
+
     :param plugin: MrBeam Plugin instance
     :returns True if support_mode is enabled, False otherwise
     """
@@ -42,8 +43,9 @@ def check_support_mode(plugin):
 
 
 def check_calibration_tool_mode(plugin):
-    """
-    Enables support_mode IF support file from USB stick is present or if support_mode is enabled in dev settings
+    """Enables support_mode IF support file from USB stick is present or if
+    support_mode is enabled in dev settings.
+
     :param plugin: MrBeam Plugin instance
     :returns True if support_mode is enabled, False otherwise
     """
@@ -66,9 +68,9 @@ def check_calibration_tool_mode(plugin):
 
 
 def set_support_user(plugin, support_mode):
-    """
-    Creates or removes a user for internal support usage or removes it.
-    Does nothing if firstRun is True
+    """Creates or removes a user for internal support usage or removes it. Does
+    nothing if firstRun is True.
+
     :param support_mode
     """
 

@@ -51,9 +51,10 @@ def model_ids_to_csv_name(device_model_id, laser_model_id):
 # inspired from in dict_merge in iobeam_protocol
 def dict_merge(dct, merge_dct):
     """Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
-    updating only top-level keys, dict_merge recurses down into dicts nested
-    to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
+    updating only top-level keys, dict_merge recurses down into dicts nested to
+    an arbitrary depth, updating keys. The ``merge_dct`` is merged into
     ``dct``. if the nested item are lists, then concatenate the lists.
+
     :param dct: dict / list onto which the merge is executed
     :param merge_dct: dct merged into dct
     :return: None
@@ -72,10 +73,8 @@ def dict_merge(dct, merge_dct):
 
 
 def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0"):
-    """
-
-    Assumes following column order:
-    mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, pierce_time, dithering
+    """Assumes following column order: mrbeamversion, material, colorcode,
+    thickness_or_engrave, intensity, speed, passes, pierce_time, dithering.
 
     :param path: path to csv file
     :param device_model: the model of the device to use. Will return the material settings to use for that model.

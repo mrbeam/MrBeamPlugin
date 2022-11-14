@@ -11,16 +11,14 @@ EXEMPTED_TRANSLATIONS = {
 
 
 class DocumentService:
-    """
-    In this class we gather all the service layer calculations needed regarding documents
-    """
+    """In this class we gather all the service layer calculations needed
+    regarding documents."""
 
     def __init__(self, logger):
         self._logger = logger
 
     def get_documents_for(self, definition):
-        """
-        Get document information corresponding to a definition
+        """Get document information corresponding to a definition.
 
         definition MrBeamDocDefinition: definition of the document
 
@@ -32,8 +30,8 @@ class DocumentService:
         return DocumentModel(title_translated, document_links)
 
     def get_document_simple_for(self, definition, language):
-        """
-        Get a simplified version of the document corresponding to a definition and language
+        """Get a simplified version of the document corresponding to a
+        definition and language.
 
         definition MrBeamDocDefinition: definition of the document
         language SupportedLanguage: language of the document

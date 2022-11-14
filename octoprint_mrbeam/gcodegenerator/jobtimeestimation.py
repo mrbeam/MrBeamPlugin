@@ -1,8 +1,9 @@
-"""
-This script takes a gcode file as an input and calculates an estimated job duration time.
+"""This script takes a gcode file as an input and calculates an estimated job
+duration time.
 
-It reads the gcode line by line extracting the coordinates and feed rates, and with those values calculates the duration
-of each of the ways. Finally it sums up all the durations to get the total duration.
+It reads the gcode line by line extracting the coordinates and feed
+rates, and with those values calculates the duration of each of the
+ways. Finally it sums up all the durations to get the total duration.
 The
 """
 
@@ -21,8 +22,9 @@ MATCH_COMMENT_ADD_TIME = re.compile(r"EXTRA_TIME [\+-]?[0-9]+\.?[0-9]*s")
 
 
 def time_from_comment(comment):
-    """
-    Returns the number of seconds read in the comment if the comment matches a float:
+    """Returns the number of seconds read in the comment if the comment matches
+    a float:
+
         ; [\+-]?[0-9]+\.?[0-9]*s
 
     Examples:
@@ -250,8 +252,9 @@ class JobTimeEstimation:
         return total_duration
 
     def estimate_job_duration(self, gcode_file, do_sleep=True):
-        """Read a gcode file and calculate what will be the total duration of the job.
-        Reads the G0 and G1 commands to extract the coordinates and the F commands to get the feed rates.
+        """Read a gcode file and calculate what will be the total duration of
+        the job. Reads the G0 and G1 commands to extract the coordinates and
+        the F commands to get the feed rates.
 
         Args:
                 gcode_file(str): the path to the gcode file.

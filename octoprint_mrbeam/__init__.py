@@ -301,9 +301,8 @@ class MrBeamPlugin(
         return l
 
     def _do_initial_log(self):
-        """
-        Kicks an identifying log line
-        Was really important before we had
+        """Kicks an identifying log line Was really important before we had.
+
         @see self.get_additional_environment()
         """
         msg = "MrBeam Plugin"
@@ -537,9 +536,9 @@ class MrBeamPlugin(
         )
 
     def on_settings_save(self, data):
-        """
-        See octoprint.plugins.types.SettingsPlugin.get_settings_preprocessors to sanitize input data.
-        """
+        """See
+        octoprint.plugins.types.SettingsPlugin.get_settings_preprocessors to
+        sanitize input data."""
         try:
             # self._logger.info("ANDYTEST on_settings_save() %s", data)
             if "cam" in data and "previewOpacity" in data["cam"]:
@@ -733,14 +732,14 @@ class MrBeamPlugin(
     # Enable or disable internal support user.
     @property
     def support_mode(self):
-        """Get the support mode"""
+        """Get the support mode."""
         ret = check_support_mode(self)
         self._fixEmptyUserManager()
         return ret
 
     @property
     def calibration_tool_mode(self):
-        """Get the calibration tool mode"""
+        """Get the calibration tool mode."""
         ret = check_calibration_tool_mode(self)
         self._fixEmptyUserManager()
         return ret
@@ -984,10 +983,8 @@ class MrBeamPlugin(
         return result
 
     def get_template_vars(self):
-        """
-        Needed to have analytics settings page in German
-        while we do not have real internationalization yet.
-        """
+        """Needed to have analytics settings page in German while we do not
+        have real internationalization yet."""
         from flask import g
 
         return dict(language=g.locale.language if g.locale else "en")
@@ -1617,7 +1614,8 @@ class MrBeamPlugin(
 
     # ~ Calibration
     def generateCalibrationMarkersSvg(self):
-        """Used from the calibration screen to engrave the calibration markers"""
+        """Used from the calibration screen to engrave the calibration
+        markers."""
         # TODO mv this func to other file
         profile = self.laserCutterProfileManager.get_current_or_default()
         cm = CalibrationMarker(
@@ -1651,10 +1649,10 @@ class MrBeamPlugin(
         )
 
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-        """
-        Defines the maximum size that is accepted for upload.
-        If the uploaded file size exeeds this limit,
-        you'll see only a ERR_CONNECTION_RESET in Chrome.
+        """Defines the maximum size that is accepted for upload.
+
+        If the uploaded file size exeeds this limit, you'll see only a
+        ERR_CONNECTION_RESET in Chrome.
         """
         return [
             ("POST", r"/convert", 100 * 1024 * 1024),
@@ -2563,8 +2561,9 @@ class MrBeamPlugin(
                 )
 
     def fire_event(self, event, payload=None):
-        """
-        Fire an event into octoPrint's event system and adds mrb_check as payload
+        """Fire an event into octoPrint's event system and adds mrb_check as
+        payload.
+
         :param event:
         :param payload: payload. If None, a payload object with mrb_state is added
         """
@@ -2629,8 +2628,9 @@ class MrBeamPlugin(
         return get_update_information(self)
 
     def get_update_branch_info(self):
-        """
-        Gets you a list of plugins which are currently not configured to be updated from their default branch.
+        """Gets you a list of plugins which are currently not configured to be
+        updated from their default branch.
+
         Why do we need this? Frontend injects these data into SWupdate settings. So we can see if we put
         a component like Mr Beam Plugin to a special branch (for development.)
         :return: dict
@@ -2709,9 +2709,9 @@ class MrBeamPlugin(
         )
 
     def get_mrb_state(self):
-        """
-        Returns the data set 'mrb_state' which we add to the periodic status messages
-        and almost all events which are sent to the frontend.
+        """Returns the data set 'mrb_state' which we add to the periodic status
+        messages and almost all events which are sent to the frontend.
+
         Called (among others) by LaserStateMonitor.get_current_data in printer.py
         :return: mrb_state
         :rtype: dict
@@ -2766,8 +2766,8 @@ class MrBeamPlugin(
             self._settings.global_set(["server", "firstRun"], True)
 
     def getHostname(self):
-        """
-        Returns device hostname like 'MrBeam2-F930'.
+        """Returns device hostname like 'MrBeam2-F930'.
+
         If system hostname (/etc/hostname) is different it'll be set (overwritten!!) to the value from device_info
         :return: String hostname
         """
@@ -2810,10 +2810,10 @@ class MrBeamPlugin(
         return self._hostname
 
     def getSerialNum(self):
-        """
-        Gives you the device's Mr Beam serial number eg "00000000E79B0313-2C"
-        The value is solely read from device_info file (/etc/mrbeam)
-        and it's cached once read.
+        """Gives you the device's Mr Beam serial number eg
+        "00000000E79B0313-2C" The value is solely read from device_info file
+        (/etc/mrbeam) and it's cached once read.
+
         :return: serial number
         :rtype: String
         """
@@ -2822,20 +2822,19 @@ class MrBeamPlugin(
         return self._serial_num
 
     def get_model_id(self):
-        """
-        Gives you the device's model id like MRBEAM2 or MRBEAM2_DC
-        The value is solely read from device_info file (/etc/mrbeam)
-        and it's cached once read.
+        """Gives you the device's model id like MRBEAM2 or MRBEAM2_DC The value
+        is solely read from device_info file (/etc/mrbeam) and it's cached once
+        read.
+
         :return: model id
         :rtype: String
         """
         return self._device_info.get_model()
 
     def get_production_date(self):
-        """
-        Gives you the device's production date as string
-        The value is solely read from device_info file (/etc/mrbeam)
-        and it's cached once read.
+        """Gives you the device's production date as string The value is solely
+        read from device_info file (/etc/mrbeam) and it's cached once read.
+
         :return: production date
         :rtype: String
         """
@@ -2942,8 +2941,8 @@ class MrBeamPlugin(
         self.__calc_time_ntp_offset(log_out_of_sync=True)
 
     def __calc_time_ntp_offset(self, log_out_of_sync=False):
-        """
-        Checks if we have a NTP time and if the offset is < 1min.
+        """Checks if we have a NTP time and if the offset is < 1min.
+
         - If not, this function is called again. The first times with 10s delay, then 120sec.
         - If yes, this fact is logged with a shift_time which indicates the time the device was off from ntp utc time
             Technically it's the difference in time between the time that should have passed theoretically and

@@ -37,7 +37,8 @@ logger = mrb_logger(__name__, lvl=logging.INFO)
 
 
 class MbPicPrepError(Exception):
-    """Something went wrong when undistorting and aligning the picture for the front-end"""
+    """Something went wrong when undistorting and aligning the picture for the
+    front-end."""
 
     pass
 
@@ -65,9 +66,8 @@ def prepareImage(
     threads=-1,
 ):
     # type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
-    """
-    Loads image from path_to_input_image, does some preparations (undistort, warp)
-    on it and saves it to path_to_output_img.
+    """Loads image from path_to_input_image, does some preparations (undistort,
+    warp) on it and saves it to path_to_output_img.
 
     :param input_image: The image to prepare. Either a filepath or a numpy array (as understood by cv2)
     :param path_to_output_image: filepath where to save the image to
@@ -253,7 +253,10 @@ def prepareImage(
 def _getColoredMarkerPositions(
     img, debug_out_path=None, blur=5, threads=-1, min_pix=MIN_MARKER_PIX
 ):
-    """Allows a multi-processing implementation of the marker detection algo. Up to 4 processes needed."""
+    """Allows a multi-processing implementation of the marker detection algo.
+
+    Up to 4 processes needed.
+    """
     outputPoints = {}
     # check all 4 corners
     if threads > 0:
@@ -310,9 +313,10 @@ def _getColoredMarkerPosition(
     visual_debug=False,
     min_pix=MIN_MARKER_PIX,
 ):
-    """
-    Tries to find a single pink marker inside the image (or the Region of Interest).
-    It then outputs the information about found marker (for now, just its center position).
+    """Tries to find a single pink marker inside the image (or the Region of
+    Interest). It then outputs the information about found marker (for now,
+    just its center position).
+
     :param roi:
     :type roi:
     :param debug_out_path:
@@ -392,8 +396,8 @@ def _getColoredMarkerPosition(
 
 
 def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
-    """
-    Tests the mask to know if it could plausably be a marker
+    """Tests the mask to know if it could plausably be a marker.
+
     :param mask: The mask to compare
     :type mask: Union[Iterable, numpy.ndarray]
     :return: True if it is a marker (circle-ish), False if not
@@ -422,7 +426,8 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
 
 
 def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
-    """Iterates over the white connected spots on the picture (aka white blobs)"""
+    """Iterates over the white connected spots on the picture (aka white
+    blobs)"""
     # Label each separate zones on the mask (The black background + the white blobs)
     lenLabels, labels = cv2.connectedComponents(mask)
     unique_labels, counts_elements = np.unique(labels, return_counts=True)
@@ -439,7 +444,7 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
 
 
 def _debug_drawMarkers(raw_img, markers):
-    """Draw the markers onto an image"""
+    """Draw the markers onto an image."""
     img = raw_img.copy()
     if len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -462,7 +467,7 @@ def _debug_drawMarkers(raw_img, markers):
 
 
 def _debug_drawCorners(raw_img, corners):
-    """Draw the corners onto an image"""
+    """Draw the corners onto an image."""
     img = raw_img.copy()
     for qd in corners:
         (cx, cy) = map(int, corners[qd])

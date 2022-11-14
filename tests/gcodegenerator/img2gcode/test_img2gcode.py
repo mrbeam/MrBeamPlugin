@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Test the gcode creating functions
-"""
+"""Test the gcode creating functions."""
 
 import StringIO
 import numpy as np
@@ -17,9 +15,7 @@ from octoprint_mrbeam.gcodegenerator import img2gcode
 
 class TestG0Generation:
     def setup_method(self, method):
-        """
-        Setup to allow each function to have a generic image processor.
-        """
+        """Setup to allow each function to have a generic image processor."""
         self.fh = StringIO.StringIO()
 
         # with open("/tmp/test_img2gcode.gco", "w") as self.fh:

@@ -171,10 +171,11 @@ class LaserCutterProfileManager(PrinterProfileManager):
     # @logme(True)
     # fmt: off
     def select(self, identifier):
-        """
-        Overloaded because OctoPrint uses a global ``PrinterProfileManager``,
-        which on line 612 of ``OctoPrint/src/octoprint/server/__init__.py``
-        selects the ``_default`` printer profile name
+        """Overloaded because OctoPrint uses a global
+        ``PrinterProfileManager``, which on line 612 of
+        ``OctoPrint/src/octoprint/server/__init__.py`` selects the ``_default``
+        printer profile name.
+
         FIXME - In upstream : create a hook that allows to change ``PrinterProfileManager``
         """
         _current_id = dict_get(self._current, ["id",])
@@ -187,7 +188,8 @@ class LaserCutterProfileManager(PrinterProfileManager):
     # fmt: on
 
     def get(self, identifier):
-        """Extend the file based ``PrinterProfileManager.get`` with the few hardcoded ones we have."""
+        """Extend the file based ``PrinterProfileManager.get`` with the few
+        hardcoded ones we have."""
         try:
             default = self._load_default()
             if identifier == "_default":
@@ -256,7 +258,8 @@ class LaserCutterProfileManager(PrinterProfileManager):
 
     # @logme(output=True)
     def _load_all(self):
-        """Extend the file based ``PrinterProfileManager._load_all`` with the few hardcoded ones we have."""
+        """Extend the file based ``PrinterProfileManager._load_all`` with the
+        few hardcoded ones we have."""
         file_based_profiles = PrinterProfileManager._load_all(self)
         device_type = deviceInfo().get_type()
         mrbeam_generated_profiles = {device_type: self.get(device_type)}
@@ -273,10 +276,8 @@ class LaserCutterProfileManager(PrinterProfileManager):
         return profile
 
     def _save_to_path(self, path, profile, allow_overwrite=False):
-        """
-        Changes the file base PrinterProfileManager._save_to_path
-        so only the diff between the profile and the default profile will be saved
-        """
+        """Changes the file base PrinterProfileManager._save_to_path so only
+        the diff between the profile and the default profile will be saved."""
         validated_profile = self._ensure_valid_profile(profile)
 
         if not validated_profile:

@@ -11,9 +11,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd
 
 
 class MIGRATION_STATE(enumerate):
-    """
-    enum of the different migraton states
-    """
+    """enum of the different migraton states."""
 
     init = 1
     migration_started = 2
@@ -31,18 +29,15 @@ class MIGRATION_RESTART(enumerate):
 
 
 class MigrationException(Exception):
-    """
-    Exception that could occure during migration
-    """
+    """Exception that could occure during migration."""
 
     pass
 
 
 @six.add_metaclass(abc.ABCMeta)
 class MigrationBaseClass:
-    """
-    Base Class of a migration, this has to be extended in a childclass for each migration that should run
-    """
+    """Base Class of a migration, this has to be extended in a childclass for
+    each migration that should run."""
 
     # folder of the files needed during migration
     MIGRATE_FILES_FOLDER = os.path.join("files/migrate/")
@@ -53,8 +48,7 @@ class MigrationBaseClass:
     BEAMOS_VERSION_HIGH = None
 
     def __init__(self, plugin, restart=MIGRATION_RESTART.NONE):
-        """
-        initalization of the class
+        """initalization of the class.
 
         Args:
             plugin: Mr Beam Plugin
@@ -69,8 +63,7 @@ class MigrationBaseClass:
     @property
     @abstractmethod
     def id(self):
-        """
-        return the id of this migration step
+        """return the id of this migration step.
 
         Returns:
             string: id of this migration step
@@ -80,8 +73,7 @@ class MigrationBaseClass:
 
     @staticmethod
     def shouldrun(cls, beamos_version):
-        """
-        Checks if this Miration should run
+        """Checks if this Miration should run.
 
         Args:
             cls: Migrationclass
@@ -106,8 +98,7 @@ class MigrationBaseClass:
 
     @staticmethod
     def return_obj(cls, plugin):
-        """
-        returns a instance of the Class
+        """returns a instance of the Class.
 
         Args:
             cls: class
@@ -139,8 +130,7 @@ class MigrationBaseClass:
         return True
 
     def run(self):
-        """
-        this will wrap the migration execution
+        """this will wrap the migration execution.
 
         Returns:
             None
@@ -193,8 +183,7 @@ class MigrationBaseClass:
 
     @property
     def state(self):
-        """
-        returns state
+        """returns state.
 
         Returns:
             state
