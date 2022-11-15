@@ -15,7 +15,14 @@ $(function () {
         self.analytics = params[2];
         self.settings = params[3];
 
-        self.initialiseStore = function () {
+        self.initialiseStore = function (url) {
+            if (typeof url === "string" && url.trim().length !== 0) {
+                self.material_store_iframe_src = url;
+            }
+            $("#material_store_iframe").attr(
+                "src",
+                self.material_store_iframe_src
+            );
             $("#material_store_iframe").attr("loading", "eager");
         };
 
