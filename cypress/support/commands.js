@@ -165,11 +165,12 @@ Cypress.Commands.add("loginLaser", (email, password) => {
 });
 
 Cypress.Commands.add("focusReminder", () => {
-    cy.get("body").then(($body) => {
+    cy.wait(3000);
+    cy.get('.modal-dialog').then(($body) => {
         if (
             $body
                 .find('[id="laserhead_focus_reminder_modal"]')
-                .filter(":visible").length > 0
+                .filter(":visible").length
         ) {
             cy.get(
                 "#laserhead_focus_reminder_not_again > label > input"
@@ -183,6 +184,7 @@ Cypress.Commands.add("focusReminder", () => {
                 .should("not.exist");
         }
     });
+    
 });
 
 Cypress.Commands.add("logout", () => {

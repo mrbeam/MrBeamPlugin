@@ -34,15 +34,30 @@ describe("Laser Job", function () {
             .filter(':contains("paris2.jpg")')
             .click();
         cy.wait(3000);
+        cy.get(".horizontal").clear().type("95.3 mm");
+        cy.get(".vertical").clear().type("70.3 mm");
         cy.get(".userIMG").click({ force: true });
         cy.get('[id="translateHandle"]').move({
             deltaX: 213.9689,
             deltaY: -144.1241,
             force: true,
         });
-        cy.get(".rotation").clear().type("250.5");
-        cy.get(".horizontal").clear().type("225.3 mm");
-        cy.get(".vertical").clear().type("230.3 mm");
+        cy.get(".rotation").clear().type("200.5");
+        cy.get('.multiply').clear().type('2x3');
+        cy.get('.mirror_toggler').click();
+        cy.get('.image-preprocessing-collapsible').click();
+        cy.get('[id="img-preprocess-contrast"]').realClick({ position: "left" });
+        cy.wait(1000)
+        cy.get('[id="img-preprocess-brightness"]').realClick({ position: "right" });
+        cy.wait(1000)
+        cy.get('[id="img-preprocess-sharpen"]').realClick({ position: "right" });
+        cy.wait(1000)
+        cy.get('[id="img-preprocess-gamma"]').realClick({ position: "left" });
+        cy.wait(1000)
+        cy.get('.crop_top').clear().type('2')
+        cy.get('.crop_left').clear().type('2')
+        cy.get('.crop_bottom').clear().type('2')
+        cy.get('.crop_right').clear().type('2')
         cy.get('[id="laser_button"]').click();
         cy.wait(2000);
         cy.focusReminder();
