@@ -111,7 +111,8 @@ class Cpu(object):
     def get_cpu_throttle_warnings(self):
         """See this
         https://harlemsquirrel.github.io/shell/2019/01/05/monitoring-raspberry-
-       pi-power-and-thermal-issues.html
+        pi-power-and-thermal-issues.html.
+
         0b1010000000000000000
           1110000000000000010
           |||             |||_ under-voltage

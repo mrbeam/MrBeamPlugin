@@ -180,7 +180,6 @@ class AccWatchDog(object):
 
         0b1010000000000000000
           1110000000000000010
-
           |||             |||_ under-voltage
           |||             ||_ currently throttled
           |||             |_ arm frequency capped
