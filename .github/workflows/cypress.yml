@@ -4,7 +4,8 @@ on: [push]
 env:
   CYPRESS_TEST_USER_EMAIL: "dev@mr-beam.org"
   CYPRESS_TEST_USER_PASSWORD: "a"
-  MRBEAM_PLUGIN_URL: "plugin-dummy-url.org"
+  MRBEAM_PLUGIN_URL: "http://plugin-address.org:5002/"
+  MRBEAM_PLUGIN_DOMAIN_NAME: "plugin-address.org"
 
 jobs:
   mrb-docker:
@@ -35,7 +36,7 @@ jobs:
     permissions: write-all
     container:
       image: cypress/browsers:node16.17.0-chrome106
-      options: --add-host=mrbeam-plugin.org:host-gateway
+      options: --add-host={{ env.MRBEAM_PLUGIN_DOMAIN_NAME }}:host-gateway
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
     needs: mrb-docker
@@ -64,7 +65,7 @@ jobs:
       - name: Run Cypress e2e - Chrome
         uses: cypress-io/github-action@v4
         with:
-          wait-on: "http://mrbeam-plugin.org:5002/"
+          wait-on: ${{ env.MRBEAM_PLUGIN_URL }}
           browser: chrome
           config-file: cypress.config.js
           command: yarn ts-node cypress/scripts/cypress-ci-run.ts
