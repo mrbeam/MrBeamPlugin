@@ -10,6 +10,8 @@ env:
 jobs:
   mrb-docker:
     runs-on: ubuntu-latest
+    outputs:
+      domain: ${{ env.MRBEAM_PLUGIN_DOMAIN_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -36,7 +38,7 @@ jobs:
     permissions: write-all
     container:
       image: cypress/browsers:node16.17.0-chrome106
-      options: --add-host=${{ env.MRBEAM_PLUGIN_DOMAIN_NAME }}:host-gateway
+      options: --add-host=${{ needs.mrb-docker.outputs.domain }}:host-gateway
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
     needs: mrb-docker
