@@ -1,9 +1,11 @@
 import requests
 import yaml
+from octoprint.plugin import PluginSettings
 from yaml import SafeLoader
 
 from octoprint_mrbeam.decorator.catch_import_error import prevent_execution_on_import_error
 from octoprint_mrbeam.model import EmptyImport
+from octoprint_mrbeam.software_update_information import SWUpdateTier
 
 try:
     from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils
@@ -19,14 +21,33 @@ def _empty_settings_model():
     return settings_model
 
 
+def get_environment_enum_from_plugin_settings(plugin_settings):
+    if type(plugin_settings) is not PluginSettings:
+        return SWUpdateTier.STABLE
+
+    if plugin_settings.get(["dev", "env"]) == SWUpdateTier.DEV.value:
+        return SWUpdateTier.DEV
+
+    software_tier_value = plugin_settings.get(["dev", "software_tier"])
+    if software_tier_value == SWUpdateTier.STABLE.value:
+        return SWUpdateTier.STABLE
+    elif software_tier_value == SWUpdateTier.BETA.value:
+        return SWUpdateTier.BETA
+    elif software_tier_value == SWUpdateTier.ALPHA.value:
+        return SWUpdateTier.ALPHA
+
+    return SWUpdateTier.STABLE
+
+
 class SettingsService:
     """
     In this class we gather all the service layer calculations needed regarding settings
     """
 
-    def __init__(self, logger, document_service):
+    def __init__(self, logger, document_service, environment=SWUpdateTier.STABLE):
         self._logger = logger
         self._document_service = document_service
+        self.environment = environment
 
     @prevent_execution_on_import_error(MrBeamDocUtils, callable=_empty_settings_model)
     def get_template_settings_model(self, mrbeam_model):
@@ -42,13 +63,12 @@ class SettingsService:
 
         definitions = MrBeamDocUtils.get_mrbeam_definitions_for(mrbeam_model_found)
         settings_model = SettingsModel()
-        settings_model.material_store = self._get_material_store_settings("localhost")
+        settings_model.material_store = self._get_material_store_settings(self.environment)
         settings_model.about = AboutModel(
             support_documents=[self._document_service.get_documents_for(definition) for definition in definitions])
         return settings_model
 
     def _get_material_store_settings(self, environment):
-
         material_store_config_url = "https://raw.githubusercontent.com/mrbeam/material-store-settings/master/config.yaml"
         material_store_settings = MaterialStore()
         try:
@@ -70,10 +90,18 @@ class SettingsService:
 
     def _get_material_store_config_from_yml(self, material_store_config_yml, environment):
         material_store_config = MaterialStore()
-        if material_store_config_yml['material-store'] and material_store_config_yml['material-store'][
-            'environment'] and material_store_config_yml['material-store']['environment'][environment]:
-            env_config_yml = material_store_config_yml['material-store']['environment'][environment]
+        if self._is_valid_material_store_config(environment, material_store_config_yml):
+            env_config_yml = material_store_config_yml['material-store']['environment'][environment.value.lower()]
             material_store_config.enabled = env_config_yml['enabled']
             material_store_config.url = env_config_yml['url']
+        else:
+            self._logger.warn(
+                'Couldn\'t find corresponding material store configuration to current environment -> %s <-',
+                environment.value.lower())
 
         return material_store_config
+
+    def _is_valid_material_store_config(self, environment, material_store_config_yml):
+        return ('material-store' in material_store_config_yml) and (
+                'environment' in material_store_config_yml['material-store']) and (
+                       environment.value.lower() in material_store_config_yml['material-store']['environment'])
