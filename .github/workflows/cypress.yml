@@ -1,6 +1,11 @@
 name: Cypress Tests
 on: [push]
 
+env:
+  CYPRESS_TEST_USER_EMAIL: "dev@mr-beam.org"
+  CYPRESS_TEST_USER_PASSWORD: "a"
+  MRBEAM_PLUGIN_URL: "plugin-dummy-url.org"
+
 jobs:
   mrb-docker:
     runs-on: ubuntu-latest
@@ -76,5 +81,3 @@ jobs:
         with:
           name: cypress-report
           path: cypress/results
-
-
