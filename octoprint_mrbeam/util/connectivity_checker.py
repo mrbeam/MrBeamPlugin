@@ -3,8 +3,10 @@ import logging
 
 
 class ConnectivityChecker(object):
-    """Abstraction of Octoprints connectivity checker 'util/__init__.py
-    #1300'."""
+    """Abstraction of Octoprints connectivity checker 'util/__init__.py.
+
+    #1300'.
+    """
 
     def __init__(self, plugin):
         self._check_worker = None
