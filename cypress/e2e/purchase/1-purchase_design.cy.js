@@ -41,40 +41,38 @@ describe("Purchase", function () {
         cy.logout();
     });
 
-    data -
-        cy("Buy design - failed", function () {
-            cy.iframe('[id="design_store_iframe"]')
-                .find('[id="price_desc"]')
-                .click();
-            cy.iframe('[id="design_store_iframe"]').then(($button) => {
-                cy.get($button)
-                    .find('[id="25_purchase_btn"]')
-                    .click({ force: true });
-            });
-            cy.iframe('[id="design_store_iframe"]').contains("Confirm").click();
-            cy.iframe('[id="design_store_iframe"]').find(".buy-now").click();
-            cy.get(".alert-error").should("to.exist");
-            cy.logout();
+    xit("Buy design - failed", function () {
+        cy.iframe('[id="design_store_iframe"]')
+            .find('[id="price_desc"]')
+            .click();
+        cy.iframe('[id="design_store_iframe"]').then(($button) => {
+            cy.get($button)
+                .find('[id="25_purchase_btn"]')
+                .click({ force: true });
         });
+        cy.iframe('[id="design_store_iframe"]').contains("Confirm").click();
+        cy.iframe('[id="design_store_iframe"]').find(".buy-now").click();
+        cy.get(".alert-error").should("to.exist");
+        cy.logout();
+    });
 
-    data -
-        cy("Download design", function () {
-            cy.iframe('[id="design_store_iframe"]')
-                .find(".btn-go-to-purchases-page")
-                .click();
-            cy.wait(2000);
-            cy.iframe('[id="design_store_iframe"]').then(($button) => {
-                cy.get($button)
-                    .find(".icon-download-alt")
-                    .each(($elem) => {
-                        const item = cy.wrap($elem);
-                        item.click({ force: true });
-                    });
-            });
-            cy.wait(3000);
-            cy.iframe('[id="design_store_iframe"]')
-                .find(".view-in-library")
-                .should("to.exist");
-            cy.logout();
+    xit("Download design", function () {
+        cy.iframe('[id="design_store_iframe"]')
+            .find(".btn-go-to-purchases-page")
+            .click();
+        cy.wait(2000);
+        cy.iframe('[id="design_store_iframe"]').then(($button) => {
+            cy.get($button)
+                .find(".icon-download-alt")
+                .each(($elem) => {
+                    const item = cy.wrap($elem);
+                    item.click({ force: true });
+                });
         });
+        cy.wait(3000);
+        cy.iframe('[id="design_store_iframe"]')
+            .find(".view-in-library")
+            .should("to.exist");
+        cy.logout();
+    });
 });
