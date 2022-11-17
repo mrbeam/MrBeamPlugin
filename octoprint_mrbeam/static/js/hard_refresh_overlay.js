@@ -5,6 +5,7 @@ $(function () {
 
         self.settings = params[0];
         self.loginState = params[1];
+        self.hardRefreshCheckbox = ko.observable(false);
 
         self.onUserLoggedIn = function () {
             if (
@@ -30,7 +31,10 @@ $(function () {
             }
         }
         self.setUserHardRefreshed = function () {
-            document.cookie = "f.u.extra=false; max-age=0" // delete cookie
+            if(self.hardRefreshCheckbox())
+            {
+                document.cookie = "f.u.extra=false; max-age=0" // delete cookie
+            }
         }
     }
 
