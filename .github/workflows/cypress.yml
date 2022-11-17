@@ -92,6 +92,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - name: Download JUnit reports
         uses: actions/download-artifact@v3
         with:
@@ -100,4 +103,6 @@ jobs:
         run: ls -R
         working-directory: cypress/results
       - name: Merge reports
-        run: npm run merge-reports
+        run: |
+          npm install --only=dev
+          npm run merge-reports
