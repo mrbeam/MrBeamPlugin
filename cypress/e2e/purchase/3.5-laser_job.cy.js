@@ -61,7 +61,7 @@ describe("Laser Job", function () {
         cy.logout();
     });
 
-    xit("Add texts 2", function () {
+    it("Add texts 2", function () {
         cy.wait(3000);
         cy.get('[id="working_area_tab_text_btn"]').click();
         cy.get('[id="quick_text_dialog_text_input"]').type("Lasers");
@@ -98,7 +98,7 @@ describe("Laser Job", function () {
         cy.logout();
     });
 
-    xit("Add texts 3", function () {
+    it("Add texts 3", function () {
         cy.wait(3000);
         cy.get('[id="working_area_tab_text_btn"]').click();
         cy.get('[id="quick_text_dialog_text_input"]').type("MrBeam Lasers");

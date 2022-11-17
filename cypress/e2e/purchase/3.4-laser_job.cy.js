@@ -57,7 +57,7 @@ describe("Laser Job", function () {
         cy.logout();
     });
 
-    xit("Add shapes 2", function () {
+    it("Add shapes 2", function () {
         cy.get('[id="working_area_tab_shape_btn"]').click();
         cy.get('[id="shape_tab_link_circle"]').click();
         cy.get('[id="quick_shape_circle_radius"]').clear().type("60");
@@ -94,7 +94,7 @@ describe("Laser Job", function () {
         cy.logout();
     });
 
-    xit("Add shapes 3", function () {
+    it("Add shapes 3", function () {
         cy.get('[id="working_area_tab_shape_btn"]').click();
         cy.get('[id="shape_tab_link_star"]').click();
         cy.get('[id="quick_shape_star_radius"]').clear().type("60");
@@ -134,7 +134,7 @@ describe("Laser Job", function () {
         cy.logout();
     });
 
-    xit("Add shapes 4", function () {
+    it("Add shapes 4", function () {
         cy.get('[id="working_area_tab_shape_btn"]').click();
         cy.get('[id="shape_tab_link_line"]').click();
         cy.get('[id="quick_shape_line_length"]').clear().type("60");
