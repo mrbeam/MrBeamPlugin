@@ -109,4 +109,5 @@ jobs:
       - name: Import to Xray
         run: |
           token=$(curl -H "Content-Type: application/json" -X POST --data '{ "client_id": ${{ secrets.JIRA_CLIENT_ID }},"client_secret": ${{ secrets.JIRA_CLIENT_SECRET }} }'  https://xray.cloud.getxray.app/api/v2/authenticate| tr -d '"')
+          echo token
           curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data @"cypress/results/combined.xml" https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=SW
