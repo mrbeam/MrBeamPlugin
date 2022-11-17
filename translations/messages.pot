@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-11-17 14:29+0100\n"
+"POT-Creation-Date: 2022-11-17 14:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2221,7 +2221,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:9
 msgid ""
 "An update has been installed on this Mr Beam. To use the new functions, "
-"the user interace must be completely reloaded."
+"the user interface must be completely reloaded."
 msgstr ""
 
 #: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:10
