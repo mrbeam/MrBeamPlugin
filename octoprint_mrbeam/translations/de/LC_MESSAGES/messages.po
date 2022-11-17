@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-11-11 08:54+0100\n"
-"PO-Revision-Date: 2022-11-11 08:58+0100\n"
+"POT-Creation-Date: 2022-11-17 14:05+0100\n"
+"PO-Revision-Date: 2022-11-17 14:13+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -2577,8 +2577,8 @@ msgid "It's focused!"
 msgstr "Fokussiert!"
 
 #: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:3
-msgid "Refresh is needed after the last Software Update"
-msgstr "Nach dem letzten Software-Update ist eine Aktualisierung erforderlich"
+msgid "A 'Hard Refresh' is needed after the last Software Update"
+msgstr "Nach dem letzten Software-Update ist ein „Hard Refresh” erfoderlich"
 
 #: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:9
 msgid ""
@@ -2590,23 +2590,39 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:10
 msgid ""
-"We call this a hard refresh. To do this, press the three keys at the same "
+"We call this a 'Hard Refresh'. To do this, press the three keys at the same "
 "time, depending on your operating system, as shown in the graphic:"
 msgstr ""
-"Wir nennen das einen hard refresh. Drücke dafür gleichzeitig die drei "
+"Wir nennen das einen „Hard Refresh”. Drücke dafür gleichzeitig die drei "
 "Tasten, passend zu deinem Betriebssystem, wie in der Grafik dargestellt."
 
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:13
+msgid "Perform the 'Hard Refresh' using the keyboard shortcut"
+msgstr "Führe den „Hard Refresh” durch mittels der Tastenkombination"
+
 #: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:14
+msgid "Close this Window"
+msgstr "Schließe dieses Fenster"
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:19
+msgid ""
+"I completeley reloaded the software ('Hard Refresh'). Do not show this again "
+"in the future"
+msgstr ""
+"Ich habe die Software komplett neu geladen („Hard Refresh”). Dieses Fenster "
+"in Zukunft nicht erneut anzeigen"
+
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:24
 msgid "Windows | Ctrl + Shift + R"
 msgstr "Windows | Strg + Shift + R"
 
-#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:16
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:26
 msgid "Mac | Command + Shift + R"
 msgstr "Mac | Command + Shift + R"
 
-#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:23
-msgid "Yes, I will reload the page"
-msgstr "Ja, ich werde die Seite neu laden"
+#: octoprint_mrbeam/templates/hard_refresh_overlay.jinja2:33
+msgid "Close window"
+msgstr "Fenster schließen"
 
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:50
 msgid "Make sure your Mr Beam is empty."
@@ -5799,6 +5815,9 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
+
+#~ msgid "Yes, I will reload the page"
+#~ msgstr "Ja, ich werde die Seite neu laden"
 
 #~ msgid "QuickstartGuide_en.pdf"
 #~ msgstr "QuickstartGuide_de.pdf"
