@@ -85,7 +85,7 @@ jobs:
           name: report_${{ matrix.containers }}
           path: cypress/results
 
-  merge-reports:
+  xray-import:
     runs-on: ubuntu-latest
     needs: ui-chrome-tests
     if: always()
