@@ -27,8 +27,8 @@ jobs:
           file: ./Dockerfile
           tags: mrbeam_plugin:latest
           outputs: type=docker,dest=/tmp/image.tar
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+      - name: Upload MrBeamPlugin image
+        uses: actions/upload-artifact@v3
         with:
           name: mrbeam_plugin
           path: /tmp/image.tar
@@ -50,8 +50,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Download artifact
-        uses: actions/download-artifact@v2
+      - name: Download MrBeamPlugin image
+        uses: actions/download-artifact@v3
         with:
           name: mrbeam_plugin
           path: /tmp
@@ -80,7 +80,23 @@ jobs:
 
       - name: Upload JUnit reports
         if: always()
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
-          name: cypress-report
+          name: report_${{ matrix.containers }}
           path: cypress/results
+
+  merge-reports:
+    runs-on: ubuntu-latest
+    needs: ui-chrome-tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Download JUnit reports
+        uses: actions/download-artifact@v3
+        with:
+          path: cypress/results
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: cypress/results
+      - name: Merge reports
+        run: npm run merge-reports
