@@ -38,8 +38,9 @@ class Materials(object):
         return self.custom_materials
 
     def put_custom_material(self, key, material):
-        """
-        Sanitize and put material. If key exists, material will be overwritten
+        """Sanitize and put material. If key exists, material will be
+        overwritten.
+
         :param key: String unique material key
         :param material: Dict of material data
         :return: Boolean success
@@ -70,8 +71,8 @@ class Materials(object):
         return res
 
     def delete_custom_material(self, key):
-        """
-        Deletes custom material if existing.
+        """Deletes custom material if existing.
+
         :param keys: String or list: key or list of keys to delete
         :return: Boolean success
         """

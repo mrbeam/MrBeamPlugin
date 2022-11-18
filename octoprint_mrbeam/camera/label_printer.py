@@ -189,8 +189,8 @@ class LabelPrinter(object):
         )
 
     def _print(self, ip, data):
-        """
-        pritns data to printer at IP using rlpr
+        """pritns data to printer at IP using rlpr.
+
         :param ip: printer's ip address
         :param data: data to print
         :return: Tuple (success, output): success: Boolean, output: commands STDOUT & STDERR (should be empty if successful)

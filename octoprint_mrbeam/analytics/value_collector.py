@@ -12,9 +12,8 @@ class ValueCollector(object):
         self.valueList.append(value)
 
     def getSummary(self):
-        """
-        Returns a dict with all the dust statistics
-        (mean,median,count,std,)
+        """Returns a dict with all the dust statistics (mean,median,count,std,)
+
         :param valueList:
         :return:
         """

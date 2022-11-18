@@ -463,8 +463,7 @@ def _generate_config_of_module(
 
 
 def _get_current_version(input_moduleconfig, module_id, plugin):
-    """
-    returns the version of the given module
+    """returns the version of the given module.
 
     Args:
         input_moduleconfig (dict): module to get the version for
@@ -521,8 +520,7 @@ def _set_current_version_for_config(update_info, plugin):
 
 
 def _generate_config_of_beamos(moduleconfig, beamos_version, tierversion):
-    """
-    generates the config for the given beamos_version of the tierversion
+    """generates the config for the given beamos_version of the tierversion.
 
     Args:
         moduleconfig (dict): update config of the module

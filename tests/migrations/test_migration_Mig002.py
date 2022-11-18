@@ -3,9 +3,7 @@ import unittest
 
 
 class TestMigrationMig002(unittest.TestCase):
-    """
-    Testclass for the migration Mig001
-    """
+    """Testclass for the migration Mig001."""
 
     def setUp(self):
         self.m002 = Mig002EnableOnlineCheck(None)

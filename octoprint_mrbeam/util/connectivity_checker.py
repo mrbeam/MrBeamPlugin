@@ -3,7 +3,10 @@ import logging
 
 
 class ConnectivityChecker(object):
-    """Abstraction of Octoprints connectivity checker 'util/__init__.py #1300'"""
+    """Abstraction of Octoprints connectivity checker 'util/__init__.py.
+
+    #1300'.
+    """
 
     def __init__(self, plugin):
         self._check_worker = None
@@ -33,14 +36,13 @@ class ConnectivityChecker(object):
                 return None
 
     def check_immediately(self):
-        """
-        checks immediatley for a internet connection and don't wait for the interval
+        """checks immediatley for a internet connection and don't wait for the
+        interval.
 
         Args:
 
         Returns:
           boolean: is the device connected to the internet
-
         """
         with self._check_mutex:
             # calls the octoprint check_immediately methode to run the checker immediately

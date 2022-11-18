@@ -1,7 +1,7 @@
-"""
-This package contains all the migrations that are needed for the beamOS
-To add a new migration create a child class of the MigrationBaseClass and extend the run and rollback method with
-the steps needed for the new migration and the beamOS versions it should run for
+"""This package contains all the migrations that are needed for the beamOS To
+add a new migration create a child class of the MigrationBaseClass and extend
+the run and rollback method with the steps needed for the new migration and the
+beamOS versions it should run for.
 
 How to use:
     - import list_of_migrations

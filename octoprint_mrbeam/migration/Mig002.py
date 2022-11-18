@@ -5,16 +5,14 @@ from octoprint_mrbeam.migration.migration_base import (
 
 
 class Mig002EnableOnlineCheck(MigrationBaseClass):
-    """
-    Migration for beamos versions 0.0.0 up to 0.18.2 to enable online check
-    """
+    """Migration for beamos versions 0.0.0 up to 0.18.2 to enable online
+    check."""
 
     BEAMOS_VERSION_LOW = "0.0.0"
     BEAMOS_VERSION_HIGH = "0.18.2"
 
     def __init__(self, plugin):
-        """
-        initalization of the migration 002
+        """initalization of the migration 002.
 
         Args:
             plugin: Mr Beam Plugin
@@ -25,8 +23,7 @@ class Mig002EnableOnlineCheck(MigrationBaseClass):
 
     @property
     def id(self):
-        """
-        return the id of the migration
+        """return the id of the migration.
 
         Returns:
             string: id of the migration
@@ -34,8 +31,7 @@ class Mig002EnableOnlineCheck(MigrationBaseClass):
         return "002"
 
     def _run(self):
-        """
-        migration steps executet during migration
+        """migration steps executet during migration.
 
         Returns:
             None
@@ -58,8 +54,7 @@ class Mig002EnableOnlineCheck(MigrationBaseClass):
         super(Mig002EnableOnlineCheck, self)._run()
 
     def _rollback(self):
-        """
-        rollback steps executet during rollback
+        """rollback steps executet during rollback.
 
         Returns:
             None

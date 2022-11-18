@@ -6,9 +6,8 @@ from octoprint_mrbeam.migration.migration_base import (
 
 
 class Mig003EnableLogrotateBuster(MigrationBaseClass):
-    """
-    This migration should add logrotate for the buster image and change the lorotate for the legacy image
-    """
+    """This migration should add logrotate for the buster image and change the
+    lorotate for the legacy image."""
 
     MIGRATE_LOGROTATE_FOLDER = "files/migrate_logrotate/"
     BEAMOS_VERSION_LOW = "0.14.0"

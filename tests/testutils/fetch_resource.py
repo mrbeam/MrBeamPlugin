@@ -9,7 +9,6 @@ RESOURCE_TARGET = "/rsc"
 
 
 def fetch(paths):
-
     cwd = os.getcwd()
 
     for p in paths[1:]:

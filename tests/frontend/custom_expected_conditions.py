@@ -55,7 +55,8 @@ class js_expression_true(object):
 
 
 class console_log_contains(object):
-    """An expectation for checking that console.log contains a message matching particular pattern.
+    """An expectation for checking that console.log contains a message matching
+    particular pattern.
 
     pattern - used to match the log message
     consumed_logs_callback - callback to do something / preserve the consumed logs

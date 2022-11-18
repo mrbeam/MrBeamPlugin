@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-img2gcode.py
-functions for digesting paths into a simple list structure
+"""img2gcode.py functions for digesting paths into a simple list structure.
 
 Copyright (C) 2014 Teja Philipp, teja@mr-beam.org
 
@@ -20,7 +18,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
 """
 import optparse
 import logging
@@ -423,8 +420,9 @@ class ImageProcessor:
         return parts
 
     def generate_gcode(self, imgArray, xMM, yMM, wMM, hMM, file_id):
-        """
-        takes an array of objects containing the separated image and converts them to gcode.
+        """takes an array of objects containing the separated image and
+        converts them to gcode.
+
         :param imgArray: array of imagedata containing dicts
         :param xMM: x position of the image in mm (origin: left bottom)
         :param yMM: y position of the image in mm (origin: left bottom)
@@ -691,9 +689,9 @@ class ImageProcessor:
     def write_gcode_for_line_start(
         self, y, img_pos_mm, pixelArray, line_info, direction_positive, debug=False
     ):
-        """
-        Writes GCode to ensure the precondition of a line gcode.
-        This includes:
+        """Writes GCode to ensure the precondition of a line gcode. This
+        includes:
+
         - Move laserhead to correct starting position with G0
         - Do the overshoot move if necessary
         - Activate laser with 0 intensity
@@ -746,9 +744,9 @@ class ImageProcessor:
     def write_gcode_for_line_end(
         self, img_pos_mm, line_info, direction_positive, debug=False
     ):
-        """
-        Writes GCode to ensure the postcondition of a line gcode.
-        This includes:
+        """Writes GCode to ensure the postcondition of a line gcode. This
+        includes:
+
         - set laser intensity to 0
         """
         comment = ""
@@ -955,10 +953,10 @@ class ImageProcessor:
         return "G1{}{}{}{}{}".format(x_gc, y_gc, s_gc, f_gc, all_comments)
 
     def _ensure_value_in_range(self, value, maximum, minimum=0, prefix=""):
-        """
-        Returns a tuple :
-          - number closest to value in range of minimum and maximum
-          - comment if the input and output value don't match ; also logs it
+        """Returns a tuple :
+
+        - number closest to value in range of minimum and maximum
+        - comment if the input and output value don't match ; also logs it
         """
         if value == None:
             return None, ""
@@ -1115,9 +1113,7 @@ class ImageProcessor:
 
 
 class GC_Context:
-    """
-    Helper class to track last gcode values
-    """
+    """Helper class to track last gcode values."""
 
     def __init__(self):
         self.x = None

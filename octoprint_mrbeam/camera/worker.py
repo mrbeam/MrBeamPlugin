@@ -11,8 +11,8 @@ import numpy as np
 
 
 class MrbPicWorker(deque):
-    """
-    Circular raw I/O buffer designed for storing pictures.
+    """Circular raw I/O buffer designed for storing pictures.
+
     It could also do frame-by-frame work, but it could hurt recording speed (better
     to split the work on a different thread)
     See "Advanced Recipies" in the PiCamera tutorials:
@@ -49,9 +49,10 @@ class MrbPicWorker(deque):
         self.busy.clear()
 
     def write(self, buf):  # (self, buf: bytearray):
-        """
-        Write into the current buffer.
-        Will automatically change buffer when a new JPEG image is detected.
+        """Write into the current buffer.
+
+        Will automatically change buffer when a new JPEG image is
+        detected.
         """
         if buf.startswith(b"\xff\xd8") and self.currentBuf().tell() > 0:
             # New frame; and the current buffer is not flushed.
@@ -61,7 +62,7 @@ class MrbPicWorker(deque):
         self.currentBuf().write(buf)
 
     def saveImg(self, path, n=1):
-        """Saves the last image or the n-th buffer starting from the end"""
+        """Saves the last image or the n-th buffer starting from the end."""
         # Unused atm
         assert 0 < n <= self.maxlen
         ret = None

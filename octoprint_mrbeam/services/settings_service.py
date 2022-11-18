@@ -16,9 +16,8 @@ def _empty_settings_model():
 
 
 class SettingsService:
-    """
-    In this class we gather all the service layer calculations needed regarding settings
-    """
+    """In this class we gather all the service layer calculations needed
+    regarding settings."""
 
     def __init__(self, logger, document_service):
         self._logger = logger
@@ -26,10 +25,10 @@ class SettingsService:
 
     @prevent_execution_on_import_error(MrBeamDocUtils, callable=_empty_settings_model)
     def get_template_settings_model(self, mrbeam_model):
-        """
-        mrbeam_model String: Name of the running mrbeam_model
+        """mrbeam_model String: Name of the running mrbeam_model.
 
-        Return SettingsModel containing all the information and settings available for this specific mrbeam_model
+        Return SettingsModel containing all the information and settings
+        available for this specific mrbeam_model
         """
         mrbeam_model_found = MrBeamDocUtils.get_mrbeam_model_enum_for(mrbeam_model)
         if mrbeam_model_found is None:
