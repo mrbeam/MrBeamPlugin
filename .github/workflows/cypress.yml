@@ -118,4 +118,4 @@ jobs:
           issue_url=$(printf '%s\n' '${{ steps.xray.outputs.response }}' | jq -r .self)
           echo $issue_url
 
-          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X PUT '$issue_url' -H 'Content-Type: application/json' --data '{"fields": {"summary": "Iratxe test 3"}}'
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X PUT $issue_url -H 'Content-Type: application/json' --data '{"fields": {"summary": "Iratxe test 3"}}'
