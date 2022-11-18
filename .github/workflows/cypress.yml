@@ -1,5 +1,7 @@
 name: Cypress Tests
-on: [push]
+on:
+  release:
+    types: [published]
 
 env:
   CYPRESS_TEST_USER_EMAIL: "dev@mr-beam.org"
@@ -117,5 +119,8 @@ jobs:
           echo ${{ steps.xray.outputs.response }}
           issue_url=$(printf '%s\n' '${{ steps.xray.outputs.response }}' | jq -r .self)
           echo $issue_url
+          echo ${{ github.event.release.tag_name }}
+          issue_name="Test plan for ${{ github.event.release.tag_name }}"
+          echo $issue_name
 
-          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X PUT $issue_url -H 'Content-Type: application/json' --data '{"fields": {"summary": "Iratxe test 3"}}'
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X PUT $issue_url -H 'Content-Type: application/json' --data '{"fields": {"summary": $issue_name}}'
