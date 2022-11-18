@@ -36,8 +36,8 @@ class Messages(object):
         return self.messages
 
     def put_custom_message(self, key, message):
-        """
-        Put message. If key exists, message will be overwritten
+        """Put message. If key exists, message will be overwritten.
+
         :param key: String unique message key
         :param message: Dict of message data
         :return: Boolean success

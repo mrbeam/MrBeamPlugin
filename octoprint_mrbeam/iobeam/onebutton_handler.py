@@ -523,8 +523,9 @@ class OneButtonHandler(object):
                 raise Exception("ReadyToLaser: file is not of type machine code")
 
     def _check_system_integrity(self):
-        """
-        We're going to need a concept of what to do if something here fails...
+        """We're going to need a concept of what to do if something here
+        fails...
+
         :return:
         """
         temp_ok = self._temperature_manager.is_temperature_recent()
@@ -589,8 +590,8 @@ class OneButtonHandler(object):
     def pause_laser(
         self, need_to_release=True, force=False, trigger=None, pause_print=True
     ):
-        """
-        Pauses laser, switches machine to paused mode
+        """Pauses laser, switches machine to paused mode.
+
         :param need_to_release: If True (default), machine does not accept a button press for some period (3sec) and indicates this per leds.
                         This is a safety feature to prevent user from pausing and immediately resuming laser in case if he presses the button multiple times because he's nervous.
                         This is not needed if pause mode is triggered by other mechanisms than the button.

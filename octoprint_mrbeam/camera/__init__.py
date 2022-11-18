@@ -16,9 +16,9 @@ from octoprint_mrbeam.util.log import logtime, logme
 
 
 def brightness_result(pic):
-    """
-    Will measure which corner has an appropriate amount of brightness, and which
-    corner seems to have a brightness correction.
+    """Will measure which corner has an appropriate amount of brightness, and
+    which corner seems to have a brightness correction.
+
     :param pic: picture to measure on
     :type pic: np.ndarray
     :return: a dict listiing the corners that need shutter speed adjustment,
@@ -53,8 +53,8 @@ def getRois(
 def _roiSlice(
     img, pole, ratioW=RATIO_W, ratioH=RATIO_H, offsetW=OFFSET_W, offsetH=OFFSET_H
 ):  # (img: np.ndarray, pole: [str, None], ratioW: int=RATIO_W, ratioH: int=RATIO_H, ):
-    """
-    Returns a slice of the img that can be used directly as:
+    """Returns a slice of the img that can be used directly as:
+
     :param img: the input image from which to get the ROIs from
     :type img: numpy.ndarray
     :param pole: The corner region of the image ('NW', 'NE', 'SW', 'SE')
@@ -107,8 +107,9 @@ def brightness(img):
 
 
 def get_same_size(imageA, imageB, upscale=True):
-    """
-    Resizes the smallest to fit the larger image, or the other way around if upscale is False.
+    """Resizes the smallest to fit the larger image, or the other way around if
+    upscale is False.
+
     :param imageA:
     :type imageA: np.ndarray
     :param imageB:
@@ -130,10 +131,11 @@ def get_same_size(imageA, imageB, upscale=True):
 
 # @logtime()
 def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize=1):
-    """
-    Compares the two images by blurring them. If the strongest difference measured
-    is higher than the threshold, then they are considered to be different and
-    the function returns True.
+    """Compares the two images by blurring them.
+
+    If the strongest difference measured is higher than the threshold,
+    then they are considered to be different and the function returns
+    True.
     """
     assert blur % 2 == 1
     if len(imageA.shape) == 3:
@@ -157,7 +159,7 @@ def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize=1):
 # @logtime()
 # @logme(True)
 def save_debug_img(img, path, folder=None):
-    """Saves the image in a folder along the given path"""
+    """Saves the image in a folder along the given path."""
     if not folder:
         folder = os.path.dirname(path)
     else:

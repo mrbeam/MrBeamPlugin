@@ -166,7 +166,8 @@ UUCONV = {
 
 
 def unittouu(string):
-    """Returns userunits given a string representation of units in another system"""
+    """Returns userunits given a string representation of units in another
+    system."""
     unit = re.compile("(%s)$" % "|".join(UUCONV.keys()))
     param = re.compile(r"(([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?)")
 

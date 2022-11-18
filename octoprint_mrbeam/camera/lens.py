@@ -66,7 +66,9 @@ USER = "user"
 
 # @logtime()
 def undistort(img, mtx, dist, calibration_img_size=None, output_img_size=None):
-    """Apply the camera calibration matrices to distort the picture back straight.
+    """Apply the camera calibration matrices to distort the picture back
+    straight.
+
     @param calibration_img_size: tuple: size of the image when the calibration was occuring.
     @param output_img_size: tuple: desired size of the output image.
     If not declared, the calibration image size and output image are going to be
@@ -114,8 +116,8 @@ def undist_dict(dict_pts, *a, **kw):
 
 
 def clean_unexpected_files(tmp_path):
-    """
-    Removes unexpected files in the directory path
+    """Removes unexpected files in the directory path.
+
     - .npz files that do not have the corresponding image anymore
     """
     files = os.listdir(tmp_path)
@@ -130,7 +132,8 @@ def clean_unexpected_files(tmp_path):
 
 
 class BoardDetectorDaemon(Thread):
-    """Processes images of chessboards to calibrate the lens used to take the pictures."""
+    """Processes images of chessboards to calibrate the lens used to take the
+    pictures."""
 
     def __init__(
         self,
@@ -565,7 +568,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 
 # @logExceptions
 def findBoard(image, pattern):
-    """Finds the chessboard pattern of a given size in the image"""
+    """Finds the chessboard pattern of a given size in the image."""
     # TODO Add 8-way connected label filtering for small elements
     corners_found, corners = cv2.findChessboardCorners(
         image,
@@ -588,10 +591,10 @@ def findBoard(image, pattern):
 
 @logExceptions
 def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
-    """
-    None the distortion of the lens given the detected chessboards.
-    N.B. is supposed to run after the main process has been joined,
-    but can also run in parallel (only uses the available results)
+    """None the distortion of the lens given the detected chessboards.
+
+    N.B. is supposed to run after the main process has been joined, but
+    can also run in parallel (only uses the available results)
     """
     # signal.signal(signal.SIGTERM, signal.SIG_DFL)
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
@@ -750,7 +753,7 @@ class CalibrationState(dict):
         return ret
 
     def refresh(self, imgFoundCallback=None, args=(), kwargs={}):
-        """Check if a pending image was taken and saved by the camera"""
+        """Check if a pending image was taken and saved by the camera."""
         # self._logger.debug("### REFRESH ###")
         changed = False
         for path, elm in self.items():
@@ -812,12 +815,12 @@ class CalibrationState(dict):
         return ts
 
     def save(self, path):
-        """Save the results of the detected chessboard in given path"""
+        """Save the results of the detected chessboard in given path."""
         with self.lock:
             np.savez(path + ".npz", **self[path])
 
     def load(self, path):
-        """Load the results of the detected chessboard in given path"""
+        """Load the results of the detected chessboard in given path."""
         with self.lock:
             self[path].update(CalibrationState._load(path))
         self.onChange()
@@ -828,14 +831,15 @@ class CalibrationState(dict):
         return dict(np.load(path + ".npz", allow_pickle=True))
 
     def saveCalibration(self, path=None):
-        """Load the calibration to path"""
+        """Load the calibration to path."""
         with self.lock:
             makedirs(path or self.output_file, parent=True)
             np.savez(path or self.output_file, **self.lensCalibration)
         self.setOutpuFileTimestamp()
 
     def loadCalibration(self, path=None):
-        """Load the calibration from path (defaults to self.lensCalibration default path)"""
+        """Load the calibration from path (defaults to self.lensCalibration
+        default path)"""
         with self.lock:
             self.lensCalibration = dict(
                 np.load(path or self.output_file, allow_pickle=True)

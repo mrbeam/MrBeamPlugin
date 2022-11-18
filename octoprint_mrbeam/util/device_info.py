@@ -71,10 +71,10 @@ class DeviceInfo(object):
         return self._device_data.get(self.KEY_HOSTNAME)
 
     def get_model(self, refresh=False):
-        """
-        Gives you the device's model id like MRBEAM2 or MRBEAM2_DC
-        The value is solely read from device_info file (/etc/mrbeam)
-        and it's cached once read.
+        """Gives you the device's model id like MRBEAM2 or MRBEAM2_DC The value
+        is solely read from device_info file (/etc/mrbeam) and it's cached once
+        read.
+
         :return: model
         :rtype: String
         """
@@ -89,8 +89,7 @@ class DeviceInfo(object):
         return self._device_data.get(self.KEY_PRODUCTION_DATE, None)
 
     def get_beamos_version(self):
-        """
-        Expect the beamos date to be formatted as TIER-YYYY-MM-DD
+        """Expect the beamos date to be formatted as TIER-YYYY-MM-DD.
 
         returns the tier of the beamos and the date of the image creation
 
@@ -113,8 +112,7 @@ class DeviceInfo(object):
             return None, BEAMOS_LEGACY_DATE
 
     def get_beamos_version_number(self):
-        """
-        returns the beamos version
+        """returns the beamos version.
 
         Returns:
             version of beamos

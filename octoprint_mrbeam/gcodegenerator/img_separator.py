@@ -1,13 +1,10 @@
 # coding=utf-8
 #!/usr/bin/env python
 
-"""
-img_separator.py
-bitmap separation for speed optimized raster processing
+"""img_separator.py bitmap separation for speed optimized raster processing.
 
 Copyright (C) 2018 Mr Beam Lasers GmbH
 Author: Teja Philipp, teja@mr-beam.org
-
 """
 import optparse
 import logging

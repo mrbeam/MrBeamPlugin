@@ -4,16 +4,14 @@ from octoprint_mrbeam.migration.migration_base import (
 
 
 class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
-    """
-    Migration for beamos versions 0.18.0 up to 0.18.1 to disable the the netconnectd debug mode
-    """
+    """Migration for beamos versions 0.18.0 up to 0.18.1 to disable the the
+    netconnectd debug mode."""
 
     BEAMOS_VERSION_LOW = "0.18.0"
     BEAMOS_VERSION_HIGH = "0.18.1"
 
     def __init__(self, plugin):
-        """
-        initalization of the migration 001
+        """initalization of the migration 001.
 
         Args:
             plugin: Mr Beam Plugin
@@ -22,8 +20,7 @@ class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
 
     @property
     def id(self):
-        """
-        return the id of the migration
+        """return the id of the migration.
 
         Returns:
             string: id of the migration
@@ -31,8 +28,7 @@ class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
         return "001"
 
     def _run(self):
-        """
-        migration steps executet during migration
+        """migration steps executet during migration.
 
         Returns:
             None
@@ -52,8 +48,7 @@ class Mig001NetconnectdDisableLogDebugLevel(MigrationBaseClass):
         super(Mig001NetconnectdDisableLogDebugLevel, self)._run()
 
     def _rollback(self):
-        """
-        rollback steps executet during rollback
+        """rollback steps executet during rollback.
 
         Returns:
             None

@@ -4,14 +4,13 @@ __author__ = "Mateusz Kobos"
 
 
 class RWLock:
-    """Synchronization object used in a solution of so-called second
-    readers-writers problem. In this problem, many readers can simultaneously
-    access a share, and a writer has an exclusive access to this share.
-    Additionally, the following constraints should be met:
-    1) no reader should be kept waiting if the share is currently opened for
-            reading unless a writer is also waiting for the share,
-    2) no writer should be kept waiting for the share longer than absolutely
-            necessary.
+    """Synchronization object used in a solution of so-called second readers-
+    writers problem. In this problem, many readers can simultaneously access a
+    share, and a writer has an exclusive access to this share. Additionally,
+    the following constraints should be met: 1) no reader should be kept
+    waiting if the share is currently opened for reading unless a writer is
+    also waiting for the share, 2) no writer should be kept waiting for the
+    share longer than absolutely necessary.
 
     The implementation is based on [1, secs. 4.2.2, 4.2.6, 4.2.7]
     with a modification -- adding an additional lock (C{self.__readers_queue})
@@ -58,8 +57,11 @@ class RWLock:
 
 
 class _LightSwitch:
-    """An auxiliary "light switch"-like object. The first thread turns on the
-    "switch", the last one turns it off (see [1, sec. 4.2.2] for details)."""
+    """An auxiliary "light switch"-like object.
+
+    The first thread turns on the "switch", the last one turns it off
+    (see [1, sec. 4.2.2] for details).
+    """
 
     def __init__(self):
         self.__counter = 0

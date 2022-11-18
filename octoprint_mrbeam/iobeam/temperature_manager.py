@@ -140,9 +140,7 @@ class TemperatureManager(object):
         self._analytics_handler.collect_laser_temp_value(self.temperature)
 
     def cooling_stop(self, err_msg=None):
-        """
-        Stop the laser for cooling purpose
-        """
+        """Stop the laser for cooling purpose."""
         if self._one_button_handler and self._one_button_handler.is_printing():
             self._logger.error(
                 "cooling_stop() %s - _msg_is_temperature_recent: %s",
@@ -158,9 +156,7 @@ class TemperatureManager(object):
             )
 
     def cooling_resume(self):
-        """
-        Resume laser once the laser has cooled down enough.
-        """
+        """Resume laser once the laser has cooled down enough."""
         self._logger.debug("cooling_resume()")
         self._plugin.fire_event(
             MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature)

@@ -57,7 +57,7 @@ BOARDS = pytest.mark.datafiles(
 
 
 def inspectState(data):
-    """Inspect the state each time it changes"""
+    """Inspect the state each time it changes."""
     if isinstance(data, dict):
         # yaml dumps create a LOT of output
         # logging.debug('Calibration State Updated\n%s', yaml.dump(data))

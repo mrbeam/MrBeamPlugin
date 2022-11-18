@@ -373,8 +373,9 @@ class LidHandler(object):
     def get_calibration_file(self, calibration_type=None):
         """Gives the location of the best existing lens calibration file, or
         the demanded type (calibration_type).
-        If in calibration tool mode, it always returns the path to the factory
-        file.
+
+        If in calibration tool mode, it always returns the path to the
+        factory file.
         """
         if self._plugin.calibration_tool_mode:
             return self._settings.get(["cam", "lensCalibration", "factory"])
@@ -401,10 +402,8 @@ class LidHandler(object):
             self._photo_creator.zoomed_out = compensate
 
     def onLensCalibrationStart(self):
-        """
-        When pressing the button 'start lens calibration'
-        Doesn't run the cv2 lens calibration at that point.
-        """
+        """When pressing the button 'start lens calibration' Doesn't run the
+        cv2 lens calibration at that point."""
         self._photo_creator.is_initial_calibration = True
         self._start_photo_worker()
         if not self.lensCalibrationStarted and self.boardDetectorDaemon.load_dir(
@@ -574,8 +573,8 @@ class LidHandler(object):
         return True
 
     def revert_factory_lens_calibration(self):
-        """
-        The camera reverts to the factory or legacy calibration file.
+        """The camera reverts to the factory or legacy calibration file.
+
         - Removes the user lens calibration file,
         - Removes the calibration pictures
         - Refreshes settings.
@@ -820,10 +819,11 @@ class PhotoCreator(object):
     def serve_pictures(
         self, cam, pic_settings=None, cam_params=None, out_pic_size=None
     ):
-        """
-        Takes pictures, isolates the work area and serves it to the user at progressively better resolutions.
-        After a certain number of similar pictures, Mr Beam serves a better quality pictures
-        As of writing this doc, it will go through these settings:
+        """Takes pictures, isolates the work area and serves it to the user at
+        progressively better resolutions. After a certain number of similar
+        pictures, Mr Beam serves a better quality pictures As of writing this
+        doc, it will go through these settings:
+
         # 500 x 390, 75% JPEG quality ~ 60 kB
         1000 x 780, 65% JPEG quality ~ 45 kB
         # 1000 x 780, 75% JPEG quality ~ 200 kB
@@ -1319,15 +1319,13 @@ class PhotoCreator(object):
             self._logger.debug("Created folder '%s' for camera images.", folder)
 
     def load_camera_settings(self, path=CAMERA_SETTINGS_LAST_SESSION_YAML):
-        """
-        Loads and returns the camera settings.
+        """Loads and returns the camera settings.
 
         Args:
             path (str): path to the camera settings Yaml to load from
 
         Returns:
             (list): ["calibMarkers", "shutter_speed"]
-
         """
 
         # To Be used in case the default file not there or invalid
@@ -1373,9 +1371,10 @@ class PhotoCreator(object):
         markers=None,
         shutter_speed=None,
     ):
-        """
-        Save the settings given for the next sesison.
-        The file is located by default at .octoprint/cam/pic_settings.yaml
+        """Save the settings given for the next sesison.
+
+        The file is located by default at
+        .octoprint/cam/pic_settings.yaml
         """
         if markers is None and shutter_speed is None:
             # Nothing to save

@@ -6,9 +6,8 @@ from octoprint_mrbeam.software_update_information import reload_update_info
 
 
 class UpdateRestHandlerMixin:
-    """
-    This class contains all the rest handlers and endpoints related to software update
-    """
+    """This class contains all the rest handlers and endpoints related to
+    software update."""
 
     @octoprint.plugin.BlueprintPlugin.route("/info/update", methods=["POST"])
     def update_update_informations(self):

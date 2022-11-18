@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-"""
-Draw the content of a gcode onto a canvas.
+"""Draw the content of a gcode onto a canvas.
+
 It can then be compared with the origin file.
 """
 
@@ -32,8 +32,8 @@ ANIMATION_SPEED = 1
 
 
 def draw_gcode(gcode, graphical=False, sim_speed=False):
-    """
-    Draw the gcode result on a canvas.
+    """Draw the gcode result on a canvas.
+
     TODO get values of speed_black etc from gcode header
     """
     from octoprint_mrbeam.gcodegenerator.read import read as g_read
@@ -49,9 +49,7 @@ def draw_gcode_file(path, graphical=False, sim_speed=False):
 
 
 def _draw_commands(commands, graphical=False, sim_speed=False, out="out.svg"):
-    """
-    Draw the gcode commands on a canvas.
-    """
+    """Draw the gcode commands on a canvas."""
     import turtle
 
     # previous values
@@ -97,26 +95,23 @@ def _draw_commands(commands, graphical=False, sim_speed=False, out="out.svg"):
 
 
 def _draw_cut(gcode, canvas):
-    """
-    Draw the following part of the gcode as a cut.
-    Stops iterarting over the gcode once it is no
-    longer doing a cutting job.
+    """Draw the following part of the gcode as a cut.
+
+    Stops iterarting over the gcode once it is no longer doing a cutting
+    job.
     """
     pass
 
 
 def _draw_engraving(gcode, canvas):
-    """
-    Draw the following part of the gcode as an engraving.
-    Stops iterarting over the gcode once it is no
-    longer doing a cutting job.
+    """Draw the following part of the gcode as an engraving.
+
+    Stops iterarting over the gcode once it is no longer doing a cutting
+    job.
     """
     pass
 
 
 def _show(canvas):
-    """
-    Refresh the canvas on the screen if you are
-    debugging it that way
-    """
+    """Refresh the canvas on the screen if you are debugging it that way."""
     pass

@@ -81,7 +81,10 @@ def calibration_needed(
     corner_conf, calibration_file_factory=None, calibration_file_user=None
 ):
     """Determine whether a corner calibration is required.
-    Uses the config file (pic_settings.yaml) and optionnaly the lens calibration files"""
+
+    Uses the config file (pic_settings.yaml) and optionnaly the lens
+    calibration files
+    """
     for config_type in ("user", "factory"):
         if is_corner_calibration(corner_conf, config_type, origin_picture="raw"):
             return False
@@ -124,10 +127,8 @@ def calibration_needed_from_flat(
 
 
 def rm_undistorted_keys(flat_corner_conf, factory=False):
-    """
-    Remove the keys and values for the undistorted marker/arrow
-    positions saved during the corner calibration.
-    """
+    """Remove the keys and values for the undistorted marker/arrow positions
+    saved during the corner calibration."""
     flat_corner_conf = get_corner_calibration(flat_corner_conf)
     if factory:
         keys = [FACT_UNDIST_CALIB_MARKERS_KEY, FACT_UNDIST_CORNERS_KEY]
