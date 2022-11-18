@@ -522,8 +522,8 @@ class MachineCom(oprintMachineCom):
         # self._logger.info("ANDYTEST Leaving _send_loop()")
 
     def _sendCommand(self, cmd=None, cmd_type=None, on_sent=None, tags=None):
-        """
-        Takes command from:
+        """Takes command from:
+
          - parameter passed to this function, (!! treated as real time command)
          - self._cmd or
          - self._commandQueue.get()
@@ -831,8 +831,9 @@ class MachineCom(oprintMachineCom):
             self._real_time_commands["soft_reset"] = False
 
     def _handle_rt_command(self, cmd: bytes) -> bool:
-        """
-        If cmd is a RT command, the RT command is sent and True is returned, False otherwise.
+        """If cmd is a RT command, the RT command is sent and True is returned,
+        False otherwise.
+
         :param cmd:
         :return:
         """
@@ -1168,8 +1169,8 @@ class MachineCom(oprintMachineCom):
         # 	self._reset_status_polling_waittime()
 
     def _handle_error_message(self, line: bytes):
-        """
-        Handles error messages from GRBL
+        """Handles error messages from GRBL.
+
         :param line: GRBL error response
         """
         line = line.rstrip() if line else line
@@ -1358,8 +1359,8 @@ class MachineCom(oprintMachineCom):
             )
 
     def _handle_settings_message(self, line: bytes):
-        """
-        Handles grbl settings message like '$130=515.1'
+        """Handles grbl settings message like '$130=515.1'.
+
         :param line:
         """
         match = self.pattern_grbl_setting.match(line.decode())
@@ -1655,8 +1656,8 @@ class MachineCom(oprintMachineCom):
         )
 
     def _gcode_command_for_cmd(self, cmd: bytes) -> str | None:
-        """
-        Tries to parse the provided ``cmd`` and extract the GCODE command identifier from it (e.g. "G0" for "G0 X10.0").
+        """Tries to parse the provided ``cmd`` and extract the GCODE command
+        identifier from it (e.g. "G0" for "G0 X10.0").
 
         Arguments:
             cmd: The command to try to parse.
@@ -2364,9 +2365,8 @@ class MachineCom(oprintMachineCom):
             self.watch_dog.notify_command(cmd_obj)
 
     def _handle_user_command(self, cmd: bytes):
-        """
-        Handles commands the user can enter on the terminal starting with /
-        """
+        """Handles commands the user can enter on the terminal starting with
+        /"""
         try:
             cmd = cmd.strip()
             self._log("Command: %s" % cmd)
@@ -2783,15 +2783,11 @@ class MachineCom(oprintMachineCom):
         return self._state == self.STATE_FLASHING
 
     def isSdReady(self):
-        """
-        overrides comm isSdReady as we are not using any sd card
-        """
+        """overrides comm isSdReady as we are not using any sd card."""
         return False
 
     def isStreaming(self):
-        """
-        overrides comm isStreaming as we are not using the streaming
-        """
+        """overrides comm isStreaming as we are not using the streaming."""
         return False
 
     def getPrintTime(self):
@@ -2864,11 +2860,11 @@ class MachineCom(oprintMachineCom):
 
 
 class PrintingFileInformation(oprintPrintingFileInformation):
-    """
-    Encapsulates information regarding the current file being printed: file name, current position, total size and
-    time the print started.
-    Allows to reset the current file position to 0 and to calculate the current progress as a floating point
-    value between 0 and 1.
+    """Encapsulates information regarding the current file being printed: file
+    name, current position, total size and time the print started.
+
+    Allows to reset the current file position to 0 and to calculate the
+    current progress as a floating point value between 0 and 1.
     """
 
     def __init__(self, filename):
@@ -2897,9 +2893,10 @@ class PrintingFileInformation(oprintPrintingFileInformation):
 
 
 class PrintingGcodeFileInformation(oprintPrintingGcodeFileInformation):
-    """
-    Encapsulates information regarding an ongoing direct print. Takes care of the needed file handle and ensures
-    that the file is closed in case of an error.
+    """Encapsulates information regarding an ongoing direct print.
+
+    Takes care of the needed file handle and ensures that the file is
+    closed in case of an error.
     """
 
     def __init__(self, filename, offsets_callback=None, current_tool_callback=None):
@@ -2923,18 +2920,14 @@ class PrintingGcodeFileInformation(oprintPrintingGcodeFileInformation):
         self._lines_read_bak = 0
 
     def start(self):
-        """
-        Opens the file for reading and determines the file size.
-        """
+        """Opens the file for reading and determines the file size."""
         super(PrintingGcodeFileInformation, self).start()
         self._handle = open(self._filename, "r")
         self._lines_read = 0
         self._lines_read_bak = 0
 
     def close(self):
-        """
-        Closes the file if it's still open.
-        """
+        """Closes the file if it's still open."""
         super(PrintingGcodeFileInformation, self).close()
         if self._handle is not None:
             try:
@@ -3053,9 +3046,7 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
         self._comment_size = 0
 
     def getNext(self) -> bytes | None:
-        """
-        Retrieves the next line for printing.
-        """
+        """Retrieves the next line for printing."""
         if self._gcode is None:
             raise ValueError("Line buffer is not filled")
 

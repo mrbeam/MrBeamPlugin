@@ -1,7 +1,6 @@
 class DocumentModel:
-    """
-    Data object containing information documents to be used on the jinja2 templates
-    """
+    """Data object containing information documents to be used on the jinja2
+    templates."""
 
     def __init__(self, title, document_links):
         self.title = title
@@ -15,9 +14,8 @@ class DocumentModel:
 
 
 class DocumentSimpleModel:
-    """
-    Data object containing a simplified version of the information about documents to be used on the jinja2 templates
-    """
+    """Data object containing a simplified version of the information about
+    documents to be used on the jinja2 templates."""
 
     def __init__(self, title, document_link):
         self.title = title
@@ -31,9 +29,8 @@ class DocumentSimpleModel:
 
 
 class DocumentLinkModel:
-    """
-    Data object containing information to be able to display a link to a document on the jinja2 templates
-    """
+    """Data object containing information to be able to display a link to a
+    document on the jinja2 templates."""
 
     def __init__(self, language, url):
         self.language = language

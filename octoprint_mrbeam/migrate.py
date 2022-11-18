@@ -474,9 +474,8 @@ class Migration(object):
 
     def fix_wifi_ap_name(self):
         """image 'PROD 2018-01-12 19:15 1515784545' has wifi AP name:
-        'MrBeam-F930'.
 
-        Let's correct it to actual wifi AP name.
+        'MrBeam-F930' Let's correct it to actual wifi AP name.
         """
         host = self.plugin.getHostname()
         # at some point change this to: command = "sudo /root/scripts/change_apname {}".format(host)

@@ -1750,9 +1750,8 @@ class MrBeamPlugin(
         ]
 
     def loginui_theming(self):
-        """
-        See [here](https://docs.octoprint.org/en/master/plugins/hooks.html?highlight=theming#octoprint-theming-dialog).
-        """
+        """See [here](https://docs.octoprint.org/en/master/plugins/hooks.html?h
+        ighlight=theming#octoprint-theming-dialog)."""
         from flask import url_for
 
         return [url_for("plugin.mrbeam.static", filename="css/loginui.css")]

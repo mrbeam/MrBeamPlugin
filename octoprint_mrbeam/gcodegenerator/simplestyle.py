@@ -181,7 +181,7 @@ def parseStyle(s):
 
 
 def formatStyle(a):
-    """Format an inline style attribute from a dictionary"""
+    """Format an inline style attribute from a dictionary."""
     return ";".join([att + ":" + str(val) for att, val in a.items()])
 
 

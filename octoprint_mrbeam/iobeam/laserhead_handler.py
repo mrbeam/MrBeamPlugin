@@ -439,9 +439,7 @@ class LaserheadHandler(object):
         return correction_factor
 
     def _load_laser_heads_file(self):
-        """
-        Loads laser head data from a file
-        """
+        """Loads laser head data from a file."""
         self._logger.debug(
             "Loading data from  {} started...!".format(self._laser_heads_file)
         )

@@ -56,9 +56,10 @@ class Laser(Printer):
 
     # overwrite connect to use comm_acc2
     def connect(self, port=None, baudrate=None, profile=None, *args, **kwargs):
-        """
-        Connects to the printer. If port and/or baudrate is provided, uses these settings, otherwise autodetection
-        will be attempted.
+        """Connects to the printer.
+
+        If port and/or baudrate is provided, uses these settings,
+        otherwise autodetection will be attempted.
         """
         self._init_terminal()
 
@@ -102,9 +103,7 @@ class Laser(Printer):
         return self._stateMonitor._machinePosition == self.HOMING_POSITION
 
     def cancel_print(self, user=None, *args, **kwargs):
-        """
-        Cancel the current printjob and do homing.
-        """
+        """Cancel the current printjob and do homing."""
         super(Laser, self).cancel_print()
         time.sleep(0.5)
         self.home(axes="wtf")
@@ -162,9 +161,7 @@ class Laser(Printer):
         self._comm.decreasePasses()
 
     def pause_print(self, force=False, trigger=None, user=None, *args, **kwargs):
-        """
-        Pause the current printjob.
-        """
+        """Pause the current printjob."""
         if self._comm is None:
             return
 

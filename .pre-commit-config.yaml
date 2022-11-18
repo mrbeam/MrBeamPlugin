@@ -16,15 +16,6 @@ repos:
     hooks:
       - id: prettier
         files: \.(html|css|js|json)$
-# Bring back after switching to Python 3
-#  - repo: https://github.com/myint/docformatter
-#    rev: v1.5.0
-#    hooks:
-#      - id: docformatter
-#        args: [
-#          --in-place,
-#        ]
-
   - repo: https://github.com/executablebooks/web-compile
     rev: v0.2.3
     hooks:
@@ -36,3 +27,10 @@ repos:
               web-compile-config.yaml|
               scss/.*
           )$
+  - repo: https://github.com/myint/docformatter
+    rev: v1.5.0
+    hooks:
+      - id: docformatter
+        args: [
+          --in-place,
+        ]

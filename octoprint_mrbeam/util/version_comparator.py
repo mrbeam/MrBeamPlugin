@@ -40,8 +40,7 @@ class VersionComparator:
 
 
 def compare_pep440_versions(v1, v2, comparator):
-    """
-    returns the PEP440 version comparison Boolean result
+    """returns the PEP440 version comparison Boolean result.
 
     Args:
         v1 (str): First version to be compared

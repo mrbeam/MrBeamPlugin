@@ -233,7 +233,7 @@ def install_wheels(install_queue):
             )
 
 
-def build_queue(update_info, dependencies, plugin_archive, plugin_target):
+def build_queue(update_info, dependencies, plugin_archive):
     """build the queue of packages to install.
 
     Args:
