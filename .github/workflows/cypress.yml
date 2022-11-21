@@ -123,7 +123,7 @@ jobs:
           issue_url=$(printf '%s\n' '${{ steps.xray.outputs.response }}' | jq -r .self)
           echo $issue_url
           echo ${{ github.event.head_commit.message }}
-          issue_name=$"Test plan for ${{ github.event.head_commit.message }}"
+          issue_name="Test plan for ${{ github.event.head_commit.message }}"
           echo $issue_name
 
-          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X PUT $issue_url -H 'Content-Type: application/json' --data '{"fields": {"summary": $issue_name}}'
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X PUT $issue_url -H 'Content-Type: application/json' --data '{"fields": {"summary": $issue_name }}'
