@@ -126,14 +126,23 @@ $(function () {
             $("#design_store_iframe").show();
             $("#design_store_offline_placeholder").hide();
 
+            // TODO: remove the following Version sanitization once the version
+            //  comparative methods support "pep440" versioning (SW-1047)
+            // Regex to extract the  base version from a version string
+            // 0.10.2-alpha --> 0.10.2  (SemVer)
+            // 0.11.78a0    --> 0.11.78 (PEP440)
+            // 0+unknown    --> 0       (No version info)
+            let regexp = /([0-9]+(?:\.[0-9]+)*)/g;
+            let mrbeamPluginVersion = MRBEAM_PLUGIN_VERSION.match(regexp)[0];
+            console.log(
+                "Design store: Mr Beam Plugin Version: " + mrbeamPluginVersion
+            );
+
             let userData = {
                 email: self.getEmail(),
                 serial: MRBEAM_SERIAL,
                 user_token: self.getAuthToken(),
-                // TODO: remove the following sanitization (SW-1046) once the version
-                //  comparative methods support "-hotfix..." verisoning (SW-1047)
-                // Remove any versioning characters after "-" like "-hotfix"
-                version: BEAMOS_VERSION.split("-")[0],
+                version:  mrbeamPluginVersion,
                 language: MRBEAM_LANGUAGE,
                 last_uploaded: self.getLastUploadedDate(),
             };

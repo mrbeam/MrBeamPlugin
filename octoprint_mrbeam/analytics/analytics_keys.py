@@ -77,7 +77,8 @@ class AnalyticsKeys:
 
         class Duration:
             CURRENT = "dur"
-            ESTIMATION = "dur_est"
+            ESTIMATION = "dur_est_v1_backend"
+            ESTIMATION_V2 = "dur_est_v2_frontend"
             CALC_DURATION_TOTAL = "calc_duration_total"
             CALC_DURATION_WOKE = "calc_duration_woke"
             CALC_LINES = "calc_lines"

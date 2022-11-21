@@ -63,7 +63,8 @@ DEFAULT_MM_TO_PX = 1  # How many pixels / mm is used for the output image
 
 SIMILAR_PICS_BEFORE_REFRESH = 20
 MAX_PIC_THREAD_RETRIES = 2
-
+CAMERA_SETTINGS_LAST_SESSION_YAML = "/home/pi/.octoprint/cam/last_session.yaml"
+CAMERA_SETTINGS_FALLBACK_JSON = "/home/pi/.octoprint/cam/last_markers.json"
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
@@ -1317,39 +1318,58 @@ class PhotoCreator(object):
             makedirs(folder)
             self._logger.debug("Created folder '%s' for camera images.", folder)
 
-    def load_camera_settings(self, path="/home/pi/.octoprint/cam/last_session.yaml"):
+    def load_camera_settings(self, path=CAMERA_SETTINGS_LAST_SESSION_YAML):
         """
-        Loads the settings saved from the last session.
-        The file is located by default at .octoprint/cam/pic_settings.yaml
+        Loads and returns the camera settings.
+
+        Args:
+            path (str): path to the camera settings Yaml to load from
+
+        Returns:
+            (list): ["calibMarkers", "shutter_speed"]
+
         """
-        backup = "/home/pi/.octoprint/cam/last_markers.json"
-        if os.path.isfile(path):
-            _path = path
-        else:
-            self._logger.info(
-                "last_session.yaml does not exist, using legacy backup (last_markers.json)"
-            )
-            _path = backup
+
+        # To Be used in case the default file not there or invalid
+        backup_path = CAMERA_SETTINGS_FALLBACK_JSON
+        camera_settings = []
+
+        # 1. Load from default
         try:
-            ret = []
-            with open(_path) as f:
-                settings = yaml.load(f) or {}
-                if _path == backup:
-                    # No shutter speed info
-                    settings = {k: v[-1] for k, v in settings.items()}
-                    ret = [settings, None]
-                else:
-                    for k in ["calibMarkers", "shutter_speed"]:
-                        ret.append(settings.get(k, None))
-            return ret
-        except (IOError, OSError) as e:
-            self._logger.warning("New or Legacy marker memory not found.")
-            return [None] * 2
+            with open(path) as f:
+                settings = yaml.safe_load(f)
+                for k in ["calibMarkers", "shutter_speed"]:
+                    camera_settings.append(settings.get(k, None))
+            self._logger.debug("lid_handler: Default camera settings loaded from file: {}".format(path))
+            return camera_settings
+        except(IOError, OSError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
+            if os.path.isfile(path):
+                # An extra step to insure a smooth experience moving forward
+                os.remove(path)
+            self._logger.warn(
+                "lid_handler: File: {} does not exist or invalid, Will try to use legacy backup_path...: {}".format(
+                    path, backup_path)
+            )
+
+        # 2. Load from Backup
+        try:
+            with open(backup_path) as f:
+                settings = yaml.safe_load(f)
+                # No shutter speed info present in this file
+                settings = {k: v[-1] for k, v in settings.items()}
+                camera_settings = [settings, None]
+            self._logger.debug("lid_handler: Fallback camera settings loaded from file: {}".format(backup_path))
+            return camera_settings
+        except(IOError, OSError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
+            self._logger.exception(
+                "lid_handler: File: {} does not exist or invalid, Camera Settings Load failed".format(backup_path)
+            )
+            return [None, None]
 
     # @logme(True)
     def save_camera_settings(
         self,
-        path="/home/pi/.octoprint/cam/last_session.yaml",
+        path=CAMERA_SETTINGS_LAST_SESSION_YAML,
         markers=None,
         shutter_speed=None,
     ):
@@ -1371,10 +1391,10 @@ class PhotoCreator(object):
         settings = {}
         try:
             with open(path) as f:
-                settings = yaml.load(f)
-        except (OSError, IOError) as e:
+                settings = yaml.safe_load(f)
+        except (OSError, IOError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
             self._logger.warning(
-                "file %s does not exist or could not be read. Overwriting..." % path
+                "lid_handler: file %s does not exist or could not be read. Overwriting..." % path
             )
 
         settings = dict_merge(
@@ -1389,7 +1409,7 @@ class PhotoCreator(object):
         try:
             with open(path, "w") as f:
                 f.write(yaml.dump(settings))
-        except (OSError, IOError) as e:
+        except (OSError, IOError, yaml.YAMLError) as e:
             self._logger.error(e)
         except TypeError as e:
             self._logger.warning(

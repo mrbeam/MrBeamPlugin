@@ -10,6 +10,7 @@ import time
 import threading
 
 from .log import logExceptions, logtime, logme
+from . import github_api
 
 if sys.version_info >= (3,):
     _basestring = str

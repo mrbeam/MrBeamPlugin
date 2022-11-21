@@ -36,7 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
-    ANALYTICS_LOG_VERSION = 21  # bumped in 0.10.0 - added the laser head model to analytics and added triggerData to session_expired event
+    ANALYTICS_LOG_VERSION = 24  # bumped for SW-1345 - added analytics for new features
 
     def __init__(self, plugin):
         self._plugin = plugin
@@ -72,7 +72,8 @@ class AnalyticsHandler(object):
 
         # Job-specific data
         self._current_job_id = None
-        self._current_job_time_estimation = -1
+        self._current_job_time_estimation_v1 = -1
+        self.current_job_time_estimation_v2 = -1
         self._current_job_final_status = None
         self._current_job_compressor_data = None
         self._current_dust_collector = None
@@ -681,7 +682,8 @@ class AnalyticsHandler(object):
     def _event_print_done(self, event, payload):
         duration = {
             ak.Job.Duration.CURRENT: int(round(payload["time"])),
-            ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+            ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation_v1)),
+            ak.Job.Duration.ESTIMATION_V2: int(round(self.current_job_time_estimation_v2)),
         }
         self._current_job_final_status = "Done"
         self._add_job_event(ak.Job.Event.Print.DONE, payload=duration)
@@ -717,12 +719,15 @@ class AnalyticsHandler(object):
         self.upload()  # delay of 5.0 s
 
     def _event_job_time_estimated(self, event, payload):
-        self._current_job_time_estimation = payload["job_time_estimation"]
+        self._current_job_time_estimation_v1 = payload["job_time_estimation_raw"]
 
         if self._current_job_id:
             payload = {
                 ak.Job.Duration.ESTIMATION: int(
-                    round(self._current_job_time_estimation)
+                    round(self._current_job_time_estimation_v1)
+                ),
+                ak.Job.Duration.ESTIMATION_V2: int(
+                    round(self.current_job_time_estimation_v2)
                 ),
                 ak.Job.Duration.CALC_DURATION_TOTAL: payload["calc_duration_total"],
                 ak.Job.Duration.CALC_DURATION_WOKE: payload["calc_duration_woke"],
@@ -898,7 +903,8 @@ class AnalyticsHandler(object):
         self._current_intensity_collector = None
         self._current_lasertemp_collector = None
         self._current_cpu_data = None
-        self._current_job_time_estimation = -1
+        self._current_job_time_estimation_v1 = -1
+        self.current_job_time_estimation_v2 = -1
         self._current_job_final_status = None
         self._current_job_compressor_data = None
 

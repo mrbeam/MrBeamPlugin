@@ -68,7 +68,7 @@ $(function () {
                     email: user,
                     custom_fields: {
                         cf_serial: MRBEAM_SERIAL,
-                        cf_software_version: BEAMOS_VERSION,
+                        cf_software_version: MRBEAM_PLUGIN_VERSION,
                         cf_software_channel: channel,
                     },
                 });
