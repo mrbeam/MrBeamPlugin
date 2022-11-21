@@ -1,7 +1,10 @@
 name: Cypress Tests
 on:
-  release:
-    types: [published]
+  pull_request:
+    branches:
+      - alpha
+      - beta
+      - stable
 
 env:
   CYPRESS_TEST_USER_EMAIL: "dev@mr-beam.org"
