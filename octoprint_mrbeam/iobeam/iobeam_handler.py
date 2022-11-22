@@ -55,6 +55,7 @@ class IoBeamValueEvents(object):
     RPM_VALUE = "iobeam.rpm.value"
     STATE_VALUE = "iobeam.state.value"
     DYNAMIC_VALUE = "iobeam.dynamic.value"
+    EXHAUST_DYNAMIC_VALUE = "iobeam.exhaust.dynamic"
     CONNECTED_VALUE = "iobeam.connected.value"
     FAN_ON_RESPONSE = "iobeam.fan.on.response"
     FAN_OFF_RESPONSE = "iobeam.fan.off.response"
@@ -1068,7 +1069,13 @@ class IoBeamHandler(object):
         :param dataset:
         :return: error count
         """
-        # self._logger.info("exhaust dataset: '%s'", dataset)
+        self._logger.debug("exhaust dataset: '%s'", dataset)
+        # get the pressure sensor reading this will come as dust with the current iobeam version
+        if "dust" in dataset:
+            vals = {
+                "pressure": dataset["dust"],
+            }
+            self._call_callback(IoBeamValueEvents.EXHAUST_DYNAMIC_VALUE, dataset, vals)
         return 0
 
     def _handle_link_quality(self, dataset):

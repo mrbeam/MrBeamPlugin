@@ -63,7 +63,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     Element.prototype.get_total_bbox = function () {
         const el = this;
         const mat = el.transform().totalMatrix;
-        const bb = el.getBBox();
+        let bb;
+        if (el.type === "tspan") {
+            bb = Snap._.box(el.node.getBBox()); // work around snap's bug: https://github.com/adobe-webplatform/Snap.svg/blob/c8e483c9694517e24b282f8f59f985629f4994ce/src/element.js#L51
+        } else {
+            bb = el.getBBox(true); // true: getBBox without transforms as totalMatrix is applied afterwards;
+        }
         return Snap.path.getBBoxWithTransformation(bb, mat);
     };
 });

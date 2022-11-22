@@ -2648,6 +2648,13 @@ input.search-query,
 }
 
 /*
+hides the force update buttons
+ */
+#settings_plugin_softwareupdate_scroll_wrapper div:nth-of-type(4) {
+  display:none;
+}
+
+/*
 * === FRESHDESK FEEDBACK WIDGET ===
 */
 #freshwidget-button > a {
@@ -3400,3 +3407,23 @@ button#terminal-send {
 #support_overlay > div.modal-body.scrollable > table {
   margin: 20px auto;
 }
+/* Support Standalone */
+
+/* Hard refresh overlay */
+
+#hard_refresh_overlay {
+  width: 60%;
+  margin-left: -30%;
+}
+#hard_refresh_overlay .image_description {
+  padding: 40px;
+}
+#hard_refresh_overlay .modal-header {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+#hard_refresh_overlay .icon-warning-sign{
+  color: #e25303;
+}
+
+/* Hard refresh overlay */

@@ -939,6 +939,14 @@ $(function () {
 
                 newSvg.unref(true);
 
+                // remove non-visible text elements (no text, TODO: just whitespace)
+                const textElements = newSvg.selectAll("text");
+                textElements.forEach((t) => {
+                    const bb = t.getBBox();
+                    if (bb.width === 0 || bb.height === 0) {
+                        t.remove();
+                    }
+                });
                 // handle texts
                 var hasText = newSvg.selectAll("text,tspan");
                 if (hasText && hasText.length > 0) {
@@ -2663,7 +2671,7 @@ $(function () {
                 .gc_options_as_string()
                 .replace(/"/g, '"');
             compSvg.attr({
-                "mb:beamOS_version": BEAMOS_VERSION,
+                "mb:beamOS_version": MRBEAM_PLUGIN_VERSION,
                 "mb:gc_options": gc_options_str,
             });
             if (compSvg.children().length > 1) {
@@ -3111,7 +3119,13 @@ $(function () {
 
             if (MRBEAM_DEBUG_RENDERING) {
                 debugBase64(
-                    clusters.map((c) => c.svg.toDataURL()),
+                    clusters.map((c) => {
+                        c.svg.attr(
+                            "viewBox",
+                            `0 0 ${self.workingAreaWidthMM()} ${self.workingAreaHeightMM()}`
+                        );
+                        return c.svg.toDataURL();
+                    }),
                     `Step 1: Raster Cluster SVGs`
                 );
             }
