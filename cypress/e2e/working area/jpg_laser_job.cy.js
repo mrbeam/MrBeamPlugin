@@ -67,12 +67,14 @@ describe("Laser Job", function () {
         cy.wait(1000);
         cy.get('[id="material_thickness_0.4"]').click();
         cy.get('[id="svgtogcode_img_intensity_black"]').clear().type("95");
+        cy.get('[id="svgtogcode_img_intensity_white"]').clear().type("30");
+        cy.get('[id="svgtogcode_img_feedrate_white"]').clear().type("900");
         cy.get('[id="svgtogcode_img_feedrate_black"]').clear().type("1500");
         cy.get('[id="parameter_assignment_show_advanced_settings_cb"]').click();
         cy.get(".passes_input").first().clear().type("4");
         cy.get('[id="parameter_assignment_pierce_time_in"]').clear().type("8");
         cy.get('[id="svgtogcode_img_line_dist"]').clear().type("1");
-        cy.get('[id="parameter_assignment_engraving_mode_basic_btn"]').dblclick(
+        cy.get('[id="parameter_assignment_engraving_mode_precise_btn"]').dblclick(
             { force: true }
         );
         cy.get('[id="start_job_btn"]').dblclick();

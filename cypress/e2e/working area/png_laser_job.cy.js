@@ -64,7 +64,9 @@ describe("Laser Job", function () {
         cy.get('[id="material_color_0057a8"]').click();
         cy.wait(1000);
         cy.get('[id="material_thickness_2"]').click();
-        cy.get('[id="svgtogcode_img_intensity_black"]').clear().type("95");
+        cy.get('[id="svgtogcode_img_intensity_black"]').clear().type("85");
+        cy.get('[id="svgtogcode_img_intensity_white"]').clear().type("25");
+        cy.get('[id="svgtogcode_img_feedrate_white"]').clear().type("700");
         cy.get('[id="svgtogcode_img_feedrate_black"]').clear().type("1500");
         cy.get('[id="parameter_assignment_show_advanced_settings_cb"]').click();
         cy.get(".passes_input").first().clear().type("4");

@@ -22,4 +22,8 @@ module.exports = defineConfig({
         mochaFile: "cypress/results/test-results-[hash].xml",
         testCaseSwitchClassnameAndName: false,
     },
+    compilerOptions: {
+        "types": ["cypress", "@4tw/cypress-drag-drop"],
+        "types": ["cypress", "node", "cypress-real-events"],
+    },
 });

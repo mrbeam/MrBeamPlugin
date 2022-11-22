@@ -9,7 +9,8 @@ describe("Laser Job - shapes", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
-        cy.wait(7000);
+        cy.reload();
+        cy.visit(this.testData.url_laser);
     });
 
     it("Add shapes - heart", function () {
@@ -38,7 +39,7 @@ describe("Laser Job - shapes", function () {
         cy.wait(2000);
         cy.get(".material_entry").contains("Cardboard, double wave").click();
         cy.wait(1000);
-        cy.get('[id="material_thickness_4"]').click();
+        cy.get('[id="material_thickness_-1"]').click();
         cy.get('[id="svgtogcode_img_intensity_black"]').clear().type("95");
         cy.get('[id="svgtogcode_img_feedrate_black"]').clear().type("1500");
         cy.get('[id="parameter_assignment_show_advanced_settings_cb"]').click();
@@ -80,6 +81,7 @@ describe("Laser Job - shapes", function () {
         cy.get('[id="laser_button"]').click();
         cy.focusReminder();
         cy.get(".material_entry").contains("Anodized Aluminum").click();
+        cy.get('[id="material_thickness_-1"]').click();
         cy.get('[id="svgtogcode_img_intensity_black"]').clear().type("95");
         cy.get('[id="svgtogcode_img_feedrate_black"]').clear().type("900");
         cy.get('[id="parameter_assignment_show_advanced_settings_cb"]').click();
@@ -170,6 +172,8 @@ describe("Laser Job - shapes", function () {
         cy.wait(1000);
         cy.get('[id="material_thickness_0.8"]').click();
         cy.get('[id="svgtogcode_img_intensity_black"]').clear().type("95");
+        cy.get('[id="svgtogcode_img_intensity_white"]').clear().type("20");
+        cy.get('[id="svgtogcode_img_feedrate_white"]').clear().type("1000");
         cy.get('[id="svgtogcode_img_feedrate_black"]').clear().type("1300");
         cy.get('[id="parameter_assignment_show_advanced_settings_cb"]').click();
         cy.get(".passes_input").first().clear().type("2");
