@@ -8,9 +8,6 @@ on:
       - stable
 
 env:
-  CYPRESS_TEST_USER_EMAIL: ${{ secrets.CYPRESS_TEST_USER_EMAIL }}
-  CYPRESS_TEST_USER_PASSWORD: ${{ secrets.CYPRESS_TEST_USER_PASSWORD }}
-  CYPRESS_TEST_DESIGN_STORE_TOKEN: ${{ secrets.CYPRESS_TEST_DESIGN_STORE_TOKEN }}
   # These two are just for internal use, to wire the container network
   MRBEAM_PLUGIN_URL: "http://plugin-address.org:5002/"
   MRBEAM_PLUGIN_DOMAIN_NAME: "plugin-address.org"
@@ -70,7 +67,11 @@ jobs:
           apt-get install docker.io -y
           docker load --input /tmp/image.tar
           docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
-      - run: |
+      - env:
+          CYPRESS_TEST_USER_EMAIL: ${{ secrets.CYPRESS_TEST_USER_EMAIL }}
+          CYPRESS_TEST_USER_PASSWORD: ${{ secrets.CYPRESS_TEST_USER_PASSWORD }}
+          CYPRESS_TEST_DESIGN_STORE_TOKEN: ${{ secrets.CYPRESS_TEST_DESIGN_STORE_TOKEN }}
+        run: |
           envsubst < ./cypress/fixtures/test-data.template.json > ./cypress/fixtures/test-data.json
           envsubst < ./cypress.config-template.js > ./cypress.config.js
       - name: Run Cypress e2e - Chrome
