@@ -130,10 +130,11 @@ jobs:
           issue_url=$(printf '%s\n' '${{ steps.xray.outputs.xray_import_response }}' | jq -r .self)
           echo $issue_url
 
-          issue_name="Test execution for ${{ github.event.head_commit.message }}"
+          last_commit_message=$(echo $(git log -1 --pretty=format:"%s"))
+          issue_name="Test execution for $last_commit_message"
           echo $issue_name
 
-          tests_issue=$(echo ${{ github.event.head_commit.message }} | sed -E -e 's/.*(SW-[0-9]+).*/\1/g')
+          tests_issue=$(echo $last_commit_message | sed -E -e 's/.*(SW-[0-9]+).*/\1/g')
           echo $tests_issue
 
           curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X PUT $issue_url -H 'Content-Type: application/json' \
