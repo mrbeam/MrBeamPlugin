@@ -14,7 +14,7 @@ Cypress.Commands.add("loginDesignStore", (email, password, code) => {
     cy.get('[id="settings_tab_btn"]').click({ force: true });
     cy.get('[id="settings_plugin_mrbeam_dev_design_store_link"]').click();
     cy.get('[id="settings-mrbeam-design-store-environment"]').select("dev");
-    cy.get('[id="designstore_tab_btn"]').click();
+    cy.get('[data-test="mrbeam-ui-index-design-store"]').click();
     cy.wait(10000);
     cy.loginStore(code);
 });
@@ -96,7 +96,7 @@ Cypress.Commands.add("loginStore", (code) => {
 
 Cypress.Commands.add("loginLibrary", (email, password) => {
     cy.loginLaser(email, password);
-    cy.get('[id="designlib_tab_btn"]').click();
+    cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
     cy.get('[id="workingarea"]').should("to.exist");
 });
 

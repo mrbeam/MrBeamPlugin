@@ -48,10 +48,10 @@
 				<!-- Navbar -->
 				<ul id="mrbeam-main-tabs" class="nav nav-pills pull-right">
                     {# Translatots: Name of the tab #}
-					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn">{{ _('working area') }}</a></li>
+					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn" data-test="mrbeam-ui-index-working-area">{{ _('working area') }}</a></li>
                     {# Translatots: Name of the tab #}
-					<li><a href="#designlib" data-toggle="tab" id="designlib_tab_btn">{{ _('design library') }}</a></li>
-                    <li><a href="#designstore" data-toggle="tab" id="designstore_tab_btn" onclick="window.mrbeam.viewModels.designStoreViewModel.goToStore()">{{ _('design store') }}</a></li>
+					<li><a href="#designlib" data-toggle="tab" id="designlib_tab_btn" data-test="mrbeam-ui-index-design-library">{{ _('design library') }}</a></li>
+                    <li><a href="#designstore" data-toggle="tab" id="designstore_tab_btn" onclick="window.mrbeam.viewModels.designStoreViewModel.goToStore()" data-test="mrbeam-ui-index-design-store">{{ _('design store') }}</a></li>
                     {% if not enableFocus %}
 					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">{{ _('focus') }}</a></li>
                     {% endif %}

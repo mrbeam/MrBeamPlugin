@@ -1,24 +1,24 @@
-<div id="quick_text_dialog" class="modal hide fade modal-left-side" >
+<div id="quick_text_dialog" class="modal hide fade modal-left-side" data-test="quick-text-modal-window">
     <div class="modal-header">
 {#        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>#}
         <h3>{{ _('Quick Text') }}</h3>
     </div>
     <div class="modal-body">
         <form role="form" class="form-search" data-bind="submit: function(){$('#quick_text_dialog').modal('hide');}" _lpchecked="1">
-            <input type="text" id="quick_text_dialog_text_input" class="input-block quicktext-input" data-bind="textInput: currentQuickText" placeholder="{{ _('QuickText...') }}" autocomplete="off"/>
+            <input type="text" id="quick_text_dialog_text_input" class="input-block quicktext-input" data-bind="textInput: currentQuickText" placeholder="{{ _('QuickText...') }}" autocomplete="off" data-test="quick-text-modal-text-input"/>
 			<div class="row-fluid padding-top">
 				{# Translators: Aa - the first alphabet letter capitalized and not #}
-				<div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontPrev"><i class="icon-chevron-left" title="{{ _('Previous Font') }}"></i> {{ _('Aa') }} </div>
+				<div class="btn btn-small span3 quicktext-font-button" data-test="quick-text-font-button-left" data-bind="click: currentQuickTextFontPrev"><i class="icon-chevron-left" title="{{ _('Previous Font') }}"></i> {{ _('Aa') }} </div>
 				<div class="span6 quicktext-fontname" id="quick_text_dialog_font_name"></div>
-				<div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontNext"> {{ _('Aa') }} <i class="icon-chevron-right" title="{{ _('Next Font') }}"></i></div>
+				<div class="btn btn-small span3 quicktext-font-button" data-test="quick-text-font-button-right" data-bind="click: currentQuickTextFontNext"> {{ _('Aa') }} <i class="icon-chevron-right" title="{{ _('Next Font') }}"></i></div>
 			</div>
 
             <div id="quick_text_stroke_and_fill" class="form-horizontal">
                 <div class="control-group">
                     <label class="control-label">{{ _('Line Color') }}</label>
                     <div class="controls">
-                        <input type="checkbox" value="stroke" id="quick_text_stroke" checked data-bind="click: _qt_currentQuickTextUpdate()" />
-                        <div id="qt_colorPicker_stroke" class="tinyColorPicker">
+                        <input type="checkbox" value="stroke" id="quick_text_stroke" checked data-bind="click: _qt_currentQuickTextUpdate()" data-test="quick-text-stroke-input"/>
+                        <div id="qt_colorPicker_stroke" class="tinyColorPicker" data-test="quick-text-color-picker-stroke">
                             <a class="tcp_color"><div class="colorInner"></div></a>
                             <div class="track"></div>
                             <ul class="dropdown"><li></li></ul>
@@ -30,8 +30,8 @@
                 <div class="control-group">
                     <label class="control-label">{{ _('Fill Color') }}</label>
                     <div class="controls">
-                        <input type="checkbox" value="fill" id="quick_text_fill" data-bind="click: _qt_currentQuickTextUpdate()" />
-                        <div id="qt_colorPicker_fill" class="tinyColorPicker blackWhite">
+                        <input type="checkbox" value="fill" id="quick_text_fill" data-bind="click: _qt_currentQuickTextUpdate()" data-test="quick-text-fill-input"/>
+                        <div id="qt_colorPicker_fill" class="tinyColorPicker blackWhite" data-test="quick-text-color-picker-fill">
                             <a class="tcp_color"><div class="colorInner"></div></a>
                             <div class="track"></div>
                             <ul class="dropdown"><li></li></ul>
@@ -45,11 +45,11 @@
                     <div class="controls">
                         <div id="qt_round_text_section" class="straight">
                             <div  class="btn-group">
-                                <div id="quick_text_straight" class="btn active"><img loading="lazy" src="/plugin/mrbeam/static/img/straight_text_paths.svg" alt="straight text"/></div>
-                                <div id="quick_text_cw" class="btn"><img src="/plugin/mrbeam/static/img/round_text_outside_paths.svg" alt="round text" class="round-text-icon clockwise pull-right"/></div>
-                                <div id="quick_text_ccw" class="btn"><img src="/plugin/mrbeam/static/img/round_text_inside_paths.svg" alt="round text" class="round-text-icon counterclockwise pull-right"/></div>
+                                <div id="quick_text_straight" data-test="quick-text-modal-text-straight" class="btn active"><img loading="lazy" src="/plugin/mrbeam/static/img/straight_text_paths.svg" alt="straight text"/></div>
+                                <div id="quick_text_cw" data-test="quick-text-modal-text-cw" class="btn"><img src="/plugin/mrbeam/static/img/round_text_outside_paths.svg" alt="round text" class="round-text-icon clockwise pull-right"/></div>
+                                <div id="quick_text_ccw" data-test="quick-text-modal-text-ccw" class="btn"><img src="/plugin/mrbeam/static/img/round_text_inside_paths.svg" alt="round text" class="round-text-icon counterclockwise pull-right"/></div>
                             </div>
-                            <input id="quick_text_dialog_circle" class="mrb_slider" type="range" min="0" max="100" value="0" />
+                            <input id="quick_text_dialog_circle" class="mrb_slider" type="range" min="0" max="100" value="0" data-test="quick-text-circle-input"/>
                         </div>
             <!--			<div id="qt_round_text_section" class="clockwise">
                             <img loading="lazy" src="/plugin/mrbeam/static/img/straight_text.svg" alt="straight text"/>
@@ -70,6 +70,6 @@
         </form>
     </div>
     <div class="modal-footer">
-        <a class="btn btn-primary" id="quick_text_text_done_btn" data-dismiss="modal" aria-hidden="true">{{ _('OK') }}</a>
+        <a class="btn btn-primary" id="quick_text_text_done_btn" data-dismiss="modal" aria-hidden="true" data-test="quick-text-done-button">{{ _('OK') }}</a>
     </div>
 </div>

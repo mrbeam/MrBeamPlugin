@@ -12,8 +12,8 @@ describe("Laser Job", function () {
     });
 
     it("Add design", function () {
-        cy.get('[id="working_area_tab_file_btn"]').click();
-        cy.get('[id="files_list"]').then(($elem) => {
+        cy.get('[data-test="working-area-tab-file"]').click();
+        cy.get('[data-test="tab-designbib-files-list"]').then(($elem) => {
             if (
                 $elem
                     .find(".files_template_model_image")
@@ -54,36 +54,34 @@ describe("Laser Job", function () {
         cy.get('.crop_bottom').clear().type('3');
         cy.get('.crop_right').clear().type('2');
         cy.contains('duplicate').click({force:true});
-        cy.get('[id="laser_button"]').click();
+        cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(2000);
         cy.focusReminder();
         cy.wait(2000);
-        cy.get(".material_entry")
+        cy.get('[data-test="conversion-dialog-material-item"]')
             .contains(/^Foam Rubber$/)
             .click();
         cy.get('[id="material_color_0057a8"]').click();
         cy.wait(1000);
         cy.get('[id="material_thickness_2"]').click();
-        cy.get('[id="svgtogcode_img_intensity_black"]').clear().type("85");
-        cy.get('[id="svgtogcode_img_intensity_white"]').clear().type("25");
-        cy.get('[id="svgtogcode_img_feedrate_white"]').clear().type("700");
-        cy.get('[id="svgtogcode_img_feedrate_black"]').clear().type("1500");
-        cy.get('[id="parameter_assignment_show_advanced_settings_cb"]').click();
-        cy.get(".passes_input").first().clear().type("4");
-        cy.get('[id="parameter_assignment_pierce_time_in"]').clear().type("8");
-        cy.get('[id="svgtogcode_img_line_dist"]').clear().type("1");
-        cy.get('[id="parameter_assignment_engraving_mode_basic_btn"]').dblclick(
-            { force: true }
-        );
-        cy.get('[id="start_job_btn"]').dblclick();
+        cy.get('[data-test="conversion-dialog-intensity-black"]').clear().type("85");
+        cy.get('[data-test="conversion-dialog-intensity-white"]').clear().type("25");
+        cy.get('[data-test="conversion-dialog-feedrate-white"]').clear().type("700");
+        cy.get('[data-test="conversion-dialog-feedrate-black"]').clear().type("1500");
+        cy.get('[data-test="conversion-dialog-show-advanced-settings"]').click();
+        cy.get('[data-test="conversion-dialog-passes-input-engrave"]').first().clear().type("4");
+        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]').clear().type("8");
+        cy.get('[data-test="conversion-dialog-line-distance-input"line-distance-input"]').clear().type("1");
+        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick({ force: true });
+        cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.reload();
         cy.wait(10000);
-        cy.get('[id="designlib_tab_btn"]').click();
-        cy.get('[id="design_lib_filter_gcode_radio"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
         cy.get(".files_template_machinecode_gcode").first().click();
-        cy.get('[id="laser_button"]').click();
+        cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });

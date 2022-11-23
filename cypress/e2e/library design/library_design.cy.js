@@ -13,7 +13,7 @@ describe("Library design", function () {
     });
 
     it("Switch sort", function () {
-        cy.get('[id="design_lib_sort_name_radio"]').click();
+        cy.get('[data-test="tab-designbib-sort-name-radio"]').click();
         cy.get('[data-bind="foreach: foldersOnlyABCList()"]').should(
             "to.exist"
         );
@@ -21,7 +21,7 @@ describe("Library design", function () {
     });
 
     it("Switch filter", function () {
-        cy.get('[id="design_lib_filter_gcode_radio"]').click();
+        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
         cy.get('[data-bind="foreach: foldersOnlyABCList()"]').should(
             "to.exist"
         );

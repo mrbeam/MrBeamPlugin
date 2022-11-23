@@ -31,29 +31,29 @@
 									<ul class="file_list_filter" id="files_filter">
                                         <div><strong>{{ _('Sort') }}</strong></div>
 										<li>
-                                            <input type="radio" name="designLibSorting" id="design_lib_sort_name_radio" data-bind="click: function() { $root.listHelper.changeSorting('name'); return true;}" />
+                                            <input type="radio" name="designLibSorting" id="design_lib_sort_name_radio" data-bind="click: function() { $root.listHelper.changeSorting('name'); return true;}" data-test="tab-designbib-sort-name-radio"/>
                                             <label for="design_lib_sort_name_radio">{{ _('Name') }} ({{ _('ascending') }})</label>
                                         </li>
 										<li>
-                                            <input type="radio" name="designLibSorting" id="design_lib_sort_upload_radio" data-bind="click: function() { $root.listHelper.changeSorting('upload'); return true;}" />
+                                            <input type="radio" name="designLibSorting" id="design_lib_sort_upload_radio" data-bind="click: function() { $root.listHelper.changeSorting('upload'); return true;}" data-test="tab-designbib-sort-upload-radio"/>
                                             <label for="design_lib_sort_upload_radio">{{ _('Upload date') }} ({{ _('descending') }})</label>
                                         </li>
                                         <li>
-                                            <input type="radio" name="designLibSorting" id="design_lib_sort_size_radio" data-bind="click: function() { $root.listHelper.changeSorting('size'); return true;}" />
+                                            <input type="radio" name="designLibSorting" id="design_lib_sort_size_radio" data-bind="click: function() { $root.listHelper.changeSorting('size'); return true;}" data-test="tab-designbib-sort-size-radio"/>
                                             <label for="design_lib_sort_size_radio">{{ _('File size') }} ({{ _('descending') }})</label>
                                         </li>
                                         <br>
                                         <div><strong>{{ _('Filter') }}</strong></div>
                                         <li>
-                                            <input type="radio" name="designLibFilter" id="design_lib_filter_design_radio" data-bind="click: function() { $root.setFilter('design'); return true;}" />
+                                            <input type="radio" name="designLibFilter" id="design_lib_filter_design_radio" data-bind="click: function() { $root.setFilter('design'); return true;}" data-test="tab-designbib-filter-design-radio"/>
                                             <label for="design_lib_filter_design_radio">{{ _('Design files') }}</label>
                                         </li>
 										<li>
-                                            <input type="radio" name="designLibFilter" id="design_lib_filter_gcode_radio" data-bind="click: function() { $root.setFilter('machinecode'); return true;}" />
+                                            <input type="radio" name="designLibFilter" id="design_lib_filter_gcode_radio" data-bind="click: function() { $root.setFilter('machinecode'); return true;}" data-test="tab-designbib-filter-gcode-radio"/>
                                             <label for="design_lib_filter_gcode_radio">{{ _('GCode files') }}</label>
                                         </li>
                                         <li>
-                                            <input type="radio" name="designLibFilter" id="design_lib_filter_recent_radio" data-bind="click: function() { $root.setFilter('recentjob'); return true;}" />
+                                            <input type="radio" name="designLibFilter" id="design_lib_filter_recent_radio" data-bind="click: function() { $root.setFilter('recentjob'); return true;}" data-test="tab-designbib-filter-recent-radio"/>
                                             <label for="design_lib_filter_recent_radio">{{ _('Recent jobs') }}</label>
                                         </li>
 									</ul>
@@ -98,7 +98,7 @@
 												{{ _('Add Folder') }} <i class="icon icon-plus-sign"></i>
 											</a>
 										</div>
-										<div id="files_list" style="height: calc(100vh - 100px); overflow-y: auto;">
+										<div id="files_list" style="height: calc(100vh - 100px); overflow-y: auto;" data-test="tab-designbib-files-list">
 
 											<!-- ko allowBindings: false -->
 											<div class="only_folders clearfix">

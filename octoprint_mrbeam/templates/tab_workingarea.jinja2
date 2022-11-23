@@ -49,7 +49,7 @@
 
 
 													<div class="row-fluid print-control btn-group" style="display: none;" data-bind="visible: loginState.isUser">
-														<button id="laser_button" data-cy=”working-area-laser-button” class="btn btn-danger span6"
+														<button id="laser_button" data-test="working-area-laser-button" class="btn btn-danger span6"
                                                                 data-bind="click: conversion.show_conversion_dialog, enable: {{ 'true' if isDevelop and 'enableLaserButton' in request.args else 'false'}} || (state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty()), attr: {title: state.titlePrintButton}"
                                                                 id="job_print">
                                                             <i class="icon-white icon-fire"
@@ -306,14 +306,14 @@
                                 <div class="accordion-group" id="working_area_files">
 									<div class="accordion-heading">
 										<div class="accordion-toggle unselectable"><i class="icon-list"></i> {{ _('Designs') }}</div>
-										<a id="clear_working_area_btn" class="accordion-toggle pull-right" data-bind="style: {opacity: working_area_empty() ? 0.75 : 1}, click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
+										<a id="clear_working_area_btn" data-test="tab-workingarea-clear-wa" class="accordion-toggle pull-right" data-bind="style: {opacity: working_area_empty() ? 0.75 : 1}, click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
 									</div>
 									<div class="accordion-body">
 										<div class="accordion-inner">
 											<div class="row-fluid btn-group">
-												<div class="btn span4" id="working_area_tab_file_btn" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
-												<div class="btn span4" id="working_area_tab_text_btn" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Text') }} </div>
-												<div class="btn span4" id="working_area_tab_shape_btn" data-bind="click: newQuickShape"><i class="icon-heart-empty"></i> {{ _('Shape') }} </div>
+												<div class="btn span4" id="working_area_tab_file_btn" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}" data-test="working-area-tab-file"><i class="icon-file"></i> {{ _('File') }} </div>
+												<div class="btn span4" id="working_area_tab_text_btn" data-bind="click: newQuickText"><i class="icon-font" data-test="working-area-tab-text"></i> {{ _('Text') }} </div>
+												<div class="btn span4" id="working_area_tab_shape_btn" data-bind="click: newQuickShape"><i class="icon-heart-empty" data-test="working-area-tab-shape"></i> {{ _('Shape') }} </div>
 {#												<div class="btn span3" id="working_area_tab_scan_btn" data-bind="click: enableScanMode"><i class="icon-copy"></i> {{ _('Scan') }} </div>#}
 {#												Camera not working, disabled till we fixed this. then set spans of the buttons above to span4 >#}
 {#												<div class="btn span4" data-bind="visible:files.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: files.takePhoto" >#}
@@ -323,7 +323,7 @@
 											</div>
                                         </div>
 
-										<div class="collapse in" id="wa_filelist">
+										<div class="collapse in" id="wa_filelist" data-test="tab-workingarea-collapse-in">
 											<div class="accordion-inner" style="padding-right:4px;">
 												<div class="scrollable" data-bind="foreach: placedDesigns" style="padding-right:4px;">
 													<div class="entry" data-bind="attr: { id: $data.id}, template: { name: $root.templateFor($data), data: $data }"></div>
@@ -446,7 +446,7 @@
 															<div class="misfit_warning">
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>
 																<span>{{ _('Design exceeds the working area.') }}</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } " data-test="tab-workingarea-make-me-fit-svg">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>
@@ -642,7 +642,8 @@
                                                        title="{{ _('exceeds working area') }}"></i>&nbsp;
                                                     <span>{{ _('Design exceeds the working area.') }}</span>
                                                     <a href="#" name="working_area_tab_make_it_fit"
-                                                       data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
+                                                       data-bind="click: function(){ $root.fitSVG($data) } "
+													   data-test="tab-workingarea-make-me-fit-image">{{ _('Make it fit') }}</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -729,7 +730,7 @@
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
 																<span>{{ _('Design exceeds the working area.') }}</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } " data-test="tab-workingarea-make-me-fit-quick-text">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>
@@ -819,7 +820,7 @@
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
 																<span>{{ _('Design exceeds the working area.') }}</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } " data-test="tab-workingarea-make-me-fit-shape">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>
