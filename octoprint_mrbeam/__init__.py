@@ -706,6 +706,7 @@ class MrBeamPlugin(
                 "js/app/view-models/settings/calibration/watterott/camera-alignment.js",
                 "js/app/view-models/settings/calibration/watterott/calibration-qa.js",
                 "js/app/view-models/settings/calibration/watterott/label-printer.js",
+                "js/app/view-models/modal/hard_refresh_overlay.js",
             ],
             css=[
                 "css/mrbeam.css",
