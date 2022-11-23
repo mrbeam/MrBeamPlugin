@@ -29,11 +29,15 @@ def get_environment_enum_from_plugin_settings(plugin_settings):
         return SWUpdateTier.DEV
 
     software_tier_value = plugin_settings.get(["dev", "software_tier"])
-    if software_tier_value == SWUpdateTier.STABLE.value:
+    if type(software_tier_value) is not str:
         return SWUpdateTier.STABLE
-    elif software_tier_value == SWUpdateTier.BETA.value:
+
+    lower_case_software_tier = software_tier_value.lower()
+    if lower_case_software_tier == SWUpdateTier.STABLE.value.lower():
+        return SWUpdateTier.STABLE
+    elif lower_case_software_tier == SWUpdateTier.BETA.value.lower():
         return SWUpdateTier.BETA
-    elif software_tier_value == SWUpdateTier.ALPHA.value:
+    elif lower_case_software_tier == SWUpdateTier.ALPHA.value.lower():
         return SWUpdateTier.ALPHA
 
     return SWUpdateTier.STABLE
@@ -102,6 +106,9 @@ class SettingsService:
         return material_store_config
 
     def _is_valid_material_store_config(self, environment, material_store_config_yml):
-        return ('material-store' in material_store_config_yml) and (
+        return environment and material_store_config_yml and ('material-store' in material_store_config_yml) and (
                 'environment' in material_store_config_yml['material-store']) and (
-                       environment.value.lower() in material_store_config_yml['material-store']['environment'])
+                       environment.value.lower() in material_store_config_yml['material-store']['environment']) and (
+                       'enabled' in material_store_config_yml['material-store']['environment'][
+                   environment.value.lower()]) and ('url' in material_store_config_yml['material-store']['environment'][
+            environment.value.lower()])
