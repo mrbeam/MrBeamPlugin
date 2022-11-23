@@ -10,6 +10,7 @@ on:
 env:
   CYPRESS_TEST_USER_EMAIL: "dev@mr-beam.org"
   CYPRESS_TEST_USER_PASSWORD: "a"
+  # These two are just for internal use, to wire the container network
   MRBEAM_PLUGIN_URL: "http://plugin-address.org:5002/"
   MRBEAM_PLUGIN_DOMAIN_NAME: "plugin-address.org"
 
@@ -45,6 +46,7 @@ jobs:
     container:
       image: cypress/browsers:node16.17.0-chrome106
       options: --add-host=${{ needs.mrb-docker.outputs.domain }}:host-gateway
+      # This is necessary to use the docker daemon from the GitHub actions virtual machine
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
     needs: mrb-docker
@@ -116,14 +118,14 @@ jobs:
         id: xray
         run: |
           token=$(curl -H "Content-Type: application/json" -X POST --data '{ "client_id": "${{ secrets.JIRA_CLIENT_ID }}","client_secret": "${{ secrets.JIRA_CLIENT_SECRET }}" }'  https://xray.cloud.getxray.app/api/v2/authenticate| tr -d '"')
-          response=$(curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data @"cypress/results/combined.xml" https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=SW)
-          echo "response=$response" >> $GITHUB_OUTPUT
+          xray_import_response=$(curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data @"cypress/results/combined.xml" https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=SW)
+          echo "xray_import_response=xray_import_response" >> $GITHUB_OUTPUT
       - name: Change issue summary and add link
         # issue_url: extracts the newly created test execution issue url from the previous response
         # issue_name: contains the latest commit message. Should be something like "SW-1234 summary"
         # tests_issue: extracts the "SW-1234" from the commit message, to add it as a link to the text execution issue
         run: |
-          issue_url=$(printf '%s\n' '${{ steps.xray.outputs.response }}' | jq -r .self)
+          issue_url=$(printf '%s\n' '${{ steps.xray.outputs.xray_import_response }}' | jq -r .self)
           echo $issue_url
 
           issue_name="Test plan for ${{ github.event.head_commit.message }}"
