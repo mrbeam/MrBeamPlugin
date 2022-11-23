@@ -864,7 +864,7 @@ class MrBeamPlugin(
                 lasersafety_confirmation_dialog_language=language,
                 settings_model=SettingsService(self._logger, DocumentService(self._logger),
                                                environment=settings_service.get_environment_enum_from_plugin_settings(
-                                                   copy.copy(self._settings))).get_template_settings_model(
+                                                   self._settings)).get_template_settings_model(
                     self.get_model_id()),
                 burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
                     self.get_model_id()),
