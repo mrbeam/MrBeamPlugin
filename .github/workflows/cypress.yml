@@ -128,7 +128,7 @@ jobs:
           issue_url=$(printf '%s\n' '${{ steps.xray.outputs.xray_import_response }}' | jq -r .self)
           echo $issue_url
 
-          issue_name="Test plan for ${{ github.event.head_commit.message }}"
+          issue_name="Test execution for ${{ github.event.head_commit.message }}"
           echo $issue_name
 
           tests_issue=$(echo ${{ github.event.head_commit.message }} | sed -E -e 's/.*(SW-[0-9]+).*/\1/g')
