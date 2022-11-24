@@ -7,7 +7,7 @@ class SettingsModel:
         self.about = None
 
     def __repr__(self):
-        return 'SettingsModel(about=%s)' % (repr(self.about))
+        return 'SettingsModel(material_store=%s, about=%s)' % (repr(self.material_store), repr(self.about))
 
 
 class AboutModel:
