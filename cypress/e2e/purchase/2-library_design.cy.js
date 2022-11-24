@@ -108,7 +108,7 @@ describe("Login", function () {
     it("Download designs by burger menu", function () {
         cy.intercept(
             "GET",
-            "http://localhost:5002/downloads/files/local/Test_plan_1.svg"
+            Cypress.config().baseUrl + "/downloads/files/local/Test_plan_1.svg"
         ).as("downloadFile");
         cy.get(".files_template_model_svg")
             .first()
