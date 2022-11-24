@@ -166,22 +166,18 @@ Cypress.Commands.add("loginLaser", (email, password) => {
 
 Cypress.Commands.add("focusReminder", () => {
     cy.wait(3000);
-    cy.get('.modal-dialog').then(($body) => {
-        if (
-            $body
-                .find('[id="laserhead_focus_reminder_modal"]')
-                .filter(":visible").length
-        ) {
-            cy.get(
-                "#laserhead_focus_reminder_not_again > label > input"
-            ).check();
+   
+    cy.get('body').then(($body) => {
+        let reminderLaser = $body.find('[id="laserhead_focus_reminder_modal"]');
+        if (reminderLaser.is(':visible'))
+        {
+            cy.get('#laserhead_focus_reminder_not_again > label > input').click();
             cy.get('[id="start_job_btn_focus_reminder"]')
                 .contains("It's focused!")
                 .click({ force: true });
         } else {
             cy.get('[id="laserhead_focus_reminder_modal"]')
-                .filter(":visible")
-                .should("not.exist");
+                .should('not.be.visible');
         }
     });
     

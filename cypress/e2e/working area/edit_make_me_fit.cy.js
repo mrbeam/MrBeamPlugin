@@ -13,24 +13,24 @@ describe("Laser Job", function () {
 
     it("Make me fit", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designbib-files-list"]').then(($elem) => {
+        cy.get('[data-test="tab-design-library-svg-preview-card"]').then(($elem) => {
             if (
                 $elem
-                    .find('[data-test="library-design-files-svg"]')
+                    .find('[data-test="tab-design-library-svg-preview-card"]')
                     .filter(':contains("black_cat.svg")').length
             ) {
             } else {
                 const filepath = "black_cat.svg";
-                cy.get('[data-test="tab-design-library-upload-file"] input[type="file"]').attachFile(
+                cy.get('.fileinput-button input[type="file"]').attachFile(
                     filepath
                 );
                 cy.wait(5000);
-                cy.get('[data-test="library-design-files-svg"]')
+                cy.get('[data-test="tab-design-library-svg-preview-card"]')
                     .contains("black_cat")
                     .should("to.exist");
             }
         });
-        cy.get('[data-test="library-design-files-svg"]')
+        cy.get('[data-test="tab-design-library-svg-preview-card"]')
             .filter(':contains("black_cat.svg")')
             .click();
         cy.wait(3000);
@@ -41,9 +41,9 @@ describe("Laser Job", function () {
     }); 
     
     it("Edit", function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get('[data-test="tab-workingarea-collapse-in"orkingarea-collapse-in"]').contains('Rectangle').should('to.exist');
+        cy.get('[data-test="tab-workingarea-collapse-in"]').contains('Rectangle').should('to.exist');
         cy.wait(2000);
         cy.get('.btn-mini').find('.icon-edit').click({force:true});
         cy.get('[data-test="quick-shape-modal-window"]').should('to.visible');
@@ -62,12 +62,12 @@ describe("Laser Job", function () {
 
     it("Clear all", function () {
         cy.get('[data-test="tab-workingarea-collapse-in"]').contains('.file_list_entry').should('not.exist');
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="tab-workingarea-collapse-in"]').contains('Rectangle').should('to.exist');
         cy.wait(2000);
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="library-design-files-svg"]').first().click();
+        cy.get('[data-test="tab-design-library-svg-preview-card"]').first().click();
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type("MrBeam");
         cy.get('[data-test="quick-text-done-button"]').click();
@@ -76,26 +76,26 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-collapse-in"]').contains('.file_list_entry').should('not.exist'); 
     });
 
-    it.only("reset and remove", function () {
+    it("reset and remove", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designbib-files-list"]').then(($elem) => {
+        cy.get('[data-test="tab-design-library-svg-preview-card"]').then(($elem) => {
             if (
                 $elem
-                    .find(".files_template_model_image")
+                    .find('[data-test="tab-design-library-image-preview-card"]')
                     .filter(':contains("paris2.jpg")').length
             ) {
             } else {
                 const filepath = "paris2.jpg";
-                cy.get('[data-test="tab-design-library-upload-file"] input[type="file"]').attachFile(
+                cy.get('.fileinput-button input[type="file"]').attachFile(
                     filepath
                 );
                 cy.wait(5000);
-                cy.get(".files_template_model_image")
+                cy.get('[data-test="tab-design-library-image-preview-card"]')
                     .contains("paris2.jpg")
                     .should("to.exist");
             }
         });
-        cy.get(".files_template_model_image")
+        cy.get('[data-test="tab-design-library-image-preview-card"]')
             .filter(':contains("paris2.jpg")')
             .click();
         cy.wait(3000);
@@ -106,7 +106,7 @@ describe("Laser Job", function () {
             deltaY: -144.1241,
             force: true,
         });
-        cy.get(".rotation").clear().type("250.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
         cy.get(".horizontal").clear().type("225.3 mm");
         cy.get(".vertical").clear().type("230.3 mm");
         cy.get('.btn-mini').find('.icon-undo').click({force:true});

@@ -16,21 +16,21 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-designbib-files-list"]').then(($elem) => {
             if (
                 $elem
-                    .find(".files_template_model_image")
+                    .find('[data-test="tab-design-library-image-preview-card"]')
                     .filter(':contains("mirror.png")').length
             ) {
             } else {
                 const filepath = "mirror.png";
-                cy.get('[data-test="tab-design-library-upload-file"] input[type="file"]').attachFile(
+                cy.get('.fileinput-button input[type="file"]').attachFile(
                     filepath
                 );
                 cy.wait(5000);
-                cy.get(".files_template_model_image")
+                cy.get('[data-test="tab-design-library-image-preview-card"]')
                     .contains("mirror.png")
                     .should("to.exist");
             }
         });
-        cy.get(".files_template_model_image")
+        cy.get('[data-test="tab-design-library-image-preview-card"]')
             .filter(':contains("mirror.png")')
             .click();
         cy.wait(3000);
@@ -39,7 +39,7 @@ describe("Laser Job", function () {
         cy.get(".horizontal").clear().type("125.3 mm");
         cy.get(".vertical").clear().type("130.3 mm");
         cy.get(".translation").clear().type("135.0, 138.0");
-        cy.get(".rotation").clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
         cy.get('.image-preprocessing-collapsible').click();
         cy.get('[id="img-preprocess-contrast"]').realClick();
         cy.wait(1000)
@@ -80,7 +80,7 @@ describe("Laser Job", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();

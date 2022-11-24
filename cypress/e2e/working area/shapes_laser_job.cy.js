@@ -14,7 +14,7 @@ describe("Laser Job - shapes", function () {
     });
 
     it("Add shapes - heart", function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-heart"]').click();
         cy.get('[data-test="quick-shape-heart-width"]').clear().type("60");
         cy.get('[data-test="quick-shape-heart-height"]').clear().type("80");
@@ -30,7 +30,7 @@ describe("Laser Job - shapes", function () {
             deltaY: 120.1241,
             force: true,
         });
-        cy.get(".rotation").clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
         cy.get(".horizontal").clear().type("125.3 mm");
         cy.get(".vertical").clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -56,14 +56,14 @@ describe("Laser Job - shapes", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
     it("Add shapes - circle", function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-circle"]').click();
         cy.get('[data-test="quick-shape-circle-radius-input"]').clear().type("60");
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
@@ -73,7 +73,7 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="quick-shape-color-picker-fill"] > .track > canvas').realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get(".translation").clear().type("235.0, 138.0");
-        cy.get(".rotation").clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
         cy.get(".horizontal").clear().type("125.3 mm");
         cy.get(".vertical").clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -94,14 +94,14 @@ describe("Laser Job - shapes", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
     it("Add shapes - star", function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-star-radius-input"]').clear().type("60");
         cy.get('[data-test="quick-shape-star-corners-input"]').clear().type("8");
@@ -113,7 +113,7 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="quick-shape-color-picker-fill"] > .track > canvas').realClick({ position: "top" });
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get(".translation").clear().type("235.0, 238.0");
-        cy.get(".rotation").clear().type("250.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
         cy.get(".horizontal").clear().type("225.3 mm");
         cy.get(".vertical").clear().type("230.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -137,14 +137,14 @@ describe("Laser Job - shapes", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
     it("Add shapes - line", function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-line"]').click();
         cy.get('[data-test="quick-shape-line-length-input"]').clear().type("60");
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
@@ -154,7 +154,7 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="quick-shape-color-picker-fill"] > .track > canvas').realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get(".translation").clear().type("135.0, 138.0");
-        cy.get(".rotation").clear().type("150.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("150.5");
         cy.get(".horizontal").clear().type("125.3 mm");
         cy.get(".vertical").clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -179,14 +179,14 @@ describe("Laser Job - shapes", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
     it("Add shapes - rectangle", function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-rect"]').click();
         cy.get('[data-test="quick-shape-rect-width"]').clear().type("60");
         cy.get('[data-test="quick-shape-rect-height"]').clear().type("60");
@@ -198,7 +198,7 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="quick-shape-color-picker-fill"] > .track > canvas').realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get(".translation").clear().type("135.0, 138.0");
-        cy.get(".rotation").clear().type("150.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("150.5");
         cy.get(".horizontal").clear().type("125.3 mm");
         cy.get(".vertical").clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -221,14 +221,14 @@ describe("Laser Job - shapes", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
     it("Add shapes - ok button", function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-modal-window"]').should('to.visible');
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="quick-shape-modal-window"]').should('not.visible');

@@ -29,7 +29,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 220.1241,
             force: true,
         });
-        cy.get(".rotation").clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
         cy.get(".horizontal").clear().type("116.3 mm");
         cy.get(".vertical").clear().type("132.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -59,7 +59,7 @@ describe("Laser Job - quick text", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
@@ -78,7 +78,7 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-font-button-left"]').last().click();
         cy.get('[data-test="quick-text-done-button"]').click();
         cy.get(".translation").clear().type("235.0, 238.0");
-        cy.get(".rotation").clear().type("250.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
         cy.get(".horizontal").clear().type("225.3 mm");
         cy.get(".vertical").clear().type("230.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -100,7 +100,7 @@ describe("Laser Job - quick text", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
@@ -118,7 +118,7 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-color-picker-stroke"] > .track > canvas').realClick({ position: "bottom" });
         cy.get('[data-test="quick-text-done-button"]').click();
         cy.get(".translation").clear().type("235.0, 138.0");
-        cy.get(".rotation").clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
         cy.get(".horizontal").clear().type("125.3 mm");
         cy.get(".vertical").clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -141,7 +141,7 @@ describe("Laser Job - quick text", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();

@@ -15,7 +15,7 @@ describe("Cut and engrave", function () {
     });
 
     it('Cut and engrave', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
         cy.get('[data-test="quick-shape-color-picker-stroke"] > .track > canvas').realClick({ position: "top" });
@@ -24,7 +24,7 @@ describe("Cut and engrave", function () {
         cy.get('[data-test="quick-shape-color-picker-fill"] > .track > canvas').realClick({ position: "top" });
         cy.get('[data-test="quick-shape-done-button"ton"]').click();
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get(".files_template_model_image")
+        cy.get('[data-test="tab-design-library-image-preview-card"]')
             .filter(':contains("paris2.jpg")')
             .click();
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -54,25 +54,25 @@ describe("Cut and engrave", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
-    it.only('Skip', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+    it('Skip', function () {
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get('[data-test="conversion-dialog-material-item"]').contains("Finn Cardboard").click();
         cy.get('[id="material_thickness_1.5"]').click();
         cy.get('.cutting_job_color').eq(0).trigger('dragstart', {dataTransfer});
-        cy.get('#no_job > .span3 > .assigned_colors').trigger('drop', {dataTransfer});
+        cy.get('[data-test="conversion-dialog-no-job"]').trigger('drop', {dataTransfer});
         cy.get('[data-test="laser-job-start-button"]').dblclick({force:true});
         cy.get('[data-test="conversion-dialog-settings-to-be-adjusted"]').should('to.exist');
-        cy.get('[data-test="conversion-dialog-settings-to-be-adjusted-btn"]').click({force:true});
-        cy.get('[data-test="laser-job-start-button"]').click({force:true});
+        cy.get('[data-test="conversion-dialog-settings-to-be-adjusted-btn"]').dblclick({force:true});
+        cy.get('[data-test="laser-job-back-button"]').click({force:true});
         cy.logout();
     });
 });

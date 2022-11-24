@@ -14,7 +14,7 @@ describe("Cut, cut 2, engrave, skip", function () {
     });
    
     it('Cut 1, cut 2, engrave, skip', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click(); 
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
         cy.get('[data-test="quick-shape-color-picker-stroke"] > .track > canvas').realClick({ position: "top" });
@@ -30,7 +30,7 @@ describe("Cut, cut 2, engrave, skip", function () {
         cy.get('[data-test="quick-text-stroke-input"]').click('center');
         cy.get('[data-test="quick-text-color-picker-stroke"] > .track > canvas').realClick({ position: "left" });
         cy.get('[data-test="quick-text-done-button"]').click();
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-heart"]').click();
         cy.get('[data-test="quick-shape-heart-range"]').realClick({ position: "right" });
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
@@ -43,7 +43,7 @@ describe("Cut, cut 2, engrave, skip", function () {
         cy.get('[data-test="conversion-dialog-material-item"]').contains("Grey Cardboard").click();
         cy.get('[id="material_thickness_1"]').click();
         cy.get('.cutting_job_color').eq(0).trigger('dragstart', {dataTransfer});
-        cy.get('#no_job > .span3 > .assigned_colors').trigger('drop', {dataTransfer});
+        cy.get('[data-test="conversion-dialog-no-job"]').trigger('drop', {dataTransfer});
         cy.get('.cutting_job_color').eq(2).trigger('dragstart', {dataTransfer});
         cy.get('[data-bind="visible: show_vector_parameters()"] > .assigned_colors').trigger('drop', {dataTransfer});
         cy.get('[data-test="conversion-dialog-intensity-black"]').clear().type("70");
@@ -74,7 +74,7 @@ describe("Cut, cut 2, engrave, skip", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();

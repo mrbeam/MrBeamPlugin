@@ -354,15 +354,15 @@
 															<div class="btn btn-mini toggleTransformBtn" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }, attr: {mrb_name: $data.name}"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
 														</div>
-														<div class="detail_information" >
+														<div class="detail_information" data-test="tab-workingarea-detail-information">
 															<div class="local_transformation muted">
 																<i class="icon-move" title="{{ _('translation') }}"></i>
-																<input class="decent_input translation wide" type="text" value="0, 0" data-bind="event: {
+																<input class="decent_input translation wide" data-test="tab-workingarea-translation" type="text" value="0, 0" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
-                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <input class="decent_input rotation" data-test="tab-workingarea-rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit: '°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
@@ -375,12 +375,12 @@
                                                	<div><!-- scale switch between mm and % -->
 													<div class="link_width_and_height">
 														<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-														<input class="decent_input horizontal unit_mm" type="text" value="? mm"
+														<input class="decent_input horizontal unit_mm" data-test="tab-workingarea-horizontal" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-														<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
+														<input class="decent_input horizontal_percent unit_percent" data-test="tab-workingarea-horizontal" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -392,12 +392,12 @@
 														</div>
 
 														<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-														<input class="decent_input vertical unit_mm" type="text" value="? mm"
+														<input class="decent_input vertical unit_mm" data-test="tab-workingarea-vertical" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-														<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
+														<input class="decent_input vertical_percent unit_percent" data-test="tab-workingarea-vertical" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -420,7 +420,7 @@
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
 																<div class='dropdown pull-right mrb_menu' style='display:inline-block;' >
-																	<a href="#" class="wa_list_item_burger_menu dropdown-toggle" data-toggle="dropdown">
+																	<a href="#" class="wa_list_item_burger_menu dropdown-toggle" data-toggle="dropdown" data-test="tab-workingarea-burger-menu">
 																		<i class="icon-reorder"></i><b class="caret"></b>
 																	</a>
 																	<ul class="dropdown-menu">
@@ -428,16 +428,16 @@
 																			<i class="icon-sitemap" title="{{ _('split') }}"></i> {{ _('split') }}
                                                                         </li>
                                                                         <li>
-																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'stroke-color'); }} ">{{ _('by stroke color') }}</a>
+																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'stroke-color'); }} " data-test="tab-workingarea-by-stroke-color">{{ _('by stroke color') }}</a>
                                                                         </li>
                                                                         <li>
-                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'non-intersecting'); }} ">{{ _('into shapes (keep overlapping)') }}</a>
+                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'non-intersecting'); }} " data-test="tab-workingarea-into-shapes">{{ _('into shapes (keep overlapping)') }}</a>
                                                                         </li>
                                                                         <li>
-                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} ">{{ _('vertically') }}</a>
+                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} " data-test="tab-workingarea-vertically">{{ _('vertically') }}</a>
                                                                         </li>
                                                                         <li>
-                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} ">{{ _('horizontally') }}</a>
+                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} " data-test="tab-workingarea-horizontally">{{ _('horizontally') }}</a>
 																		</li>
 																	</ul>
 																</div>
@@ -464,12 +464,12 @@
                                         <div class="detail_information" >
                                             <div class="local_transformation muted">
                                                 <i class="icon-move" title="{{ _('translation') }}"></i>
-                                                <input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
+                                                <input class="decent_input translation wide" data-test="tab-workingarea-translation" type="text" value="0,0" data-bind="event: {
                                                             keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 															keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
                                                             blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
-                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <input class="decent_input rotation" data-test="tab-workingarea-rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
@@ -482,12 +482,12 @@
 												<div><!-- scale switch between mm and % -->
 													<div class="link_width_and_height">
 														<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-														<input class="decent_input horizontal unit_mm" type="text" value="? mm"
+														<input class="decent_input horizontal unit_mm" data-test="tab-workingarea-horizontal" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-														<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
+														<input class="decent_input horizontal_percent unit_percent" data-test="tab-workingarea-horizontal" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -499,12 +499,12 @@
 														</div>
 
 														<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-														<input class="decent_input vertical unit_mm" type="text" value="? mm"
+														<input class="decent_input vertical unit_mm" data-test="tab-workingarea-vertical" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-														<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
+														<input class="decent_input vertical_percent unit_percent" data-test="tab-workingarea-vertical" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -664,13 +664,13 @@
                                         <div class="detail_information">
                                             <div class="local_transformation muted">
                                                 <i class="icon-move" title="{{ _('translation') }}"></i>
-                                                <input class="decent_input translation wide" type="text" value="0,0"
+                                                <input class="decent_input translation wide" data-test="tab-workingarea-translation" type="text" value="0,0"
                                                        data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
-                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <input class="decent_input rotation" data-test="tab-workingarea-rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
@@ -683,12 +683,12 @@
 												<div><!-- scale switch between mm and % -->
 													<div class="link_width_and_height">
 														<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-														<input class="decent_input horizontal unit_mm" type="text" value="? mm"
+														<input class="decent_input horizontal unit_mm" data-test="tab-workingarea-horizontal" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-														<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
+														<input class="decent_input horizontal_percent unit_percent" data-test="tab-workingarea-horizontal" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -700,12 +700,12 @@
 														</div>
 
 														<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-														<input class="decent_input vertical unit_mm" type="text" value="? mm"
+														<input class="decent_input vertical unit_mm" data-test="tab-workingarea-vertical" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-														<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
+														<input class="decent_input vertical_percent unit_percent" data-test="tab-workingarea-vertical" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -752,12 +752,12 @@
 														<div class="detail_information" >
 															<div class="local_transformation muted">
 																<i class="icon-move" title="{{ _('translation') }}"></i>
-																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
+																<input class="decent_input translation wide" data-test="tab-workingarea-translation" type="text" value="0,0" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
-                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <input class="decent_input rotation" data-test="tab-workingarea-rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
@@ -771,12 +771,12 @@
 												<div><!-- scale switch between mm and % -->
 													<div class="link_width_and_height">
 														<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-														<input class="decent_input horizontal unit_mm" type="text" value="? mm"
+														<input class="decent_input horizontal unit_mm" type="text" data-test="tab-workingarea-horizontal" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-														<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
+														<input class="decent_input horizontal_percent unit_percent" data-test="tab-workingarea-horizontal" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -788,12 +788,12 @@
 														</div>
 
 														<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-														<input class="decent_input vertical unit_mm" type="text" value="? mm"
+														<input class="decent_input vertical unit_mm" data-test="tab-workingarea-vertical" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-														<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
+														<input class="decent_input vertical_percent unit_percent" data-test="tab-workingarea-vertical" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },

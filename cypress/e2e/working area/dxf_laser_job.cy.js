@@ -15,24 +15,24 @@ describe("Laser Job", function () {
 
     it("Add design dxf", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designbib-files-list"]').then(($elem) => {
+        cy.get('[data-test="tab-design-library-dxf-preview-card"]').then(($elem) => {
             if (
                 $elem
-                    .find(".files_template_model_dxf")
+                    .find('[data-test="tab-design-library-dxf-preview-card"]')
                     .filter(':contains("paris1.dxf")').length
             ) {
             } else {
                 const filepath = "paris1.dxf";
-                cy.get('[data-test="tab-design-library-upload-file"] input[type="file"]').attachFile(
+                cy.get('.fileinput-button input[type="file"]').attachFile(
                     filepath
                 );
                 cy.wait(5000);
-                cy.get(".files_template_model_dxf")
+                cy.get('[data-test="tab-design-library-dxf-preview-card"]')
                     .contains("paris1.dxf")
                     .should("to.exist");
             }
         });
-        cy.get(".files_template_model_dxf")
+        cy.get('[data-test="tab-design-library-dxf-preview-card"]')
             .filter(':contains("paris1.dxf")')
             .click();
         cy.wait(3000);
@@ -44,7 +44,7 @@ describe("Laser Job", function () {
         cy.get('.multiply').clear().type('1x3{enter}');
         cy.get('.btn-mini').find('.icon-move').click({force:true});
         cy.get(".translation").clear().type("135.0, 138.0");
-        cy.get(".rotation").clear().type("250.5");
+        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get('.image-preprocessing-collapsible').click(); 
         cy.wait(2000);
@@ -67,7 +67,7 @@ describe("Laser Job", function () {
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
-        cy.get(".files_template_machinecode_gcode").first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();

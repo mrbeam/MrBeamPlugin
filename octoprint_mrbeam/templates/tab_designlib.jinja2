@@ -115,7 +115,7 @@
 													<script type="text/html" id="files_template_machinecode_gcode">
 														<div class="file_list_entry icon_card rounded_container">
 															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
-															<div class="preview" data-bind="
+															<div class="preview" data-test="tab-designlib-mechinecode-file" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-cog"></i></div>
@@ -158,10 +158,10 @@
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
-																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}" data-test="tab-design-library-download-file"></i> {{ _('Download') }}</a>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}" data-test="tab-design-library-download-file"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}" data-test="tab-design-library-remove-file"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}" data-test="tab-design-library-remove-file"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																	 <li class="divider"></li>
 																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
@@ -205,8 +205,8 @@
 
 													<script type="text/html" id="files_template_model_dxf">
 														<div class="file_list_entry icon_card rounded_container">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
-															<div class="preview" data-bind="
+															<div class="selection_box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
+															<div class="preview" data-test="tab-design-library-dxf-preview-card" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-picture"></i></div>
@@ -231,8 +231,8 @@
 													</script>
 
 													<script type="text/html" id="files_template_model_image">
-														<div class="file_list_entry preview_card rounded_container" data-bind="attr: {mrb_name: name}">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok" data-test="tab-design-library-checked-image"></i></div>
+														<div class="file_list_entry preview_card rounded_container" data-test="tab-design-library-image-preview-card" data-bind="attr: {mrb_name: name}">
+															<div class="selection_box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok" data-test="tab-design-library-checked-image"></i></div>
 															<div class="preview" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
@@ -283,7 +283,7 @@
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFolder($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}" data-test="tab-design-library-remove-folder"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFolder($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}" data-test="tab-design-library-remove-folder"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																</ul>
 															</div>

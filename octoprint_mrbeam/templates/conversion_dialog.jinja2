@@ -237,7 +237,8 @@
                     <div class="span3" style="display:flex;">
                         <div class="assigned_colors color_drop_zone img_drop_zone"
                              ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)"
-                             ondrop="window.mrbeam.colorDragging.colorDrop(event)"></div>
+                             ondrop="window.mrbeam.colorDragging.colorDrop(event)"
+                             data-test="conversion-dialog-no-job"></div>
                     </div>
                     <div class="span9">
                         <div class="job_parameters">
@@ -408,8 +409,9 @@
                                             <button type="button" value="precise"
                                                     id="parameter_assignment_engraving_mode_precise_btn"
                                                     data-bind="event: {click: updateEngravingMode}"
-                                                    class="btn btn-default active">{{ _('Recommended') }}
-                                                    data-test="conversion-dialog-engraving-mode-recommended"</button>
+                                                    class="btn btn-default active"
+                                                    data-test="conversion-dialog-engraving-mode-recommended">{{ _('Recommended') }}
+                                                    </button>
                                             {# TODO: SW-1447 #}
                                             {#<button type="button" value="fast"
                                                     id="parameter_assignment_engraving_mode_fast_btn"
@@ -418,8 +420,9 @@
                                             <button type="button" value="basic"
                                                     id="parameter_assignment_engraving_mode_basic_btn"
                                                     data-bind="event: {click: updateEngravingMode}"
-                                                    class="btn btn-default">{{ _('Basic') }}
-                                                    data-test="conversion-dialog-engraving-mode-basic"</button>
+                                                    class="btn btn-default"
+                                                    data-test="conversion-dialog-engraving-mode-basic">{{ _('Basic') }}
+                                                    </button>
                                         </div>
                                     </div>
 

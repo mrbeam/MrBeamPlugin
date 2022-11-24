@@ -10,14 +10,11 @@ describe("Functionalities", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
-        cy.visit(this.testData.url_laser);
-        cy.reload();
-        cy.visit(this.testData.url_laser);
         cy.get('.icon-remove').click({ force: true, multiple: true });
     });
 
     it('Start without set settings', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -27,7 +24,7 @@ describe("Functionalities", function () {
     });
 
     it('Back button', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -39,7 +36,7 @@ describe("Functionalities", function () {
     });
 
     it.only('Material and back', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click({force:true});
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -65,7 +62,7 @@ describe("Functionalities", function () {
     });
 
     it('Color and back', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -90,7 +87,7 @@ describe("Functionalities", function () {
     });
 
     it('Thinknees and back', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -117,7 +114,7 @@ describe("Functionalities", function () {
     });
 
     it('Help', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -130,7 +127,7 @@ describe("Functionalities", function () {
     });
 
     it('Manage materials', function () {
-        cy.get('[data-test="working-area-tab-shapes"]').click();
+        cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
