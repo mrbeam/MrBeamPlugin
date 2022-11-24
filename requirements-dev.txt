@@ -5,12 +5,13 @@
 git+https://github.com/mrbeam/MrBeamDoc.git@v1.0.0#egg=MrBeamDoc
 git+https://github.com/mrbeam/OctoPrint.git@v1.3.6.9#egg=OctoPrint
 
+configparser==4.0.2
 mock==3.0.5
 numpy==1.16.6
 opencv-python==4.2.0.32
 Pillow==6.2.2
 pre-commit==1.21.0
-pylint==1.6.5
+pylint==1.9.5
 pytest==4.6.11
 pytest-datafiles==2.0
 pytest-mock==2.0.0
