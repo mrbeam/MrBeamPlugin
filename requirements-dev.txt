@@ -10,7 +10,7 @@ numpy==1.16.6
 opencv-python==4.2.0.32
 Pillow==6.2.2
 pre-commit==1.21.0
-pylint
+pylint==1.9.5
 pytest==4.6.11
 pytest-datafiles==2.0
 pytest-mock==2.0.0

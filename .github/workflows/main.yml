@@ -10,9 +10,10 @@ on:
 
 jobs:
   build:
-    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
+    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@bugfix/SW-2257-github-actions-pylint-failing-for-mr-beam-plugin
     secrets: inherit
     with:
       python_v: 2.7
       source_dir: octoprint_mrbeam
       exclude_from_coverage: octoprint_mrbeam/static/**/*
+      pylint_fail_under: 0  # 0 means disable the --fail-under flag (it's not supported for Python2)
