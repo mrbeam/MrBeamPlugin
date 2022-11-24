@@ -10,6 +10,7 @@ describe("Functionalities", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
+        cy.visit(this.testData.url_laser);
         cy.reload();
         cy.visit(this.testData.url_laser);
         cy.get('.icon-remove').click({ force: true, multiple: true });
@@ -37,7 +38,7 @@ describe("Functionalities", function () {
         cy.logout();
     });
 
-    it('Material and back', function () {
+    it.only('Material and back', function () {
         cy.get('[data-test="working-area-tab-shapes"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
@@ -47,7 +48,7 @@ describe("Functionalities", function () {
             .contains(/^Foam Rubber$/)
             .click();
         cy.wait(2000)
-        cy.get(".selected").should(($elem) => {
+        cy.get('[data-test="conversion-dialog-material-item"] .selected').should(($elem) => {
             expect($elem).to.have.length(1);
             expect($elem).to.be.visible;
         });

@@ -312,8 +312,8 @@
 										<div class="accordion-inner">
 											<div class="row-fluid btn-group">
 												<div class="btn span4" id="working_area_tab_file_btn" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}" data-test="working-area-tab-file"><i class="icon-file"></i> {{ _('File') }} </div>
-												<div class="btn span4" id="working_area_tab_text_btn" data-bind="click: newQuickText"><i class="icon-font" data-test="working-area-tab-text"></i> {{ _('Text') }} </div>
-												<div class="btn span4" id="working_area_tab_shape_btn" data-bind="click: newQuickShape"><i class="icon-heart-empty" data-test="working-area-tab-shape"></i> {{ _('Shape') }} </div>
+												<div class="btn span4" id="working_area_tab_text_btn" data-bind="click: newQuickText" data-test="working-area-tab-text"><i class="icon-font"></i> {{ _('Text') }} </div>
+												<div class="btn span4" id="working_area_tab_shape_btn" data-bind="click: newQuickShape"  data-test="working-area-tab-shape"><i class="icon-heart-empty"></i> {{ _('Shape') }} </div>
 {#												<div class="btn span3" id="working_area_tab_scan_btn" data-bind="click: enableScanMode"><i class="icon-copy"></i> {{ _('Scan') }} </div>#}
 {#												Camera not working, disabled till we fixed this. then set spans of the buttons above to span4 >#}
 {#												<div class="btn span4" data-bind="visible:files.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: files.takePhoto" >#}

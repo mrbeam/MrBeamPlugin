@@ -23,7 +23,7 @@ describe("Laser Job", function () {
             ) {
             } else {
                 const filepath = "paris1.dxf";
-                cy.get('.fileinput-button input[type="file"]').attachFile(
+                cy.get('[data-test="tab-design-library-upload-file"] input[type="file"]').attachFile(
                     filepath
                 );
                 cy.wait(5000);

@@ -29,82 +29,81 @@ describe("Library design", function () {
     });
 
     it("Select/Unselect - file", function () {
-        cy.get(".files_template_model_svg")
+        cy.get('[data-test="library-design-files-svg"]')
             .first()
             .invoke('prop', 'innerText').then(checkedItem => {
-            cy.get(".files_template_model_svg").filter(`:contains(${checkedItem})`).realHover()
-              .find(".selection_box").click({ force: true })
-            cy.get('.icon-ok').should('to.visible')  
+            cy.get('[data-test="library-design-files-svg"]').filter(`:contains(${checkedItem})`).realHover()
+              .find('[data-test="tab-design-library-svg-select-box"]').click({ force: true })
+            cy.get('[data-test="tab-design-library-checked-file"]').should('to.visible')  
             cy.wait(3000);
-            cy.get(".btn-link").find(".icon-remove").click();
-            cy.get('.icon-ok').should('not.visible')  
+            cy.get('[data-test="library-design-unselect-all"]').click();
+            cy.get('[data-test="tab-design-library-checked-file"]').should('not.visible')  
             cy.logout();
         });
     });
 
     it("Delete selection - file", function () {
-        cy.get(".files_template_model_svg")
+        cy.get('[data-test="library-design-files-svg"]')
             .first()
             .invoke('prop', 'innerText').then(checkedItem => {
-                cy.get(".files_template_model_svg").first().contains(checkedItem).realHover()
-                  .get(".selection_box").filter(':visible').click({ force: true })
-                cy.get(".btn-danger").find(".icon-trash").click();
-                cy.get('.entry').contains(checkedItem).should('not.exist')
+                cy.get('[data-test="library-design-files-svg"]').first().contains(checkedItem).realHover()
+                  .get('[data-test="tab-design-library-svg-select-box"]').filter(':visible').click({ force: true })
+                cy.get('[data-test="library-design-delete-selection"]').click();
+                cy.get('[data-test="library-design-files-svg"]').contains(checkedItem).should('not.exist')
             })
         cy.logout();
     });
 
     it("Search", function () {
-        cy.get(".preview_card")
+        cy.get('[data-test="tab-design-library-svg-preview-card"]')
             .eq(1)
             .invoke('prop', 'innerText').then(item => {
-                cy.get('#files_search > .form-search > .input-block').clear();
-                cy.get('#files_search > .form-search > .input-block').type(item);
-                cy.get('.preview_card').contains(item).should('to.exist')
+                cy.get('[data-test="tab-design-library-search-input"]').clear();
+                cy.get('[data-test="tab-design-library-search-input"]').type(item);
+                cy.get('[data-test="tab-design-library-svg-preview-card"]').contains(item).should('to.exist')
             })
         cy.logout();
     });
 
     it("Upload designs by clicking", function () {
         const filepathSvg = "test.svg";
-        cy.get('.fileinput-button input[type="file"]').attachFile(filepathSvg);
+        cy.get('[data-test="tab-design-library-upload-file"] input[type="file"]').attachFile(filepathSvg);
         cy.wait(5000);
-        cy.get(".files_template_model_svg")
+        cy.get('[data-test="library-design-files-svg"]')
             .first()
             .should("to.exist", "test.svg");
         cy.logout();
     });
 
     it("Delete designs by burger menu", function () {
-        cy.get(".files_template_model_svg")
+        cy.get('[data-test="library-design-files-svg"]')
             .first()
-            .should("contain", "test.svg")
-            .find(".icon-reorder")
+            .find('[data-test="tab-design-library-option-file"]')
             .click();
-        cy.get(".icon-trash:visible").click();
-        cy.get(".files_template_model_svg")
+        cy.get('[data-test="tab-design-library-remove-file"]').click();
+        cy.get('[data-test="library-design-files-svg"]')
             .first()
             .should("not.exist", "test.svg");
         cy.logout();
     });
-
+    // dynamically modal
     it("Add folder", function () {
         const time = new Date().getTime();
         const folderName = `folder ${time}`
-        cy.get(".addfolder-button").click({ force: true });
+        cy.get('[data-test="library-design-add-folder"]').click({ force: true });
         cy.get('[id="add_folder_dialog"]').within(() => {
             cy.get('.controls input[type="text"]').type(folderName);
             cy.get(".btn-primary").click();
         });
         cy.wait(7000);
-        cy.get(".file_list_entry > .title")
+        cy.get('[data-test="tab-design-library-folder-list"]')
             .contains(folderName)
             .should("to.exist");
         cy.logout();
     });
-
+    // dynamically modal
     it("Add folder - cancel button", function () {
-        cy.get(".addfolder-button").click({ force: true });
+        cy.get('[data-test="library-design-add-folder"]').click({ force: true });
         cy.get('[id="add_folder_dialog"]').within(() => {
             cy.get(".btn").contains("Cancel").click();
         });
@@ -115,54 +114,53 @@ describe("Library design", function () {
     });
 
     it("Select/Unselect - folder", function () {
-        cy.get(".folder").last().invoke('prop','innerText').then((folder) => {
-            cy.get(".folder").filter(`:contains(${folder})`).realHover()
-              .find(".selection_box").click({ force: true })
-            cy.get('.icon-ok').should('to.visible')  
+        cy.get('[data-test="tab-design-library-folder-list"]').last().invoke('prop','innerText').then((folder) => {
+            cy.get('[data-test="tab-design-library-folder-list"]').filter(`:contains(${folder})`).realHover()
+              .find('[data-test="tab-design-library-folder-select-box"]').click({ force: true })
+            cy.get('[data-test="tab-design-library-checked-folder"]').should('to.visible')  
             cy.wait(3000);
-            cy.get(".btn-link").find(".icon-remove").click();
-            cy.get('.icon-ok').should('not.visible')  
+            cy.get('[data-test="library-design-unselect-all"]').click();
+            cy.get('[data-test="tab-design-library-checked-folder"]').should('not.visible')  
             cy.logout();
         });
     });
-
+    // dynamically modal
     it("Delete selection - folder", function () {
         const time = new Date().getTime();
         const folderName = `folder ${time}`
-        cy.get(".addfolder-button").click({ force: true });
+        cy.get('[data-test="library-design-add-folder"]').click({ force: true });
         cy.get('[id="add_folder_dialog"]').within(() => {
             cy.get('.controls input[type="text"]').type(folderName);
             cy.get(".btn-primary").click();
         });
         cy.wait(7000);
-        cy.get(".file_list_entry > .title")
+        cy.get('[data-test="tab-design-library-folder-list"]')
             .contains(folderName)
             .should("to.exist");
-        cy.get(".folder").last().invoke('prop','innerText').then((folder) => {
-            cy.get(".folder").filter(`:contains(${folder})`).realHover()
-              .find(".selection_box").click({ force: true })
-              cy.get(".btn-danger").find(".icon-trash").click();
-              cy.get('.folder').contains(folder).should('not.exist')
+        cy.get('[data-test="tab-design-library-folder-list"]').last().invoke('prop','innerText').then((folder) => {
+            cy.get('[data-test="tab-design-library-folder-list"]').filter(`:contains(${folder})`).realHover()
+              .find('[data-test="tab-design-library-folder-select-box"]').click({ force: true })
+              cy.get('[data-test="library-design-delete-selection"]').click();
+              cy.get('[data-test="tab-design-library-folder-list"]').contains(folder).should('not.exist')
             });
         cy.logout();
     });   
 
     it("Open folder and click back", function () {
-        cy.get(".preview").eq(0).click({ force: true });
-        cy.get(".back-arrow").click();
+        cy.get('[data-test="tab-design-library-folder-preview"]').eq(0).click({ force: true });
+        cy.get('[data-test="library-design-back" ]').click();
         cy.logout();
     });
 
     it("Delete folder by burger menu", function () {
-        cy.get(
-            "#gcode_file_23e36bc802346e6e128d3370e49fc959 > .file_list_entry > .title > .dropdown-toggle > .icon-reorder"
-        )
-            .first()
-            .click();
-        cy.get(".dropdown-menu").get(".icon-trash:visible").first().click();
-        cy.get(".file_list_entry > .title")
-            .first()
-            .should("not.exist", "test folder");
+        cy.get('[data-test="tab-design-library-folder-list"]').first().invoke('prop', 'innerText').then(nameFolder => {
+            cy.get('[data-test="tab-design-library-dropdown-folder"]')
+              .filter(`:contains(${nameFolder})`).find('[data-test="tab-design-library-option-folder"]')
+              .click();
+            cy.get('[data-test="tab-design-library-remove-folder"]').first().click();
+            cy.get('[data-test="tab-design-library-folder-list"]')
+              .should("not.exist", nameFolder);
+        })
         cy.logout();
     });
 
@@ -171,12 +169,12 @@ describe("Library design", function () {
             "GET",
             "http://localhost:5002/downloads/files/local/Test_plan_1.svg"
         ).as("downloadFile");
-        cy.get(".files_template_model_svg")
+        cy.get('[data-test="library-design-files-svg"]')
             .first()
-            .find(".icon-reorder")
+            .find('[data-test="tab-design-library-option-file"]')
             .click();
         cy.wait(1000);
-        cy.get(".icon-download-alt:visible").click();
+        cy.get('[data-test="tab-design-library-download-file"]').click();
         cy.wait("@downloadFile");
     });
 });

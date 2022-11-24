@@ -18,14 +18,14 @@
 										</div>
 										<div class="action_btns">
 											<div class="btn-group">
-												<a class="btn btn-danger" data-cy=”library-design-delete-selection” href="#" data-bind="click: function() { if ($root.enableRemove($data)) { $root.deleteSelection(); } else { console.warn('Insufficient permissions to delete files!'); return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon icon-trash"></i> {{ _('Delete Selection') }}</a>
-												<a class="btn btn-link" data-cy=”library-design-unselect-all” href="#" data-bind="click: $root.cancelSelection"><i class="icon icon-remove"></i> {{ _('Unselect all') }}</a>
+												<a class="btn btn-danger" data-test="library-design-delete-selection" href="#" data-bind="click: function() { if ($root.enableRemove($data)) { $root.deleteSelection(); } else { console.warn('Insufficient permissions to delete files!'); return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon icon-trash"></i> {{ _('Delete Selection') }}</a>
+												<a class="btn btn-link" data-test="library-design-unselect-all" href="#" data-bind="click: $root.cancelSelection"><i class="icon icon-remove"></i> {{ _('Unselect all') }}</a>
 											</div>
 										</div>
 									</div>
 									<div id="files_search" class="">
 										<form class="form-search" data-bind="submit: performSearch">
-											<input type="text" style="width:94%;" class="input-block search-query" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
+											<input type="text" style="width:94%;" class="input-block search-query" data-test="tab-design-library-search-input" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
 										</form>
 									</div>
 									<ul class="file_list_filter" id="files_filter">
@@ -66,7 +66,7 @@
 											<span class="btn fileinput-button " data-bind="css: {disabled: !$root.loginState.isUser(), span12: !hasCamera(), span8: hasCamera()}" style="margin-bottom: 10px">
 												<i class="icon-upload-alt icon-white"></i>
 												<span>{{ _('Upload') }}</span>
-												<input id="gcode_upload" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser()">
+												<input id="gcode_upload" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser()" data-test="tab-design-library-upload-file">
 											</span>
 											<a class="btn btn-primary span4" href="#" role="button" data-bind="visible:hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: takePhoto" >
 												<i class="icon-camera icon-white"></i>
@@ -87,12 +87,12 @@
 									<div id="files" >
 										<div class="folder_navigation clearfix">
 											<div class="entry back pull-left" data-bind="visible: currentPath() != ''" style="display: none">
-												<a class="back-arrow btn-link" data-cy=”library-design-back” data-bind="click: function() { $root.cancelSelection(); $root.navigateUp(); }">
+												<a class="back-arrow btn-link" data-test="library-design-back" data-bind="click: function() { $root.cancelSelection(); $root.navigateUp(); }">
 													<i class="fa fa-arrow-left"></i> {{  _('Back') }}
 												</a>  |
 												<span class="back-path muted">{{ _('Currently in') }} <span data-bind="text: currentPath"></span></span>
 											</div>
-											<a class="btn-link addfolder-button pull-right" data-cy=”library-design-add-folder” data-bind="
+											<a class="btn-link addfolder-button pull-right" data-test="library-design-add-folder" data-bind="
 												click: function() { if ($root.loginState.isUser()) { $root.showAddFolderDialog(); } },
 												css: {disabled: !$root.loginState.isUser()}">
 												{{ _('Add Folder') }} <i class="icon icon-plus-sign"></i>
@@ -139,9 +139,9 @@
 														</div>
 													</script>
 
-													<script type="text/html" id="files_template_model_svg">
-														<div class="file_list_entry preview_card rounded_container" data-bind="attr: {mrb_name: name}">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
+													<script type="text/html" id="files_template_model_svg" data-test="library-design-files-svg">
+														<div class="file_list_entry preview_card rounded_container" data-test="tab-design-library-svg-preview-card" data-bind="attr: {mrb_name: name}">
+															<div class="selection_box" data-test="tab-design-library-svg-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok" data-test="tab-design-library-checked-file"></i></div>
 															<div class="preview" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
@@ -154,14 +154,14 @@
 															<div class="title dropdown dropup" >
 																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
-																	<i class="icon-reorder pull-right"></i>
+																	<i class="icon-reorder pull-right" data-test="tab-design-library-option-file"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
-																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}" data-test="tab-design-library-download-file"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}" data-test="tab-design-library-remove-file"></i> {{ _('Remove') }}</a>
 																	</li>
 																	 <li class="divider"></li>
 																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
@@ -232,7 +232,7 @@
 
 													<script type="text/html" id="files_template_model_image">
 														<div class="file_list_entry preview_card rounded_container" data-bind="attr: {mrb_name: name}">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
+															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok" data-test="tab-design-library-checked-image"></i></div>
 															<div class="preview" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
@@ -273,17 +273,17 @@
 													</script>
 
 													<script type="text/html" id="files_template_folder">
-														<div class="file_list_entry folder">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}, clickBubble: false;"><i class="icon icon-ok"></i></div>
-															<div class="preview" data-bind=" click: function(data){ $root.cancelSelection(); $root.changeFolder(data); }"></div>
-															<div class="title dropdown dropup">
+														<div class="file_list_entry folder" data-test="tab-design-library-folder-list">
+															<div class="selection_box" data-test="tab-design-library-folder-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}, clickBubble: false;"><i class="icon icon-ok" data-test="tab-design-library-checked-folder"></i></div>
+															<div class="preview" data-test="tab-design-library-folder-preview" data-bind=" click: function(data){ $root.cancelSelection(); $root.changeFolder(data); }"></div>
+															<div class="title dropdown dropup" data-test="tab-design-library-dropdown-folder">
 																<span class="title_shortened" data-bind="text: display, attr: {title: name}, style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' " ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
-																	<i class="icon-reorder pull-right"></i>
+																	<i class="icon-reorder pull-right" data-test="tab-design-library-option-folder"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFolder($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFolder($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}" data-test="tab-design-library-remove-folder"></i> {{ _('Remove') }}</a>
 																	</li>
 																</ul>
 															</div>

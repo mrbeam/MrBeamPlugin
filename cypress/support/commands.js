@@ -103,7 +103,7 @@ Cypress.Commands.add("loginLibrary", (email, password) => {
 Cypress.Commands.add("runWelcomeWizardIfPresent", (email, password) => {
     cy.get("body").then(($body) => {
         if (
-            $body.find('[data-cy="first-run-wizard"]').filter(":visible")
+            $body.find('[data-test="first-run-wizard"]').filter(":visible")
                 .length > 0
         ) {
             cy.get(".modal-footer").contains("Next").click();
@@ -132,7 +132,7 @@ Cypress.Commands.add("runWelcomeWizardIfPresent", (email, password) => {
             cy.get(".modal-footer").contains("Next").click();
             cy.get(".button-finish").click();
         } else {
-            cy.get('[data-cy="first-run-wizard"]').should("not.exist");
+            cy.get('[data-test="first-run-wizard"]').should("not.exist");
         }
     });
 });
@@ -140,14 +140,14 @@ Cypress.Commands.add("runWelcomeWizardIfPresent", (email, password) => {
 Cypress.Commands.add("runloginUserIfPresent", (email, password) => {
     cy.get("body").then(($body) => {
         if (
-            $body.find('[data-cy="loginscreen_dialog"]').filter(":visible")
+            $body.find('[data-test="loginscreen_dialog"]').filter(":visible")
                 .length > 0
         ) {
             cy.get('[id="login_screen_email_address_in"]').clear().type(email);
             cy.get('[id="login_screen_password_in"]').clear().type(password);
             cy.get('[id="login_screen_login_btn"]').click();
         } else {
-            cy.get('[data-cy="loginscreen_dialog"]').should("not.visible");
+            cy.get('[data-test="loginscreen_dialog"]').should("not.visible");
             cy.reload();
             cy.get('[id="login_screen_email_address_in"]').clear().type(email);
             cy.get('[id="login_screen_password_in"]').clear().type(password);

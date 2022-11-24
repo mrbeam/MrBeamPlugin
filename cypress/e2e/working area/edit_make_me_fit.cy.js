@@ -16,21 +16,21 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-designbib-files-list"]').then(($elem) => {
             if (
                 $elem
-                    .find(".files_template_model_svg")
+                    .find('[data-test="library-design-files-svg"]')
                     .filter(':contains("black_cat.svg")').length
             ) {
             } else {
                 const filepath = "black_cat.svg";
-                cy.get('.fileinput-button input[type="file"]').attachFile(
+                cy.get('[data-test="tab-design-library-upload-file"] input[type="file"]').attachFile(
                     filepath
                 );
                 cy.wait(5000);
-                cy.get(".files_template_model_svg")
+                cy.get('[data-test="library-design-files-svg"]')
                     .contains("black_cat")
                     .should("to.exist");
             }
         });
-        cy.get(".files_template_model_svg")
+        cy.get('[data-test="library-design-files-svg"]')
             .filter(':contains("black_cat.svg")')
             .click();
         cy.wait(3000);
@@ -67,7 +67,7 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-collapse-in"]').contains('Rectangle').should('to.exist');
         cy.wait(2000);
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get(".files_template_model_svg").first().click();
+        cy.get('[data-test="library-design-files-svg"]').first().click();
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type("MrBeam");
         cy.get('[data-test="quick-text-done-button"]').click();
@@ -86,7 +86,7 @@ describe("Laser Job", function () {
             ) {
             } else {
                 const filepath = "paris2.jpg";
-                cy.get('.fileinput-button input[type="file"]').attachFile(
+                cy.get('[data-test="tab-design-library-upload-file"] input[type="file"]').attachFile(
                     filepath
                 );
                 cy.wait(5000);
