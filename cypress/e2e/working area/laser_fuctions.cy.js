@@ -28,9 +28,9 @@ describe("Functionalities", function () {
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get('[id="dialog_vector_graphics_conversion"]').should('be.visible');
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should('be.visible');
         cy.get('[data-test="laser-job-start-button"]').click();
-        cy.get('[id="dialog_vector_graphics_conversion"]').should('not.be.visible');
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should('not.be.visible');
         cy.get('[id="area_preview"]').should('be.visible');
         cy.logout();
     });

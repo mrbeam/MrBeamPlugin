@@ -31,8 +31,8 @@ describe("Laser Job - shapes", function () {
             force: true,
         });
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
-        cy.get(".horizontal").clear().type("125.3 mm");
-        cy.get(".vertical").clear().type("130.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("125.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(2000);
         cy.focusReminder();
@@ -72,10 +72,10 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="quick-shape-color-picker-fill"]').click();
         cy.get('[data-test="quick-shape-color-picker-fill"] > .track > canvas').realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get(".translation").clear().type("235.0, 138.0");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 138.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
-        cy.get(".horizontal").clear().type("125.3 mm");
-        cy.get(".vertical").clear().type("130.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("125.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]').contains("Anodized Aluminum").click();
@@ -112,10 +112,10 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="quick-shape-color-picker-fill"]').click();
         cy.get('[data-test="quick-shape-color-picker-fill"] > .track > canvas').realClick({ position: "top" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get(".translation").clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get(".horizontal").clear().type("225.3 mm");
-        cy.get(".vertical").clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]').contains("Finn Cardboard").click();
@@ -153,10 +153,10 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="quick-shape-color-picker-fill"]').click();
         cy.get('[data-test="quick-shape-color-picker-fill"] > .track > canvas').realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get(".translation").clear().type("135.0, 138.0");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("135.0, 138.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("150.5");
-        cy.get(".horizontal").clear().type("125.3 mm");
-        cy.get(".vertical").clear().type("130.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("125.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]').contains("Polypropylene").click();
@@ -197,10 +197,10 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="quick-shape-color-picker-fill"]').click();
         cy.get('[data-test="quick-shape-color-picker-fill"] > .track > canvas').realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get(".translation").clear().type("135.0, 138.0");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("135.0, 138.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("150.5");
-        cy.get(".horizontal").clear().type("125.3 mm");
-        cy.get(".vertical").clear().type("130.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("125.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]').contains("Polypropylene").click();

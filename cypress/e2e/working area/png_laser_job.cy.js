@@ -34,26 +34,26 @@ describe("Laser Job", function () {
             .filter(':contains("mirror.png")')
             .click();
         cy.wait(3000);
-        cy.get('.btn-mini').find('.icon-move').click({force:true});
-        cy.get('.scale_prop_btn').click();
-        cy.get(".horizontal").clear().type("125.3 mm");
-        cy.get(".vertical").clear().type("130.3 mm");
-        cy.get(".translation").clear().type("135.0, 138.0");
+        cy.get('[data-test="tab-workingarea-move"]').click({force:true});
+        cy.get('[data-test="tab-workingarea-scale-prop-btn"]').click();
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("125.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("130.3 mm");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("135.0, 138.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
-        cy.get('.image-preprocessing-collapsible').click();
-        cy.get('[id="img-preprocess-contrast"]').realClick();
+        cy.get('[data-test="tab-workingarea-image-preprocessing-collapsible"]').click();
+        cy.get('[data-test="tab-workingarea-img-preprocess-contrast"]').realClick();
         cy.wait(1000)
-        cy.get('[id="img-preprocess-brightness"]').realClick({ position: "left" });
+        cy.get('[data-test="tab-workingarea-img-preprocess-brightness"]').realClick({ position: "left" });
         cy.wait(1000)
-        cy.get('[id="img-preprocess-sharpen"]').realClick();
+        cy.get('[data-test="tab-workingarea-img-preprocess-sharpen"]').realClick();
         cy.wait(1000)
-        cy.get('[id="img-preprocess-gamma"]').realClick({ position: "right" });
+        cy.get('[data-test="tab-workingarea-img-preprocess-gamma"]').realClick({ position: "right" });
         cy.wait(1000)
-        cy.get('.crop_top').clear().type('3');
-        cy.get('.crop_left').clear().type('2');
-        cy.get('.crop_bottom').clear().type('3');
-        cy.get('.crop_right').clear().type('2');
-        cy.contains('duplicate').click({force:true});
+        cy.get('[data-test="tab-workingarea-crop-top"]').clear().type('3');
+        cy.get('[data-test="tab-workingarea-crop-left"]').clear().type('2');
+        cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type('3');
+        cy.get('[data-test="tab-workingarea-crop-rignt"]').clear().type('2');
+        cy.get('[data-test="tab-workingarea-duplicate"]').click({force:true});
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(2000);
         cy.focusReminder();

@@ -36,17 +36,17 @@ describe("Laser Job", function () {
             .filter(':contains("paris1.dxf")')
             .click();
         cy.wait(3000);
-        cy.get('.unit_toggler').click();
-        cy.get('.scale_prop_btn').click();
-        cy.get(".horizontal_percent").clear().type("1266 {enter}");
-        cy.get(".vertical_percent").clear().type("1466 {enter}");
-        cy.get('.mirror_toggler').click();
-        cy.get('.multiply').clear().type('1x3{enter}');
-        cy.get('.btn-mini').find('.icon-move').click({force:true});
-        cy.get(".translation").clear().type("135.0, 138.0");
+        cy.get('[data-test="tab-workingarea-unit-toggler" ]').click();
+        cy.get('[data-test="tab-workingarea-scale-prop-btn"]').click();
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("1266 {enter}");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("1466 {enter}");
+        cy.get('[data-test="tab-workingarea-mirror"]').click();
+        cy.get('[data-test="tab-workingarea-multiply"]').clear().type('1x3{enter}');
+        cy.get('[data-test="tab-workingarea-move"]').click({force:true});
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("135.0, 138.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
         cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get('.image-preprocessing-collapsible').click(); 
+        cy.get('[data-test="tab-workingarea-image-preprocessing-collapsible"]').click(); 
         cy.wait(2000);
         cy.focusReminder();
         cy.wait(2000);

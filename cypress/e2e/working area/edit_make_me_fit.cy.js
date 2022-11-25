@@ -26,7 +26,7 @@ describe("Laser Job", function () {
                 );
                 cy.wait(5000);
                 cy.get('[data-test="tab-design-library-svg-preview-card"]')
-                    .contains("black_cat")
+                    .contains("black_cat.svg")
                     .should("to.exist");
             }
         });
@@ -45,7 +45,7 @@ describe("Laser Job", function () {
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="tab-workingarea-collapse-in"]').contains('Rectangle').should('to.exist');
         cy.wait(2000);
-        cy.get('.btn-mini').find('.icon-edit').click({force:true});
+        cy.get('[data-test="tab-workingarea-edit"]').click({force:true});
         cy.get('[data-test="quick-shape-modal-window"]').should('to.visible');
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-star-radius-input"]').clear().type("60");
@@ -99,7 +99,7 @@ describe("Laser Job", function () {
             .filter(':contains("paris2.jpg")')
             .click();
         cy.wait(3000);
-        cy.get('.multiply').clear().type('2x3');
+        cy.get('[data-test="tab-workingarea-multiply"]').clear().type('2x3');
         cy.get(".userIMG").click({ force: true });
         cy.get('[id="translateHandle"]').move({
             deltaX: 213.9689,
@@ -107,11 +107,11 @@ describe("Laser Job", function () {
             force: true,
         });
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get(".horizontal").clear().type("225.3 mm");
-        cy.get(".vertical").clear().type("230.3 mm");
-        cy.get('.btn-mini').find('.icon-undo').click({force:true});
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-undo"]').click({force:true});
         cy.wait(2000);
-        cy.get('.btn-mini').find('.icon-remove').click({force:true});
+        cy.get('[data-test="tab-workingarea-remove"]').click({force:true});
         cy.get('[data-test="tab-workingarea-collapse-in"]').contains('.file_list_entry').should('not.exist'); 
         cy.logout();
     });

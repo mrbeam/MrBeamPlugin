@@ -34,8 +34,8 @@ describe("Laser Job", function () {
             .filter(':contains("paris2.jpg")')
             .click();
         cy.wait(3000);
-        cy.get(".horizontal").clear().type("95.3 mm");
-        cy.get(".vertical").clear().type("70.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("95.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("70.3 mm");
         cy.get(".userIMG").click({ force: true });
         cy.get('[id="translateHandle"]').move({
             deltaX: 213.9689,
@@ -43,21 +43,21 @@ describe("Laser Job", function () {
             force: true,
         });
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("200.5");
-        cy.get('.multiply').clear().type('2x3');
-        cy.get('.mirror_toggler').click();
-        cy.get('.image-preprocessing-collapsible').click();
-        cy.get('[id="img-preprocess-contrast"]').realClick({ position: "left" });
+        cy.get('[data-test="tab-workingarea-multiply"]').clear().type('2x3');
+        cy.get('[data-test="tab-workingarea-mirror"]').click();
+        cy.get('[data-test="tab-workingarea-image-preprocessing-collapsible"]').click();
+        cy.get('[data-test="tab-workingarea-img-preprocess-contrast"]').realClick({ position: "left" });
         cy.wait(1000)
-        cy.get('[id="img-preprocess-brightness"]').realClick({ position: "right" });
+        cy.get('[data-test="tab-workingarea-img-preprocess-brightness"]').realClick({ position: "right" });
         cy.wait(1000)
-        cy.get('[id="img-preprocess-sharpen"]').realClick({ position: "right" });
+        cy.get('[data-test="tab-workingarea-img-preprocess-sharpen"]').realClick({ position: "right" });
         cy.wait(1000)
-        cy.get('[id="img-preprocess-gamma"]').realClick({ position: "left" });
+        cy.get('[data-test="tab-workingarea-img-preprocess-gamma"]').realClick({ position: "left" });
         cy.wait(1000)
-        cy.get('.crop_top').clear().type('2')
-        cy.get('.crop_left').clear().type('2')
-        cy.get('.crop_bottom').clear().type('2')
-        cy.get('.crop_right').clear().type('2')
+        cy.get('[data-test="tab-workingarea-crop-top"]').clear().type('2')
+        cy.get('[data-test="tab-workingarea-crop-left"]').clear().type('2')
+        cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type('2')
+        cy.get('[data-test="tab-workingarea-crop-right"]').clear().type('2')
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(2000);
         cy.focusReminder();
@@ -74,9 +74,9 @@ describe("Laser Job", function () {
         cy.get('[data-test="conversion-dialog-passes-input-engrave"]').first().clear().type("4");
         cy.get('[data-test="conversion-dialog-engraving-pierce-time"]').clear().type("8");
         cy.get('[data-test="conversion-dialog-line-distance-input"]').clear().type("1");
-        // cy.get('[data-test="conversion-dialog-engraving-mode-recommended"]').dblclick(
-        //     { force: true }
-        // );
+        cy.get('[data-test="conversion-dialog-engraving-mode-recommended"]').dblclick(
+            { force: true }
+        );
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");

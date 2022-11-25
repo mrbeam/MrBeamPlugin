@@ -35,11 +35,11 @@ describe("Laser Job", function () {
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
-        cy.get(".translation").clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get(".horizontal").clear().type("225.3 mm");
-        cy.get(".vertical").clear().type("230.3 mm");
-        cy.get('.[data-test="tab-workingarea-burger-menu"]').click();
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-by-stroke-color"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(2000);
@@ -75,11 +75,11 @@ describe("Laser Job", function () {
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
-        cy.get(".translation").clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get(".horizontal").clear().type("225.3 mm");
-        cy.get(".vertical").clear().type("230.3 mm");
-        cy.get('.[data-test="tab-workingarea-burger-menu"]').click();
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-horizontally"]').click();
         cy.logout();
     });
@@ -90,15 +90,15 @@ describe("Laser Job", function () {
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
-        cy.get('.btn-mini').find('.icon-move').click({force:true});
-        cy.get(".translation").clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-move"]').click({force:true});
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get(".horizontal").clear().type("225.3 mm");
-        cy.get(".vertical").clear().type("230.3 mm");
-        cy.get('.[data-test="tab-workingarea-burger-menu"]').click();
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-vertically"]').click();
-        cy.get('.[data-test="tab-workingarea-burger-menu"]').first().click();
-        cy.get('.[data-test="tab-workingarea-burger-menu"]').first().click();
+        cy.get('[data-test="tab-workingarea-burger-menu"]').first().click();
+        cy.get('[data-test="tab-workingarea-burger-menu"]').first().click();
         cy.get('[data-test="tab-workingarea-into-shapes"]').click({force: true});
         cy.get('[data-test="tab-workingarea-detail-information"]').should(($elem) => {
             expect($elem).to.have.length(12)
@@ -112,15 +112,15 @@ describe("Laser Job", function () {
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
-        cy.get(".translation").clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get(".horizontal").clear().type("225.3 mm");
-        cy.get(".vertical").clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
         cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-vertically"]').click();
         cy.get('[data-test="tab-workingarea-burger-menu"]').first().click();
         cy.get('[data-test="tab-workingarea-into-shapes"]').click();
-        cy.get('.[data-test="tab-workingarea-burger-menu"]').last().click();
+        cy.get('[data-test="tab-workingarea-burger-menu"]').last().click();
         cy.get('[data-test="tab-workingarea-horizontally"]').click({force:true});
         cy.get('[data-test="tab-workingarea-burger-menu"]').eq(10).click();
         cy.get('[data-test="tab-workingarea-by-stroke-color"]').click({force:true});

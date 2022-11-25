@@ -30,8 +30,8 @@ describe("Laser Job - quick text", function () {
             force: true,
         });
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
-        cy.get(".horizontal").clear().type("116.3 mm");
-        cy.get(".vertical").clear().type("132.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("116.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("132.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(2000);
         cy.focusReminder();
@@ -77,10 +77,10 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-circle-input"]').trigger("right");
         cy.get('[data-test="quick-text-font-button-left"]').last().click();
         cy.get('[data-test="quick-text-done-button"]').click();
-        cy.get(".translation").clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get(".horizontal").clear().type("225.3 mm");
-        cy.get(".vertical").clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]').contains("Cork").click({ force: true });
@@ -117,10 +117,10 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-stroke-input"]').click('center');
         cy.get('[data-test="quick-text-color-picker-stroke"] > .track > canvas').realClick({ position: "bottom" });
         cy.get('[data-test="quick-text-done-button"]').click();
-        cy.get(".translation").clear().type("235.0, 138.0");
+        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 138.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
-        cy.get(".horizontal").clear().type("125.3 mm");
-        cy.get(".vertical").clear().type("130.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("125.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]').contains("Foam").click({ force: true });
