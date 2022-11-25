@@ -9,17 +9,17 @@ VERSION="1.7.2"
 APP_DIR=/root/mount_manager
 LOG_FILE="/var/log/mount_manager.log"
 SELFCHECK_MOUNT_TARGET=/media/
-DESIGNLIB_MOUNT_TARGET="/home/pi/.octoprint/uploads/USB-Stick"
+DESIGNLIB_MOUNT_TARGET="/var/lib/mrbeam/.octoprint/uploads/USB-Stick"
 
-OCTOPRINT_LOG="/home/pi/.octoprint/logs/octoprint.log"
-MRBEAM_PLUGIN_DIR="/home/pi/oprint/lib/python2.7/site-packages/octoprint_mrbeam"
-MRBEAM_PLUGIN_SHADOWED_DIR="/home/pi/oprint/lib/python2.7/site-packages/_octoprint_mrbeam_shadowed"
+OCTOPRINT_LOG="/var/lib/mrbeam/.octoprint/logs/octoprint.log"
+MRBEAM_PLUGIN_DIR="/usr/lib/python3.10/site-packages/octoprint_mrbeam"
+MRBEAM_PLUGIN_SHADOWED_DIR="/var/lib/mrbeam/oprint/lib/python2.7/site-packages/_octoprint_mrbeam_shadowed"
 
 SIG_DIR="/mrbeam" # optional. can be in / as well
 SIG_FILE_PATTERN="mrbeam*.sig"
 TAR_FILE_BASE="/mrbeam_usb_mount.tar.gz"
 
-SELFCHECK_DIR=/home/pi/usb_mount
+SELFCHECK_DIR=/var/lib/mrbeam/usb_mount
 SELFCHECK_FILE="${SELFCHECK_DIR}/mrbeam_usb_mount_start"
 SELFCHECK_STOP="${SELFCHECK_DIR}/mrbeam_usb_mount_stop"
 
@@ -55,7 +55,7 @@ mrbeam_ledstrips_cli flash_color:40:40:40:5
 # output:
 # /dev/mmcblk0p2 / ext4
 # /dev/mmcblk0p1 /boot vfat
-# /dev/sda1 /home/pi/.octoprint/uploads/USB-Stick_4 vfat
+# /dev/sda1 /var/lib/mrbeam/.octoprint/uploads/USB-Stick_4 vfat
 getMountedDevices () { echo $( findmnt -t ext4,vfat,exfat,ext2,ext3,ntfs -rno SOURCE,TARGET,FSTYPE 2>/dev/null ); }
 
 # reliable checks if mounted with findmnt
@@ -174,8 +174,8 @@ log_syslog=true
 FREE_SPACE=`df -k --output=avail / | tail -n1`
 if ((FREE_SPACE < MIN_FREE_SPACE_K)); then
 	rm -f /var/log/*
-	rm -f /home/pi/.octoprint/logs/*
-	log_warn "DISK SPACE IS LOW!!! (Free space: ${FREE_SPACE}k): Deleted all files in /var/log and /home/pi/.octoprint/logs/"
+	rm -f /var/lib/mrbeam/.octoprint/logs/*
+	log_warn "DISK SPACE IS LOW!!! (Free space: ${FREE_SPACE}k): Deleted all files in /var/log and /var/lib/mrbeam/.octoprint/logs/"
 fi
 FREE_SPACE=`df -k --output=avail / | tail -n1`
 log_info "Free disk space is now: ${FREE_SPACE}k"
@@ -304,7 +304,7 @@ if [ "$1" == "remove" ]; then
 
 
 #	### Cleanup designlib stuff ###
-#	# iterate over all /home/pi/.octoprint/uploads/USB-Stick_* Folders
+#	# iterate over all /var/lib/mrbeam/.octoprint/uploads/USB-Stick_* Folders
 #	for designlibfile in ${DESIGNLIB_MOUNT_TARGET}_* ;
 #	do
 #		if isMounted ${designlibfile}; then # first unmount if necessary

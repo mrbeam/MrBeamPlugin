@@ -3,8 +3,8 @@ import os.path
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
-SUPPORT_STICK_FILE_PATH = "/home/pi/usb_mount/support"
-CALIBRATION_STICK_FILE_PATH = "/home/pi/usb_mount/calibration_tool"
+SUPPORT_STICK_FILE_PATH = "/var/lib/mrbeam/usb_mount/support"
+CALIBRATION_STICK_FILE_PATH = "/var/lib/mrbeam/usb_mount/calibration_tool"
 
 
 USER_NAME = "support@mr-beam.org"

@@ -8,7 +8,7 @@ DISABLE_PY_WARNING = "--no-python-version-warning"
 
 # Dictionary of package versions available at different locations
 # {
-# /home/pi/oprint/bin/pip : {
+# /usr/bin/pip3 : {
 #   "OctoPrint    x.x.x",
 #   ...
 #   },

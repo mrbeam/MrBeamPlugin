@@ -2956,11 +2956,11 @@ class MrBeamPlugin(
 
         if not branch:
             try:
-                command = "cd /home/pi/mrb3-core-plugin/; git branch | grep '*'"
+                command = "cd /var/lib/mrbeam/mrb3-core-plugin/; git branch | grep '*'"
                 output = check_output(command, shell=True)
                 branch = output[1:].strip()
             except Exception as e:
-                # 	self._logger.debug("getBranch: unable to execute 'cd /home/pi/MrBeamPlugin/; git branch' due to exception: %s", e)
+                # 	self._logger.debug("getBranch: unable to execute 'cd /var/lib/mrbeam/MrBeamPlugin/; git branch' due to exception: %s", e)
                 pass
 
         return branch

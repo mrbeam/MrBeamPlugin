@@ -29,7 +29,7 @@ UPDATE_CONFIG_NAME = "mrbeam"
 REPO_NAME = "mrb3-core-plugin"
 MAIN_SRC_FOLDER_NAME = "octoprint_mrbeam"
 PLUGIN_NAME = "Mr_Beam"
-DEFAULT_OPRINT_VENV = "/home/pi/oprint/bin/pip"
+DEFAULT_OPRINT_VENV = "/usr/bin/pip3"
 PIP_WHEEL_TEMP_FOLDER = "/tmp/wheelhouse"
 
 

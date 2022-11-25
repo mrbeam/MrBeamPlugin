@@ -229,34 +229,34 @@ class TimerHandler:
             # must end with /
             folders = {
                 "mrbeam": {
-                    "src_path": "/home/pi/site-packages/octoprint_mrbeam/",
+                    "src_path": "/usr/lib/python3.10/site-packages/octoprint_mrbeam/",
                 },
                 "iobeam": {
-                    "src_path": "/home/pi/dist-packages/iobeam/",
+                    "src_path": "/usr/lib/python3.10/site-packages/iobeam/",
                 },
                 "findmymrbeam": {
-                    "src_path": "/home/pi/site-packages/octoprint_findmymrbeam/",
+                    "src_path": "/usr/lib/python3.10/site-packages/octoprint_findmymrbeam/",
                 },
                 "netconnectd-daemon": {
-                    "src_path": "/home/pi/dist-packages/netconnectd/",
+                    "src_path": "/usr/lib/python3.10/site-packages/netconnectd/",
                 },
                 "netconnectd": {
-                    "src_path": "/home/pi/site-packages/octoprint_netconnectd/",
+                    "src_path": "/usr/lib/python3.10/site-packages/octoprint_netconnectd/",
                 },
                 "mrb_hw_info": {
-                    "src_path": "/home/pi/dist-packages/mrb_hw_info/",
+                    "src_path": "/usr/lib/python3.10/site-packages/mrb_hw_info/",
                 },
                 "mrbeam-ledstrips": {
-                    "src_path": "/home/pi/dist-packages/mrbeam_ledstrips/",
+                    "src_path": "/usr/lib/python3.10/site-packages/mrbeam_ledstrips/",
                 },
                 "octoprint": {
-                    "src_path": "/home/pi/site-packages/octoprint/",
+                    "src_path": "/usr/lib/python3.10/site-packages/octoprint/",
                 },
                 "_dist-packages": {
-                    "src_path": "/home/pi/dist-packages/",
+                    "src_path": "/var/lib/mrbeam/dist-packages/",
                 },
                 "_site-packages": {
-                    "src_path": "/home/pi/site-packages/",
+                    "src_path": "/usr/lib/python3.10/site-packages/",
                 },
             }
             sw_versions = self._get_software_versions()

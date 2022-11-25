@@ -436,7 +436,7 @@ class Migration(object):
 
         Also cleans up an old OctoPrint folder which very likely is part of the image...
         """
-        site_packages_dir = "/home/pi/site-packages"
+        site_packages_dir = "/usr/lib/python3.10/site-packages"
         folders = []
         keep_version = None
         if os.path.isdir(site_packages_dir):
@@ -766,7 +766,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def delete_uploaded_stl_files(self):
         self._logger.info("delete_uploaded_stl_files() ")
-        exec_cmd("rm -f /home/pi/.octoprint/uploads/*.stl")
+        exec_cmd("rm -f /var/lib/mrbeam/.octoprint/uploads/*.stl")
 
     def disable_wifi_power_management(self):
         self._logger.info("disable_wifi_power_management() ")
