@@ -36,11 +36,16 @@ describe("Laser Job - shapes", function () {
             deltaY: 120.1241,
             force: true,
         });
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("-50.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("125.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -108,14 +113,21 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="tab-workingarea-translation"]')
             .clear()
             .type("235.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("-50.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("125.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("130.3 mm");
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.get('[data-test="working-area-laser-button"]')
+            .filter(":visible")
+            .click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Anodized Aluminum")
@@ -179,13 +191,19 @@ describe("Laser Job - shapes", function () {
         ).realClick({ position: "top" });
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="tab-workingarea-translation"]')
+            .filter(":visible")
             .clear()
             .type("235.0, 238.0");
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("250.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("225.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("230.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -249,13 +267,19 @@ describe("Laser Job - shapes", function () {
         ).realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="tab-workingarea-translation"]')
+            .filter(":visible")
             .clear()
             .type("135.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("150.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("150.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("125.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -326,16 +350,23 @@ describe("Laser Job - shapes", function () {
         ).realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="tab-workingarea-translation"]')
+            .filter(":visible")
             .clear()
             .type("135.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("150.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("150.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
             .clear()
             .type("125.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("130.3 mm");
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.get('[data-test="working-area-laser-button"]')
+            .filter(":visible")
+            .click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Polypropylene")

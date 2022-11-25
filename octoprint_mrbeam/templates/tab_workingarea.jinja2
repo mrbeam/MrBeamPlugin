@@ -154,10 +154,12 @@
 														<span class="muted">{{ _('Set the height of the surface above the bottom for the camera preview to be accurate:') }}</span>
                                                         <div>
                                                             <input class="mrb_slider" type="range" min="0" max="38" step="1" id="objectZ_input_slider" value="0"
+																   data-test="tab-workingarea-object-height-slider"	
                                                                    data-bind="value: camera.objectZ, valueUpdate: 'input'"
                                                                    style="width:60%; display: inline; margin: 1em 0 1em 5px;"
                                                             />
                                                             <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input_number" value="0"
+															   data-test="tab-workingarea-object-height-input"
 														       data-bind="value: camera.objectZ, valueUpdate: 'input'"
 														       style="width:3.5em; display: inline; margin: 0; padding-right:0;"
 														/>&nbsp;{{ _('mm') }}
@@ -170,7 +172,7 @@
 
                                         <div id="wa_view_settings" class="accordion-inner">
 											<div class="accordion-heading ">
-												<a id="wa_view_settings_toggle" href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
+												<a id="wa_view_settings_toggle" data-test="tab-workingarea-preview-settings" href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
 													<i class="icon-camera"></i> {{ _('Preview') }}:
 												</a>
 												<span class="caret" style="vertical-align: middle"></span>
@@ -250,21 +252,21 @@
 															{{ _('Brightness') }}:
 														</label>
 														<i class="icon-adjust"></i>
-                                                        <input id="preview-brightness" type="range" min="0" max="1" step="0.01"
+                                                        <input id="preview-brightness" data-test="tab-workingarea-preview-brightness" type="range" min="0" max="1" step="0.01"
                                                            style="width:80%;"
                                                            class="mrb_slider"
                                                            value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">
 													</div>
 													<div>
 														<label style="cursor: default;">
-															{{ _('Zoom') }}: <span data-bind="text:zoom_factor_text"></span>
+															{{ _('Zoom') }}: <span data-bind="text:zoom_factor_text" data-test="tab-workingarea-preview-zoom"></span>
 														</label>
 														<div id="zoom_monitor_wrapper">
 															<div id="zoom_monitor" data-bind="
 																	style: { 'padding-bottom': (100 * hwRatio())+'%' },
 																	event: { mousewheel: wheel_zoom_monitor }
 																 ">
-                                                                <div data-bind="style: {
+                                                                <div data-test="tab-workingarea-preview-scroll-to-zoom" data-bind="style: {
 																		width: (100*zoom())+'%',
 																		'padding-bottom': (100*zoom()*hwRatio())+'%',
 																		left: (zoomOffX() / workingAreaWidthMM() * 100) + '%',
@@ -368,7 +370,7 @@
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
                                                 <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };" data-test="tab-workingarea-mirror">
 													<span class="mini_switch_label">ABC</span>
-													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label mini_switch_trigger" data-test="tab-workingarea-mirror-switch"><div></div></span>
 													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
 												</div>
                                                 <br/>
@@ -475,7 +477,7 @@
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
                                                 <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
 													<span class="mini_switch_label">ABC</span>
-													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label mini_switch_trigger" data-test="tab-workingarea-mirror-switch"><div></div></span>
 													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
 												</div>
                                                 <br/>
@@ -685,7 +687,7 @@
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
                                                 <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
 													<span class="mini_switch_label">ABC</span>
-													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label mini_switch_trigger" data-test="tab-workingarea-mirror-switch"><div></div></span>
 													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
 												</div>
 												<br/>
@@ -772,7 +774,7 @@
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
                                                 <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
 													<span class="mini_switch_label">ABC</span>
-													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label mini_switch_trigger" data-test="tab-workingarea-mirror-switch"><div></div></span>
 													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
 												</div>
 												<br/>

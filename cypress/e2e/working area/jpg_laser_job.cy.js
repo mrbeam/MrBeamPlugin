@@ -35,9 +35,11 @@ describe("Laser Job", function () {
             .click();
         cy.wait(3000);
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("95.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("70.3 mm");
         cy.get(".userIMG").click({ force: true });
@@ -46,9 +48,12 @@ describe("Laser Job", function () {
             deltaY: -144.1241,
             force: true,
         });
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("200.5");
-        cy.get('[data-test="tab-workingarea-multiply"]').clear().type("2x3");
-        cy.get('[data-test="tab-workingarea-mirror"]').click();
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("200.5");
+        cy.get('[data-test="tab-workingarea-multiply"]').clear().type("2x3{enter}");
+        cy.get('[data-test="tab-workingarea-mirror-switch"]').click();
         cy.get(
             '[data-test="tab-workingarea-image-preprocessing-collapsible"]'
         ).click();

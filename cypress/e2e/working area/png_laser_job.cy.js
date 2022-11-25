@@ -37,15 +37,21 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-move"]').click({ force: true });
         cy.get('[data-test="tab-workingarea-scale-prop-btn"]').click();
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("125.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("130.3 mm");
         cy.get('[data-test="tab-workingarea-translation"]')
+            .filter(":visible")
             .clear()
             .type("135.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("-50.5");
         cy.get(
             '[data-test="tab-workingarea-image-preprocessing-collapsible"]'
         ).click();
@@ -68,7 +74,7 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-crop-top"]').clear().type("3");
         cy.get('[data-test="tab-workingarea-crop-left"]').clear().type("2");
         cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type("3");
-        cy.get('[data-test="tab-workingarea-crop-rignt"]').clear().type("2");
+        cy.get('[data-test="tab-workingarea-crop-right"]').clear().type("2");
         cy.get('[data-test="tab-workingarea-duplicate"]').click({
             force: true,
         });

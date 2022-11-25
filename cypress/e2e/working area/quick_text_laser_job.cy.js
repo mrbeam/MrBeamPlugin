@@ -33,11 +33,16 @@ describe("Laser Job - quick text", function () {
             deltaY: 220.1241,
             force: true,
         });
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("-50.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("116.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("132.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -107,13 +112,19 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-font-button-left"]').last().click();
         cy.get('[data-test="quick-text-done-button"]').click();
         cy.get('[data-test="tab-workingarea-translation"]')
+            .filter(":visible")
             .clear()
             .type("235.0, 238.0");
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("250.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("225.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("230.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();
@@ -174,13 +185,19 @@ describe("Laser Job - quick text", function () {
         ).realClick({ position: "bottom" });
         cy.get('[data-test="quick-text-done-button"]').click();
         cy.get('[data-test="tab-workingarea-translation"]')
+            .filter(":visible")
             .clear()
             .type("235.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("-50.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("125.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]').click();

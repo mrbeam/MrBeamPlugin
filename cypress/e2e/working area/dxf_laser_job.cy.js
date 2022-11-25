@@ -43,20 +43,26 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-unit-toggler" ]').click();
         cy.get('[data-test="tab-workingarea-scale-prop-btn"]').click();
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("1266 {enter}");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("1466 {enter}");
-        cy.get('[data-test="tab-workingarea-mirror"]').click();
+        cy.get('[data-test="tab-workingarea-mirror-switch"]').click();
         cy.get('[data-test="tab-workingarea-multiply"]')
             .clear()
             .type("1x3{enter}");
         cy.get('[data-test="tab-workingarea-move"]').click({ force: true });
         cy.get('[data-test="tab-workingarea-translation"]')
+            .filter(":visible")
             .clear()
             .type("135.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("250.5");
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(
             '[data-test="tab-workingarea-image-preprocessing-collapsible"]'
