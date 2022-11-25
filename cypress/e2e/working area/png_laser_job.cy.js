@@ -34,26 +34,44 @@ describe("Laser Job", function () {
             .filter(':contains("mirror.png")')
             .click();
         cy.wait(3000);
-        cy.get('[data-test="tab-workingarea-move"]').click({force:true});
+        cy.get('[data-test="tab-workingarea-move"]').click({ force: true });
         cy.get('[data-test="tab-workingarea-scale-prop-btn"]').click();
-        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("125.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("130.3 mm");
-        cy.get('[data-test="tab-workingarea-translation"]').clear().type("135.0, 138.0");
+        cy.get('[data-test="tab-workingarea-horizontal"]')
+            .clear()
+            .type("125.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]')
+            .clear()
+            .type("130.3 mm");
+        cy.get('[data-test="tab-workingarea-translation"]')
+            .clear()
+            .type("135.0, 138.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("-50.5");
-        cy.get('[data-test="tab-workingarea-image-preprocessing-collapsible"]').click();
-        cy.get('[data-test="tab-workingarea-img-preprocess-contrast"]').realClick();
-        cy.wait(1000)
-        cy.get('[data-test="tab-workingarea-img-preprocess-brightness"]').realClick({ position: "left" });
-        cy.wait(1000)
-        cy.get('[data-test="tab-workingarea-img-preprocess-sharpen"]').realClick();
-        cy.wait(1000)
-        cy.get('[data-test="tab-workingarea-img-preprocess-gamma"]').realClick({ position: "right" });
-        cy.wait(1000)
-        cy.get('[data-test="tab-workingarea-crop-top"]').clear().type('3');
-        cy.get('[data-test="tab-workingarea-crop-left"]').clear().type('2');
-        cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type('3');
-        cy.get('[data-test="tab-workingarea-crop-rignt"]').clear().type('2');
-        cy.get('[data-test="tab-workingarea-duplicate"]').click({force:true});
+        cy.get(
+            '[data-test="tab-workingarea-image-preprocessing-collapsible"]'
+        ).click();
+        cy.get(
+            '[data-test="tab-workingarea-img-preprocess-contrast"]'
+        ).realClick();
+        cy.wait(1000);
+        cy.get(
+            '[data-test="tab-workingarea-img-preprocess-brightness"]'
+        ).realClick({ position: "left" });
+        cy.wait(1000);
+        cy.get(
+            '[data-test="tab-workingarea-img-preprocess-sharpen"]'
+        ).realClick();
+        cy.wait(1000);
+        cy.get('[data-test="tab-workingarea-img-preprocess-gamma"]').realClick({
+            position: "right",
+        });
+        cy.wait(1000);
+        cy.get('[data-test="tab-workingarea-crop-top"]').clear().type("3");
+        cy.get('[data-test="tab-workingarea-crop-left"]').clear().type("2");
+        cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type("3");
+        cy.get('[data-test="tab-workingarea-crop-rignt"]').clear().type("2");
+        cy.get('[data-test="tab-workingarea-duplicate"]').click({
+            force: true,
+        });
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(2000);
         cy.focusReminder();
@@ -64,15 +82,36 @@ describe("Laser Job", function () {
         cy.get('[id="material_color_0057a8"]').click();
         cy.wait(1000);
         cy.get('[id="material_thickness_2"]').click();
-        cy.get('[data-test="conversion-dialog-intensity-black"]').clear().type("85");
-        cy.get('[data-test="conversion-dialog-intensity-white"]').clear().type("25");
-        cy.get('[data-test="conversion-dialog-feedrate-white"]').clear().type("700");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]').clear().type("1500");
-        cy.get('[data-test="conversion-dialog-show-advanced-settings"]').click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]').first().clear().type("4");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]').clear().type("8");
-        cy.get('[data-test="conversion-dialog-line-distance-input"line-distance-input"]').clear().type("1");
-        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick({ force: true });
+        cy.get('[data-test="conversion-dialog-intensity-black"]')
+            .clear()
+            .type("85");
+        cy.get('[data-test="conversion-dialog-intensity-white"]')
+            .clear()
+            .type("25");
+        cy.get('[data-test="conversion-dialog-feedrate-white"]')
+            .clear()
+            .type("700");
+        cy.get('[data-test="conversion-dialog-feedrate-black"]')
+            .clear()
+            .type("1500");
+        cy.get(
+            '[data-test="conversion-dialog-show-advanced-settings"]'
+        ).click();
+        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
+            .first()
+            .clear()
+            .type("4");
+        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
+            .clear()
+            .type("8");
+        cy.get(
+            '[data-test="conversion-dialog-line-distance-input"line-distance-input"]'
+        )
+            .clear()
+            .type("1");
+        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick(
+            { force: true }
+        );
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");

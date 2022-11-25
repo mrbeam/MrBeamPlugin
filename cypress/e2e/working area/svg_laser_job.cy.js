@@ -14,47 +14,75 @@ describe("Laser Job", function () {
 
     it("Add svg file", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-design-library-svg-preview-card"]').then(($elem) => {
-            if (
-                $elem
-                    .find('[data-test="tab-design-library-svg-preview-card"]')
-                    .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")').length
-            ) {
-            } else {
-                const filepath = "Focus_Tool_Mr_Beam_Laser_1.svg";
-                cy.get('.fileinput-button input[type="file"]').attachFile(
-                    filepath
-                );
-                cy.wait(5000);
-                cy.get('[data-test="tab-design-library-svg-preview-card"]')
-                    .contains("Focus_Tool_Mr_Beam_Laser_1.svg")
-                    .should("to.exist");
+        cy.get('[data-test="tab-design-library-svg-preview-card"]').then(
+            ($elem) => {
+                if (
+                    $elem
+                        .find(
+                            '[data-test="tab-design-library-svg-preview-card"]'
+                        )
+                        .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
+                        .length
+                ) {
+                } else {
+                    const filepath = "Focus_Tool_Mr_Beam_Laser_1.svg";
+                    cy.get('.fileinput-button input[type="file"]').attachFile(
+                        filepath
+                    );
+                    cy.wait(5000);
+                    cy.get('[data-test="tab-design-library-svg-preview-card"]')
+                        .contains("Focus_Tool_Mr_Beam_Laser_1.svg")
+                        .should("to.exist");
+                }
             }
-        });
+        );
         cy.get('[data-test="tab-design-library-svg-preview-card"]')
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
-        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-translation"]')
+            .clear()
+            .type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]')
+            .clear()
+            .type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]')
+            .clear()
+            .type("230.3 mm");
         cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-by-stroke-color"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(2000);
         cy.focusReminder();
         cy.wait(2000);
-        cy.get('[data-test="conversion-dialog-material-item"]').contains("Cardboard, single wave").click();
+        cy.get('[data-test="conversion-dialog-material-item"]')
+            .contains("Cardboard, single wave")
+            .click();
         cy.wait(1000);
         cy.get('[id="material_thickness_1.5"]').click();
-        cy.get('[data-test="conversion-dialog-intensity-black"]').clear().type("95");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]').clear().type("1500");
-        cy.get('[data-test="conversion-dialog-show-advanced-settings"]').click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]').first().clear().type("4");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]').clear().type("8");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]').clear().type("1");
-        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick({ force: true });
+        cy.get('[data-test="conversion-dialog-intensity-black"]')
+            .clear()
+            .type("95");
+        cy.get('[data-test="conversion-dialog-feedrate-black"]')
+            .clear()
+            .type("1500");
+        cy.get(
+            '[data-test="conversion-dialog-show-advanced-settings"]'
+        ).click();
+        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
+            .first()
+            .clear()
+            .type("4");
+        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
+            .clear()
+            .type("8");
+        cy.get('[data-test="conversion-dialog-line-distance-input"]')
+            .clear()
+            .type("1");
+        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick(
+            { force: true }
+        );
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
@@ -75,10 +103,16 @@ describe("Laser Job", function () {
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
-        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-translation"]')
+            .clear()
+            .type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]')
+            .clear()
+            .type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]')
+            .clear()
+            .type("230.3 mm");
         cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-horizontally"]').click();
         cy.logout();
@@ -90,19 +124,29 @@ describe("Laser Job", function () {
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
-        cy.get('[data-test="tab-workingarea-move"]').click({force:true});
-        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-move"]').click({ force: true });
+        cy.get('[data-test="tab-workingarea-translation"]')
+            .clear()
+            .type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]')
+            .clear()
+            .type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]')
+            .clear()
+            .type("230.3 mm");
         cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-vertically"]').click();
         cy.get('[data-test="tab-workingarea-burger-menu"]').first().click();
         cy.get('[data-test="tab-workingarea-burger-menu"]').first().click();
-        cy.get('[data-test="tab-workingarea-into-shapes"]').click({force: true});
-        cy.get('[data-test="tab-workingarea-detail-information"]').should(($elem) => {
-            expect($elem).to.have.length(12)
+        cy.get('[data-test="tab-workingarea-into-shapes"]').click({
+            force: true,
         });
+        cy.get('[data-test="tab-workingarea-detail-information"]').should(
+            ($elem) => {
+                expect($elem).to.have.length(12);
+            }
+        );
         cy.logout();
     });
 
@@ -112,21 +156,33 @@ describe("Laser Job", function () {
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
-        cy.get('[data-test="tab-workingarea-translation"]').clear().type("235.0, 238.0");
+        cy.get('[data-test="tab-workingarea-translation"]')
+            .clear()
+            .type("235.0, 238.0");
         cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]').clear().type("225.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]').clear().type("230.3 mm");
+        cy.get('[data-test="tab-workingarea-horizontal"]')
+            .clear()
+            .type("225.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]')
+            .clear()
+            .type("230.3 mm");
         cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-vertically"]').click();
         cy.get('[data-test="tab-workingarea-burger-menu"]').first().click();
         cy.get('[data-test="tab-workingarea-into-shapes"]').click();
         cy.get('[data-test="tab-workingarea-burger-menu"]').last().click();
-        cy.get('[data-test="tab-workingarea-horizontally"]').click({force:true});
-        cy.get('[data-test="tab-workingarea-burger-menu"]').eq(10).click();
-        cy.get('[data-test="tab-workingarea-by-stroke-color"]').click({force:true});
-        cy.get('[data-test="tab-workingarea-detail-information"]').should(($elem) => {
-            expect($elem).to.have.length(13)
+        cy.get('[data-test="tab-workingarea-horizontally"]').click({
+            force: true,
         });
+        cy.get('[data-test="tab-workingarea-burger-menu"]').eq(10).click();
+        cy.get('[data-test="tab-workingarea-by-stroke-color"]').click({
+            force: true,
+        });
+        cy.get('[data-test="tab-workingarea-detail-information"]').should(
+            ($elem) => {
+                expect($elem).to.have.length(13);
+            }
+        );
         cy.logout();
     });
 });
