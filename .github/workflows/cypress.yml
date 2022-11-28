@@ -1,0 +1,161 @@
+name: Cypress Tests
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - alpha
+      - beta
+      - stable
+
+env:
+  # These two are just for internal use, to wire the container network
+  MRBEAM_PLUGIN_URL: "http://plugin-address.org:5002/"
+  MRBEAM_PLUGIN_DOMAIN_NAME: "plugin-address.org"
+
+jobs:
+  mrb-docker:
+    runs-on: ubuntu-latest
+    outputs:
+      domain: ${{ env.MRBEAM_PLUGIN_DOMAIN_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and export
+        uses: docker/build-push-action@v3
+        with:
+          push: false
+          context: .
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: ./Dockerfile
+          tags: mrbeam_plugin:latest
+          outputs: type=docker,dest=/tmp/image.tar
+      - name: Upload MrBeamPlugin image
+        uses: actions/upload-artifact@v3
+        with:
+          name: mrbeam_plugin
+          path: /tmp/image.tar
+
+  ui-chrome-tests:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    container:
+      image: cypress/browsers:node16.17.0-chrome106
+      options: --add-host=${{ needs.mrb-docker.outputs.domain }}:host-gateway
+      # This is necessary to use the docker daemon from the GitHub actions virtual machine
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    needs: mrb-docker
+    strategy:
+      fail-fast: false
+      matrix:
+        # run copies of the current job in parallel
+        containers: [ 0, 1, 2, 3, 4 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download MrBeamPlugin image
+        uses: actions/download-artifact@v3
+        with:
+          name: mrbeam_plugin
+          path: /tmp
+      - name: Load Docker image
+        run: |
+          apt-get --allow-releaseinfo-change update
+          apt-get install docker.io -y
+          docker load --input /tmp/image.tar
+          docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
+      - env:
+          CYPRESS_TEST_USER_EMAIL: ${{ secrets.CYPRESS_TEST_USER_EMAIL }}
+          CYPRESS_TEST_USER_PASSWORD: ${{ secrets.CYPRESS_TEST_USER_PASSWORD }}
+          CYPRESS_TEST_DESIGN_STORE_TOKEN: ${{ secrets.CYPRESS_TEST_DESIGN_STORE_TOKEN }}
+        run: |
+          envsubst < ./cypress/fixtures/test-data.template.json > ./cypress/fixtures/test-data.json
+          envsubst < ./cypress.config-template.js > ./cypress.config.js
+      - name: Run Cypress e2e - Chrome
+        uses: cypress-io/github-action@v4
+        with:
+          wait-on: ${{ env.MRBEAM_PLUGIN_URL }}
+          browser: chrome
+          config-file: cypress.config.js
+          command: yarn ts-node cypress/scripts/cypress-ci-run.ts
+        env:
+          TOTAL_RUNNERS: 5
+          THIS_RUNNER: ${{ matrix.containers }}
+          # Recommended: pass the GitHub token lets this action correctly
+          # determine the unique run id necessary to re-run the checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: report_${{ matrix.containers }}
+          path: cypress/results
+
+  xray-import:
+    runs-on: ubuntu-latest
+    needs: ui-chrome-tests
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Download JUnit reports
+        uses: actions/download-artifact@v3
+        with:
+          path: cypress/results
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: cypress/results
+      - name: Merge reports
+        run: |
+          npm install --only=dev
+          npm run merge-reports
+      - name: Import to Xray
+        id: xray
+        run: |
+          token=$(curl -H "Content-Type: application/json" -X POST --data '{ "client_id": "${{ secrets.JIRA_CLIENT_ID }}","client_secret": "${{ secrets.JIRA_CLIENT_SECRET }}" }'  https://xray.cloud.getxray.app/api/v2/authenticate| tr -d '"')
+          xray_import_response=$(curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data @"cypress/results/combined.xml" https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=SW)
+          echo "xray_import_response=$xray_import_response" >> $GITHUB_OUTPUT
+      - name: Change issue summary and add link
+        # issue_url: extracts the newly created test execution issue url from the previous response
+        # issue_name: contains the latest commit message. Should be something like "SW-1234 summary"
+        # tests_issue: extracts the "SW-1234" from the commit message, to add it as a link to the text execution issue
+        run: |
+          issue_url=$(printf '%s\n' '${{ steps.xray.outputs.xray_import_response }}' | jq -r .self)
+          echo $issue_url
+
+          last_commit_message=$(echo $(git log -1 --pretty=format:"%s"))
+          issue_name="Test execution for $last_commit_message"
+          echo $issue_name
+
+          tests_issue=$(echo $last_commit_message | sed -E -e 's/.*(SW-[0-9]+).*/\1/g')
+          echo $tests_issue
+
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X PUT $issue_url -H 'Content-Type: application/json' \
+            --data \
+              '{
+                "fields": {
+                  "summary": "'"$issue_name"'"
+                },
+                "update": {
+                  "issuelinks": [
+                    {
+                      "add": {
+                        "type": {
+                          "name":"Test",
+                          "outward":"tests"
+                        },
+                        "outwardIssue" : {
+                          "key": "'"$tests_issue"'"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }'
