@@ -16,6 +16,7 @@ describe("Purchase", function () {
     });
 
     it("Buy design - success", function () {
+        cy.wait(3000);
         cy.iframe('[id="design_store_iframe"]').then(($button) => {
             cy.get($button)
                 .find('[src="static/img/beam_coin_orange.png"]')
