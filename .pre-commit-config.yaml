@@ -17,10 +17,11 @@ repos:
     hooks:
       - id: prettier
         files: \.(html|css|js|json)$
-  - repo: https://github.com/myint/docformatter
-    rev: v1.5.0
-    hooks:
-      - id: docformatter
-        args: [
-          --in-place,
-        ]
+# Bring back after switching to Python 3
+#  - repo: https://github.com/myint/docformatter
+#    rev: v1.5.0
+#    hooks:
+#      - id: docformatter
+#        args: [
+#          --in-place,
+#        ]
