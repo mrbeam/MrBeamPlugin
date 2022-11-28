@@ -52,7 +52,9 @@ describe("Laser Job", function () {
             .filter(":visible")
             .clear()
             .type("200.5");
-        cy.get('[data-test="tab-workingarea-multiply"]').clear().type("2x3{enter}");
+        cy.get('[data-test="tab-workingarea-multiply"]')
+            .clear()
+            .type("2x3{enter}");
         cy.get('[data-test="tab-workingarea-mirror-switch"]').click();
         cy.get(
             '[data-test="tab-workingarea-image-preprocessing-collapsible"]'
@@ -87,6 +89,9 @@ describe("Laser Job", function () {
         cy.get('[id="material_color_1155cc"]').click();
         cy.wait(1000);
         cy.get('[id="material_thickness_0.4"]').click();
+        cy.get(
+            '[data-test="conversion-dialog-show-advanced-settings"]'
+        ).click();
         cy.get('[data-test="conversion-dialog-intensity-black"]')
             .clear()
             .type("95");
@@ -99,9 +104,6 @@ describe("Laser Job", function () {
         cy.get('[data-test="conversion-dialog-feedrate-black"]')
             .clear()
             .type("1500");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
         cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
             .first()
             .clear()

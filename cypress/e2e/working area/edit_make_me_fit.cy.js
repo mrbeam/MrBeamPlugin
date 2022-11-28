@@ -140,11 +140,16 @@ describe("Laser Job", function () {
             deltaY: -144.1241,
             force: true,
         });
-        cy.get('[data-test="tab-workingarea-rotation"]').clear().type("250.5");
+        cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear()
+            .type("250.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("225.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
             .clear()
             .type("230.3 mm");
         cy.get('[data-test="tab-workingarea-undo"]').click({ force: true });

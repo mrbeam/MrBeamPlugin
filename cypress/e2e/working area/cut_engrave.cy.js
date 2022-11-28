@@ -25,7 +25,7 @@ describe("Cut and engrave", function () {
         cy.get(
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "top" });
-        cy.get('[data-test="quick-shape-done-button"ton"]').click();
+        cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-tab-file"]').click();
         cy.get('[data-test="tab-design-library-image-preview-card"]')
             .filter(':contains("paris2.jpg")')
@@ -40,7 +40,7 @@ describe("Cut and engrave", function () {
             "drop",
             { dataTransfer }
         );
-        cy.get('[data-test="conversion-dialog-intensity-black"ity-black"]')
+        cy.get('[data-test="conversion-dialog-intensity-black"]')
             .clear()
             .type("70");
         cy.get('[data-test="conversion-dialog-intensity-white"]')
@@ -49,7 +49,7 @@ describe("Cut and engrave", function () {
         cy.get('[data-test="conversion-dialog-feedrate-white"]')
             .clear()
             .type("1500");
-        cy.get('[data-test="conversion-dialog-feedrate-black"ate-black"]')
+        cy.get('[data-test="conversion-dialog-feedrate-black"]')
             .clear()
             .type("3000");
         cy.get(

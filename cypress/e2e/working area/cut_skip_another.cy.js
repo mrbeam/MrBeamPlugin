@@ -39,7 +39,7 @@ describe("Cut, cut 2, engrave, skip", function () {
         ).realClick({ position: "left" });
         cy.get('[data-test="quick-text-done-button"]').click();
         cy.get('[data-test="working-area-tab-shape"]').click();
-        cy.get('[data-test="quick-shape-heart"]').click();
+        cy.get('[data-test="quick-shape-Heart"]').click();
         cy.get('[data-test="quick-shape-heart-range"]').realClick({
             position: "right",
         });
@@ -65,7 +65,7 @@ describe("Cut, cut 2, engrave, skip", function () {
             dataTransfer,
         });
         cy.get(".cutting_job_color")
-            .eq(2)
+            .eq(1)
             .trigger("dragstart", { dataTransfer });
         cy.get(
             '[data-bind="visible: show_vector_parameters()"] > .assigned_colors'

@@ -16,7 +16,7 @@
                 </div>
 
                 <div id="material_type" data-bind="css: {active : selected_material() === null}">
-                    <div id="material_burger_menu" class="dropdown pull-right">
+                    <div id="material_burger_menu" data-test="custom-material-materials-manage-menu-burger" class="dropdown pull-right">
                         <a id="materials_manage" data-test="custom-material-materials-manage" href="#"
                            data-bind="click: function(){ $('#material_type').addClass('manage'); }"
                            style="text-decoration: none;">
@@ -220,7 +220,7 @@
                                    href="https://support.mr-beam.org/support/solutions/articles/43000562372-laser-parameters"
                                    target="_blank"
                                    data-test="conversion-dialog-help">
-                                    <i class="icon-external-link"></i> {{ _('Help') }}
+                                    <i class="icon-external-link" data-test="conversion-dialog-help-icon"></i> {{ _('Help') }}
                                 </a>
                                 <a class="show_only_offline" href="#"
                                    onclick="mrbeam.openOfflineKbUrl('43000562372-laser-parameters.pdf')"

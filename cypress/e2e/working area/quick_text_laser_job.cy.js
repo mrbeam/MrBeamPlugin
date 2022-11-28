@@ -99,7 +99,7 @@ describe("Laser Job - quick text", function () {
         cy.wait(3000);
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type("Lasers");
-        cy.get('[data-test="quick-text-modal-text-ccw" ]').click();
+        cy.get('[data-test="quick-text-modal-text-ccw"]').click();
         cy.get('[data-test="quick-text-color-picker-fill"]').click();
         cy.get(
             '[data-test="quick-text-color-picker-fill"] > .track > canvas'

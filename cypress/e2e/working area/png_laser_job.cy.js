@@ -110,9 +110,7 @@ describe("Laser Job", function () {
         cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
             .clear()
             .type("8");
-        cy.get(
-            '[data-test="conversion-dialog-line-distance-input"line-distance-input"]'
-        )
+        cy.get('[data-test="conversion-dialog-line-distance-input"]')
             .clear()
             .type("1");
         cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick(
