@@ -209,9 +209,10 @@ describe("Functionalities", function () {
         cy.get('[data-test="custom-material-materials-manage"]').should(
             "not.be.visible"
         );
-        cy.get('[data-test="custom-material-learn-how"]').click();
+        // cy.get('[data-test="custom-material-learn-how"]').click({force: true});
+        cy.get('#material_burger_menu > div > .show_only_online').click({force: true});
         cy.get('[data-test="custom-material-done"]').click();
-        cy.get('[data-test="laser-job-start-button"]').click();
+        cy.get('[data-test="laser-job-back-button"]').click();
         cy.logout();
     });
 });
