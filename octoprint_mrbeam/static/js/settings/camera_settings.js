@@ -323,15 +323,11 @@ $(function () {
 
         self.cameraSettingsActiveChanged = function(newvalue){
             if (newvalue){
-                // if (isActive){
-                    console.log("camera settings active")
-                    OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
-                // }
+                OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
                 self.imageReloadTimer = setInterval(function () {
                     OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
                 }, 3000);
             }else{
-                console.log("camera settings inactive")
                 if (self.imageReloadTimer){clearInterval(self.imageReloadTimer)}
             }
         }
