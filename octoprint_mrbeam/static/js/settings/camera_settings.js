@@ -26,6 +26,7 @@ $(function () {
         self.cameraSettingsActive = ko.observable(false);
 
         self.isLocked = ko.observable(false);
+        self.imageReloadTimer = undefined
 
         // Lens calibration status needed in this viewModel.
         // TODO make it a part of the mrb state (when we have a state wrapper)
@@ -240,6 +241,7 @@ $(function () {
                         });
                 }
             });
+            self.cameraSettingsActive.subscribe(self.cameraSettingsActiveChanged)
         };
 
         self.onBeforeBinding = function () {
@@ -318,6 +320,21 @@ $(function () {
                 }
             );
         };
+
+        self.cameraSettingsActiveChanged = function(newvalue){
+            if (newvalue){
+                // if (isActive){
+                    console.log("camera settings active")
+                    OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
+                // }
+                self.imageReloadTimer = setInterval(function () {
+                    OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
+                }, 3000);
+            }else{
+                console.log("camera settings inactive")
+                if (self.imageReloadTimer){clearInterval(self.imageReloadTimer)}
+            }
+        }
     }
 
     // view model class, parameters for constructor, container to bind to

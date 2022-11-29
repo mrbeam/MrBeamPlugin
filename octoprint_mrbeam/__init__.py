@@ -2318,8 +2318,11 @@ class MrBeamPlugin(
             "New undistorted image is requested. is_initial_calibration: %s",
             is_initial_calibration,
         )
-        self.lid_handler._photo_creator.is_initial_calibration = is_initial_calibration
-        self.lid_handler._startStopCamera("initial_calibration")
+        if is_initial_calibration:
+            self.lid_handler._photo_creator.is_initial_calibration = (
+                is_initial_calibration
+            )
+            self.lid_handler._startStopCamera("initial_calibration")
         succ = self.lid_handler.takeNewPic()
         if succ:
             resp_text = {
