@@ -323,12 +323,18 @@ $(function () {
 
         self.cameraSettingsActiveChanged = function(newvalue){
             if (newvalue){
-                OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
+                self.forceTakeNewPicture()
                 self.imageReloadTimer = setInterval(function () {
-                    OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
+                    self.forceTakeNewPicture()
                 }, 3000);
             }else{
                 if (self.imageReloadTimer){clearInterval(self.imageReloadTimer)}
+            }
+        }
+
+        self.forceTakeNewPicture = function(){
+            if (self.readyToLaser.lid_fully_open() && !self.readyToLaser.state.interlocksClosed()){
+                OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
             }
         }
     }

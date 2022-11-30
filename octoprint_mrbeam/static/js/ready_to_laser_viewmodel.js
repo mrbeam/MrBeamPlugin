@@ -196,6 +196,15 @@ $(function () {
                 self.fromCurrentData = function (data) {
                     self._fromData(data);
                 };
+
+                self.onDataUpdaterPluginMessage = function (plugin, data) {
+                    if (plugin != "mrbeam") {
+                        return;
+                    }
+                    if ("mrb_state" in data) {
+                        self._fromData(data, "onDataUpdaterPluginMessage");
+                    }
+                }
             } // end if oneButton
         }; // end onStartupComplete
 
