@@ -230,7 +230,7 @@ $(function () {
                 }
             }
             // not_first_run
-            if (restrictions.not_first_run && !CONFIG_FIRST_RUN) {
+            if (!restrictions.not_first_run && CONFIG_FIRST_RUN) {
                 return false;
             }
             return true;
