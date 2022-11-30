@@ -1341,15 +1341,24 @@ class PhotoCreator(object):
                 settings = yaml.safe_load(f)
                 for k in ["calibMarkers", "shutter_speed"]:
                     camera_settings.append(settings.get(k, None))
-            self._logger.debug("lid_handler: Default camera settings loaded from file: {}".format(path))
+            self._logger.debug(
+                "lid_handler: Default camera settings loaded from file: {}".format(path)
+            )
             return camera_settings
-        except(IOError, OSError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
+        except (
+            IOError,
+            OSError,
+            yaml.YAMLError,
+            yaml.reader.ReaderError,
+            AttributeError,
+        ) as e:
             if os.path.isfile(path):
                 # An extra step to insure a smooth experience moving forward
                 os.remove(path)
             self._logger.warn(
                 "lid_handler: File: {} does not exist or invalid, Will try to use legacy backup_path...: {}".format(
-                    path, backup_path)
+                    path, backup_path
+                )
             )
 
         # 2. Load from Backup
@@ -1359,11 +1368,23 @@ class PhotoCreator(object):
                 # No shutter speed info present in this file
                 settings = {k: v[-1] for k, v in settings.items()}
                 camera_settings = [settings, None]
-            self._logger.debug("lid_handler: Fallback camera settings loaded from file: {}".format(backup_path))
+            self._logger.debug(
+                "lid_handler: Fallback camera settings loaded from file: {}".format(
+                    backup_path
+                )
+            )
             return camera_settings
-        except(IOError, OSError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
+        except (
+            IOError,
+            OSError,
+            yaml.YAMLError,
+            yaml.reader.ReaderError,
+            AttributeError,
+        ) as e:
             self._logger.exception(
-                "lid_handler: File: {} does not exist or invalid, Camera Settings Load failed".format(backup_path)
+                "lid_handler: File: {} does not exist or invalid, Camera Settings Load failed".format(
+                    backup_path
+                )
             )
             return [None, None]
 
@@ -1393,9 +1414,16 @@ class PhotoCreator(object):
         try:
             with open(path) as f:
                 settings = yaml.safe_load(f)
-        except (OSError, IOError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
+        except (
+            OSError,
+            IOError,
+            yaml.YAMLError,
+            yaml.reader.ReaderError,
+            AttributeError,
+        ) as e:
             self._logger.warning(
-                "lid_handler: file %s does not exist or could not be read. Overwriting..." % path
+                "lid_handler: file %s does not exist or could not be read. Overwriting..."
+                % path
             )
 
         settings = dict_merge(
@@ -1418,7 +1446,7 @@ class PhotoCreator(object):
             )
 
     def reset_shutter_speed(self):
-        self._logger.error("shutter speed reseteds")
+        self._logger.info("reset shutter speed")
         self.save_camera_settings(
             markers=self.last_markers, shutter_speed=DEFAULT_SHUTTER_SPEED
         )
