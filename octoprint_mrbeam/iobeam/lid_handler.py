@@ -21,7 +21,7 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img
+from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img, DEFAULT_SHUTTER_SPEED
 
 # from octoprint_mrbeam.camera
 from octoprint_mrbeam.camera.definitions import (
@@ -117,6 +117,7 @@ class LidHandler(object):
         self._photo_creator = PhotoCreator(
             self._plugin, self._plugin_manager, self.imagePath, debug=False
         )
+        self._photo_creator.reset_shutter_speed()
         self.refresh_pic_settings = (
             Event()
         )  # TODO placeholder for when we delete PhotoCreator
@@ -924,7 +925,7 @@ class PhotoCreator(object):
             if self.stopping:
                 break  # check if still active...
 
-            cam.compensate_shutter_speed(latest)  # Change exposure if needed
+            cam.compensate_shutter_speed()  # Change exposure if needed
             curr_shutter_speed = cam.exposure_speed
             curr_brightness = copy.deepcopy(cam.worker.avg_roi_brightness)
 
@@ -1415,6 +1416,12 @@ class PhotoCreator(object):
             self._logger.warning(
                 "Data that I tried writing to %s :\n%s\n%s" % (path, settings, e)
             )
+
+    def reset_shutter_speed(self):
+        self._logger.error("shutter speed reseteds")
+        self.save_camera_settings(
+            markers=self.last_markers, shutter_speed=DEFAULT_SHUTTER_SPEED
+        )
 
 
 def blank_session_details():
