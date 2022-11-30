@@ -270,7 +270,6 @@ class LidHandler(object):
                     self._client_opened
                     and not self._is_slicing
                     and not self._interlock_closed
-                    and not self._printer.is_locked()
                 ):
                     self._logger.info("Camera starting" + status)
                     self._start_photo_worker()
