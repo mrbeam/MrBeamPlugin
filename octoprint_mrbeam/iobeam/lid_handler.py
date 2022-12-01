@@ -259,7 +259,10 @@ class LidHandler(object):
             ):
                 self._logger.info("Camera stopping" + status)
                 self._end_photo_worker()
-            elif event in ["initial_calibration", MrBeamEvents.LENS_CALIB_START]:
+            elif event in [
+                MrBeamEvents.INITIAL_CALIBRATION,
+                MrBeamEvents.LENS_CALIB_START,
+            ]:
                 # See self._photo_creator.is_initial_calibration if it used from /plugin/mrbeam/calibration
                 self._logger.info(
                     "Camera starting: initial_calibration. event: {}".format(event)
@@ -271,7 +274,6 @@ class LidHandler(object):
                     self._client_opened
                     and not self._is_slicing
                     and not self._interlock_closed
-                    and not self._printer.is_locked()
                 ):
                     self._logger.info("Camera starting" + status)
                     self._start_photo_worker()
