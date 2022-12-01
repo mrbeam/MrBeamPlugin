@@ -2324,7 +2324,7 @@ class MrBeamPlugin(
             self.lid_handler._photo_creator.is_initial_calibration = (
                 is_initial_calibration
             )
-            self.lid_handler._startStopCamera("initial_calibration")
+            self.lid_handler._startStopCamera(MrBeamEvents.INITIAL_CALIBRATION)
         succ = self.lid_handler.takeNewPic()
         if succ:
             resp_text = {
