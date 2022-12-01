@@ -21,7 +21,7 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img
+from octoprint_mrbeam.camera import gaussBlurDiff, save_debug_img, DEFAULT_SHUTTER_SPEED
 
 # from octoprint_mrbeam.camera
 from octoprint_mrbeam.camera.definitions import (
@@ -117,6 +117,7 @@ class LidHandler(object):
         self._photo_creator = PhotoCreator(
             self._plugin, self._plugin_manager, self.imagePath, debug=False
         )
+        self._photo_creator.reset_shutter_speed()
         self.refresh_pic_settings = (
             Event()
         )  # TODO placeholder for when we delete PhotoCreator
@@ -924,7 +925,7 @@ class PhotoCreator(object):
             if self.stopping:
                 break  # check if still active...
 
-            cam.compensate_shutter_speed(latest)  # Change exposure if needed
+            cam.compensate_shutter_speed()  # Change exposure if needed
             curr_shutter_speed = cam.exposure_speed
             curr_brightness = copy.deepcopy(cam.worker.avg_roi_brightness)
 
@@ -1340,15 +1341,24 @@ class PhotoCreator(object):
                 settings = yaml.safe_load(f)
                 for k in ["calibMarkers", "shutter_speed"]:
                     camera_settings.append(settings.get(k, None))
-            self._logger.debug("lid_handler: Default camera settings loaded from file: {}".format(path))
+            self._logger.debug(
+                "lid_handler: Default camera settings loaded from file: {}".format(path)
+            )
             return camera_settings
-        except(IOError, OSError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
+        except (
+            IOError,
+            OSError,
+            yaml.YAMLError,
+            yaml.reader.ReaderError,
+            AttributeError,
+        ) as e:
             if os.path.isfile(path):
                 # An extra step to insure a smooth experience moving forward
                 os.remove(path)
             self._logger.warn(
                 "lid_handler: File: {} does not exist or invalid, Will try to use legacy backup_path...: {}".format(
-                    path, backup_path)
+                    path, backup_path
+                )
             )
 
         # 2. Load from Backup
@@ -1358,11 +1368,23 @@ class PhotoCreator(object):
                 # No shutter speed info present in this file
                 settings = {k: v[-1] for k, v in settings.items()}
                 camera_settings = [settings, None]
-            self._logger.debug("lid_handler: Fallback camera settings loaded from file: {}".format(backup_path))
+            self._logger.debug(
+                "lid_handler: Fallback camera settings loaded from file: {}".format(
+                    backup_path
+                )
+            )
             return camera_settings
-        except(IOError, OSError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
+        except (
+            IOError,
+            OSError,
+            yaml.YAMLError,
+            yaml.reader.ReaderError,
+            AttributeError,
+        ) as e:
             self._logger.exception(
-                "lid_handler: File: {} does not exist or invalid, Camera Settings Load failed".format(backup_path)
+                "lid_handler: File: {} does not exist or invalid, Camera Settings Load failed".format(
+                    backup_path
+                )
             )
             return [None, None]
 
@@ -1392,9 +1414,16 @@ class PhotoCreator(object):
         try:
             with open(path) as f:
                 settings = yaml.safe_load(f)
-        except (OSError, IOError, yaml.YAMLError, yaml.reader.ReaderError, AttributeError) as e:
+        except (
+            OSError,
+            IOError,
+            yaml.YAMLError,
+            yaml.reader.ReaderError,
+            AttributeError,
+        ) as e:
             self._logger.warning(
-                "lid_handler: file %s does not exist or could not be read. Overwriting..." % path
+                "lid_handler: file %s does not exist or could not be read. Overwriting..."
+                % path
             )
 
         settings = dict_merge(
@@ -1415,6 +1444,12 @@ class PhotoCreator(object):
             self._logger.warning(
                 "Data that I tried writing to %s :\n%s\n%s" % (path, settings, e)
             )
+
+    def reset_shutter_speed(self):
+        self._logger.info("reset shutter speed")
+        self.save_camera_settings(
+            markers=self.last_markers, shutter_speed=DEFAULT_SHUTTER_SPEED
+        )
 
 
 def blank_session_details():
