@@ -14,12 +14,12 @@ describe("Laser Job", function () {
 
     it("Add svg file", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-design-library-svg-preview-card"]').then(
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').then(
             ($elem) => {
                 if (
                     $elem
                         .find(
-                            '[data-test="tab-design-library-svg-preview-card"]'
+                            '[data-test="tab-designlib-svg-preview-card"]'
                         )
                         .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
                         .length
@@ -30,13 +30,13 @@ describe("Laser Job", function () {
                         filepath
                     );
                     cy.wait(5000);
-                    cy.get('[data-test="tab-design-library-svg-preview-card"]')
+                    cy.get('[data-test="tab-designlib-svg-preview-card"]')
                         .contains("Focus_Tool_Mr_Beam_Laser_1.svg")
                         .should("to.exist");
                 }
             }
         );
-        cy.get('[data-test="tab-design-library-svg-preview-card"]')
+        cy.get('[data-test="tab-designlib-svg-preview-card"]')
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
@@ -95,7 +95,7 @@ describe("Laser Job", function () {
         cy.reload();
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
+        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(5000);
@@ -105,7 +105,7 @@ describe("Laser Job", function () {
 
     it("Add svg file", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-design-library-svg-preview-card"]')
+        cy.get('[data-test="tab-designlib-svg-preview-card"]')
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
@@ -134,7 +134,7 @@ describe("Laser Job", function () {
 
     it("Add svg file", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-design-library-svg-preview-card"]')
+        cy.get('[data-test="tab-designlib-svg-preview-card"]')
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);
@@ -175,7 +175,7 @@ describe("Laser Job", function () {
 
     it("Add svg file  ", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-design-library-svg-preview-card"]')
+        cy.get('[data-test="tab-designlib-svg-preview-card"]')
             .filter(':contains("Focus_Tool_Mr_Beam_Laser_1.svg")')
             .click();
         cy.wait(3000);

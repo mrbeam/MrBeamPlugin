@@ -15,10 +15,10 @@ describe("Laser Job", function () {
 
     it("Add design dxf", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designbib-files-list"]').then(($elem) => {
+        cy.get('[data-test="tab-designlib-files-list"]').then(($elem) => {
             if (
                 $elem
-                    .find('[data-test="tab-designbib-files-list"]')
+                    .find('[data-test="tab-designlib-files-list"]')
                     .filter(':contains("paris1.dxf")').length
             ) {
             } else {
@@ -27,12 +27,12 @@ describe("Laser Job", function () {
                     filepath
                 );
                 cy.wait(5000);
-                cy.get('[data-test="tab-designbib-files-list"]')
+                cy.get('[data-test="tab-designlib-files-list"]')
                     .contains("paris1.dxf")
                     .should("to.exist");
             }
         });
-        cy.get('[data-test="tab-design-library-dxf-preview-card"]')
+        cy.get('[data-test="tab-designlib-dxf-preview-card"]')
             // .filter(':contains("paris1.dxf")')
             .click();
         cy.wait(3000);
@@ -98,7 +98,7 @@ describe("Laser Job", function () {
         cy.reload();
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
+        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");

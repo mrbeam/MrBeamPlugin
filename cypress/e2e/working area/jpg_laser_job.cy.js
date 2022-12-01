@@ -13,10 +13,10 @@ describe("Laser Job", function () {
 
     it("Add design", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designbib-files-list"]').then(($elem) => {
+        cy.get('[data-test="tab-designlib-files-list"]').then(($elem) => {
             if (
                 $elem
-                    .find('[data-test="tab-design-library-image-preview-card"]')
+                    .find('[data-test="tab-designlib-image-preview-card"]')
                     .filter(':contains("paris2.jpg")').length
             ) {
             } else {
@@ -25,12 +25,12 @@ describe("Laser Job", function () {
                     filepath
                 );
                 cy.wait(5000);
-                cy.get('[data-test="tab-design-library-image-preview-card"]')
+                cy.get('[data-test="tab-designlib-image-preview-card"]')
                     .contains("paris2.jpg")
                     .should("to.exist");
             }
         });
-        cy.get('[data-test="tab-design-library-image-preview-card"]')
+        cy.get('[data-test="tab-designlib-image-preview-card"]')
             .filter(':contains("paris2.jpg")')
             .click();
         cy.wait(3000);
@@ -123,7 +123,7 @@ describe("Laser Job", function () {
         cy.reload();
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
+        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");

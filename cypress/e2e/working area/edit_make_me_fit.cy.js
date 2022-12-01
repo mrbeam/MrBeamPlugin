@@ -13,12 +13,12 @@ describe("Laser Job", function () {
 
     it("Make me fit", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-design-library-svg-preview-card"]').then(
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').then(
             ($elem) => {
                 if (
                     $elem
                         .find(
-                            '[data-test="tab-design-library-svg-preview-card"]'
+                            '[data-test="tab-designlib-svg-preview-card"]'
                         )
                         .filter(':contains("black_cat.svg")').length
                 ) {
@@ -28,13 +28,13 @@ describe("Laser Job", function () {
                         filepath
                     );
                     cy.wait(5000);
-                    cy.get('[data-test="tab-design-library-svg-preview-card"]')
+                    cy.get('[data-test="tab-designlib-svg-preview-card"]')
                         .contains("black_cat.svg")
                         .should("to.exist");
                 }
             }
         );
-        cy.get('[data-test="tab-design-library-svg-preview-card"]')
+        cy.get('[data-test="tab-designlib-svg-preview-card"]')
             .filter(':contains("black_cat.svg")')
             .click();
         cy.wait(3000);
@@ -89,7 +89,7 @@ describe("Laser Job", function () {
             .should("to.exist");
         cy.wait(2000);
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-design-library-svg-preview-card"]')
+        cy.get('[data-test="tab-designlib-svg-preview-card"]')
             .first()
             .click();
         cy.get('[data-test="working-area-tab-text"]').click();
@@ -106,12 +106,12 @@ describe("Laser Job", function () {
 
     it("reset and remove", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-design-library-svg-preview-card"]').then(
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').then(
             ($elem) => {
                 if (
                     $elem
                         .find(
-                            '[data-test="tab-design-library-image-preview-card"]'
+                            '[data-test="tab-designlib-image-preview-card"]'
                         )
                         .filter(':contains("paris2.jpg")').length
                 ) {
@@ -122,14 +122,14 @@ describe("Laser Job", function () {
                     );
                     cy.wait(5000);
                     cy.get(
-                        '[data-test="tab-design-library-image-preview-card"]'
+                        '[data-test="tab-designlib-image-preview-card"]'
                     )
                         .contains("paris2.jpg")
                         .should("to.exist");
                 }
             }
         );
-        cy.get('[data-test="tab-design-library-image-preview-card"]')
+        cy.get('[data-test="tab-designlib-image-preview-card"]')
             .filter(':contains("paris2.jpg")')
             .click();
         cy.wait(3000);

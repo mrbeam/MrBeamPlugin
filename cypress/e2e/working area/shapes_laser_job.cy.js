@@ -87,7 +87,7 @@ describe("Laser Job - shapes", function () {
         cy.reload();
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
+        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
@@ -163,7 +163,7 @@ describe("Laser Job - shapes", function () {
         cy.reload();
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
+        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
@@ -243,7 +243,7 @@ describe("Laser Job - shapes", function () {
         cy.reload();
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
+        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
@@ -326,7 +326,7 @@ describe("Laser Job - shapes", function () {
         cy.reload();
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
+        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");
@@ -404,7 +404,7 @@ describe("Laser Job - shapes", function () {
         cy.reload();
         cy.wait(10000);
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designbib-filter-gcode-radio"]').click();
+        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.get(".alert-success").should("to.exist", "Preparation done");

@@ -57,7 +57,7 @@ Cypress.Commands.add("ignoreUpdate", () => {
         } else {
             cy.get(".ui-pnotify-container")
                 .filter(':contains("Update Available")')
-                .should("not.visible");
+                .should("not.exist");
         }
     });
 });
@@ -189,4 +189,13 @@ Cypress.Commands.add("logout", () => {
     cy.get('[id="logout_button"]').click({ force: true });
 });
 
+Cypress.Commands.add('assertValueCopiedToClipboard', value => {
+    cy.window().then(win => {
+      win.navigator.clipboard.readText().then(text => {
+        expect(text).to.eq(value)
+      })
+    })
+  })
+
 import "cypress-file-upload";
+import 'cypress-if'
