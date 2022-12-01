@@ -18,11 +18,6 @@ G4P0.5
 M5
 ; end speedup cooling fan
 
-; home the device
-$H
-G90
-G21
-
 ; gcode_before_job - color: #000000
 ; mrbeam_compressor: no compressor
 
@@ -44,6 +39,23 @@ G1X5Y-5
 G1X0Y20
 M5
 
+; marker top left
+G90
+G0X%(xmin)sY%(ymax)s
+G91
+F%(feedrate)s
+M3S0
+G4P0
+M3S%(intensity)s
+
+G1X20Y0
+G1X-5Y-5
+G1X10Y-10
+G1X-10Y-10
+G1X-10Y10
+G1X-5Y-5
+G1X0Y20
+M5
 
 ; marker bottom left
 G90
