@@ -42,7 +42,7 @@ from ._version import get_versions
 
 __version__ = get_versions()["version"]
 if isinstance(__version__, unicode):
-    __version__ = unicodedata.normalize("NFKD", __version__).encode("ascii", "ignore")
+    __version__ = unicodedata.normalize('NFKD', __version__).encode('ascii', 'ignore')
 
 del get_versions
 
@@ -161,6 +161,7 @@ class MrBeamPlugin(
     TIME_NTP_SYNC_CHECK_FAST_COUNT = 20
     TIME_NTP_SYNC_CHECK_INTERVAL_FAST = 10.0
     TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
+
 
     def __init__(self):
         self.mrbeam_plugin_initialized = False
@@ -861,12 +862,10 @@ class MrBeamPlugin(
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
-                settings_model=SettingsService(
-                    self._logger, DocumentService(self._logger)
-                ).get_template_settings_model(self.get_model_id()),
-                burger_menu_model=BurgerMenuService(
-                    self._logger, DocumentService(self._logger)
-                ).get_burger_menu_model(self.get_model_id()),
+                settings_model=SettingsService(self._logger, DocumentService(self._logger)).get_template_settings_model(
+                    self.get_model_id()),
+                burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
+                    self.get_model_id()),
                 isDevelop=self.is_dev_env(),
             )
         )
@@ -1310,11 +1309,12 @@ class MrBeamPlugin(
     # simpleApiCommand: compare_pep440_versions;
     def handle_pep440_comparison_result(self, data):
         try:
-            result = compare_pep440_versions(data["v1"], data["v2"], data["operator"])
+            result = compare_pep440_versions(data['v1'], data['v2'], data['operator'])
             return make_response(json.dumps(result), 200)
         except KeyError as e:
             self._logger.error("Key is missing in data: %s", e)
             return make_response(json.dumps(None), 500)
+
 
     # ~~ helpers
 
@@ -1948,7 +1948,7 @@ class MrBeamPlugin(
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
-            compare_pep440_versions=[],
+            compare_pep440_versions=[]
         )
 
     def on_api_command(self, command, data):
@@ -2137,17 +2137,17 @@ class MrBeamPlugin(
                 pass
             msg = payload.get("msg", "")
             if func and func is not "null":
-                msg = "{} ({})".format(msg, func)
+                msg = u"{} ({})".format(msg, func)
             else:
-                msg = "{}".format(msg)
+                msg = u"{}".format(msg)
 
             self._frontend_logger.log(
                 level,
-                "%s - %s - %s %s",
+                u"%s - %s - %s %s",
                 browser_time,
                 f_level,
                 msg,
-                "\n  " + ("\n   ".join(stack)) if stack else "",
+                "\n  " + (u"\n   ".join(stack)) if stack else "",
             )
 
             if level >= logging.WARNING:
@@ -2324,7 +2324,7 @@ class MrBeamPlugin(
             self.lid_handler._photo_creator.is_initial_calibration = (
                 is_initial_calibration
             )
-            self.lid_handler._startStopCamera(MrBeamEvents.INITIAL_CALIBRATION)
+            self.lid_handler._startStopCamera("initial_calibration")
         succ = self.lid_handler.takeNewPic()
         if succ:
             resp_text = {
