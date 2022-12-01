@@ -3429,6 +3429,9 @@ button#terminal-send {
 /* Hard refresh overlay */
 
 /* Corner Calibration */
+.corner_calibration {
+  max-width: 800px;
+}
 .corner_calibration .focus_reminder{
   width: 250px;
 }
