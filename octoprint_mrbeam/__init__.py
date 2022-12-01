@@ -1946,7 +1946,7 @@ class MrBeamPlugin(
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
-            compare_pep440_versions=[]
+            compare_pep440_versions=[],
         )
 
     def on_api_command(self, command, data):
