@@ -3428,6 +3428,8 @@ button#terminal-send {
 
 /* Hard refresh overlay */
 
+/* Material Store */
+
 #material_store_content #loading_spinner_wrapper {
   position: absolute;
   top: 0px;
@@ -3442,6 +3444,10 @@ button#terminal-send {
   left: 50%;
   top: 50%;
   color: #ffffff;
+}
+#material_store_content #loading_spinner i {
+  font-weight: bold;
+  font-size: 4em;
 }
 
 #material_store_content #material_store_iframe {
@@ -3491,3 +3497,5 @@ button#terminal-send {
   .btn.refresh-connection {
   margin-top: 45px;
 }
+
+/* Material Store */

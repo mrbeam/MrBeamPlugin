@@ -22,7 +22,7 @@ class AboutModel:
         return 'About(support_documents=%s)' % (','.join([repr(document) for document in self.support_documents]))
 
 
-class MaterialStore:
+class MaterialStoreModel:
     """
         Data object containing information corresponding to the material store section to be used on the jinja2 templates
         """

@@ -12,7 +12,9 @@ try:
 except ImportError:
     MrBeamDocUtils = EmptyImport("from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils")
 
-from octoprint_mrbeam.model.settings_model import SettingsModel, AboutModel, MaterialStore
+from octoprint_mrbeam.model.settings_model import SettingsModel, AboutModel, MaterialStoreModel
+
+MATERIAL_STORE_CONFIG_URL = "https://raw.githubusercontent.com/mrbeam/material-store-settings/master/config.yaml"
 
 
 def _empty_settings_model():
@@ -75,10 +77,9 @@ class SettingsService:
         return settings_model
 
     def _get_material_store_settings(self, environment):
-        material_store_config_url = "https://raw.githubusercontent.com/mrbeam/material-store-settings/master/config.yaml"
-        material_store_settings = MaterialStore()
+        material_store_settings = MaterialStoreModel()
         try:
-            response = requests.get(material_store_config_url, allow_redirects=False)
+            response = requests.get(MATERIAL_STORE_CONFIG_URL, allow_redirects=False)
         except requests.exceptions.RequestException as e:
             self._logger.error('Material store settings couldn\'t be retrieved. Exception %s', e)
         else:
@@ -95,7 +96,7 @@ class SettingsService:
         return material_store_settings
 
     def _get_material_store_config_from_yml(self, material_store_config_yml, environment):
-        material_store_config = MaterialStore()
+        material_store_config = MaterialStoreModel()
         if self._is_valid_material_store_config(environment, material_store_config_yml):
             env_config_yml = material_store_config_yml['material-store']['environment'][environment.value.lower()]
             material_store_config.enabled = env_config_yml['enabled']

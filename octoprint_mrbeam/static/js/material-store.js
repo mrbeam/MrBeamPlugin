@@ -10,11 +10,6 @@ $(function () {
         window.mrbeam.viewModels["materialStoreViewModel"] = self;
         self.material_store_iframe_src = "";
 
-        self.loginState = params[0];
-        self.navigation = params[1];
-        self.analytics = params[2];
-        self.settings = params[3];
-
         self.initialiseStore = function (url) {
             if (typeof url === "string" && url.trim().length !== 0) {
                 if (url !== self.material_store_iframe_src) {
@@ -92,12 +87,7 @@ $(function () {
 
     OCTOPRINT_VIEWMODELS.push({
         construct: MaterialStoreViewModel,
-        dependencies: [
-            "loginStateViewModel",
-            "navigationViewModel",
-            "analyticsViewModel",
-            "settingsViewModel",
-        ],
+        dependencies: [],
         elements: ["#material_store_content"],
     });
 });
