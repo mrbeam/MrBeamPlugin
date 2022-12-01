@@ -281,10 +281,10 @@ $(function () {
                 }, 1000);
             }
 
-            if (!payload || !MRBEAM.STATE_KEY in payload || !payload[MRBEAM.STATE_KEY]) {
+            if (!payload || !(MRBEAM.STATE_KEY in payload) || !payload[MRBEAM.STATE_KEY]) {
                 return;
             }
-            var mrb_state = payload[MRBEAM.STATE_KEY];
+            let mrb_state = payload[MRBEAM.STATE_KEY];
             if (mrb_state) {
                 // TODO: All the handling of mrb_state data should be moved into a dedicated view model
                 window.mrbeam.mrb_state = mrb_state;
