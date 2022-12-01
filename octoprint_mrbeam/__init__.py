@@ -1655,6 +1655,24 @@ class MrBeamPlugin(
             dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL)
         )
 
+    def generateCalibrationMarkersGcode(self):
+        """Used from the calibration screen to engrave the calibration markers"""
+        profile = self.laserCutterProfileManager.get_current_or_default()
+        cm = CalibrationMarker(
+            str(profile["volume"]["width"]), str(profile["volume"]["depth"])
+        )
+        gcode = cm.getGCode(70, 1500)
+
+        filename = "CalibrationMarkers.gco"
+
+        self.mrb_file_manager.add_file_to_design_library(
+            file_name=filename, content=gcode
+        )
+
+        return jsonify(
+            dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL)
+        )
+
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
         """
         Defines the maximum size that is accepted for upload.
@@ -1945,8 +1963,9 @@ class MrBeamPlugin(
             camera_run_lens_calibration=[],
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
+            generate_calibration_markers_gcode=[],
             cancel_final_extraction=[],
-            compare_pep440_versions=[]
+            compare_pep440_versions=[],
         )
 
     def on_api_command(self, command, data):
@@ -2071,6 +2090,10 @@ class MrBeamPlugin(
         elif command == "generate_calibration_markers_svg":
             return (
                 self.generateCalibrationMarkersSvg()
+            )  # TODO move this func to other file
+        elif command == "generate_calibration_markers_gcode":
+            return (
+                self.generateCalibrationMarkersGcode()
             )  # TODO move this func to other file
         elif command == "cancel_final_extraction":
             self.dust_manager.set_user_abort_final_extraction()

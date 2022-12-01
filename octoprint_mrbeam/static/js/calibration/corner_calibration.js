@@ -339,25 +339,25 @@ $(function () {
 
         self.engraveMarkers = function () {
             let success_callback = function (data) {
-                console.log("generated_markers_svg", data);
+                console.log("generated_markers_gco", data);
                 let fileObj = {
                     date: Math.floor(Date.now() / 1000),
-                    name: "CalibrationMarkers.svg",
+                    name: "CalibrationMarkers.gco",
                     origin: "local",
-                    path: "CalibrationMarkers.svg",
+                    path: "CalibrationMarkers.gco",
                     refs: {
                         download:
-                            "/downloads/files/local/CalibrationMarkers.svg",
-                        resource: "/api/files/local/CalibrationMarkers.svg",
+                            "/downloads/files/local/CalibrationMarkers.gco",
+                        resource: "/api/files/local/CalibrationMarkers.gco",
                     },
                     size: 594,
-                    type: "model",
-                    typePath: ["model", "svg"],
+                    type: "machinecode",
+                    typePath: ["machinecode", "gcode"],
                 };
                 //clear workingArea from previous designs
                 self.workingArea.clear();
                 // put it on the working area
-                self.workingArea.placeSVG(fileObj, function () {
+                self.workingArea.placeGcode(fileObj, function () {
                     // start conversion
                     self.conversion.show_conversion_dialog();
                 });
@@ -381,7 +381,7 @@ $(function () {
             };
 
             self.calibration.simpleApiCommand(
-                "generate_calibration_markers_svg",
+                "generate_calibration_markers_gcode",
                 {},
                 success_callback,
                 error_callback,

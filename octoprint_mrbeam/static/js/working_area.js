@@ -563,7 +563,7 @@ $(function () {
             return p.length;
         };
 
-        self.placeGcode = function (file) {
+        self.placeGcode = function (file, callback=undefined) {
             var start_ts = Date.now();
             var previewId = self.getEntryId();
 
@@ -580,6 +580,7 @@ $(function () {
             snap.select("#placedGcodes").append(g);
             file.previewId = previewId;
             self._listPlacedItem(file);
+            if (typeof callback === "function") callback();
             //			}
 
             self.loadGcode(file, function (gcode) {
