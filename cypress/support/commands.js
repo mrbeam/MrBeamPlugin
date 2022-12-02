@@ -1,5 +1,6 @@
 require("cypress-iframe");
 require("@4tw/cypress-drag-drop");
+require('cy-verify-downloads').addCustomCommand();
 
 Cypress.on("uncaught:exception", (err, runnable) => {
     // returning false here prevents Cypress from
@@ -10,8 +11,8 @@ Cypress.on("uncaught:exception", (err, runnable) => {
 Cypress.Commands.add("loginDesignStore", (email, password, code) => {
     cy.loginLaser(email, password);
     cy.laserSafety();
-    cy.get('[id="burger_menu_link"]').click();
-    cy.get('[id="settings_tab_btn"]').click({ force: true });
+    cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
+    cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({ force: true });
     cy.get('[id="settings_plugin_mrbeam_dev_design_store_link"]').click();
     cy.get('[id="settings-mrbeam-design-store-environment"]').select("dev");
     cy.get('[data-test="mrbeam-ui-index-design-store"]').click();
@@ -97,7 +98,6 @@ Cypress.Commands.add("loginStore", (code) => {
 Cypress.Commands.add("loginLibrary", (email, password) => {
     cy.loginLaser(email, password);
     cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-    cy.get('[id="workingarea"]').should("to.exist");
 });
 
 Cypress.Commands.add("runWelcomeWizardIfPresent", (email, password) => {

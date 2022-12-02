@@ -12,6 +12,7 @@ module.exports = defineConfig({
     chromeWebSecurity: false,
     numTestsKeptInMemory: 0,
     e2e: {
+        experimentalStudio: true,
         experimentalRunAllSpecs: true,
         setupNodeEvents(on, config) {
             return require("./cypress/plugins/index.js")(on, config);

@@ -13,14 +13,14 @@ describe("Library design", function () {
     });
 
     it("Switch sort", function () {
-        let design1 =[]; 
-        cy.get('.title_shortened').each((elements) => {
+        let design1 = [];
+        cy.get(".title_shortened").each((elements) => {
             design1.push(elements.text());
         });
-        cy.wrap(design1).should('to.exist')
+        cy.wrap(design1).should("to.exist");
         cy.get('[data-test="tab-designlib-sort-name-radio"]').click();
-        let design =[]; 
-        cy.get('.title_shortened').each((elements) => {
+        let design = [];
+        cy.get(".title_shortened").each((elements) => {
             design.push(elements.text());
         });
         cy.wrap(design).should("not.equal", design1.sort());
@@ -241,18 +241,29 @@ describe("Library design", function () {
     });
 
     it("Download designs by burger menu", function () {
-        cy.intercept(
-            "GET",
-            Cypress.config().baseUrl + "/downloads/files/local/Test_plan_1.svg"
-        ).as("downloadFile");
         cy.get('[data-test="tab-designlib-svg-preview-card"]')
             .first()
             .find('[data-test="tab-designlib-option-file"]')
-            .click();
-        cy.wait(1000);
-        cy.get('[data-test="tab-designlib-download-file"]')
-            .filter(":visible")
-            .click();
-        cy.wait("@downloadFile");
+            .click()
+            .invoke("prop", "innerText")
+            .then((downloadFile) => {
+                cy.window()
+                    .document()
+                    .then(function (doc) {
+                        doc.addEventListener("click", () => {
+                            setTimeout(function () {
+                                doc.location.reload();
+                            }, 5000);
+                        });
+                        cy.get('[data-test="tab-designlib-svg-preview-card"]')
+                            .filter(`:contains(${downloadFile})`)
+                            .find('[data-test="tab-designlib-option-file"]');
+                        cy.wait(1000);
+                        cy.get('[data-test="tab-designlib-download-file"]')
+                            .filter(":visible")
+                            .click();
+                        cy.verifyDownload(downloadFile);
+                    });
+            });
     });
 });
