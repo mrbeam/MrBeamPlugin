@@ -3,7 +3,7 @@
 
 <div class="hide" id="software_channel_selector">
     <h3 style="display: inline">{{ _('Software Channel') }}:</h3>
-    <select id="software_channel_select" data-bind="value: selector, options: available_channels, optionsText: 'name', optionsValue: 'id', event: { change: selection_changed }"></select>
+    <select id="software_channel_select" data-test="software-channel-select-bata-stable" data-bind="value: selector, options: available_channels, optionsText: 'name', optionsValue: 'id', event: { change: selection_changed }"></select>
     <div id="settings_software_channel_descriptions" class="row">
         <div class="control-group span6 ">
             <h5><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>{{ _('Stable Channel') }}: </h5>

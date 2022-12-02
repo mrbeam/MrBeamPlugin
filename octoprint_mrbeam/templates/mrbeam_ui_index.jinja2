@@ -83,13 +83,13 @@
 					<!-- /ko -->
 
 					<li id="burger_menu" class="dropdown mrb_menu">
-						<a href="#" id="burger_menu_link" class="dropdown-toggle" data-toggle="dropdown">
+						<a href="#" id="burger_menu_link" data-test="mrbeam-ui-index-menu-burger" class="dropdown-toggle" data-toggle="dropdown">
 							<i class="icon-reorder icon-large"></i>
 {#							<i class="icon-cog"></i>#}
 						  <b class="caret"></b>
 						</a>
 						<ul class="dropdown-menu">
-							<li><a href="#settings" data-toggle="tab" id="settings_tab_btn"><i class="icon-wrench"></i> {{ _('Settings') }}</a></li>
+							<li><a href="#settings" data-toggle="tab" id="settings_tab_btn" data-test="mrbeam-ui-index-tab-settings"><i class="icon-wrench"></i> {{ _('Settings') }}</a></li>
 							<li class="divider"></li>
                             <li><a href="#" onclick="$('#lasersafety_overlay').modal('show')" id="lasersafety_menu_item"><i class="icon-warning-sign"></i> {{ _('Laser Safety') }}</a></li>
 							<li class="divider fullscreen"></li>
