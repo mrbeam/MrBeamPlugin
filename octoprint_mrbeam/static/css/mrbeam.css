@@ -2987,7 +2987,7 @@ hides the force update buttons
   display: none !important;
 }
 
-/*MRB Menus*/
+/* MRB Menus */
 
 .mrb_menu ul.dropdown-menu,
 #navbar_login ul.dropdown-menu,
@@ -3111,9 +3111,9 @@ hides the force update buttons
   margin-bottom: 1px;
 }
 
-/*MRB Menus*/
+/* MRB Menus */
 
-/*App font family*/
+/* App font family */
 
 body,
 input,
@@ -3126,9 +3126,9 @@ div.hopscotch-bubble h3 {
   font-family: "RobotoFont", sans-serif;
 }
 
-/*App font family*/
+/* App font family */
 
-/*Setting buttons*/
+/* Setting buttons */
 
 #settings_plugin_softwareupdate button.btn.btn-primary.btn-block.sticky-footer {
   position: inherit;
@@ -3142,7 +3142,7 @@ div.hopscotch-bubble h3 {
   text-align: right;
 }
 
-/*Setting buttons*/
+/* Setting buttons */
 
 /*Working Area Scrolling*/
 
@@ -3155,9 +3155,9 @@ div.hopscotch-bubble h3 {
   height: 100%;
 }
 
-/*Working Area Scrolling*/
+/* Working Area Scrolling */
 
-/*Scrollbar styling*/
+/* Scrollbar styling */
 
 /* width */
 ::-webkit-scrollbar {
@@ -3179,9 +3179,9 @@ div.hopscotch-bubble h3 {
   background: #555;
 }
 
-/*Scrollbar styling*/
+/* Scrollbar styling */
 
-/*Pnotify styling*/
+/* Pnotify styling */
 
 .ui-pnotify-container.ui-pnotify-shadow {
   color: #383e42;
@@ -3224,9 +3224,9 @@ h4.ui-pnotify-title {
   background-color: #ff8686;
 }
 
-/*Pnotify styling*/
+/* Pnotify styling */
 
-/*Terminal button*/
+/* Terminal button */
 
 button#terminal-send {
   height: 30px;
@@ -3235,9 +3235,9 @@ button#terminal-send {
   float: right;
 }
 
-/*Terminal button*/
+/* Terminal button */
 
-/*FreshDesk button*/
+/* FreshDesk button */
 
 .freshwidget-theme {
   text-shadow: rgba(0, 0, 0, 0.2), -1px, -1px, 1px;
@@ -3319,17 +3319,17 @@ button#terminal-send {
   animation: slideupleft 0.3s ease !important;
 }
 
-/*FreshDesk button*/
+/* FreshDesk button */
 
-/*User Settings API Key button*/
+/* User Settings API Key button */
 
 #usersettings_access a.btn.add-on {
   border-radius: 6px;
 }
 
-/*User Settings API Key button*/
+/* User Settings API Key button */
 
-/*Design Store*/
+/* Design Store */
 
 #designstore_tab_btn .red-dot {
   height: 5px;
@@ -3401,12 +3401,14 @@ button#terminal-send {
   margin-top: 45px;
 }
 
-/*Design Store*/
+/* Design Store */
 
-/*Support Standalone*/
+/* Support Standalone */
+
 #support_overlay > div.modal-body.scrollable > table {
   margin: 20px auto;
 }
+
 /* Support Standalone */
 
 /* Hard refresh overlay */
@@ -3499,3 +3501,14 @@ button#terminal-send {
 }
 
 /* Material Store */
+
+/* Corner Calibration */
+
+.corner_calibration {
+  max-width: 800px;
+}
+.corner_calibration .focus_reminder{
+  width: 250px;
+}
+
+/* Corner Calibration */

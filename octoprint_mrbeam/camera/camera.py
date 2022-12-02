@@ -12,6 +12,7 @@ from .definitions import (
     DEFAULT_SHUTTER_SPEED,
     TARGET_AVG_ROI_BRIGHTNESS,
     BRIGHTNESS_TOLERANCE,
+    MAX_SHUTTER_SPEED,
 )
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util import get_thread
@@ -139,6 +140,8 @@ class BaseCamera(object):
         elif self.shutter_speed == 0:
             self.shutter_speed = DEFAULT_SHUTTER_SPEED
         self.shutter_speed = int(self.shutter_speed * compensate)
+        if self.shutter_speed > MAX_SHUTTER_SPEED:
+            self.shutter_speed = MAX_SHUTTER_SPEED
 
 
 from octoprint_mrbeam.camera.worker import MrbPicWorker

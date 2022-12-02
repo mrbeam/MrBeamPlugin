@@ -714,6 +714,8 @@ class MrBeamPlugin(
                 "js/calibration/watterott/calibration_qa.js",
                 "js/calibration/watterott/label_printer.js",
                 "js/hard_refresh_overlay.js",
+                "js/app/view-models/mrbeam-simple-api-commands.js",
+                "js/app/view-models/mrbeam-constants.js",
             ],
             css=[
                 "css/mrbeam.css",
@@ -1950,7 +1952,7 @@ class MrBeamPlugin(
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
-            compare_pep440_versions=[]
+            compare_pep440_versions=[],
         )
 
     def on_api_command(self, command, data):
@@ -2322,8 +2324,11 @@ class MrBeamPlugin(
             "New undistorted image is requested. is_initial_calibration: %s",
             is_initial_calibration,
         )
-        self.lid_handler._photo_creator.is_initial_calibration = is_initial_calibration
-        self.lid_handler._startStopCamera("initial_calibration")
+        if is_initial_calibration:
+            self.lid_handler._photo_creator.is_initial_calibration = (
+                is_initial_calibration
+            )
+            self.lid_handler._startStopCamera(MrBeamEvents.INITIAL_CALIBRATION)
         succ = self.lid_handler.takeNewPic()
         if succ:
             resp_text = {
