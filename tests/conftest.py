@@ -1,6 +1,7 @@
 # pytest config file
 
 import pytest
+from flask_login import LoginManager
 
 from octoprint.settings import settings
 from octoprint_mrbeam import MrBeamPlugin
@@ -33,3 +34,22 @@ def mrbeam_plugin():
     mrbeam_plugin = MrBeamPlugin()
     mrbeam_plugin._settings = sett
     yield mrbeam_plugin
+
+
+@pytest.fixture()
+def app():
+    from octoprint.server import app
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    app.config.update({
+        "TESTING": True,
+    })
+
+    yield app
+
+
+@pytest.fixture()
+def request_context(app):
+    """Create the app and return the request context as a fixture"""
+    return app.test_request_context

@@ -1696,13 +1696,12 @@ class MrBeamPlugin(
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
-    @restricted_access
     def gcodeConvertCommand(self):
         # In order to reactivate the cancel button in the processing screen,
         # we need should run the code in here in a separate thread and return the http call as soon as possible
         # This allows the cancel request to come through.
         # On frontend side we should prevent the system from reloading the whole file list during slicing
-        # which can be done bu doing this before we trigger the /convert request:
+        # which can be done but doing this before we trigger the /convert request:
         # self.files.ignoreUpdatedFilesEvent = true; Of course we should set it back once slicing is done.
         # All this improved the cancellation speed. Still it's not good enough to justify a cancel button.
 
