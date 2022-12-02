@@ -2,9 +2,8 @@
 from __future__ import absolute_import
 
 import __builtin__
-import copy
 import json
-import operator
+import shutil
 import os
 import platform
 import pprint
@@ -16,21 +15,18 @@ import collections
 import logging
 import unicodedata
 from subprocess import check_output
-import pkg_resources
 
 import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
 from flask.ext.babel import gettext
-import octoprint.filemanager as op_filemanager
-from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping, FileManager
+from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import (
     restricted_access,
     get_json_command_from_request,
     add_non_caching_response_headers,
 )
-from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
@@ -1831,10 +1827,10 @@ class MrBeamPlugin(
 
                         if select_after_slicing or print_after_slicing:
                             sd = False
-                            filenameToSelect = self.mrb_file_manager.path_on_disk(
+                            filename_to_select = self.mrb_file_manager.path_on_disk(
                                 FileDestinations.LOCAL, gcode_name
                             )
-                            printer.select_file(filenameToSelect, sd, True)
+                            self._printer.select_file(filename_to_select, sd, True)
 
                         # keep only x recent files in job history and gcode.
                         self.mrb_file_manager.delete_old_files()
