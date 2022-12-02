@@ -1436,7 +1436,10 @@ class PhotoCreator(object):
                 "version": octoprint_mrbeam.__version__,
             },
         )
-        makedirs(path, parent=True, exist_ok=True)
+        try:
+            makedirs(path, parent=True, exist_ok=True)
+        except OSError as exce:
+            self._logger.error("Could not create folder %s error: %s", path, exce)
         try:
             with open(path, "w") as f:
                 f.write(yaml.dump(settings))
