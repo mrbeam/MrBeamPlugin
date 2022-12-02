@@ -38,3 +38,10 @@ server:
     enabled: true
     host: find.mr-beam.org
     port: '80'
+devel:
+  cache:
+    enabled: false
+  webassets:
+    bundle: false
+    clean_on_startup: true
+    minify: false
