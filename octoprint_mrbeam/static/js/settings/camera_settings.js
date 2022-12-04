@@ -26,6 +26,7 @@ $(function () {
         self.cameraSettingsActive = ko.observable(false);
 
         self.isLocked = ko.observable(false);
+        self.imageReloadTimer = undefined
 
         // Lens calibration status needed in this viewModel.
         // TODO make it a part of the mrb state (when we have a state wrapper)
@@ -145,7 +146,7 @@ $(function () {
                     true
                 );
                 OctoPrint.settings
-                    .savePluginSettings("mrbeam", _data)
+                    .savePluginSettings(MRBEAM.PLUGIN_IDENTIFIER, _data)
                     .done(
                         // "remember_markers_across_sessions",
                         function (data, status, xhr) {
@@ -218,8 +219,8 @@ $(function () {
                     self.loginState.loggedIn()
                 ) {
                     OctoPrint.simpleApiCommand(
-                        "mrbeam",
-                        "calibration_get_lens_calib_alive",
+                        MRBEAM.PLUGIN_IDENTIFIER,
+                        SimpleApiCommands.CALIBRATION_GET_LENS_CALIB_ALIVE,
                         {}
                     )
                         .done(function (response) {
@@ -240,6 +241,7 @@ $(function () {
                         });
                 }
             });
+            self.cameraSettingsActive.subscribe(self.cameraSettingsActiveChanged)
         };
 
         self.onBeforeBinding = function () {
@@ -318,6 +320,23 @@ $(function () {
                 }
             );
         };
+
+        self.cameraSettingsActiveChanged = function(newvalue){
+            if (newvalue){
+                self.forceTakeNewPicture()
+                self.imageReloadTimer = setInterval(function () {
+                    self.forceTakeNewPicture()
+                }, 3000);
+            }else{
+                if (self.imageReloadTimer){clearInterval(self.imageReloadTimer)}
+            }
+        }
+
+        self.forceTakeNewPicture = function(){
+            if (self.readyToLaser.lid_fully_open() && !self.readyToLaser.state.interlocksClosed()){
+                OctoPrint.simpleApiCommand(MRBEAM.PLUGIN_IDENTIFIER, SimpleApiCommands.TAKE_UNDISTORTED_PICTURE, {})
+            }
+        }
     }
 
     // view model class, parameters for constructor, container to bind to
