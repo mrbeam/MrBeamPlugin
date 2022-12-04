@@ -1110,11 +1110,11 @@ $(function () {
             self.images_placed(self.workingArea.getPlacedImages().length > 0);
             self.color_key_update();
 
-            // Job Time Estimation 2.0
-            self.doFrontendRendering(true); // initial rendering for job time estimation
-            self._update_job_summary();
-
             if (self.show_vector_parameters() || self.show_image_parameters()) {
+                // Job Time Estimation 2.0
+                self.doFrontendRendering(true); // initial rendering for job time estimation
+                self._update_job_summary();
+
                 self.dialog_state(self.get_dialog_state());
 
                 var gcodeFile = self.create_gcode_filename(
