@@ -3743,17 +3743,18 @@ $(function () {
             }
             self._qt_currentQuickTextUpdate();
         });
-        $("#quick_text_stroke").on("click", function (e) {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.stroke = e.currentTarget.checked;
-                self.lastQuickTextStroke = self.currentQuickTextFile.stroke;
-            }
-            self._qt_currentQuickTextUpdate();
-        });
-        $("#quick_text_fill").on("click", function (e) {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.fill = e.currentTarget.checked;
-                self.lastQuickTextFill = self.currentQuickTextFile.fill;
+
+        let quickTextRadioInput = $('input[type=radio][name=stroke_or_fill]');
+        quickTextRadioInput.on("change", function () {
+            if(self.currentQuickTextFile){
+                if (this.value === "stroke") {
+                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = true;
+                        self.currentQuickTextFile.fill = self.lastQuickTextFill = false;
+                }
+                if (this.value === "fill"){
+                        self.currentQuickTextFile.fill = self.lastQuickTextFill = true;
+                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = false;
+                }
             }
             self._qt_currentQuickTextUpdate();
         });
