@@ -52,6 +52,7 @@ describe("Laser Job", function () {
             .filter(":visible")
             .clear()
             .type("-50.5");
+        // image preprocessing 
         cy.get(
             '[data-test="tab-workingarea-image-preprocessing-collapsible"]'
         ).click();
@@ -71,6 +72,7 @@ describe("Laser Job", function () {
             position: "right",
         });
         cy.wait(1000);
+        // crop img
         cy.get('[data-test="tab-workingarea-crop-top"]').clear().type("3");
         cy.get('[data-test="tab-workingarea-crop-left"]').clear().type("2");
         cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type("3");
@@ -88,6 +90,7 @@ describe("Laser Job", function () {
         cy.get('[id="material_color_0057a8"]').click();
         cy.wait(1000);
         cy.get('[id="material_thickness_2"]').click();
+        // engrave parameters
         cy.get('[data-test="conversion-dialog-intensity-black"]')
             .clear()
             .type("85");

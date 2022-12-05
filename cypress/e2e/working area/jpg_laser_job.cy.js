@@ -56,9 +56,11 @@ describe("Laser Job", function () {
             .clear()
             .type("2x3{enter}");
         cy.get('[data-test="tab-workingarea-mirror-switch"]').click();
+        // image preprocessing
         cy.get(
             '[data-test="tab-workingarea-image-preprocessing-collapsible"]'
         ).click();
+        //preprocess img
         cy.get(
             '[data-test="tab-workingarea-img-preprocess-contrast"]'
         ).realClick({ position: "left" });
@@ -75,6 +77,7 @@ describe("Laser Job", function () {
             position: "left",
         });
         cy.wait(1000);
+        //crop 
         cy.get('[data-test="tab-workingarea-crop-top"]').clear().type("2");
         cy.get('[data-test="tab-workingarea-crop-left"]').clear().type("2");
         cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type("2");
@@ -89,6 +92,7 @@ describe("Laser Job", function () {
         cy.get('[id="material_color_1155cc"]').click();
         cy.wait(1000);
         cy.get('[id="material_thickness_0.4"]').click();
+        // engrave parameters
         cy.get(
             '[data-test="conversion-dialog-show-advanced-settings"]'
         ).click();

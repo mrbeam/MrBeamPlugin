@@ -10,7 +10,9 @@ describe("About This Mr Beam", function () {
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
-        cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({ force: true });
+        cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({
+            force: true,
+        });
     });
 
     it("Quickstart Guide - de", function () {
@@ -21,11 +23,21 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Quickstart Guide - en", function () {
+        cy.get(':nth-child(1) > [data-test="about-settings-link-quickstart"]')
+            .invoke("attr", "href")
+            .then((myLink) => {
+                cy.request(myLink).then((resp) => {
+                    expect(resp.status).to.eq(200);
+                });
+            });
+        cy.logout();
+    });
+    it("User manual - online", function () {
         cy.get(
-            ':nth-child(1) > [data-test="about-settings-link-quickstart"]'
+            ':nth-child(1) > [data-test="about-settings-link-quickstart-online"]'
         )
             .invoke("attr", "href")
             .then((myLink) => {
@@ -33,17 +45,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
-    });
-    it("User manual - online", function () {
-        cy.get(':nth-child(1) > [data-test="about-settings-link-quickstart-online"]')
-            .invoke("attr", "href")
-            .then((myLink) => {
-                cy.request(myLink).then((resp) => {
-                    expect(resp.status).to.eq(200);
-                });
-            });
-            cy.logout();
+        cy.logout();
     });
     it("User manual - de", function () {
         cy.get('[data-test="about-settings-link-quickstart"]')
@@ -53,19 +55,17 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("User manual - en", function () {
-        cy.get(
-            ':nth-child(2) > [data-test="about-settings-link-quickstart"]'
-        )
+        cy.get(':nth-child(2) > [data-test="about-settings-link-quickstart"]')
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request(myLink).then((resp) => {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("User manual - es", function () {
         cy.get('[data-test="about-settings-link-quickstart"]')
@@ -75,7 +75,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("User manual - fr", function () {
         cy.get('[data-test="about-settings-link-quickstart"]')
@@ -85,7 +85,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("User manual - it", function () {
         cy.get('[data-test="about-settings-link-quickstart"]')
@@ -95,7 +95,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("User manual - nl", function () {
         cy.get('[data-test="about-settings-link-quickstart"]')
@@ -105,19 +105,17 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link IG", function () {
-        cy.get(
-            '[data-test="about-settings-link-instagram"]'
-        )
+        cy.get('[data-test="about-settings-link-instagram"]')
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request(myLink).then((resp) => {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link twitter", function () {
         cy.get('[data-test="about-settings-link-twitter"]')
@@ -127,7 +125,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link YT", function () {
         cy.get('[data-test="about-settings-link-youtube"]')
@@ -137,7 +135,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link pinterest", function () {
         cy.get('[data-test="about-settings-link-pinterest"]')
@@ -147,7 +145,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     // Linkedin status code 999
     it.skip("Links - linkedin", function () {
@@ -155,14 +153,14 @@ describe("About This Mr Beam", function () {
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request({
-                    method: 'GET',
-                    url: myLink, 
-                    failOnStatusCode: false
-                  }).then((response) => {
+                    method: "GET",
+                    url: myLink,
+                    failOnStatusCode: false,
+                }).then((response) => {
                     expect(response.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link TikTok", function () {
         cy.get('[data-test="about-settings-link-tiktok"]')
@@ -181,7 +179,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link find.mr-beam service", function () {
         cy.get('[data-test="about-settings-link-find-mr-beam-org"]')
@@ -200,7 +198,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link Source code", function () {
         cy.get('[data-test="about-settings-link-github"]')
@@ -210,7 +208,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link Recommend Mr Beam", function () {
         cy.get('[data-test="about-settings-link-aklamio"]')
@@ -220,17 +218,19 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("User manual - online", function () {
-        cy.get(':nth-child(2) > [data-test="about-settings-link-quickstart-online"]')
+        cy.get(
+            ':nth-child(2) > [data-test="about-settings-link-quickstart-online"]'
+        )
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request(myLink).then((resp) => {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link support", function () {
         cy.get('[data-test="about-settings-link-support"]')
@@ -240,7 +240,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     // error 404
     it.skip("Link privacy", function () {
@@ -248,31 +248,30 @@ describe("About This Mr Beam", function () {
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request({
-                    method: 'GET',
-                    url: myLink, 
-                    failOnStatusCode: false
-                  }).then((resp) => {
+                    method: "GET",
+                    url: myLink,
+                    failOnStatusCode: false,
+                }).then((resp) => {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     // error 404
     it.skip("Privacy Policies - service", function () {
-        cy.get(
-            '[data-test="about-settings-link-find-mr-beam"]'
-        ).click()
+        cy.get('[data-test="about-settings-link-find-mr-beam"]')
+            .click()
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request({
-                    method: 'GET',
-                    url: myLink, 
-                    failOnStatusCode: false
-                  }).then((resp) => {
+                    method: "GET",
+                    url: myLink,
+                    failOnStatusCode: false,
+                }).then((resp) => {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Privacy Policies - analytics", function () {
         cy.get('[data-test="about-settings-link-analytics"]')
@@ -282,7 +281,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
     it("Link - mr-beam.org", function () {
         cy.get('[data-test="about-settings-link-mr-beam-org"]')
@@ -292,7 +291,7 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
 
     it("Link fb", function () {
@@ -303,6 +302,6 @@ describe("About This Mr Beam", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-            cy.logout();
+        cy.logout();
     });
 });

@@ -9,7 +9,9 @@ describe("Access control", function () {
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
-        cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({ force: true });
+        cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({
+            force: true,
+        });
     });
 
     it("Access control", function () {
@@ -41,12 +43,13 @@ describe("Access control", function () {
     it("Access control", function () {
         cy.get('[id="settings_users_link"]').click();
         cy.logout();
-        cy.get('[id="login_screen_email_address_in"]').clear().type("dev+1@mr-beam.org");
+        cy.get('[id="login_screen_email_address_in"]')
+            .clear()
+            .type("dev+1@mr-beam.org");
         cy.get('[id="login_screen_password_in"]').clear().type("a");
         cy.get('[id="login_screen_login_btn"]').click();
-            
     });
-   
+
     it("Access control", function () {
         cy.get('[id="settings_users_link"]').click();
         cy.get(":nth-child(1) > .settings_users_actions > .fa-key").click();
@@ -57,23 +60,23 @@ describe("Access control", function () {
         cy.get(
             "#settings-usersDialogChangePassword > .modal-footer > .btn-primary"
         ).click();
-            
     });
     it("Access control", function () {
         cy.get('[id="settings_users_link"]').click();
         cy.get('[id="settings_users_link"]').click();
         cy.logout();
-        cy.get('[id="login_screen_email_address_in"]').clear().type("dev+1@mr-beam.org");
+        cy.get('[id="login_screen_email_address_in"]')
+            .clear()
+            .type("dev+1@mr-beam.org");
         cy.get('[id="login_screen_password_in"]').clear().type("aa");
-        cy.get('[id="login_screen_login_btn"]').click();   
+        cy.get('[id="login_screen_login_btn"]').click();
     });
     it("Access control", function () {
         cy.get('[id="settings_users_link"]').click();
-            
     });
     it("Access control", function () {
         cy.get('[id="settings_users_link"]').click();
-        cy.get(':nth-child(1) > .settings_users_actions > .fa-trash-o').click();
+        cy.get(":nth-child(1) > .settings_users_actions > .fa-trash-o").click();
     });
 
     it("Access control", function () {
@@ -86,16 +89,15 @@ describe("Access control", function () {
         cy.get(
             '#settings-usersDialogChangePassword > .modal-footer > [data-dismiss="modal"]'
         ).click();
-
     });
     it("Access control", function () {
         cy.get('[id="settings_users_link"]').click();
-        cy.get('#mrb_settings_users_header > .show_only_online > a').invoke("attr", "href")
-        .then((myLink) => {
-            cy.request(myLink).then((resp) => {
-                expect(resp.status).to.eq(200);
+        cy.get("#mrb_settings_users_header > .show_only_online > a")
+            .invoke("attr", "href")
+            .then((myLink) => {
+                cy.request(myLink).then((resp) => {
+                    expect(resp.status).to.eq(200);
+                });
             });
-        });
     });
-   
 });

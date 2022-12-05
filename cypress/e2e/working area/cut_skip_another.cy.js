@@ -13,7 +13,8 @@ describe("Cut, cut 2, engrave, skip", function () {
         cy.loginLaser(this.testData.email, this.testData.password);
     });
 
-    it("Cut 1, cut 2, engrave, skip", function () {
+    it("Cut 1, cut 2, engrave", function () {
+        // add shape star
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
@@ -25,6 +26,7 @@ describe("Cut, cut 2, engrave, skip", function () {
         cy.get(
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "top" });
+        // add text
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type("MrBeam");
@@ -38,6 +40,7 @@ describe("Cut, cut 2, engrave, skip", function () {
             '[data-test="quick-text-color-picker-stroke"] > .track > canvas'
         ).realClick({ position: "left" });
         cy.get('[data-test="quick-text-done-button"]').click();
+        // add shape heart
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-Heart"]').click();
         cy.get('[data-test="quick-shape-heart-range"]').realClick({
@@ -54,6 +57,7 @@ describe("Cut, cut 2, engrave, skip", function () {
         ).realClick({ position: "top" });
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="working-area-laser-button"]').click();
+        //select material
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Grey Cardboard")
             .click();
@@ -64,12 +68,15 @@ describe("Cut, cut 2, engrave, skip", function () {
         cy.get('[data-test="conversion-dialog-no-job"]').trigger("drop", {
             dataTransfer,
         });
+        // move to cutting
         cy.get(".cutting_job_color")
             .eq(1)
             .trigger("dragstart", { dataTransfer });
+        // move to another cut    
         cy.get(
             '[data-bind="visible: show_vector_parameters()"] > .assigned_colors'
         ).trigger("drop", { dataTransfer });
+        // engrave paramters
         cy.get('[data-test="conversion-dialog-intensity-black"]')
             .clear()
             .type("70");
@@ -101,6 +108,7 @@ describe("Cut, cut 2, engrave, skip", function () {
         cy.get('[data-test="conversion-dialog-line-dithering"]').click({
             force: true,
         });
+        // cutting parameters for first cut
         cy.get('[data-test="conversion-dialog-cut-intensity-input"]')
             .first()
             .clear()
@@ -117,6 +125,7 @@ describe("Cut, cut 2, engrave, skip", function () {
             .clear()
             .type("3");
         cy.get('[data-test="conversion-dialog-progressive"]').first().click();
+        // cutting parameters for first cut 2
         cy.get('[data-test="conversion-dialog-cut-piercetime-input"]')
             .eq(1)
             .clear()

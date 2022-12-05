@@ -11,10 +11,10 @@ describe("Cut and engrave", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
-        cy.visit(this.testData.url_laser);
     });
 
-    it.only("Cut and engrave", function () {
+    it("Cut and engrave", function () {
+        //Adding star
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
@@ -27,20 +27,17 @@ describe("Cut and engrave", function () {
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "top" });
         cy.get('[data-test="quick-shape-done-button"]').click();
+        //Adding file jpg
         cy.get('[data-test="working-area-tab-file"]').click();
         cy.get('[data-test="tab-designlib-image-preview-card"]')
             .filter(':contains("paris2.jpg")')
             .click();
         cy.get('[data-test="working-area-laser-button"]').click();
+        //adding select material
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Finn Cardboard")
             .click();
         cy.get('[id="material_thickness_1.5"]').click();
-        cy.get(".cutting_job_color").trigger("dragstart", { dataTransfer });
-        cy.get('[data-test="conversion-dialog-engrave-job-zone"]').trigger(
-            "drop",
-            { dataTransfer }
-        );
         cy.get('[data-test="conversion-dialog-intensity-black"]')
             .clear()
             .type("70");
@@ -102,6 +99,7 @@ describe("Cut and engrave", function () {
     });
 
     it("Skip", function () {
+        //Adding star
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
@@ -127,8 +125,40 @@ describe("Cut and engrave", function () {
         ).dblclick({ force: true });
         cy.get(
             '[data-test="conversion-dialog-settings-to-be-adjusted"]'
-        ).should("not.exist");
-        cy.get('[data-test="conversion-dialog-vector-graphics"]').should("to.exist");
+        ).should("not.visible");
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "to.exist"
+        );
+        cy.get('[data-test="laser-job-back-button"]').click({ force: true });
+        cy.logout();
+    });
+
+    it("Engrave move to cut", function () {
+        //Adding text
+        cy.get('[data-test="working-area-tab-text"]').click();
+        cy.get('[data-test="quick-text-modal-text-input"]').type("MrBeam");
+        cy.get('[data-test="quick-text-done-button"]').click();
+        //Adding text
+        cy.get('[data-test="working-area-tab-shape"]').click();
+        cy.get('[data-test="quick-shape-star"]').click();
+        cy.get('[data-test="quick-shape-done-button"]').click();
+        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.get('[data-test="conversion-dialog-material-item"]')
+            .contains("Finn Cardboard")
+            .click();
+        cy.get('[id="material_thickness_1.5"]').click();
+        cy.get('[id="cd_engraving"]')
+            .eq(0)
+            .trigger("dragstart", { dataTransfer });
+        cy.get("#first_job > .span3 > .assigned_colors").trigger("drop", {
+            dataTransfer,
+        });
+        cy.get("#first_job > .span3 > .assigned_colors")
+            .find('[id="cd_engraving"]')
+            .should("not.exist");
+        cy.get('[data-test="conversion-dialog-engrave-job-zone"]')
+            .find('[id="cd_engraving"]')
+            .should("to.exist");
         cy.get('[data-test="laser-job-back-button"]').click({ force: true });
         cy.logout();
     });

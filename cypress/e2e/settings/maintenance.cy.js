@@ -10,12 +10,14 @@ describe("Maintenance", function () {
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
-        cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({ force: true });
+        cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({
+            force: true,
+        });
     });
 
     afterEach(function () {
         cy.logout();
-    })
+    });
     it("Access control", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-buy-now-pre-filter"]')

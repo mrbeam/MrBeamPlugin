@@ -12,7 +12,7 @@ describe("Laser Job", function () {
         cy.reload();
         cy.visit(this.testData.url_laser);
     });
-
+// to fix... wip
     it("Add design dxf", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
         cy.get('[data-test="tab-designlib-files-list"]').then(($elem) => {
