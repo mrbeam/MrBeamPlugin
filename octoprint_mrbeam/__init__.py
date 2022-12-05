@@ -1712,7 +1712,7 @@ class MrBeamPlugin(
         if response is not None:
             return response
 
-        appendGcodeFiles = data["gcodeFilesToAppend"]
+        append_gcode_files = data["gcodeFilesToAppend"]
         del data["gcodeFilesToAppend"]
 
         if command == "convert":
@@ -1772,10 +1772,10 @@ class MrBeamPlugin(
                     i += 1
 
                 # prohibit overwriting the file that is currently being printed
-                currentOrigin, currentFilename = self._getCurrentFile()
+                current_origin, current_filename = self._getCurrentFile()
                 if (
-                    currentFilename == gcode_name
-                    and currentOrigin == FileDestinations.LOCAL
+                    current_filename == gcode_name
+                    and current_origin == FileDestinations.LOCAL
                     and (self._printer.is_printing() or self._printer.is_paused())
                 ):
                     msg = "Trying to slice into file that is currently being printed: {}".format(
@@ -1798,7 +1798,7 @@ class MrBeamPlugin(
                         "Wrote job parameters to %s", self._CONVERSION_PARAMS_PATH
                     )
 
-                self._printer.set_colors(currentFilename, data["vector"])
+                self._printer.set_colors(current_filename, data["vector"])
 
                 # callback definition
                 def slicing_done(
@@ -1856,7 +1856,7 @@ class MrBeamPlugin(
                             gcode_name,
                             select_after_slicing,
                             print_after_slicing,
-                            appendGcodeFiles,
+                            append_gcode_files,
                         ],
                     )
                 except octoprint.slicing.UnknownProfile:

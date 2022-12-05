@@ -1,6 +1,4 @@
 # pytest config file
-from functools import wraps
-from mock import patch
 
 import pytest
 from octoprint.events import EventManager
@@ -141,12 +139,3 @@ def dummy_printer():
             return ""
 
     yield DummyPrinter()
-
-
-def dummy_decorator():
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
