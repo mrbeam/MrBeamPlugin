@@ -88,7 +88,6 @@ def app():
 
 @pytest.fixture()
 def request_context(app):
-    """Create the app and return the request context as a fixture"""
     return app.test_request_context
 
 
