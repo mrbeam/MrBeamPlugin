@@ -13,6 +13,6 @@ jobs:
     uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
     secrets: inherit
     with:
-      python_v: 2.7
+      python_v: 2.7.17
       source_dir: octoprint_mrbeam
       exclude_from_coverage: octoprint_mrbeam/static/**/*
