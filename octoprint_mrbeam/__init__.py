@@ -1696,6 +1696,7 @@ class MrBeamPlugin(
         return NO_CONTENT
 
     @octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
+    @restricted_access
     def gcodeConvertCommand(self):
         # In order to reactivate the cancel button in the processing screen,
         # we need should run the code in here in a separate thread and return the http call as soon as possible

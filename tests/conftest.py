@@ -1,7 +1,8 @@
 # pytest config file
+from functools import wraps
+from mock import patch
 
 import pytest
-from flask_login import LoginManager
 from octoprint.events import EventManager
 from octoprint.settings import settings
 from octoprint.users import UserManager
@@ -32,7 +33,7 @@ def pytest_generate_tests(metafunc):
 
 
 @pytest.fixture
-def mrbeam_plugin(mocker, dummy_slicing_manager, dummy_file_manager):
+def mrbeam_plugin(mocker, dummy_slicing_manager, dummy_file_manager, dummy_printer):
     mocker.patch("octoprint_mrbeam.MrBeamPlugin.set_serial_setting")
     mocker.patch("octoprint_mrbeam.analytics.analytics_handler.AnalyticsHandler")
     mocker.patch("octoprint_mrbeam.iobeam.onebutton_handler.OneButtonHandler")
@@ -42,10 +43,11 @@ def mrbeam_plugin(mocker, dummy_slicing_manager, dummy_file_manager):
     mocker.patch("octoprint_mrbeam.iobeam.dust_manager.DustManager")
     mocker.patch("octoprint_mrbeam.iobeam.laserhead_handler.LaserheadHandler")
     mocker.patch("octoprint_mrbeam.iobeam.temperature_manager.TemperatureManager")
-    # mocker.patch("octoprint_mrbeam.filemanager.MrbFileManager.file_exists", return_value=False)  # todo iratxe: this doesn't work
     mocker.patch("octoprint_mrbeam.filemanager.MrbFileManager")
     mocker.patch("octoprint_mrbeam.wizard_config.WizardConfig")
     mocker.patch("octoprint.users.UserManager")
+    mocker.patch("octoprint_mrbeam.url_for", return_value="")
+    # mocker.patch("octoprint_mrbeam.restricted_access", side=dummy_decorator)
     mocker.patch("octoprint_mrbeam.user_notification_system")
     mocker.patch("octoprint_mrbeam.MrBeamPlugin.isFirstRun", return_value=False)
     mocker.patch("octoprint_mrbeam.MrBeamPlugin._fixEmptyUserManager")
@@ -54,7 +56,7 @@ def mrbeam_plugin(mocker, dummy_slicing_manager, dummy_file_manager):
     mrbeam_plugin = MrBeamPlugin()
 
     mrbeam_plugin._settings = sett
-    mrbeam_plugin._printer = None  # todo iratxe write dummy module
+    mrbeam_plugin._printer = dummy_printer
     mrbeam_plugin._event_bus = EventManager()
     mrbeam_plugin._plugin_manager = None
     mrbeam_plugin._file_manager = None
@@ -73,7 +75,11 @@ def mrbeam_plugin(mocker, dummy_slicing_manager, dummy_file_manager):
 @pytest.fixture()
 def app():
     from octoprint.server import app
+    from flask_login import LoginManager
+
     login_manager = LoginManager()
+    app.secret_key = 'dummy key'
+    app.config['LOGIN_DISABLED'] = True  # To avoid 401 from @restricted_access
     login_manager.init_app(app)
 
     app.config.update({
@@ -110,4 +116,37 @@ def dummy_file_manager():
         def add_file_to_design_library(self, file_name, content):
             return
 
+        def slice(self, *args, **kwargs):
+            pass
+
     yield DummyFileManager()
+
+
+@pytest.fixture()
+def dummy_printer():
+    class DummyPrinter:
+        def set_colors(self, a, b):
+            pass
+
+        def on_comm_log(self, _):
+            return
+
+        def is_paused(self):
+            return False
+
+        def is_homed(self):
+            return True
+
+        def get_state_string(self):
+            return ""
+
+    yield DummyPrinter()
+
+
+def dummy_decorator():
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator

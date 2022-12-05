@@ -34,7 +34,7 @@ def test_get_navbar_label_combined(mrbeam_plugin, mocker):
     assert mrbeam_plugin.get_navbar_label() == initial_label + " | ALPHA"
 
 
-def test_test(mocker, mrbeam_plugin, request_context):
+def test_gcodeConvertCommand_slicing_gcode_plus_svg(mocker, mrbeam_plugin, request_context):
     mocker.patch("octoprint_mrbeam.get_json_command_from_request", return_value=(CONVERT_COMMAND, CONVERT_DATA_GCODE_AND_QS, CONVERT_RESPONSE))
     with request_context():
         mrbeam_plugin.gcodeConvertCommand()
