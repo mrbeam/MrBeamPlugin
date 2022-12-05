@@ -45,7 +45,6 @@ def mrbeam_plugin(mocker, dummy_slicing_manager, dummy_file_manager, dummy_print
     mocker.patch("octoprint_mrbeam.wizard_config.WizardConfig")
     mocker.patch("octoprint.users.UserManager")
     mocker.patch("octoprint_mrbeam.url_for", return_value="")
-    # mocker.patch("octoprint_mrbeam.restricted_access", side=dummy_decorator)
     mocker.patch("octoprint_mrbeam.user_notification_system")
     mocker.patch("octoprint_mrbeam.MrBeamPlugin.isFirstRun", return_value=False)
     mocker.patch("octoprint_mrbeam.MrBeamPlugin._fixEmptyUserManager")
