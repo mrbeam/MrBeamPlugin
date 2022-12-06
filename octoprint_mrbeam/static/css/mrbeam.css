@@ -2449,6 +2449,15 @@ input.search-query,
   user-select: none;
 }
 
+#quick_text_stroke_and_fill input[type=radio]{
+  margin: 8px 5px 0 0;
+  transform: scale(1.2);
+}
+
+.mrb-quicktext-stroked-placeholder::-webkit-input-placeholder{
+    color: #ffffff;
+}
+
 .hidden {
   display: none;
 }

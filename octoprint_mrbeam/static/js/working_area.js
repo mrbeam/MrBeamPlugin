@@ -3743,17 +3743,18 @@ $(function () {
             }
             self._qt_currentQuickTextUpdate();
         });
-        $("#quick_text_stroke").on("click", function (e) {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.stroke = e.currentTarget.checked;
-                self.lastQuickTextStroke = self.currentQuickTextFile.stroke;
-            }
-            self._qt_currentQuickTextUpdate();
-        });
-        $("#quick_text_fill").on("click", function (e) {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.fill = e.currentTarget.checked;
-                self.lastQuickTextFill = self.currentQuickTextFile.fill;
+
+        let quickTextRadioInput = $('input[type=radio][name=stroke_or_fill]');
+        quickTextRadioInput.on("change", function () {
+            if(self.currentQuickTextFile){
+                if (this.value === "stroke") {
+                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = true;
+                        self.currentQuickTextFile.fill = self.lastQuickTextFill = false;
+                }
+                if (this.value === "fill"){
+                        self.currentQuickTextFile.fill = self.lastQuickTextFill = true;
+                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = false;
+                }
             }
             self._qt_currentQuickTextUpdate();
         });
@@ -3834,10 +3835,11 @@ $(function () {
         self._qt_currentQuickTextUpdate = function () {
             if (self.currentQuickTextFile) {
                 self.currentQuickText(self.currentQuickTextFile.name);
+                let quickTextInputField = $("#quick_text_dialog_text_input");
                 const displayText =
                     self.currentQuickTextFile.name !== ""
                         ? self.currentQuickTextFile.name
-                        : $("#quick_text_dialog_text_input").attr(
+                        : quickTextInputField.attr(
                               "placeholder"
                           );
 
@@ -3942,12 +3944,22 @@ $(function () {
                 });
 
                 // update font of input field
-                $("#quick_text_dialog_text_input").css({
+                quickTextInputField.css({
                     "text-shadow": shadow,
                     color: previewFill,
                     "font-family": font,
                     "font-variant-ligatures": ligatures,
                 });
+                // update input placeholder color if stroked
+                let StrokedQuickTextPlaceholderClass = 'mrb-quicktext-stroked-placeholder';
+                if(isStroked){
+                    quickTextInputField.addClass(StrokedQuickTextPlaceholderClass);
+                }
+                // update input placeholder color if not stroked
+                if(!isStroked && quickTextInputField.hasClass(StrokedQuickTextPlaceholderClass)){
+                    quickTextInputField.removeClass(StrokedQuickTextPlaceholderClass);
+                }
+
                 $("#quick_text_dialog_font_name").text(font);
                 //                $("#quick_text_fill_brightness").val(fillColor);
                 //                $("#quick_text_stroke_color").val(strokeColor);
