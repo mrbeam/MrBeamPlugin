@@ -141,7 +141,7 @@ jobs:
             --data \
               '{
                 "fields": {
-                  "summary": "'"$issue_name"'"
+                  "summary": "[GitHub:Cypress] '"$issue_name"'"
                 },
                 "update": {
                   "issuelinks": [
