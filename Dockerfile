@@ -52,7 +52,7 @@ RUN source ./venv2/bin/activate \
     && pip install .
 
 RUN source ./venv2/bin/activate \
-    && pip install opencv-python==4.2.0.32
+    && pip install opencv-python==3.2.0.7
 
 COPY --chown=mrbeam ./docker-octoprint-config.yaml /home/mrbeam/.octoprint/config.yaml
 
