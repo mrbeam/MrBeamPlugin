@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
+    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@bugfix/SW-2349-github-actions-python-2-7-no-longer-available-in-reusable-workflow
     secrets: inherit
     with:
       python_v: 2.7
