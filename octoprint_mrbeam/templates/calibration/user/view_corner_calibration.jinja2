@@ -22,7 +22,7 @@
 
         <li>{{ _('Engrave the calibrations markers on your material by clicking on this button:') }}<br>
             <button class="btn btn-primary"
-                    data-bind="click: engraveMarkers, enable: (!camera.state.isLocked() && !camera.state.isConnecting())">
+                    data-bind="click: engraveMarkers, enable: (!camera.state.isLocked() && !camera.state.isConnecting() && camera.state.isOperational())">
                 {{ _('Engrave Calibration Markers')  }}
             </button>
             <span class="muted" data-bind="visible: camera.state.isLocked() || camera.state.isConnecting">
