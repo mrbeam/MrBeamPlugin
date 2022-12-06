@@ -102,7 +102,7 @@ class BaseCamera(object):
         """Returns the last picture taken"""
         return self.worker.latest
 
-    def compensate_shutter_speed(self, img):
+    def compensate_shutter_speed(self):
         # self._logger.info(
         # 	"sensor : "+ str(self.sensor_mode)+
         # 	"\n iso : "+ str(self.iso)+
