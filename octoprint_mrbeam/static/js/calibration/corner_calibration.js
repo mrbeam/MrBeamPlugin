@@ -338,7 +338,6 @@ $(function () {
         };
 
         self.engraveMarkers = function () {
-            self.workingArea.performHomingCycle("corner_calibration");
             let success_callback = function (data) {
                 console.log("generated_markers_svg", data);
                 let fileObj = {
