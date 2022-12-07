@@ -90,6 +90,7 @@ class SettingsService:
                                                                                      environment)
                     material_store_settings.enabled = material_store_config.enabled
                     material_store_settings.url = material_store_config.url
+                    material_store_settings.healthcheck_url = material_store_config.healthcheck_url
                 except yaml.YAMLError as e:
                     self._logger.error('Material store settings couldn\'t be parsed. Exception %s', e)
 
@@ -101,6 +102,7 @@ class SettingsService:
             env_config_yml = material_store_config_yml['material-store']['environment'][environment.value.lower()]
             material_store_config.enabled = env_config_yml['enabled']
             material_store_config.url = env_config_yml['url']
+            material_store_config.healthcheck_url = env_config_yml['healthcheck_url']
         else:
             self._logger.warn(
                 'Couldn\'t find corresponding material store configuration to current environment -> %s <-',
@@ -114,4 +116,5 @@ class SettingsService:
                        environment.value.lower() in material_store_config_yml['material-store']['environment']) and (
                        'enabled' in material_store_config_yml['material-store']['environment'][
                    environment.value.lower()]) and ('url' in material_store_config_yml['material-store']['environment'][
+            environment.value.lower()]) and ('healthcheck_url' in material_store_config_yml['material-store']['environment'][
             environment.value.lower()])
