@@ -124,13 +124,38 @@ describe("Laser Job", function () {
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.reload();
-        cy.wait(10000);
+        cy.get('.modal-scrollable').click({ force: true })
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
+        cy.get('[data-test="tab-designlib-mechinecode-file"]')
+            .first()
+            .find('[data-test="tab-designlib-option-file"]')
+            .click()
+            .invoke("prop", "innerText")
+            .then((downloadFile) => {
+                cy.window()
+                    .document()
+                    .then(function (doc) {
+                        doc.addEventListener("click", () => {
+                            setTimeout(function () {
+                                doc.location.reload();
+                            }, 5000);
+                        });
+                        cy.get('[data-test="tab-designlib-svg-preview-card"]')
+                            .filter(`:contains(${downloadFile})`)
+                            .find('[data-test="tab-designlib-option-file"]');
+                        cy.wait(1000);
+                        cy.get('[data-test="tab-designlib-download-file"]')
+                            .filter(":visible")
+                            .click();
+                        cy.verifyDownload(downloadFile);
+                        const contentFile = cy.readFile("./Downloads/MrBeam_Lasers.gco")
+        
+                            cy.readFile("./fixture/MrBeam_Lasers.gco").should('eq', contentFile )
+                         
+                    });
+                     
+            });
         cy.logout();
     });
 });

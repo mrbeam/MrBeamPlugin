@@ -15,7 +15,7 @@ describe("Laser Job - shapes", function () {
 
     it("Add shapes - heart", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
-        cy.get('[data-test="quick-shape-heart"]').click();
+        cy.get('[data-test="quick-shape-Heart"]').click();
         cy.get('[data-test="quick-shape-heart-width"]').clear().type("60");
         cy.get('[data-test="quick-shape-heart-height"]').clear().type("80");
         cy.get('[data-test="quick-shape-heart-range"]').realClick({
@@ -83,14 +83,11 @@ describe("Laser Job - shapes", function () {
             '[data-test="conversion-dialog-engraving-mode-recommended"]'
         ).dblclick({ force: true });
         cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.wait(7000);
-        cy.reload();
-        cy.wait(10000);
+        cy.wait(3000)
+        cy.get('.modal-scrollable').click({ force: true })
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
@@ -125,9 +122,7 @@ describe("Laser Job - shapes", function () {
             .filter(":visible")
             .clear()
             .type("130.3 mm");
-        cy.get('[data-test="working-area-laser-button"]')
-            .filter(":visible")
-            .click();
+        cy.get('[data-test="working-area-laser-button"]').click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Anodized Aluminum")
@@ -159,14 +154,10 @@ describe("Laser Job - shapes", function () {
             '[data-test="conversion-dialog-engraving-mode-recommended"]'
         ).dblclick({ force: true });
         cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.wait(7000);
-        cy.reload();
-        cy.wait(10000);
+        cy.get('.modal-scrollable').click({ force: true })
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
@@ -239,14 +230,10 @@ describe("Laser Job - shapes", function () {
             '[data-test="conversion-dialog-engraving-mode-recommended"]'
         ).dblclick({ force: true });
         cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.wait(7000);
-        cy.reload();
-        cy.wait(10000);
+        cy.get('.modal-scrollable').click({ force: true })
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
@@ -322,14 +309,10 @@ describe("Laser Job - shapes", function () {
             '[data-test="conversion-dialog-engraving-mode-recommended"]'
         ).dblclick({ force: true });
         cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.wait(7000);
-        cy.reload();
-        cy.wait(10000);
+        cy.get('.modal-scrollable').click({ force: true })
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
@@ -358,6 +341,7 @@ describe("Laser Job - shapes", function () {
             .clear()
             .type("150.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
             .clear()
             .type("125.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
@@ -365,7 +349,6 @@ describe("Laser Job - shapes", function () {
             .clear()
             .type("130.3 mm");
         cy.get('[data-test="working-area-laser-button"]')
-            .filter(":visible")
             .click();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
@@ -401,13 +384,10 @@ describe("Laser Job - shapes", function () {
         ).dblclick({ force: true });
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(7000);
-        cy.reload();
-        cy.wait(10000);
+        cy.get('.modal-scrollable').click({ force: true })
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 

@@ -12,7 +12,7 @@ describe("Laser Job", function () {
         cy.wait(5000);
     });
 
-    it("Add svg file", function () {
+    it.only("Add svg file", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
         cy.get('[data-test="tab-designlib-svg-preview-card"]').then(
             ($elem) => {
@@ -92,14 +92,10 @@ describe("Laser Job", function () {
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.reload();
-        cy.wait(10000);
+        cy.get('.modal-scrollable').click({ force: true })
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.wait(5000);
-        cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.logout();
     });
 
