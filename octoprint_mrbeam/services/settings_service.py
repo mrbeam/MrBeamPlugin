@@ -73,7 +73,6 @@ class SettingsService:
         settings_model.about = AboutModel(
             support_documents=[self._document_service.get_documents_for(definition) for definition in definitions])
 
-        self._logger.info("SettingsModel -> %s", str(settings_model))
         return settings_model
 
     def _get_material_store_settings(self, environment):
