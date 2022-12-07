@@ -11,6 +11,9 @@ env:
   # These two are just for internal use, to wire the container network
   MRBEAM_PLUGIN_URL: "http://plugin-address.org:5002/"
   MRBEAM_PLUGIN_DOMAIN_NAME: "plugin-address.org"
+  JIRA_PROJECT_KEY: "SW"
+  XRAY_JUNIT_IMPORT: "https://xray.cloud.getxray.app/api/v2/import/execution/junit"
+  TEST_PLAN_KEY: "SW-2354"
 
 jobs:
   mrb-docker:
@@ -120,7 +123,7 @@ jobs:
         id: xray
         run: |
           token=$(curl -H "Content-Type: application/json" -X POST --data '{ "client_id": "${{ secrets.JIRA_CLIENT_ID }}","client_secret": "${{ secrets.JIRA_CLIENT_SECRET }}" }'  https://xray.cloud.getxray.app/api/v2/authenticate| tr -d '"')
-          xray_import_response=$(curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data @"cypress/results/combined.xml" https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=SW)
+          xray_import_response=$(curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data @"cypress/results/combined.xml" ${{ env.XRAY_JUNIT_IMPORT }}?projectKey=${{ env.JIRA_PROJECT_KEY }}&testPlanKey=${{ env.TEST_PLAN_KEY }})
           echo "xray_import_response=$xray_import_response" >> $GITHUB_OUTPUT
       - name: Change issue summary and add link
         # issue_url: extracts the newly created test execution issue url from the previous response
@@ -151,7 +154,7 @@ jobs:
                           "name":"Test",
                           "outward":"tests"
                         },
-                        "outwardIssue" : {
+                        "outwardIssue": {
                           "key": "'"$tests_issue"'"
                         }
                       }
