@@ -71,12 +71,15 @@ $(function () {
                 payload: payload,
             };
 
-            document
-                .getElementById("material_store_iframe")
-                .contentWindow.postMessage(
-                    data,
-                    self.material_store_iframe_src
-                );
+            let materialStoreIframeElement = $("#material_store_iframe");
+
+            if(materialStoreIframeElement.is(":visible")){
+                materialStoreIframeElement
+                    .contentWindow.postMessage(
+                        data,
+                        self.material_store_iframe_src
+                    );
+            }
         };
 
         $("#material_store_iframe").attr("src", self.material_store_iframe_src);
