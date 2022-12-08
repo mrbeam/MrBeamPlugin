@@ -77,7 +77,7 @@ describe("Laser Job", function () {
             position: "left",
         });
         cy.wait(1000);
-        //crop 
+        //crop
         cy.get('[data-test="tab-workingarea-crop-top"]').clear().type("2");
         cy.get('[data-test="tab-workingarea-crop-left"]').clear().type("2");
         cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type("2");
@@ -124,13 +124,13 @@ describe("Laser Job", function () {
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.get('.modal-scrollable').click({ force: true })
+        cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.get('[data-test="tab-designlib-mechinecode-file"]')
+        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
-            .find('[data-test="tab-designlib-option-file"]')
-            .click()
+            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
+            .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
                 cy.window()
@@ -141,21 +141,31 @@ describe("Laser Job", function () {
                                 doc.location.reload();
                             }, 5000);
                         });
-                        cy.get('[data-test="tab-designlib-svg-preview-card"]')
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-card"]'
+                        )
                             .filter(`:contains(${downloadFile})`)
-                            .find('[data-test="tab-designlib-option-file"]');
+                            .find(
+                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
+                            );
                         cy.wait(1000);
-                        cy.get('[data-test="tab-designlib-download-file"]')
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-download"]'
+                        )
                             .filter(":visible")
                             .click();
-                        cy.verifyDownload(downloadFile);
-                        const contentFile = cy.readFile("./Downloads/MrBeam_Lasers.gco")
-        
-                            cy.readFile("./fixture/MrBeam_Lasers.gco").should('eq', contentFile )
-                         
                     });
-                     
             });
+        cy.wait(7000);
+        cy.readFile("cypress/fixtures/MrBeam_Lasers1.gco", {
+            timeout: 40000,
+        }).then((contentTestFile) => {
+            cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
+                timeout: 40000,
+            }).then((contentFile) => {
+                expect(contentTestFile).to.include(contentFile);
+            });
+        });
         cy.logout();
     });
 });

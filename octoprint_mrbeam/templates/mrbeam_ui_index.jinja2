@@ -76,7 +76,7 @@
                     <!-- ko allowBindings: false -->
                     {# Translators: Name of the tab #}
 					<li>
-						<a id="messages_nav_tab" href="#messages" data-toggle="tab" data-bind="css: { 'has-unread-messages': hasUnread }">
+						<a id="messages_nav_tab" data-test="mrbeam-ui-index-tab-message" href="#messages" data-toggle="tab" data-bind="css: { 'has-unread-messages': hasUnread }">
 							<i class="icon icon-envelope icon-large"></i>
 						</a>
 					</li>
@@ -91,20 +91,20 @@
 						<ul class="dropdown-menu">
 							<li><a href="#settings" data-toggle="tab" id="settings_tab_btn" data-test="mrbeam-ui-index-tab-settings"><i class="icon-wrench"></i> {{ _('Settings') }}</a></li>
 							<li class="divider"></li>
-                            <li><a href="#" onclick="$('#lasersafety_overlay').modal('show')" id="lasersafety_menu_item"><i class="icon-warning-sign"></i> {{ _('Laser Safety') }}</a></li>
+                            <li><a href="#" onclick="$('#lasersafety_overlay').modal('show')" data-test="mrbeam-ui-index-tab-laser-safety" id="lasersafety_menu_item"><i class="icon-warning-sign"></i> {{ _('Laser Safety') }}</a></li>
 							<li class="divider fullscreen"></li>
                             <li class="fullscreen">
-                                <a href="#" id="go_fullscreen_menu_item"><i class="icon-fullscreen"></i> {{ _('Fullscreen') }}</a>
-                                <a href="#" id="exit_fullscreen_menu_item"><i class="icon-fullscreen"></i> {{ _('Exit Fullscreen') }}</a>
+                                <a href="#" id="go_fullscreen_menu_item"><i class="icon-fullscreen" data-test="mrbeam-ui-index-tab-fullscreen-go"  ></i> {{ _('Fullscreen') }}</a>
+                                <a href="#" id="exit_fullscreen_menu_item"><i class="icon-fullscreen" data-test="mrbeam-ui-index-tab-fullscreen-exit" ></i> {{ _('Exit Fullscreen') }}</a>
                             </li>
 							<li class="divider"></li>
                             {% for document in burger_menu_model.documents %}
-                                <li><a href="{{ document.document_link.url }}" target="_blank"><i class="icon-book"></i>{{ document.title }}</a></li>
+                                <li><a href="{{ document.document_link.url }}" target="_blank"><i class="icon-book" data-test="mrbeam-ui-index-tab-manual-user" ></i>{{ document.title }}</a></li>
                             {% endfor %}
 							<li class="divider"></li>
-							<li><a href="#" onclick="$('#support_overlay').modal('show')" id="support_menu_item"><i class="fa fa-life-ring"></i> {{ _('Support') }}</a></li>
+							<li><a href="#" onclick="$('#support_overlay').modal('show')" id="support_menu_item"><i class="fa fa-life-ring" data-test="mrbeam-ui-index-tab-support" ></i> {{ _('Support') }}</a></li>
 							<li class="divider show_only_online"></li>
-							<li class="show_only_online"><a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right"></i> {{ _('Find my Mr Beam') }}</a></li>
+							<li class="show_only_online"><a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right" data-test="mrbeam-ui-index-tab-laser-find-mr-beam" ></i> {{ _('Find my Mr Beam') }}</a></li>
                         </ul>
 					</li>
 				</ul>

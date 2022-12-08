@@ -18,7 +18,7 @@ describe("Maintenance", function () {
     afterEach(function () {
         cy.logout();
     });
-    it("Access control", function () {
+    it("Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-buy-now-pre-filter"]')
             .invoke("attr", "href")
@@ -28,7 +28,7 @@ describe("Maintenance", function () {
                 });
             });
     });
-    it("Access control", function () {
+    it("Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-buy-now-main-filter"]')
             .invoke("attr", "href")
@@ -38,7 +38,7 @@ describe("Maintenance", function () {
                 });
             });
     });
-    it("Access control", function () {
+    it("Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-buy-now-laser-head"]')
             .invoke("attr", "href")
@@ -48,7 +48,7 @@ describe("Maintenance", function () {
                 });
             });
     });
-    it("Access control", function () {
+    it("How to clean a laser head", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-how-laser-head"]')
             .invoke("attr", "href")
@@ -58,21 +58,21 @@ describe("Maintenance", function () {
                 });
             });
     });
-    it("Reset", function () {
+    it("Reset Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-reset-button"]').click();
         cy.get('[data-test="maintenance-yes-button"]').click();
         cy.get(":nth-child(1) > .maintenance-reset-column > .btn").click();
         cy.get("#reset_counter_btn").click();
     });
-    it("Reset", function () {
+    it("Reset Air Filter: Main filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-reset-button"]').click();
         cy.get('[data-test="maintenance-yes-button"]').click();
         cy.get(":nth-child(2) > .maintenance-reset-column > .btn").click();
         cy.get("#reset_counter_btn").click();
     });
-    it("Reset", function () {
+    it("Reset Laser head cleaning", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-reset-button"]').click();
         cy.get('[data-test="maintenance-yes-button"]').click();

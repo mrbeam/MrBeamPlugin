@@ -3,9 +3,9 @@
 
     <div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
 
-        <div class="show_only_online" data-test="custom-material-learn-how">
+        <div class="show_only_online">
             {{ _("To learn how to create, use, and manage custom material settings, read this %(opening_tag)sKnowledge Base article%(closing_tag)s.",
-                    opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000431865-save-custom-material-settings" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                    opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000431865-save-custom-material-settings" data-test="custom-material-learn-how" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                     closing_tag='</a>') }}
         </div>
         <div class="show_only_offline">
@@ -22,7 +22,7 @@
                     <div>{{ _("Download all custom material settings as file: ") }}</div>
                     <div><a data-bind="text: getBackupFilename(),
                                       attr: {href: backupDataUrl,
-                                             download: getBackupFilename()}"></a></div>
+                                             download: getBackupFilename()}" data-test="custom-material-settings-backup"></a></div>
                 </ul>
             </div>
         </div>
@@ -37,7 +37,7 @@
                 <ul>
                     <div>
                         <button class="btn btn-mini" data-bind="click: function(){$('#settings_mrbeam_custom_material_restore_input').click();}">Restore from backup file</button>
-                        <input id="settings_mrbeam_custom_material_restore_input" type="file" style="display: none">
+                        <input id="settings_mrbeam_custom_material_restore_input" data-test="custom-material-settings-input-file" type="file" style="display: none">
                     </div>
                 </ul>
             </div>

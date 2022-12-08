@@ -6,7 +6,7 @@
                     <h1 class="mrb-messages-title">{{ _('Messages From Mr Beam') }}</h1>
                     <div class="mrb-message-list" data-bind="foreach: messages">
                         <div data-bind="css: { 'mrb-message-read': read }">
-                            <div class="mrb-message-element rounded_container"
+                            <div class="mrb-message-element rounded_container" data-test="tab-message-list-message" 
                                  data-bind="css: { selected: $index() == $root.selectedIndex() }, click: function(data, event) { $root.onIndexSelected($index(), data, event) }">
                                 <h5 class="mrb-message-title" data-bind="text: content.title"></h5>
                             </div>
@@ -32,7 +32,7 @@
                             </div>
                             <div class="row-fluid">
                                 <div class="span6">
-                                    <div class="mrb-message-text-container rounded_container">
+                                    <div class="mrb-message-text-container rounded_container" data-test="tab-message-message-content">
                                         <div class="mrb-message-text">
                                             <span style="white-space: pre-wrap" data-bind="text: content.body"></span>
                                         </div>
@@ -74,7 +74,7 @@
                                     <h2 class="mrb-message-content-title"
                                         data-bind="text: content.title"></h2>
                                     <div class="mrb-message-date" data-bind="text: date"></div>
-                                    <div class="mrb-message-text-container no-img rounded_container">
+                                    <div class="mrb-message-text-container no-img rounded_container" data-test="tab-message-message-content-no-img">
                                         <div class="mrb-message-text">
                                             <span style="white-space: pre-wrap" data-bind="text: content.body"></span>
                                         </div>

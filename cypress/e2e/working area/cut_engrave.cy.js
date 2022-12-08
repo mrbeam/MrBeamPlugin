@@ -89,10 +89,49 @@ describe("Cut and engrave", function () {
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(3000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.get('.modal-scrollable').click({ force: true })
+        cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
+        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+            .first()
+            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
+            .click({ force: true })
+            .invoke("prop", "innerText")
+            .then((downloadFile) => {
+                cy.window()
+                    .document()
+                    .then(function (doc) {
+                        doc.addEventListener("click", () => {
+                            setTimeout(function () {
+                                doc.location.reload();
+                            }, 5000);
+                        });
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-card"]'
+                        )
+                            .filter(`:contains(${downloadFile})`)
+                            .find(
+                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
+                            );
+                        cy.wait(1000);
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-download"]'
+                        )
+                            .filter(":visible")
+                            .click();
+                    });
+            });
+        cy.wait(7000);
+        cy.readFile("cypress/fixtures/MrBeam_Lasers1.gco", {
+            timeout: 40000,
+        }).then((contentTestFile) => {
+            cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
+                timeout: 40000,
+            }).then((contentFile) => {
+                expect(contentTestFile).to.include(contentFile);
+            });
+        });
         cy.logout();
     });
 

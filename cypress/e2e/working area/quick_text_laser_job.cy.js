@@ -9,6 +9,7 @@ describe("Laser Job - quick text", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
+        cy.visit(this.testData.url_laser);
         cy.wait(5000);
     });
 
@@ -85,13 +86,49 @@ describe("Laser Job - quick text", function () {
         );
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.reload();
-        cy.wait(10000);
+        cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
+        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+            .first()
+            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
+            .click({ force: true })
+            .invoke("prop", "innerText")
+            .then((downloadFile) => {
+                cy.window()
+                    .document()
+                    .then(function (doc) {
+                        doc.addEventListener("click", () => {
+                            setTimeout(function () {
+                                doc.location.reload();
+                            }, 5000);
+                        });
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-card"]'
+                        )
+                            .filter(`:contains(${downloadFile})`)
+                            .find(
+                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
+                            );
+                        cy.wait(1000);
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-download"]'
+                        )
+                            .filter(":visible")
+                            .click();
+                    });
+            });
+        cy.wait(7000);
+        cy.readFile("cypress/fixtures/MrBeam_Lasers1.gco", {
+            timeout: 40000,
+        }).then((contentTestFile) => {
+            cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
+                timeout: 40000,
+            }).then((contentFile) => {
+                expect(contentTestFile).to.include(contentFile);
+            });
+        });
         cy.logout();
     });
 
@@ -156,18 +193,55 @@ describe("Laser Job - quick text", function () {
             { force: true }
         );
         cy.get('[data-test="laser-job-start-button"]').dblclick();
+        cy.wait(3000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.reload();
-        cy.wait(10000);
+        cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
+        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+            .first()
+            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
+            .click({ force: true })
+            .invoke("prop", "innerText")
+            .then((downloadFile) => {
+                cy.window()
+                    .document()
+                    .then(function (doc) {
+                        doc.addEventListener("click", () => {
+                            setTimeout(function () {
+                                doc.location.reload();
+                            }, 5000);
+                        });
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-card"]'
+                        )
+                            .filter(`:contains(${downloadFile})`)
+                            .find(
+                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
+                            );
+                        cy.wait(1000);
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-download"]'
+                        )
+                            .filter(":visible")
+                            .click();
+                    });
+            });
+        cy.wait(7000);
+        cy.readFile("cypress/fixtures/MrBeam_Lasers1.gco", {
+            timeout: 40000,
+        }).then((contentTestFile) => {
+            cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
+                timeout: 40000,
+            }).then((contentFile) => {
+                expect(contentTestFile).to.include(contentFile);
+            });
+        });
         cy.logout();
     });
 
-    it("Add texts 3", function () {
+    it.only("Add texts 3", function () {
         cy.wait(3000);
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type(
@@ -231,13 +305,48 @@ describe("Laser Job - quick text", function () {
         ).dblclick({ force: true });
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.reload();
-        cy.wait(10000);
+        cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
+        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+            .first()
+            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
+            .click({ force: true })
+            .invoke("prop", "innerText")
+            .then((downloadFile) => {
+                cy.window()
+                    .document()
+                    .then(function (doc) {
+                        doc.addEventListener("click", () => {
+                            setTimeout(function () {
+                                doc.location.reload();
+                            }, 5000);
+                        });
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-card"]'
+                        )
+                            .filter(`:contains(${downloadFile})`)
+                            .find(
+                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
+                            );
+                        cy.wait(1000);
+                        cy.get(
+                            '[data-test="tab-designlib-mechinecode-file-download"]'
+                        )
+                            .filter(":visible")
+                            .click();
+                    });
+            });
+        cy.wait(7000);
+        cy.readFile("cypress/fixtures/MrBeam_Lasers1.gco", {
+            timeout: 40000,
+        }).then((contentTestFile) => {
+            cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
+                timeout: 40000,
+            }).then((contentFile) => {
+                expect(contentTestFile).to.include(contentFile);
+            });
+        });
         cy.logout();
     });
 

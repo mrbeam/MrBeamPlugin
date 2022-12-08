@@ -162,6 +162,7 @@ Cypress.Commands.add("loginLaser", (email, password) => {
     cy.wait(2000);
     cy.get('[id="workingarea"]').should("to.exist");
     cy.ignoreUpdate();
+    cy.hardResetModal();
 });
 
 Cypress.Commands.add("focusReminder", () => {
@@ -178,6 +179,23 @@ Cypress.Commands.add("focusReminder", () => {
                 .click({ force: true });
         } else {
             cy.get('[id="laserhead_focus_reminder_modal"]').should(
+                "not.be.visible"
+            );
+        }
+    });
+});
+
+Cypress.Commands.add("hardResetModal", () => {
+    cy.wait(3000);
+
+    cy.get("body").then(($body) => {
+        let reminderLaser = $body.find("#hard_refresh_overlay");
+        if (reminderLaser.is(":visible")) {
+            cy.get('#hard_refresh_checkbox').click();
+            cy.get('#hard_refresh_overlay > .modal-footer > .btn')
+                .click({ force: true });
+        } else {
+            cy.get("#hard_refresh_overlay").should(
                 "not.be.visible"
             );
         }
