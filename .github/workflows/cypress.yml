@@ -125,26 +125,37 @@ jobs:
           token=$(curl -H "Content-Type: application/json" -X POST --data '{ "client_id": "${{ secrets.JIRA_CLIENT_ID }}","client_secret": "${{ secrets.JIRA_CLIENT_SECRET }}" }'  https://xray.cloud.getxray.app/api/v2/authenticate| tr -d '"')
           xray_import_response=$(curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data @"cypress/results/combined.xml" ${{ env.XRAY_JUNIT_IMPORT }}?projectKey=${{ env.JIRA_PROJECT_KEY }}&testPlanKey=${{ env.TEST_PLAN_KEY }})
           echo "xray_import_response=$xray_import_response" >> $GITHUB_OUTPUT
-      - name: Change issue summary and add link
-        # issue_url: extracts the newly created test execution issue url from the previous response
-        # issue_name: contains the latest commit message. Should be something like "SW-1234 summary"
-        # tests_issue: extracts the "SW-1234" from the commit message, to add it as a link to the text execution issue
+      - name: Change test execution issue details
+        # test_exec_id: extracts the newly created test execution issue url from the previous response
+        # test_exec_summary: contains the latest commit message. Should be something like "SW-1234 summary"
+        # tested_issue_id: extracts the "SW-1234" from the commit message, to add it as a link to the text execution issue
+        # tested_issue_assignee: extracts the accountId of the assignee of the tested ticket
+        # tested_issue_fix_version: extracts the fixVersion of the tested ticket
         run: |
-          issue_url=$(printf '%s\n' '${{ steps.xray.outputs.xray_import_response }}' | jq -r .self)
-          echo $issue_url
+          test_exec_url=$(printf '%s\n' '${{ steps.xray.outputs.xray_import_response }}' | jq -r .self)
+          echo $test_exec_url
 
           last_commit_message=$(echo $(git log -1 --pretty=format:"%s"))
-          issue_name="Test execution for $last_commit_message"
-          echo $issue_name
+          test_exec_summary="Test execution for $last_commit_message"
+          echo $test_exec_summary
 
-          tests_issue=$(echo $last_commit_message | sed -E -e 's/.*(SW-[0-9]+).*/\1/g')
-          echo $tests_issue
+          tested_issue_id=$(echo $last_commit_message | sed -E -e 's/.*(SW-[0-9]+).*/\1/g')
+          echo $tested_issue_id
 
-          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X PUT $issue_url -H 'Content-Type: application/json' \
+          tested_issue_details=$(curl -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X GET 'https://mr-beam.atlassian.net/rest/api/2/issue/'$tested_issue_id )
+          tested_issue_assignee=$(printf '%s' $tested_issue_details | jq --raw-output .fields.assignee.accountId)
+          echo $tested_issue_assignee
+
+          tested_issue_fix_version=$(printf '%s' '$tested_issue_details' | jq -r .fields.fixVersions[].name)
+          echo $tested_issue_fix_version
+
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} \
+            -X PUT $test_exec_url -H 'Content-Type: application/json' \
             --data \
               '{
                 "fields": {
-                  "summary": "[GitHub:Cypress] '"$issue_name"'"
+                  "summary": "[GitHub:Cypress] '"$test_exec_summary"'",
+                  "assignee": { "accountId": "$tested_issue_assignee" }
                 },
                 "update": {
                   "issuelinks": [
@@ -155,10 +166,22 @@ jobs:
                           "outward":"tests"
                         },
                         "outwardIssue": {
-                          "key": "'"$tests_issue"'"
+                          "key": "'"$tested_issue_id"'"
                         }
                       }
+                    }
+                  ],
+                  "fixVersions": [
+                    {
+                      "add": {"name": "'"tested_issue_fix_version"'"}
                     }
                   ]
                 }
               }'
+
+      - name: Move test execution to done
+        # 21 is the id for the status "Done"
+        run: |
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} \
+            -X POST $test_exec_url'/transitions' -H 'Content-Type: application/json' \
+            --data '{ "transition": { "id": "21" } }'
