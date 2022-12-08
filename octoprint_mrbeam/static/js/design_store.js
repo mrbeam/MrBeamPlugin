@@ -9,6 +9,7 @@ $(function () {
         // staging:
         // 'https://1-0-0-staging-dot-design-store-269610.appspot.com'
         // 'http://localhost:8080';
+        self.DESIGN_STORE_IFRAME_HEALTHCHECK_SRC = self.DESIGN_STORE_IFRAME_SRC + "/api/healthcheck";
 
         self.loginState = params[0];
         self.navigation = params[1];
@@ -18,8 +19,9 @@ $(function () {
         self.lastUploadedDate = ko.observable("");
         self.eventListenerAdded = ko.observable(false);
 
-        self.onUserLoggedIn = function () {
+        self.initialiseStore = function () {
             self.prepareDesignStoreTab();
+            self.goToStore();
         };
 
         self.getUserSettings = function () {
