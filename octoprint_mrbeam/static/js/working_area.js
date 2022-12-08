@@ -2970,6 +2970,8 @@ $(function () {
                         "polyline",
                         "polygon",
                         "path",
+                        "text",
+                        "tspan"
                     ].indexOf(e.type) >= 0
                 ) {
                     var fill = e.attr("fill");
