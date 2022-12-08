@@ -161,7 +161,7 @@ Cypress.Commands.add("loginLaser", (email, password) => {
     cy.runloginUserIfPresent(email, password);
     cy.wait(2000);
     cy.get('[id="workingarea"]').should("to.exist");
-    cy.ignoreUpdate();
+    //cy.ignoreUpdate();
 });
 
 Cypress.Commands.add("focusReminder", () => {
