@@ -2969,7 +2969,6 @@ $(function () {
                         "line",
                         "polyline",
                         "polygon",
-                        "path",
                         "text",
                         "tspan"
                     ].indexOf(e.type) >= 0
