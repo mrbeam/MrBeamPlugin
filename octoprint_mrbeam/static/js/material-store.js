@@ -66,12 +66,11 @@ $(function () {
         };
 
         self.sendMessageToMaterialStoreIframe = function (event, payload) {
+            let materialStoreIframeElement = $("#material_store_iframe");
             let data = {
                 event: event,
                 payload: payload,
             };
-
-            let materialStoreIframeElement = $("#material_store_iframe");
 
             if(materialStoreIframeElement.is(":visible")){
                 materialStoreIframeElement
