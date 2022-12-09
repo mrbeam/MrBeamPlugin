@@ -260,6 +260,9 @@ $(function () {
         };
 
         self.goToStore = function () {
+            // Lazy load the iframe
+            $("#design_store_iframe").attr('loading', 'eager');
+            // Handle the new designs notification icon
             $("#designstore_tab_btn > span.red-dot").remove();
             if ($("#designstore_tab_btn").parent().hasClass("active")) {
                 self.sendMessageToDesignStoreIframe("goToStore", {});
