@@ -64,16 +64,19 @@
             </div>
         </div>
         <div class="modal-footer">
-            <h4 class="pull-left"
-                data-bind='visible: readyToLaser.jobTimeEstimationCalculated'>{{ _('Laser job duration:') }} <span
-                    data-bind='text: job_duration_formatted()'>    </span>
-                <small>({{ _('Estimated:') }} <span
-                        data-bind='text: readyToLaser.jobTimeEstimationString'></span>)</small>
-            </h4>
-            <a class="btn" id="laser_job_done_repeat_btn" data-bind='click: repeat_job' aria-hidden="true"><i
-                    class="icon icon-repeat"></i> {{ _('Repeat Job') }}</a>
-            <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='click: cancel_btn'
-               aria-hidden="true">{{ _('Close') }}</a>
+            <div class="pull-left">
+                <h4 data-bind='visible: readyToLaser.jobTimeEstimationCalculated'>{{ _('Laser job duration:') }} <span
+                        data-bind='text: job_duration_formatted()'>    </span>
+                    <small>({{ _('Estimated:') }} <span
+                            data-bind='text: readyToLaser.jobTimeEstimationString'></span>)</small>
+                </h4>
+            </div>
+            <div>
+                <a class="btn" id="laser_job_done_repeat_btn" data-bind='click: repeat_job' aria-hidden="true"><i
+                        class="icon icon-repeat"></i> {{ _('Repeat Job') }}</a>
+                <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='click: cancel_btn'
+                   aria-hidden="true">{{ _('Close') }}</a>
+            </div>
         </div>
     </div>
 

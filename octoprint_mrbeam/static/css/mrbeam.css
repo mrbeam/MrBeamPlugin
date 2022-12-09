@@ -2746,11 +2746,6 @@ hides the force update buttons
 * === LASER JOB DONE #madewithmrbeam ===
 */
 
-.modal--laser-job-done {
-  width: 50%;
-  margin-left: -25%;
-}
-
 .modal--laser-job-done.show {
   text-shadow: 0 0 0 rgba(255, 255, 255, 0.95);
 }
@@ -2804,6 +2799,7 @@ hides the force update buttons
 
 .modal--laser-job-done .modal-body .modal__modal-body--material-section {
   padding: 25px;
+  margin-bottom: 10px;
 }
 
 .modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details {
@@ -2834,6 +2830,7 @@ hides the force update buttons
 
 .modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-description p {
   margin: 0 15px;
+  width: 75px;
 }
 
 .modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--1 {
@@ -2858,10 +2855,6 @@ hides the force update buttons
   background-size: cover;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-link {
-  padding: 20px;
-}
-
 .modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-link a {
   border: 1px solid;
   width: 100%;
@@ -2875,6 +2868,11 @@ hides the force update buttons
   background-color: #e25303;
   color: #ffffff;
   text-decoration: none;
+}
+
+.modal--laser-job-done .modal-footer > div {
+  display: inline-block;
+  margin-bottom: 10px;
 }
 
 #laser_job_done_image_check {

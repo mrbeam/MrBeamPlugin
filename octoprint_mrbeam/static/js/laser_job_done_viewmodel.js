@@ -59,9 +59,21 @@ $(function () {
             self._fromData(payload);
 
             // For styling purposes
-            let materialBoxElement = $(".modal__material-details-box--1");
-            materialBoxElement.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--2');
-            materialBoxElement.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--3');
+            let materialBoxElement1 = $(".modal__material-details-box--1");
+            let materialBoxElement2 = $(".modal__material-details-box--2");
+            let materialBoxElement3 = $(".modal__material-details-box--3");
+            if(materialBoxElement2.length >= 0){
+                materialBoxElement2.remove();
+                materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--2');
+            }else if(materialBoxElement2.length === 0){
+                materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--2');
+            }
+            if(materialBoxElement3.length >= 0){
+                materialBoxElement3.remove();
+                materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--3');
+            }else if(materialBoxElement3.length === 0){
+                materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--3');
+            }
         };
 
         self.onEventPrintDone = function (payload) {
