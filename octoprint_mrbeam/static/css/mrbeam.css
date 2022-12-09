@@ -2746,12 +2746,135 @@ hides the force update buttons
 * === LASER JOB DONE #madewithmrbeam ===
 */
 
-.laser_job_done_image {
-  width: 100%;
-  height: 311px;
-  text-align: center;
-  background-repeat: no-repeat;
+.modal--laser-job-done {
+  width: 50%;
+  margin-left: -25%;
+}
+
+.modal--laser-job-done.show {
+  text-shadow: 0 0 0 rgba(255, 255, 255, 0.95);
+}
+
+.modal--laser-job-done .modal-body {
+  padding-bottom: 0;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section {
+  height: 100px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0);
+  transition: text-shadow 0.8s ease-in;
+  border-radius: 8px;
+  background-color: #e25303;
   position: relative;
+  padding: 25px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p {
+  font-size: 1.8em;
+  color: #ffffff;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p.modal__p--hashtag {
+  font-weight: bold;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div {
+  position: absolute;
+  bottom: 25px;
+  right: 25px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div a i {
+  font-size: 2.4em;
+  padding: 0 3px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p.modal__p--hashtag a,
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div a i {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p.modal__p--hashtag a:hover,
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div a i:hover {
+  color: #e25303;
+  text-decoration: none;
+  background-color: #ffffff;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section {
+  padding: 25px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details {
+  font-weight: bold;
+  position: relative;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details p {
+  font-size: 16px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details > div {
+  border: 1px solid #333333;
+  position: absolute;
+  background: #ffffff;
+  margin: 20px 0;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details div div {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details div p {
+  font-size: 14px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-description p {
+  margin: 0 15px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--1 {
+  z-index: 3;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--2 {
+  top: 20px;
+  left: 10px;
+  z-index: 2;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--3 {
+  top: 10px;
+  left: 20px;
+  z-index: 1;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-picture{
+  height: 50px;
+  width: 50px;
+  background-size: cover;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-link {
+  padding: 20px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-link a {
+  border: 1px solid;
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+  text-align: center;
+  padding: 5px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-link a:hover {
+  background-color: #e25303;;
+  color: #ffffff;
+  text-decoration: none;
 }
 
 #laser_job_done_image_check {
@@ -2770,40 +2893,6 @@ hides the force update buttons
 
 #laser_job_done_image_check.show {
   text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.7);
-}
-
-#laser_job_done_image_text {
-  text-align: left;
-  padding: 10% 9%;
-  /*line-height: 250%;*/
-  color: transparent;
-  text-shadow: 0px 0px 20px rgba(255, 255, 255, 0);
-  transition: text-shadow 0.8s ease-in;
-}
-
-#laser_job_done_image_text p {
-  font-weight: bold;
-  font-size: 1.8em;
-  color: transparent;
-}
-
-#laser_job_done_image_text a {
-  color: transparent;
-  text-decoration: none;
-}
-
-#laser_job_done_image_text a:hover {
-  color: transparent;
-  text-decoration: none;
-}
-
-#laser_job_done_image_text.show {
-  text-shadow: 0px 0px 0px rgba(255, 255, 255, 0.95);
-}
-
-.laser_job_done_image_media_icon {
-  font-size: 2.4em;
-  padding: 0px 3px;
 }
 
 /*

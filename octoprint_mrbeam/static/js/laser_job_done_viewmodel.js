@@ -57,6 +57,11 @@ $(function () {
             self.is_job_done(false);
             self.job_duration(0);
             self._fromData(payload);
+
+            // For styling purposes
+            let materialBoxElement = $(".modal__material-details-box--1");
+            materialBoxElement.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--2');
+            materialBoxElement.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--3');
         };
 
         self.onEventPrintDone = function (payload) {
