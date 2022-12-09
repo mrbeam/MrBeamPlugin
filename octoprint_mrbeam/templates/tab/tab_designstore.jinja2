@@ -1,9 +1,13 @@
-
 <div class="tab-pane" id="designstore">
-    <iframe id="design_store_iframe" scrolling="auto" frameBorder="0"></iframe>
-    <div id="design_store_offline_placeholder">
-{#        Seems like you are not connected to the internet. If you want to use the Design Store, please connect to the internet and reload the page.#}
+    <div class="loading_spinner_wrapper">
+        <div class="loading_spinner">
+            <i class="icon icon-spinner icon-spin"></i>
+        </div>
+    </div>
 
+    <iframe loading="lazy" id="design_store_iframe" scrolling="auto" frameBorder="0"></iframe>
+
+    <div id="design_store_offline_placeholder" class="hidden">
         <div class="row-fluid no-internet-connection-section">
             <div class="span12">
                 <div class="row-fluid">
