@@ -451,13 +451,13 @@ $(function () {
         }
 
         self.constructMaterialURL = function (materialName, materialColor) {
-            let url = self.materialSettingsDatabase[materialName]["url"];
+            const url = self.materialSettingsDatabase[materialName]["url"];
             // Check if a color variant query parameter exists for this URL
             if("variant" in self.materialSettingsDatabase[materialName] &&
             "color" in self.materialSettingsDatabase[materialName]["variant"] &&
             materialColor in self.materialSettingsDatabase[materialName]["variant"]["color"]){
-                let variantParameterKey = "variant"
-                let variantParameterValue = self.materialSettingsDatabase[materialName]["variant"]["color"][materialColor];
+                const variantParameterKey = "variant"
+                const variantParameterValue = self.materialSettingsDatabase[materialName]["variant"]["color"][materialColor];
                 return url + "?" + variantParameterKey + "=" + variantParameterValue;
             } else {
                 return url;
