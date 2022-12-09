@@ -49,7 +49,7 @@ describe('Quickstart Guide', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Quickstart Guide").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test quickstart guide  website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Quickstart Guide").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/de/QuickstartGuide.pdf');
     });
@@ -92,7 +92,7 @@ describe('Quickstart Guide', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Quickstart Guide").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test quickstart guide  website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Quickstart Guide").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/QuickstartGuide.pdf');
     });
@@ -135,7 +135,7 @@ describe('Quickstart Guide', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guía de inicio rápido").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test quickstart guide  website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guía de inicio rápido").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/QuickstartGuide.pdf');
     });
@@ -178,7 +178,7 @@ describe('Quickstart Guide', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guide de démarrage rapide").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test quickstart guide  website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guide de démarrage rapide").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/QuickstartGuide.pdf');
     });
@@ -221,7 +221,7 @@ describe('Quickstart Guide', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guida Rapida").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test quickstart guide  website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guida Rapida").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/QuickstartGuide.pdf');
     });

@@ -49,7 +49,7 @@ describe('User manual', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Betriebsanleitung").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test user manual website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Betriebsanleitung").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/de/UserManual.pdf');
     });
@@ -92,7 +92,7 @@ describe('User manual', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("User Manual").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test user manual website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("User Manual").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/UserManual.pdf');
     });
@@ -135,7 +135,7 @@ describe('User manual', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manual del usuario").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test user manual website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manual del usuario").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/es/UserManual.pdf');
     });
@@ -178,7 +178,7 @@ describe('User manual', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manuel d’Instructions").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test user manual website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manuel d’Instructions").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/fr/UserManual.pdf');
     });
@@ -221,7 +221,7 @@ describe('User manual', () => {
         .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manuale Utente").should("to.exist");
 
-        // test find.mr.beam website url & title
+        // test user manual website url & title
         cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manuale Utente").invoke('removeAttr', 'target').click({force: true});
         cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/it/UserManual.pdf');
     });

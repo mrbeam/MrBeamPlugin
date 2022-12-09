@@ -19,11 +19,11 @@
     </tr>
     <tr>
         <td class="wizard-table-comment">{{ _('Check our %(a_strong_open)sYoutube channel%(a_strong_close)s to find tutorials and practical tips for you.',
-            a_strong_open='<a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A?utm_source=beamos&utm_medium=beamos&utm_campaign=welcome_dialog" target="_blank"><strong>', a_strong_close='</strong></a>') }}</td>
+            a_strong_open='<a data-test="Youtube" href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A?utm_source=beamos&utm_medium=beamos&utm_campaign=welcome_dialog" target="_blank"><strong>', a_strong_close='</strong></a>') }}</td>
         <td class="wizard-table-comment">{{ _('Do you want to know what to do if you need help? Visit our %(a_strong_open)sKnowledge Base%(a_strong_close)s',
-            a_strong_open='<a href="https://mr-beam.freshdesk.com/support/solutions?utm_source=beamos&utm_medium=beamos&utm_campaign=welcome_dialog" target="_blank"><strong>', a_strong_close='</strong></a>') }}</td>
+            a_strong_open='<a data-test="Knowledge" href="https://mr-beam.freshdesk.com/support/solutions?utm_source=beamos&utm_medium=beamos&utm_campaign=welcome_dialog" target="_blank"><strong>', a_strong_close='</strong></a>') }}</td>
 {#        The function call here is a bit hacky, because it did not work with knockout#}
         <td class="wizard-table-comment">{{ _('Let\'s take a %(a_strong_open)sguided tour%(a_strong_close)s together to get your first laser job done.',
-            a_strong_open='<a onclick="window.mrbeam.viewModels.wizardWhatsnewViewModel.startGuidedTour()" href="#"><strong>', a_strong_close='</strong></a>') }}</td>
+            a_strong_open='<a data-test="Tour" onclick="window.mrbeam.viewModels.wizardWhatsnewViewModel.startGuidedTour()" href="#"><strong>', a_strong_close='</strong></a>') }}</td>
     </tr>
 </table>

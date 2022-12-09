@@ -18,7 +18,7 @@ describe('Find.mr.beam', () => {
 
         // click on find.mr.beam under burger menu icon
         cy.get('[id="burger_menu_link"]')
-        .click();
+        .click({force: true});
         cy.get('[id="burger_menu"] > .dropdown-menu > .show_only_online > a').should("to.exist");
 
         // test find.mr.beam website url & title
