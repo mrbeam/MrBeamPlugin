@@ -160,6 +160,10 @@ describe("Cut, cut 2, engrave, skip", function () {
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
+                cy.intercept(
+                    "GET",
+                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
+                ).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -182,17 +186,26 @@ describe("Cut, cut 2, engrave, skip", function () {
                             .filter(":visible")
                             .click();
                     });
+                    cy.readFile("cypress/downloads/Lasers.gco", {
+                        timeout: 40000,
+                    }).then((contentTestFile) => {
+                       
+                        cy.get(
+                            '[data-test="mrbeam-ui-index-design-library"]'
+                        ).click();
+                        cy.get(
+                            '[data-test="tab-designlib-filter-gcode-radio"]'
+                        ).click();
+                        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+                            .first()
+                            .click({ force: true });
+                        cy.wait("@file")
+                            .its("response.body")
+                            .should(($body) => {
+                                expect($body).to.equal(contentTestFile);
+                            });
             });
-        cy.wait(7000);
-        cy.readFile("cypress/fixtures/MrBeam_Lasers1.gco", {
-            timeout: 40000,
-        }).then((contentTestFile) => {
-            cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
-                timeout: 40000,
-            }).then((contentFile) => {
-                expect(contentTestFile).to.include(contentFile);
             });
-        });
         cy.logout();
     });
 });

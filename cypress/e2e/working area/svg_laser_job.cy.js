@@ -119,17 +119,24 @@ describe("Laser Job", function () {
                             .filter(":visible")
                             .click();
                     });
+                    cy.wait(7000);
+                    cy.readFile("cypress/downloads/Focus_Tool_Mr_Beam_Laser_1.svg.5x.gco", {
+                        timeout: 40000,
+                    }).then((contentTestFile) => {
+                        cy.intercept('GET', `http://localhost:5002/downloads/files/local/${downloadFile}*`).as('file')
+                        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+                        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+                        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+                            .first()
+                            .click({ force: true })
+                        cy.wait('@file').its('response.body')
+                        .should($body => {
+                          expect($body).to.equal(contentTestFile);
+                          
+                      });
+                });    
             });
-        cy.wait(7000);
-        cy.readFile("cypress/fixtures/MrBeam_Lasers1.gco", {
-            timeout: 40000,
-        }).then((contentTestFile) => {
-            cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
-                timeout: 40000,
-            }).then((contentFile) => {
-                expect(contentTestFile).to.include(contentFile);
-            });
-        });
+           
         cy.logout();
     });
 

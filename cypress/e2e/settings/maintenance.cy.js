@@ -18,6 +18,7 @@ describe("Maintenance", function () {
     afterEach(function () {
         cy.logout();
     });
+    //status code no exist
     it("Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-buy-now-pre-filter"]')
@@ -28,6 +29,7 @@ describe("Maintenance", function () {
                 });
             });
     });
+    // status code no exist
     it("Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-buy-now-main-filter"]')
@@ -38,6 +40,7 @@ describe("Maintenance", function () {
                 });
             });
     });
+    // status code no exist
     it("Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-buy-now-laser-head"]')
@@ -60,23 +63,23 @@ describe("Maintenance", function () {
     });
     it("Reset Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
-        cy.get('[data-test="maintenance-reset-button"]').click();
+        cy.get('[data-test="maintenance-reset-button-pre-filter"]').click();
+        cy.get('#reset_counter_are_you_sure > .modal-header').should('to.visible')
         cy.get('[data-test="maintenance-yes-button"]').click();
-        cy.get(":nth-child(1) > .maintenance-reset-column > .btn").click();
-        cy.get("#reset_counter_btn").click();
+        cy.get('#reset_counter_are_you_sure > .modal-header').should('not.visible')
     });
     it("Reset Air Filter: Main filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
-        cy.get('[data-test="maintenance-reset-button"]').click();
+        cy.get('[data-test="maintenance-reset-button-carbon-filter"]').eq(1).click();
+        cy.get('#reset_counter_are_you_sure > .modal-header').should('to.visible')
         cy.get('[data-test="maintenance-yes-button"]').click();
-        cy.get(":nth-child(2) > .maintenance-reset-column > .btn").click();
-        cy.get("#reset_counter_btn").click();
+        cy.get('#reset_counter_are_you_sure > .modal-header').should('not.visible')
     });
     it("Reset Laser head cleaning", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
-        cy.get('[data-test="maintenance-reset-button"]').click();
+        cy.get('[data-test="maintenance-reset-button-laser-head"]').click();
+        cy.get('#reset_counter_are_you_sure > .modal-header').should('to.visible')
         cy.get('[data-test="maintenance-yes-button"]').click();
-        cy.get(":nth-child(3) > .maintenance-reset-column > .btn").click();
-        cy.get("#reset_counter_btn").click();
+        cy.get('#reset_counter_are_you_sure > .modal-header').should('not.visible')
     });
 });

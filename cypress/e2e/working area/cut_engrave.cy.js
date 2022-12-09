@@ -94,43 +94,56 @@ describe("Cut and engrave", function () {
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-            .first()
-            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
-            .click({ force: true })
-            .invoke("prop", "innerText")
-            .then((downloadFile) => {
-                cy.window()
-                    .document()
-                    .then(function (doc) {
-                        doc.addEventListener("click", () => {
-                            setTimeout(function () {
-                                doc.location.reload();
-                            }, 5000);
-                        });
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-card"]'
-                        )
-                            .filter(`:contains(${downloadFile})`)
-                            .find(
-                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
-                            );
-                        cy.wait(1000);
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-download"]'
-                        )
-                            .filter(":visible")
-                            .click();
+        .first()
+        .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
+        .click({ force: true })
+        .invoke("prop", "innerText")
+        .then((downloadFile) => {
+            cy.intercept(
+                "GET",
+                `http://localhost:5002/downloads/files/local/${downloadFile}*`
+            ).as("file");
+            cy.window()
+                .document()
+                .then(function (doc) {
+                    doc.addEventListener("click", () => {
+                        setTimeout(function () {
+                            doc.location.reload();
+                        }, 5000);
                     });
-            });
-        cy.wait(7000);
-        cy.readFile("cypress/fixtures/MrBeam_Lasers1.gco", {
-            timeout: 40000,
-        }).then((contentTestFile) => {
-            cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
-                timeout: 40000,
-            }).then((contentFile) => {
-                expect(contentTestFile).to.include(contentFile);
-            });
+                    cy.get(
+                        '[data-test="tab-designlib-mechinecode-file-card"]'
+                    )
+                        .filter(`:contains(${downloadFile})`)
+                        .find(
+                            '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
+                        );
+                    cy.wait(1000);
+                    cy.get(
+                        '[data-test="tab-designlib-mechinecode-file-download"]'
+                    )
+                        .filter(":visible")
+                        .click();
+                });
+                cy.readFile("cypress/downloads/Lasers.gco", {
+                    timeout: 40000,
+                }).then((contentTestFile) => {
+                   
+                    cy.get(
+                        '[data-test="mrbeam-ui-index-design-library"]'
+                    ).click();
+                    cy.get(
+                        '[data-test="tab-designlib-filter-gcode-radio"]'
+                    ).click();
+                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+                        .first()
+                        .click({ force: true });
+                    cy.wait("@file")
+                        .its("response.body")
+                        .should(($body) => {
+                            expect($body).to.equal(contentTestFile);
+                        });
+        });
         });
         cy.logout();
     });

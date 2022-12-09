@@ -104,7 +104,7 @@ describe("Laser Job", function () {
             .should("not.exist");
     });
 
-    it("reset and remove", function () {
+    it("Reset and remove", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
         cy.get('[data-test="tab-designlib-svg-preview-card"]').then(
             ($elem) => {

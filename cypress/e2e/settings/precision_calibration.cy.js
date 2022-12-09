@@ -49,11 +49,12 @@ describe("Navbar icons", function () {
 
     it("Find the most precise line", function () {
         cy.get('[id="settings_plugin_mrbeam_backlash_link"]').click();
-        cy.get('.btn-default').contains('Next').click()
-        cy.get('[id="settings_backlash_compensation_x"]').clear().type('01')
-        cy.get('.btn-default').contains('OK').click()
-        cy.get('.btn-default').contains('Next').click()
-        cy.get('[id="settings_backlash_compensation_x"]').invoke('prop', "value").should('to.contain', "01")
-    
+        cy.get(".btn-default").contains("Next").click();
+        cy.get('[id="settings_backlash_compensation_x"]').clear().type("01");
+        cy.get(".btn-default").contains("OK").click();
+        cy.get(".btn-default").contains("Next").click();
+        cy.get('[id="settings_backlash_compensation_x"]')
+            .invoke("prop", "value")
+            .should("to.contain", "01");
     });
 });

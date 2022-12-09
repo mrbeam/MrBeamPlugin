@@ -17,10 +17,12 @@ describe("Navbar icons", function () {
 
     it("Reminder", function () {
         cy.get('[id="settings_plugin_mrbeam_reminders_link"]').click();
-        cy.get('[data-test="reminder-settings-focus-reminder"]').if('not.checked')
-        .check().should("be.checked")
-        .else('be.checked')
-        .uncheck()
-        .should('not.checked')     
+        cy.get('[data-test="reminder-settings-focus-reminder"]')
+            .if("not.checked")
+            .check()
+            .should("be.checked")
+            .else("be.checked")
+            .uncheck()
+            .should("not.checked");
     });
 });

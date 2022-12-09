@@ -15,25 +15,30 @@ describe("Files", function () {
     });
     it("SVG dpi", function () {
         cy.get('[id="settings_plugin_mrbeam_conversion_link"]').click();
-        cy.get('#settings-svgtogcode-svgDPI').clear().type('100');
+        cy.get("#settings-svgtogcode-svgDPI").clear().type("100");
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[id="settings_plugin_mrbeam_conversion_link"]').click();
-        cy.get('#settings-svgtogcode-svgDPI').invoke('prop', "value").should('to.contain', "100")
-    })
+        cy.get("#settings-svgtogcode-svgDPI")
+            .invoke("prop", "value")
+            .should("to.contain", "100");
+    });
     it("DXF default scale factor", function () {
         cy.get('[id="settings_plugin_mrbeam_conversion_link"]').click();
-        cy.get('#settings-svgtogcode-dxfScale').clear().type('100');
+        cy.get("#settings-svgtogcode-dxfScale").clear().type("100");
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[id="settings_plugin_mrbeam_conversion_link"]').click();
-        cy.get('#settings-svgtogcode-dxfScale').invoke('prop', "value").should('to.contain', "100")
-        
-    })
+        cy.get("#settings-svgtogcode-dxfScale")
+            .invoke("prop", "value")
+            .should("to.contain", "100");
+    });
     it("Delete GCode files automatically", function () {
         cy.get('[id="settings_plugin_mrbeam_conversion_link"]').click();
-        cy.get(':nth-child(4) > .control-group > div > .checkbox > input').if('not.checked')
-        .check().should("be.checked")
-        .else('be.checked')
-        .uncheck()
-        .should('not.checked')     
-    })
+        cy.get(":nth-child(4) > .control-group > div > .checkbox > input")
+            .if("not.checked")
+            .check()
+            .should("be.checked")
+            .else("be.checked")
+            .uncheck()
+            .should("not.checked");
+    });
 });

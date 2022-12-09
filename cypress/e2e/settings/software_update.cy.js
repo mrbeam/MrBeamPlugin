@@ -17,9 +17,7 @@ describe("Software update", function () {
 
     it("Link this link", function () {
         cy.get('[id="settings_plugin_softwareupdate_link"]').click();
-        cy.get(
-            "#settings_software_channel_descriptions > :nth-child(1) > :nth-child(3) > a"
-        )
+        cy.get('[data-test="software-channel-stable-channel-link"]')
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request(myLink).then((resp) => {
@@ -30,9 +28,7 @@ describe("Software update", function () {
 
     it("Link what's new in the beta channel", function () {
         cy.get('[id="settings_plugin_softwareupdate_link"]').click();
-        cy.get(
-            "#settings_software_channel_descriptions > :nth-child(2) > :nth-child(3) > a"
-        )
+        cy.get('[data-test="software-channel-beta-channel-link"]')
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request(myLink).then((resp) => {
@@ -112,18 +108,35 @@ describe("Software update", function () {
                     });
             });
     });
-    it("Software channel", function () {
+    it("Software channel - beta", function () {
         cy.get('[id="settings_plugin_softwareupdate_link"]').click();
         cy.get('[data-test="software-channel-select-bata-stable"]').select(
             "BETA"
         );
-        cy.get(".sticky-footer").click();
-        cy.contains("Everything is up-to-date").should("to.exist");
+        cy.reload(true);
+        cy.wait(2000);
+        cy.get(".navbar-header > span > a")
+            .contains("BETA")
+            .should("to.visible");
+    });
+    it("Software channel - stable", function () {
         cy.get('[id="settings_plugin_softwareupdate_link"]').click();
         cy.get('[data-test="software-channel-select-bata-stable"]').select(
             "PROD"
         );
+        cy.reload(true);
+        cy.wait(2000);
+        cy.get(".navbar-header > span > a").should("not.exist");
+    });
+    it("Software channel", function () {
+        cy.get('[id="settings_plugin_softwareupdate_link"]').click();
+
         cy.get(".sticky-footer").click();
-        cy.contains("Everything is up-to-date").should("to.exist");
+        cy.contains("Everything is up-to-date")
+            .if("exist")
+            .should("exist")
+            .else("to.visible")
+            .contains("Update Available")
+            .should("exist");
     });
 });

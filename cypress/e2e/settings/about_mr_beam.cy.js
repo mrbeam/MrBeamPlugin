@@ -148,7 +148,7 @@ describe("About This Mr Beam", function () {
         cy.logout();
     });
     // Linkedin status code 999
-    it.skip("Links - linkedin", function () {
+    it("Links - linkedin", function () {
         cy.get('[data-test="about-settings-link-linkedin"]')
             .invoke("attr", "href")
             .then((myLink) => {
@@ -243,7 +243,7 @@ describe("About This Mr Beam", function () {
         cy.logout();
     });
     // error 404
-    it.skip("Link privacy", function () {
+    it("Link privacy", function () {
         cy.get('[data-test="about-settings-link-web-site"]')
             .invoke("attr", "href")
             .then((myLink) => {
@@ -258,7 +258,7 @@ describe("About This Mr Beam", function () {
         cy.logout();
     });
     // error 404
-    it.skip("Privacy Policies - service", function () {
+    it("Privacy Policies - service", function () {
         cy.get('[data-test="about-settings-link-find-mr-beam"]')
             .click()
             .invoke("attr", "href")
