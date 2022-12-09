@@ -1,4 +1,4 @@
-describe('User manual', () => {
+describe('Quickstart Guide', () => {
   beforeEach(function () {
         cy.fixture("test-data").then(function (testData) {
             this.testData = testData;
@@ -11,7 +11,7 @@ describe('User manual', () => {
         cy.loginLaser(this.testData.email, this.testData.password);
     });
 
-    it("User manual -- De", function () {
+    it("Quickstart Guide -- De", function () {
         // set language to German
         cy.get('[id="navbar_login"]').click();
         cy.get('[id="login_dropdown_loggedin"]')
@@ -44,17 +44,17 @@ describe('User manual', () => {
         cy.get('[id="burger_menu_link"]')
         .should("to.exist");
 
-        // click on user manual under burger menu icon
+        // click on quickstart guide under burger menu icon
         cy.get('[id="burger_menu_link"]')
         .click({force: true});
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Betriebsanleitung").should("to.exist");
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Quickstart Guide").should("to.exist");
 
         // test find.mr.beam website url & title
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Betriebsanleitung").invoke('removeAttr', 'target').click({force: true});
-        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/de/UserManual.pdf');
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Quickstart Guide").invoke('removeAttr', 'target').click({force: true});
+        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/de/QuickstartGuide.pdf');
     });
 
-    it("User manual -- En", function () {
+    it("Quickstart Guide -- En", function () {
         // set language to English
         cy.get('[id="navbar_login"]').click();
         cy.get('[id="login_dropdown_loggedin"]')
@@ -87,17 +87,17 @@ describe('User manual', () => {
         cy.get('[id="burger_menu_link"]')
         .should("to.exist");
 
-        // click on user manual under burger menu icon
+        // click on quickstart guide under burger menu icon
         cy.get('[id="burger_menu_link"]')
         .click({force: true});
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("User Manual").should("to.exist");
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Quickstart Guide").should("to.exist");
 
         // test find.mr.beam website url & title
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("User Manual").invoke('removeAttr', 'target').click({force: true});
-        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/UserManual.pdf');
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Quickstart Guide").invoke('removeAttr', 'target').click({force: true});
+        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/QuickstartGuide.pdf');
     });
 
-    it("User manual -- Es", function () {
+    it("Quickstart Guide -- Es", function () {
         // set language to Spanish
         cy.get('[id="navbar_login"]').click();
         cy.get('[id="login_dropdown_loggedin"]')
@@ -130,17 +130,17 @@ describe('User manual', () => {
         cy.get('[id="burger_menu_link"]')
         .should("to.exist");
 
-        // click on user manual under burger menu icon
+        // click on quickstart guide under burger menu icon
         cy.get('[id="burger_menu_link"]')
         .click({force: true});
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manual del usuario").should("to.exist");
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guía de inicio rápido").should("to.exist");
 
         // test find.mr.beam website url & title
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manual del usuario").invoke('removeAttr', 'target').click({force: true});
-        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/es/UserManual.pdf');
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guía de inicio rápido").invoke('removeAttr', 'target').click({force: true});
+        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/QuickstartGuide.pdf');
     });
 
-    it("User manual -- Fr", function () {
+    it("Quickstart Guide-- Fr", function () {
         // set language to French
         cy.get('[id="navbar_login"]').click();
         cy.get('[id="login_dropdown_loggedin"]')
@@ -173,17 +173,17 @@ describe('User manual', () => {
         cy.get('[id="burger_menu_link"]')
         .should("to.exist");
 
-        // click on user manual under burger menu icon
+        // click on quickstart guide under burger menu icon
         cy.get('[id="burger_menu_link"]')
         .click({force: true});
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manuel d’Instructions").should("to.exist");
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guide de démarrage rapide").should("to.exist");
 
         // test find.mr.beam website url & title
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manuel d’Instructions").invoke('removeAttr', 'target').click({force: true});
-        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/fr/UserManual.pdf');
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guide de démarrage rapide").invoke('removeAttr', 'target').click({force: true});
+        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/QuickstartGuide.pdf');
     });
 
-    it("User manual -- It", function () {
+    it("Quickstart Guide -- It", function () {
         // set language to Italian
         cy.get('[id="navbar_login"]').click();
         cy.get('[id="login_dropdown_loggedin"]')
@@ -216,13 +216,13 @@ describe('User manual', () => {
         cy.get('[id="burger_menu_link"]')
         .should("to.exist");
 
-        // click on user manual under burger menu icon
+        // click on quickstart guide under burger menu icon
         cy.get('[id="burger_menu_link"]')
         .click({force: true});
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manuale Utente").should("to.exist");
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guida Rapida").should("to.exist");
 
         // test find.mr.beam website url & title
-        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Manuale Utente").invoke('removeAttr', 'target').click({force: true});
-        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/it/UserManual.pdf');
+        cy.get('[id="burger_menu"] > .dropdown-menu').contains("Guida Rapida").invoke('removeAttr', 'target').click({force: true});
+        cy.url().should('eq', 'http://localhost:5002/plugin/mrbeam/docs/dreamcut/en/QuickstartGuide.pdf');
     });
 });
