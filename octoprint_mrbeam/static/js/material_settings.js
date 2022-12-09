@@ -74,7 +74,7 @@ $(function () {
                 ),
                 hints: "",
                 type: "product",
-                url: gettext("https://www.mr-beam.org/products/mr-beam-acryl-schwarz")
+                url: gettext("https://www.mr-beam.org/en/products/mr-beam-acryl-schwarz")
             },
             "Anodized Aluminum": {
                 name: gettext("Anodized Aluminum"),
@@ -84,7 +84,7 @@ $(function () {
                     "Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefore we suggest to invert photos for engravings."
                 ),
                 type: "product",
-                url: gettext("https://www.mr-beam.org/products/eloxiertes-aluminium")
+                url: gettext("https://www.mr-beam.org/en/products/eloxiertes-aluminium")
             },
             "Balsa Wood": {
                 name: gettext("Balsa Wood"),
