@@ -444,20 +444,24 @@ $(function () {
                 // Check if a URL exists for this material
                 if("url" in self.materialSettingsDatabase[materialName] &&
                 self.materialSettingsDatabase[materialName]["url"]){
-                    let url = self.materialSettingsDatabase[materialName]["url"];
-                    // Check if a color variant query parameter exists for this URL
-                    if("variant" in self.materialSettingsDatabase[materialName] &&
-                    "color" in self.materialSettingsDatabase[materialName]["variant"] &&
-                    materialColor in self.materialSettingsDatabase[materialName]["variant"]["color"]){
-                        let variantParameterKey = "variant"
-                        let variantParameterValue = self.materialSettingsDatabase[materialName]["variant"]["color"][materialColor];
-                        return url + "?" + variantParameterKey + "=" + variantParameterValue;
-                    } else {
-                        return url;
-                    }
+                    return self.constructMaterialURL(materialName, materialColor)
                 }
             }
             return self.MATERIAL_SHOPIFY_LINK;
+        }
+
+        self.constructMaterialURL = function (materialName, materialColor) {
+            let url = self.materialSettingsDatabase[materialName]["url"];
+            // Check if a color variant query parameter exists for this URL
+            if("variant" in self.materialSettingsDatabase[materialName] &&
+            "color" in self.materialSettingsDatabase[materialName]["variant"] &&
+            materialColor in self.materialSettingsDatabase[materialName]["variant"]["color"]){
+                let variantParameterKey = "variant"
+                let variantParameterValue = self.materialSettingsDatabase[materialName]["variant"]["color"][materialColor];
+                return url + "?" + variantParameterKey + "=" + variantParameterValue;
+            } else {
+                return url;
+            }
         }
     }
 
