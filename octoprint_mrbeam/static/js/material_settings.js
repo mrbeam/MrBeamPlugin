@@ -442,13 +442,16 @@ $(function () {
             // Check if material exists in the Database
             if(materialName in self.materialSettingsDatabase) {
                 // Check if a URL exists for this material
-                if("url" in self.materialSettingsDatabase[materialName] &&
-                self.materialSettingsDatabase[materialName]["url"] &&
-                typeof self.materialSettingsDatabase[materialName]["url"] === "string"){
+                if(self.validateMaterialUrl()){
                     return self.addUrlReferral(self.constructMaterialURL(materialName, materialColor))
                 }
             }
             return self.addUrlReferral(self.MATERIAL_SHOPIFY_LINK);
+        }
+
+        self.validateMaterialUrl = function (materialName){
+            return self.materialSettingsDatabase[materialName]["url"] &&
+                typeof self.materialSettingsDatabase[materialName]["url"] === "string"
         }
 
         self.constructMaterialURL = function (materialName, materialColor) {
