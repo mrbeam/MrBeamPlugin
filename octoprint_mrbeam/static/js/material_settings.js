@@ -457,15 +457,19 @@ $(function () {
         self.constructMaterialURL = function (materialName, materialColor) {
             const url = self.materialSettingsDatabase[materialName]["url"];
             // Check if a color variant query parameter exists for this URL
-            if("variant" in self.materialSettingsDatabase[materialName] &&
-            "color" in self.materialSettingsDatabase[materialName]["variant"] &&
-            materialColor in self.materialSettingsDatabase[materialName]["variant"]["color"]){
+            if(self.validateMaterialVariant()){
                 const variantParameterKey = "variant"
                 const variantParameterValue = self.materialSettingsDatabase[materialName]["variant"]["color"][materialColor];
                 return url + "?" + variantParameterKey + "=" + variantParameterValue;
             } else {
                 return url;
             }
+        }
+
+        self.validateMaterialVariant = function (materialName){
+            return "variant" in self.materialSettingsDatabase[materialName] &&
+            "color" in self.materialSettingsDatabase[materialName]["variant"] &&
+            materialColor in self.materialSettingsDatabase[materialName]["variant"]["color"]
         }
 
         self.addUrlReferral = function (url){
