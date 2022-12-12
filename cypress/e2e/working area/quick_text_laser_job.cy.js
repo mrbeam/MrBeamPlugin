@@ -89,7 +89,7 @@ describe("Laser Job - quick text", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -210,7 +210,7 @@ describe("Laser Job - quick text", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -266,7 +266,7 @@ describe("Laser Job - quick text", function () {
         cy.logout();
     });
 
-    it.only("Add texts 3", function () {
+    it("Add texts 3", function () {
         cy.wait(3000);
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type(
@@ -333,6 +333,7 @@ describe("Laser Job - quick text", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')

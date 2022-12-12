@@ -87,6 +87,7 @@ describe("Laser Job - shapes", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -208,6 +209,7 @@ describe("Laser Job - shapes", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -335,6 +337,7 @@ describe("Laser Job - shapes", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -465,6 +468,7 @@ describe("Laser Job - shapes", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -590,19 +594,20 @@ describe("Laser Job - shapes", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
+                cy.intercept(
+                    "GET",
+                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
+                ).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
-                        cy.intercept(
-                            "GET",
-                            `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                        ).as("file");
                         doc.addEventListener("click", () => {
                             setTimeout(function () {
                                 doc.location.reload();

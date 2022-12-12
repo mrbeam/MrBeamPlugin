@@ -92,7 +92,7 @@ describe("Cut and engrave", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.get('[data-test="tab-designlib-mechinecode-file"]').first().click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
         .first()
         .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -125,7 +125,7 @@ describe("Cut and engrave", function () {
                         .filter(":visible")
                         .click();
                 });
-                cy.readFile("cypress/downloads/Lasers.gco", {
+                cy.readFile("cypress/downloads/Star_1more.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                    

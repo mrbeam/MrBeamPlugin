@@ -126,6 +126,7 @@ describe("Laser Job", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
         .first()
         .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -158,7 +159,7 @@ describe("Laser Job", function () {
                         .filter(":visible")
                         .click();
                 });
-                cy.readFile("cypress/downloads/Lasers.gco", {
+                cy.readFile("cypress/downloads/mirror.2x.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                    

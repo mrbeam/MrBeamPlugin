@@ -154,6 +154,7 @@ describe("Cut, cut 2, engrave, skip", function () {
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+        cy.wait(3000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -184,27 +185,27 @@ describe("Cut, cut 2, engrave, skip", function () {
                             '[data-test="tab-designlib-mechinecode-file-download"]'
                         )
                             .filter(":visible")
-                            .click();
-                    });
-                    cy.readFile("cypress/downloads/Lasers.gco", {
-                        timeout: 40000,
-                    }).then((contentTestFile) => {
-                       
-                        cy.get(
-                            '[data-test="mrbeam-ui-index-design-library"]'
-                        ).click();
-                        cy.get(
-                            '[data-test="tab-designlib-filter-gcode-radio"]'
-                        ).click();
-                        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-                            .first()
                             .click({ force: true });
-                        cy.wait("@file")
-                            .its("response.body")
-                            .should(($body) => {
-                                expect($body).to.equal(contentTestFile);
-                            });
-            });
+                    });
+                cy.readFile("cypress/downloads/Star_2more.gco", {
+                    timeout: 40000,
+                }).then((contentTestFile) => {
+
+                    cy.get(
+                        '[data-test="mrbeam-ui-index-design-library"]'
+                    ).click();
+                    cy.get(
+                        '[data-test="tab-designlib-filter-gcode-radio"]'
+                    ).click();
+                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+                        .first()
+                        .click({ force: true });
+                    cy.wait("@file")
+                        .its("response.body")
+                        .should(($body) => {
+                            expect($body).to.equal(contentTestFile);
+                        });
+                });
             });
         cy.logout();
     });

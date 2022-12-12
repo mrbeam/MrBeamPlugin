@@ -40,13 +40,17 @@ describe("Library design", function () {
     });
 
     it("Single design in working area", function () {
-        cy.get('[data-test="tab-design-library-image-preview-card"]')
-            .filter(':contains("mirror.png")')
-            .click();
-        cy.get('[id="userContent"]').contains("mirror.png").should("to.exist");
-        cy.get(".file_list_entry")
-            .filter(':contains("mirror.png")')
-            .should("to.exist");
+        cy.get('[data-test="tab-designlib-svg-preview-card"]')
+            .first()
+            .invoke("prop", "innerText")
+            .then((checkedItem) => {
+                cy.get('[data-test="tab-designlib-svg-preview-card"]')
+                    .filter(`:contains(${checkedItem})`)
+                    .click();
+                cy.get(".file_list_entry")
+                    .filter(`:contains(${checkedItem})`)
+                    .should("to.exist");
+            });
     });
 
     it("Select/Unselect - file", function () {
@@ -93,7 +97,7 @@ describe("Library design", function () {
 
     it("Search", function () {
         cy.get('[data-test="tab-designlib-svg-preview-card"]')
-            .eq(1)
+            .first()
             .invoke("prop", "innerText")
             .then((item) => {
                 cy.get('[data-test="tab-designlib-search-input"]').clear();
@@ -111,7 +115,7 @@ describe("Library design", function () {
         cy.wait(5000);
         cy.get('[data-test="tab-designlib-files-svg"]')
             .first()
-            .should("to.exist", "test.svg");
+            .should("to.exist", filepathSvg);
         cy.logout();
     });
 
@@ -140,7 +144,7 @@ describe("Library design", function () {
             cy.get(".btn-primary").click();
         });
         cy.wait(7000);
-        cy.get('[data-test="tab-designlib-folder-preview"]')
+        cy.get('[data-test="tab-designlib-dropdown-folder"]')
             .contains(folderName)
             .should("to.exist");
         cy.logout();
@@ -160,7 +164,7 @@ describe("Library design", function () {
 
     it("Select/Unselect - folder", function () {
         cy.get('[data-test="tab-designlib-dropdown-folder"]')
-            .eq(0)
+            .first()
             .invoke("prop", "innerText")
             .then((folder) => {
                 cy.get('[data-test="tab-designlib-folder-list"]')
@@ -212,11 +216,12 @@ describe("Library design", function () {
     });
 
     it("Open folder and click back", function () {
-        cy.get('[data-test="tab-designlib-folder-preview"]')
-            .eq(0)
+        cy.get('[data-test="tab-designlib-dropdown-folder"]')
+            .first()
+            .filter(':visible')
             .click({ force: true });
         cy.get('[data-test="tab-designlib-back" ]').click();
-        cy.get('[data-test="tab-designlib-back" ]').should("not.exist");
+        cy.get('[data-test="tab-designlib-back" ]').should("not.visible");
         cy.logout();
     });
 
