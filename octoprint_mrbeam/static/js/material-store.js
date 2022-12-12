@@ -10,8 +10,9 @@ $(function () {
         window.mrbeam.viewModels["materialStoreViewModel"] = self;
         self.material_store_iframe_src = "";
 
-        self.initialiseStore = function (url) {
-            if (typeof url === "string" && url.trim().length !== 0) {
+        self.initialiseStore = function (healthcheck_url, url) {
+            if (typeof url === "string" && url.trim().length !== 0
+            && typeof healthcheck_url === "string" && healthcheck_url.trim().length !== 0) {
                 if (url !== self.material_store_iframe_src) {
                     self.material_store_iframe_src = url;
                     $("#material_store_iframe").attr(
@@ -21,7 +22,7 @@ $(function () {
                 }
 
                 $.ajax({
-                    url: self.material_store_iframe_src,
+                    url: healthcheck_url,
                     method: "HEAD",
                     timeout: 6000,
                     success: self.loadMaterialStore,
@@ -65,17 +66,21 @@ $(function () {
         };
 
         self.sendMessageToMaterialStoreIframe = function (event, payload) {
+            let materialStoreIframeElement = $("#material_store_iframe");
             let data = {
                 event: event,
                 payload: payload,
             };
 
-            document
-                .getElementById("material_store_iframe")
-                .contentWindow.postMessage(
-                    data,
-                    self.material_store_iframe_src
-                );
+            if(materialStoreIframeElement.contentWindow){
+                materialStoreIframeElement
+                    .contentWindow.postMessage(
+                        data,
+                        self.material_store_iframe_src
+                    );
+            } else {
+                console.error("Material store Iframe window object is undefined");
+            }
         };
 
         $("#material_store_iframe").attr("src", self.material_store_iframe_src);

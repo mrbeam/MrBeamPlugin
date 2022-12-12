@@ -3410,6 +3410,26 @@ button#terminal-send {
   margin-top: 45px;
 }
 
+#designstore .loading_spinner_wrapper {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+}
+#designstore .loading_spinner {
+  position: relative;
+  left: 50%;
+  top: 50%;
+  color: #ffffff;
+}
+#designstore .loading_spinner i {
+  font-weight: bold;
+  font-size: 4em;
+}
+
 /* Design Store */
 
 /* Support Standalone */

@@ -92,7 +92,7 @@ class TestSettingsService(TestCase):
     def test_get_template_settings_model_with_no_matching_environment_material_store_settings__then_empty_material_store_settings(
             self, yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {
-            'environment': {'doesnotexist': {'url': 'https://test.material.store.mr-beam.org', 'enabled': True}}}}
+            'environment': {'doesnotexist': {'url': 'https://test.material.store.mr-beam.org', 'enabled': True, 'healthcheck_url': 'https://test.material.store.mr-beam.org/api/healthcheck'}}}}
         settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
@@ -102,7 +102,7 @@ class TestSettingsService(TestCase):
     def test_get_template_settings_model_with_no_url_material_store_settings__then_empty_material_store_settings(self,
                                                                                                                  yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {
-            'environment': {'prod': {'enabled': True}}}}
+            'environment': {'prod': {'enabled': True, 'healthcheck_url': 'https://test.material.store.mr-beam.org/api/healthcheck'}}}}
         settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
@@ -112,7 +112,17 @@ class TestSettingsService(TestCase):
     def test_get_template_settings_model_with_no_enabled_material_store_settings__then_empty_material_store_settings(
             self, yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {
-            'environment': {'prod': {'url': 'https://test.material.store.mr-beam.org'}}}}
+            'environment': {'prod': {'url': 'https://test.material.store.mr-beam.org', 'healthcheck_url': 'https://test.material.store.mr-beam.org/api/healthcheck'}}}}
+        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+        self._validate_settings_model(settings_model)
+        self._validate_empty_material_store_settings(settings_model)
+
+    @patch('octoprint_mrbeam.services.settings_service.requests.get')
+    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    def test_get_template_settings_model_with_no_healthcheck_url_material_store_settings__then_empty_material_store_settings(
+            self, yaml_mock, requests_mock):
+        yaml_mock.return_value = {'material-store': {
+            'environment': {'prod': {'enabled': True, 'url': 'https://test.material.store.mr-beam.org'}}}}
         settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
@@ -121,11 +131,12 @@ class TestSettingsService(TestCase):
     @patch('octoprint_mrbeam.services.settings_service.yaml.load')
     def test_get_template_settings_model_with_correct_material_store_settings__then_valid_settings(self, yaml_mock, requests_mock):
         yaml_mock.return_value = {'material-store': {
-            'environment': {'prod': {'url': 'https://test.material.store.mr-beam.org', 'enabled': True}}}}
+            'environment': {'prod': {'url': 'https://test.material.store.mr-beam.org', 'enabled': True, 'healthcheck_url': 'https://test.material.store.mr-beam.org/api/healthcheck'}}}}
         settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
         self._validate_settings_model(settings_model)
         self.assertEquals(settings_model.material_store.url, 'https://test.material.store.mr-beam.org')
         self.assertEquals(settings_model.material_store.enabled, True)
+        self.assertEquals(settings_model.material_store.healthcheck_url, 'https://test.material.store.mr-beam.org/api/healthcheck')
 
     def test_get_environment_from_settings_with_none__then_stable(self):
         environment = settings_service.get_environment_enum_from_plugin_settings(None)
@@ -192,5 +203,7 @@ class TestSettingsService(TestCase):
         self.assertIsNotNone(settings_model.material_store)
         self.assertIsNotNone(settings_model.material_store.enabled)
         self.assertIsNotNone(settings_model.material_store.url)
+        self.assertIsNotNone(settings_model.material_store.healthcheck_url)
         self.assertEquals(settings_model.material_store.enabled, False)
         self.assertEquals(settings_model.material_store.url, "")
+        self.assertEquals(settings_model.material_store.healthcheck_url, "")

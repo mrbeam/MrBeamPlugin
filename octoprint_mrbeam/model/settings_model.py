@@ -27,9 +27,10 @@ class MaterialStoreModel:
         Data object containing information corresponding to the material store section to be used on the jinja2 templates
         """
 
-    def __init__(self, enabled=False, url=""):
+    def __init__(self, enabled=False, url="", healthcheck_url=""):
         self.enabled = enabled
         self.url = url
+        self.healthcheck_url = healthcheck_url
 
     def __repr__(self):
-        return 'MaterialStore(enabled=%s, url=%s)' % (self.enabled, self.url)
+        return 'MaterialStore(enabled=%s, url=%s, healthcheck_url=%s)' % (self.enabled, self.url, self.healthcheck_url)
