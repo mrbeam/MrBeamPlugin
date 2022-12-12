@@ -443,11 +443,12 @@ $(function () {
             if(materialName in self.materialSettingsDatabase) {
                 // Check if a URL exists for this material
                 if("url" in self.materialSettingsDatabase[materialName] &&
-                self.materialSettingsDatabase[materialName]["url"]){
-                    return self.constructMaterialURL(materialName, materialColor)
+                self.materialSettingsDatabase[materialName]["url"] &&
+                typeof self.materialSettingsDatabase[materialName]["url"] === "string"){
+                    return self.addUrlReferral(self.constructMaterialURL(materialName, materialColor))
                 }
             }
-            return self.MATERIAL_SHOPIFY_LINK;
+            return self.addUrlReferral(self.MATERIAL_SHOPIFY_LINK);
         }
 
         self.constructMaterialURL = function (materialName, materialColor) {
@@ -461,6 +462,14 @@ $(function () {
                 return url + "?" + variantParameterKey + "=" + variantParameterValue;
             } else {
                 return url;
+            }
+        }
+
+        self.addUrlReferral = function (url){
+            if(url.includes("?")){
+                return url + "&utm_source=mrbeam_device_frontend"
+            } else {
+                return url + "?utm_source=mrbeam_device_frontend"
             }
         }
     }
