@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2022-12-12 16:11+0100\n"
-"PO-Revision-Date: 2022-12-12 17:20+0100\n"
+"PO-Revision-Date: 2022-12-12 17:25+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -3277,7 +3277,7 @@ msgstr "design-store"
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:56
 msgid "material store"
-msgstr "Material Store"
+msgstr "Material-Store"
 
 # tab headline (old mr beam I)
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:59
