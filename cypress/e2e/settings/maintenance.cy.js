@@ -64,22 +64,36 @@ describe("Maintenance", function () {
     it("Reset Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-reset-button-pre-filter"]').click();
-        cy.get('#reset_counter_are_you_sure > .modal-header').should('to.visible')
+        cy.get("#reset_counter_are_you_sure > .modal-header").should(
+            "to.visible"
+        );
         cy.get('[data-test="maintenance-yes-button"]').click();
-        cy.get('#reset_counter_are_you_sure > .modal-header').should('not.visible')
+        cy.get("#reset_counter_are_you_sure > .modal-header").should(
+            "not.visible"
+        );
     });
     it("Reset Air Filter: Main filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
-        cy.get('[data-test="maintenance-reset-button-carbon-filter"]').eq(1).click();
-        cy.get('#reset_counter_are_you_sure > .modal-header').should('to.visible')
+        cy.get('[data-test="maintenance-reset-button-carbon-filter"]')
+            .eq(1)
+            .click();
+        cy.get("#reset_counter_are_you_sure > .modal-header").should(
+            "to.visible"
+        );
         cy.get('[data-test="maintenance-yes-button"]').click();
-        cy.get('#reset_counter_are_you_sure > .modal-header').should('not.visible')
+        cy.get("#reset_counter_are_you_sure > .modal-header").should(
+            "not.visible"
+        );
     });
     it("Reset Laser head cleaning", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-reset-button-laser-head"]').click();
-        cy.get('#reset_counter_are_you_sure > .modal-header').should('to.visible')
+        cy.get("#reset_counter_are_you_sure > .modal-header").should(
+            "to.visible"
+        );
         cy.get('[data-test="maintenance-yes-button"]').click();
-        cy.get('#reset_counter_are_you_sure > .modal-header').should('not.visible')
+        cy.get("#reset_counter_are_you_sure > .modal-header").should(
+            "not.visible"
+        );
     });
 });

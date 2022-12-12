@@ -90,7 +90,7 @@ describe("Menu burger", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-        cy.get('.hopscotch-cta').click();
-        cy.get(".hopscotch-bubble-container").should("not.exist");  
+        cy.get(".hopscotch-cta").click();
+        cy.get(".hopscotch-bubble-container").should("not.exist");
     });
 });

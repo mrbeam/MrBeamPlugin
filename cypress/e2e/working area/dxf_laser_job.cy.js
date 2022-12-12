@@ -131,25 +131,24 @@ describe("Laser Job", function () {
                             .filter(":visible")
                             .click();
                     });
-                    cy.readFile("cypress/downloads/paris1.gco", {
-                        timeout: 40000,
-                    }).then((contentTestFile) => {
-                       
-                        cy.get(
-                            '[data-test="mrbeam-ui-index-design-library"]'
-                        ).click();
-                        cy.get(
-                            '[data-test="tab-designlib-filter-gcode-radio"]'
-                        ).click();
-                        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-                            .first()
-                            .click({ force: true });
-                        cy.wait("@file")
-                            .its("response.body")
-                            .should(($body) => {
-                                expect($body).to.equal(contentTestFile);
-                            });
-            });
+                cy.readFile("cypress/downloads/paris1.gco", {
+                    timeout: 40000,
+                }).then((contentTestFile) => {
+                    cy.get(
+                        '[data-test="mrbeam-ui-index-design-library"]'
+                    ).click();
+                    cy.get(
+                        '[data-test="tab-designlib-filter-gcode-radio"]'
+                    ).click();
+                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+                        .first()
+                        .click({ force: true });
+                    cy.wait("@file")
+                        .its("response.body")
+                        .should(($body) => {
+                            expect($body).to.equal(contentTestFile);
+                        });
+                });
             });
         cy.logout();
     });

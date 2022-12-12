@@ -13,27 +13,23 @@ describe("Laser Job", function () {
 
     it("Make me fit", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designlib-svg-preview-card"]').then(
-            ($elem) => {
-                if (
-                    $elem
-                        .find(
-                            '[data-test="tab-designlib-svg-preview-card"]'
-                        )
-                        .filter(':contains("black_cat.svg")').length
-                ) {
-                } else {
-                    const filepath = "black_cat.svg";
-                    cy.get('.fileinput-button input[type="file"]').attachFile(
-                        filepath
-                    );
-                    cy.wait(5000);
-                    cy.get('[data-test="tab-designlib-svg-preview-card"]')
-                        .contains("black_cat.svg")
-                        .should("to.exist");
-                }
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').then(($elem) => {
+            if (
+                $elem
+                    .find('[data-test="tab-designlib-svg-preview-card"]')
+                    .filter(':contains("black_cat.svg")').length
+            ) {
+            } else {
+                const filepath = "black_cat.svg";
+                cy.get('.fileinput-button input[type="file"]').attachFile(
+                    filepath
+                );
+                cy.wait(5000);
+                cy.get('[data-test="tab-designlib-svg-preview-card"]')
+                    .contains("black_cat.svg")
+                    .should("to.exist");
             }
-        );
+        });
         cy.get('[data-test="tab-designlib-svg-preview-card"]')
             .filter(':contains("black_cat.svg")')
             .click();
@@ -89,9 +85,7 @@ describe("Laser Job", function () {
             .should("to.exist");
         cy.wait(2000);
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designlib-svg-preview-card"]')
-            .first()
-            .click();
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').first().click();
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type("MrBeam");
         cy.get('[data-test="quick-text-done-button"]').click();
@@ -106,29 +100,23 @@ describe("Laser Job", function () {
 
     it("Reset and remove", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designlib-svg-preview-card"]').then(
-            ($elem) => {
-                if (
-                    $elem
-                        .find(
-                            '[data-test="tab-designlib-image-preview-card"]'
-                        )
-                        .filter(':contains("paris2.jpg")').length
-                ) {
-                } else {
-                    const filepath = "paris2.jpg";
-                    cy.get('.fileinput-button input[type="file"]').attachFile(
-                        filepath
-                    );
-                    cy.wait(5000);
-                    cy.get(
-                        '[data-test="tab-designlib-image-preview-card"]'
-                    )
-                        .contains("paris2.jpg")
-                        .should("to.exist");
-                }
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').then(($elem) => {
+            if (
+                $elem
+                    .find('[data-test="tab-designlib-image-preview-card"]')
+                    .filter(':contains("paris2.jpg")').length
+            ) {
+            } else {
+                const filepath = "paris2.jpg";
+                cy.get('.fileinput-button input[type="file"]').attachFile(
+                    filepath
+                );
+                cy.wait(5000);
+                cy.get('[data-test="tab-designlib-image-preview-card"]')
+                    .contains("paris2.jpg")
+                    .should("to.exist");
             }
-        );
+        });
         cy.get('[data-test="tab-designlib-image-preview-card"]')
             .filter(':contains("paris2.jpg")')
             .click();

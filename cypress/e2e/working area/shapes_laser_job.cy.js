@@ -123,7 +123,6 @@ describe("Laser Job - shapes", function () {
                 cy.readFile("cypress/downloads/Heart.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
-
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
                     ).click();
@@ -245,7 +244,6 @@ describe("Laser Job - shapes", function () {
                 cy.readFile("cypress/downloads/Circle.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
-                   
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
                     ).click();
@@ -373,7 +371,6 @@ describe("Laser Job - shapes", function () {
                 cy.readFile("cypress/downloads/Star.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
-                   
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
                     ).click();
@@ -504,7 +501,6 @@ describe("Laser Job - shapes", function () {
                 cy.readFile("cypress/downloads/Line.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
-                    
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
                     ).click();
@@ -630,7 +626,6 @@ describe("Laser Job - shapes", function () {
                 cy.readFile("cypress/downloads/Rectangle.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
-                    
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
                     ).click();

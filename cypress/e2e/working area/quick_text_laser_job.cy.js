@@ -122,24 +122,24 @@ describe("Laser Job - quick text", function () {
                             .filter(":visible")
                             .click();
                     });
-                    cy.readFile("cypress/downloads/MrBeam.gco", {
-                        timeout: 40000,
-                    }).then((contentTestFile) => {
-                        cy.get(
-                            '[data-test="mrbeam-ui-index-design-library"]'
-                        ).click();
-                        cy.get(
-                            '[data-test="tab-designlib-filter-gcode-radio"]'
-                        ).click();
-                        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-                            .first()
-                            .click({ force: true });
-                        cy.wait("@file")
-                            .its("response.body")
-                            .should(($body) => {
-                                expect($body).to.equal(contentTestFile);
-                            });
-            });
+                cy.readFile("cypress/downloads/MrBeam.gco", {
+                    timeout: 40000,
+                }).then((contentTestFile) => {
+                    cy.get(
+                        '[data-test="mrbeam-ui-index-design-library"]'
+                    ).click();
+                    cy.get(
+                        '[data-test="tab-designlib-filter-gcode-radio"]'
+                    ).click();
+                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+                        .first()
+                        .click({ force: true });
+                    cy.wait("@file")
+                        .its("response.body")
+                        .should(($body) => {
+                            expect($body).to.equal(contentTestFile);
+                        });
+                });
             });
         cy.logout();
     });
@@ -243,25 +243,24 @@ describe("Laser Job - quick text", function () {
                             .filter(":visible")
                             .click();
                     });
-                    cy.readFile("cypress/downloads/Lasers.gco", {
-                        timeout: 40000,
-                    }).then((contentTestFile) => {
-                       
-                        cy.get(
-                            '[data-test="mrbeam-ui-index-design-library"]'
-                        ).click();
-                        cy.get(
-                            '[data-test="tab-designlib-filter-gcode-radio"]'
-                        ).click();
-                        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-                            .first()
-                            .click({ force: true });
-                        cy.wait("@file")
-                            .its("response.body")
-                            .should(($body) => {
-                                expect($body).to.equal(contentTestFile);
-                            });
-            });
+                cy.readFile("cypress/downloads/Lasers.gco", {
+                    timeout: 40000,
+                }).then((contentTestFile) => {
+                    cy.get(
+                        '[data-test="mrbeam-ui-index-design-library"]'
+                    ).click();
+                    cy.get(
+                        '[data-test="tab-designlib-filter-gcode-radio"]'
+                    ).click();
+                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+                        .first()
+                        .click({ force: true });
+                    cy.wait("@file")
+                        .its("response.body")
+                        .should(($body) => {
+                            expect($body).to.equal(contentTestFile);
+                        });
+                });
             });
         cy.logout();
     });
@@ -366,25 +365,26 @@ describe("Laser Job - quick text", function () {
                             .filter(":visible")
                             .click();
                     });
-                    cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
-                        timeout: 40000,
-                    }).then((contentTestFile) => {
-                        cy.get(
-                            '[data-test="mrbeam-ui-index-design-library"]'
-                        ).click();
-                        cy.get(
-                            '[data-test="tab-designlib-filter-gcode-radio"]'
-                        ).click();
-                        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-                            .first()
-                            .click({ force: true });
-                        cy.wait("@file")
-                            .its("response.body")
-                            .should(($body) => {
-                                expect($body).to.equal(contentTestFile);
-                            });
-            });});
-        
+                cy.readFile("cypress/downloads/MrBeam_Lasers.gco", {
+                    timeout: 40000,
+                }).then((contentTestFile) => {
+                    cy.get(
+                        '[data-test="mrbeam-ui-index-design-library"]'
+                    ).click();
+                    cy.get(
+                        '[data-test="tab-designlib-filter-gcode-radio"]'
+                    ).click();
+                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+                        .first()
+                        .click({ force: true });
+                    cy.wait("@file")
+                        .its("response.body")
+                        .should(($body) => {
+                            expect($body).to.equal(contentTestFile);
+                        });
+                });
+            });
+
         cy.logout();
     });
 

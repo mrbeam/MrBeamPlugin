@@ -192,7 +192,6 @@ describe("Cut, cut 2, engrave, skip", function () {
                 cy.readFile("cypress/downloads/Star_2more.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
-
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
                     ).click();
