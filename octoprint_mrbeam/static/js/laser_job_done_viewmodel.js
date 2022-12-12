@@ -65,13 +65,9 @@ $(function () {
             if(materialBoxElement2.length >= 0){
                 materialBoxElement2.remove();
                 materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--2');
-            }else if(materialBoxElement2.length === 0){
-                materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--2');
             }
             if(materialBoxElement3.length >= 0){
                 materialBoxElement3.remove();
-                materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--3');
-            }else if(materialBoxElement3.length === 0){
                 materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--3');
             }
         };
