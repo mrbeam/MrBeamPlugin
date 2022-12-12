@@ -9,7 +9,6 @@ describe("Navbar icons", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
-        cy.get(".icon-remove").click({ force: true, multiple: true });
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
         cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({
             force: true,

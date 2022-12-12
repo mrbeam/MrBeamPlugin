@@ -9,7 +9,6 @@ describe("Functionalities", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
-        cy.get(".icon-remove").click({ force: true, multiple: true });
     });
 
     it("Object height - slidebar", function () {
@@ -192,11 +191,16 @@ describe("Functionalities", function () {
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains(/^Foam Rubber$/)
             .click();
-        cy.get('[id="material_color_0057a8"]').click();
-        // data-test="conversion-dialog-help-icon"
-        cy.get(
-            '[data-test="conversion-dialog-help"] > .icon-external-link'
-        ).click({ force: true });
+        cy.get('[id="material_color_0057a8"]').click({ force: true });
+        cy.get("#material_thickness_2").click({ force: true });
+        cy.get('[data-test="conversion-dialog-help"]')
+            .click({ force: true })
+            .invoke("attr", "href")
+            .then((myLink) => {
+                cy.request(myLink).then((resp) => {
+                    expect(resp.status).to.eq(200);
+                });
+            });
         cy.get('[data-test="laser-job-back-button"]').click();
         cy.logout();
     });
@@ -212,10 +216,15 @@ describe("Functionalities", function () {
         cy.get('[data-test="custom-material-materials-manage"]').should(
             "not.be.visible"
         );
-        // data-test="custom-material-materials-manage-menu-burger"
-        cy.get(
-            '#material_burger_menu > div > [data-test="custom-material-learn-how"]'
-        ).click({ force: true });
+        cy.get('[data-test="custom-material-learn-how"]')
+            .filter(":visible")
+            .click({ force: true })
+            .invoke("attr", "href")
+            .then((myLink) => {
+                cy.request(myLink).then((resp) => {
+                    expect(resp.status).to.eq(200);
+                });
+            });
         cy.get('[data-test="custom-material-done"]').click();
         cy.get('[data-test="laser-job-back-button"]').click();
         cy.logout();

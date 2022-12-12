@@ -1,6 +1,7 @@
 require("cypress-iframe");
 require("@4tw/cypress-drag-drop");
-require('cy-verify-downloads').addCustomCommand();
+require("cy-verify-downloads").addCustomCommand();
+require("cypress-delete-downloads-folder").addCustomCommand();
 
 Cypress.on("uncaught:exception", (err, runnable) => {
     // returning false here prevents Cypress from
@@ -163,6 +164,7 @@ Cypress.Commands.add("loginLaser", (email, password) => {
     cy.get('[id="workingarea"]').should("to.exist");
     cy.ignoreUpdate();
     cy.hardResetModal();
+    cy.get(".icon-remove").click({ force: true, multiple: true });
 });
 
 Cypress.Commands.add("focusReminder", () => {
@@ -187,17 +189,15 @@ Cypress.Commands.add("focusReminder", () => {
 
 Cypress.Commands.add("hardResetModal", () => {
     cy.wait(3000);
-
     cy.get("body").then(($body) => {
         let reminderLaser = $body.find("#hard_refresh_overlay");
         if (reminderLaser.is(":visible")) {
-            cy.get('#hard_refresh_checkbox').click();
-            cy.get('#hard_refresh_overlay > .modal-footer > .btn')
-                .click({ force: true });
+            cy.get("#hard_refresh_checkbox").click();
+            cy.get("#hard_refresh_overlay > .modal-footer > .btn").click({
+                force: true,
+            });
         } else {
-            cy.get("#hard_refresh_overlay").should(
-                "not.be.visible"
-            );
+            cy.get("#hard_refresh_overlay").should("not.be.visible");
         }
     });
 });
@@ -207,13 +207,32 @@ Cypress.Commands.add("logout", () => {
     cy.get('[id="logout_button"]').click({ force: true });
 });
 
-Cypress.Commands.add('assertValueCopiedToClipboard', value => {
-    cy.window().then(win => {
-      win.navigator.clipboard.readText().then(text => {
-        expect(text).to.eq(value)
-      })
-    })
-  })
+Cypress.Commands.add("assertValueCopiedToClipboard", (value) => {
+    cy.window().then((win) => {
+        win.navigator.clipboard.readText().then((text) => {
+            expect(text).to.eq(value);
+        });
+    });
+});
+
+Cypress.Commands.add("deleteGcoFile", () => {
+    cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+    cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+    cy.wait(3000);
+    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+        .if("exist")
+        .then(() => {
+            cy.get('[data-test="tab-designlib-mechinecode-file"]')
+                .realHover({ multiple: true, force: true })
+                .get('[data-test="tab-designlib-mechinecode-file-select-box"]')
+                .click({ multiple: true, force: true });
+            cy.get('[data-test="tab-designlib-delete-selection"]').click();
+            cy.get('[data-test="tab-designlib-preview-card"]').should(
+                "not.exist"
+            );
+        });
+    cy.get('[data-test="mrbeam-ui-index-working-area"]').click();
+});
 
 import "cypress-file-upload";
-import 'cypress-if'
+import "cypress-if";

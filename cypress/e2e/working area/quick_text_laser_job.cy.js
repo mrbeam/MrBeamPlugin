@@ -9,8 +9,8 @@ describe("Laser Job - quick text", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
-        cy.visit(this.testData.url_laser);
-        cy.wait(5000);
+        cy.deleteDownloadsFolder();
+        cy.deleteGcoFile();
     });
 
     it("Add texts", function () {

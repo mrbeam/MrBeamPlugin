@@ -12,7 +12,6 @@ describe("Access control", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({
             force: true,
         });
-        cy.get(".icon-remove").click({ force: true, multiple: true });
     });
 
     it("Access control - new user", function () {

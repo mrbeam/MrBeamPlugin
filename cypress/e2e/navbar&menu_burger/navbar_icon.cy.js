@@ -8,7 +8,6 @@ describe("Navbar icons", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
-        cy.get(".icon-remove").click({ force: true, multiple: true });
     });
     it("Message", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-message"]').click();

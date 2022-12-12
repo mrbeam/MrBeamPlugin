@@ -9,7 +9,6 @@ describe("Menu burger", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
-        cy.get(".icon-remove").click({ force: true, multiple: true });
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
     });
     it("Lasersafety", function () {
@@ -18,14 +17,14 @@ describe("Menu burger", function () {
         cy.get(".modal-footer").filter(":visible").find(".btn-danger").click();
     });
     it("Fullscreen", function () {
-        cy.get("#go_fullscreen_menu_item").realClick();
+        cy.get('[data-test="mrbeam-ui-index-tab-fullscreen-go"]').realClick();
         cy.document().its("fullscreenElement").should("not.equal", null);
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
-        cy.get("#exit_fullscreen_menu_item").realClick();
+        cy.get('[data-test="mrbeam-ui-index-tab-manual-user"]').realClick();
         cy.document().its("fullscreenElement").should("equal", null);
     });
     it("Manual User", function () {
-        cy.get(".dropdown-menu > :nth-child(7) > a")
+        cy.get('[data-test="mrbeam-ui-index-tab-manual-user"]')
             .click()
             .invoke("attr", "href")
             .then((myLink) => {
@@ -36,7 +35,8 @@ describe("Menu burger", function () {
         cy.logout();
     });
     it("Quickstart Guide", function () {
-        cy.get(".dropdown-menu > :nth-child(8) > a")
+        cy.get('[data-test="mrbeam-ui-index-tab-manual-user"]')
+            .first()
             .click()
             .invoke("attr", "href")
             .then((myLink) => {
@@ -48,7 +48,8 @@ describe("Menu burger", function () {
     });
 
     it("Find mr beam", function () {
-        cy.get(".dropdown-menu > :nth-child(12) > a")
+        cy.get('[data-test="mrbeam-ui-index-tab-laser-find-mr-beam"]')
+            .last()
             .click()
             .invoke("attr", "href")
             .then((myLink) => {
@@ -58,8 +59,38 @@ describe("Menu burger", function () {
             });
         cy.logout();
     });
-    it("Support", function () {
-        cy.get("#support_menu_item").click();
+    it.only("Support", function () {
+        cy.get('[data-test="mrbeam-ui-index-tab-support"]').click();
         cy.get('[id="support_overlay"]').should("to.exist");
+        cy.get(".wizard-table > tbody > :nth-child(2) > :nth-child(1) > a")
+            .click()
+            .invoke("attr", "href")
+            .then((myLink) => {
+                cy.request(myLink).then((resp) => {
+                    expect(resp.status).to.eq(200);
+                });
+            });
+        cy.get(".wizard-table > tbody > :nth-child(2) > :nth-child(2) > a")
+            .click()
+            .invoke("attr", "href")
+            .then((myLink) => {
+                cy.request(myLink).then((resp) => {
+                    expect(resp.status).to.eq(200);
+                });
+            });
+        cy.get(
+            ".wizard-table > tbody > :nth-child(2) > :nth-child(3) > a"
+        ).click();
+        cy.get(".hopscotch-bubble-container").should("to.exist");
+        cy.get(".hopscotch-content > ul > .show_only_online > a")
+            .click()
+            .invoke("attr", "href")
+            .then((myLink) => {
+                cy.request(myLink).then((resp) => {
+                    expect(resp.status).to.eq(200);
+                });
+            });
+        cy.get('.hopscotch-cta').click();
+        cy.get(".hopscotch-bubble-container").should("not.exist");  
     });
 });

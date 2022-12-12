@@ -11,6 +11,8 @@ describe("Cut and engrave", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
+        cy.deleteDownloadsFolder();
+        cy.deleteGcoFile();
     });
 
     it("Cut and engrave", function () {
@@ -28,6 +30,23 @@ describe("Cut and engrave", function () {
         ).realClick({ position: "top" });
         cy.get('[data-test="quick-shape-done-button"]').click();
         //Adding file jpg
+        cy.get('[data-test="tab-designlib-files-list"]').then(($elem) => {
+            if (
+                $elem
+                    .find('[data-test="tab-designlib-image-preview-card"]')
+                    .filter(':contains("paris2.jpg")').length
+            ) {
+            } else {
+                const filepath = "paris2.jpg";
+                cy.get('.fileinput-button input[type="file"]').attachFile(
+                    filepath
+                );
+                cy.wait(5000);
+                cy.get('[data-test="tab-designlib-image-preview-card"]')
+                    .contains("paris2.jpg")
+                    .should("to.exist");
+            }
+        });
         cy.get('[data-test="working-area-tab-file"]').click();
         cy.get('[data-test="tab-designlib-image-preview-card"]')
             .filter(':contains("paris2.jpg")')

@@ -12,9 +12,9 @@ describe("Laser Job", function () {
         cy.wait(5000);
     });
 
-    it.only("Add svg file", function () {
+    it("Add svg file", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designlib-svg-preview-card"]').then(($elem) => {
+        cy.get('[data-test="tab-designlib-files-list"]').then(($elem) => {
             if (
                 $elem
                     .find('[data-test="tab-designlib-svg-preview-card"]')
