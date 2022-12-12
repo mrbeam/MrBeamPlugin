@@ -72,12 +72,14 @@ $(function () {
                 payload: payload,
             };
 
-            if(materialStoreIframeElement.is(":visible")){
+            if(materialStoreIframeElement.contentWindow){
                 materialStoreIframeElement
                     .contentWindow.postMessage(
                         data,
                         self.material_store_iframe_src
                     );
+            } else {
+                console.error("Material store Iframe window object is undefined");
             }
         };
 
