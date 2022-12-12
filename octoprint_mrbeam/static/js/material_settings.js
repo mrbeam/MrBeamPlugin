@@ -473,11 +473,8 @@ $(function () {
         }
 
         self.addUrlReferral = function (url){
-            if(url.includes("?")){
-                return url + "&utm_source=mrbeam_device_frontend"
-            } else {
-                return url + "?utm_source=mrbeam_device_frontend"
-            }
+            let param_separator = url.includes("?") ? "&" : "?" ;
+            return url + param_separator + "utm_source=mrbeam_device_frontend";
         }
     }
 
