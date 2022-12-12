@@ -29,7 +29,8 @@
                     <div class="span6">
                         <div class="modal__material-details">
                             <p>{{ _('By the way - Did you know?') }}</p>
-                            <div class="modal__material-details-box--1">
+                            {% for i in [1,2,3] %}
+                            <div class="modal__material-details-box--{{ i }}">
                                 <div class="modal__material-picture"
                                      data-bind="style: { backgroundImage: 'url(\'' + window.mrbeam.viewModels.vectorConversionViewModel.selected_material().img + '\')' }">
                                 </div>
@@ -43,6 +44,7 @@
                                     </div>
                                 </div>
                             </div>
+                            {% endfor %}
                         </div>
                     </div>
                     <div class="span6">

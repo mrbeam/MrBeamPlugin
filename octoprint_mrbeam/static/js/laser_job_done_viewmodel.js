@@ -57,19 +57,6 @@ $(function () {
             self.is_job_done(false);
             self.job_duration(0);
             self._fromData(payload);
-
-            // For styling purposes
-            let materialBoxElement1 = $(".modal__material-details-box--1");
-            let materialBoxElement2 = $(".modal__material-details-box--2");
-            let materialBoxElement3 = $(".modal__material-details-box--3");
-            if(materialBoxElement2.length >= 0){
-                materialBoxElement2.remove();
-                materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--2');
-            }
-            if(materialBoxElement3.length >= 0){
-                materialBoxElement3.remove();
-                materialBoxElement1.clone().appendTo( ".modal__material-details").removeClass('modal__material-details-box--1').addClass('modal__material-details-box--3');
-            }
         };
 
         self.onEventPrintDone = function (payload) {
