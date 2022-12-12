@@ -231,6 +231,7 @@ Cypress.Commands.add("deleteGcoFile", () => {
                 "not.exist"
             );
         });
+    cy.get('[data-test="tab-designlib-filter-design-radio"]').click();
     cy.get('[data-test="mrbeam-ui-index-working-area"]').click();
 });
 
