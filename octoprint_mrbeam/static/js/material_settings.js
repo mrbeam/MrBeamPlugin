@@ -439,14 +439,15 @@ $(function () {
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
 
         self.constructShopifyURL = function (materialName, materialColor) {
-            // Check if material exists in the Database
-            if(materialName in self.materialSettingsDatabase) {
-                // Check if a URL exists for this material
-                if(self.validateMaterialUrl(materialName)){
-                    return self.addUrlReferral(self.constructMaterialURL(materialName, materialColor))
-                }
+            // Validate material name and URL
+            if(self.validateMaterialName(materialName)  && self.validateMaterialUrl(materialName)) {
+                return self.addUrlReferral(self.constructMaterialURL(materialName, materialColor));
             }
             return self.addUrlReferral(self.MATERIAL_SHOPIFY_LINK);
+        }
+
+        self.validateMaterialName = function (materialName){
+            return materialName in self.materialSettingsDatabase;
         }
 
         self.validateMaterialUrl = function (materialName){
