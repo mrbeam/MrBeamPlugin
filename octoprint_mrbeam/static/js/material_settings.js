@@ -442,7 +442,7 @@ $(function () {
             // Check if material exists in the Database
             if(materialName in self.materialSettingsDatabase) {
                 // Check if a URL exists for this material
-                if(self.validateMaterialUrl()){
+                if(self.validateMaterialUrl(materialName)){
                     return self.addUrlReferral(self.constructMaterialURL(materialName, materialColor))
                 }
             }
@@ -457,7 +457,7 @@ $(function () {
         self.constructMaterialURL = function (materialName, materialColor) {
             const url = self.materialSettingsDatabase[materialName]["url"];
             // Check if a color variant query parameter exists for this URL
-            if(self.validateMaterialVariant()){
+            if(self.validateMaterialVariant(materialName, materialColor)){
                 const variantParameterKey = "variant"
                 const variantParameterValue = self.materialSettingsDatabase[materialName]["variant"]["color"][materialColor];
                 return url + "?" + variantParameterKey + "=" + variantParameterValue;
@@ -466,7 +466,7 @@ $(function () {
             }
         }
 
-        self.validateMaterialVariant = function (materialName){
+        self.validateMaterialVariant = function (materialName, materialColor){
             return "variant" in self.materialSettingsDatabase[materialName] &&
             "color" in self.materialSettingsDatabase[materialName]["variant"] &&
             materialColor in self.materialSettingsDatabase[materialName]["variant"]["color"]
