@@ -140,7 +140,7 @@
 													</script>
 
 													<script type="text/html" id="files_template_model_svg" data-test="tab-designlib-files-svg">
-														<div class="file_list_entry preview_card rounded_container" data-test="tab-designlib-svg-preview-card" data-test="tab-designlib-preview-card" data-bind="attr: {mrb_name: name}">
+														<div class="file_list_entry preview_card rounded_container" data-test="tab-designlib-svg-preview-card" cy-data="tab-designlib-preview-card" data-bind="attr: {mrb_name: name}">
 															<div class="selection_box" data-test="tab-designlib-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok" data-test="tab-designlib-checked-file"></i></div>
 															<div class="preview" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
@@ -206,7 +206,7 @@
 													<script type="text/html" id="files_template_model_dxf">
 														<div class="file_list_entry icon_card rounded_container">
 															<div class="selection_box" data-test="tab-designlib-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
-															<div class="preview" data-test="tab-designlib-dxf-preview-card" data-test="tab-designlib-preview-card" data-bind="
+															<div class="preview" data-test="tab-designlib-dxf-preview-card" cy-data="tab-designlib-preview-card" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-picture"></i></div>
@@ -231,7 +231,7 @@
 													</script>
 
 													<script type="text/html" id="files_template_model_image">
-														<div class="file_list_entry preview_card rounded_container" data-test="tab-designlib-image-preview-card" data-test="tab-designlib-preview-card" data-bind="attr: {mrb_name: name}">
+														<div class="file_list_entry preview_card rounded_container" data-test="tab-designlib-image-preview-card" cy-data="tab-designlib-preview-card" data-bind="attr: {mrb_name: name}">
 															<div class="selection_box" data-test="tab-designlib-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok" data-test="tab-designlib-checked-image"></i></div>
 															<div class="preview" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } },

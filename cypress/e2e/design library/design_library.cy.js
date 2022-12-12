@@ -47,11 +47,11 @@ describe("Library design", function () {
     });
 
     it("Single design in working area", function () {
-        cy.get('[data-test="tab-designlib-preview-card"]')
+        cy.get('[cy-data="tab-designlib-preview-card"]')
             .first()
             .invoke("prop", "innerText")
             .then((checkedItem) => {
-                cy.get('[data-test="tab-designlib-preview-card"]')
+                cy.get('[cy-data="tab-designlib-preview-card"]')
                     .filter(`:contains(${checkedItem})`)
                     .click();
                 cy.get(".file_list_entry")
@@ -61,11 +61,11 @@ describe("Library design", function () {
     });
 
     it("Select/Unselect - file", function () {
-        cy.get('[data-test="tab-designlib-preview-card"]')
+        cy.get('[cy-data="tab-designlib-preview-card"]')
             .first()
             .invoke("prop", "innerText")
             .then((checkedItem) => {
-                cy.get('[ddata-test="tab-designlib-preview-card"]')
+                cy.get('[cy-data="tab-designlib-preview-card"]')
                     .filter(`:contains(${checkedItem})`)
                     .realHover()
                     .find('[data-test="tab-designlib-select-box"]')
@@ -83,11 +83,11 @@ describe("Library design", function () {
     });
 
     it("Delete selection - file", function () {
-        cy.get('[data-test="tab-designlib-preview-card"]')
+        cy.get('[cy-data="tab-designlib-preview-card"]')
             .first()
             .invoke("prop", "innerText")
             .then((checkedItem) => {
-                cy.get('[data-test="tab-designlib-preview-card"]')
+                cy.get('[cy-data="tab-designlib-preview-card"]')
                     .first()
                     .contains(checkedItem)
                     .realHover()
@@ -95,7 +95,7 @@ describe("Library design", function () {
                     .filter(":visible")
                     .click({ force: true });
                 cy.get('[data-test="tab-designlib-delete-selection"]').click();
-                cy.get('[data-test="tab-designlib-preview-card"]')
+                cy.get('[cy-data="tab-designlib-preview-card"]')
                     .contains(checkedItem)
                     .should("not.exist");
             });
@@ -103,13 +103,13 @@ describe("Library design", function () {
     });
 
     it("Search", function () {
-        cy.get('[data-test="tab-designlib-preview-card"]')
+        cy.get('[cy-data="tab-designlib-preview-card"]')
             .first()
             .invoke("prop", "innerText")
             .then((item) => {
                 cy.get('[data-test="tab-designlib-search-input"]').clear();
                 cy.get('[data-test="tab-designlib-search-input"]').type(item);
-                cy.get('[data-test="tab-designlib-preview-card"]')
+                cy.get('[cy-data="tab-designlib-preview-card"]')
                     .contains(item)
                     .should("to.exist");
             });
@@ -127,14 +127,14 @@ describe("Library design", function () {
     });
 
     it("Delete designs by burger menu", function () {
-        cy.get('[data-test="tab-designlib-preview-card"]')
+        cy.get('[cy-data="tab-designlib-preview-card"]')
             .first()
             .find('[data-test="tab-designlib-option-file"]')
             .click();
         cy.get('[data-test="tab-designlib-remove-file"]')
             .filter(":visible")
             .click();
-        cy.get('[data-test="tab-designlib-preview-card"]')
+        cy.get('[cy-data="tab-designlib-preview-card"]')
             .first()
             .should("not.exist", "test.svg");
         cy.logout();
@@ -262,7 +262,7 @@ describe("Library design", function () {
     });
 
     it("Download designs by burger menu", function () {
-        cy.get('[data-test="tab-designlib-preview-card"]')
+        cy.get('[cy-data="tab-designlib-preview-card"]')
             .first()
             .find('[data-test="tab-designlib-option-file"]')
             .click()
@@ -276,7 +276,7 @@ describe("Library design", function () {
                                 doc.location.reload();
                             }, 5000);
                         });
-                        cy.get('[data-test="tab-designlib-preview-card"]')
+                        cy.get('[cy-data="tab-designlib-preview-card"]')
                             .filter(`:contains(${downloadFile})`)
                             .find('[data-test="tab-designlib-option-file"]');
                         cy.wait(1000);
