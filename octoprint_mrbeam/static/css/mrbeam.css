@@ -2875,24 +2875,6 @@ hides the force update buttons
   margin-bottom: 10px;
 }
 
-#laser_job_done_image_check {
-  font-size: 250px;
-  position: absolute;
-  top: 10%;
-  left: 0;
-  text-align: center;
-  width: 100%;
-  display: block;
-  color: transparent;
-  text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.25);
-  transition: text-shadow 3.5s ease;
-  pointer-events: none;
-}
-
-#laser_job_done_image_check.show {
-  text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.7);
-}
-
 /*
 * === COMPRESSOR and new LINE COLOR MAPPING ===
 */
