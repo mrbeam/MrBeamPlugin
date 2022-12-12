@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-11-17 14:40+0100\n"
-"PO-Revision-Date: 2022-11-17 14:40+0100\n"
+"POT-Creation-Date: 2022-12-12 16:11+0100\n"
+"PO-Revision-Date: 2022-12-12 17:20+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -50,27 +50,27 @@ msgstr ""
 "Bitte kalibriere die Kamera unter Einstellungen -> Kamera -> "
 "Eckenkalibrierung."
 
-#: octoprint_mrbeam/static/js/convert.js:186
+#: octoprint_mrbeam/static/js/convert.js:257
 msgid "My"
 msgstr "Mein"
 
-#: octoprint_mrbeam/static/js/convert.js:309
-#: octoprint_mrbeam/static/js/convert.js:327
+#: octoprint_mrbeam/static/js/convert.js:379
+#: octoprint_mrbeam/static/js/convert.js:397
 msgid "Custom material setting! Use at your own risk."
 msgstr ""
 "Die Nutzung benutzerdefinierten Materialeinstellungen erfolgt auf eigene "
 "Gefahr."
 
-#: octoprint_mrbeam/static/js/convert.js:397
-#: octoprint_mrbeam/static/js/convert.js:442
-#: octoprint_mrbeam/static/js/convert.js:1662
+#: octoprint_mrbeam/static/js/convert.js:467
+#: octoprint_mrbeam/static/js/convert.js:512
+#: octoprint_mrbeam/static/js/convert.js:1741
 #: octoprint_mrbeam/static/js/wizard_analytics.js:79
 #: octoprint_mrbeam/static/js/wizard_gcode_deletion.js:41
 msgid "Error while saving settings!"
 msgstr "Fehler beim Speichern der Einstellungen!"
 
-#: octoprint_mrbeam/static/js/convert.js:399
-#: octoprint_mrbeam/static/js/convert.js:444
+#: octoprint_mrbeam/static/js/convert.js:469
+#: octoprint_mrbeam/static/js/convert.js:514
 #, python-format
 msgid ""
 "Unable to save your custom material settings at the moment.%(br)sCheck "
@@ -80,35 +80,35 @@ msgstr ""
 "gespeichert werden. %(br)sPrüfe die Verbindung zu Mr Beam und versuche es "
 "erneut."
 
-#: octoprint_mrbeam/static/js/convert.js:425
+#: octoprint_mrbeam/static/js/convert.js:495
 msgid "Custom Material Settings restored."
 msgstr "Wiederhergestellt."
 
-#: octoprint_mrbeam/static/js/convert.js:427
+#: octoprint_mrbeam/static/js/convert.js:497
 #, python-format
 msgid "Successfully restored %(number)d custom materials from file."
 msgstr ""
 "%(number)d benutzerdefinierten Materialeinstellungen wurden aus der Datei "
 "wiederhergestellt."
 
-#: octoprint_mrbeam/static/js/convert.js:543
+#: octoprint_mrbeam/static/js/convert.js:613
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:160
 msgid "engrave only"
 msgstr "nur Gravur"
 
-#: octoprint_mrbeam/static/js/convert.js:545
+#: octoprint_mrbeam/static/js/convert.js:615
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:159
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:377
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:371
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:131
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:163
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:407
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:514
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:713
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:801
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:714
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:802
 msgid "mm"
 msgstr "mm"
 
-#: octoprint_mrbeam/static/js/convert.js:668
+#: octoprint_mrbeam/static/js/convert.js:738
 msgid ""
 "This is a custom setting you made for another laserhead.\n"
 " We recommend adjusting your saved custom material settings to your current "
@@ -126,7 +126,7 @@ msgstr ""
 "ursprünglichen Einstellungen bleiben erhalten, falls du sie behalten "
 "möchtest."
 
-#: octoprint_mrbeam/static/js/convert.js:734
+#: octoprint_mrbeam/static/js/convert.js:804
 msgid ""
 "Drag and drop this box in the Skip area if you want to skip cutting this "
 "color. Drop it in Engrave area if you just want to engrave it, or "
@@ -139,7 +139,7 @@ msgstr ""
 "neuen Schneideauftrag mit anderen Parametern, indem du es im unteren "
 "Abschnitt platzierst."
 
-#: octoprint_mrbeam/static/js/convert.js:1664
+#: octoprint_mrbeam/static/js/convert.js:1743
 #, python-format
 msgid ""
 "Unable to save your focus reminder state at the moment.%(br)sCheck "
@@ -148,32 +148,32 @@ msgstr ""
 "Deine Erinnerungs-Einstellungen können im Moment nicht gespeichert werden. "
 "%(br)sPrüfe die Verbindung zu Mr Beam und versuche es erneut."
 
-#: octoprint_mrbeam/static/js/convert.js:1707
+#: octoprint_mrbeam/static/js/convert.js:1797
 msgid "There is nothing to laser, all jobs are set to be skipped."
 msgstr ""
 "Es gibt nichts zum Lasern, alle Aufträge sind so eingestellt, dass sie "
 "übersprungen werden."
 
 # Sorry but the %(designType)s can only be %(laserJob)s, which is not supported for this material.
-#: octoprint_mrbeam/static/js/convert.js:1718
+#: octoprint_mrbeam/static/js/convert.js:1808
 msgid "engraved"
 msgstr "graviert"
 
 # Sorry but the %(designType)s can only be %(laserJob)s, which is not supported for this material.
-#: octoprint_mrbeam/static/js/convert.js:1721
+#: octoprint_mrbeam/static/js/convert.js:1811
 msgid "cut"
 msgstr "geschnitten"
 
-#: octoprint_mrbeam/static/js/convert.js:1725
+#: octoprint_mrbeam/static/js/convert.js:1815
 #: octoprint_mrbeam/templates/quick_text.jinja2:4
 msgid "Quick Text"
 msgstr "Quick Text"
 
-#: octoprint_mrbeam/static/js/convert.js:1727
+#: octoprint_mrbeam/static/js/convert.js:1817
 msgid "selected design"
 msgstr "ausgewähltes Design"
 
-#: octoprint_mrbeam/static/js/convert.js:1732
+#: octoprint_mrbeam/static/js/convert.js:1822
 #, python-format
 msgid ""
 "Sorry but the %(designType)s can only be %(laserJob)s, which is not "
@@ -182,12 +182,11 @@ msgstr ""
 "Sorry, die %(designType)s können nur %(laserJob)s werden. Das wird jedoch "
 "für dieses Material nicht unterstützt."
 
-#: octoprint_mrbeam/static/js/convert.js:1839
-#: octoprint_mrbeam/static/js/render_fills.js:492
+#: octoprint_mrbeam/static/js/convert.js:1909
 msgid "Conversion failed"
 msgstr "Konvertierung fehlgeschlagen"
 
-#: octoprint_mrbeam/static/js/convert.js:1841
+#: octoprint_mrbeam/static/js/convert.js:1911
 #, python-format
 msgid ""
 "Unable to start the conversion in the backend. Please try reloading this "
@@ -197,16 +196,16 @@ msgstr ""
 "diese Seite neu zu laden oder Mr Beam neu zu starten.%(br)s%(br)sContent "
 "length was %(length)s bytes."
 
-#: octoprint_mrbeam/static/js/convert.js:1858
+#: octoprint_mrbeam/static/js/convert.js:1926
 msgid "Parameter missing"
 msgstr "Parameter fehlt"
 
-#: octoprint_mrbeam/static/js/convert.js:1859
+#: octoprint_mrbeam/static/js/convert.js:1927
 msgid "Unable to start conversion because a parameter is missing."
 msgstr ""
 "Die Konvertierung konnte nicht gestartet werden, da ein Parameter fehlt."
 
-#: octoprint_mrbeam/static/js/convert.js:2056
+#: octoprint_mrbeam/static/js/convert.js:2124
 msgid ""
 "To free up some disk space you may want to perform one or all of the "
 "following suggestions:"
@@ -214,7 +213,7 @@ msgstr ""
 "Um etwas Speicherplatz freizugeben, könntest Du einen oder alle der "
 "folgenden Vorschläge ausführen:"
 
-#: octoprint_mrbeam/static/js/convert.js:2062
+#: octoprint_mrbeam/static/js/convert.js:2130
 msgid ""
 "Delete GCode files: Go to design library and click 'Only show GCode files' "
 "on the left. Here you can delete files from the according context menu."
@@ -223,7 +222,7 @@ msgstr ""
 "„Nur GCode-Dateien anzeigen“. Hier kannst Du Dateien über das entsprechende "
 "Kontextmenü löschen."
 
-#: octoprint_mrbeam/static/js/convert.js:2068
+#: octoprint_mrbeam/static/js/convert.js:2136
 msgid ""
 "Delete design files: Go to design library and click 'Only show design files' "
 "on the left. Here you can delete files from the according context menu."
@@ -232,7 +231,7 @@ msgstr ""
 "\"Nur Designdateien anzeigen'. Hier kannst Du Dateien aus dem entsprechenden "
 "Kontextmenü löschen."
 
-#: octoprint_mrbeam/static/js/convert.js:2074
+#: octoprint_mrbeam/static/js/convert.js:2142
 msgid ""
 "Delete log files: Go to Settings -> logs and delete old log files per click "
 "on the trash bin icon."
@@ -240,25 +239,25 @@ msgstr ""
 "Löschen von log-Dateien: Gehe zu Einstellungen -> logs und lösche alte log-"
 "Dateien, indem Du auf das Papierkorbsymbol klickst."
 
-#: octoprint_mrbeam/static/js/convert.js:2080
+#: octoprint_mrbeam/static/js/convert.js:2148
 #, python-format
 msgid "Find more details %(open)sonline%(close)s."
 msgstr "Mehr Details findest Du %(open)sonline%(close)s."
 
-#: octoprint_mrbeam/static/js/convert.js:2088
+#: octoprint_mrbeam/static/js/convert.js:2156
 msgid "Get more free disk space"
 msgstr "Mehr Disk-Speicherplatz frei machen"
 
-#: octoprint_mrbeam/static/js/convert.js:2355
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:495
+#: octoprint_mrbeam/static/js/convert.js:2429
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:493
 msgid "Cut "
 msgstr "Schneiden "
 
-#: octoprint_mrbeam/static/js/design_store.js:248
+#: octoprint_mrbeam/static/js/design_store.js:262
 msgid "Could not download design"
 msgstr "Konnte das Design nicht herunterladen"
 
-#: octoprint_mrbeam/static/js/design_store.js:249
+#: octoprint_mrbeam/static/js/design_store.js:263
 msgid "The purchased design could not be downloaded. Please download again."
 msgstr ""
 "Das gekaufte Design konnte nicht heruntergeladen werden. Bitte versuche es "
@@ -392,11 +391,16 @@ msgstr ""
 "Eine regelmäßige Wartung Deines Mr&nbsp;Beam ist fällig.%(br)s Gehe auf die "
 "%(open)sWartungsseite%(close)s in den Einstellungen für weitere Details."
 
-#: octoprint_mrbeam/static/js/material_settings.js:69
+# don’t change the link
+#: octoprint_mrbeam/static/js/material_settings.js:7
+msgid "https://www.mr-beam.org/en/collections/mr-beam-materialstore"
+msgstr "https://www.mr-beam.org/collections/mr-beam-materialstore"
+
+#: octoprint_mrbeam/static/js/material_settings.js:70
 msgid "Acrylic"
 msgstr "Acryl"
 
-#: octoprint_mrbeam/static/js/material_settings.js:71
+#: octoprint_mrbeam/static/js/material_settings.js:72
 msgid ""
 "Use opaque acrylic in red or black to create nice objects and signs. Acrylic "
 "is great for outdoor applications."
@@ -405,15 +409,20 @@ msgstr ""
 "Schilder zu gestalten. Acryl eignet sich hervorragend für Outdoor-"
 "Anwendungen."
 
+# don’t change the link
 #: octoprint_mrbeam/static/js/material_settings.js:77
+msgid "https://www.mr-beam.org/en/products/mr-beam-acryl-schwarz"
+msgstr "https://www.mr-beam.org/products/mr-beam-acryl-schwarz"
+
+#: octoprint_mrbeam/static/js/material_settings.js:80
 msgid "Anodized Aluminum"
 msgstr "Eloxiertes Aluminium"
 
-#: octoprint_mrbeam/static/js/material_settings.js:79
+#: octoprint_mrbeam/static/js/material_settings.js:82
 msgid "Dark anodized aluminum can be engraved."
 msgstr "Dunkel eloxiertes Aluminium kann graviert werden."
 
-#: octoprint_mrbeam/static/js/material_settings.js:80
+#: octoprint_mrbeam/static/js/material_settings.js:83
 msgid ""
 "Requires very precise focus. Anodized aluminum turns brighter through laser "
 "engraving. Therefore we suggest to invert photos for engravings."
@@ -421,11 +430,16 @@ msgstr ""
 "Erfordert eine sehr genaue Fokussierung. Eloxiertes Aluminium wird durch die "
 "Lasergravur heller. Wir empfehlen daher, Fotos für Gravuren zu invertieren."
 
-#: octoprint_mrbeam/static/js/material_settings.js:91
+# don’t change the link
+#: octoprint_mrbeam/static/js/material_settings.js:87
+msgid "https://www.mr-beam.org/en/products/eloxiertes-aluminium"
+msgstr "https://www.mr-beam.org/products/eloxiertes-aluminium"
+
+#: octoprint_mrbeam/static/js/material_settings.js:90
 msgid "Balsa Wood"
 msgstr "Balsaholz"
 
-#: octoprint_mrbeam/static/js/material_settings.js:93
+#: octoprint_mrbeam/static/js/material_settings.js:92
 msgid ""
 "Balsa wood is a very popular material for light, stiff structures in model "
 "making and in particular construction of model aircraft."
@@ -433,7 +447,7 @@ msgstr ""
 "Balsaholz ist ein sehr beliebtes Material für leichte, steife Strukturen im "
 "Modellbau oder Flugzeugmodellbau."
 
-#: octoprint_mrbeam/static/js/material_settings.js:97
+#: octoprint_mrbeam/static/js/material_settings.js:96
 msgid ""
 "Caution sensitive material. If laser speed is too slow, balsa wood may "
 "ignite."
@@ -441,11 +455,11 @@ msgstr ""
 "Vorsicht empfindliches Material. Wenn die Lasergeschwindigkeit zu langsam "
 "ist, kann sich Balsaholz entzünden."
 
-#: octoprint_mrbeam/static/js/material_settings.js:114
+#: octoprint_mrbeam/static/js/material_settings.js:103
 msgid "Bamboo Wood"
 msgstr "Bambusholz"
 
-#: octoprint_mrbeam/static/js/material_settings.js:116
+#: octoprint_mrbeam/static/js/material_settings.js:105
 msgid ""
 "An individual engraving on a chopping board or a wooden spoon is the perfect "
 "spontaneous gift."
@@ -453,20 +467,20 @@ msgstr ""
 "Eine individuelle Gravur auf einem Schneidebrett oder einem Holzlöffel ist "
 "das perfekte Spontangeschenk."
 
-#: octoprint_mrbeam/static/js/material_settings.js:123
+#: octoprint_mrbeam/static/js/material_settings.js:114
 msgid "Cardboard, single wave"
 msgstr "Karton, einwellig"
 
-#: octoprint_mrbeam/static/js/material_settings.js:125
-#: octoprint_mrbeam/static/js/material_settings.js:138
+#: octoprint_mrbeam/static/js/material_settings.js:116
+#: octoprint_mrbeam/static/js/material_settings.js:131
 msgid ""
 "Recycle cardboard from packagings to create precise prototypes and models ."
 msgstr ""
 "Verwende recycelten Karton aus Verpackungen, um präzise Prototypen und "
 "Modelle zu erstellen."
 
-#: octoprint_mrbeam/static/js/material_settings.js:128
-#: octoprint_mrbeam/static/js/material_settings.js:141
+#: octoprint_mrbeam/static/js/material_settings.js:119
+#: octoprint_mrbeam/static/js/material_settings.js:134
 msgid ""
 "Dont use your Mr Beam packaging. Please keep it for transportation and "
 "storage!"
@@ -474,8 +488,8 @@ msgstr ""
 "Verwende nicht die Verpackung deines Mr Beams. Bitte bewahre sie für "
 "Transport und Lagerung auf!"
 
-#: octoprint_mrbeam/static/js/material_settings.js:131
-#: octoprint_mrbeam/static/js/material_settings.js:144
+#: octoprint_mrbeam/static/js/material_settings.js:122
+#: octoprint_mrbeam/static/js/material_settings.js:137
 msgid ""
 "Caution sensitive material. If laser speed is too slow, cardboard may "
 "ignite. Never run a laser job slower than 180 mm/min!"
@@ -483,29 +497,29 @@ msgstr ""
 "Vorsicht empfindliches Material. Bei zu langsamer Lasergeschwindigkeit kann "
 "sich Karton entzünden. Führe einen Laserjob nie langsamer als 180 mm/min aus!"
 
-#: octoprint_mrbeam/static/js/material_settings.js:136
+#: octoprint_mrbeam/static/js/material_settings.js:129
 msgid "Cardboard, double wave"
 msgstr "Karton, zweiwellig"
 
-#: octoprint_mrbeam/static/js/material_settings.js:149
+#: octoprint_mrbeam/static/js/material_settings.js:144
 msgid "Cork"
 msgstr "Kork"
 
-#: octoprint_mrbeam/static/js/material_settings.js:151
+#: octoprint_mrbeam/static/js/material_settings.js:146
 msgid "Create beautiful pin boards or coasters with individual engravings. "
 msgstr ""
 "Gestalte schöne Pinnwände oder Untersetzer mit individuellen Gravuren. "
 
-#: octoprint_mrbeam/static/js/material_settings.js:158
+#: octoprint_mrbeam/static/js/material_settings.js:155
 msgid "Felt"
 msgstr "Filz"
 
-#: octoprint_mrbeam/static/js/material_settings.js:160
+#: octoprint_mrbeam/static/js/material_settings.js:157
 msgid "Acrylic felt can be engraved and cut super fast with Mr Beam."
 msgstr ""
 "Acrylfilz kann mit Mr Beam superschnell graviert und geschnitten werden."
 
-#: octoprint_mrbeam/static/js/material_settings.js:163
+#: octoprint_mrbeam/static/js/material_settings.js:160
 msgid ""
 "Be aware that natural felt is something else and smells very strong when you "
 "open the lid."
@@ -513,19 +527,24 @@ msgstr ""
 "Seie dir bewusst, dass Naturfilz etwas anderes ist und sehr stark riecht, "
 "wenn du den Deckel öffnest."
 
-#: octoprint_mrbeam/static/js/material_settings.js:171
+# don’t change the link
+#: octoprint_mrbeam/static/js/material_settings.js:165
+msgid "https://www.mr-beam.org/en/collections/filz"
+msgstr "https://www.mr-beam.org/collections/filz"
+
+#: octoprint_mrbeam/static/js/material_settings.js:170
 msgid "Finn Cardboard"
 msgstr "Finnpappe"
 
-#: octoprint_mrbeam/static/js/material_settings.js:173
+#: octoprint_mrbeam/static/js/material_settings.js:172
 msgid "Made out of purely wooden fibres, often used for architectural models."
 msgstr "Aus reinen Holzfasern; oft für Architekturmodelle verwendet."
 
-#: octoprint_mrbeam/static/js/material_settings.js:180
+#: octoprint_mrbeam/static/js/material_settings.js:181
 msgid "Foam"
 msgstr "Schaumstoff"
 
-#: octoprint_mrbeam/static/js/material_settings.js:182
+#: octoprint_mrbeam/static/js/material_settings.js:183
 msgid ""
 "Use polyethylene or polyurethane foam to create nice prototypes and mock-"
 "ups. "
@@ -533,11 +552,11 @@ msgstr ""
 "Verwende Polyethylen- oder Polyurethanschaum, um schöne Prototypen und Mock-"
 "ups zu erstellen. "
 
-#: octoprint_mrbeam/static/js/material_settings.js:188
+#: octoprint_mrbeam/static/js/material_settings.js:191
 msgid "Foam Rubber"
 msgstr "Moosgummi"
 
-#: octoprint_mrbeam/static/js/material_settings.js:190
+#: octoprint_mrbeam/static/js/material_settings.js:193
 msgid ""
 "Mostly made out of polyurethane and can be engraved and cut super fast with "
 "Mr Beam."
@@ -545,7 +564,7 @@ msgstr ""
 "Meistens aus Polyurethan und kann mit Mr Beam superschnell graviert und "
 "geschnitten werden."
 
-#: octoprint_mrbeam/static/js/material_settings.js:193
+#: octoprint_mrbeam/static/js/material_settings.js:196
 msgid ""
 "Laser parameters are highly color dependant, bright colors might need pierce "
 "time."
@@ -553,21 +572,21 @@ msgstr ""
 "Die Lasereinstellungen sind stark farbabhängig, helle Farben benötigen "
 "möglicherweise eine Einstichzeit."
 
-#: octoprint_mrbeam/static/js/material_settings.js:196
+#: octoprint_mrbeam/static/js/material_settings.js:199
 msgid "Make sure your foam is not made of PVC and does not contain chlorine!"
 msgstr ""
 "Achte darauf, dass dein Schaumstoff nicht aus PVC besteht und kein Chlor "
 "enthält!"
 
-#: octoprint_mrbeam/static/js/material_settings.js:201
+#: octoprint_mrbeam/static/js/material_settings.js:206
 msgid "Grey Cardboard"
 msgstr "Graue Pappe"
 
-#: octoprint_mrbeam/static/js/material_settings.js:207
+#: octoprint_mrbeam/static/js/material_settings.js:214
 msgid "Jersey Fabric"
 msgstr "Jersey Stoff"
 
-#: octoprint_mrbeam/static/js/material_settings.js:209
+#: octoprint_mrbeam/static/js/material_settings.js:216
 msgid ""
 "Cutting fabric with Mr Beam is so much fun because it doesn't warp and the "
 "result is much more accurate than with scissors."
@@ -575,11 +594,11 @@ msgstr ""
 "Das Schneiden von Stoffen mit Mr Beam macht so viel Spaß, weil er sich nicht "
 "verzieht und das Ergebnis viel genauer ist als mit einer Schere."
 
-#: octoprint_mrbeam/static/js/material_settings.js:215
+#: octoprint_mrbeam/static/js/material_settings.js:224
 msgid "Kraftplex"
 msgstr "Kraftplex"
 
-#: octoprint_mrbeam/static/js/material_settings.js:217
+#: octoprint_mrbeam/static/js/material_settings.js:226
 msgid ""
 "100% natural fibers compressed under high temperature. Strong and bendable "
 "like metal."
@@ -587,11 +606,16 @@ msgstr ""
 "100% Naturfasern, die bei hohen Temperaturen gepresst werden. Stark und "
 "biegsam wie Metall."
 
-#: octoprint_mrbeam/static/js/material_settings.js:224
+# don’t change the link
+#: octoprint_mrbeam/static/js/material_settings.js:232
+msgid "https://www.mr-beam.org/en/collections/kraftplex"
+msgstr "https://www.mr-beam.org/collections/kraftplex"
+
+#: octoprint_mrbeam/static/js/material_settings.js:235
 msgid "Kraftplex (wave)"
 msgstr "Kraftplex (wave)"
 
-#: octoprint_mrbeam/static/js/material_settings.js:226
+#: octoprint_mrbeam/static/js/material_settings.js:237
 msgid ""
 " 100% natural fibers similar to Kraftplex, but wavy. Thickness is measured "
 "over the whole wave."
@@ -599,19 +623,19 @@ msgstr ""
 " 100%Naturfasern ähnlich wie Kraftplex, aber gewellt. Die Dicke wird über "
 "die gesamte Welle gemessen."
 
-#: octoprint_mrbeam/static/js/material_settings.js:231
+#: octoprint_mrbeam/static/js/material_settings.js:244
 msgid "Latex"
 msgstr "Latex"
 
-#: octoprint_mrbeam/static/js/material_settings.js:238
+#: octoprint_mrbeam/static/js/material_settings.js:253
 msgid "Leather"
 msgstr "Leder"
 
-#: octoprint_mrbeam/static/js/material_settings.js:240
+#: octoprint_mrbeam/static/js/material_settings.js:255
 msgid "Use thin and hard leather to get the best result."
 msgstr "Verwende dünnes und hartes Leder, um das beste Ergebnis zu erzielen."
 
-#: octoprint_mrbeam/static/js/material_settings.js:244
+#: octoprint_mrbeam/static/js/material_settings.js:259
 msgid ""
 "If you use artificial leather, make sure that it is not made of PVC and does "
 "not contain chlorine!"
@@ -619,15 +643,15 @@ msgstr ""
 "Wenn du Kunstleder verwendest, achten darauf, dass es nicht aus PVC besteht "
 "und kein Chlor enthält!"
 
-#: octoprint_mrbeam/static/js/material_settings.js:249
+#: octoprint_mrbeam/static/js/material_settings.js:266
 msgid "Linoleum"
 msgstr "Linoleum"
 
-#: octoprint_mrbeam/static/js/material_settings.js:255
+#: octoprint_mrbeam/static/js/material_settings.js:274
 msgid "Mirror"
 msgstr "Spiegel"
 
-#: octoprint_mrbeam/static/js/material_settings.js:257
+#: octoprint_mrbeam/static/js/material_settings.js:276
 msgid ""
 "Engrave Mirrors only from the back side. But be aware of that you also need "
 "to mirror your design!"
@@ -635,7 +659,7 @@ msgstr ""
 "Graviere Spiegel nur von der Rückseite! Achte aber darauf, dass du dein "
 "Motiv auch spiegeln musst!"
 
-#: octoprint_mrbeam/static/js/material_settings.js:261
+#: octoprint_mrbeam/static/js/material_settings.js:280
 msgid ""
 "Mirrors can only be engraved from the back, otherwise the laser would be "
 "reflected."
@@ -643,17 +667,21 @@ msgstr ""
 "Spiegel können nur von der Rückseite graviert werden, da sonst der Laser "
 "reflektiert würde."
 
-#: octoprint_mrbeam/static/js/material_settings.js:266
+#: octoprint_mrbeam/static/js/material_settings.js:284
+msgid "https://www.mr-beam.org/en/products/mr-beam-spiegelfliesen"
+msgstr "https://www.mr-beam.org/products/mr-beam-spiegelfliesen"
+
+#: octoprint_mrbeam/static/js/material_settings.js:287
 msgid "Paper"
 msgstr "Papier"
 
-#: octoprint_mrbeam/static/js/material_settings.js:268
+#: octoprint_mrbeam/static/js/material_settings.js:289
 msgid ""
 "White paper is difficult to engrave. Please do some testing if necessary."
 msgstr ""
 "Weißes Papier ist schwer zu gravieren. Bitte führe ggf. einige Tests durch."
 
-#: octoprint_mrbeam/static/js/material_settings.js:271
+#: octoprint_mrbeam/static/js/material_settings.js:292
 msgid ""
 "Extremely thin paper can vibrate heavily or fly away if using the "
 "compressor. In that case, please reduce the power of the compressor."
@@ -661,23 +689,23 @@ msgstr ""
 "Extrem dünnes Papier kann bei Verwendung des Kompressors stark vibrieren "
 "oder wegfliegen. Reduziere in diesem Fall bitte die Leistung des Kompressors."
 
-#: octoprint_mrbeam/static/js/material_settings.js:274
+#: octoprint_mrbeam/static/js/material_settings.js:295
 msgid ""
 "Caution sensitive material. Very fine structures may be subject of ignition."
 msgstr ""
 "Vorsicht empfindliches Material. Sehr feine Strukturen können sich entzünden."
 
-#: octoprint_mrbeam/static/js/material_settings.js:279
+#: octoprint_mrbeam/static/js/material_settings.js:302
 msgid "Plywood Birch"
 msgstr "Sperrholz Birke"
 
-#: octoprint_mrbeam/static/js/material_settings.js:281
-#: octoprint_mrbeam/static/js/material_settings.js:291
+#: octoprint_mrbeam/static/js/material_settings.js:304
+#: octoprint_mrbeam/static/js/material_settings.js:316
 msgid "Plywood is greate fo all kinds of model making and decoration."
 msgstr "Sperrholz ist für alle Arten von Modellbau und Dekoration geeignet."
 
-#: octoprint_mrbeam/static/js/material_settings.js:284
-#: octoprint_mrbeam/static/js/material_settings.js:294
+#: octoprint_mrbeam/static/js/material_settings.js:307
+#: octoprint_mrbeam/static/js/material_settings.js:319
 msgid ""
 "Watch out for dedicated laser plywood - it has better surface quality and "
 "better glue."
@@ -685,15 +713,23 @@ msgstr ""
 "Halte Ausschau nach speziellem Lasersperrholz - es hat eine bessere "
 "Oberflächenqualität und nur natürlichen Klebstoff."
 
-#: octoprint_mrbeam/static/js/material_settings.js:289
+#: octoprint_mrbeam/static/js/material_settings.js:311
+msgid "https://www.mr-beam.org/en/products/sperrholz-birke-5er-pack"
+msgstr "https://www.mr-beam.org/products/sperrholz-birke-5er-pack"
+
+#: octoprint_mrbeam/static/js/material_settings.js:314
 msgid "Plywood Poplar"
 msgstr "Sperrholz Pappel"
 
-#: octoprint_mrbeam/static/js/material_settings.js:300
+#: octoprint_mrbeam/static/js/material_settings.js:324
+msgid "https://www.mr-beam.org/en/products/mr-beam-pappelsperrholz-bunt"
+msgstr "https://www.mr-beam.org/products/mr-beam-pappelsperrholz-bunt"
+
+#: octoprint_mrbeam/static/js/material_settings.js:332
 msgid "Polypropylene"
 msgstr "Polypropylen"
 
-#: octoprint_mrbeam/static/js/material_settings.js:302
+#: octoprint_mrbeam/static/js/material_settings.js:334
 msgid ""
 "Because of its flexibility and durability it is great for outdoor "
 "applications. On engraved lines you can easily fold and reinforce it."
@@ -702,17 +738,17 @@ msgstr ""
 "Anwendungen geeignet. An gravierten Linien kannst du es einfach falten und "
 "verstärken."
 
-#: octoprint_mrbeam/static/js/material_settings.js:305
+#: octoprint_mrbeam/static/js/material_settings.js:337
 msgid "For the best results, use opaque and dark colored polypropylene."
 msgstr ""
 "Die besten Ergebnisse erzielst du, wenn du blickdichtes und dunkel gefärbtes "
 "Polypropylen verwendest."
 
-#: octoprint_mrbeam/static/js/material_settings.js:310
+#: octoprint_mrbeam/static/js/material_settings.js:344
 msgid "Slate"
 msgstr "Schiefer"
 
-#: octoprint_mrbeam/static/js/material_settings.js:312
+#: octoprint_mrbeam/static/js/material_settings.js:346
 msgid ""
 "Slate is greate to engrave and you can create beatiful objects, gifts and "
 "signs."
@@ -720,7 +756,7 @@ msgstr ""
 "Schiefer lässt sich hervorragend gravieren und du kannst schöne Objekte, "
 "Geschenke und Schilder erstellen."
 
-#: octoprint_mrbeam/static/js/material_settings.js:315
+#: octoprint_mrbeam/static/js/material_settings.js:349
 msgid ""
 "When engraving slate, the engraving becomes brighter than the original "
 "material. The images might need theirs colors inverted."
@@ -728,15 +764,19 @@ msgstr ""
 "Beim Gravieren von Schiefer wird die Gravur heller als das Originalmaterial. "
 "Möglicherweise sollte die Farben der Designvorlage invertiert werden."
 
-#: octoprint_mrbeam/static/js/material_settings.js:320
+#: octoprint_mrbeam/static/js/material_settings.js:353
+msgid "https://www.mr-beam.org/en/products/schiefer-platte-40x30-cm-2er-pack"
+msgstr "https://www.mr-beam.org/products/schiefer-platte-40x30-cm-2er-pack"
+
+#: octoprint_mrbeam/static/js/material_settings.js:356
 msgid "Snappap"
 msgstr "Snappap"
 
-#: octoprint_mrbeam/static/js/material_settings.js:326
+#: octoprint_mrbeam/static/js/material_settings.js:364
 msgid "Laser Leather"
 msgstr "Laser-Leder"
 
-#: octoprint_mrbeam/static/js/material_settings.js:328
+#: octoprint_mrbeam/static/js/material_settings.js:366
 msgid ""
 "Laser leather is robust in everyday life, it can be washed, sewn and "
 "creatively processed with Mr Beam."
@@ -744,11 +784,16 @@ msgstr ""
 "Laser-Leder ist robust im Alltag, es kann gewaschen, genäht und kreativ mit "
 "Mr Beam verarbeitet werden."
 
-#: octoprint_mrbeam/static/js/material_settings.js:334
+# don’t change the link
+#: octoprint_mrbeam/static/js/material_settings.js:371
+msgid "https://www.mr-beam.org/en/collections/laser-leder"
+msgstr "https://www.mr-beam.org/collections/laser-leder"
+
+#: octoprint_mrbeam/static/js/material_settings.js:374
 msgid "Sign Material"
 msgstr "Schildmaterial"
 
-#: octoprint_mrbeam/static/js/material_settings.js:337
+#: octoprint_mrbeam/static/js/material_settings.js:377
 msgid ""
 "The material is supplied with a protective film. It can be removed before or "
 "after processing."
@@ -756,32 +801,51 @@ msgstr ""
 "Das Material wird mit einer Schutzfolie geliefert. Sie kann vor oder nach "
 "der Verarbeitung entfernt werden."
 
-#: octoprint_mrbeam/static/js/material_settings.js:343
+#: octoprint_mrbeam/static/js/material_settings.js:382
+msgid "https://www.mr-beam.org/en/products/mr-beam-schilder-material"
+msgstr "https://www.mr-beam.org/products/mr-beam-schilder-material"
+
+#: octoprint_mrbeam/static/js/material_settings.js:392
 msgid "Stamp Rubber"
 msgstr "Stempelgummi"
 
-#: octoprint_mrbeam/static/js/material_settings.js:346
+#: octoprint_mrbeam/static/js/material_settings.js:395
 msgid "Repeat the engraving once ore twice for a better result."
 msgstr ""
 "Wiederhole die Gravur ein- bis zweimal, um ein besseres Ergebnis zu erzielen."
 
-#: octoprint_mrbeam/static/js/material_settings.js:352
+# don’t change the link
+#: octoprint_mrbeam/static/js/material_settings.js:400
+msgid "https://www.mr-beam.org/en/products/stempelgummi"
+msgstr "https://www.mr-beam.org/products/stempelgummi"
+
+#: octoprint_mrbeam/static/js/material_settings.js:403
 msgid "Swiss stone pine"
 msgstr "Zirbelkiefer"
 
-#: octoprint_mrbeam/static/js/material_settings.js:359
+#: octoprint_mrbeam/static/js/material_settings.js:412
 msgid "Wood Sticker"
 msgstr "Edelholzsticker"
 
-#: octoprint_mrbeam/static/js/material_settings.js:366
+# don’t change the link
+#: octoprint_mrbeam/static/js/material_settings.js:418
+msgid "https://www.mr-beam.org/en/products/edelholzsticker"
+msgstr "https://www.mr-beam.org/products/edelholzsticker"
+
+#: octoprint_mrbeam/static/js/material_settings.js:421
 msgid "Solid Wood"
 msgstr "Vollholz"
 
-#: octoprint_mrbeam/static/js/material_settings.js:373
+# don’t change the link
+#: octoprint_mrbeam/static/js/material_settings.js:427
+msgid "https://www.mr-beam.org/en/collections/holz"
+msgstr "https://www.mr-beam.org/collections/holz"
+
+#: octoprint_mrbeam/static/js/material_settings.js:430
 msgid "Stainless Steel"
 msgstr "Edelstahl"
 
-#: octoprint_mrbeam/static/js/material_settings.js:376
+#: octoprint_mrbeam/static/js/material_settings.js:433
 msgid ""
 "Engravings on stainless steel only work with our \"mark solid\" spray. Use "
 "line distance 0,1mm for the best result."
@@ -790,7 +854,7 @@ msgstr ""
 "Markierungsspray. Verwende einen Linienabstand von 0,1mm für ein optimales "
 "Ergebnis."
 
-#: octoprint_mrbeam/static/js/material_settings.js:377
+#: octoprint_mrbeam/static/js/material_settings.js:434
 msgid ""
 "Do not engrave stainless steel without the application of laser marking "
 "color."
@@ -870,7 +934,7 @@ msgstr "Bereit zum Lasern?"
 
 #: octoprint_mrbeam/static/js/mother_viewmodel.js:951
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:501
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:125
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:131
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:118
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:101
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:181
@@ -967,19 +1031,19 @@ msgstr ""
 "Du Analytics-Daten im Beta-Kanal automatisiert mit uns teilst. Danke! %(br)s"
 "%(open)sZu den Analytics Einstellungen%(close)s"
 
-#: octoprint_mrbeam/static/js/ready_to_laser_viewmodel.js:235
+#: octoprint_mrbeam/static/js/ready_to_laser_viewmodel.js:244
 msgid "minute"
 msgstr "Minute"
 
-#: octoprint_mrbeam/static/js/ready_to_laser_viewmodel.js:237
+#: octoprint_mrbeam/static/js/ready_to_laser_viewmodel.js:246
 msgid "minutes"
 msgstr "Minuten"
 
-#: octoprint_mrbeam/static/js/ready_to_laser_viewmodel.js:243
+#: octoprint_mrbeam/static/js/ready_to_laser_viewmodel.js:252
 msgid "hour"
 msgstr "Stunde"
 
-#: octoprint_mrbeam/static/js/ready_to_laser_viewmodel.js:248
+#: octoprint_mrbeam/static/js/ready_to_laser_viewmodel.js:257
 msgid "hours"
 msgstr "Stunden"
 
@@ -1321,14 +1385,14 @@ msgid "Click here to remove all designs from your working area."
 msgstr "Klicke hier, um alle Designs von der Arbeitsfläche zu entfernen."
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:514
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:119
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:125
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:100
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:33
 msgid "Next"
 msgstr "Weiter"
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:518
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:33
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:81
 msgid "Close"
 msgstr "Schließen"
 
@@ -1540,27 +1604,31 @@ msgstr "Was gibt's Neues"
 msgid "What's New in Beta"
 msgstr "Was gibt's Neues in Beta"
 
-#: octoprint_mrbeam/static/js/working_area.js:125
+#: octoprint_mrbeam/static/js/working_area.js:153
 msgid "Rectangle"
 msgstr "Rechteck"
 
-#: octoprint_mrbeam/static/js/working_area.js:126
+#: octoprint_mrbeam/static/js/working_area.js:154
+msgid "Line"
+msgstr "Linie"
+
+#: octoprint_mrbeam/static/js/working_area.js:155
 msgid "Circle"
 msgstr "Kreis"
 
-#: octoprint_mrbeam/static/js/working_area.js:127
+#: octoprint_mrbeam/static/js/working_area.js:156
 msgid "Star"
 msgstr "Stern"
 
-#: octoprint_mrbeam/static/js/working_area.js:128
+#: octoprint_mrbeam/static/js/working_area.js:157
 msgid "Heart"
 msgstr "Herz"
 
-#: octoprint_mrbeam/static/js/working_area.js:1364
+#: octoprint_mrbeam/static/js/working_area.js:1403
 msgid "Limited split result."
 msgstr "Nur teilweise zerteiltes Ergebnis."
 
-#: octoprint_mrbeam/static/js/working_area.js:1365
+#: octoprint_mrbeam/static/js/working_area.js:1404
 msgid ""
 "Splitting this design would result in too many parts. Here are "
 "${split_result.length} parts. You can split the last one again if necessary."
@@ -1569,27 +1637,27 @@ msgstr ""
 "${split_result.length} Teile. Du kannst den letzten Teil bei Bedarf noch "
 "einmal zerteilen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1376
+#: octoprint_mrbeam/static/js/working_area.js:1415
 msgid "No different line colors found."
 msgstr "Keine unterschiedlichen Linienfarben gefunden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1379
+#: octoprint_mrbeam/static/js/working_area.js:1418
 msgid "No non-intersecting shapes found."
 msgstr "Keine nicht-überlappenden Formen gefunden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1386
+#: octoprint_mrbeam/static/js/working_area.js:1425
 msgid "Looks like a single path."
 msgstr "Sieht nach einem einzigen Pfad aus."
 
-#: octoprint_mrbeam/static/js/working_area.js:1389
+#: octoprint_mrbeam/static/js/working_area.js:1428
 msgid "Element not splittable with this method."
 msgstr "Element is nicht zerteilbar mit dieser Methode."
 
-#: octoprint_mrbeam/static/js/working_area.js:1391
+#: octoprint_mrbeam/static/js/working_area.js:1430
 msgid "Can't split this design."
 msgstr "Dieses Design kann nicht zerteilt werden."
 
-#: octoprint_mrbeam/static/js/working_area.js:1931
+#: octoprint_mrbeam/static/js/working_area.js:1970
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements "
@@ -1598,12 +1666,12 @@ msgstr ""
 "Die SVG-Datei enthält nicht unterstützte Elemente: %(elemName)s' Diese "
 "Elemente wurden entfernt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1939
+#: octoprint_mrbeam/static/js/working_area.js:1978
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr "Nicht unterstützte Elemente in SVG: '%(elemName)s'"
 
-#: octoprint_mrbeam/static/js/working_area.js:1952
+#: octoprint_mrbeam/static/js/working_area.js:1991
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their "
@@ -1614,11 +1682,11 @@ msgstr ""
 "willst,%(br)skonvertiere sie in Pfade.%(br)sAnsonsten werden sie mit Füllung "
 "graviert."
 
-#: octoprint_mrbeam/static/js/working_area.js:1959
+#: octoprint_mrbeam/static/js/working_area.js:1998
 msgid "Text elements found"
 msgstr "Textelemente gefunden"
 
-#: octoprint_mrbeam/static/js/working_area.js:1972
+#: octoprint_mrbeam/static/js/working_area.js:2011
 msgid ""
 "The SVG file contained style elements with online references. Since online "
 "references are not supported, we removed them. The image might look a bit "
@@ -1628,11 +1696,11 @@ msgstr ""
 "Referenzen nicht unterstützt werden, haben wir sie entfernt. Das Bild könnte "
 "jetzt etwas anders aussehen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1977
+#: octoprint_mrbeam/static/js/working_area.js:2016
 msgid "Style elements removed"
 msgstr "Style-Elemente entfernt"
 
-#: octoprint_mrbeam/static/js/working_area.js:1991
+#: octoprint_mrbeam/static/js/working_area.js:2030
 msgid ""
 "The selected design file can not be handled. Please make sure it is a valid "
 "design file."
@@ -1640,25 +1708,25 @@ msgstr ""
 "Die ausgewählte Design-Datei kann nicht bearbeitet werden. Bitte stelle "
 "sicher, dass es sich um eine gültige Design-Datei handelt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1997
+#: octoprint_mrbeam/static/js/working_area.js:2036
 msgid "File error."
 msgstr "Dateifehler."
 
-#: octoprint_mrbeam/static/js/working_area.js:2011
+#: octoprint_mrbeam/static/js/working_area.js:2050
 msgid "The selected design file does not have any content."
 msgstr "Die ausgewählte Design-Datei hat keinen Inhalt."
 
-#: octoprint_mrbeam/static/js/working_area.js:2017
+#: octoprint_mrbeam/static/js/working_area.js:2056
 msgid "Empty File."
 msgstr "Leere Datei."
 
-#: octoprint_mrbeam/static/js/working_area.js:2031
+#: octoprint_mrbeam/static/js/working_area.js:2070
 msgid "An unknown error occurred while processing this design file."
 msgstr ""
 "Ein bekannter Fehler ist während der Verarbeitung dieser Designdatei "
 "aufgetreten."
 
-#: octoprint_mrbeam/static/js/working_area.js:2039
+#: octoprint_mrbeam/static/js/working_area.js:2078
 msgid ""
 "Please try reloading this browser window and try again. If this error "
 "remains, contact the Mr Beam Support Team. Make sure you provide the error "
@@ -1672,8 +1740,8 @@ msgstr ""
 #: octoprint_mrbeam/static/js/calibration/calibration.js:120
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:124
 #: octoprint_mrbeam/static/js/calibration/corner_calibration.js:367
-#: octoprint_mrbeam/static/js/working_area.js:2046
-#: octoprint_mrbeam/static/js/working_area.js:2051
+#: octoprint_mrbeam/static/js/working_area.js:2085
+#: octoprint_mrbeam/static/js/working_area.js:2090
 msgid "Error"
 msgstr "Fehler"
 
@@ -1800,23 +1868,23 @@ msgstr "Gedruckt: "
 msgid "Print Error"
 msgstr "Druckfehler"
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:75
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:76
 msgid "The lid is open"
 msgstr "Der Deckel ist geöffnet"
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:76
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:77
 msgid "The lid is closed: Please open the lid to start the camera"
 msgstr ""
 "Der Deckel ist geschlossen: Bitte öffne den Deckel, um die Kamera zu starten"
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:83
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:84
 msgid ""
 "Mr Beam is not homed: Please go to the working area and do a Homing Cycle"
 msgstr ""
 "Mr Beam ist nicht ge-homed: Bitte gehe in den Arbeitsbereich und machen Sie "
 "einen Homing Cycle"
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:87
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:88
 msgid ""
 "Mr Beam is currently performing a laser job. The camera does not work during "
 "a laser job"
@@ -1824,11 +1892,11 @@ msgstr ""
 "Mr Beam ist gerade mit einem Laserjob beschäftigt. Die Kamera funktioniert "
 "nicht während eines Laserjobs."
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:91
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:92
 msgid "Mr Beam is in state Operational"
 msgstr "Mr Beam ist im Status Operational"
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:93
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:94
 msgid ""
 "Mr Beam is not in state Operational: The camera does not work during a laser "
 "job"
@@ -1836,32 +1904,32 @@ msgstr ""
 "Mr Beam ist nicht im Status Operational: Die Kamera funktioniert nicht "
 "während eines Laserjobs"
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:111
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:112
 msgid "No markers found since camera did not launch"
 msgstr "Keine Markierungen gefunden, da Kamera nicht gestartet wurde"
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:113
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:114
 msgid "All 4 pink corner markers are recognized"
 msgstr "Alle 4 pinken Markierungskreise wurden erkannt"
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:116
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:117
 msgid "Not all pink corner markers are recognized. Missing markers: "
 msgstr ""
 "Nicht alle pinken Markierungskreise wurden erkannt. Fehlende Markierungen: "
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:169
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:170
 msgid "Error while selecting the marker detection mode"
 msgstr "Fehler bei der Auswahl des Markierungserkennungsmodus"
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:173
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:174
 msgid "Unable to select the marker detection mode at the moment."
 msgstr "Der Markierungserkennungsmodus kann derzeit nicht ausgewählt werden."
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:230
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:231
 msgid "Failed to update the Lens Calibration Status."
 msgstr "DerLinsenkalibrierungs-Status konnte nicht aktualisiert werden."
 
-#: octoprint_mrbeam/static/js/settings/camera_settings.js:233
+#: octoprint_mrbeam/static/js/settings/camera_settings.js:234
 msgid "There is nothing to worry about, but here is some extra information :\n"
 msgstr ""
 "Es gibt keinen Grund zur Sorge, aber hier sind einige zusätzliche "
@@ -2065,7 +2133,7 @@ msgid "Speed range"
 msgstr "Geschwindigkeitsbereich"
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:304
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:521
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:519
 msgid "mm/min"
 msgstr "mm/min"
 
@@ -2079,12 +2147,12 @@ msgid "Line color mapping"
 msgstr "Zuordnung der Linienfarben"
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:324
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:529
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:527
 msgid "The power of the air compressor."
 msgstr "Die Stärkeeinstellung des Luftkompressors."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:325
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:530
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:528
 msgid ""
 "Keep this value to the maximum for the best performance, unless you want to "
 "lower it because your material is very light and it's blown away."
@@ -2094,32 +2162,28 @@ msgstr ""
 "Luftstrom weggeblasen würde."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:326
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:531
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:529
 msgid "Compressor"
 msgstr "Kompressor"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:339
-msgid "engrave outlines of filled shapes"
-msgstr "Umrisse von gefüllten Formen gravieren"
-
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:347
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:341
 msgid ""
 "Indicates the number of times the laser will run over the design to engrave "
 "it. "
 msgstr "Gibt an, wie oft der Laser über das Design fährt, um es zu gravieren. "
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:348
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:342
 msgid "Increase the number of passes if the material does not get engraved."
 msgstr ""
 "Erhöhe die Anzahl der Durchläufe, falls das Material nicht ganz graviert "
 "wird."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:349
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:553
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:343
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:551
 msgid "Passes"
 msgstr "Durchläufe"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:359
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:353
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:570
 msgid ""
 "This is the time which Mr Beam pierces into the material without any "
@@ -2131,7 +2195,7 @@ msgstr ""
 "beginnt."
 
 # pierce
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:360
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:354
 msgid ""
 "For some materials Mr Beam needs more energy to do the first piercing of a "
 "cut or engraving than it needs for the ongoing cutting/engraving."
@@ -2140,7 +2204,7 @@ msgstr ""
 "Einstich eines Schnittes oder einer Gravur als für das laufende Schneiden/"
 "Gravieren."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:361
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:355
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:572
 msgid ""
 "If you experience that the laser does not cut or engrave first few "
@@ -2150,22 +2214,22 @@ msgstr ""
 "oder Form nicht schneidet oder graviert, versuche, eine Einstichzeit "
 "einzustellen."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:362
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:356
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:573
 msgid "Try 100ms and adjust if needed."
 msgstr "Versuche es mit 100ms und passe es bei Bedarf an."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:363
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:357
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:574
 msgid "Pierce time"
 msgstr "Einstichzeit"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:367
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:577
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:361
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:578
 msgid "ms"
 msgstr "ms"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:371
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:365
 msgid ""
 "Pixel / raster engravings are done line by line. This sets <b>the distance "
 "between the single lines.</b>"
@@ -2173,7 +2237,7 @@ msgstr ""
 "Pixel-/Rastergravuren werden zeilenweise durchgeführt. Hiermit wird <b>der "
 "Abstand zwischen den einzelnen Linien eingestellt.</b>"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:372
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:366
 msgid ""
 "Smaller values allow finer engravings but require a more precise focus and "
 "are slower."
@@ -2181,17 +2245,17 @@ msgstr ""
 "Kleinere Werte ermöglichen feinere Gravuren, erfordern aber einen genaueren "
 "Fokus und sind langsamer."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:373
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:367
 msgid "Line distance"
 msgstr "Linienabstand"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:382
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:432
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:376
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:430
 msgid "All engravings are processed line by line from bottom to top."
 msgstr "Alle Gravuren werden zeilenweise von unten nach oben verarbeitet."
 
 # In this specific sting you must not use quotes, use &quot; instead
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:383
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:377
 msgid ""
 "The system may cluster objects and process them separately from each other "
 "to <b>improve overall job duration by reducing 'empty rides'</b> where the "
@@ -2202,11 +2266,11 @@ msgstr ""
 "reduziert, bei denen der Laser ausgeschaltet bleibt."
 
 # Kontext?
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:385
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:379
 msgid "Recommended (default):"
 msgstr "Empfohlen (Voreinstellung):"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:386
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:380
 msgid ""
 "Clusters are processed successively and each cluster is processed line by "
 "line."
@@ -2215,7 +2279,7 @@ msgstr ""
 "für Zeile bearbeitet wird."
 
 # In this specific sting you must not use quotes, use &quot; instead
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:387
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:381
 msgid ""
 "This option reduces 'empty rides' moderately and <b>gives the best "
 "precision</b>."
@@ -2223,13 +2287,13 @@ msgstr ""
 "Diese Option verringert &quot;Leerfahrten&quot; angemessen und <b>hat die "
 "höchste Präzision</b>."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:389
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:443
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:383
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:441
 msgid "Fast:"
 msgstr "Schnell:"
 
 # In this specific sting you must not use quotes, use &quot; instead
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:390
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:384
 msgid ""
 "Aggressive clustering also of smaller objects to reduce 'empty rides' as "
 "much as possible."
@@ -2238,7 +2302,7 @@ msgstr ""
 "weit wie möglich zu reduzieren."
 
 # "dieser Modus" eingefügt --> ok?
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:391
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:385
 msgid ""
 "The higher speed might compromise the precision of some engravings, but "
 "<b>works well with text or clip-art design.</b>"
@@ -2247,12 +2311,12 @@ msgstr ""
 "Gravuren beeinträchtigt, aber dieser Modus<b>eignet sich gut für Text- oder "
 "Clip-Art-Design.</b>"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:393
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:387
 msgid "Basic:"
 msgstr "Einfach:"
 
 # In this specific sting you must not use quotes, use &quot; instead
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:394
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:388
 msgid ""
 "No clustering at all, the engravings are processed line by line. In this "
 "mode the laserhead may have a lot of 'empty rides' making it slower, but the "
@@ -2262,7 +2326,7 @@ msgstr ""
 "Modus kann der Laserkopf viele &quot;Leerfahrten&quot; haben. Das erhöht die "
 "Gesamtdauer des Jobs, jedoch ist die Präzision am besten."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:395
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:389
 msgid ""
 "<b>Use this option as fallback</b> if you're experiencing issues with the "
 "other options."
@@ -2271,42 +2335,37 @@ msgstr ""
 "Optionen haben solltest."
 
 # Stimmen die  Stellen der <b>s im Deutschen noch?
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:397
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:391
 msgid "* Some designs, as photos or long texts, <b>always</b> use basic mode."
 msgstr ""
 "* Für einige Designs, wie Fotos oder lange Texte, <b>verwendest Du immer</b> "
 "den Basismodus."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:398
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:392
 msgid "Engraving time optimization mode"
 msgstr "Gravurzeitoptimierung"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:405
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:400
 msgid "Recommended"
 msgstr "Empfohlen"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:408
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:470
-msgid "Fast"
-msgstr "Schnell"
-
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:411
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:409
 msgid "Basic"
 msgstr "Basic"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:417
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:415
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:540
 msgid "Image Preprocessing"
 msgstr "Bildvorverarbeitung"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:419
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:417
 msgid "Converts the image to solely black and white pixels."
 msgstr ""
 "Konvertiert das Bild in ausschließlich schwarz-weiße Pixel. (Keine "
 "Graustufen)"
 
 # Verwende das .... KONTEXT?
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:420
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:418
 msgid ""
 "Use this if the laser effect on your material is not able to transfer "
 "grayscales."
@@ -2315,12 +2374,12 @@ msgstr ""
 "lasern."
 
 # Dithering in German
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:421
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:425
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:419
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:423
 msgid "Dithering"
 msgstr "Dithering"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:433
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:431
 msgid ""
 "When engraving from one line to an other, the caret will come to a "
 "standstill for a short moment with minimal power."
@@ -2328,7 +2387,7 @@ msgstr ""
 "Beim Gravieren von einer Linie zur anderen kommt der Laserkopf für einen "
 "kurzen Moment mit minimaler Intensität zum Stillstand."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:434
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:432
 msgid ""
 "This can cause burnmarks on the left and right side of the engraving for "
 "particularly sensitive materials such as synthetic leather or foam."
@@ -2338,11 +2397,11 @@ msgstr ""
 "Gravur führen."
 
 # Kontext?
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:436
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:434
 msgid "Auto (default):"
 msgstr "Auto (Voreinstellung):"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:437
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:435
 msgid ""
 "If the material is deemed sensitive, extra time will be spent to make sure "
 "there is no undesired burn marks on the edges of the engraving."
@@ -2351,15 +2410,15 @@ msgstr ""
 "aufgewendet, um sicherzustellen, dass sich keine unerwünschten Brandflecken "
 "an den Rändern der Gravur befinden."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:438
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:436
 msgid "Otherwise, it will engrave as fast as possible."
 msgstr "Andernfalls wird so schnell wie möglich graviert."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:440
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:438
 msgid "Careful:"
 msgstr "Vorsichtig:"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:441
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:439
 msgid ""
 "Extra time will be spent when going from line to line to make sure there is "
 "no undesired burn marks on the edges of the engraving."
@@ -2368,7 +2427,7 @@ msgstr ""
 "sicherzustellen, dass keine unerwünschten Brandflecken an den Rändern der "
 "Gravur entstehen."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:444
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:442
 msgid ""
 "Do the least amount of movement from line to line, making it as fast as "
 "possible."
@@ -2376,7 +2435,7 @@ msgstr ""
 "So wenig zusätzliche Bewegung wie möglich von Linie zu Linie um die Gravur "
 "so schnell wie möglich zu machen."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:445
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:443
 msgid ""
 "This can cause burnmarks on the left and right side of the engraving for "
 "sensitive material."
@@ -2384,11 +2443,11 @@ msgstr ""
 "Dies kann bei empfindlichem Material zu Brandflecken auf der linken und "
 "rechten Seite der Gravur führen."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:449
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:447
 msgid "Prevent unwanted burn marks"
 msgstr "Unerwünschte Brandflecken verhindern"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:450
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:448
 msgid ""
 "This feature has been disabled as the burn marks issue has been resolved in "
 "our Software"
@@ -2396,37 +2455,41 @@ msgstr ""
 "Diese Funktion wurde entfernt, da das Problem mit dem neusten Softwareupdate "
 "behoben wurde"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:458
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:456
 msgid "Auto"
 msgstr "Auto"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:464
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:462
 msgid "Careful"
 msgstr "Vorsichtig"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:479
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:468
+msgid "Fast"
+msgstr "Schnell"
+
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:477
 msgid "Sorry, there are no engraving settings for this material."
 msgstr "Leider gibt es für dieses Material keine Gravureinstellungen."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:481
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:585
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:479
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:586
 msgid "I know what I am doing! Let me try my own."
 msgstr "Ich weiß, was ich tue! Lass es mich selbst versuchen."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:500
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:498
 msgid "Sets the intensity of the laser."
 msgstr "Legt die Intensität des Lasers fest."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:500
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:498
 msgid "The more intensity the deeper the effect on the material."
 msgstr "Je mehr Intensität, desto tiefer die Wirkung auf das Material."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:501
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:499
 msgid "Cutting needs higher intensities than engraving."
 msgstr "Schneiden erfordert höhere Intensitäten als Gravieren."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:502
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:517
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:500
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:515
 msgid ""
 "The effect in general is dependent from the material and its color and "
 "surface."
@@ -2434,42 +2497,42 @@ msgstr ""
 "Die Wirkung ist im Allgemeinen abhängig vom Material sowie von dessen Farbe "
 "und Oberfläche."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:503
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:501
 msgid "Intensity"
 msgstr "Intensität"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:514
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:512
 msgid "Sets the velocity of the laser head (50-3000 mm/min)."
 msgstr "Legt die Geschwindigkeit des Laserkopfes fest (50-3000 mm/min)."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:515
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:513
 msgid "The slower the movement the deeper the effect on the material."
 msgstr "Je langsamer die Bewegung, desto tiefer die Wirkung auf das Material."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:516
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:514
 msgid "Cutting needs slower movement than engraving."
 msgstr "Schneiden erfordert eine niedrigere Geschwindigkeit als Gravieren."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:518
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:516
 msgid "Speed"
 msgstr "Geschwindigkeit"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:546
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:544
 msgid ""
 "Indicates the number of times the laser will run over the design to cut it. "
 msgstr "Gibt an, wie oft der Laser über das Design läuft, um es zu schneiden."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:547
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:545
 msgid "Increase the number of passes if the material does not get cut."
 msgstr ""
 "Erhöhe die Anzahl der Durchläufe, falls das Material nicht ganz "
 "durchgeschnitten wird."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:549
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:547
 msgid "Progressive cut (activate in advanced settings):"
 msgstr "Progressiv (in den erweiterten Einstellungen):"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:550
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:548
 msgid ""
 "Slows down the laser head progressively in every cut.\n"
 "                                            Depending on the design, this "
@@ -2495,58 +2558,62 @@ msgstr ""
 "Gravieren."
 
 # Schneideeinstellungen oder Schnitteinstellungen?
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:583
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:584
 msgid "Sorry, there are no cutting settings for this material."
 msgstr "Leider gibt es für dieses Material keine Schneideeinstellungen."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:595
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:596
 msgid "+ Drag cut symbols here for another job +"
 msgstr "+ Ziehe ein Schneidesymbol hierher um einen weiteren Block anzulegen +"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:610
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:611
+msgid "Estimation:"
+msgstr "Geschätzt:"
+
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:632
 msgid "show advanced settings"
 msgstr "erweiterte Einstellungen anzeigen"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:615
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:637
 #: octoprint_mrbeam/templates/review.jinja2:53
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:91
 msgid "Back"
 msgstr "Zurück"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:620
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:642
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:182
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:194
 msgid "Start"
 msgstr "Start"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:629
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:651
 msgid "Settings to be adjusted"
 msgstr "Einstellungen müssen noch angepasst werden"
 
 # lettering =?
 # Schriftzüge, Beschriftungen
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:637
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:659
 msgid "Learn how to cut out lettering"
 msgstr "Lerne, wie man Beschriftungen ausschneidet"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:642
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:664
 msgid "Ok"
 msgstr "Ok"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:655
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:677
 msgid "Did you focus your laserhead?"
 msgstr "Hast Du den Laserkopf fokussiert?"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:659
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:681
 msgid "Focus your laserhead before starting the job to get the best quality!"
 msgstr "Fokussiere den Laserkopf, um ein gutes Ergebnis zu erzielen!"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:663
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:666
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:685
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:688
 msgid " Learn how to do this."
 msgstr "Lerne wie das geht."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:671
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:693
 msgid ""
 "Reminder: Never remove any components while your Mr Beam is switched on! To "
 "make sure your Mr Beam is turned off, take out the key and unplug the power "
@@ -2556,23 +2623,23 @@ msgstr ""
 "aktiv ist! Um sicherzustellen, dass du ihn zuvor ausgeschaltet hast, zieh "
 "den Schlüssel ab und trenne ihn von der Stromquelle."
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:678
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:700
 msgid "Don't remind me again"
 msgstr "Erinnere mich nicht mehr"
 
 # vergessen… passt
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:682
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:704
 msgid "I forgot"
 msgstr "vergessen…"
 
 # custom material?
 # geht es hier nun wirklich um "eigenes Material" ?
 # englische version evtl ändern
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:684
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:706
 msgid "Move over the material"
 msgstr "Über das Material fahren"
 
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:688
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:710
 msgid "It's focused!"
 msgstr "Fokussiert!"
 
@@ -2636,45 +2703,56 @@ msgstr ""
 "Führe dann einen Homing-Zyklus durch, damit Dein Mr&nbsp;Beam die Position "
 "des Laserkopfs erkennen kann."
 
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:21
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:54
 msgid "Homing Cycle"
 msgstr "Homing-Zyklus"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:6
-msgid "Laser Job Finished"
-msgstr "Laserjob fertig"
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:5
+msgid "Laser Job Finished!"
+msgstr "Laser Job abgeschlossen!"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:13
-msgid "Inspire the Mr Beam Community"
-msgstr "Inspiriere die Mr Beam Community"
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:9
+msgid "Share your work and inspire others!"
+msgstr "Teile deine Arbeit und inspiriere andere!"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:14
-msgid "and be inspired too!"
-msgstr "und lass’ dich selbst inspirieren!"
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:31
+msgid "By the way - Did you know?"
+msgstr "Übrigens - wusstest du schon?"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:15
-msgid "Tag your photos with"
-msgstr "Markiere deine Fotos mit"
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:57
+msgid "You need a working internet connection for this forwarding to work."
+msgstr ""
+"Du brauchst eine aktive Internetverbindung damit diese Weiterleitung "
+"funktioniert. "
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:27
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:45
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:61
+msgid "Browse the options"
+msgstr "Stöbere durch die Optionen"
+
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:62
+msgid "Restock Material"
+msgstr "Material nachbestellen"
+
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:71
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:94
 msgid "Laser job duration:"
 msgstr "Dauer des Laserjobs:"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:28
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:46
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:73
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:95
 msgid "Estimated:"
 msgstr "Geschätzt:"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:32
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:79
 msgid "Repeat Job"
 msgstr "Job wiederholen"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:39
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:88
 msgid "Air Filter run-on"
 msgstr "Air Filter Nachlauf"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:44
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:93
 msgid ""
 "Please wait a few seconds until Mr Beam cleared most of the dust particles "
 "out of the working area."
@@ -2682,7 +2760,7 @@ msgstr ""
 "Bitte warte einige Sekunden, bis Mr Beam die meisten Staubpartikel aus dem "
 "Arbeitsbereich entfernt hat."
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:50
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:99
 msgid "Cancel Air Filter run-on"
 msgstr "Air Filter-Nachlauf abbrechen"
 
@@ -2731,8 +2809,8 @@ msgid "Read more"
 msgstr "Mehr Informationen"
 
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:17
-#: octoprint_mrbeam/templates/quick_shape.jinja2:142
-#: octoprint_mrbeam/templates/quick_text.jinja2:38
+#: octoprint_mrbeam/templates/quick_shape.jinja2:152
+#: octoprint_mrbeam/templates/quick_text.jinja2:75
 #: octoprint_mrbeam/templates/review.jinja2:56
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:48
 msgid "OK"
@@ -3070,7 +3148,7 @@ msgstr ""
 "%(close)s."
 
 #: octoprint_mrbeam/templates/lasersafety_standalone.jinja2:4
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:97
 #: octoprint_mrbeam/templates/wizard/wizard_lasersafety.jinja2:3
 msgid "Laser Safety"
 msgstr "Lasersicherheit"
@@ -3110,13 +3188,13 @@ msgstr "Etwas ist schief gelaufen"
 
 # Serial number
 #: octoprint_mrbeam/templates/loading_overlay.jinja2:222
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:966
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:970
 msgid "Serial"
 msgstr "Seriennummer"
 
 #: octoprint_mrbeam/templates/loading_overlay.jinja2:223
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:13
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:967
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:971
 msgid "Mr Beam Name"
 msgstr "Mr Beam Name"
 
@@ -3197,55 +3275,59 @@ msgstr "designbibliothek"
 msgid "design store"
 msgstr "design-store"
 
-# tab headline (old mr beam I)
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:56
+msgid "material store"
+msgstr "Material Store"
+
+# tab headline (old mr beam I)
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:59
 msgid "focus"
 msgstr "fokus"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:60
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:63
 msgid "terminal"
 msgstr "terminal"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:92
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:95
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:111
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:97
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:100
 msgid "Fullscreen"
 msgstr "Vollbild"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:98
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:101
 msgid "Exit Fullscreen"
 msgstr "Vollbild verlassen"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:105
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:108
 #: octoprint_mrbeam/templates/support_standalone.jinja2:5
 msgid "Support"
 msgstr "Support"
 
 # feststehender Begriff
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:107
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:110
 msgid "Find my Mr Beam"
 msgstr "Find my Mr Beam"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:147
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:153
 msgid "Version"
 msgstr "Version"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:150
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:156
 msgid "Homepage"
 msgstr "Startseite"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:151
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:157
 msgid "Sourcecode"
 msgstr "Sourcecode"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:152
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:158
 msgid "Documentation"
 msgstr "Dokumentation"
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:153
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:159
 msgid "Bugs and Requests"
 msgstr "Fehler und Anfragen"
 
@@ -3253,20 +3335,22 @@ msgstr "Fehler und Anfragen"
 msgid "Quick Shape"
 msgstr "Quick Form"
 
-#: octoprint_mrbeam/templates/quick_shape.jinja2:33
-#: octoprint_mrbeam/templates/quick_shape.jinja2:68
+#: octoprint_mrbeam/templates/quick_shape.jinja2:34
+#: octoprint_mrbeam/templates/quick_shape.jinja2:78
 msgid "Corners"
 msgstr "Ecken"
 
-#: octoprint_mrbeam/templates/quick_shape.jinja2:74
+#: octoprint_mrbeam/templates/quick_shape.jinja2:84
 msgid "Sharpness"
 msgstr "Schärfe"
 
-#: octoprint_mrbeam/templates/quick_shape.jinja2:111
+#: octoprint_mrbeam/templates/quick_shape.jinja2:121
+#: octoprint_mrbeam/templates/quick_text.jinja2:19
 msgid "Line Color"
 msgstr "Linienfarbe"
 
-#: octoprint_mrbeam/templates/quick_shape.jinja2:126
+#: octoprint_mrbeam/templates/quick_shape.jinja2:136
+#: octoprint_mrbeam/templates/quick_text.jinja2:32
 msgid "Fill Color"
 msgstr "Füllfarbe"
 
@@ -3287,11 +3371,15 @@ msgstr "Aa"
 msgid "Next Font"
 msgstr "Nächste Schriftart"
 
-#: octoprint_mrbeam/templates/quick_text.jinja2:31
+#: octoprint_mrbeam/templates/quick_text.jinja2:46
+msgid "Baseline"
+msgstr "Grundlinie"
+
+#: octoprint_mrbeam/templates/quick_text.jinja2:63
 msgid "outside"
 msgstr "außerhalb"
 
-#: octoprint_mrbeam/templates/quick_text.jinja2:33
+#: octoprint_mrbeam/templates/quick_text.jinja2:65
 msgid "inside"
 msgstr "innenhalb"
 
@@ -3660,8 +3748,8 @@ msgstr "Download"
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:336
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:355
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:462
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:660
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:748
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:661
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:749
 msgid "Remove"
 msgstr "Entfernen"
 
@@ -3687,30 +3775,6 @@ msgstr "Erstellt am"
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:291
 msgid "Internal"
 msgstr "Intern"
-
-#: octoprint_mrbeam/templates/tab_designstore.jinja2:21
-msgid "The Mr&nbsp;Beam Design Store is not reachable"
-msgstr "Der Mr&nbsp;Beam Design-Store ist nicht erreichbar"
-
-#: octoprint_mrbeam/templates/tab_designstore.jinja2:22
-msgid ""
-"In order to use our store it is necessary that your Mr&nbsp;Beam is "
-"connected to the internet."
-msgstr ""
-"Um unseren Store nutzen zu können, muß Dein Mr&nbsp;Beam mit dem Internet "
-"verbunden sein."
-
-#: octoprint_mrbeam/templates/tab_designstore.jinja2:23
-msgid ""
-"Please connect your Mr&nbsp;Beam to your router with a cable, or via WiFi."
-msgstr ""
-"Bitte verbinde Deinen Mr&nbsp;Beam mit einem Kabel oder über WiFi mit Deinem "
-"Router."
-
-#: octoprint_mrbeam/templates/tab_designstore.jinja2:26
-#: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:61
-msgid "Refresh"
-msgstr "Aktualisieren"
 
 #: octoprint_mrbeam/templates/tab_messages.jinja2:6
 msgid "Messages From Mr Beam"
@@ -4138,72 +4202,72 @@ msgstr "Form"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:353
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:460
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:657
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:745
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:658
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:746
 msgid "Reset Transform"
 msgstr "Transformieren zurücksetzen"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:354
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:461
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:659
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:747
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:660
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:748
 msgid "Transform"
 msgstr "Transformieren"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:359
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:466
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:664
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:752
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:665
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:753
 msgid "translation"
 msgstr "Übersetzung"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:364
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:471
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:670
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:757
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:671
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:758
 msgid "rotation"
 msgstr "Rotation"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:377
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:484
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:683
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:771
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:684
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:772
 msgid "horizontal"
 msgstr "horizontal"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:390
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:497
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:696
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:784
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:697
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:785
 msgid "proportional"
 msgstr "proportional"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:391
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:498
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:697
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:785
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:698
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:786
 msgid "unproportional"
 msgstr "unproportional"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:394
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:501
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:700
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:788
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:701
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:789
 msgid "vertical"
 msgstr "vertikal"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:409
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:516
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:715
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:803
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:716
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:804
 #, python-format
 msgid "%%"
 msgstr "%%"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:412
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:519
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:718
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:808
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:719
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:809
 msgid "multiply"
 msgstr "multiplizieren"
 
@@ -4211,10 +4275,10 @@ msgstr "multiplizieren"
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:421
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:524
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:527
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:723
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:726
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:813
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:816
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:724
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:727
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:814
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:817
 msgid "duplicate"
 msgstr "duplizieren"
 
@@ -4240,22 +4304,22 @@ msgstr "horizontal"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:447
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:642
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:729
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:819
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:730
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:820
 msgid "exceeds working area"
 msgstr "überschreitet den Arbeitsbereich"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:448
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:643
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:730
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:820
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:731
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:821
 msgid "Design exceeds the working area."
 msgstr "Das Design überschreitet den Arbeitsbereich."
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:449
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:645
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:731
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:821
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:732
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:822
 msgid "Make it fit"
 msgstr "Anpassen"
 
@@ -4283,15 +4347,15 @@ msgstr "Gamma"
 msgid "crop"
 msgstr "zuschneiden"
 
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:658
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:746
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:659
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:747
 msgid "Edit"
 msgstr "Bearbeiten"
 
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:904
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:907
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:910
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:913
-#: octoprint_mrbeam/templates/tab_workingarea.jinja2:916
 msgid ""
 "The system can not find the pink marker in the device in this corner of the "
 "workin area. Please make sure that it is visible for the camera."
@@ -4335,22 +4399,30 @@ msgstr ""
 "Lege einige Stücke flaches Material wie z.B. Karton in jede Ecke des Mr Beam "
 "Arbeitsbereichs:"
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:17
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:18
+msgid "Focus the laserhead onto the material."
+msgstr "Fokussiere den Laserkopf auf das Materials."
+
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:20
+msgid "Home the laserhead."
+msgstr "Home den Laserkopf"
+
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:23
 msgid ""
 "Engrave the calibrations markers on your material by clicking on this button:"
 msgstr ""
 "Klicke auf diese Schaltfläche um die Kalibrierungsmarkierungen auf das "
 "Material zu gravieren."
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:20
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:26
 msgid "Engrave Calibration Markers"
 msgstr "Kalibriermarkierungen gravieren"
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:23
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:29
 msgid "Please perform a homing cycle first"
 msgstr "Bitte führe zuerst einen Homing-Zyklus durch"
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:26
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:32
 msgid ""
 "Wait until the engraving is finished and Mr Beam Status Lights are green. "
 "Open the safety lid again and be carefult NOT to touch the engraved "
@@ -4360,54 +4432,54 @@ msgstr ""
 "leuchten. Öffne den Sicherheitsdeckel wieder OHNE dabei das gravierte "
 "Material zu berühren. Die Kamera wird nun ein Bild der Gravur aufnehmen."
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:27
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:33
 msgid ""
 "Start the calibration by clicking on the button, and then follow these steps:"
 msgstr ""
 "Um die Kalibrierung zu starten, klicke auf diese Schaltfläche und befolge "
 "die diese Schritte:"
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:29
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:35
 msgid "Click on the arrow head of the marker in the magnified picture."
 msgstr "Klicke auf die Pfeilspitze des Markers im vergrößerten Bild."
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:30
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:36
 msgid ""
 "Click on \"next\" to continue with the other markers as the picture changes."
 msgstr "Klicke auf \"weiter\", um mit den anderen Markierungen fortzufahren."
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:31
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:37
 msgid ""
 "Once all arrowheads are marked the calibration is finished and can be saved."
 msgstr ""
 "Sobald alle Pfeilspitzen markiert sind, ist die Kalibrierung abgeschlossen "
 "und kann gespeichert werden."
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:34
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:40
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:75
 msgid "Start Calibration"
 msgstr "Kalibrierung starten"
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:73
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:79
 msgid "refresh"
 msgstr "aktualisiere"
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:88
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:94
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:40
 msgid "detecting"
 msgstr "Erkennung"
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:90
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:96
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:42
 msgid "Download this image"
 msgstr "Dieses Bild herunterladen"
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:116
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:122
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:99
 msgid "Previous"
 msgstr "Zurück"
 
-#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:122
+#: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:128
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:115
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:102
 msgid "Save Calibration"
@@ -5526,6 +5598,37 @@ msgstr ""
 msgid "Activate focus reminder"
 msgstr "Fokus-Erinnerung aktivieren"
 
+#: octoprint_mrbeam/templates/tab/tab_designstore.jinja2:25
+msgid "The Mr&nbsp;Beam Design Store is not reachable"
+msgstr "Der Mr&nbsp;Beam Design-Store ist nicht erreichbar"
+
+#: octoprint_mrbeam/templates/tab/tab_designstore.jinja2:26
+#: octoprint_mrbeam/templates/tab/tab_materialstore.jinja2:24
+msgid ""
+"In order to use our store it is necessary that your Mr&nbsp;Beam is "
+"connected to the internet."
+msgstr ""
+"Um unseren Store nutzen zu können, muß Dein Mr&nbsp;Beam mit dem Internet "
+"verbunden sein."
+
+#: octoprint_mrbeam/templates/tab/tab_designstore.jinja2:27
+#: octoprint_mrbeam/templates/tab/tab_materialstore.jinja2:25
+msgid ""
+"Please connect your Mr&nbsp;Beam to your router with a cable, or via WiFi."
+msgstr ""
+"Bitte verbinde Deinen Mr&nbsp;Beam mit einem Kabel oder über WiFi mit Deinem "
+"Router."
+
+#: octoprint_mrbeam/templates/tab/tab_designstore.jinja2:30
+#: octoprint_mrbeam/templates/tab/tab_materialstore.jinja2:28
+#: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:61
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+#: octoprint_mrbeam/templates/tab/tab_materialstore.jinja2:23
+msgid "The Mr&nbsp;Beam Material Store is not reachable"
+msgstr "Der Mr&nbsp;Beam Material Store ist nicht erreichbar"
+
 #: octoprint_mrbeam/templates/wizard/firstrun_end.jinja2:7
 #, python-format
 msgid ""
@@ -5815,6 +5918,18 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
+
+#~ msgid "engrave outlines of filled shapes"
+#~ msgstr "Umrisse von gefüllten Formen gravieren"
+
+#~ msgid "Inspire the Mr Beam Community"
+#~ msgstr "Inspiriere die Mr Beam Community"
+
+#~ msgid "and be inspired too!"
+#~ msgstr "und lass’ dich selbst inspirieren!"
+
+#~ msgid "Tag your photos with"
+#~ msgstr "Markiere deine Fotos mit"
 
 #~ msgid "Yes, I will reload the page"
 #~ msgstr "Ja, ich werde die Seite neu laden"
