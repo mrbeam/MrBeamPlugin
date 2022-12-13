@@ -148,19 +148,20 @@ describe("About This Mr Beam", function () {
         cy.logout();
     });
     // Linkedin status code 999
-    it("Links - linkedin", function () {
+    it.only("Links - linkedin", function () {
         cy.get('[data-test="about-settings-link-linkedin"]')
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request({
+                    failOnStatusCode: false,
                     method: "GET",
                     url: myLink,
-                    failOnStatusCode: false,
-                }).then((response) => {
+                    followRedirect: false,
+                  }).then((response) => {
                     expect(response.status).to.eq(200);
+                  })
                 });
-            });
-        cy.logout();
+                
     });
     it("Link TikTok", function () {
         cy.get('[data-test="about-settings-link-tiktok"]')
@@ -242,32 +243,27 @@ describe("About This Mr Beam", function () {
             });
         cy.logout();
     });
-    // error 404
-    it("Link privacy", function () {
+
+    it.only("Link privacy", function () {
         cy.get('[data-test="about-settings-link-web-site"]')
-            .invoke("attr", "href")
-            .then((myLink) => {
-                cy.request({
-                    method: "GET",
-                    url: myLink,
-                    failOnStatusCode: false,
-                }).then((resp) => {
-                    expect(resp.status).to.eq(200);
-                });
+        .invoke("attr", "href")
+        .then((myLink) => {
+            cy.request({
+                failOnStatusCode: false,
+                method: "GET",
+                url: myLink,
+                followRedirect: false,
+                failOnStatusCode: false 
+              }).then((resp) => {
+                expect(resp.status).to.eq(200)                
+              })
             });
-        cy.logout();
     });
-    // error 404
     it("Privacy Policies - service", function () {
         cy.get('[data-test="about-settings-link-find-mr-beam"]')
-            .click()
             .invoke("attr", "href")
             .then((myLink) => {
-                cy.request({
-                    method: "GET",
-                    url: myLink,
-                    failOnStatusCode: false,
-                }).then((resp) => {
+                cy.request(myLink).then((resp) => {
                     expect(resp.status).to.eq(200);
                 });
             });

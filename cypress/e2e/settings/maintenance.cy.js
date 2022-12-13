@@ -30,7 +30,7 @@ describe("Maintenance", function () {
             });
     });
     // status code no exist
-    it("Air Filter: Pre-filter", function () {
+    it("Air Filter: Main-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-buy-now-main-filter"]')
             .invoke("attr", "href")
@@ -41,7 +41,7 @@ describe("Maintenance", function () {
             });
     });
     // status code no exist
-    it("Air Filter: Pre-filter", function () {
+    it("Laser head cleaning", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-links-buy-now-laser-head"]')
             .invoke("attr", "href")
@@ -74,9 +74,7 @@ describe("Maintenance", function () {
     });
     it("Reset Air Filter: Main filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
-        cy.get('[data-test="maintenance-reset-button-carbon-filter"]')
-            .eq(1)
-            .click();
+        cy.get('[data-test="maintenance-reset-button-carbon-filter"]').click();
         cy.get("#reset_counter_are_you_sure > .modal-header").should(
             "to.visible"
         );
