@@ -1,4 +1,4 @@
-FROM ubuntu:21.10
+FROM ubuntu:22.04
 
 ENV TZ=Europe/Berlin
 # Installing python and pip on user level so we need to add it to the PATH
