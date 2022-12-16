@@ -35,7 +35,7 @@ describe("About This Mr Beam", function () {
             });
         cy.logout();
     });
-    it("User manual - online", function () {
+    it("Quickstart Guide - online", function () {
         cy.get(
             ':nth-child(1) > [data-test="about-settings-link-quickstart-online"]'
         )
