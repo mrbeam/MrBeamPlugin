@@ -9,6 +9,7 @@ describe("Laser Job", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(20000);
         cy.loginLaser(this.testData.email, this.testData.password);
+        cy.visit(this.testData.url_laser);
         cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });

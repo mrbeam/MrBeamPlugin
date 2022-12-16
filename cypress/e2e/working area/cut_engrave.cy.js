@@ -11,6 +11,7 @@ describe("Cut and engrave", function () {
         cy.visit(this.testData.url_laser);
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
+        cy.visit(this.testData.url_laser);
         cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });
