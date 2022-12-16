@@ -28,9 +28,6 @@ describe("Navbar icons", function () {
     it("Prod", function () {
         cy.get('[id="settings_plugin_mrbeam_dev_design_store_link"]').click();
         cy.get('[data-test="dev-design-store-env"]').select("prod");
-        cy.get('[data-test="mrbeam-ui-index-design-store"]')
-            .find(".red-dot")
-            .should("to.visible");
         cy.get('[data-test="mrbeam-ui-index-design-store"]').click();
         cy.get('[id="design_store_iframe"]')
             .invoke("prop", "src")
