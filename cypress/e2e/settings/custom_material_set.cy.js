@@ -26,7 +26,7 @@ describe("Navbar icons", function () {
     });
     it("Download backup", function () {
         cy.get('[id="settings_plugin_mrbeam_custom_material_link"]').click();
-        cy.get('[data-test="custom-material-settings-backup]')
+        cy.get('[data-test="custom-material-settings-backup"]')
             .click()
             .invoke("prop", "innerText")
             .then((downloadFile) => {
