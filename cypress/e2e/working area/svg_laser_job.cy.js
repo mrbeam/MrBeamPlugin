@@ -178,11 +178,11 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-horizontally"]')
             .filter(":visible")
             .click();
-            cy.get('[data-test="tab-workingarea-detail-information"]').should(
-                ($elem) => {
-                    expect($elem).to.have.length(2);
-                }
-            );
+        cy.get('[data-test="tab-workingarea-detail-information"]').should(
+            ($elem) => {
+                expect($elem).to.have.length(2);
+            }
+        );
         cy.logout();
     });
 

@@ -6,7 +6,7 @@
                     <h1 class="mrb-messages-title">{{ _('Messages From Mr Beam') }}</h1>
                     <div class="mrb-message-list" data-bind="foreach: messages">
                         <div data-bind="css: { 'mrb-message-read': read }">
-                            <div class="mrb-message-element rounded_container" data-test="tab-message-list-message" 
+                            <div class="mrb-message-element rounded_container" data-test="tab-message-list-message"
                                  data-bind="css: { selected: $index() == $root.selectedIndex() }, click: function(data, event) { $root.onIndexSelected($index(), data, event) }">
                                 <h5 class="mrb-message-title" data-bind="text: content.title"></h5>
                             </div>

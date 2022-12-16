@@ -157,11 +157,10 @@ describe("About This Mr Beam", function () {
                     method: "GET",
                     url: myLink,
                     followRedirect: false,
-                  }).then((response) => {
+                }).then((response) => {
                     expect(response.status).to.eq(200);
-                  })
                 });
-                
+            });
     });
     it("Link TikTok", function () {
         cy.get('[data-test="about-settings-link-tiktok"]')
@@ -246,17 +245,17 @@ describe("About This Mr Beam", function () {
 
     it.only("Link privacy", function () {
         cy.get('[data-test="about-settings-link-web-site"]')
-        .invoke("attr", "href")
-        .then((myLink) => {
-            cy.request({
-                failOnStatusCode: false,
-                method: "GET",
-                url: myLink,
-                followRedirect: false,
-                failOnStatusCode: false 
-              }).then((resp) => {
-                expect(resp.status).to.eq(200)                
-              })
+            .invoke("attr", "href")
+            .then((myLink) => {
+                cy.request({
+                    failOnStatusCode: false,
+                    method: "GET",
+                    url: myLink,
+                    followRedirect: false,
+                    failOnStatusCode: false,
+                }).then((resp) => {
+                    expect(resp.status).to.eq(200);
+                });
             });
     });
     it("Privacy Policies - service", function () {

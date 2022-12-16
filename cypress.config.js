@@ -25,7 +25,7 @@ module.exports = defineConfig({
         testCaseSwitchClassnameAndName: false,
     },
     compilerOptions: {
-        "types": ["cypress", "@4tw/cypress-drag-drop"],
-        "types": ["cypress", "node", "cypress-real-events"],
+        types: ["cypress", "@4tw/cypress-drag-drop"],
+        types: ["cypress", "node", "cypress-real-events"],
     },
 });
