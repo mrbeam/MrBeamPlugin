@@ -48,7 +48,7 @@ describe("Navbar icons", function () {
     it("Coner Calibration - start", function () {
         cy.get('[id="settings_plugin_mrbeam_camera_link"]').click();
         cy.get('[data-test="camera-settings-start-button-lens"]').click();
-        cy.get('[data-test="view-corner-calibration-svg" ').should(
+        cy.get('[data-test="view-corner-calibration-svg"]').should(
             "to.visible"
         );
         cy.get('[data-test="view-corner-start-button-back"]').click();
