@@ -67,6 +67,7 @@ from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.rest_handler.docs_handler import DocsRestHandlerMixin
+from octoprint_mrbeam.services import settings_service
 from octoprint_mrbeam.services.settings_service import SettingsService
 from octoprint_mrbeam.services.burger_menu_service import BurgerMenuService
 from octoprint_mrbeam.services.document_service import DocumentService
@@ -700,6 +701,8 @@ class MrBeamPlugin(
                 "js/app/view-models/messages.js",
                 "js/app/view-models/design-store.js",
                 "js/app/view-models/settings/dev-design-store.js",
+                "js/app/view-models/material-store.js",
+                "js/settings_menu_navigation.js",
                 "js/app/view-models/settings/calibration/calibration.js",
                 "js/app/view-models/settings/calibration/corner-calibration.js",
                 "js/app/view-models/settings/calibration/lens-calibration.js",
@@ -707,6 +710,8 @@ class MrBeamPlugin(
                 "js/app/view-models/settings/calibration/watterott/calibration-qa.js",
                 "js/app/view-models/settings/calibration/watterott/label-printer.js",
                 "js/app/view-models/modal/hard_refresh_overlay.js",
+                "js/app/view-models/mrbeam-simple-api-commands.js",
+                "js/app/view-models/mrbeam-constants.js",
             ],
             css=[
                 "css/mrbeam.css",
@@ -855,7 +860,9 @@ class MrBeamPlugin(
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
-                settings_model=SettingsService(self._logger, DocumentService(self._logger)).get_template_settings_model(
+                settings_model=SettingsService(self._logger, DocumentService(self._logger),
+                                               environment=settings_service.get_environment_enum_from_plugin_settings(
+                                                   self._settings)).get_template_settings_model(
                     self.get_model_id()),
                 burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
                     self.get_model_id()),
@@ -1940,7 +1947,7 @@ class MrBeamPlugin(
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
-            compare_pep440_versions=[]
+            compare_pep440_versions=[],
         )
 
     def on_api_command(self, command, data):
@@ -2314,8 +2321,11 @@ class MrBeamPlugin(
             "New undistorted image is requested. is_initial_calibration: %s",
             is_initial_calibration,
         )
-        self.lid_handler._photo_creator.is_initial_calibration = is_initial_calibration
-        self.lid_handler._startStopCamera("initial_calibration")
+        if is_initial_calibration:
+            self.lid_handler._photo_creator.is_initial_calibration = (
+                is_initial_calibration
+            )
+            self.lid_handler._startStopCamera(MrBeamEvents.INITIAL_CALIBRATION)
         succ = self.lid_handler.takeNewPic()
         if succ:
             resp_text = {

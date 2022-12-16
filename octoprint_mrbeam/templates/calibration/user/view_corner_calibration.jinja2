@@ -1,4 +1,4 @@
-<div>
+<div class="corner_calibration">
 
     <div class="camera-calibration-title">
         <button class="btn" data-bind="click: abortCornerCalibration">
@@ -14,9 +14,15 @@
             <div class='calibration_manual img'
                  style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_material_size.svg)'></div>
         </li>
+
+        <li>{{ _('Focus the laserhead onto the material.') }}<br>
+        <img class="focus_reminder" src="/plugin/mrbeam/static/img/focus_reminder.png"></li>
+        <li>{{ _('Home the laserhead.') }}<br>
+            <button class="btn btn-primary" data-bind="click: function() { workingArea.performHomingCycle('corner_calibration') }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button></li>
+
         <li>{{ _('Engrave the calibrations markers on your material by clicking on this button:') }}<br>
             <button class="btn btn-primary"
-                    data-bind="click: engraveMarkers, enable: (!camera.state.isLocked() && !camera.state.isConnecting())">
+                    data-bind="click: engraveMarkers, enable: (!camera.state.isLocked() && !camera.state.isConnecting() && camera.state.isOperational())">
                 {{ _('Engrave Calibration Markers')  }}
             </button>
             <span class="muted" data-bind="visible: camera.state.isLocked() || camera.state.isConnecting">

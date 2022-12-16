@@ -2972,7 +2972,8 @@ $(function () {
                         "line",
                         "polyline",
                         "polygon",
-                        "path",
+                        "text",
+                        "tspan"
                     ].indexOf(e.type) >= 0
                 ) {
                     var fill = e.attr("fill");
@@ -3646,11 +3647,14 @@ $(function () {
                 );
 
                 // analytics
-                var analyticsData = {
+                let analyticsData = {
                     id: self.currentQuickShapeFile.id,
                     file_type: "quickShape",
                     type: type.substr(1),
-                    color: qs_params.color,
+                    stroke: qs_params.stroke,
+                    stroke_color: qs_params.color,
+                    fill: qs_params.fill,
+                    fill_color: qs_params.fill_color,
                     name: name,
                 };
                 for (let myKey in qs_params) {
@@ -3764,17 +3768,18 @@ $(function () {
             }
             self._qt_currentQuickTextUpdate();
         });
-        $("#quick_text_stroke").on("click", function (e) {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.stroke = e.currentTarget.checked;
-                self.lastQuickTextStroke = self.currentQuickTextFile.stroke;
-            }
-            self._qt_currentQuickTextUpdate();
-        });
-        $("#quick_text_fill").on("click", function (e) {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.fill = e.currentTarget.checked;
-                self.lastQuickTextFill = self.currentQuickTextFile.fill;
+
+        let quickTextRadioInput = $('input[type=radio][name=stroke_or_fill]');
+        quickTextRadioInput.on("change", function () {
+            if(self.currentQuickTextFile){
+                if (this.value === "stroke") {
+                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = true;
+                        self.currentQuickTextFile.fill = self.lastQuickTextFill = false;
+                }
+                if (this.value === "fill"){
+                        self.currentQuickTextFile.fill = self.lastQuickTextFill = true;
+                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = false;
+                }
             }
             self._qt_currentQuickTextUpdate();
         });
@@ -3855,10 +3860,11 @@ $(function () {
         self._qt_currentQuickTextUpdate = function () {
             if (self.currentQuickTextFile) {
                 self.currentQuickText(self.currentQuickTextFile.name);
+                let quickTextInputField = $("#quick_text_dialog_text_input");
                 const displayText =
                     self.currentQuickTextFile.name !== ""
                         ? self.currentQuickTextFile.name
-                        : $("#quick_text_dialog_text_input").attr(
+                        : quickTextInputField.attr(
                               "placeholder"
                           );
 
@@ -3962,12 +3968,22 @@ $(function () {
                 });
 
                 // update font of input field
-                $("#quick_text_dialog_text_input").css({
+                quickTextInputField.css({
                     "text-shadow": shadow,
                     color: previewFill,
                     "font-family": font,
                     "font-variant-ligatures": ligatures,
                 });
+                // update input placeholder color if stroked
+                let StrokedQuickTextPlaceholderClass = 'mrb-quicktext-stroked-placeholder';
+                if(isStroked){
+                    quickTextInputField.addClass(StrokedQuickTextPlaceholderClass);
+                }
+                // update input placeholder color if not stroked
+                if(!isStroked && quickTextInputField.hasClass(StrokedQuickTextPlaceholderClass)){
+                    quickTextInputField.removeClass(StrokedQuickTextPlaceholderClass);
+                }
+
                 $("#quick_text_dialog_font_name").text(font);
                 //                $("#quick_text_fill_brightness").val(fillColor);
                 //                $("#quick_text_stroke_color").val(strokeColor);
@@ -4004,8 +4020,10 @@ $(function () {
                     file_type: "quickText",
                     text_length: self.currentQuickTextFile.name.length,
                     brightness: ity,
-                    fill: fill,
-                    stroke: stroke,
+                    fill: self.currentQuickTextFile.fill,
+                    fill_color: self.currentQuickTextFile.fillColor,
+                    stroke: self.currentQuickTextFile.stroke,
+                    stroke_color: self.currentQuickTextFile.strokeColor,
                     font: font,
                     font_index: self.currentQuickTextFile.fontIndex,
                     is_straight: isStraightText,
@@ -4365,6 +4383,8 @@ $(function () {
                 function stopCrossHairDragging(event) {
                     clearInterval(window.mrbeam.draggableCrosshair.interval);
                     window.mrbeam.draggableCrosshair.destination = null;
+
+                    self._sendAnalytics("workingarea_crosshair_dragging", {})
 
                     const pos = self._get_pointer_event_position_MM(
                         event,
