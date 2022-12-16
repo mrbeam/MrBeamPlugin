@@ -9,6 +9,7 @@ $(function () {
 
         window.mrbeam.viewModels["materialStoreViewModel"] = self;
         self.material_store_iframe_src = "";
+        self.healthcheck_url = "";
 
         self.initialiseStore = function (healthcheck_url, url) {
             if (typeof url === "string" && url.trim().length !== 0
@@ -21,13 +22,13 @@ $(function () {
                     );
                 }
 
-                $.ajax({
-                    url: healthcheck_url,
-                    method: "HEAD",
-                    timeout: 6000,
-                    success: self.loadMaterialStore,
-                    error: self.showConnectionError,
-                });
+                if (healthcheck_url !== self.healthcheck_url) {
+                    self.healthcheck_url = healthcheck_url;
+                }
+
+                fetch(self.healthcheck_url)
+                    .then(self.loadMaterialStore)
+                    .catch(self.showConnectionError);
             } else {
                 self.showConnectionError();
             }
@@ -66,18 +67,20 @@ $(function () {
         };
 
         self.sendMessageToMaterialStoreIframe = function (event, payload) {
-            let materialStoreIframeElement = $("#material_store_iframe");
-            let data = {
+            const materialStoreIframe = document.getElementById('material_store_iframe');
+            // IE patch although we don't officially support it
+            const iframeContentWindow = materialStoreIframe.contentWindow ? materialStoreIframe.contentWindow : materialStoreIframe.contentDocument.defaultView;
+
+            const data = {
                 event: event,
                 payload: payload,
             };
 
-            if(materialStoreIframeElement.contentWindow){
-                materialStoreIframeElement
-                    .contentWindow.postMessage(
-                        data,
-                        self.material_store_iframe_src
-                    );
+            if (iframeContentWindow) {
+                iframeContentWindow.postMessage(
+                    data,
+                    self.material_store_iframe_src
+                );
             } else {
                 console.error("Material store Iframe window object is undefined");
             }
@@ -86,7 +89,7 @@ $(function () {
         $("#material_store_iframe").attr("src", self.material_store_iframe_src);
         $("#material_store_iframe").on("load", self.onLoadMaterialStore);
         $("#refresh_material_store_btn").click(() =>
-            self.initialiseStore(self.material_store_iframe_src)
+            self.initialiseStore(self.healthcheck_url, self.material_store_iframe_src)
         );
     }
 
