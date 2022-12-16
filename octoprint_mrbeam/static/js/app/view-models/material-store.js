@@ -11,8 +11,12 @@ $(function () {
         self.material_store_iframe_src = "";
 
         self.initialiseStore = function (healthcheck_url, url) {
-            if (typeof url === "string" && url.trim().length !== 0
-            && typeof healthcheck_url === "string" && healthcheck_url.trim().length !== 0) {
+            if (
+                typeof url === "string" &&
+                url.trim().length !== 0 &&
+                typeof healthcheck_url === "string" &&
+                healthcheck_url.trim().length !== 0
+            ) {
                 if (url !== self.material_store_iframe_src) {
                     self.material_store_iframe_src = url;
                     $("#material_store_iframe").attr(
@@ -72,14 +76,15 @@ $(function () {
                 payload: payload,
             };
 
-            if(materialStoreIframeElement.contentWindow){
-                materialStoreIframeElement
-                    .contentWindow.postMessage(
-                        data,
-                        self.material_store_iframe_src
-                    );
+            if (materialStoreIframeElement.contentWindow) {
+                materialStoreIframeElement.contentWindow.postMessage(
+                    data,
+                    self.material_store_iframe_src
+                );
             } else {
-                console.error("Material store Iframe window object is undefined");
+                console.error(
+                    "Material store Iframe window object is undefined"
+                );
             }
         };
 

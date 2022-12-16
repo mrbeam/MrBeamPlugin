@@ -9,7 +9,8 @@ $(function () {
         // staging:
         // 'https://1-0-0-staging-dot-design-store-269610.appspot.com'
         // 'http://localhost:8080';
-        self.DESIGN_STORE_IFRAME_HEALTHCHECK_SRC = self.DESIGN_STORE_IFRAME_SRC + "/api/healthcheck";
+        self.DESIGN_STORE_IFRAME_HEALTHCHECK_SRC =
+            self.DESIGN_STORE_IFRAME_SRC + "/api/healthcheck";
 
         self.loginState = params[0];
         self.navigation = params[1];
@@ -21,14 +22,17 @@ $(function () {
 
         self.initialiseStore = function () {
             let designStoreIframeElement = $("#design_store_iframe");
-            if(designStoreIframeElement.attr("src") !== self.DESIGN_STORE_IFRAME_SRC){
+            if (
+                designStoreIframeElement.attr("src") !==
+                self.DESIGN_STORE_IFRAME_SRC
+            ) {
                 self.prepareDesignStoreTab();
                 self.goToStore();
                 // Handle design store if offline
                 // This will show the network issue page if the device is offline
                 // However, if the device gets online afterwards, this will not change
                 // until the user refreshes the page
-                if(!window.mrbeam.isOnline) {
+                if (!window.mrbeam.isOnline) {
                     $("#designstore > .loading_spinner_wrapper").hide();
                     $("#design_store_iframe").hide();
                     $("#design_store_offline_placeholder").show();
@@ -270,7 +274,7 @@ $(function () {
 
         self.goToStore = function () {
             // Lazy load the iframe
-            $("#design_store_iframe").attr('loading', 'eager');
+            $("#design_store_iframe").attr("loading", "eager");
             // Handle the new designs notification icon
             $("#designstore_tab_btn > span.red-dot").remove();
             if ($("#designstore_tab_btn").parent().hasClass("active")) {

@@ -2973,7 +2973,7 @@ $(function () {
                         "polyline",
                         "polygon",
                         "text",
-                        "tspan"
+                        "tspan",
                     ].indexOf(e.type) >= 0
                 ) {
                     var fill = e.attr("fill");
@@ -3769,16 +3769,20 @@ $(function () {
             self._qt_currentQuickTextUpdate();
         });
 
-        let quickTextRadioInput = $('input[type=radio][name=stroke_or_fill]');
+        let quickTextRadioInput = $("input[type=radio][name=stroke_or_fill]");
         quickTextRadioInput.on("change", function () {
-            if(self.currentQuickTextFile){
+            if (self.currentQuickTextFile) {
                 if (this.value === "stroke") {
-                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = true;
-                        self.currentQuickTextFile.fill = self.lastQuickTextFill = false;
+                    self.currentQuickTextFile.stroke =
+                        self.lastQuickTextStroke = true;
+                    self.currentQuickTextFile.fill =
+                        self.lastQuickTextFill = false;
                 }
-                if (this.value === "fill"){
-                        self.currentQuickTextFile.fill = self.lastQuickTextFill = true;
-                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = false;
+                if (this.value === "fill") {
+                    self.currentQuickTextFile.fill =
+                        self.lastQuickTextFill = true;
+                    self.currentQuickTextFile.stroke =
+                        self.lastQuickTextStroke = false;
                 }
             }
             self._qt_currentQuickTextUpdate();
@@ -3864,9 +3868,7 @@ $(function () {
                 const displayText =
                     self.currentQuickTextFile.name !== ""
                         ? self.currentQuickTextFile.name
-                        : quickTextInputField.attr(
-                              "placeholder"
-                          );
+                        : quickTextInputField.attr("placeholder");
 
                 // get all parameters
                 const font = self.fontMap[self.currentQuickTextFile.fontIndex];
@@ -3975,13 +3977,23 @@ $(function () {
                     "font-variant-ligatures": ligatures,
                 });
                 // update input placeholder color if stroked
-                let StrokedQuickTextPlaceholderClass = 'mrb-quicktext-stroked-placeholder';
-                if(isStroked){
-                    quickTextInputField.addClass(StrokedQuickTextPlaceholderClass);
+                let StrokedQuickTextPlaceholderClass =
+                    "mrb-quicktext-stroked-placeholder";
+                if (isStroked) {
+                    quickTextInputField.addClass(
+                        StrokedQuickTextPlaceholderClass
+                    );
                 }
                 // update input placeholder color if not stroked
-                if(!isStroked && quickTextInputField.hasClass(StrokedQuickTextPlaceholderClass)){
-                    quickTextInputField.removeClass(StrokedQuickTextPlaceholderClass);
+                if (
+                    !isStroked &&
+                    quickTextInputField.hasClass(
+                        StrokedQuickTextPlaceholderClass
+                    )
+                ) {
+                    quickTextInputField.removeClass(
+                        StrokedQuickTextPlaceholderClass
+                    );
                 }
 
                 $("#quick_text_dialog_font_name").text(font);
@@ -4384,7 +4396,7 @@ $(function () {
                     clearInterval(window.mrbeam.draggableCrosshair.interval);
                     window.mrbeam.draggableCrosshair.destination = null;
 
-                    self._sendAnalytics("workingarea_crosshair_dragging", {})
+                    self._sendAnalytics("workingarea_crosshair_dragging", {});
 
                     const pos = self._get_pointer_event_position_MM(
                         event,

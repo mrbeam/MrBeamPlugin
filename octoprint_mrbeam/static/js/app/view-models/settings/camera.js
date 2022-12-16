@@ -26,7 +26,7 @@ $(function () {
         self.cameraSettingsActive = ko.observable(false);
 
         self.isLocked = ko.observable(false);
-        self.imageReloadTimer = undefined
+        self.imageReloadTimer = undefined;
 
         // Lens calibration status needed in this viewModel.
         // TODO make it a part of the mrb state (when we have a state wrapper)
@@ -240,7 +240,9 @@ $(function () {
                         });
                 }
             });
-            self.cameraSettingsActive.subscribe(self.cameraSettingsActiveChanged)
+            self.cameraSettingsActive.subscribe(
+                self.cameraSettingsActiveChanged
+            );
         };
 
         self.onBeforeBinding = function () {
@@ -320,22 +322,31 @@ $(function () {
             );
         };
 
-        self.cameraSettingsActiveChanged = function(newvalue){
-            if (newvalue){
-                self.forceTakeNewPicture()
+        self.cameraSettingsActiveChanged = function (newvalue) {
+            if (newvalue) {
+                self.forceTakeNewPicture();
                 self.imageReloadTimer = setInterval(function () {
-                    self.forceTakeNewPicture()
+                    self.forceTakeNewPicture();
                 }, 3000);
-            }else{
-                if (self.imageReloadTimer){clearInterval(self.imageReloadTimer)}
+            } else {
+                if (self.imageReloadTimer) {
+                    clearInterval(self.imageReloadTimer);
+                }
             }
-        }
+        };
 
-        self.forceTakeNewPicture = function(){
-            if (self.readyToLaser.lid_fully_open() && !self.readyToLaser.state.interlocksClosed()){
-                OctoPrint.simpleApiCommand(MRBEAM.PLUGIN_IDENTIFIER, SimpleApiCommands.TAKE_UNDISTORTED_PICTURE, {})
+        self.forceTakeNewPicture = function () {
+            if (
+                self.readyToLaser.lid_fully_open() &&
+                !self.readyToLaser.state.interlocksClosed()
+            ) {
+                OctoPrint.simpleApiCommand(
+                    MRBEAM.PLUGIN_IDENTIFIER,
+                    SimpleApiCommands.TAKE_UNDISTORTED_PICTURE,
+                    {}
+                );
             }
-        }
+        };
     }
 
     // view model class, parameters for constructor, container to bind to

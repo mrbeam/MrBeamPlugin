@@ -204,12 +204,14 @@ $(function () {
                     if (MRBEAM.STATE_KEY in data) {
                         self._fromData(data, "onDataUpdaterPluginMessage");
                     }
-                }
+                };
             } // end if oneButton
         }; // end onStartupComplete
 
         self.onEventJobTimeEstimated = function (payload) {
-            self.formatJobTimeEstimation(payload["job_time_estimation_rounded"]);
+            self.formatJobTimeEstimation(
+                payload["job_time_estimation_rounded"]
+            );
             self._fromData(payload);
         };
 
@@ -281,7 +283,11 @@ $(function () {
                 }, 1000);
             }
 
-            if (!payload || !(MRBEAM.STATE_KEY in payload) || !payload[MRBEAM.STATE_KEY]) {
+            if (
+                !payload ||
+                !(MRBEAM.STATE_KEY in payload) ||
+                !payload[MRBEAM.STATE_KEY]
+            ) {
                 return;
             }
             let mrb_state = payload[MRBEAM.STATE_KEY];
@@ -390,7 +396,11 @@ $(function () {
 
         self._sendCancelReadyToLaserMode = function () {
             data = { rtl_cancel: true };
-            OctoPrint.simpleApiCommand(MRBEAM.PLUGIN_IDENTIFIER, SimpleApiCommands.READY_TO_LASER, data);
+            OctoPrint.simpleApiCommand(
+                MRBEAM.PLUGIN_IDENTIFIER,
+                SimpleApiCommands.READY_TO_LASER,
+                data
+            );
         };
 
         self._sendReadyToLaserRequest = function (ready, dev_start_button) {
@@ -398,7 +408,11 @@ $(function () {
             if (dev_start_button) {
                 data.dev_start_button = "start";
             }
-            OctoPrint.simpleApiCommand(MRBEAM.PLUGIN_IDENTIFIER, SimpleApiCommands.READY_TO_LASER, data);
+            OctoPrint.simpleApiCommand(
+                MRBEAM.PLUGIN_IDENTIFIER,
+                SimpleApiCommands.READY_TO_LASER,
+                data
+            );
         };
 
         self._setTimeoutForDialog = function () {

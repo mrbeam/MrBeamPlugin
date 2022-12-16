@@ -128,10 +128,18 @@ class JobTimeEstimation:
     def _send_v1_estimate_to_frontend(self):
         try:
             payload = dict()
-            payload["job_time_estimation_rounded"] = self._last_estimation.get("total_duration_rounded", -1)
-            payload["job_time_estimation_raw"] = self._last_estimation.get("total_duration_raw", -1)
-            payload["calc_duration_total"] = self._last_estimation.get("calc_duration_total", -1)
-            payload["calc_duration_woke"] = self._last_estimation.get("calc_duration_woke", -1)
+            payload["job_time_estimation_rounded"] = self._last_estimation.get(
+                "total_duration_rounded", -1
+            )
+            payload["job_time_estimation_raw"] = self._last_estimation.get(
+                "total_duration_raw", -1
+            )
+            payload["calc_duration_total"] = self._last_estimation.get(
+                "calc_duration_total", -1
+            )
+            payload["calc_duration_woke"] = self._last_estimation.get(
+                "calc_duration_woke", -1
+            )
             payload["calc_lines"] = self._last_estimation.get("calc_lines", -1)
             self._plugin.fire_event(MrBeamEvents.JOB_TIME_ESTIMATED, payload)
         except:

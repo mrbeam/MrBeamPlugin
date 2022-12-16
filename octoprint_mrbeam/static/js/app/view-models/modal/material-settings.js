@@ -4,7 +4,9 @@ $(function () {
     function MaterialSettingsViewModel(params) {
         let self = this;
         self.MATERIAL_SETTINGS_RETRY_TIME = 5000;
-        self.MATERIAL_SHOPIFY_LINK = gettext("https://www.mr-beam.org/en/collections/mr-beam-materialstore");
+        self.MATERIAL_SHOPIFY_LINK = gettext(
+            "https://www.mr-beam.org/en/collections/mr-beam-materialstore"
+        );
 
         window.mrbeam.viewModels["materialSettingsViewModel"] = self;
 
@@ -76,7 +78,9 @@ $(function () {
                 ),
                 hints: "",
                 type: "product",
-                url: gettext("https://www.mr-beam.org/en/products/mr-beam-acryl-schwarz")
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/mr-beam-acryl-schwarz"
+                ),
             },
             "Anodized Aluminum": {
                 name: gettext("Anodized Aluminum"),
@@ -86,7 +90,9 @@ $(function () {
                     "Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefore we suggest to invert photos for engravings."
                 ),
                 type: "product",
-                url: gettext("https://www.mr-beam.org/en/products/eloxiertes-aluminium")
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/eloxiertes-aluminium"
+                ),
             },
             "Balsa Wood": {
                 name: gettext("Balsa Wood"),
@@ -99,7 +105,7 @@ $(function () {
                     "Caution sensitive material. If laser speed is too slow, balsa wood may ignite."
                 ),
                 type: null,
-                url: null
+                url: null,
             },
             Bamboo: {
                 name: gettext("Bamboo Wood"),
@@ -110,7 +116,7 @@ $(function () {
                 hints: "",
                 safety_notes: "",
                 type: null,
-                url: null
+                url: null,
             },
             "Cardboard, corrugated single wave": {
                 name: gettext("Cardboard, single wave"),
@@ -125,7 +131,7 @@ $(function () {
                     "Caution sensitive material. If laser speed is too slow, cardboard may ignite. Never run a laser job slower than 180 mm/min!"
                 ),
                 type: null,
-                url: null
+                url: null,
             },
             "Cardboard, corrugated double wave": {
                 name: gettext("Cardboard, double wave"),
@@ -140,7 +146,7 @@ $(function () {
                     "Caution sensitive material. If laser speed is too slow, cardboard may ignite. Never run a laser job slower than 180 mm/min!"
                 ),
                 type: null,
-                url: null
+                url: null,
             },
             Cork: {
                 name: gettext("Cork"),
@@ -150,7 +156,7 @@ $(function () {
                 ),
                 hints: "",
                 type: null,
-                url: null
+                url: null,
             },
             Felt: {
                 // took settings from IHM fair
@@ -164,7 +170,7 @@ $(function () {
                 ),
                 safety_notes: "",
                 type: "collection",
-                url: gettext("https://www.mr-beam.org/en/collections/filz")
+                url: gettext("https://www.mr-beam.org/en/collections/filz"),
             },
             "Fabric Cotton": null,
             "Fabric Polyester": null,
@@ -177,7 +183,7 @@ $(function () {
                 hints: "",
                 safety_notes: "",
                 type: null,
-                url: null
+                url: null,
             },
             Foam: {
                 name: gettext("Foam"),
@@ -187,7 +193,7 @@ $(function () {
                 ),
                 hints: "",
                 type: null,
-                url: null
+                url: null,
             },
             "Foam Rubber": {
                 name: gettext("Foam Rubber"),
@@ -202,7 +208,7 @@ $(function () {
                     "Make sure your foam is not made of PVC and does not contain chlorine!"
                 ),
                 type: null,
-                url: null
+                url: null,
             },
             "Grey Cardboard": {
                 name: gettext("Grey Cardboard"),
@@ -210,7 +216,7 @@ $(function () {
                 description: "",
                 hints: "",
                 type: null,
-                url: null
+                url: null,
             },
             "Jersey Fabric": {
                 name: gettext("Jersey Fabric"),
@@ -220,7 +226,7 @@ $(function () {
                 ),
                 hints: "",
                 type: null,
-                url: null
+                url: null,
             },
             Kraftplex: {
                 name: gettext("Kraftplex"),
@@ -231,7 +237,9 @@ $(function () {
                 hints: "",
                 safety_notes: "",
                 type: "collection",
-                url: gettext("https://www.mr-beam.org/en/collections/kraftplex")
+                url: gettext(
+                    "https://www.mr-beam.org/en/collections/kraftplex"
+                ),
             },
             "Kraftplex (wave)": {
                 name: gettext("Kraftplex (wave)"),
@@ -240,7 +248,7 @@ $(function () {
                     " 100% natural fibers similar to Kraftplex, but wavy. Thickness is measured over the whole wave."
                 ),
                 type: null,
-                url: null
+                url: null,
             },
             Latex: {
                 name: gettext("Latex"),
@@ -249,7 +257,7 @@ $(function () {
                 hints: "",
                 safety_notes: "",
                 type: null,
-                url: null
+                url: null,
             },
             Leather: {
                 name: gettext("Leather"),
@@ -262,7 +270,7 @@ $(function () {
                     "If you use artificial leather, make sure that it is not made of PVC and does not contain chlorine!"
                 ),
                 type: null,
-                url: null
+                url: null,
             },
             Linoleum: {
                 name: gettext("Linoleum"),
@@ -270,7 +278,7 @@ $(function () {
                 description: "",
                 hints: "",
                 type: null,
-                url: null
+                url: null,
             },
             Mirror: {
                 name: gettext("Mirror"),
@@ -283,7 +291,9 @@ $(function () {
                     "Mirrors can only be engraved from the back, otherwise the laser would be reflected."
                 ),
                 type: "product",
-                url: gettext("https://www.mr-beam.org/en/products/mr-beam-spiegelfliesen")
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/mr-beam-spiegelfliesen"
+                ),
             },
             Paper: {
                 name: gettext("Paper"),
@@ -298,7 +308,7 @@ $(function () {
                     "Caution sensitive material. Very fine structures may be subject of ignition."
                 ),
                 type: null,
-                url: null
+                url: null,
             },
             "Plywood Birch": {
                 name: gettext("Plywood Birch"),
@@ -310,7 +320,9 @@ $(function () {
                     "Watch out for dedicated laser plywood - it has better surface quality and better glue."
                 ),
                 type: "product",
-                url: gettext("https://www.mr-beam.org/en/products/sperrholz-birke-5er-pack")
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/sperrholz-birke-5er-pack"
+                ),
             },
             "Plywood Poplar": {
                 name: gettext("Plywood Poplar"),
@@ -323,12 +335,14 @@ $(function () {
                 ),
                 safety_notes: "",
                 type: "product",
-                url: gettext("https://www.mr-beam.org/en/products/mr-beam-pappelsperrholz-bunt"),
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/mr-beam-pappelsperrholz-bunt"
+                ),
                 variant: {
                     color: {
-                        "e7d27f": "40760806080623"
-                    }
-                }
+                        e7d27f: "40760806080623",
+                    },
+                },
             },
             Polypropylene: {
                 name: gettext("Polypropylene"),
@@ -340,7 +354,7 @@ $(function () {
                     "For the best results, use opaque and dark colored polypropylene."
                 ),
                 type: null,
-                url: null
+                url: null,
             },
             Slate: {
                 name: gettext("Slate"),
@@ -352,7 +366,9 @@ $(function () {
                     "When engraving slate, the engraving becomes brighter than the original material. The images might need theirs colors inverted."
                 ),
                 type: "product",
-                url: gettext("https://www.mr-beam.org/en/products/schiefer-platte-40x30-cm-2er-pack")
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/schiefer-platte-40x30-cm-2er-pack"
+                ),
             },
             Snappap: {
                 name: gettext("Snappap"),
@@ -360,7 +376,7 @@ $(function () {
                 description: "",
                 hints: "",
                 type: null,
-                url: null
+                url: null,
             },
             "Laser Leather": {
                 name: gettext("Laser Leather"),
@@ -370,7 +386,9 @@ $(function () {
                 ),
                 hints: "",
                 type: "collection",
-                url: gettext("https://www.mr-beam.org/en/collections/laser-leder")
+                url: gettext(
+                    "https://www.mr-beam.org/en/collections/laser-leder"
+                ),
             },
             "Sign Material": {
                 name: gettext("Sign Material"),
@@ -381,14 +399,16 @@ $(function () {
                 ),
                 safety_notes: "",
                 type: "product",
-                url: gettext("https://www.mr-beam.org/en/products/mr-beam-schilder-material"),
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/mr-beam-schilder-material"
+                ),
                 variant: {
                     color: {
-                        "f3de8d": "39842200944751",
-                        "dedede": "39842200977519",
-                        "d2a477": "39842201010287"
-                    }
-                }
+                        f3de8d: "39842200944751",
+                        dedede: "39842200977519",
+                        d2a477: "39842201010287",
+                    },
+                },
             },
             "Stamp Rubber": {
                 name: gettext("Stamp Rubber"),
@@ -399,7 +419,9 @@ $(function () {
                 ),
                 safety_notes: "",
                 type: "product",
-                url: gettext("https://www.mr-beam.org/en/products/stempelgummi")
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/stempelgummi"
+                ),
             },
             "Swiss stone pine": {
                 name: gettext("Swiss stone pine"),
@@ -408,7 +430,7 @@ $(function () {
                 hints: "",
                 safety_notes: "",
                 type: null,
-                url: null
+                url: null,
             },
             "Wood Sticker": {
                 name: gettext("Wood Sticker"),
@@ -417,7 +439,9 @@ $(function () {
                 hints: "",
                 safety_notes: "",
                 type: "product",
-                url: gettext("https://www.mr-beam.org/en/products/edelholzsticker")
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/edelholzsticker"
+                ),
             },
             "Solid Wood": {
                 name: gettext("Solid Wood"),
@@ -426,7 +450,7 @@ $(function () {
                 hints: "",
                 safety_notes: "",
                 type: "collection",
-                url: gettext("https://www.mr-beam.org/en/collections/holz")
+                url: gettext("https://www.mr-beam.org/en/collections/holz"),
             },
             "Stainless Steel": {
                 name: gettext("Stainless Steel"),
@@ -439,50 +463,73 @@ $(function () {
                     "Do not engrave stainless steel without the application of laser marking color."
                 ),
                 type: null,
-                url: null
+                url: null,
             },
         };
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
 
         self.constructShopifyURL = function (materialName, materialColor) {
             // Validate material name and URL
-            if(self.validateMaterialName(materialName)  && self.validateMaterialUrl(materialName)) {
-                return self.addUrlReferral(self.constructMaterialURL(materialName, materialColor));
+            if (
+                self.validateMaterialName(materialName) &&
+                self.validateMaterialUrl(materialName)
+            ) {
+                return self.addUrlReferral(
+                    self.constructMaterialURL(materialName, materialColor)
+                );
             }
             return self.addUrlReferral(self.MATERIAL_SHOPIFY_LINK);
-        }
+        };
 
-        self.validateMaterialName = function (materialName){
+        self.validateMaterialName = function (materialName) {
             return materialName in self.materialSettingsDatabase;
-        }
+        };
 
-        self.validateMaterialUrl = function (materialName){
-            return self.materialSettingsDatabase[materialName]["url"] &&
-                typeof self.materialSettingsDatabase[materialName]["url"] === "string"
-        }
+        self.validateMaterialUrl = function (materialName) {
+            return (
+                self.materialSettingsDatabase[materialName]["url"] &&
+                typeof self.materialSettingsDatabase[materialName]["url"] ===
+                    "string"
+            );
+        };
 
         self.constructMaterialURL = function (materialName, materialColor) {
             const url = self.materialSettingsDatabase[materialName]["url"];
             // Check if a color variant query parameter exists for this URL
-            if(self.validateMaterialVariant(materialName, materialColor)){
-                const variantParameterKey = "variant"
-                const variantParameterValue = self.materialSettingsDatabase[materialName]["variant"]["color"][materialColor];
-                return url + "?" + variantParameterKey + "=" + variantParameterValue;
+            if (self.validateMaterialVariant(materialName, materialColor)) {
+                const variantParameterKey = "variant";
+                const variantParameterValue =
+                    self.materialSettingsDatabase[materialName]["variant"][
+                        "color"
+                    ][materialColor];
+                return (
+                    url +
+                    "?" +
+                    variantParameterKey +
+                    "=" +
+                    variantParameterValue
+                );
             } else {
                 return url;
             }
-        }
+        };
 
-        self.validateMaterialVariant = function (materialName, materialColor){
-            return "variant" in self.materialSettingsDatabase[materialName] &&
-            "color" in self.materialSettingsDatabase[materialName]["variant"] &&
-            materialColor in self.materialSettingsDatabase[materialName]["variant"]["color"]
-        }
+        self.validateMaterialVariant = function (materialName, materialColor) {
+            return (
+                "variant" in self.materialSettingsDatabase[materialName] &&
+                "color" in
+                    self.materialSettingsDatabase[materialName]["variant"] &&
+                materialColor in
+                    self.materialSettingsDatabase[materialName]["variant"][
+                        "color"
+                    ]
+            );
+        };
 
-        self.addUrlReferral = function (url){
-            let param_separator = url.includes("?") ? "&" : "?" ;
+        self.addUrlReferral = function (url) {
+            let param_separator = url.includes("?") ? "&" : "?";
             return url + param_separator + "utm_source=mrbeam_device_frontend";
-        }
+        };
     }
 
     ADDITIONAL_VIEWMODELS.push([

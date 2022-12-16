@@ -1,12 +1,16 @@
 class SettingsModel:
     """Data object containing information about the settings to be used on the
     jinja2 templates."""
+
     def __init__(self):
         self.material_store = None
         self.about = None
 
     def __repr__(self):
-        return 'SettingsModel(material_store=%s, about=%s)' % (repr(self.material_store), repr(self.about))
+        return "SettingsModel(material_store=%s, about=%s)" % (
+            repr(self.material_store),
+            repr(self.about),
+        )
 
 
 class AboutModel:
@@ -18,13 +22,15 @@ class AboutModel:
         self.support_documents = support_documents
 
     def __repr__(self):
-        return 'About(support_documents=%s)' % (','.join([repr(document) for document in self.support_documents]))
+        return "About(support_documents=%s)" % (
+            ",".join([repr(document) for document in self.support_documents])
+        )
 
 
 class MaterialStoreModel:
     """
-        Data object containing information corresponding to the material store section to be used on the jinja2 templates
-        """
+    Data object containing information corresponding to the material store section to be used on the jinja2 templates
+    """
 
     def __init__(self, enabled=False, url="", healthcheck_url=""):
         self.enabled = enabled
@@ -32,4 +38,8 @@ class MaterialStoreModel:
         self.healthcheck_url = healthcheck_url
 
     def __repr__(self):
-        return 'MaterialStore(enabled=%s, url=%s, healthcheck_url=%s)' % (self.enabled, self.url, self.healthcheck_url)
+        return "MaterialStore(enabled=%s, url=%s, healthcheck_url=%s)" % (
+            self.enabled,
+            self.url,
+            self.healthcheck_url,
+        )
