@@ -29,7 +29,7 @@ describe("Access control", function () {
             "#settings-usersDialogAddUser > .modal-footer > .btn-primary"
         ).click();
         cy.get(":nth-child(1) > .settings_users_active > .fa").click();
-        cy.get(":nth-child(1) > .settings_users_active > .fa").click();
+        cy.get(":nth-child(1) > .settings_users_admin > .fa").click();
         cy.get(":nth-child(1) > .settings_users_admin > .fa").click();
         cy.get("#settings_users").click();
         cy.get(":nth-child(1) > .settings_users_actions > .fa-pencil").click();

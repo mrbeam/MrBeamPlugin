@@ -64,7 +64,7 @@ $(function () {
         };
 
         self.onEventJobTimeEstimated = function (payload) {
-            self.jobTimeEstimation(payload["job_time_estimation"]);
+            self.jobTimeEstimation(payload["job_time_estimation_rounded"]);
         };
 
         self.onEventPrintStarted = function (payload) {

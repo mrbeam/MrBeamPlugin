@@ -9,6 +9,8 @@ $(function () {
         // staging:
         // 'https://1-0-0-staging-dot-design-store-269610.appspot.com'
         // 'http://localhost:8080';
+        self.DESIGN_STORE_IFRAME_HEALTHCHECK_SRC =
+            self.DESIGN_STORE_IFRAME_SRC + "/api/healthcheck";
 
         self.loginState = params[0];
         self.navigation = params[1];
@@ -18,8 +20,24 @@ $(function () {
         self.lastUploadedDate = ko.observable("");
         self.eventListenerAdded = ko.observable(false);
 
-        self.onUserLoggedIn = function () {
-            self.prepareDesignStoreTab();
+        self.initialiseStore = function () {
+            let designStoreIframeElement = $("#design_store_iframe");
+            if (
+                designStoreIframeElement.attr("src") !==
+                self.DESIGN_STORE_IFRAME_SRC
+            ) {
+                self.prepareDesignStoreTab();
+                self.goToStore();
+                // Handle design store if offline
+                // This will show the network issue page if the device is offline
+                // However, if the device gets online afterwards, this will not change
+                // until the user refreshes the page
+                if (!window.mrbeam.isOnline) {
+                    $("#designstore > .loading_spinner_wrapper").hide();
+                    $("#design_store_iframe").hide();
+                    $("#design_store_offline_placeholder").show();
+                }
+            }
         };
 
         self.getUserSettings = function () {
@@ -123,7 +141,7 @@ $(function () {
 
         self.onDiscoveryReceived = function () {
             $("#design_store_iframe").show();
-            $("#design_store_offline_placeholder").hide();
+            $("#designstore > .loading_spinner_wrapper").hide();
 
             // TODO: remove the following Version sanitization once the version
             //  comparative methods support "pep440" versioning (SW-1047)
@@ -255,6 +273,9 @@ $(function () {
         };
 
         self.goToStore = function () {
+            // Lazy load the iframe
+            $("#design_store_iframe").attr("loading", "eager");
+            // Handle the new designs notification icon
             $("#designstore_tab_btn > span.red-dot").remove();
             if ($("#designstore_tab_btn").parent().hasClass("active")) {
                 self.sendMessageToDesignStoreIframe("goToStore", {});
@@ -276,12 +297,8 @@ $(function () {
             setTimeout(function () {
                 refreshButtonElement.text(refreshButtonText);
             }, 3000);
-            console.log(
-                "Loading design store... ",
-                self.DESIGN_STORE_IFRAME_SRC
-            );
-            document.getElementById("design_store_iframe").src =
-                self.DESIGN_STORE_IFRAME_SRC;
+            document.getElementById("design_store_iframe").src = "#";
+            self.initialiseStore();
         };
     }
 

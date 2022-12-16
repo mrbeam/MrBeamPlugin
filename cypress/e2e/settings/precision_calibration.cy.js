@@ -25,7 +25,7 @@ describe("Navbar icons", function () {
             });
     });
 
-    it("Knowlage base", function () {
+    it("Knowledge base", function () {
         cy.get('[id="settings_plugin_mrbeam_backlash_link"]').click();
         cy.get('small > [href="https://support.mr-beam.org"]')
             .invoke("attr", "href")
