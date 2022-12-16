@@ -1,4 +1,4 @@
-<div id="settings_mrbeam_about">
+<div id="settings_mrbeam_about" data-test="about-settings-tab">
     <h3>{{ _('About This Mr Beam') }}</h3>
 
     {#    Download link is language specific  #}
@@ -71,17 +71,17 @@
                         <div>
                             <strong>{{ document.title }}</strong>
                             {% for link in document.document_links | sort_enum(attribute='language') %}
-                                <a href="{{ link.url }}" target="_blank"> {{ link.language.value }} </a> |
+                                <a href="{{ link.url }}" target="_blank" data-test="about-settings-link-quickstart"> {{ link.language.value }} </a> |
                             {% endfor %}
-                            {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank">{{ _('online') }}</a>
+                            {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank" data-test="about-settings-link-quickstart-online">{{ _('online') }}</a>
                         </div>
                     {% endfor %}
 
-                    <div><strong>{{ _('Online Support Portal') }}:</strong> <a href="https://www.mr-beam.org/support" target="_blank">mr-beam.org/support</a></div>
+                    <div><strong>{{ _('Online Support Portal') }}:</strong> <a href="https://www.mr-beam.org/support" target="_blank" data-test="about-settings-link-support">mr-beam.org/support</a></div>
                     <div><strong>{{ _('Privacy Policies') }}:</strong>
-                        <a href="http://shop.mr-beam.org/privacy" target="_blank">{{ _('Mr Beam Web Site') }}</a> |
-                        <a href="/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf" target="_blank">{{ _('find.mr-beam service') }}</a> |
-                        <a href="{{ _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') }}" target="_blank">{{ _('Mr Beam Analytics') }}</a>
+                        <a href="http://shop.mr-beam.org/privacy" target="_blank" data-test="about-settings-link-web-site">{{ _('Mr Beam Web Site') }}</a> |
+                        <a href="/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf" target="_blank" data-test="about-settings-link-find-mr-beam">{{ _('find.mr-beam service') }}</a> |
+                        <a href="{{ _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') }}" target="_blank" data-test="about-settings-link-analytics">{{ _('Mr Beam Analytics') }}</a>
                     </div>
                 </ul>
             </div>
@@ -92,21 +92,21 @@
             <h5>{{ _('Links') }}</h5>
             <div class="controls">
                 <ul>
-                    <div><strong>{{ _('Website') }}:</strong> <a href="https://www.mr-beam.org" target="_blank"> mr-beam.org</a></div>
+                    <div><strong>{{ _('Website') }}:</strong> <a href="https://www.mr-beam.org" target="_blank" data-test="about-settings-link-mr-beam-org"> mr-beam.org</a></div>
                     <div><strong>{{ _('Social media') }}:</strong>
-                        <a href="https://www.facebook.com/mrbeamlasercutter/" target="_blank">Facebook</a> |
-                        <a href="https://www.instagram.com/mrbeamlasers/" target="_blank">Instagram</a> |
-                        <a href="https://twitter.com/MrBeamLasers" target="_blank">Twitter</a> |
-                        <a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank">YouTube</a> |
-                        <a href="https://www.pinterest.com/mrbeamlasers" target="_blank">Pinterest</a> |
-                        <a href="https://www.linkedin.com/company/mrbeamlasers" target="_blank">LinkedIn</a> |
-                        <a href="https://www.tiktok.com/@mrbeamlasers" target="_blank">TikTok</a>
+                        <a href="https://www.facebook.com/mrbeamlasercutter/" target="_blank" data-test="about-settings-link-facebook">Facebook</a> |
+                        <a href="https://www.instagram.com/mrbeamlasers/" target="_blank" data-test="about-settings-link-instagram">Instagram</a> |
+                        <a href="https://twitter.com/MrBeamLasers" target="_blank" data-test="about-settings-link-twitter">Twitter</a> |
+                        <a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank" data-test="about-settings-link-youtube">YouTube</a> |
+                        <a href="https://www.pinterest.com/mrbeamlasers" target="_blank" data-test="about-settings-link-pinterest">Pinterest</a> |
+                        <a href="https://www.linkedin.com/company/mrbeamlasers" target="_blank" data-test="about-settings-link-linkedin">LinkedIn</a> |
+                        <a href="https://www.tiktok.com/@mrbeamlasers" target="_blank" data-test="about-settings-link-tiktok">TikTok</a>
                     </div>
-                    <div><strong>{{ _('Official user group') }}</strong> {{ _('on Facebook') }} ({{ _('German') }}): <a href="https://www.facebook.com/groups/officialmrbeamusers/" target="_blank"> Official Mr Beam Lasers User Group</a></div>
-                    <div><strong>{{ _('find.mr-beam service') }}:</strong> <a href="http://find.mr-beam.org" target="_blank"> find.mr-beam.org</a></div>
-                    <div><strong>{{ _('Online resources') }}:</strong> <a href="{{ mrbeamorg_downloads }}" target="_blank"> {{ _('Mr Beam Downloads') }}</a></div>
-                    <div><strong>{{ _('Source code') }}:</strong> <a href="https://github.com/mrbeam" target="_blank"> github.com/mrbeam</a></div>
-                    <div><strong>{{ _('Recommend Mr Beam') }}</strong> {{ _("and earn cashback") }}: <a href="https://www.aklamio.com/community/shops/mrbeam_de" target="_blank">aklamio.com</a></div>
+                    <div><strong>{{ _('Official user group') }}</strong> {{ _('on Facebook') }} ({{ _('German') }}): <a href="https://www.facebook.com/groups/officialmrbeamusers/" target="_blank" data-test="about-settings-link-facebook-group"> Official Mr Beam Lasers User Group</a></div>
+                    <div><strong>{{ _('find.mr-beam service') }}:</strong> <a href="http://find.mr-beam.org" target="_blank" data-test="about-settings-link-find-mr-beam-org"> find.mr-beam.org</a></div>
+                    <div><strong>{{ _('Online resources') }}:</strong> <a href="{{ mrbeamorg_downloads }}" target="_blank" data-test="about-settings-link-downloads"> {{ _('Mr Beam Downloads') }}</a></div>
+                    <div><strong>{{ _('Source code') }}:</strong> <a href="https://github.com/mrbeam" target="_blank" data-test="about-settings-link-github"> github.com/mrbeam</a></div>
+                    <div><strong>{{ _('Recommend Mr Beam') }}</strong> {{ _("and earn cashback") }}: <a href="https://www.aklamio.com/community/shops/mrbeam_de" target="_blank" data-test="about-settings-link-aklamio">aklamio.com</a></div>
                 </ul>
             </div>
         </div>

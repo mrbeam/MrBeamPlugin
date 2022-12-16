@@ -25,7 +25,7 @@
                     data-bind="css: fourMarkersFound() == true ? 'requirement-met' : 'requirement-not-met'">
                     <span data-bind="text: markersMessage()"></span>
                     <span class="muted show_only_online">({{ _("More about markers %(opening_tag)shere%(closing_tag)s.",
-                opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000577720" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000577720" data-test="camera-settings-here" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }})</span>
                     <span class="muted show_only_offline">({{ _("More about markers %(opening_tag)shere%(closing_tag)s.",
                 opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000577720_pink_markers.pdf\')"><i class="icon-file-text"></i>&nbsp;',
@@ -79,7 +79,7 @@
                 <div class='show_only_online'>
                     <strong>{{ _("Do you have problems with the camera?") }}</strong>
                     {{ _("Please check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
-                opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000582595" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000582595" data-test="camera-settings-troubleshooting-guide" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}
 
                 </div>
@@ -163,7 +163,7 @@
                 </div>
             </div>
             <div class='show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
-                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000599424" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000599424" data-test="camera-settings-camera-calibration" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}
             </div>
             <div class='show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
@@ -178,7 +178,7 @@
                     <hr class="rounded_container_hr">
                     <p>{{ _('The corner calibration uses the pink markers to calibrate the camera. Use this in case one of the markers has been changed or if there is a large deviation between the screen position and the laser result.') }}</p>
                     <button class="btn btn-default"
-                            data-bind="click: changeUserView('corner')">
+                            data-bind="click: changeUserView('corner')" data-test="camera-settings-start-button-camera">
                         {{ _('Start') }}
                     </button>
                 </div>
@@ -189,7 +189,7 @@
                     <p data-bind="visible: camera.needsRawCornerCalibration">
                         <i class="icon-warning-sign"></i>{{ _('You need to make a corner calibration first') }}
                     </p>
-                    <button class="btn btn-default"
+                    <button class="btn btn-default" data-test="camera-settings-start-button-lens"
                             data-bind="click: changeUserView('lens'), enable: !lensDaemonAlive() && !camera.needsRawCornerCalibration()">
                         {{ _('Start') }}
                     </button>
