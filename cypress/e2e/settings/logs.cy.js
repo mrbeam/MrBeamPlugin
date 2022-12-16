@@ -46,7 +46,7 @@ describe("Navbar icons", function () {
                 cy.verifyDownload("frontend.log");
             });
     });
-    it("Download - pligin software plugin", function () {
+    it("Download - software plugin", function () {
         cy.get('[id="settings_logs_link"]').click();
         cy.window()
             .document()

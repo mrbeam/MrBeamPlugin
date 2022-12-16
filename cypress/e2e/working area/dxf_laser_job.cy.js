@@ -12,7 +12,6 @@ describe("Laser Job", function () {
         cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });
-    // to fix... wip
     it("Add design dxf", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
         cy.get('[data-test="tab-designlib-files-list"]').then(($elem) => {
@@ -32,9 +31,7 @@ describe("Laser Job", function () {
                     .should("to.exist");
             }
         });
-        cy.get('[data-test="tab-designlib-dxf-preview-card"]')
-            // .filter(':contains("paris1.dxf")')
-            .click();
+        cy.get('[data-test="tab-designlib-dxf-preview-card"]').click();
         cy.wait(3000);
         cy.get('[data-test="tab-workingarea-unit-toggler"]').click();
         cy.get('[data-test="tab-workingarea-scale-prop-btn"]').click();
@@ -59,10 +56,6 @@ describe("Laser Job", function () {
             .filter(":visible")
             .clear()
             .type("250.5");
-
-        // cy.get(
-        //     '[data-test="tab-workingarea-image-preprocessing-collapsible"]'
-        // ).click();
         cy.get('[data-test="working-area-laser-button"]').click();
         cy.wait(2000);
         cy.focusReminder();

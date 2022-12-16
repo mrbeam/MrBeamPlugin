@@ -9,7 +9,6 @@ describe("Library design", function () {
         cy.visit(this.testData.url);
         cy.wait(15000);
         cy.loginLibrary(this.testData.email, this.testData.password);
-        cy.get(".icon-remove").click({ force: true, multiple: true });
         cy.wait(7000);
     });
 
