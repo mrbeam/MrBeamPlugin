@@ -32,7 +32,7 @@ jobs:
         with:
           token: '${{ github.token }}'
           environment: development
-
+      # This step could be used in the future to notify or trigger another action
       - name: Deploy my app
         run: |
           # add your deployment code here

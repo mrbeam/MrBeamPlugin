@@ -66,11 +66,11 @@ jobs:
         with:
           token: '${{ github.token }}'
           environment: ${{ steps.set_release_env.outputs.deployment-env }}
-
+      # This step could be used in the future to publish release notes or to send Slack notification
       - name: Deploy my app
         run: |
           echo "Release: ${{ github.event.release.name }}"
-          echo "Release enviroment : ${{ steps.set_release_env.outputs.deployment-env }}"
+          echo "Release environment : ${{ steps.set_release_env.outputs.deployment-env }}"
 
       - name: Update deployment status (success)
         if:  ${{ success() }}
