@@ -5,7 +5,6 @@ __author__ = "Gina Häußge <osd@foosel.net>"
 __license__ = "GNU Affero General Public License http://www.gnu.org/licenses/agpl.html"
 __copyright__ = "Copyright (C) 2014 The OctoPrint Project - Released under terms of the AGPLv3 License"
 
-
 import os
 import copy
 from flask import url_for
@@ -24,7 +23,7 @@ from octoprint.util import (
 )
 from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.util import dict_get, device_info
+from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.log import logme
 
 
@@ -82,17 +81,10 @@ class InvalidProfileError(Exception):
 
 LASER_PROFILE_DEFAULT = profiles.default.profile
 LASER_PROFILE_2C = profiles.mrb2c.profile
-LASER_PROFILE_2U = profiles.mrb2u.profile
 LASER_PROFILE_DUMMY = profiles.dummy.profile
 
 LASER_PROFILES_DERIVED = (
     LASER_PROFILE_2C,
-    profiles.mrb2d.profile,
-    profiles.mrb2e.profile,
-    profiles.mrb2f.profile,
-    profiles.mrb2g.profile,
-    LASER_PROFILE_2U,
-    profiles.mrb2v.profile,
     LASER_PROFILE_DUMMY,
 )
 
@@ -194,14 +186,18 @@ class LaserCutterProfileManager(PrinterProfileManager):
             default = self._load_default()
             if identifier == "_default":
                 return default
-            elif identifier in LASER_PROFILE_IDENTIFIERS:
+            elif (
+                identifier in LASER_PROFILE_IDENTIFIERS
+            ):  # if device series has profile defined use this
                 file_based_result = PrinterProfileManager.get(self, identifier) or {}
                 # Update derivated profiles using the default profile.
                 hard_coded = dict_merge(default, LASER_PROFILE_MAP[identifier])
                 return dict_merge(hard_coded, file_based_result)
             else:
                 if identifier is None:
-                    identifier = device_info.deviceInfo().get_type()
+                    identifier = (
+                        deviceInfo().get_type()
+                    )  # generate identifier from device type
                 else:
                     default["id"] = identifier
                     default["model"] = identifier[-1]
@@ -249,8 +245,9 @@ class LaserCutterProfileManager(PrinterProfileManager):
 
     def exists(self, identifier):
         # if the regex matches and there is no profile it will use the default and change the id and model
-        if identifier in LASER_PROFILE_IDENTIFIERS or re.match(
-            r"MrBeam[0-9][A-Z]", identifier
+        if identifier is not None and (
+            identifier in LASER_PROFILE_IDENTIFIERS
+            or re.match(r"MrBeam[0-9][A-Z]", identifier)
         ):
             return True
         else:
