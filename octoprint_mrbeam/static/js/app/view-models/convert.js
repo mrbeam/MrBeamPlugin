@@ -750,6 +750,9 @@ $(function () {
                         if (m.laser_model === "S") {
                             m.customBeforeElementContent = "[S]";
                         }
+                        else if (m.laser_model === "x") {
+                            m.customBeforeElementContent = "[x]";
+                        }
                         if (!m.compatible) {
                             self.incompatible_custom_materials_keys.push(
                                 materialKey

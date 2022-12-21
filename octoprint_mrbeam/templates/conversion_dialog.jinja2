@@ -2,7 +2,9 @@
     <div class="modal-header">
         <h3 data-bind="visible:!slicing_in_progress()">{{ _('Material') }}
             <span data-bind="visible:customized_material()">{{ _('(customized)') }}</span>
-            {% if laserhead_model == 'S' %}<span class="laserhead-model-icon">[S]</span>{% endif %}</h3>
+            {% if laserhead_model == 'S' %}<span class="laserhead-model-icon"><img src="/plugin/mrbeam/static/img/laserhead_S.svg"></span>{% endif %}
+            {% if laserhead_model == 'x' %}<span class="laserhead-model-icon"><img src="/plugin/mrbeam/static/img/laserhead_x.svg"></span>{% endif %}
+        </h3>
         <h3 data-bind="visible:slicing_in_progress()">{{ _('Preparing...') }}</h3>
     </div>
     <div class="modal-body scrollable" style="box-sizing: border-box">
