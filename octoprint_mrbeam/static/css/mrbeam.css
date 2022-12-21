@@ -1179,11 +1179,6 @@ body {
   padding-bottom: 3px;
 }
 
-#dialog_vector_graphics_conversion .modal-header .laserhead-model-icon img {
-  height: 24px;
-  padding-bottom: 6px;
-}
-
 .octoprint-container .accordion-heading [class^="icon-"],
 .octoprint-container .accordion-heading [class*=" icon-"] {
   color: #383e42;

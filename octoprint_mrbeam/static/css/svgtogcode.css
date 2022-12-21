@@ -701,6 +701,11 @@ li.material_entry.custom.incompatible_material::after {
   margin-left: 5px;
 }
 
+#dialog_vector_graphics_conversion .modal-header .laserhead-model-icon img {
+  height: 16px;
+  padding-bottom: 2px;
+}
+
 .modal.modal-left-side {
   top: 50%;
   left: -52%;
