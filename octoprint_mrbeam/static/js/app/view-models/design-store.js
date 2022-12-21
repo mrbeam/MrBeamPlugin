@@ -83,7 +83,8 @@ $(function () {
             design_store_iframe.on("load", function () {
                 // When the iframe sends the discovery message, we respond with the user data.
                 function receiveMessagesFromDesignStoreIframe(event) {
-                    if (event.origin === self.DESIGN_STORE_IFRAME_SRC) {
+                    // Check for startsWith to ignore the port, eg. localhost:80
+                    if (self.DESIGN_STORE_IFRAME_SRC.startsWith(event.origin)) {
                         switch (event.data.event) {
                             case "discovery":
                                 self.onDiscoveryReceived();
