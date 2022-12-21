@@ -12,13 +12,13 @@
                 <ul>
                     <div><strong>{{ _('Name') }}:</strong> {{ hostname }}</div>
                     <div><strong>{{ _('Serial number') }}:</strong> {{ serial }}</div>
-                    {% if laserhead_serial or laserhead_model == 'S' %}
+                    {% if laserhead_serial or laserhead_model in ['S', 'x'] %}
                         <div><strong>{{ _('Laser head') }}:</strong>
                         <ul class="list-unstyled">
                         {% if laserhead_serial %}
                             <li><strong>{{ _('Serial number') }}:</strong> {{ laserhead_serial }}</li>
                         {% endif %}
-                        {% if laserhead_model == 'S' %}
+                        {% if laserhead_model in ['S', 'x'] %}
                             <li><strong>{{ _('Model') }}:</strong> {{ laserhead_model }}</li>
                         {% endif %}
                         </ul>

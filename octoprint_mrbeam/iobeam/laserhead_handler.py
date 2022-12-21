@@ -26,6 +26,7 @@ class LaserheadHandler(object):
     _LASERHEAD_MODEL_STRING_MAP = {
         "0": '0',  # dreamcut, mrbeam2 and mrbeam laserheads
         "1": 'S',  # dreamcut[S] laserhead
+        "3": 'x',  # dreamcut[x] laserhead
     }
 
     def __init__(self, plugin):
