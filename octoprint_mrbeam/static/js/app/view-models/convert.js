@@ -749,8 +749,7 @@ $(function () {
                             m.laser_model === MRBEAM_LASER_HEAD_MODEL;
                         if (m.laser_model === "S") {
                             m.customBeforeElementContent = "[S]";
-                        }
-                        else if (m.laser_model === "x") {
+                        } else if (m.laser_model === "x") {
                             m.customBeforeElementContent = "[x]";
                         }
                         if (!m.compatible) {
