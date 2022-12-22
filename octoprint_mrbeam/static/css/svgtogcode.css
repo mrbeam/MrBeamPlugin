@@ -504,6 +504,18 @@ li.material_entry.custom.compatible_material::before {
   font-size: 15px;
 }
 
+li.material_entry.custom.compatible_material.laserhead_x::before, li.material_entry.custom.compatible_material.laserhead_x::before {
+  content: url("/plugin/mrbeam/static/img/laserhead_x.svg");
+  width: 20px;
+  top: 5px;
+}
+
+li.material_entry.custom.compatible_material.laserhead_S::before, li.material_entry.custom.incompatible_material.laserhead_S::before {
+  content: url("/plugin/mrbeam/static/img/laserhead_S.svg");
+  width: 20px;
+  top: 5px;
+}
+
 li.material_entry.custom.compatible_material::after {
   content: "✓";
   right: 4px;
@@ -530,11 +542,10 @@ li.material_entry.custom.incompatible_material::after {
   content: "!";
   right: 4px;
   top: 4px;
-  font-size: 10px;
   background-color: #e25303;
   border-radius: 50%;
   color: #ffffff;
-  padding: 0 8px;
+  padding: 0 7px;
   height: 17px;
 }
 
