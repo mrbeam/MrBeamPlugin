@@ -504,13 +504,15 @@ li.material_entry.custom.compatible_material::before {
   font-size: 15px;
 }
 
-li.material_entry.custom.compatible_material.laserhead_x::before, li.material_entry.custom.compatible_material.laserhead_x::before {
+li.material_entry.custom.compatible_material.laserhead_x::before,
+li.material_entry.custom.compatible_material.laserhead_x::before {
   content: url("/plugin/mrbeam/static/img/laserhead_x.svg");
   width: 20px;
   top: 5px;
 }
 
-li.material_entry.custom.compatible_material.laserhead_S::before, li.material_entry.custom.incompatible_material.laserhead_S::before {
+li.material_entry.custom.compatible_material.laserhead_S::before,
+li.material_entry.custom.incompatible_material.laserhead_S::before {
   content: url("/plugin/mrbeam/static/img/laserhead_S.svg");
   width: 20px;
   top: 5px;
