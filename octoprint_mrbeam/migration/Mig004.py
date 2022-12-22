@@ -1,7 +1,6 @@
-import os
-
 from octoprint_mrbeam.migration.migration_base import (
     MigrationBaseClass,
+    MIGRATION_RESTART,
 )
 
 
@@ -9,12 +8,13 @@ class Mig004DisableDebugLogging(MigrationBaseClass):
     """This migration should add logrotate for the buster image and change the
     lorotate for the legacy image."""
 
-    # MIGRATE_LOGROTATE_FOLDER = "files/migrate_logrotate/"
     BEAMOS_VERSION_LOW = "0.14.0"
     BEAMOS_VERSION_HIGH = "0.14.0"
 
     def __init__(self, plugin):
-        super(Mig004DisableDebugLogging, self).__init__(plugin)
+        super(Mig004DisableDebugLogging, self).__init__(
+            plugin, restart=MIGRATION_RESTART.OCTOPRINT
+        )
 
     @property
     def id(self):
