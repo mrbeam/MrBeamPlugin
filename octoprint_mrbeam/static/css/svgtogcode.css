@@ -477,7 +477,7 @@ body.colorDragInProgress #drop_overlay {
   display: block;
 }
 
-li.material_entry span {
+li.material_entry .material_name {
   position: absolute;
   top: 0;
   background-color: rgba(255, 255, 255, 0.85);
@@ -486,6 +486,12 @@ li.material_entry span {
   left: 0;
   padding: 3px 8px;
   box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+li.material_entry.custom.compatible_material .material_name,
+li.material_entry.custom.incompatible_material .material_name {
+  padding-right: 40px;
 }
 
 li.material_entry.custom.compatible_material::before,
@@ -500,12 +506,13 @@ li.material_entry.custom.compatible_material::after {
 
 li.material_entry.custom.compatible_material::before {
   content: attr(data_content);
-  right: 22px;
+  right: 19px;
   font-size: 15px;
+  padding-right: 3px;
 }
 
 li.material_entry.custom.compatible_material.laserhead_x::before,
-li.material_entry.custom.compatible_material.laserhead_x::before {
+li.material_entry.custom.incompatible_material.laserhead_x::before {
   content: url("/plugin/mrbeam/static/img/laserhead_x.svg");
   width: 20px;
   top: 5px;
@@ -533,7 +540,8 @@ li.material_entry.custom.incompatible_material::after {
 
 li.material_entry.custom.incompatible_material::before {
   content: attr(data_content);
-  right: 26px;
+  right: 23px;
+  padding-right: 3px;
   top: 3px;
   font-size: 15px;
   color: #e25303;
@@ -1262,4 +1270,9 @@ svg#area_preview.overModalBG {
   background: url(/plugin/mrbeam/static/img/calibration/calpic_wait.svg) center
     no-repeat;
   background-size: cover;
+}
+
+.material_tooltip {
+  width: 100%;
+  height: 20px;
 }

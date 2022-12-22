@@ -585,6 +585,23 @@ $(function () {
                 Object.keys(tmp).length
             );
             self.custom_materials(tmp);
+            $(document).on("mouseover", ".material_entry", function () {
+                var $this = $(this);
+                var material_name_DOMelement =
+                    $this.context.getElementsByClassName("material_name")[0];
+                var material_name_element = $(material_name_DOMelement);
+                if (
+                    material_name_DOMelement.offsetWidth <
+                        material_name_DOMelement.scrollWidth &&
+                    !material_name_element.attr("title")
+                ) {
+                    $this.tooltip({
+                        title: material_name_element.text(),
+                        placement: "top",
+                    });
+                    $this.tooltip("show");
+                }
+            });
         };
 
         self.get_closest_thickness_params = function () {
