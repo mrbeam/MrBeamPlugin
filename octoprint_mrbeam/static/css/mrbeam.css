@@ -1174,6 +1174,10 @@ body {
   padding-left: 15px;
   color: #e25303;
 }
+.octoprint-container .accordion-heading .laserhead-model-icon img {
+  height: 14px;
+  padding-bottom: 3px;
+}
 
 .octoprint-container .accordion-heading [class^="icon-"],
 .octoprint-container .accordion-heading [class*=" icon-"] {
