@@ -24,6 +24,18 @@
                         </ul>
                         </div>
                     {% endif %}
+                    {% if airfilter_serial or airfilter_model %}
+                        <div><strong>{{ _('Air Filter System') }}:</strong>
+                        <ul class="list-unstyled">
+                        {% if airfilter_serial %}
+                            <li><strong>{{ _('Serial number') }}:</strong> {{ airfilter_serial }}</li>
+                        {% endif %}
+                        {% if airfilter_model %}
+                            <li><strong>{{ _('Model') }}:</strong> {{ airfilter_model }}</li>
+                        {% endif %}
+                        </ul>
+                        </div>
+                    {% endif %}
                     {% if mac_addrs %}
                     <div><strong>{{ _('Network interfaces') }}:</strong>
 						<ul class="list-unstyled">

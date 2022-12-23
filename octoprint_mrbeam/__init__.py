@@ -36,6 +36,7 @@ from octoprint.events import Events as OctoPrintEvents
 
 from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
 from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
+from .iobeam.airfilter import airfilter
 
 IS_X86 = platform.machine() == "x86_64"
 from ._version import get_versions
@@ -274,6 +275,7 @@ class MrBeamPlugin(
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
         self.mrb_file_manager = mrbFileManager(self)
+        self.airfilter = airfilter(self)
 
         self._logger.info("MrBeamPlugin initialized!")
         self.mrbeam_plugin_initialized = True
@@ -842,6 +844,9 @@ class MrBeamPlugin(
                 laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
                     "model"
                 ],
+                airfilter_serial=self.airfilter.serial,
+                airfilter_model=self.airfilter.model,
+                airfilter_model_id=self.airfilter.model_id,
                 env=self.get_env(),
                 mac_addrs=self._get_mac_addresses(),
                 env_local=self.get_env(self.ENV_LOCAL),
@@ -2734,7 +2739,7 @@ class MrBeamPlugin(
         """
         if self.mrbeam_plugin_initialized:
             try:
-                return dict(
+                state_dict = dict(
                     laser_temp=self.temperature_manager.get_temperature(),
                     fan_connected=self.dust_manager.is_fan_connected(),
                     fan_state=self.dust_manager.get_fan_state(),
@@ -2753,7 +2758,13 @@ class MrBeamPlugin(
                     laser_model=self.laserhead_handler.get_current_used_lh_data()[
                         "model"
                     ],
+                    airfilter_serial=self.airfilter.serial,
+                    airfilter_model=self.airfilter.model,
+                    airfilter_model_id=self.airfilter.model_id,
+                    airfilter_pressure=self.airfilter.pressure,
                 )
+                return collections.OrderedDict(sorted(state_dict.items()))
+
             except:
                 self._logger.exception("Exception while collecting mrb_state data.")
         else:

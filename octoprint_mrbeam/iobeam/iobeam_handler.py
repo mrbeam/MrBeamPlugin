@@ -170,6 +170,7 @@ class IoBeamHandler(object):
         self._callbacks_lock = RWLock()
 
         self._laserhead_handler = None
+        self._airfilter = None
 
         self.iobeam_version = None
 
@@ -192,6 +193,7 @@ class IoBeamHandler(object):
 
     def _on_mrbeam_plugin_initialized(self, event, payload):
         self._laserhead_handler = self._plugin.laserhead_handler
+        self._airfilter = self._plugin.airfilter
         self._hw_malfunction_handler = self._plugin.hw_malfunction_handler
         self._user_notification_system = self._plugin.user_notification_system
 
@@ -1068,6 +1070,14 @@ class IoBeamHandler(object):
         :return: error count
         """
         self._logger.debug("exhaust dataset: '%s'", dataset)
+        self._airfilter.set_serial(dataset.get("serial_num", None))
+        self._airfilter.set_model_id(dataset.get("type", None))
+        self._airfilter.set_pressure(
+            pressure1=dataset.get("dust", None),
+            pressure2=dataset.get("pressure2", None),
+            pressure3=dataset.get("pressure3", None),
+            pressure4=dataset.get("pressure4", None),
+        )
         # get the pressure sensor reading this will come as dust with the current iobeam version
         if "dust" in dataset:
             vals = {
