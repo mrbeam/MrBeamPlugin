@@ -5,7 +5,6 @@ on:
   push:
     branches: ["alpha"]
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -17,13 +16,10 @@ permissions:
 jobs:
   deploy-dev:
     name: Deploy to Dev environment
-
     # IMPORTANT: the workflow must have write access to deployments, otherwise the action will fail.
     permissions:
       deployments: write
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v1
       - uses: chrnorm/deployment-action@v2
@@ -32,10 +28,6 @@ jobs:
         with:
           token: '${{ github.token }}'
           environment: development
-      # This step could be used in the future to notify or trigger another action
-      - name: Deploy my app
-        run: |
-          # add your deployment code here
 
       - name: Update deployment status (success)
         if: ${{ success() }}
@@ -51,4 +43,12 @@ jobs:
         with:
           token: '${{ github.token }}'
           state: 'failure'
+          deployment-id: ${{ steps.deployment-dev.outputs.deployment_id }}
+
+      - name: Update deployment status (cancelled)
+        if: ${{ cancelled() }}
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: '${{ github.token }}'
+          state: 'cancelled'
           deployment-id: ${{ steps.deployment-dev.outputs.deployment_id }}
