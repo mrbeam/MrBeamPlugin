@@ -126,6 +126,7 @@ jobs:
           xray_import_response=$(curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data @"cypress/results/combined.xml" ${{ env.XRAY_JUNIT_IMPORT }}?projectKey=${{ env.JIRA_PROJECT_KEY }}&testPlanKey=${{ env.TEST_PLAN_KEY }})
           echo "xray_import_response=$xray_import_response" >> $GITHUB_OUTPUT
       - name: Change test execution issue details
+        id: issue-details
         # test_exec_id: extracts the newly created test execution issue url from the previous response
         # test_exec_summary: contains the latest commit message. Should be something like "SW-1234 summary"
         # tested_issue_id: extracts the "SW-1234" from the commit message, to add it as a link to the text execution issue
@@ -134,6 +135,7 @@ jobs:
         run: |
           test_exec_url=$(printf '%s\n' '${{ steps.xray.outputs.xray_import_response }}' | jq -r .self)
           echo $test_exec_url
+          echo "test_exec_url=$test_exec_url" >> $GITHUB_OUTPUT
 
           last_commit_message=$(echo $(git log -1 --pretty=format:"%s"))
           test_exec_summary="Test execution for $last_commit_message"
@@ -148,6 +150,7 @@ jobs:
 
           tested_issue_fix_version=$(printf '%s' $tested_issue_details | jq -r .fields.fixVersions[].name)
           echo $tested_issue_fix_version
+          echo "tested_issue_fix_version=$tested_issue_fix_version" >> $GITHUB_OUTPUT
 
           curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} \
             -X PUT $test_exec_url -H 'Content-Type: application/json' \
@@ -170,10 +173,22 @@ jobs:
                         }
                       }
                     }
-                  ],
+                  ]
+                }
+              }'
+
+      - name: Add fix version if available
+        continue-on-error: true
+        if: ${{ steps.issue-details.outputs.tested_issue_fix_version }}
+        run: |
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} \
+            -X PUT ${{ steps.issue-details.outputs.test_exec_url }} -H 'Content-Type: application/json' \
+            --data \
+              '{
+                "update": {
                   "fixVersions": [
                     {
-                      "add": {"name": "'"$tested_issue_fix_version"'"}
+                      "add": {"name": "'"${{ steps.issue-details.outputs.tested_issue_fix_version }}"'"}
                     }
                   ]
                 }
@@ -182,6 +197,7 @@ jobs:
       - name: Move test execution to done
         # 21 is the id for the status "Done"
         run: |
+          echo ${{ steps.issue-details.outputs.test_exec_url }}
           curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} \
-            -X POST $test_exec_url'/transitions' -H 'Content-Type: application/json' \
+            -X POST ${{ steps.issue-details.outputs.test_exec_url }}'/transitions' -H 'Content-Type: application/json' \
             --data '{ "transition": { "id": "21" } }'
