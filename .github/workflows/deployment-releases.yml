@@ -1,0 +1,98 @@
+# Deployment workflow to be used for Jira reporting
+name: Deploy release
+
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy-release:
+    name: Deploy a release
+
+    # IMPORTANT: the workflow must have write access to deployments, otherwise the action will fail.
+    permissions:
+      deployments: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match-alpha-release
+        with:
+          text: ${{ github.ref_name }}
+          regex: 'v\d+\.\d+\.\d+a\d+$'
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match-beta-release
+        with:
+          text: ${{ github.ref_name }}
+          regex: 'v\d+\.\d+\.\d+b\d+$'
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match-prod-release
+        with:
+          text: ${{ github.ref_name }}
+          regex: 'v\d+\.\d+\.\d+(.post\d+)?$'
+
+      - name: Set release environment
+        id: set_release_env
+        run: |
+          if [ ${{ steps.regex-match-alpha-release.outputs.match }} != "" ]; then
+            echo 'deployment-env=alpha' >> $GITHUB_OUTPUT
+          elif [ ${{ steps.regex-match-beta-release.outputs.match }} != "" ]; then
+            echo 'deployment-env=beta' >> $GITHUB_OUTPUT
+          elif [ ${{ steps.regex-match-prod-release.outputs.match }} != "" ]; then
+            echo 'deployment-env=production' >> $GITHUB_OUTPUT
+          else
+            echo 'deployment-env=unknown' >> $GITHUB_OUTPUT
+            echo 'release name unrecognized: ${{ github.ref_name }}'
+            exit 1
+          fi
+
+      - uses: chrnorm/deployment-action@v2
+        if: ${{ success() }}
+        name: Create GitHub deployment for the release
+        id: deployment
+        with:
+          token: '${{ github.token }}'
+          environment: ${{ steps.set_release_env.outputs.deployment-env }}
+          ref: ${{ github.ref_name }}
+          task: "Deploy: ${{ github.ref_name }}"
+
+      - name: Update deployment status (success)
+        if:  ${{ success() }}
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: '${{ github.token }}'
+          state: 'success'
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+
+      - name: Update deployment status (failure)
+        if: ${{ failure() }}
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: '${{ github.token }}'
+          state: 'failure'
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+
+      - name: Update deployment status (cancelled)
+        if: ${{ cancelled() }}
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: '${{ github.token }}'
+          state: 'cancelled'
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+
+      - name: Print deployment info
+        if: ${{ success() }}
+        run: |
+          echo "Release: ${{ github.ref_name }}"
+          echo "Release environment : ${{ steps.set_release_env.outputs.deployment-env }}"
+          echo "Deployment id: ${{ steps.deployment.outputs.deployment_id }}"
