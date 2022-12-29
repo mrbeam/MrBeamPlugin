@@ -138,7 +138,7 @@ jobs:
           echo "test_exec_url=$test_exec_url" >> $GITHUB_OUTPUT
 
           last_commit_message=$(echo $(git log -1 --pretty=format:"%s"))
-          test_exec_summary="Test execution for $last_commit_message"
+          test_exec_summary=$(echo "Test execution for $last_commit_message" | tr \" " ")
           echo $test_exec_summary
 
           tested_issue_id=$(echo $last_commit_message | sed -E -e 's/.*(SW-[0-9]+).*/\1/g')
