@@ -2,9 +2,8 @@
 from __future__ import absolute_import
 
 import __builtin__
-import copy
 import json
-import operator
+import shutil
 import os
 import platform
 import pprint
@@ -16,21 +15,18 @@ import collections
 import logging
 import unicodedata
 from subprocess import check_output
-import pkg_resources
 
 import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
 from flask.ext.babel import gettext
-import octoprint.filemanager as op_filemanager
-from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping, FileManager
+from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import (
     restricted_access,
     get_json_command_from_request,
     add_non_caching_response_headers,
 )
-from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
@@ -1714,7 +1710,7 @@ class MrBeamPlugin(
         # we need should run the code in here in a separate thread and return the http call as soon as possible
         # This allows the cancel request to come through.
         # On frontend side we should prevent the system from reloading the whole file list during slicing
-        # which can be done bu doing this before we trigger the /convert request:
+        # which can be done but doing this before we trigger the /convert request:
         # self.files.ignoreUpdatedFilesEvent = true; Of course we should set it back once slicing is done.
         # All this improved the cancellation speed. Still it's not good enough to justify a cancel button.
 
@@ -1724,7 +1720,7 @@ class MrBeamPlugin(
         if response is not None:
             return response
 
-        appendGcodeFiles = data["gcodeFilesToAppend"]
+        append_gcode_files = data["gcodeFilesToAppend"]
         del data["gcodeFilesToAppend"]
 
         if command == "convert":
@@ -1784,10 +1780,10 @@ class MrBeamPlugin(
                     i += 1
 
                 # prohibit overwriting the file that is currently being printed
-                currentOrigin, currentFilename = self._getCurrentFile()
+                current_origin, current_filename = self._getCurrentFile()
                 if (
-                    currentFilename == gcode_name
-                    and currentOrigin == FileDestinations.LOCAL
+                    current_filename == gcode_name
+                    and current_origin == FileDestinations.LOCAL
                     and (self._printer.is_printing() or self._printer.is_paused())
                 ):
                     msg = "Trying to slice into file that is currently being printed: {}".format(
@@ -1810,7 +1806,7 @@ class MrBeamPlugin(
                         "Wrote job parameters to %s", self._CONVERSION_PARAMS_PATH
                     )
 
-                self._printer.set_colors(currentFilename, data["vector"])
+                self._printer.set_colors(current_filename, data["vector"])
 
                 # callback definition
                 def slicing_done(
@@ -1839,10 +1835,10 @@ class MrBeamPlugin(
 
                         if select_after_slicing or print_after_slicing:
                             sd = False
-                            filenameToSelect = self.mrb_file_manager.path_on_disk(
+                            filename_to_select = self.mrb_file_manager.path_on_disk(
                                 FileDestinations.LOCAL, gcode_name
                             )
-                            printer.select_file(filenameToSelect, sd, True)
+                            self._printer.select_file(filename_to_select, sd, True)
 
                         # keep only x recent files in job history and gcode.
                         self.mrb_file_manager.delete_old_files()
@@ -1868,7 +1864,7 @@ class MrBeamPlugin(
                             gcode_name,
                             select_after_slicing,
                             print_after_slicing,
-                            appendGcodeFiles,
+                            append_gcode_files,
                         ],
                     )
                 except octoprint.slicing.UnknownProfile:
