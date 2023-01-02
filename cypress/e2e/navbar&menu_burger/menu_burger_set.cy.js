@@ -15,6 +15,7 @@ describe("Menu burger", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-laser-safety"]').click();
         cy.get('[id="lasersafety_overlay"]').should("to.visible");
         cy.get(".modal-footer").filter(":visible").find(".btn-danger").click();
+        cy.logout();
     });
     it("Fullscreen", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-fullscreen-go"]').realClick();
@@ -22,6 +23,7 @@ describe("Menu burger", function () {
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
         cy.get('[data-test="mrbeam-ui-index-tab-fullscreen-exit"]').realClick();
         cy.document().its("fullscreenElement").should("equal", null);
+        cy.logout();
     });
     it("Manual User", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-manual-user"]')
@@ -93,5 +95,7 @@ describe("Menu burger", function () {
             });
         cy.get(".hopscotch-cta").click();
         cy.get(".hopscotch-bubble-container").should("not.exist");
+        cy.get('[id="support_overlay"]').find(".close").click();
+        cy.logout();
     });
 });
