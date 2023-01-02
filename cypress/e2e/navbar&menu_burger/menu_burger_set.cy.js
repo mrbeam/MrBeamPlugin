@@ -60,7 +60,7 @@ describe("Menu burger", function () {
             });
         cy.logout();
     });
-    it.only("Support", function () {
+    it("Support", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-support"]').click();
         cy.get('[id="support_overlay"]').should("to.exist");
         cy.get('[id="support_overlay"]')
