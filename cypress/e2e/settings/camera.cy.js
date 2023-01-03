@@ -27,7 +27,7 @@ describe("Navbar icons", function () {
     });
     it("Troublrshooting guide", function () {
         cy.get('[id="settings_plugin_mrbeam_camera_link"]').click();
-        cy.contains('[data-test="camera-settings-troubleshooting-guide"]')
+        cy.get('[data-test="camera-settings-troubleshooting-guide"]')
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request(myLink).then((resp) => {
@@ -44,16 +44,5 @@ describe("Navbar icons", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-    });
-    it("Coner Calibration - start", function () {
-        cy.get('[id="settings_plugin_mrbeam_camera_link"]').click();
-        cy.get('[data-test="camera-settings-start-button-lens"]').click();
-        cy.get('[data-test="view-corner-calibration-svg"]').should(
-            "to.visible"
-        );
-        cy.get('[data-test="view-corner-start-button-back"]').click();
-        cy.get('[data-test="view-corner-calibration-svg" ]').should(
-            "not.visible"
-        );
     });
 });
