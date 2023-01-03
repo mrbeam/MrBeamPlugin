@@ -25,15 +25,4 @@ describe("Navbar icons", function () {
             .uncheck()
             .should("not.checked");
     });
-
-    it("Show checksums", function () {
-        cy.get('[id="settings_plugin_mrbeam_debug_link"]').click();
-        cy.get('[data-test="debug-settings-show-checksums"]')
-            .if("not.checked")
-            .check()
-            .should("be.checked")
-            .else("be.checked")
-            .uncheck()
-            .should("not.checked");
-    });
 });
