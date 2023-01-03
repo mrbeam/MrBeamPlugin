@@ -16,7 +16,7 @@ describe("Navbar icons", function () {
     });
     it("Knowledge base", function () {
         cy.get('[id="settings_plugin_mrbeam_custom_material_link"]').click();
-        cy.get('[data-test="custom-material-learn-how"] > a')
+        cy.get('[data-test="custom-material-learn-how"]')
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request(myLink).then((resp) => {
