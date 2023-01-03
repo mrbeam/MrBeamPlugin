@@ -27,7 +27,7 @@
     "docker:run": "docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin",
     "docker:build-and-run": "npm run docker:build && npm run docker:run",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run --reporter junit --config-file cypress.config.js",
+    "cypress:run": "cypress run --browser chrome --reporter junit --config-file cypress.config.js",
     "merge-reports": "jrm cypress/results/combined.xml 'cypress/results/*.xml' 'cypress/results/**/*.xml'"
   }
 }
