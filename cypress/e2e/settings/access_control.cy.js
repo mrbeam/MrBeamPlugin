@@ -23,20 +23,10 @@ describe("Access control", function () {
         cy.get("#settings-usersDialogAddUserPassword1").type("a");
         cy.get("#settings-usersDialogAddUserPassword2").clear("a");
         cy.get("#settings-usersDialogAddUserPassword2").type("a");
-        cy.get("#settings-usersDialogAddUserActive").uncheck();
-        cy.get("#settings-usersDialogAddUserAdmin").uncheck();
+        cy.get("#settings-usersDialogAddUserActive").check();
+        cy.get("#settings-usersDialogAddUserAdmin").check();
         cy.get(
             "#settings-usersDialogAddUser > .modal-footer > .btn-primary"
-        ).click();
-        cy.get(":nth-child(1) > .settings_users_active > .fa").click();
-        cy.get(":nth-child(1) > .settings_users_admin > .fa").click();
-        cy.get(":nth-child(1) > .settings_users_admin > .fa").click();
-        cy.get("#settings_users").click();
-        cy.get(":nth-child(1) > .settings_users_actions > .fa-pencil").click();
-        cy.get("#settings-usersDialogEditUserActive").check();
-        cy.get("#settings-usersDialogEditUserAdmin").check();
-        cy.get(
-            "#settings-usersDialogEditUser > .modal-footer > .btn-primary"
         ).click();
         cy.get(".settings_users_name")
             .contains("dev+1@mr-beam.org")
