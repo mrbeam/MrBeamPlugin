@@ -235,5 +235,15 @@ Cypress.Commands.add("deleteGcoFile", () => {
     cy.get('[data-test="mrbeam-ui-index-working-area"]').click();
 });
 
+Cypress.Commands.add("laserButtonClick", (value) => {
+    cy.get('[data-test="working-area-laser-button"]').click();
+    cy.wait(1000);
+    cy.get('[id="laserhead_focus_reminder_modal"]')
+        .if("visible")
+        .get('[id="start_job_btn_focus_reminder"]')
+        .click();
+    cy.wait(1000);
+});
+
 import "cypress-file-upload";
 import "cypress-if";

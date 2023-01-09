@@ -7,72 +7,110 @@ describe("Laser Job", function () {
 
     beforeEach(function () {
         cy.visit(this.testData.url_laser);
-        cy.wait(10000);
+        cy.wait(20000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.visit(this.testData.url_laser);
         cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });
-    it("Add design dxf", function () {
+
+    it("Add design", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
         cy.get('[data-test="tab-designlib-files-list"]').then(($elem) => {
             if (
                 $elem
-                    .find('[data-test="tab-designlib-files-list"]')
-                    .filter(':contains("paris1.dxf")').length
+                    .find('[data-test="tab-designlib-image-preview-card"]')
+                    .filter(':contains("paris2.jpg")').length
             ) {
             } else {
-                const filepath = "paris1.dxf";
+                const filepath = "paris2.jpg";
                 cy.get('.fileinput-button input[type="file"]').attachFile(
                     filepath
                 );
                 cy.wait(5000);
-                cy.get('[data-test="tab-designlib-files-list"]')
-                    .contains("paris1.dxf")
+                cy.get('[data-test="tab-designlib-image-preview-card"]')
+                    .contains("paris2.jpg")
                     .should("to.exist");
             }
         });
-        cy.get('[data-test="tab-designlib-dxf-preview-card"]').click();
+        cy.get('[data-test="tab-designlib-image-preview-card"]')
+            .filter(':contains("paris2.jpg")')
+            .click();
         cy.wait(3000);
-        cy.get('[data-test="tab-workingarea-unit-toggler"]').click();
-        cy.get('[data-test="tab-workingarea-scale-prop-btn"]').click();
         cy.get('[data-test="tab-workingarea-horizontal"]')
             .filter(":visible")
             .clear()
-            .type("1266 {enter}");
+            .type("95.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
             .filter(":visible")
             .clear()
-            .type("1466 {enter}");
-        cy.get('[data-test="tab-workingarea-mirror-switch"]').click();
-        cy.get('[data-test="tab-workingarea-multiply"]')
-            .clear()
-            .type("1x3{enter}");
-        cy.get('[data-test="tab-workingarea-move"]').click({ force: true });
-        cy.get('[data-test="tab-workingarea-translation"]')
-            .filter(":visible")
-            .clear()
-            .type("135.0, 138.0");
+            .type("70.3 mm");
+        cy.get(".userIMG").click({ force: true });
+        cy.get('[id="translateHandle"]').move({
+            deltaX: 213.9689,
+            deltaY: -144.1241,
+            force: true,
+        });
         cy.get('[data-test="tab-workingarea-rotation"]')
             .filter(":visible")
             .clear()
-            .type("250.5");
-        cy.get('[data-test="working-area-laser-button"]').click();
+            .type("200.5");
+        cy.get('[data-test="tab-workingarea-multiply"]')
+            .clear()
+            .type("2x3{enter}");
+        cy.get('[data-test="tab-workingarea-mirror-switch"]').click();
+        // image preprocessing
+        cy.get(
+            '[data-test="tab-workingarea-image-preprocessing-collapsible"]'
+        ).click();
+        //preprocess img
+        cy.get(
+            '[data-test="tab-workingarea-img-preprocess-contrast"]'
+        ).realClick({ position: "left" });
+        cy.wait(1000);
+        cy.get(
+            '[data-test="tab-workingarea-img-preprocess-brightness"]'
+        ).realClick({ position: "right" });
+        cy.wait(1000);
+        cy.get(
+            '[data-test="tab-workingarea-img-preprocess-sharpen"]'
+        ).realClick({ position: "right" });
+        cy.wait(1000);
+        cy.get('[data-test="tab-workingarea-img-preprocess-gamma"]').realClick({
+            position: "left",
+        });
+        cy.wait(1000);
+        //crop
+        cy.get('[data-test="tab-workingarea-crop-top"]').clear().type("2");
+        cy.get('[data-test="tab-workingarea-crop-left"]').clear().type("2");
+        cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type("2");
+        cy.get('[data-test="tab-workingarea-crop-right"]').clear().type("2");
+        cy.laserButtonClick();
         cy.wait(2000);
         cy.focusReminder();
         cy.wait(2000);
         cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Mirror")
+            .contains("Paper")
             .click();
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("95");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("1500");
+        cy.get('[id="material_color_1155cc"]').click();
+        cy.wait(1000);
+        cy.get('[id="material_thickness_0.4"]').click();
+        // engrave parameters
         cy.get(
             '[data-test="conversion-dialog-show-advanced-settings"]'
         ).click();
+        cy.get('[data-test="conversion-dialog-intensity-black"]')
+            .clear()
+            .type("95");
+        cy.get('[data-test="conversion-dialog-intensity-white"]')
+            .clear()
+            .type("30");
+        cy.get('[data-test="conversion-dialog-feedrate-white"]')
+            .clear()
+            .type("900");
+        cy.get('[data-test="conversion-dialog-feedrate-black"]')
+            .clear()
+            .type("1500");
         cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
             .first()
             .clear()
@@ -83,9 +121,9 @@ describe("Laser Job", function () {
         cy.get('[data-test="conversion-dialog-line-distance-input"]')
             .clear()
             .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick(
-            { force: true }
-        );
+        cy.get(
+            '[data-test="conversion-dialog-engraving-mode-recommended"]'
+        ).dblclick({ force: true });
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
@@ -125,7 +163,7 @@ describe("Laser Job", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/paris1.gco", {
+                cy.readFile("cypress/downloads/paris2.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(

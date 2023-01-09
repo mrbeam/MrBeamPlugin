@@ -49,7 +49,7 @@ describe("Laser Job - shapes", function () {
             .filter(":visible")
             .clear()
             .type("130.3 mm");
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.laserButtonClick();
         cy.wait(2000);
         cy.focusReminder();
         cy.wait(2000);
@@ -174,7 +174,7 @@ describe("Laser Job - shapes", function () {
             .filter(":visible")
             .clear()
             .type("130.3 mm");
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.laserButtonClick();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Anodized Aluminum")
@@ -300,7 +300,7 @@ describe("Laser Job - shapes", function () {
             .filter(":visible")
             .clear()
             .type("230.3 mm");
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.laserButtonClick();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Finn Cardboard")
@@ -423,7 +423,7 @@ describe("Laser Job - shapes", function () {
             .filter(":visible")
             .clear()
             .type("130.3 mm");
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.laserButtonClick();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Polypropylene")
@@ -553,7 +553,7 @@ describe("Laser Job - shapes", function () {
             .filter(":visible")
             .clear()
             .type("130.3 mm");
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.laserButtonClick();
         cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Polypropylene")

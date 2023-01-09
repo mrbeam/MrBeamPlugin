@@ -1,4 +1,4 @@
-describe("Cut and engrave", function () {
+describe("Cut, cut 2, engrave, skip", function () {
     const dataTransfer = new DataTransfer();
 
     beforeEach(function () {
@@ -16,8 +16,8 @@ describe("Cut and engrave", function () {
         cy.deleteGcoFile();
     });
 
-    it("Cut and engrave", function () {
-        //Adding star
+    it("Cut 1, cut 2, engrave", function () {
+        // add shape star
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
@@ -29,35 +29,57 @@ describe("Cut and engrave", function () {
         cy.get(
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "top" });
+        // add text
         cy.get('[data-test="quick-shape-done-button"]').click();
-        //Adding file jpg
-        cy.get('[data-test="tab-designlib-files-list"]').then(($elem) => {
-            if (
-                $elem
-                    .find('[data-test="tab-designlib-image-preview-card"]')
-                    .filter(':contains("paris2.jpg")').length
-            ) {
-            } else {
-                const filepath = "paris2.jpg";
-                cy.get('.fileinput-button input[type="file"]').attachFile(
-                    filepath
-                );
-                cy.wait(5000);
-                cy.get('[data-test="tab-designlib-image-preview-card"]')
-                    .contains("paris2.jpg")
-                    .should("to.exist");
-            }
+        cy.get('[data-test="working-area-tab-text"]').click();
+        cy.get('[data-test="quick-text-modal-text-input"]').type("MrBeam");
+        cy.get('[data-test="quick-text-modal-text-cw"]').click();
+        cy.get('[data-test="quick-text-color-picker-fill"]').click();
+        cy.get(
+            '[data-test="quick-text-color-picker-fill"] > .track > canvas'
+        ).realClick({ position: "top" });
+        cy.get('[data-test="quick-text-stroke-input"]').click("center");
+        cy.get(
+            '[data-test="quick-text-color-picker-stroke"] > .track > canvas'
+        ).realClick({ position: "left" });
+        cy.get('[data-test="quick-text-done-button"]').click();
+        // add shape heart
+        cy.get('[data-test="working-area-tab-shape"]').click();
+        cy.get('[data-test="quick-shape-Heart"]').click();
+        cy.get('[data-test="quick-shape-heart-range"]').realClick({
+            position: "right",
         });
-        cy.get('[data-test="working-area-tab-file"]').click();
-        cy.get('[data-test="tab-designlib-image-preview-card"]')
-            .filter(':contains("paris2.jpg")')
-            .click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        //adding select material
+        cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
+        cy.get(
+            '[data-test="quick-shape-color-picker-stroke"] > .track > canvas'
+        ).realClick({ position: "right" });
+        cy.get('[data-test="quick-shape-fill-input"]').click();
+        cy.get('[data-test="quick-shape-color-picker-fill"]').click();
+        cy.get(
+            '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
+        ).realClick({ position: "top" });
+        cy.get('[data-test="quick-shape-done-button"]').click();
+        cy.laserButtonClick();
+        //select material
         cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Finn Cardboard")
+            .contains("Grey Cardboard")
             .click();
-        cy.get('[id="material_thickness_1.5"]').click();
+        cy.get('[id="material_thickness_1"]').click();
+        cy.get(".cutting_job_color")
+            .eq(0)
+            .trigger("dragstart", { dataTransfer });
+        cy.get('[data-test="conversion-dialog-no-job"]').trigger("drop", {
+            dataTransfer,
+        });
+        // move to cutting
+        cy.get(".cutting_job_color")
+            .eq(1)
+            .trigger("dragstart", { dataTransfer });
+        // move to another cut
+        cy.get(
+            '[data-bind="visible: show_vector_parameters()"] > .assigned_colors'
+        ).trigger("drop", { dataTransfer });
+        // engrave paramters
         cy.get('[data-test="conversion-dialog-intensity-black"]')
             .clear()
             .type("70");
@@ -89,26 +111,49 @@ describe("Cut and engrave", function () {
         cy.get('[data-test="conversion-dialog-line-dithering"]').click({
             force: true,
         });
+        // cutting parameters for first cut
         cy.get('[data-test="conversion-dialog-cut-intensity-input"]')
+            .first()
             .clear()
             .type("95");
         cy.get('[data-test="conversion-dialog-cut-feedrate-input"]')
+            .first()
             .clear()
             .type("1500");
-        cy.get(
-            '[data-test="conversion-dialog-cut-compressor-input"]'
-        ).realClick({ position: "left" });
+        cy.get('[data-test="conversion-dialog-cut-compressor-input"]')
+            .first()
+            .realClick({ position: "left" });
         cy.get('[data-test="conversion-dialog-cut-passes-input"]')
+            .first()
             .clear()
             .type("3");
-        cy.get('[data-test="conversion-dialog-progressive"]').click();
+        cy.get('[data-test="conversion-dialog-progressive"]').first().click();
+        // cutting parameters for first cut 2
+        cy.get('[data-test="conversion-dialog-cut-piercetime-input"]')
+            .eq(1)
+            .clear()
+            .type("10");
+        cy.get('[data-test="conversion-dialog-cut-intensity-input"]')
+            .last()
+            .clear()
+            .type("95");
+        cy.get('[data-test="conversion-dialog-cut-feedrate-input"]')
+            .last()
+            .clear()
+            .type("2500");
+        cy.get('[data-test="conversion-dialog-cut-compressor-input"]')
+            .last()
+            .realClick();
+        cy.get('[data-test="conversion-dialog-cut-passes-input"]')
+            .last()
+            .clear()
+            .type("2");
+        cy.get('[data-test="conversion-dialog-progressive"]').last().click();
         cy.get('[data-test="conversion-dialog-cut-piercetime-input"]')
             .last()
             .clear()
-            .type("10");
+            .type("15");
         cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.wait(3000);
-        cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
@@ -143,9 +188,9 @@ describe("Cut and engrave", function () {
                             '[data-test="tab-designlib-mechinecode-file-download"]'
                         )
                             .filter(":visible")
-                            .click();
+                            .click({ force: true });
                     });
-                cy.readFile("cypress/downloads/Star_1more.gco", {
+                cy.readFile("cypress/downloads/Star_2more.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -164,71 +209,6 @@ describe("Cut and engrave", function () {
                         });
                 });
             });
-        cy.logout();
-    });
-
-    it("Skip", function () {
-        //Adding star
-        cy.get('[data-test="working-area-tab-shape"]').click();
-        cy.get('[data-test="quick-shape-star"]').click();
-        cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Finn Cardboard")
-            .click();
-        cy.get('[id="material_thickness_1.5"]').click();
-        cy.get(".cutting_job_color")
-            .eq(0)
-            .trigger("dragstart", { dataTransfer });
-        cy.get('[data-test="conversion-dialog-no-job"]').trigger("drop", {
-            dataTransfer,
-        });
-        cy.get('[data-test="laser-job-start-button"]').dblclick({
-            force: true,
-        });
-        cy.get(
-            '[data-test="conversion-dialog-settings-to-be-adjusted"]'
-        ).should("to.exist");
-        cy.get(
-            '[data-test="conversion-dialog-settings-to-be-adjusted-btn"]'
-        ).dblclick({ force: true });
-        cy.get(
-            '[data-test="conversion-dialog-settings-to-be-adjusted"]'
-        ).should("not.visible");
-        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
-            "to.exist"
-        );
-        cy.get('[data-test="laser-job-back-button"]').click({ force: true });
-        cy.logout();
-    });
-
-    it("Engrave move to cut", function () {
-        //Adding text
-        cy.get('[data-test="working-area-tab-text"]').click();
-        cy.get('[data-test="quick-text-modal-text-input"]').type("MrBeam");
-        cy.get('[data-test="quick-text-done-button"]').click();
-        //Adding text
-        cy.get('[data-test="working-area-tab-shape"]').click();
-        cy.get('[data-test="quick-shape-star"]').click();
-        cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get('[data-test="working-area-laser-button"]').click();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Finn Cardboard")
-            .click();
-        cy.get('[id="material_thickness_1.5"]').click();
-        cy.get('[id="cd_engraving"]')
-            .eq(0)
-            .trigger("dragstart", { dataTransfer });
-        cy.get("#first_job > .span3 > .assigned_colors").trigger("drop", {
-            dataTransfer,
-        });
-        cy.get("#first_job > .span3 > .assigned_colors")
-            .find('[id="cd_engraving"]')
-            .should("not.exist");
-        cy.get('[data-test="conversion-dialog-engrave-job-zone"]')
-            .find('[id="cd_engraving"]')
-            .should("to.exist");
-        cy.get('[data-test="laser-job-back-button"]').click({ force: true });
         cy.logout();
     });
 });

@@ -55,7 +55,7 @@ describe("Laser Job", function () {
             .type("230.3 mm");
         cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-by-stroke-color"]').click();
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.laserButtonClick();
         cy.wait(2000);
         cy.focusReminder();
         cy.wait(2000);
