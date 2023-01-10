@@ -50,9 +50,6 @@ describe("Laser Job - shapes", function () {
             .clear()
             .type("130.3 mm");
         cy.laserButtonClick();
-        cy.wait(2000);
-        cy.focusReminder();
-        cy.wait(2000);
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Cardboard, double wave")
             .click();
@@ -175,7 +172,6 @@ describe("Laser Job - shapes", function () {
             .clear()
             .type("130.3 mm");
         cy.laserButtonClick();
-        cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Anodized Aluminum")
             .click();
@@ -301,7 +297,6 @@ describe("Laser Job - shapes", function () {
             .clear()
             .type("230.3 mm");
         cy.laserButtonClick();
-        cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Finn Cardboard")
             .click();
@@ -424,7 +419,6 @@ describe("Laser Job - shapes", function () {
             .clear()
             .type("130.3 mm");
         cy.laserButtonClick();
-        cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Polypropylene")
             .click();
@@ -554,7 +548,6 @@ describe("Laser Job - shapes", function () {
             .clear()
             .type("130.3 mm");
         cy.laserButtonClick();
-        cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Polypropylene")
             .click();

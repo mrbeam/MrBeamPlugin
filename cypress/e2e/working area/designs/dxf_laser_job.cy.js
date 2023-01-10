@@ -58,12 +58,9 @@ describe("Laser Job", function () {
             .clear()
             .type("250.5");
         cy.laserButtonClick();
-        cy.wait(2000);
-        cy.focusReminder();
-        cy.wait(2000);
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Mirror")
-            .click();
+        cy.get('[data-test="conversion-dialog-material-list"]')
+            .contains(/^Mirror$/)
+            .click({ force: true });
         cy.get('[data-test="conversion-dialog-intensity-black"]')
             .clear()
             .type("95");

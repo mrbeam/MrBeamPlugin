@@ -84,9 +84,6 @@ describe("Laser Job", function () {
             force: true,
         });
         cy.laserButtonClick();
-        cy.wait(2000);
-        cy.focusReminder();
-        cy.wait(2000);
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains(/^Foam Rubber$/)
             .click();

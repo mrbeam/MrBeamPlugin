@@ -48,9 +48,6 @@ describe("Laser Job - quick text", function () {
             .clear()
             .type("132.3 mm");
         cy.laserButtonClick();
-        cy.wait(2000);
-        cy.focusReminder();
-        cy.wait(2000);
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains(/^Leather$/)
             .click({ force: true });
@@ -178,7 +175,6 @@ describe("Laser Job - quick text", function () {
             .clear()
             .type("230.3 mm");
         cy.laserButtonClick();
-        cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Cork")
             .click({ force: true });
@@ -300,7 +296,6 @@ describe("Laser Job - quick text", function () {
             .clear()
             .type("130.3 mm");
         cy.laserButtonClick();
-        cy.focusReminder();
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Foam")
             .click({ force: true });

@@ -86,9 +86,6 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-crop-bottom"]').clear().type("2");
         cy.get('[data-test="tab-workingarea-crop-right"]').clear().type("2");
         cy.laserButtonClick();
-        cy.wait(2000);
-        cy.focusReminder();
-        cy.wait(2000);
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Paper")
             .click();

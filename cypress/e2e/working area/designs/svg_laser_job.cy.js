@@ -56,9 +56,6 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-by-stroke-color"]').click();
         cy.laserButtonClick();
-        cy.wait(2000);
-        cy.focusReminder();
-        cy.wait(2000);
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Cardboard, single wave")
             .click();
