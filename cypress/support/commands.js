@@ -222,9 +222,9 @@ Cypress.Commands.add("deleteGcoFile", () => {
     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
         .if("exist")
         .then(() => {
-            cy.get('[data-test="tab-designlib-mechinecode-file"]')
+            cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                 .realHover({ multiple: true, force: true })
-                .get('[data-test="tab-designlib-mechinecode-file-select-box"]')
+                .get('[data-test="tab-designlib-select-box"]')
                 .click({ multiple: true, force: true });
             cy.get('[data-test="tab-designlib-delete-selection"]').click();
             cy.get('[data-test="tab-designlib-preview-card"]').should(
@@ -235,10 +235,24 @@ Cypress.Commands.add("deleteGcoFile", () => {
     cy.get('[data-test="mrbeam-ui-index-working-area"]').click();
 });
 
-Cypress.Commands.add("laserButtonClick", (value) => {
+Cypress.Commands.add("laserButtonClick", () => {
     cy.get('[data-test="working-area-laser-button"]').click();
     cy.focusReminder();
+    cy.wait(3000);
+});
+
+Cypress.Commands.add("selectMaterial", () => {
+    cy.get('[data-test="conversion-dialog-material-item"]').first().click();
     cy.wait(1000);
+    cy.get('[data-test="conversion-dialog-material-color"]')
+        .first()
+        .if("exist")
+        .click();
+    cy.wait(1000);
+    cy.get('[data-test="conversion-dialog-thickness-sample"]')
+        .first()
+        .if("exist")
+        .click();
 });
 
 import "cypress-file-upload";

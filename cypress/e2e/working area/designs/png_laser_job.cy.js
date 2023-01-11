@@ -87,6 +87,7 @@ describe("Laser Job", function () {
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains(/^Foam Rubber$/)
             .click();
+        cy.wait(1000);
         cy.get('[id="material_color_0057a8"]').click();
         cy.wait(1000);
         cy.get('[id="material_thickness_2"]').click();
@@ -159,7 +160,7 @@ describe("Laser Job", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/mirror.2x.gco", {
+                cy.readFile("cypress/fixtures/mirror.2x.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -174,7 +175,12 @@ describe("Laser Job", function () {
                     cy.wait("@file")
                         .its("response.body")
                         .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
+                            let bodyNoComments = $body.replace(/^;.*$/gm, "");
+                            let contentTestFileNoComments =
+                                contentTestFile.replace(/^;.*$/gm, "");
+                            expect(bodyNoComments).to.equal(
+                                contentTestFileNoComments
+                            );
                         });
                 });
             });

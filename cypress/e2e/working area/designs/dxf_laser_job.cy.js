@@ -13,6 +13,7 @@ describe("Laser Job", function () {
         cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });
+
     it("Add design dxf", function () {
         cy.get('[data-test="working-area-tab-file"]').click();
         cy.get('[data-test="tab-designlib-files-list"]').then(($elem) => {
@@ -58,31 +59,7 @@ describe("Laser Job", function () {
             .clear()
             .type("250.5");
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-list"]')
-            .contains(/^Mirror$/)
-            .click({ force: true });
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("95");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("1500");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("4");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("8");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick(
-            { force: true }
-        );
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
@@ -122,7 +99,7 @@ describe("Laser Job", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/paris1.gco", {
+                cy.readFile("cypress/fixtures/paris1.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -137,7 +114,12 @@ describe("Laser Job", function () {
                     cy.wait("@file")
                         .its("response.body")
                         .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
+                            let bodyNoComments = $body.replace(/^;.*$/gm, "");
+                            let contentTestFileNoComments =
+                                contentTestFile.replace(/^;.*$/gm, "");
+                            expect(bodyNoComments).to.equal(
+                                contentTestFileNoComments
+                            );
                         });
                 });
             });

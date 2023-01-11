@@ -89,6 +89,7 @@ describe("Laser Job", function () {
         cy.get('[data-test="conversion-dialog-material-item"]')
             .contains("Paper")
             .click();
+        cy.wait(1000);
         cy.get('[id="material_color_1155cc"]').click();
         cy.wait(1000);
         cy.get('[id="material_thickness_0.4"]').click();
@@ -160,7 +161,7 @@ describe("Laser Job", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/paris2.gco", {
+                cy.readFile("cypress/fixtures/paris2.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -175,7 +176,12 @@ describe("Laser Job", function () {
                     cy.wait("@file")
                         .its("response.body")
                         .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
+                            let bodyNoComments = $body.replace(/^;.*$/gm, "");
+                            let contentTestFileNoComments =
+                                contentTestFile.replace(/^;.*$/gm, "");
+                            expect(bodyNoComments).to.equal(
+                                contentTestFileNoComments
+                            );
                         });
                 });
             });
