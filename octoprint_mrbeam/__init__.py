@@ -36,7 +36,7 @@ from octoprint.events import Events as OctoPrintEvents
 
 from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
 from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
-from .iobeam.airfilter import airfilter
+from octoprint_mrbeam.iobeam.airfilter import airfilter
 
 IS_X86 = platform.machine() == "x86_64"
 from ._version import get_versions

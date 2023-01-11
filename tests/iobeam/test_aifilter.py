@@ -4,7 +4,7 @@ from octoprint_mrbeam.iobeam.airfilter import AirFilter
 def test_model_name():
     # Arrange
     air_filter = AirFilter(None)
-    air_filter.set_model_id(0)
+    air_filter.model_id = 0
     # Act
     model_name = air_filter.model
     # Assert
@@ -12,28 +12,28 @@ def test_model_name():
 
     # Arrange
     for i in range(1, 8):
-        air_filter.set_model_id(i)
+        air_filter.model_id = i
         # Act
         model_name = air_filter.model
         # Assert
         assert model_name == "Air Filter II System"
 
     # Arrange
-    air_filter.set_model_id(8)
+    air_filter.model_id = 8
     # Act
     model_name = air_filter.model
     # Assert
     assert model_name == "Air Filter 3 System"
 
     # Arrange
-    air_filter.set_model_id(None)
+    air_filter.model_id = None
     # Act
     model_name = air_filter.model
     # Assert
     assert model_name == "Unknown"
 
     # Arrange
-    air_filter.set_model_id(100)
+    air_filter.model_id = 100
     # Act
     model_name = air_filter.model
     # Assert
@@ -43,7 +43,7 @@ def test_model_name():
 def test_model_id():
     # Arrange
     air_filter = AirFilter(None)
-    air_filter.set_model_id(0)
+    air_filter.model_id = 0
     # Act
     model_id = air_filter.model_id
     # Assert
@@ -53,7 +53,7 @@ def test_model_id():
 def test_serial():
     # Arrange
     air_filter = AirFilter(None)
-    air_filter.set_serial("123456")
+    air_filter.serial = "123456"
     # Act
     serial = air_filter.serial
     # Assert
