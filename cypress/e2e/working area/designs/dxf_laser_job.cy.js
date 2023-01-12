@@ -10,7 +10,6 @@ describe("Laser Job", function () {
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.visit(this.testData.url_laser);
-        cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });
 
@@ -65,8 +64,10 @@ describe("Laser Job", function () {
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.downloadMrbFile();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.wait(3000);
+        cy.wait(2000);
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')

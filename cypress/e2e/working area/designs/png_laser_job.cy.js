@@ -10,7 +10,6 @@ describe("Laser Job", function () {
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.visit(this.testData.url_laser);
-        cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });
 
@@ -84,47 +83,14 @@ describe("Laser Job", function () {
             force: true,
         });
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains(/^Foam Rubber$/)
-            .click();
-        cy.wait(1000);
-        cy.get('[id="material_color_0057a8"]').click();
-        cy.wait(1000);
-        cy.get('[id="material_thickness_2"]').click();
-        // engrave parameters
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("85");
-        cy.get('[data-test="conversion-dialog-intensity-white"]')
-            .clear()
-            .type("25");
-        cy.get('[data-test="conversion-dialog-feedrate-white"]')
-            .clear()
-            .type("700");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("1500");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("4");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("8");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick(
-            { force: true }
-        );
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.wait(3000);
         cy.get(".modal-scrollable").click({ force: true });
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);

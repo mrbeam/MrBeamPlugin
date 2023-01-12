@@ -242,7 +242,9 @@ Cypress.Commands.add("laserButtonClick", () => {
 });
 
 Cypress.Commands.add("selectMaterial", () => {
-    cy.get('[data-test="conversion-dialog-material-item"]').first().click();
+    cy.get('[data-test="conversion-dialog-material-item"]')
+        .contains("Cardboard, single wave")
+        .click();
     cy.wait(1000);
     cy.get('[data-test="conversion-dialog-material-color"]')
         .first()
@@ -253,6 +255,42 @@ Cypress.Commands.add("selectMaterial", () => {
         .first()
         .if("exist")
         .click();
+});
+
+Cypress.Commands.add("downloadMrbFile", () => {
+    cy.get('[data-test="tab-designlib-filter-recent-radio"]').click();
+    cy.wait(2000);
+    cy.get('[data-test="tab-designlib-recentjob-file-card"]')
+        .first()
+        .find('[data-test="tab-designlib-recentjob-file-icon-reorder"]')
+        .click({ force: true })
+        .invoke("prop", "innerText")
+        .then((downloadFile) => {
+            cy.intercept(
+                "GET",
+                `http://localhost:5002/downloads/files/local/${downloadFile}*`
+            ).as("file");
+            cy.window()
+                .document()
+                .then(function (doc) {
+                    doc.addEventListener("click", () => {
+                        setTimeout(function () {
+                            doc.location.reload();
+                        }, 5000);
+                    });
+                    cy.get('[data-test="tab-designlib-recentjob-file-card"]')
+                        .filter(`:contains(${downloadFile})`)
+                        .find(
+                            '[data-test="tab-designlib-recentjob-file-icon-reorder"]'
+                        );
+                    cy.wait(1000);
+                    cy.get(
+                        '[data-test="tab-designlib-recentjob-file-download"]'
+                    )
+                        .filter(":visible")
+                        .click();
+                });
+        });
 });
 
 import "cypress-file-upload";

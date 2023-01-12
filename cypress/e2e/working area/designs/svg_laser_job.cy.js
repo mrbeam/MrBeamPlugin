@@ -10,7 +10,6 @@ describe("Laser Job", function () {
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.visit(this.testData.url_laser);
-        cy.deleteDownloadsFolder();
         cy.wait(5000);
     });
 
@@ -57,15 +56,13 @@ describe("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-burger-menu"]').click();
         cy.get('[data-test="tab-workingarea-by-stroke-color"]').click();
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Cardboard, single wave")
-            .click();
-        cy.wait(1000);
-        cy.get('[id="material_thickness_1.5"]').click();
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(2000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);

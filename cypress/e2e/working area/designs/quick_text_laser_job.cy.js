@@ -10,7 +10,6 @@ describe("Laser Job - quick text", function () {
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.visit(this.testData.url_laser);
-        // cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });
 
@@ -47,45 +46,12 @@ describe("Laser Job - quick text", function () {
             .clear()
             .type("132.3 mm");
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains(/^Leather$/)
-            .click({ force: true });
-        cy.wait(1000);
-        cy.get('[id="material_color_b45f06"]').click();
-        cy.wait(1000);
-        cy.get('[id="material_thickness_0.8"]').click();
-        cy.wait(1000);
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("70");
-        cy.get('[data-test="conversion-dialog-intensity-white"]')
-            .clear()
-            .type("25");
-        cy.get('[data-test="conversion-dialog-feedrate-white"]')
-            .clear()
-            .type("1500");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("3000");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("2");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick(
-            { force: true }
-        );
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
@@ -182,44 +148,12 @@ describe("Laser Job - quick text", function () {
             .clear()
             .type("132.3 mm");
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains(/^Leather$/)
-            .click({ force: true });
-        cy.get('[id="material_color_b45f06"]').click();
-        cy.wait(1000);
-        cy.get('[id="material_thickness_0.8"]').click();
-        cy.wait(1000);
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("70");
-        cy.get('[data-test="conversion-dialog-intensity-white"]')
-            .clear()
-            .type("25");
-        cy.get('[data-test="conversion-dialog-feedrate-white"]')
-            .clear()
-            .type("1500");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("3000");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("2");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick(
-            { force: true }
-        );
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
@@ -312,36 +246,13 @@ describe("Laser Job - quick text", function () {
             .clear()
             .type("230.3 mm");
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Cork")
-            .click({ force: true });
-        cy.wait(1000);
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("70");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("3000");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("2");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-mode-basic"]').dblclick(
-            { force: true }
-        );
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(3000);
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
@@ -435,37 +346,12 @@ describe("Laser Job - quick text", function () {
             .clear()
             .type("130.3 mm");
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Foam")
-            .click({ force: true });
-        cy.wait(1000);
-        cy.get('[id="material_thickness_10"]').click();
-        cy.wait(1000);
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("70");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("3000");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("1");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("2");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("1");
-        cy.get(
-            '[data-test="conversion-dialog-engraving-mode-recommended"]'
-        ).dblclick({ force: true });
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
