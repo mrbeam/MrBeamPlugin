@@ -92,3 +92,68 @@ def test_pressure():
         "pressure3": 3,
         "pressure4": 4,
     }
+
+
+def test_temperatures():
+    # Arrange
+    air_filter = AirFilter(None)
+    air_filter.set_temperatures(temperature1=1.0)
+    # Act
+    temperatures = air_filter.temperatures
+    # Assert
+    assert temperatures == {
+        "temperature1": 1.0,
+        "temperature2": None,
+        "temperature3": None,
+        "temperature4": None,
+    }
+
+    # Arrange
+    air_filter.set_temperatures(
+        temperature1=1.0, temperature2=2.0, temperature3=3.0, temperature4=4.0
+    )
+    # Act
+    temperatures = air_filter.temperatures
+    # Assert
+    assert temperatures == {
+        "temperature1": 1.0,
+        "temperature2": 2.0,
+        "temperature3": 3.0,
+        "temperature4": 4.0,
+    }
+
+    # Arrange
+    air_filter.set_temperatures(temperature2=None)  # temperature2 is not set
+    # Act
+    temperatures = air_filter.temperatures
+    # Assert
+    assert temperatures == {
+        "temperature1": 1.0,
+        "temperature2": 2.0,
+        "temperature3": 3.0,
+        "temperature4": 4.0,
+    }
+
+    # Arrange
+    air_filter.set_temperatures(temperature2=2)  # temperature2 is set
+    # Act
+    temperatures = air_filter.temperatures
+    # Assert
+    assert temperatures == {
+        "temperature1": 1.0,
+        "temperature2": 2,
+        "temperature3": 3.0,
+        "temperature4": 4.0,
+    }
+
+    # Arrange
+    air_filter.set_temperatures(temperature2="error")
+    # Act
+    temperatures = air_filter.temperatures
+    # Assert
+    assert temperatures == {
+        "temperature1": 1.0,
+        "temperature2": "error",
+        "temperature3": 3.0,
+        "temperature4": 4.0,
+    }

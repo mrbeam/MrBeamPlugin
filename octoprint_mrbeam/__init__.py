@@ -677,6 +677,7 @@ class MrBeamPlugin(
                 "js/app/view-models/settings/camera.js",
                 "js/app/view-models/settings/backlash.js",
                 "js/app/view-models/settings/leds.js",
+                "js/app/view-models/settings/about.js",
                 "js/app/helpers/path-magic.js",
                 "js/lib/simplify.js",
                 "js/lib/clipper.js",
@@ -844,9 +845,6 @@ class MrBeamPlugin(
                 laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
                     "model"
                 ],
-                airfilter_serial=self.airfilter.serial,
-                airfilter_model=self.airfilter.model,
-                airfilter_model_id=self.airfilter.model_id,
                 env=self.get_env(),
                 mac_addrs=self._get_mac_addresses(),
                 env_local=self.get_env(self.ENV_LOCAL),
@@ -2543,7 +2541,7 @@ class MrBeamPlugin(
     ##~~ Event Handler Plugin API
 
     def on_event(self, event, payload):
-        if event is not MrBeamEvents.ANALYTICS_DATA:
+        if event != MrBeamEvents.ANALYTICS_DATA:
             self._logger.info("on_event %s: %s", event, payload)
 
         if event == MrBeamEvents.BOOT_GRACE_PERIOD_END:
@@ -2762,6 +2760,7 @@ class MrBeamPlugin(
                     airfilter_model=self.airfilter.model,
                     airfilter_model_id=self.airfilter.model_id,
                     airfilter_pressure=self.airfilter.pressure,
+                    airfilter_temperatures=self.airfilter.temperatures,
                 )
                 return collections.OrderedDict(sorted(state_dict.items()))
 
@@ -3072,6 +3071,11 @@ class MrBeamPlugin(
             self._logger.debug("_get_mac_addresses() found %s" % interfaces)
             self._mac_addrs = interfaces
         return self._mac_addrs
+
+    def send_mrb_state(self):
+        self._plugin_manager.send_plugin_message(
+            "mrbeam", dict(mrb_state=self.get_mrb_state())
+        )
 
 
 # # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS

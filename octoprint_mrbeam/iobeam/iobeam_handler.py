@@ -1087,6 +1087,12 @@ class IoBeamHandler(object):
             pressure3=pressure_dataset.get("pressure3"),
             pressure4=pressure_dataset.get("pressure4"),
         )
+        self._airfilter.set_temperatures(
+            temperature1=temperature_dataset.get("temp1"),
+            temperature2=temperature_dataset.get("temp2"),
+            temperature3=temperature_dataset.get("temp3"),
+            temperature4=temperature_dataset.get("temp4"),
+        )
         # get the pressure sensor reading this will come as dust with the current iobeam version
         if "pressure" in device_dataset:
             self._airfilter.set_pressure(pressure=device_dataset.get("pressure"))
