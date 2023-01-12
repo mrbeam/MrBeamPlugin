@@ -170,6 +170,7 @@ class IoBeamHandler(object):
         self._callbacks_lock = RWLock()
 
         self._laserhead_handler = None
+        self._airfilter = None
 
         self.iobeam_version = None
 
@@ -192,6 +193,7 @@ class IoBeamHandler(object):
 
     def _on_mrbeam_plugin_initialized(self, event, payload):
         self._laserhead_handler = self._plugin.laserhead_handler
+        self._airfilter = self._plugin.airfilter
         self._hw_malfunction_handler = self._plugin.hw_malfunction_handler
         self._user_notification_system = self._plugin.user_notification_system
 
@@ -1068,10 +1070,34 @@ class IoBeamHandler(object):
         :return: error count
         """
         self._logger.debug("exhaust dataset: '%s'", dataset)
+        device_dataset = dataset.get("device")
+        pressure_dataset = dataset.get("pressure")
+        temperature_dataset = dataset.get("temperature")
+        self._logger.debug(
+            "exhaust device datasets: '%s %s %s'",
+            device_dataset,
+            pressure_dataset,
+            temperature_dataset,
+        )
+        self._airfilter.serial = device_dataset.get("serial_num")
+        self._airfilter.model_id = device_dataset.get("type")
+        self._airfilter.set_pressure(
+            pressure1=pressure_dataset.get("pressure1"),
+            pressure2=pressure_dataset.get("pressure2"),
+            pressure3=pressure_dataset.get("pressure3"),
+            pressure4=pressure_dataset.get("pressure4"),
+        )
+        self._airfilter.set_temperatures(
+            temperature1=temperature_dataset.get("temp1"),
+            temperature2=temperature_dataset.get("temp2"),
+            temperature3=temperature_dataset.get("temp3"),
+            temperature4=temperature_dataset.get("temp4"),
+        )
         # get the pressure sensor reading this will come as dust with the current iobeam version
-        if "dust" in dataset:
+        if "pressure" in device_dataset:
+            self._airfilter.set_pressure(pressure=device_dataset.get("pressure"))
             vals = {
-                "pressure": dataset["dust"],
+                "pressure": device_dataset.get("pressure"),
             }
             self._call_callback(IoBeamValueEvents.EXHAUST_DYNAMIC_VALUE, dataset, vals)
         return 0
