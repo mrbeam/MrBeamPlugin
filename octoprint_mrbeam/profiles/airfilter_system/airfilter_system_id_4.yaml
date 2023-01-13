@@ -1,0 +1,5 @@
+#airfilter 2 system
+prefilter:
+  - lifespan: 40
+carbon_filter:
+  - lifespan: 280
