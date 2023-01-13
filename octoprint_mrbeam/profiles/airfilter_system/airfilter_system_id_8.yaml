@@ -1,6 +1,9 @@
 #airfilter 3 system
 prefilter:
-  - lifespan: 40 #TODO
-  - lifespan: 40 #TODO
-carbon_filter:
-  - lifespan: 280 #TODO
+  - lifespan: 80 #TODO
+    shopify_link: 'https://store.mr-beam.org/products/10er-pack-vorfilter-fur-mr-beam-air-filter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' #TODO
+  - lifespan: 100 #TODO
+    shopify_link: 'https://store.mr-beam.org/products/10er-pack-vorfilter-fur-mr-beam-air-filter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' #TODO
+carbonfilter:
+  - lifespan: 400 #TODO
+    shopify_link: 'https://store.mr-beam.org/products/10er-pack-vorfilter-fur-mr-beam-air-filter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' #TODO

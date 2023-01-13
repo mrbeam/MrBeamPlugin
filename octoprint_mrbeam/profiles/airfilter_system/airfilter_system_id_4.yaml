@@ -1,5 +1,7 @@
 #airfilter 2 system
 prefilter:
   - lifespan: 40
-carbon_filter:
+    shopify_link: 'Link to Shopify'#TODO
+carbonfilter:
   - lifespan: 280
+    shopify_link: 'Link to Shopify'#TODO
