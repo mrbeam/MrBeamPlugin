@@ -1,0 +1,6 @@
+#airfilter 3 system
+prefilter:
+  - lifespan: 40 #TODO
+  - lifespan: 40 #TODO
+carbon_filter:
+  - lifespan: 280 #TODO
