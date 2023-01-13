@@ -1,4 +1,8 @@
 # singleton
+import os
+
+import yaml
+
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 _instance = None
@@ -26,6 +30,11 @@ class AirFilter(object):
 
     AIRFILTER2_MODELS = [1, 2, 3, 4, 5, 6, 7]
     AIRFILTER3_MODELS = [8]
+    PREFILTER_LIFESPAN_FALLBACK = 40
+    CARBON_LIFESPAN_FALLBACK = 280
+    PREFILTER = "prefilter"
+    CARBONFILTER = "carbonfilter"
+    FILTERSTAGES = [PREFILTER, CARBONFILTER]
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.airfilter")
@@ -40,6 +49,7 @@ class AirFilter(object):
         self._temperature2 = None
         self._temperature3 = None
         self._temperature4 = None
+        self._profile = None
 
     @property
     def model(self):
@@ -135,6 +145,7 @@ class AirFilter(object):
             self.reset_data()
             self._model_id = model_id
             self._plugin.send_mrb_state()
+            self._load_current_profile()
 
     def set_pressure(
         self,
@@ -200,3 +211,112 @@ class AirFilter(object):
         self._temperature2 = None
         self._temperature3 = None
         self._temperature4 = None
+        self._profile = None
+
+    def _load_current_profile(self):
+        if self._model_id is None:
+            self._logger.debug(
+                "profile not loaded as id is not valid :{}".format(self.model_id)
+            )
+        else:
+            self._logger.debug(
+                "load profile for air filter system ID:{}".format(self.model_id)
+            )
+            # 1. Load the corresponding yaml file and return it's content
+            af_profile_file_path = os.path.join(
+                self._plugin._basefolder,
+                "profiles",
+                "airfilter_system",
+                "airfilter_system_id_{}.yaml".format(self.model_id),
+            )
+            if not os.path.isfile(af_profile_file_path):
+                self._logger.exception(
+                    "profile file for current air filter system ID: {} doesn't exist or path is invalid. Path: {}".format(
+                        self.model_id, af_profile_file_path
+                    )
+                )
+                self._profile = None
+            #
+            self._logger.debug(
+                "profile file for current air filter system ID: {} exists. Path:{}".format(
+                    self.model_id, af_profile_file_path
+                )
+            )
+            try:
+                with open(af_profile_file_path) as af_profile_yaml_file:
+                    self._logger.debug(
+                        "profile file for current air filter system ID: {} opened successfully".format(
+                            self.model_id
+                        )
+                    )
+                    self._profile = yaml.safe_load(af_profile_yaml_file)
+            except (IOError, yaml.YAMLError) as e:
+                self._logger.exception(
+                    "Exception: {} while Opening or loading the profile file for current air filter system. Path: {}".format(
+                        e, af_profile_file_path
+                    )
+                )
+                self._profile = None
+
+    @property
+    def profile(self):
+        """returns the current saved laser head profile or load new if the
+        air filter system id changed.
+
+        Returns:
+            dict: current air filter system profile, None: otherwise
+        """
+        self._logger.debug(
+            "get profile for air filter system ID:{}".format(self.model_id)
+        )
+        return self._profile
+
+    def get_lifespan(self, filterstage, stage_id=0):
+        current_airfilter_profile = self.profile
+        if filterstage not in self.FILTERSTAGES:
+            self._logger.error("filterstage {} is not known".format(filterstage))
+            return None
+
+        if filterstage == self.PREFILTER:
+            fallbackvalue = self.PREFILTER_LIFESPAN_FALLBACK
+        elif filterstage == self.CARBONFILTER:
+            fallbackvalue = self.CARBON_LIFESPAN_FALLBACK
+        else:
+            fallbackvalue = 0
+        # Handle the exceptions
+        if (
+            (isinstance(current_airfilter_profile, dict) is False)
+            or (filterstage not in current_airfilter_profile)
+            or (isinstance(current_airfilter_profile[filterstage], list) is False)
+            or (
+                isinstance(current_airfilter_profile[filterstage][stage_id], dict)
+                is False
+            )
+            or (
+                isinstance(
+                    current_airfilter_profile[filterstage][stage_id]["lifespan"], int
+                )
+                is False
+            )
+        ):
+            # Apply fallback
+            self._logger.debug(
+                "Current air filter system profile: {}".format(
+                    current_airfilter_profile
+                )
+            )
+            self._logger.error(
+                "Current {} ID:{} lifespan couldn't be retrieved, fallback to the fallback value of: {}".format(
+                    filterstage, stage_id, fallbackvalue
+                )
+            )
+            return fallbackvalue
+        # Reaching here means, everything looks good
+        self._logger.debug(
+            "Current {} ID:{} lifespan:{}".format(
+                filterstage,
+                stage_id,
+                current_airfilter_profile[filterstage][stage_id]["lifespan"],
+            )
+        )
+        return current_airfilter_profile[filterstage][stage_id]["lifespan"]
