@@ -1,7 +1,7 @@
-;Generated from temp.svg 610b35dfee391e1b305f6403a915fd8db31169bc
-; gc_nexgen gc_options: beamOS:0.12.1a2.post29.dev0+gd08886f1 on 06cb44f8a3d6, gc_nextgen:0.1, enabled:true, precision:0.05, optimize_travel:true, small_paths_first:true, clip_working_area:true, clipRect:0,0,500,390, userAgent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36
-; created:2023-01-11 14:41:11
-; laser params: {u'#a7194b': {u'passes': 2, u'feedrate': 100, u'progressive': False, u'color': u'#a7194b', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 26.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}}
+;Generated from temp.svg 571e79803790fa2766793b8ea08cd30d7c5270c0
+; gc_nexgen gc_options: beamOS:0.12.1a2.post31.dev0+gf43f7839 on 842a87f31fcd, gc_nextgen:0.1, enabled:true, precision:0.05, optimize_travel:true, small_paths_first:true, clip_working_area:true, clipRect:0,0,500,390, userAgent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36
+; created:2023-01-16 12:57:48
+; laser params: {u'#000000': {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}}
 
 ; speedup cooling fan
 M3S0
@@ -9,19 +9,19 @@ G4P0.5
 M5
 ; end speedup cooling fan
 
-; gcode_before_job - color: #a7194b
+; gcode_before_job - color: #000000
 M100P100 ; mrbeam_compressor: 100
 G4P0.2
 
-; Layer:compSvg, outline of:pathSlcrrr30h2g, stroke:#a7194b, {u'passes': 2, u'feedrate': 100, u'progressive': False, u'color': u'#a7194b', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 26.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlcyt9mgm2g, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:wa_dijyxa-0,node:path,mb:id:wa_dijyxa-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:wa_tylomu-0,node:path,mb:id:wa_tylomu-0,clip_working_area_clipped:false
 G0X413.96Y165.20
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X413.61Y164.56
 G1X417.66Y162.04
@@ -53,11 +53,11 @@ G1X414.37Y165.87
 G1X413.96Y165.20
 M05
 G0X418.13Y169.57
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X426.93Y161.26
 G1X428.05Y162.40
@@ -77,11 +77,11 @@ G1X417.97Y169.77
 G1X418.13Y169.57
 M05
 G0X439.87Y180.89
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X442.83Y175.45
 G1X446.52Y177.38
@@ -113,11 +113,11 @@ G1X436.96Y186.33
 G1X439.87Y180.89
 M05
 G0X432.29Y179.12
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X437.75Y171.73
 G1X438.98Y172.59
@@ -137,11 +137,11 @@ G1X433.57Y179.99
 G1X432.29Y179.12
 M05
 G0X417.37Y160.75
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X418.09Y161.13
 G1X419.01Y161.19
@@ -167,11 +167,11 @@ G1X416.98Y160.42
 G1X417.37Y160.75
 M05
 G0X441.58Y187.30
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X442.15Y187.49
 G1X442.75Y187.56
@@ -189,11 +189,11 @@ G1X439.04Y185.89
 G1X441.58Y187.30
 M05
 G0X410.81Y151.55
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X410.48Y150.70
 G1X410.35Y149.95
@@ -237,11 +237,11 @@ G1X411.25Y152.18
 G1X410.81Y151.55
 M05
 G0X403.04Y139.72
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X402.88Y139.05
 G1X402.92Y138.98
@@ -259,11 +259,11 @@ G1X403.28Y140.43
 G1X403.04Y139.72
 M05
 G0X412.85Y151.78
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X413.37Y151.94
 G1X413.85Y151.97
@@ -280,11 +280,11 @@ G1X412.43Y151.52
 G1X412.85Y151.78
 M05
 G0X442.84Y182.01
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X444.26Y182.75
 G1X444.81Y182.95
@@ -301,11 +301,11 @@ G1X441.56Y181.27
 G1X442.84Y182.01
 M05
 G0X450.85Y188.86
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X450.44Y188.07
 G1X450.22Y187.32
@@ -349,11 +349,11 @@ G1X451.37Y189.48
 G1X450.85Y188.86
 M05
 G0X452.55Y188.77
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X453.04Y189.04
 G1X453.63Y189.19
@@ -368,11 +368,11 @@ G1X452.05Y188.23
 G1X452.55Y188.77
 M05
 G0X405.95Y132.20
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X405.60Y131.42
 G1X405.40Y130.54
@@ -408,11 +408,11 @@ G1X406.37Y132.75
 G1X405.95Y132.20
 M05
 G0X407.82Y132.08
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X408.82Y132.47
 G1X409.96Y132.57
@@ -442,11 +442,11 @@ G1X407.40Y131.74
 G1X407.82Y132.08
 M05
 G0X460.21Y190.99
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X459.99Y190.30
 G1X459.98Y189.65
@@ -495,11 +495,11 @@ G1X460.64Y191.62
 G1X460.21Y190.99
 M05
 G0X405.04Y123.77
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X405.07Y123.03
 G1X405.31Y122.28
@@ -519,11 +519,11 @@ G1X405.15Y124.06
 G1X405.04Y123.77
 M05
 G0X462.58Y187.47
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X463.05Y187.77
 G1X463.68Y188.01
@@ -543,11 +543,11 @@ G1X462.29Y187.19
 G1X462.58Y187.47
 M05
 G0X403.62Y114.08
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X403.78Y113.30
 G1X405.91Y113.56
@@ -577,11 +577,11 @@ G1X403.52Y114.86
 G1X403.62Y114.08
 M05
 G0X470.84Y189.47
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X470.75Y184.84
 G1X472.29Y184.77
@@ -631,11 +631,11 @@ G1X471.04Y194.07
 G1X470.84Y189.47
 M05
 G0X404.66Y108.32
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X404.31Y107.42
 G1X404.14Y106.39
@@ -714,13 +714,13 @@ G1X404.66Y108.32
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:wa_dijyxa-0,node:path,mb:id:wa_dijyxa-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:wa_tylomu-0,node:path,mb:id:wa_tylomu-0,clip_working_area_clipped:false
 G0X413.96Y165.20
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X413.61Y164.56
 G1X417.66Y162.04
@@ -752,11 +752,11 @@ G1X414.37Y165.87
 G1X413.96Y165.20
 M05
 G0X418.13Y169.57
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X426.93Y161.26
 G1X428.05Y162.40
@@ -776,11 +776,11 @@ G1X417.97Y169.77
 G1X418.13Y169.57
 M05
 G0X439.87Y180.89
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X442.83Y175.45
 G1X446.52Y177.38
@@ -812,11 +812,11 @@ G1X436.96Y186.33
 G1X439.87Y180.89
 M05
 G0X432.29Y179.12
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X437.75Y171.73
 G1X438.98Y172.59
@@ -836,11 +836,11 @@ G1X433.57Y179.99
 G1X432.29Y179.12
 M05
 G0X417.37Y160.75
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X418.09Y161.13
 G1X419.01Y161.19
@@ -866,11 +866,11 @@ G1X416.98Y160.42
 G1X417.37Y160.75
 M05
 G0X441.58Y187.30
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X442.15Y187.49
 G1X442.75Y187.56
@@ -888,11 +888,11 @@ G1X439.04Y185.89
 G1X441.58Y187.30
 M05
 G0X410.81Y151.55
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X410.48Y150.70
 G1X410.35Y149.95
@@ -936,11 +936,11 @@ G1X411.25Y152.18
 G1X410.81Y151.55
 M05
 G0X403.04Y139.72
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X402.88Y139.05
 G1X402.92Y138.98
@@ -958,11 +958,11 @@ G1X403.28Y140.43
 G1X403.04Y139.72
 M05
 G0X412.85Y151.78
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X413.37Y151.94
 G1X413.85Y151.97
@@ -979,11 +979,11 @@ G1X412.43Y151.52
 G1X412.85Y151.78
 M05
 G0X442.84Y182.01
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X444.26Y182.75
 G1X444.81Y182.95
@@ -1000,11 +1000,11 @@ G1X441.56Y181.27
 G1X442.84Y182.01
 M05
 G0X450.85Y188.86
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X450.44Y188.07
 G1X450.22Y187.32
@@ -1048,11 +1048,11 @@ G1X451.37Y189.48
 G1X450.85Y188.86
 M05
 G0X452.55Y188.77
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X453.04Y189.04
 G1X453.63Y189.19
@@ -1067,11 +1067,11 @@ G1X452.05Y188.23
 G1X452.55Y188.77
 M05
 G0X405.95Y132.20
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X405.60Y131.42
 G1X405.40Y130.54
@@ -1107,11 +1107,11 @@ G1X406.37Y132.75
 G1X405.95Y132.20
 M05
 G0X407.82Y132.08
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X408.82Y132.47
 G1X409.96Y132.57
@@ -1141,11 +1141,11 @@ G1X407.40Y131.74
 G1X407.82Y132.08
 M05
 G0X460.21Y190.99
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X459.99Y190.30
 G1X459.98Y189.65
@@ -1194,11 +1194,11 @@ G1X460.64Y191.62
 G1X460.21Y190.99
 M05
 G0X405.04Y123.77
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X405.07Y123.03
 G1X405.31Y122.28
@@ -1218,11 +1218,11 @@ G1X405.15Y124.06
 G1X405.04Y123.77
 M05
 G0X462.58Y187.47
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X463.05Y187.77
 G1X463.68Y188.01
@@ -1242,11 +1242,11 @@ G1X462.29Y187.19
 G1X462.58Y187.47
 M05
 G0X403.62Y114.08
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X403.78Y113.30
 G1X405.91Y113.56
@@ -1276,11 +1276,11 @@ G1X403.52Y114.86
 G1X403.62Y114.08
 M05
 G0X470.84Y189.47
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X470.75Y184.84
 G1X472.29Y184.77
@@ -1330,11 +1330,11 @@ G1X471.04Y194.07
 G1X470.84Y189.47
 M05
 G0X404.66Y108.32
-F100;#a7194b
+F200;#000000
 ; gcode_before_path_color
 M3S0
 G4P0
-M03 S1300 ; color: #a7194b
+M03 S1300 ; color: #000000
 
 G1X404.31Y107.42
 G1X404.14Y106.39

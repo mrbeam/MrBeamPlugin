@@ -1,6 +1,6 @@
-;Generated from temp.svg 73cc3948a0cd150f55fd80af5b6f60cfe3ea6345
-; gc_nexgen gc_options: beamOS:0.12.1a2.post28.dev0+gfebaa4ff on 4b1cb9446c31, gc_nextgen:0.1, enabled:true, precision:0.05, optimize_travel:true, small_paths_first:true, clip_working_area:true, clipRect:0,0,500,390, userAgent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36
-; created:2023-01-11 13:13:19
+;Generated from temp.svg 3c47ad132c924e4163598e56cb2f44d2ca1eb7ab
+; gc_nexgen gc_options: beamOS:0.12.1a2.post30.dev0+g075cbf2a on 20a6a61ccbaf, gc_nextgen:0.1, enabled:true, precision:0.05, optimize_travel:true, small_paths_first:true, clip_working_area:true, clipRect:0,0,500,390, userAgent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36
+; created:2023-01-12 16:37:12
 ; laser params: {u'#000000': {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}, u'#010202': {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}, u'#e52424': {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e52424', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}}
 
 ; speedup cooling fan
@@ -13,9 +13,9 @@ M5
 M100P100 ; mrbeam_compressor: 100
 G4P0.2
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mku,node:path,mb:color:#010202,mb:id:pathSlcrom96mku,mb:clone_of:line491_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnku,node:path,mb:color:#010202,mb:id:pathSlctbcdvnku,mb:clone_of:line491_5_,clip_working_area_clipped:false
 G0X314.86Y252.54
 F200;#010202
 ; gcode_before_path_color
@@ -27,7 +27,7 @@ G1X315.48Y250.80
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mku,node:path,mb:color:#010202,mb:id:pathSlcrom96mku,mb:clone_of:line491_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnku,node:path,mb:color:#010202,mb:id:pathSlctbcdvnku,mb:clone_of:line491_5_,clip_working_area_clipped:false
 G0X314.86Y252.54
 F200;#010202
 ; gcode_before_path_color
@@ -38,9 +38,9 @@ M03 S1300 ; color: #010202
 G1X315.48Y250.80
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkv,node:path,mb:color:#010202,mb:id:pathSlcrom96mkv,mb:clone_of:line493_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkv,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkv,mb:clone_of:line493_5_,clip_working_area_clipped:false
 G0X315.94Y252.92
 F200;#010202
 ; gcode_before_path_color
@@ -52,7 +52,7 @@ G1X316.55Y251.18
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkv,node:path,mb:color:#010202,mb:id:pathSlcrom96mkv,mb:clone_of:line493_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkv,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkv,mb:clone_of:line493_5_,clip_working_area_clipped:false
 G0X315.94Y252.92
 F200;#010202
 ; gcode_before_path_color
@@ -63,9 +63,9 @@ M03 S1300 ; color: #010202
 G1X316.55Y251.18
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkx,node:path,mb:color:#010202,mb:id:pathSlcrom96mkx,mb:clone_of:line497_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkx,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkx,mb:clone_of:line497_5_,clip_working_area_clipped:false
 G0X318.09Y253.69
 F200;#010202
 ; gcode_before_path_color
@@ -77,7 +77,7 @@ G1X318.71Y251.94
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkx,node:path,mb:color:#010202,mb:id:pathSlcrom96mkx,mb:clone_of:line497_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkx,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkx,mb:clone_of:line497_5_,clip_working_area_clipped:false
 G0X318.09Y253.69
 F200;#010202
 ; gcode_before_path_color
@@ -88,9 +88,9 @@ M03 S1300 ; color: #010202
 G1X318.71Y251.94
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mky,node:path,mb:color:#010202,mb:id:pathSlcrom96mky,mb:clone_of:line499_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnky,node:path,mb:color:#010202,mb:id:pathSlctbcdvnky,mb:clone_of:line499_5_,clip_working_area_clipped:false
 G0X319.17Y254.07
 F200;#010202
 ; gcode_before_path_color
@@ -102,7 +102,7 @@ G1X319.79Y252.32
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mky,node:path,mb:color:#010202,mb:id:pathSlcrom96mky,mb:clone_of:line499_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnky,node:path,mb:color:#010202,mb:id:pathSlctbcdvnky,mb:clone_of:line499_5_,clip_working_area_clipped:false
 G0X319.17Y254.07
 F200;#010202
 ; gcode_before_path_color
@@ -113,9 +113,9 @@ M03 S1300 ; color: #010202
 G1X319.79Y252.32
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkz,node:path,mb:color:#010202,mb:id:pathSlcrom96mkz,mb:clone_of:line501_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkz,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkz,mb:clone_of:line501_5_,clip_working_area_clipped:false
 G0X320.25Y254.45
 F200;#010202
 ; gcode_before_path_color
@@ -127,7 +127,7 @@ G1X320.87Y252.71
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkz,node:path,mb:color:#010202,mb:id:pathSlcrom96mkz,mb:clone_of:line501_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkz,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkz,mb:clone_of:line501_5_,clip_working_area_clipped:false
 G0X320.25Y254.45
 F200;#010202
 ; gcode_before_path_color
@@ -138,9 +138,9 @@ M03 S1300 ; color: #010202
 G1X320.87Y252.71
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkk,node:path,mb:color:#010202,mb:id:pathSlcrom96mkk,mb:clone_of:line471_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkk,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkk,mb:clone_of:line471_6_,clip_working_area_clipped:false
 G0X321.33Y254.83
 F200;#010202
 ; gcode_before_path_color
@@ -152,7 +152,7 @@ G1X321.95Y253.09
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkk,node:path,mb:color:#010202,mb:id:pathSlcrom96mkk,mb:clone_of:line471_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkk,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkk,mb:clone_of:line471_6_,clip_working_area_clipped:false
 G0X321.33Y254.83
 F200;#010202
 ; gcode_before_path_color
@@ -163,9 +163,9 @@ M03 S1300 ; color: #010202
 G1X321.95Y253.09
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkm,node:path,mb:color:#010202,mb:id:pathSlcrom96mkm,mb:clone_of:line475_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkm,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkm,mb:clone_of:line475_6_,clip_working_area_clipped:false
 G0X323.48Y255.60
 F200;#010202
 ; gcode_before_path_color
@@ -177,7 +177,7 @@ G1X324.10Y253.85
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkm,node:path,mb:color:#010202,mb:id:pathSlcrom96mkm,mb:clone_of:line475_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkm,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkm,mb:clone_of:line475_6_,clip_working_area_clipped:false
 G0X323.48Y255.60
 F200;#010202
 ; gcode_before_path_color
@@ -188,9 +188,9 @@ M03 S1300 ; color: #010202
 G1X324.10Y253.85
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkn,node:path,mb:color:#010202,mb:id:pathSlcrom96mkn,mb:clone_of:line477_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkn,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkn,mb:clone_of:line477_6_,clip_working_area_clipped:false
 G0X324.56Y255.98
 F200;#010202
 ; gcode_before_path_color
@@ -202,7 +202,7 @@ G1X325.18Y254.23
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkn,node:path,mb:color:#010202,mb:id:pathSlcrom96mkn,mb:clone_of:line477_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkn,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkn,mb:clone_of:line477_6_,clip_working_area_clipped:false
 G0X324.56Y255.98
 F200;#010202
 ; gcode_before_path_color
@@ -213,9 +213,9 @@ M03 S1300 ; color: #010202
 G1X325.18Y254.23
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mko,node:path,mb:color:#010202,mb:id:pathSlcrom96mko,mb:clone_of:line479_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnko,node:path,mb:color:#010202,mb:id:pathSlctbcdvnko,mb:clone_of:line479_6_,clip_working_area_clipped:false
 G0X325.64Y256.36
 F200;#010202
 ; gcode_before_path_color
@@ -227,7 +227,7 @@ G1X326.26Y254.62
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mko,node:path,mb:color:#010202,mb:id:pathSlcrom96mko,mb:clone_of:line479_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnko,node:path,mb:color:#010202,mb:id:pathSlctbcdvnko,mb:clone_of:line479_6_,clip_working_area_clipped:false
 G0X325.64Y256.36
 F200;#010202
 ; gcode_before_path_color
@@ -238,9 +238,9 @@ M03 S1300 ; color: #010202
 G1X326.26Y254.62
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkp,node:path,mb:color:#010202,mb:id:pathSlcrom96mkp,mb:clone_of:line481_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkp,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkp,mb:clone_of:line481_6_,clip_working_area_clipped:false
 G0X326.72Y256.74
 F200;#010202
 ; gcode_before_path_color
@@ -252,7 +252,7 @@ G1X327.34Y255.00
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkp,node:path,mb:color:#010202,mb:id:pathSlcrom96mkp,mb:clone_of:line481_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkp,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkp,mb:clone_of:line481_6_,clip_working_area_clipped:false
 G0X326.72Y256.74
 F200;#010202
 ; gcode_before_path_color
@@ -263,9 +263,9 @@ M03 S1300 ; color: #010202
 G1X327.34Y255.00
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkr,node:path,mb:color:#010202,mb:id:pathSlcrom96mkr,mb:clone_of:line485_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkr,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkr,mb:clone_of:line485_6_,clip_working_area_clipped:false
 G0X328.88Y257.51
 F200;#010202
 ; gcode_before_path_color
@@ -277,7 +277,7 @@ G1X329.49Y255.76
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkr,node:path,mb:color:#010202,mb:id:pathSlcrom96mkr,mb:clone_of:line485_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkr,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkr,mb:clone_of:line485_6_,clip_working_area_clipped:false
 G0X328.88Y257.51
 F200;#010202
 ; gcode_before_path_color
@@ -288,9 +288,9 @@ M03 S1300 ; color: #010202
 G1X329.49Y255.76
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mks,node:path,mb:color:#010202,mb:id:pathSlcrom96mks,mb:clone_of:line487_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnks,node:path,mb:color:#010202,mb:id:pathSlctbcdvnks,mb:clone_of:line487_6_,clip_working_area_clipped:false
 G0X329.95Y257.89
 F200;#010202
 ; gcode_before_path_color
@@ -302,7 +302,7 @@ G1X330.57Y256.14
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mks,node:path,mb:color:#010202,mb:id:pathSlcrom96mks,mb:clone_of:line487_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnks,node:path,mb:color:#010202,mb:id:pathSlctbcdvnks,mb:clone_of:line487_6_,clip_working_area_clipped:false
 G0X329.95Y257.89
 F200;#010202
 ; gcode_before_path_color
@@ -313,9 +313,9 @@ M03 S1300 ; color: #010202
 G1X330.57Y256.14
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkt,node:path,mb:color:#010202,mb:id:pathSlcrom96mkt,mb:clone_of:line489_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkt,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkt,mb:clone_of:line489_6_,clip_working_area_clipped:false
 G0X331.03Y258.27
 F200;#010202
 ; gcode_before_path_color
@@ -327,7 +327,7 @@ G1X331.65Y256.52
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkt,node:path,mb:color:#010202,mb:id:pathSlcrom96mkt,mb:clone_of:line489_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkt,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkt,mb:clone_of:line489_6_,clip_working_area_clipped:false
 G0X331.03Y258.27
 F200;#010202
 ; gcode_before_path_color
@@ -338,9 +338,9 @@ M03 S1300 ; color: #010202
 G1X331.65Y256.52
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mka,node:path,mb:color:#010202,mb:id:pathSlcrom96mka,mb:clone_of:line451_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnka,node:path,mb:color:#010202,mb:id:pathSlctbcdvnka,mb:clone_of:line451_6_,clip_working_area_clipped:false
 G0X332.11Y258.65
 F200;#010202
 ; gcode_before_path_color
@@ -352,7 +352,7 @@ G1X332.73Y256.91
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mka,node:path,mb:color:#010202,mb:id:pathSlcrom96mka,mb:clone_of:line451_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnka,node:path,mb:color:#010202,mb:id:pathSlctbcdvnka,mb:clone_of:line451_6_,clip_working_area_clipped:false
 G0X332.11Y258.65
 F200;#010202
 ; gcode_before_path_color
@@ -363,9 +363,9 @@ M03 S1300 ; color: #010202
 G1X332.73Y256.91
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkc,node:path,mb:color:#010202,mb:id:pathSlcrom96mkc,mb:clone_of:line455_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkc,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkc,mb:clone_of:line455_6_,clip_working_area_clipped:false
 G0X334.27Y259.41
 F200;#010202
 ; gcode_before_path_color
@@ -377,7 +377,7 @@ G1X334.88Y257.67
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkc,node:path,mb:color:#010202,mb:id:pathSlcrom96mkc,mb:clone_of:line455_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkc,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkc,mb:clone_of:line455_6_,clip_working_area_clipped:false
 G0X334.27Y259.41
 F200;#010202
 ; gcode_before_path_color
@@ -388,9 +388,9 @@ M03 S1300 ; color: #010202
 G1X334.88Y257.67
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkd,node:path,mb:color:#010202,mb:id:pathSlcrom96mkd,mb:clone_of:line457_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkd,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkd,mb:clone_of:line457_6_,clip_working_area_clipped:false
 G0X335.34Y259.80
 F200;#010202
 ; gcode_before_path_color
@@ -402,7 +402,7 @@ G1X335.96Y258.05
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkd,node:path,mb:color:#010202,mb:id:pathSlcrom96mkd,mb:clone_of:line457_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkd,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkd,mb:clone_of:line457_6_,clip_working_area_clipped:false
 G0X335.34Y259.80
 F200;#010202
 ; gcode_before_path_color
@@ -413,9 +413,9 @@ M03 S1300 ; color: #010202
 G1X335.96Y258.05
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mke,node:path,mb:color:#010202,mb:id:pathSlcrom96mke,mb:clone_of:line459_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnke,node:path,mb:color:#010202,mb:id:pathSlctbcdvnke,mb:clone_of:line459_6_,clip_working_area_clipped:false
 G0X336.42Y260.18
 F200;#010202
 ; gcode_before_path_color
@@ -427,7 +427,7 @@ G1X337.04Y258.43
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mke,node:path,mb:color:#010202,mb:id:pathSlcrom96mke,mb:clone_of:line459_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnke,node:path,mb:color:#010202,mb:id:pathSlctbcdvnke,mb:clone_of:line459_6_,clip_working_area_clipped:false
 G0X336.42Y260.18
 F200;#010202
 ; gcode_before_path_color
@@ -438,9 +438,9 @@ M03 S1300 ; color: #010202
 G1X337.04Y258.43
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkf,node:path,mb:color:#010202,mb:id:pathSlcrom96mkf,mb:clone_of:line461_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkf,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkf,mb:clone_of:line461_6_,clip_working_area_clipped:false
 G0X337.50Y260.56
 F200;#010202
 ; gcode_before_path_color
@@ -452,7 +452,7 @@ G1X338.12Y258.82
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkf,node:path,mb:color:#010202,mb:id:pathSlcrom96mkf,mb:clone_of:line461_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkf,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkf,mb:clone_of:line461_6_,clip_working_area_clipped:false
 G0X337.50Y260.56
 F200;#010202
 ; gcode_before_path_color
@@ -463,9 +463,9 @@ M03 S1300 ; color: #010202
 G1X338.12Y258.82
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkh,node:path,mb:color:#010202,mb:id:pathSlcrom96mkh,mb:clone_of:line465_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkh,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkh,mb:clone_of:line465_6_,clip_working_area_clipped:false
 G0X339.66Y261.32
 F200;#010202
 ; gcode_before_path_color
@@ -477,7 +477,7 @@ G1X340.28Y259.58
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkh,node:path,mb:color:#010202,mb:id:pathSlcrom96mkh,mb:clone_of:line465_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkh,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkh,mb:clone_of:line465_6_,clip_working_area_clipped:false
 G0X339.66Y261.32
 F200;#010202
 ; gcode_before_path_color
@@ -488,9 +488,9 @@ M03 S1300 ; color: #010202
 G1X340.28Y259.58
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mki,node:path,mb:color:#010202,mb:id:pathSlcrom96mki,mb:clone_of:line467_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnki,node:path,mb:color:#010202,mb:id:pathSlctbcdvnki,mb:clone_of:line467_6_,clip_working_area_clipped:false
 G0X340.74Y261.71
 F200;#010202
 ; gcode_before_path_color
@@ -502,7 +502,7 @@ G1X341.35Y259.96
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mki,node:path,mb:color:#010202,mb:id:pathSlcrom96mki,mb:clone_of:line467_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnki,node:path,mb:color:#010202,mb:id:pathSlctbcdvnki,mb:clone_of:line467_6_,clip_working_area_clipped:false
 G0X340.74Y261.71
 F200;#010202
 ; gcode_before_path_color
@@ -513,9 +513,9 @@ M03 S1300 ; color: #010202
 G1X341.35Y259.96
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkj,node:path,mb:color:#010202,mb:id:pathSlcrom96mkj,mb:clone_of:line469_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkj,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkj,mb:clone_of:line469_6_,clip_working_area_clipped:false
 G0X341.81Y262.09
 F200;#010202
 ; gcode_before_path_color
@@ -527,7 +527,7 @@ G1X342.43Y260.34
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkj,node:path,mb:color:#010202,mb:id:pathSlcrom96mkj,mb:clone_of:line469_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkj,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkj,mb:clone_of:line469_6_,clip_working_area_clipped:false
 G0X341.81Y262.09
 F200;#010202
 ; gcode_before_path_color
@@ -538,9 +538,9 @@ M03 S1300 ; color: #010202
 G1X342.43Y260.34
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mjz,node:path,mb:color:#010202,mb:id:pathSlcrom96mjz,mb:clone_of:line429_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnjz,node:path,mb:color:#010202,mb:id:pathSlctbcdvnjz,mb:clone_of:line429_6_,clip_working_area_clipped:false
 G0X342.89Y262.47
 F200;#010202
 ; gcode_before_path_color
@@ -552,7 +552,7 @@ G1X343.51Y260.72
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mjz,node:path,mb:color:#010202,mb:id:pathSlcrom96mjz,mb:clone_of:line429_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnjz,node:path,mb:color:#010202,mb:id:pathSlctbcdvnjz,mb:clone_of:line429_6_,clip_working_area_clipped:false
 G0X342.89Y262.47
 F200;#010202
 ; gcode_before_path_color
@@ -563,9 +563,9 @@ M03 S1300 ; color: #010202
 G1X343.51Y260.72
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk1,node:path,mb:color:#010202,mb:id:pathSlcrom96mk1,mb:clone_of:line433_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk1,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk1,mb:clone_of:line433_6_,clip_working_area_clipped:false
 G0X345.05Y263.23
 F200;#010202
 ; gcode_before_path_color
@@ -577,7 +577,7 @@ G1X345.67Y261.49
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk1,node:path,mb:color:#010202,mb:id:pathSlcrom96mk1,mb:clone_of:line433_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk1,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk1,mb:clone_of:line433_6_,clip_working_area_clipped:false
 G0X345.05Y263.23
 F200;#010202
 ; gcode_before_path_color
@@ -588,9 +588,9 @@ M03 S1300 ; color: #010202
 G1X345.67Y261.49
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk2,node:path,mb:color:#010202,mb:id:pathSlcrom96mk2,mb:clone_of:line435_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk2,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk2,mb:clone_of:line435_6_,clip_working_area_clipped:false
 G0X346.13Y263.61
 F200;#010202
 ; gcode_before_path_color
@@ -602,7 +602,7 @@ G1X346.75Y261.87
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk2,node:path,mb:color:#010202,mb:id:pathSlcrom96mk2,mb:clone_of:line435_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk2,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk2,mb:clone_of:line435_6_,clip_working_area_clipped:false
 G0X346.13Y263.61
 F200;#010202
 ; gcode_before_path_color
@@ -613,9 +613,9 @@ M03 S1300 ; color: #010202
 G1X346.75Y261.87
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk3,node:path,mb:color:#010202,mb:id:pathSlcrom96mk3,mb:clone_of:line437_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk3,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk3,mb:clone_of:line437_6_,clip_working_area_clipped:false
 G0X347.21Y264.00
 F200;#010202
 ; gcode_before_path_color
@@ -627,7 +627,7 @@ G1X347.82Y262.25
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk3,node:path,mb:color:#010202,mb:id:pathSlcrom96mk3,mb:clone_of:line437_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk3,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk3,mb:clone_of:line437_6_,clip_working_area_clipped:false
 G0X347.21Y264.00
 F200;#010202
 ; gcode_before_path_color
@@ -638,9 +638,9 @@ M03 S1300 ; color: #010202
 G1X347.82Y262.25
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk4,node:path,mb:color:#010202,mb:id:pathSlcrom96mk4,mb:clone_of:line439_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk4,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk4,mb:clone_of:line439_6_,clip_working_area_clipped:false
 G0X348.28Y264.38
 F200;#010202
 ; gcode_before_path_color
@@ -652,7 +652,7 @@ G1X348.90Y262.63
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk4,node:path,mb:color:#010202,mb:id:pathSlcrom96mk4,mb:clone_of:line439_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk4,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk4,mb:clone_of:line439_6_,clip_working_area_clipped:false
 G0X348.28Y264.38
 F200;#010202
 ; gcode_before_path_color
@@ -663,9 +663,9 @@ M03 S1300 ; color: #010202
 G1X348.90Y262.63
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk7,node:path,mb:color:#010202,mb:id:pathSlcrom96mk7,mb:clone_of:line445_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk7,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk7,mb:clone_of:line445_6_,clip_working_area_clipped:false
 G0X350.44Y265.14
 F200;#010202
 ; gcode_before_path_color
@@ -677,7 +677,7 @@ G1X351.06Y263.40
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk7,node:path,mb:color:#010202,mb:id:pathSlcrom96mk7,mb:clone_of:line445_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk7,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk7,mb:clone_of:line445_6_,clip_working_area_clipped:false
 G0X350.44Y265.14
 F200;#010202
 ; gcode_before_path_color
@@ -688,9 +688,9 @@ M03 S1300 ; color: #010202
 G1X351.06Y263.40
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk8,node:path,mb:color:#010202,mb:id:pathSlcrom96mk8,mb:clone_of:line447_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk8,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk8,mb:clone_of:line447_6_,clip_working_area_clipped:false
 G0X351.52Y265.52
 F200;#010202
 ; gcode_before_path_color
@@ -702,7 +702,7 @@ G1X352.14Y263.78
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk8,node:path,mb:color:#010202,mb:id:pathSlcrom96mk8,mb:clone_of:line447_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk8,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk8,mb:clone_of:line447_6_,clip_working_area_clipped:false
 G0X351.52Y265.52
 F200;#010202
 ; gcode_before_path_color
@@ -713,9 +713,9 @@ M03 S1300 ; color: #010202
 G1X352.14Y263.78
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk9,node:path,mb:color:#010202,mb:id:pathSlcrom96mk9,mb:clone_of:line449_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk9,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk9,mb:clone_of:line449_6_,clip_working_area_clipped:false
 G0X352.60Y265.91
 F200;#010202
 ; gcode_before_path_color
@@ -727,7 +727,7 @@ G1X353.22Y264.16
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk9,node:path,mb:color:#010202,mb:id:pathSlcrom96mk9,mb:clone_of:line449_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk9,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk9,mb:clone_of:line449_6_,clip_working_area_clipped:false
 G0X352.60Y265.91
 F200;#010202
 ; gcode_before_path_color
@@ -738,9 +738,9 @@ M03 S1300 ; color: #010202
 G1X353.22Y264.16
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk6,node:path,mb:color:#010202,mb:id:pathSlcrom96mk6,mb:clone_of:line443_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk6,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk6,mb:clone_of:line443_6_,clip_working_area_clipped:false
 G0X353.68Y266.29
 F200;#010202
 ; gcode_before_path_color
@@ -752,7 +752,7 @@ G1X354.29Y264.54
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk6,node:path,mb:color:#010202,mb:id:pathSlcrom96mk6,mb:clone_of:line443_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk6,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk6,mb:clone_of:line443_6_,clip_working_area_clipped:false
 G0X353.68Y266.29
 F200;#010202
 ; gcode_before_path_color
@@ -763,9 +763,9 @@ M03 S1300 ; color: #010202
 G1X354.29Y264.54
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk5,node:path,mb:color:#010202,mb:id:pathSlcrom96mk5,mb:clone_of:line441_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk5,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk5,mb:clone_of:line441_6_,clip_working_area_clipped:false
 G0X348.77Y266.44
 F200;#010202
 ; gcode_before_path_color
@@ -777,7 +777,7 @@ G1X349.98Y263.02
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk5,node:path,mb:color:#010202,mb:id:pathSlcrom96mk5,mb:clone_of:line441_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk5,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk5,mb:clone_of:line441_6_,clip_working_area_clipped:false
 G0X348.77Y266.44
 F200;#010202
 ; gcode_before_path_color
@@ -788,9 +788,9 @@ M03 S1300 ; color: #010202
 G1X349.98Y263.02
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mk0,node:path,mb:color:#010202,mb:id:pathSlcrom96mk0,mb:clone_of:line431_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk0,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk0,mb:clone_of:line431_6_,clip_working_area_clipped:false
 G0X343.38Y264.53
 F200;#010202
 ; gcode_before_path_color
@@ -802,7 +802,7 @@ G1X344.59Y261.11
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mk0,node:path,mb:color:#010202,mb:id:pathSlcrom96mk0,mb:clone_of:line431_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnk0,node:path,mb:color:#010202,mb:id:pathSlctbcdvnk0,mb:clone_of:line431_6_,clip_working_area_clipped:false
 G0X343.38Y264.53
 F200;#010202
 ; gcode_before_path_color
@@ -813,9 +813,9 @@ M03 S1300 ; color: #010202
 G1X344.59Y261.11
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkg,node:path,mb:color:#010202,mb:id:pathSlcrom96mkg,mb:clone_of:line463_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkg,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkg,mb:clone_of:line463_6_,clip_working_area_clipped:false
 G0X337.99Y262.62
 F200;#010202
 ; gcode_before_path_color
@@ -827,7 +827,7 @@ G1X339.20Y259.20
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkg,node:path,mb:color:#010202,mb:id:pathSlcrom96mkg,mb:clone_of:line463_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkg,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkg,mb:clone_of:line463_6_,clip_working_area_clipped:false
 G0X337.99Y262.62
 F200;#010202
 ; gcode_before_path_color
@@ -838,9 +838,9 @@ M03 S1300 ; color: #010202
 G1X339.20Y259.20
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkb,node:path,mb:color:#010202,mb:id:pathSlcrom96mkb,mb:clone_of:line453_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkb,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkb,mb:clone_of:line453_6_,clip_working_area_clipped:false
 G0X332.59Y260.71
 F200;#010202
 ; gcode_before_path_color
@@ -852,7 +852,7 @@ G1X333.81Y257.29
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkb,node:path,mb:color:#010202,mb:id:pathSlcrom96mkb,mb:clone_of:line453_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkb,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkb,mb:clone_of:line453_6_,clip_working_area_clipped:false
 G0X332.59Y260.71
 F200;#010202
 ; gcode_before_path_color
@@ -863,9 +863,9 @@ M03 S1300 ; color: #010202
 G1X333.81Y257.29
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkq,node:path,mb:color:#010202,mb:id:pathSlcrom96mkq,mb:clone_of:line483_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkq,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkq,mb:clone_of:line483_6_,clip_working_area_clipped:false
 G0X327.20Y258.80
 F200;#010202
 ; gcode_before_path_color
@@ -877,7 +877,7 @@ G1X328.42Y255.38
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkq,node:path,mb:color:#010202,mb:id:pathSlcrom96mkq,mb:clone_of:line483_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkq,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkq,mb:clone_of:line483_6_,clip_working_area_clipped:false
 G0X327.20Y258.80
 F200;#010202
 ; gcode_before_path_color
@@ -888,9 +888,9 @@ M03 S1300 ; color: #010202
 G1X328.42Y255.38
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkl,node:path,mb:color:#010202,mb:id:pathSlcrom96mkl,mb:clone_of:line473_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkl,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkl,mb:clone_of:line473_6_,clip_working_area_clipped:false
 G0X321.81Y256.89
 F200;#010202
 ; gcode_before_path_color
@@ -902,7 +902,7 @@ G1X323.02Y253.47
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkl,node:path,mb:color:#010202,mb:id:pathSlcrom96mkl,mb:clone_of:line473_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkl,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkl,mb:clone_of:line473_6_,clip_working_area_clipped:false
 G0X321.81Y256.89
 F200;#010202
 ; gcode_before_path_color
@@ -913,9 +913,9 @@ M03 S1300 ; color: #010202
 G1X323.02Y253.47
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#010202, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#010202', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mkw,node:path,mb:color:#010202,mb:id:pathSlcrom96mkw,mb:clone_of:line495_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkw,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkw,mb:clone_of:line495_5_,clip_working_area_clipped:false
 G0X316.42Y254.98
 F200;#010202
 ; gcode_before_path_color
@@ -927,7 +927,7 @@ G1X317.63Y251.56
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mkw,node:path,mb:color:#010202,mb:id:pathSlcrom96mkw,mb:clone_of:line495_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnkw,node:path,mb:color:#010202,mb:id:pathSlctbcdvnkw,mb:clone_of:line495_5_,clip_working_area_clipped:false
 G0X316.42Y254.98
 F200;#010202
 ; gcode_before_path_color
@@ -942,9 +942,9 @@ M05
 M100P100 ; mrbeam_compressor: 100
 G4P0.2
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#e52424, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e52424', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#e52424, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e52424', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mh6,node:path,mb:color:#e52424,mb:id:pathSlcrom96mh6,mb:clone_of:path619_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnh6,node:path,mb:color:#e52424,mb:id:pathSlctbcdvnh6,mb:clone_of:path619_6_,clip_working_area_clipped:false
 G0X344.98Y270.74
 F200;#e52424
 ; gcode_before_path_color
@@ -973,7 +973,7 @@ G1X344.98Y270.74
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mh6,node:path,mb:color:#e52424,mb:id:pathSlcrom96mh6,mb:clone_of:path619_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnh6,node:path,mb:color:#e52424,mb:id:pathSlctbcdvnh6,mb:clone_of:path619_6_,clip_working_area_clipped:false
 G0X344.98Y270.74
 F200;#e52424
 ; gcode_before_path_color
@@ -1001,9 +1001,9 @@ G1X318.56Y261.38
 G1X344.98Y270.74
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#e52424, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e52424', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#e52424, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e52424', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mh9,node:path,mb:color:#e52424,mb:id:pathSlcrom96mh9,mb:clone_of:path674_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnh9,node:path,mb:color:#e52424,mb:id:pathSlctbcdvnh9,mb:clone_of:path674_6_,clip_working_area_clipped:false
 G0X351.44Y252.52
 F200;#e52424
 ; gcode_before_path_color
@@ -1032,7 +1032,7 @@ G1X351.44Y252.52
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mh9,node:path,mb:color:#e52424,mb:id:pathSlcrom96mh9,mb:clone_of:path674_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnh9,node:path,mb:color:#e52424,mb:id:pathSlctbcdvnh9,mb:clone_of:path674_6_,clip_working_area_clipped:false
 G0X351.44Y252.52
 F200;#e52424
 ; gcode_before_path_color
@@ -1060,9 +1060,9 @@ G1X325.01Y243.17
 G1X351.44Y252.52
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#e52424, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e52424', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#e52424, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e52424', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mig,node:path,mb:color:#e52424,mb:id:pathSlcrom96mig,mb:clone_of:wa_vyvihu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnig,node:path,mb:color:#e52424,mb:id:pathSlctbcdvnig,mb:clone_of:wa_jugado-0,clip_working_area_clipped:false
 G0X323.44Y355.10
 F200;#e52424
 ; gcode_before_path_color
@@ -1117,7 +1117,7 @@ G1X323.44Y355.10
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mig,node:path,mb:color:#e52424,mb:id:pathSlcrom96mig,mb:clone_of:wa_vyvihu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnig,node:path,mb:color:#e52424,mb:id:pathSlctbcdvnig,mb:clone_of:wa_jugado-0,clip_working_area_clipped:false
 G0X323.44Y355.10
 F200;#e52424
 ; gcode_before_path_color
@@ -1175,9 +1175,9 @@ M05
 M100P100 ; mrbeam_compressor: 100
 G4P0.2
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mel,node:path,mb:color:#000000,mb:id:pathSlcrom96mel,mb:clone_of:wa_zedoge-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnel,node:path,mb:color:#000000,mb:id:pathSlctbcdvnel,mb:clone_of:wa_qotaju-0,clip_working_area_clipped:false
 G0X330.28Y326.08
 F200;#000000
 ; gcode_before_path_color
@@ -1213,7 +1213,7 @@ G1X330.28Y326.08
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mel,node:path,mb:color:#000000,mb:id:pathSlcrom96mel,mb:clone_of:wa_zedoge-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnel,node:path,mb:color:#000000,mb:id:pathSlctbcdvnel,mb:clone_of:wa_qotaju-0,clip_working_area_clipped:false
 G0X330.28Y326.08
 F200;#000000
 ; gcode_before_path_color
@@ -1248,9 +1248,9 @@ G1X330.17Y326.29
 G1X330.28Y326.08
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mek,node:path,mb:color:#000000,mb:id:pathSlcrom96mek,mb:clone_of:wa_hesuli-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnek,node:path,mb:color:#000000,mb:id:pathSlctbcdvnek,mb:clone_of:wa_buzywu-0,clip_working_area_clipped:false
 G0X331.19Y323.50
 F200;#000000
 ; gcode_before_path_color
@@ -1286,7 +1286,7 @@ G1X331.19Y323.50
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mek,node:path,mb:color:#000000,mb:id:pathSlcrom96mek,mb:clone_of:wa_hesuli-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnek,node:path,mb:color:#000000,mb:id:pathSlctbcdvnek,mb:clone_of:wa_buzywu-0,clip_working_area_clipped:false
 G0X331.19Y323.50
 F200;#000000
 ; gcode_before_path_color
@@ -1321,9 +1321,9 @@ G1X331.08Y323.72
 G1X331.19Y323.50
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mep,node:path,mb:color:#000000,mb:id:pathSlcrom96mep,mb:clone_of:wa_sovyvy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnep,node:path,mb:color:#000000,mb:id:pathSlctbcdvnep,mb:clone_of:wa_vaxuxo-0,clip_working_area_clipped:false
 G0X333.13Y322.16
 F200;#000000
 ; gcode_before_path_color
@@ -1343,7 +1343,7 @@ G1X328.90Y320.67
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mep,node:path,mb:color:#000000,mb:id:pathSlcrom96mep,mb:clone_of:wa_sovyvy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnep,node:path,mb:color:#000000,mb:id:pathSlctbcdvnep,mb:clone_of:wa_vaxuxo-0,clip_working_area_clipped:false
 G0X333.13Y322.16
 F200;#000000
 ; gcode_before_path_color
@@ -1362,9 +1362,9 @@ G1X324.82Y332.22
 G1X328.90Y320.67
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mej,node:path,mb:color:#000000,mb:id:pathSlcrom96mej,mb:clone_of:wa_bunafe-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnej,node:path,mb:color:#000000,mb:id:pathSlctbcdvnej,mb:clone_of:wa_tifavy-0,clip_working_area_clipped:false
 G0X331.27Y319.84
 F200;#000000
 ; gcode_before_path_color
@@ -1429,7 +1429,7 @@ G1X330.58Y320.35
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mej,node:path,mb:color:#000000,mb:id:pathSlcrom96mej,mb:clone_of:wa_bunafe-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnej,node:path,mb:color:#000000,mb:id:pathSlctbcdvnej,mb:clone_of:wa_tifavy-0,clip_working_area_clipped:false
 G0X331.27Y319.84
 F200;#000000
 ; gcode_before_path_color
@@ -1493,9 +1493,9 @@ G1X330.80Y320.36
 G1X330.58Y320.35
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mei,node:path,mb:color:#000000,mb:id:pathSlcrom96mei,mb:clone_of:wa_hymity-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnei,node:path,mb:color:#000000,mb:id:pathSlctbcdvnei,mb:clone_of:wa_botejo-0,clip_working_area_clipped:false
 G0X332.59Y318.17
 F200;#000000
 ; gcode_before_path_color
@@ -1539,7 +1539,7 @@ G1X332.59Y318.17
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mei,node:path,mb:color:#000000,mb:id:pathSlcrom96mei,mb:clone_of:wa_hymity-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnei,node:path,mb:color:#000000,mb:id:pathSlctbcdvnei,mb:clone_of:wa_botejo-0,clip_working_area_clipped:false
 G0X332.59Y318.17
 F200;#000000
 ; gcode_before_path_color
@@ -1582,9 +1582,9 @@ G1X332.84Y318.39
 G1X332.59Y318.17
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96meh,node:path,mb:color:#000000,mb:id:pathSlcrom96meh,mb:clone_of:wa_fuvosi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvneh,node:path,mb:color:#000000,mb:id:pathSlctbcdvneh,mb:clone_of:wa_zofihe-0,clip_working_area_clipped:false
 G0X332.75Y316.83
 F200;#000000
 ; gcode_before_path_color
@@ -1599,7 +1599,7 @@ G1X332.75Y316.83
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96meh,node:path,mb:color:#000000,mb:id:pathSlcrom96meh,mb:clone_of:wa_fuvosi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvneh,node:path,mb:color:#000000,mb:id:pathSlctbcdvneh,mb:clone_of:wa_zofihe-0,clip_working_area_clipped:false
 G0X332.75Y316.83
 F200;#000000
 ; gcode_before_path_color
@@ -1613,9 +1613,9 @@ G1X332.44Y317.70
 G1X332.75Y316.83
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96meg,node:path,mb:color:#000000,mb:id:pathSlcrom96meg,mb:clone_of:wa_juheqy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvneg,node:path,mb:color:#000000,mb:id:pathSlctbcdvneg,mb:clone_of:wa_teruqo-0,clip_working_area_clipped:false
 G0X332.99Y315.14
 F200;#000000
 ; gcode_before_path_color
@@ -1658,7 +1658,7 @@ G1X333.61Y316.04
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96meg,node:path,mb:color:#000000,mb:id:pathSlcrom96meg,mb:clone_of:wa_juheqy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvneg,node:path,mb:color:#000000,mb:id:pathSlctbcdvneg,mb:clone_of:wa_teruqo-0,clip_working_area_clipped:false
 G0X332.99Y315.14
 F200;#000000
 ; gcode_before_path_color
@@ -1700,9 +1700,9 @@ G1X333.63Y315.85
 G1X333.61Y316.04
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mef,node:path,mb:color:#000000,mb:id:pathSlcrom96mef,mb:clone_of:wa_tegemy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnef,node:path,mb:color:#000000,mb:id:pathSlctbcdvnef,mb:clone_of:wa_haxufy-0,clip_working_area_clipped:false
 G0X334.41Y313.81
 F200;#000000
 ; gcode_before_path_color
@@ -1731,7 +1731,7 @@ G1X334.41Y313.81
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mef,node:path,mb:color:#000000,mb:id:pathSlcrom96mef,mb:clone_of:wa_tegemy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnef,node:path,mb:color:#000000,mb:id:pathSlctbcdvnef,mb:clone_of:wa_haxufy-0,clip_working_area_clipped:false
 G0X334.41Y313.81
 F200;#000000
 ; gcode_before_path_color
@@ -1759,9 +1759,9 @@ G1X334.59Y313.91
 G1X334.41Y313.81
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdo,node:path,mb:color:#000000,mb:id:pathSlcrom96mdo,mb:clone_of:path690_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndo,node:path,mb:color:#000000,mb:id:pathSlctbcdvndo,mb:clone_of:path690_6_,clip_working_area_clipped:false
 G0X336.82Y311.75
 F200;#000000
 ; gcode_before_path_color
@@ -1786,7 +1786,7 @@ G1X336.82Y311.75
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdo,node:path,mb:color:#000000,mb:id:pathSlcrom96mdo,mb:clone_of:path690_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndo,node:path,mb:color:#000000,mb:id:pathSlctbcdvndo,mb:clone_of:path690_6_,clip_working_area_clipped:false
 G0X336.82Y311.75
 F200;#000000
 ; gcode_before_path_color
@@ -1810,9 +1810,9 @@ G1X336.74Y311.85
 G1X336.82Y311.75
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdp,node:path,mb:color:#000000,mb:id:pathSlcrom96mdp,mb:clone_of:path694_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndp,node:path,mb:color:#000000,mb:id:pathSlctbcdvndp,mb:clone_of:path694_6_,clip_working_area_clipped:false
 G0X325.49Y307.73
 F200;#000000
 ; gcode_before_path_color
@@ -1837,7 +1837,7 @@ G1X325.49Y307.73
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdp,node:path,mb:color:#000000,mb:id:pathSlcrom96mdp,mb:clone_of:path694_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndp,node:path,mb:color:#000000,mb:id:pathSlctbcdvndp,mb:clone_of:path694_6_,clip_working_area_clipped:false
 G0X325.49Y307.73
 F200;#000000
 ; gcode_before_path_color
@@ -1861,9 +1861,9 @@ G1X325.40Y307.84
 G1X325.49Y307.73
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96me7,node:path,mb:color:#000000,mb:id:pathSlcrom96me7,mb:clone_of:wa_xixofu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne7,node:path,mb:color:#000000,mb:id:pathSlctbcdvne7,mb:clone_of:wa_zapopa-0,clip_working_area_clipped:false
 G0X321.45Y309.79
 F200;#000000
 ; gcode_before_path_color
@@ -1881,7 +1881,7 @@ G1X321.45Y309.79
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96me7,node:path,mb:color:#000000,mb:id:pathSlcrom96me7,mb:clone_of:wa_xixofu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne7,node:path,mb:color:#000000,mb:id:pathSlctbcdvne7,mb:clone_of:wa_zapopa-0,clip_working_area_clipped:false
 G0X321.45Y309.79
 F200;#000000
 ; gcode_before_path_color
@@ -1898,9 +1898,9 @@ G1X323.19Y310.44
 G1X321.45Y309.79
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96me8,node:path,mb:color:#000000,mb:id:pathSlcrom96me8,mb:clone_of:wa_byluvo-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne8,node:path,mb:color:#000000,mb:id:pathSlctbcdvne8,mb:clone_of:wa_tazubo-0,clip_working_area_clipped:false
 G0X322.60Y311.49
 F200;#000000
 ; gcode_before_path_color
@@ -1929,7 +1929,7 @@ G1X322.60Y311.49
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96me8,node:path,mb:color:#000000,mb:id:pathSlcrom96me8,mb:clone_of:wa_byluvo-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne8,node:path,mb:color:#000000,mb:id:pathSlctbcdvne8,mb:clone_of:wa_tazubo-0,clip_working_area_clipped:false
 G0X322.60Y311.49
 F200;#000000
 ; gcode_before_path_color
@@ -1957,9 +1957,9 @@ G1X322.78Y311.59
 G1X322.60Y311.49
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96me9,node:path,mb:color:#000000,mb:id:pathSlcrom96me9,mb:clone_of:wa_sisijo-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne9,node:path,mb:color:#000000,mb:id:pathSlctbcdvne9,mb:clone_of:wa_havofu-0,clip_working_area_clipped:false
 G0X321.52Y312.85
 F200;#000000
 ; gcode_before_path_color
@@ -1974,7 +1974,7 @@ G1X321.52Y312.85
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96me9,node:path,mb:color:#000000,mb:id:pathSlcrom96me9,mb:clone_of:wa_sisijo-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne9,node:path,mb:color:#000000,mb:id:pathSlctbcdvne9,mb:clone_of:wa_havofu-0,clip_working_area_clipped:false
 G0X321.52Y312.85
 F200;#000000
 ; gcode_before_path_color
@@ -1988,9 +1988,9 @@ G1X321.21Y313.72
 G1X321.52Y312.85
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mea,node:path,mb:color:#000000,mb:id:pathSlcrom96mea,mb:clone_of:wa_xametu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnea,node:path,mb:color:#000000,mb:id:pathSlctbcdvnea,mb:clone_of:wa_cyvaja-0,clip_working_area_clipped:false
 G0X321.36Y314.19
 F200;#000000
 ; gcode_before_path_color
@@ -2034,7 +2034,7 @@ G1X321.36Y314.19
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mea,node:path,mb:color:#000000,mb:id:pathSlcrom96mea,mb:clone_of:wa_xametu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnea,node:path,mb:color:#000000,mb:id:pathSlctbcdvnea,mb:clone_of:wa_cyvaja-0,clip_working_area_clipped:false
 G0X321.36Y314.19
 F200;#000000
 ; gcode_before_path_color
@@ -2077,9 +2077,9 @@ G1X321.61Y314.41
 G1X321.36Y314.19
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96meb,node:path,mb:color:#000000,mb:id:pathSlcrom96meb,mb:clone_of:wa_wikyli-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvneb,node:path,mb:color:#000000,mb:id:pathSlctbcdvneb,mb:clone_of:wa_wozuri-0,clip_working_area_clipped:false
 G0X320.19Y315.62
 F200;#000000
 ; gcode_before_path_color
@@ -2122,7 +2122,7 @@ G1X320.80Y316.52
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96meb,node:path,mb:color:#000000,mb:id:pathSlcrom96meb,mb:clone_of:wa_wikyli-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvneb,node:path,mb:color:#000000,mb:id:pathSlctbcdvneb,mb:clone_of:wa_wozuri-0,clip_working_area_clipped:false
 G0X320.19Y315.62
 F200;#000000
 ; gcode_before_path_color
@@ -2164,9 +2164,9 @@ G1X320.82Y316.33
 G1X320.80Y316.52
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96meo,node:path,mb:color:#000000,mb:id:pathSlcrom96meo,mb:clone_of:wa_hamyny-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvneo,node:path,mb:color:#000000,mb:id:pathSlctbcdvneo,mb:clone_of:wa_foryso-0,clip_working_area_clipped:false
 G0X321.80Y318.15
 F200;#000000
 ; gcode_before_path_color
@@ -2186,7 +2186,7 @@ G1X317.57Y316.65
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96meo,node:path,mb:color:#000000,mb:id:pathSlcrom96meo,mb:clone_of:wa_hamyny-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvneo,node:path,mb:color:#000000,mb:id:pathSlctbcdvneo,mb:clone_of:wa_foryso-0,clip_working_area_clipped:false
 G0X321.80Y318.15
 F200;#000000
 ; gcode_before_path_color
@@ -2205,9 +2205,9 @@ G1X313.48Y328.21
 G1X317.57Y316.65
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mec,node:path,mb:color:#000000,mb:id:pathSlcrom96mec,mb:clone_of:wa_lytipu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnec,node:path,mb:color:#000000,mb:id:pathSlctbcdvnec,mb:clone_of:wa_bijily-0,clip_working_area_clipped:false
 G0X319.97Y319.53
 F200;#000000
 ; gcode_before_path_color
@@ -2243,7 +2243,7 @@ G1X319.97Y319.53
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mec,node:path,mb:color:#000000,mb:id:pathSlcrom96mec,mb:clone_of:wa_lytipu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnec,node:path,mb:color:#000000,mb:id:pathSlctbcdvnec,mb:clone_of:wa_bijily-0,clip_working_area_clipped:false
 G0X319.97Y319.53
 F200;#000000
 ; gcode_before_path_color
@@ -2278,9 +2278,9 @@ G1X319.86Y319.74
 G1X319.97Y319.53
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96med,node:path,mb:color:#000000,mb:id:pathSlcrom96med,mb:clone_of:wa_zucihy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvned,node:path,mb:color:#000000,mb:id:pathSlctbcdvned,mb:clone_of:wa_nyxome-0,clip_working_area_clipped:false
 G0X319.06Y322.10
 F200;#000000
 ; gcode_before_path_color
@@ -2316,7 +2316,7 @@ G1X319.06Y322.10
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96med,node:path,mb:color:#000000,mb:id:pathSlcrom96med,mb:clone_of:wa_zucihy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvned,node:path,mb:color:#000000,mb:id:pathSlctbcdvned,mb:clone_of:wa_nyxome-0,clip_working_area_clipped:false
 G0X319.06Y322.10
 F200;#000000
 ; gcode_before_path_color
@@ -2351,9 +2351,9 @@ G1X318.95Y322.31
 G1X319.06Y322.10
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96men,node:path,mb:color:#000000,mb:id:pathSlcrom96men,mb:clone_of:wa_wyguce-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnen,node:path,mb:color:#000000,mb:id:pathSlctbcdvnen,mb:clone_of:wa_siviwu-0,clip_working_area_clipped:false
 G0X310.68Y314.21
 F200;#000000
 ; gcode_before_path_color
@@ -2373,7 +2373,7 @@ G1X306.45Y312.72
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96men,node:path,mb:color:#000000,mb:id:pathSlcrom96men,mb:clone_of:wa_wyguce-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnen,node:path,mb:color:#000000,mb:id:pathSlctbcdvnen,mb:clone_of:wa_siviwu-0,clip_working_area_clipped:false
 G0X310.68Y314.21
 F200;#000000
 ; gcode_before_path_color
@@ -2392,9 +2392,9 @@ G1X302.37Y324.27
 G1X306.45Y312.72
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96me3,node:path,mb:color:#000000,mb:id:pathSlcrom96me3,mb:clone_of:wa_mokoka-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne3,node:path,mb:color:#000000,mb:id:pathSlctbcdvne3,mb:clone_of:wa_carohu-0,clip_working_area_clipped:false
 G0X309.71Y311.91
 F200;#000000
 ; gcode_before_path_color
@@ -2420,7 +2420,7 @@ G1X309.71Y311.91
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96me3,node:path,mb:color:#000000,mb:id:pathSlcrom96me3,mb:clone_of:wa_mokoka-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne3,node:path,mb:color:#000000,mb:id:pathSlctbcdvne3,mb:clone_of:wa_carohu-0,clip_working_area_clipped:false
 G0X309.71Y311.91
 F200;#000000
 ; gcode_before_path_color
@@ -2445,9 +2445,9 @@ G1X309.46Y312.78
 G1X309.71Y311.91
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96me2,node:path,mb:color:#000000,mb:id:pathSlcrom96me2,mb:clone_of:wa_cehoti-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne2,node:path,mb:color:#000000,mb:id:pathSlctbcdvne2,mb:clone_of:wa_xodigy-0,clip_working_area_clipped:false
 G0X310.47Y310.41
 F200;#000000
 ; gcode_before_path_color
@@ -2476,7 +2476,7 @@ G1X310.47Y310.41
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96me2,node:path,mb:color:#000000,mb:id:pathSlcrom96me2,mb:clone_of:wa_cehoti-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne2,node:path,mb:color:#000000,mb:id:pathSlctbcdvne2,mb:clone_of:wa_xodigy-0,clip_working_area_clipped:false
 G0X310.47Y310.41
 F200;#000000
 ; gcode_before_path_color
@@ -2504,9 +2504,9 @@ G1X310.65Y310.51
 G1X310.47Y310.41
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96me1,node:path,mb:color:#000000,mb:id:pathSlcrom96me1,mb:clone_of:wa_decebi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne1,node:path,mb:color:#000000,mb:id:pathSlctbcdvne1,mb:clone_of:wa_zymoti-0,clip_working_area_clipped:false
 G0X310.38Y308.97
 F200;#000000
 ; gcode_before_path_color
@@ -2521,7 +2521,7 @@ G1X310.38Y308.97
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96me1,node:path,mb:color:#000000,mb:id:pathSlcrom96me1,mb:clone_of:wa_decebi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne1,node:path,mb:color:#000000,mb:id:pathSlctbcdvne1,mb:clone_of:wa_zymoti-0,clip_working_area_clipped:false
 G0X310.38Y308.97
 F200;#000000
 ; gcode_before_path_color
@@ -2535,9 +2535,9 @@ G1X310.07Y309.84
 G1X310.38Y308.97
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96me0,node:path,mb:color:#000000,mb:id:pathSlcrom96me0,mb:clone_of:wa_cedaxi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne0,node:path,mb:color:#000000,mb:id:pathSlctbcdvne0,mb:clone_of:wa_sokuju-0,clip_working_area_clipped:false
 G0X310.55Y307.38
 F200;#000000
 ; gcode_before_path_color
@@ -2577,7 +2577,7 @@ G1X311.24Y308.19
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96me0,node:path,mb:color:#000000,mb:id:pathSlcrom96me0,mb:clone_of:wa_cedaxi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne0,node:path,mb:color:#000000,mb:id:pathSlctbcdvne0,mb:clone_of:wa_sokuju-0,clip_working_area_clipped:false
 G0X310.55Y307.38
 F200;#000000
 ; gcode_before_path_color
@@ -2616,9 +2616,9 @@ G1X311.24Y307.90
 G1X311.24Y308.19
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdq,node:path,mb:color:#000000,mb:id:pathSlcrom96mdq,mb:clone_of:path698_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndq,node:path,mb:color:#000000,mb:id:pathSlctbcdvndq,mb:clone_of:path698_6_,clip_working_area_clipped:false
 G0X314.37Y303.80
 F200;#000000
 ; gcode_before_path_color
@@ -2643,7 +2643,7 @@ G1X314.37Y303.80
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdq,node:path,mb:color:#000000,mb:id:pathSlcrom96mdq,mb:clone_of:path698_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndq,node:path,mb:color:#000000,mb:id:pathSlctbcdvndq,mb:clone_of:path698_6_,clip_working_area_clipped:false
 G0X314.37Y303.80
 F200;#000000
 ; gcode_before_path_color
@@ -2667,9 +2667,9 @@ G1X314.29Y303.90
 G1X314.37Y303.80
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdr,node:path,mb:color:#000000,mb:id:pathSlcrom96mdr,mb:clone_of:path702_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndr,node:path,mb:color:#000000,mb:id:pathSlctbcdvndr,mb:clone_of:path702_5_,clip_working_area_clipped:false
 G0X303.08Y299.80
 F200;#000000
 ; gcode_before_path_color
@@ -2694,7 +2694,7 @@ G1X303.08Y299.80
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdr,node:path,mb:color:#000000,mb:id:pathSlcrom96mdr,mb:clone_of:path702_5_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndr,node:path,mb:color:#000000,mb:id:pathSlctbcdvndr,mb:clone_of:path702_5_,clip_working_area_clipped:false
 G0X303.08Y299.80
 F200;#000000
 ; gcode_before_path_color
@@ -2718,9 +2718,9 @@ G1X303.00Y299.90
 G1X303.08Y299.80
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdt,node:path,mb:color:#000000,mb:id:pathSlcrom96mdt,mb:clone_of:wa_dojuhy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndt,node:path,mb:color:#000000,mb:id:pathSlctbcdvndt,mb:clone_of:wa_hehuko-0,clip_working_area_clipped:false
 G0X298.55Y303.60
 F200;#000000
 ; gcode_before_path_color
@@ -2738,7 +2738,7 @@ G1X298.55Y303.60
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdt,node:path,mb:color:#000000,mb:id:pathSlcrom96mdt,mb:clone_of:wa_dojuhy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndt,node:path,mb:color:#000000,mb:id:pathSlctbcdvndt,mb:clone_of:wa_hehuko-0,clip_working_area_clipped:false
 G0X298.55Y303.60
 F200;#000000
 ; gcode_before_path_color
@@ -2755,9 +2755,9 @@ G1X300.28Y304.25
 G1X298.55Y303.60
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdu,node:path,mb:color:#000000,mb:id:pathSlcrom96mdu,mb:clone_of:wa_medopy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndu,node:path,mb:color:#000000,mb:id:pathSlctbcdvndu,mb:clone_of:wa_tijulu-0,clip_working_area_clipped:false
 G0X299.20Y305.01
 F200;#000000
 ; gcode_before_path_color
@@ -2772,7 +2772,7 @@ G1X299.20Y305.01
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdu,node:path,mb:color:#000000,mb:id:pathSlcrom96mdu,mb:clone_of:wa_medopy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndu,node:path,mb:color:#000000,mb:id:pathSlctbcdvndu,mb:clone_of:wa_tijulu-0,clip_working_area_clipped:false
 G0X299.20Y305.01
 F200;#000000
 ; gcode_before_path_color
@@ -2786,9 +2786,9 @@ G1X298.89Y305.88
 G1X299.20Y305.01
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdv,node:path,mb:color:#000000,mb:id:pathSlcrom96mdv,mb:clone_of:wa_xumalo-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndv,node:path,mb:color:#000000,mb:id:pathSlctbcdvndv,mb:clone_of:wa_tovypo-0,clip_working_area_clipped:false
 G0X297.55Y306.41
 F200;#000000
 ; gcode_before_path_color
@@ -2806,7 +2806,7 @@ G1X297.55Y306.41
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdv,node:path,mb:color:#000000,mb:id:pathSlcrom96mdv,mb:clone_of:wa_xumalo-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndv,node:path,mb:color:#000000,mb:id:pathSlctbcdvndv,mb:clone_of:wa_tovypo-0,clip_working_area_clipped:false
 G0X297.55Y306.41
 F200;#000000
 ; gcode_before_path_color
@@ -2823,9 +2823,9 @@ G1X299.29Y307.05
 G1X297.55Y306.41
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdw,node:path,mb:color:#000000,mb:id:pathSlcrom96mdw,mb:clone_of:wa_dehiqa-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndw,node:path,mb:color:#000000,mb:id:pathSlctbcdvndw,mb:clone_of:wa_cinegu-0,clip_working_area_clipped:false
 G0X297.79Y307.88
 F200;#000000
 ; gcode_before_path_color
@@ -2865,7 +2865,7 @@ G1X298.48Y308.68
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdw,node:path,mb:color:#000000,mb:id:pathSlcrom96mdw,mb:clone_of:wa_dehiqa-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndw,node:path,mb:color:#000000,mb:id:pathSlctbcdvndw,mb:clone_of:wa_cinegu-0,clip_working_area_clipped:false
 G0X297.79Y307.88
 F200;#000000
 ; gcode_before_path_color
@@ -2904,9 +2904,9 @@ G1X298.48Y308.40
 G1X298.48Y308.68
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mem,node:path,mb:color:#000000,mb:id:pathSlcrom96mem,mb:clone_of:wa_fuqihu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnem,node:path,mb:color:#000000,mb:id:pathSlctbcdvnem,mb:clone_of:wa_somamy-0,clip_working_area_clipped:false
 G0X299.39Y310.22
 F200;#000000
 ; gcode_before_path_color
@@ -2926,7 +2926,7 @@ G1X295.16Y308.72
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mem,node:path,mb:color:#000000,mb:id:pathSlcrom96mem,mb:clone_of:wa_fuqihu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnem,node:path,mb:color:#000000,mb:id:pathSlctbcdvnem,mb:clone_of:wa_somamy-0,clip_working_area_clipped:false
 G0X299.39Y310.22
 F200;#000000
 ; gcode_before_path_color
@@ -2945,9 +2945,9 @@ G1X291.08Y320.27
 G1X295.16Y308.72
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdx,node:path,mb:color:#000000,mb:id:pathSlcrom96mdx,mb:clone_of:wa_naradu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndx,node:path,mb:color:#000000,mb:id:pathSlctbcdvndx,mb:clone_of:wa_vuvoke-0,clip_working_area_clipped:false
 G0X297.65Y311.69
 F200;#000000
 ; gcode_before_path_color
@@ -2983,7 +2983,7 @@ G1X297.65Y311.69
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdx,node:path,mb:color:#000000,mb:id:pathSlcrom96mdx,mb:clone_of:wa_naradu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndx,node:path,mb:color:#000000,mb:id:pathSlctbcdvndx,mb:clone_of:wa_vuvoke-0,clip_working_area_clipped:false
 G0X297.65Y311.69
 F200;#000000
 ; gcode_before_path_color
@@ -3018,9 +3018,9 @@ G1X297.53Y311.90
 G1X297.65Y311.69
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdy,node:path,mb:color:#000000,mb:id:pathSlcrom96mdy,mb:clone_of:wa_rujuke-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndy,node:path,mb:color:#000000,mb:id:pathSlctbcdvndy,mb:clone_of:wa_gacita-0,clip_working_area_clipped:false
 G0X296.73Y314.26
 F200;#000000
 ; gcode_before_path_color
@@ -3056,7 +3056,7 @@ G1X296.73Y314.26
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdy,node:path,mb:color:#000000,mb:id:pathSlcrom96mdy,mb:clone_of:wa_rujuke-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndy,node:path,mb:color:#000000,mb:id:pathSlctbcdvndy,mb:clone_of:wa_gacita-0,clip_working_area_clipped:false
 G0X296.73Y314.26
 F200;#000000
 ; gcode_before_path_color
@@ -3091,9 +3091,9 @@ G1X296.62Y314.48
 G1X296.73Y314.26
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96me5,node:path,mb:color:#000000,mb:id:pathSlcrom96me5,mb:clone_of:wa_hunile-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne5,node:path,mb:color:#000000,mb:id:pathSlctbcdvne5,mb:clone_of:wa_fyxize-0,clip_working_area_clipped:false
 G0X307.92Y318.22
 F200;#000000
 ; gcode_before_path_color
@@ -3129,7 +3129,7 @@ G1X307.92Y318.22
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96me5,node:path,mb:color:#000000,mb:id:pathSlcrom96me5,mb:clone_of:wa_hunile-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne5,node:path,mb:color:#000000,mb:id:pathSlctbcdvne5,mb:clone_of:wa_fyxize-0,clip_working_area_clipped:false
 G0X307.92Y318.22
 F200;#000000
 ; gcode_before_path_color
@@ -3164,9 +3164,9 @@ G1X307.81Y318.44
 G1X307.92Y318.22
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96me4,node:path,mb:color:#000000,mb:id:pathSlcrom96me4,mb:clone_of:wa_dezapi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne4,node:path,mb:color:#000000,mb:id:pathSlctbcdvne4,mb:clone_of:wa_wulugi-0,clip_working_area_clipped:false
 G0X308.83Y315.65
 F200;#000000
 ; gcode_before_path_color
@@ -3202,7 +3202,7 @@ G1X308.83Y315.65
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96me4,node:path,mb:color:#000000,mb:id:pathSlcrom96me4,mb:clone_of:wa_dezapi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvne4,node:path,mb:color:#000000,mb:id:pathSlctbcdvne4,mb:clone_of:wa_wulugi-0,clip_working_area_clipped:false
 G0X308.83Y315.65
 F200;#000000
 ; gcode_before_path_color
@@ -3237,9 +3237,9 @@ G1X308.72Y315.86
 G1X308.83Y315.65
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdn,node:path,mb:color:#000000,mb:id:pathSlcrom96mdn,mb:clone_of:wa_wecumu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndn,node:path,mb:color:#000000,mb:id:pathSlctbcdvndn,mb:clone_of:wa_zoxyhu-0,clip_working_area_clipped:false
 G0X308.77Y274.11
 F200;#000000
 ; gcode_before_path_color
@@ -3264,7 +3264,7 @@ G1X308.77Y274.11
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdn,node:path,mb:color:#000000,mb:id:pathSlcrom96mdn,mb:clone_of:wa_wecumu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndn,node:path,mb:color:#000000,mb:id:pathSlctbcdvndn,mb:clone_of:wa_zoxyhu-0,clip_working_area_clipped:false
 G0X308.77Y274.11
 F200;#000000
 ; gcode_before_path_color
@@ -3288,9 +3288,9 @@ G1X308.19Y272.88
 G1X308.77Y274.11
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mci,node:path,mb:color:#000000,mb:id:pathSlcrom96mci,mb:clone_of:wa_suzixa-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnci,node:path,mb:color:#000000,mb:id:pathSlctbcdvnci,mb:clone_of:wa_wesomo-0,clip_working_area_clipped:false
 G0X311.59Y270.52
 F200;#000000
 ; gcode_before_path_color
@@ -3318,7 +3318,7 @@ G1X311.59Y270.52
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mci,node:path,mb:color:#000000,mb:id:pathSlcrom96mci,mb:clone_of:wa_suzixa-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnci,node:path,mb:color:#000000,mb:id:pathSlctbcdvnci,mb:clone_of:wa_wesomo-0,clip_working_area_clipped:false
 G0X311.59Y270.52
 F200;#000000
 ; gcode_before_path_color
@@ -3345,9 +3345,9 @@ G1X311.34Y270.43
 G1X311.59Y270.52
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mch,node:path,mb:color:#000000,mb:id:pathSlcrom96mch,mb:clone_of:wa_rijire-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnch,node:path,mb:color:#000000,mb:id:pathSlctbcdvnch,mb:clone_of:wa_cekixy-0,clip_working_area_clipped:false
 G0X313.31Y271.13
 F200;#000000
 ; gcode_before_path_color
@@ -3375,7 +3375,7 @@ G1X313.31Y271.13
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mch,node:path,mb:color:#000000,mb:id:pathSlcrom96mch,mb:clone_of:wa_rijire-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnch,node:path,mb:color:#000000,mb:id:pathSlctbcdvnch,mb:clone_of:wa_cekixy-0,clip_working_area_clipped:false
 G0X313.31Y271.13
 F200;#000000
 ; gcode_before_path_color
@@ -3402,9 +3402,9 @@ G1X312.88Y270.98
 G1X313.31Y271.13
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcg,node:path,mb:color:#000000,mb:id:pathSlcrom96mcg,mb:clone_of:wa_pitupi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncg,node:path,mb:color:#000000,mb:id:pathSlctbcdvncg,mb:clone_of:wa_nodewi-0,clip_working_area_clipped:false
 G0X315.88Y273.03
 F200;#000000
 ; gcode_before_path_color
@@ -3458,7 +3458,7 @@ G1X316.76Y270.36
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcg,node:path,mb:color:#000000,mb:id:pathSlcrom96mcg,mb:clone_of:wa_pitupi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncg,node:path,mb:color:#000000,mb:id:pathSlctbcdvncg,mb:clone_of:wa_nodewi-0,clip_working_area_clipped:false
 G0X315.88Y273.03
 F200;#000000
 ; gcode_before_path_color
@@ -3511,9 +3511,9 @@ G1X316.51Y270.34
 G1X316.76Y270.36
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcf,node:path,mb:color:#000000,mb:id:pathSlcrom96mcf,mb:clone_of:wa_dikiha-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncf,node:path,mb:color:#000000,mb:id:pathSlctbcdvncf,mb:clone_of:wa_kuzobo-0,clip_working_area_clipped:false
 G0X318.92Y270.25
 F200;#000000
 ; gcode_before_path_color
@@ -3540,7 +3540,7 @@ G1X318.00Y272.79
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcf,node:path,mb:color:#000000,mb:id:pathSlcrom96mcf,mb:clone_of:wa_dikiha-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncf,node:path,mb:color:#000000,mb:id:pathSlctbcdvncf,mb:clone_of:wa_kuzobo-0,clip_working_area_clipped:false
 G0X318.92Y270.25
 F200;#000000
 ; gcode_before_path_color
@@ -3566,9 +3566,9 @@ G1X317.58Y272.64
 G1X318.00Y272.79
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mce,node:path,mb:color:#000000,mb:id:pathSlcrom96mce,mb:clone_of:wa_sazeza-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnce,node:path,mb:color:#000000,mb:id:pathSlctbcdvnce,mb:clone_of:wa_xawumo-0,clip_working_area_clipped:false
 G0X320.28Y272.54
 F200;#000000
 ; gcode_before_path_color
@@ -3612,7 +3612,7 @@ G1X319.59Y271.64
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mce,node:path,mb:color:#000000,mb:id:pathSlcrom96mce,mb:clone_of:wa_sazeza-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnce,node:path,mb:color:#000000,mb:id:pathSlctbcdvnce,mb:clone_of:wa_xawumo-0,clip_working_area_clipped:false
 G0X320.28Y272.54
 F200;#000000
 ; gcode_before_path_color
@@ -3655,9 +3655,9 @@ G1X319.43Y271.90
 G1X319.59Y271.64
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcd,node:path,mb:color:#000000,mb:id:pathSlcrom96mcd,mb:clone_of:wa_rivuwy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncd,node:path,mb:color:#000000,mb:id:pathSlctbcdvncd,mb:clone_of:wa_mezugo-0,clip_working_area_clipped:false
 G0X321.34Y273.97
 F200;#000000
 ; gcode_before_path_color
@@ -3685,7 +3685,7 @@ G1X321.34Y273.97
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcd,node:path,mb:color:#000000,mb:id:pathSlcrom96mcd,mb:clone_of:wa_rivuwy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncd,node:path,mb:color:#000000,mb:id:pathSlctbcdvncd,mb:clone_of:wa_mezugo-0,clip_working_area_clipped:false
 G0X321.34Y273.97
 F200;#000000
 ; gcode_before_path_color
@@ -3712,9 +3712,9 @@ G1X320.92Y273.82
 G1X321.34Y273.97
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcc,node:path,mb:color:#000000,mb:id:pathSlcrom96mcc,mb:clone_of:wa_xemoce-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncc,node:path,mb:color:#000000,mb:id:pathSlctbcdvncc,mb:clone_of:wa_kyzoba-0,clip_working_area_clipped:false
 G0X324.44Y275.07
 F200;#000000
 ; gcode_before_path_color
@@ -3742,7 +3742,7 @@ G1X324.44Y275.07
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcc,node:path,mb:color:#000000,mb:id:pathSlcrom96mcc,mb:clone_of:wa_xemoce-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncc,node:path,mb:color:#000000,mb:id:pathSlctbcdvncc,mb:clone_of:wa_kyzoba-0,clip_working_area_clipped:false
 G0X324.44Y275.07
 F200;#000000
 ; gcode_before_path_color
@@ -3769,9 +3769,9 @@ G1X324.18Y274.98
 G1X324.44Y275.07
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcb,node:path,mb:color:#000000,mb:id:pathSlcrom96mcb,mb:clone_of:wa_vycejo-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncb,node:path,mb:color:#000000,mb:id:pathSlctbcdvncb,mb:clone_of:wa_gykexy-0,clip_working_area_clipped:false
 G0X326.25Y275.74
 F200;#000000
 ; gcode_before_path_color
@@ -3804,7 +3804,7 @@ G1X326.25Y275.74
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcb,node:path,mb:color:#000000,mb:id:pathSlcrom96mcb,mb:clone_of:wa_vycejo-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncb,node:path,mb:color:#000000,mb:id:pathSlctbcdvncb,mb:clone_of:wa_gykexy-0,clip_working_area_clipped:false
 G0X326.25Y275.74
 F200;#000000
 ; gcode_before_path_color
@@ -3836,9 +3836,9 @@ G1X325.91Y275.55
 G1X326.25Y275.74
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mca,node:path,mb:color:#000000,mb:id:pathSlcrom96mca,mb:clone_of:wa_kawupy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnca,node:path,mb:color:#000000,mb:id:pathSlctbcdvnca,mb:clone_of:wa_wigife-0,clip_working_area_clipped:false
 G0X329.37Y275.76
 F200;#000000
 ; gcode_before_path_color
@@ -3882,7 +3882,7 @@ G1X328.69Y274.86
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mca,node:path,mb:color:#000000,mb:id:pathSlcrom96mca,mb:clone_of:wa_kawupy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnca,node:path,mb:color:#000000,mb:id:pathSlctbcdvnca,mb:clone_of:wa_wigife-0,clip_working_area_clipped:false
 G0X329.37Y275.76
 F200;#000000
 ; gcode_before_path_color
@@ -3925,9 +3925,9 @@ G1X328.53Y275.13
 G1X328.69Y274.86
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mc8,node:path,mb:color:#000000,mb:id:pathSlcrom96mc8,mb:clone_of:wa_bunaba-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc8,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc8,mb:clone_of:wa_qegese-0,clip_working_area_clipped:false
 G0X331.33Y277.33
 F200;#000000
 ; gcode_before_path_color
@@ -3975,7 +3975,7 @@ G1X332.53Y275.95
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mc8,node:path,mb:color:#000000,mb:id:pathSlcrom96mc8,mb:clone_of:wa_bunaba-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc8,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc8,mb:clone_of:wa_qegese-0,clip_working_area_clipped:false
 G0X331.33Y277.33
 F200;#000000
 ; gcode_before_path_color
@@ -4022,9 +4022,9 @@ G1X332.29Y275.92
 G1X332.53Y275.95
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mc7,node:path,mb:color:#000000,mb:id:pathSlcrom96mc7,mb:clone_of:wa_zuhase-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc7,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc7,mb:clone_of:wa_vunige-0,clip_working_area_clipped:false
 G0X333.68Y278.09
 F200;#000000
 ; gcode_before_path_color
@@ -4070,7 +4070,7 @@ G1X334.51Y276.78
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mc7,node:path,mb:color:#000000,mb:id:pathSlcrom96mc7,mb:clone_of:wa_zuhase-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc7,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc7,mb:clone_of:wa_vunige-0,clip_working_area_clipped:false
 G0X333.68Y278.09
 F200;#000000
 ; gcode_before_path_color
@@ -4115,9 +4115,9 @@ G1X334.23Y277.12
 G1X334.51Y276.78
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mc6,node:path,mb:color:#000000,mb:id:pathSlcrom96mc6,mb:clone_of:wa_filimy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc6,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc6,mb:clone_of:wa_pybylu-0,clip_working_area_clipped:false
 G0X337.20Y279.59
 F200;#000000
 ; gcode_before_path_color
@@ -4132,7 +4132,7 @@ G1X337.20Y279.59
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mc6,node:path,mb:color:#000000,mb:id:pathSlcrom96mc6,mb:clone_of:wa_filimy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc6,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc6,mb:clone_of:wa_pybylu-0,clip_working_area_clipped:false
 G0X337.20Y279.59
 F200;#000000
 ; gcode_before_path_color
@@ -4146,9 +4146,9 @@ G1X336.69Y279.41
 G1X337.20Y279.59
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mc5,node:path,mb:color:#000000,mb:id:pathSlcrom96mc5,mb:clone_of:wa_tyzamy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc5,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc5,mb:clone_of:wa_jagoky-0,clip_working_area_clipped:false
 G0X338.13Y279.92
 F200;#000000
 ; gcode_before_path_color
@@ -4171,7 +4171,7 @@ G1X338.13Y279.92
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mc5,node:path,mb:color:#000000,mb:id:pathSlcrom96mc5,mb:clone_of:wa_tyzamy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc5,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc5,mb:clone_of:wa_jagoky-0,clip_working_area_clipped:false
 G0X338.13Y279.92
 F200;#000000
 ; gcode_before_path_color
@@ -4193,9 +4193,9 @@ G1X337.62Y279.74
 G1X338.13Y279.92
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mc4,node:path,mb:color:#000000,mb:id:pathSlcrom96mc4,mb:clone_of:wa_wavawy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc4,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc4,mb:clone_of:wa_demazu-0,clip_working_area_clipped:false
 G0X340.35Y280.70
 F200;#000000
 ; gcode_before_path_color
@@ -4243,7 +4243,7 @@ G1X340.69Y279.77
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mc4,node:path,mb:color:#000000,mb:id:pathSlcrom96mc4,mb:clone_of:wa_wavawy-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc4,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc4,mb:clone_of:wa_demazu-0,clip_working_area_clipped:false
 G0X340.35Y280.70
 F200;#000000
 ; gcode_before_path_color
@@ -4290,9 +4290,9 @@ G1X340.58Y280.14
 G1X340.69Y279.77
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mc3,node:path,mb:color:#000000,mb:id:pathSlcrom96mc3,mb:clone_of:wa_nyxoko-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc3,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc3,mb:clone_of:wa_dalime-0,clip_working_area_clipped:false
 G0X342.57Y281.49
 F200;#000000
 ; gcode_before_path_color
@@ -4332,7 +4332,7 @@ G1X342.57Y281.49
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mc3,node:path,mb:color:#000000,mb:id:pathSlcrom96mc3,mb:clone_of:wa_nyxoko-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc3,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc3,mb:clone_of:wa_dalime-0,clip_working_area_clipped:false
 G0X342.57Y281.49
 F200;#000000
 ; gcode_before_path_color
@@ -4371,9 +4371,9 @@ G1X342.15Y281.34
 G1X342.57Y281.49
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mc9,node:path,mb:color:#000000,mb:id:pathSlcrom96mc9,mb:clone_of:wa_lugoxi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc9,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc9,mb:clone_of:wa_jivuqo-0,clip_working_area_clipped:false
 G0X330.31Y278.12
 F200;#000000
 ; gcode_before_path_color
@@ -4405,7 +4405,7 @@ G1X331.37Y274.66
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mc9,node:path,mb:color:#000000,mb:id:pathSlcrom96mc9,mb:clone_of:wa_lugoxi-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnc9,node:path,mb:color:#000000,mb:id:pathSlctbcdvnc9,mb:clone_of:wa_jivuqo-0,clip_working_area_clipped:false
 G0X330.31Y278.12
 F200;#000000
 ; gcode_before_path_color
@@ -4436,9 +4436,9 @@ G1X330.92Y274.50
 G1X331.37Y274.66
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96md7,node:path,mb:color:#000000,mb:id:pathSlcrom96md7,mb:clone_of:path629_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd7,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd7,mb:clone_of:path629_6_,clip_working_area_clipped:false
 G0X341.72Y244.94
 F200;#000000
 ; gcode_before_path_color
@@ -4466,7 +4466,7 @@ G1X341.72Y244.94
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96md7,node:path,mb:color:#000000,mb:id:pathSlcrom96md7,mb:clone_of:path629_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd7,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd7,mb:clone_of:path629_6_,clip_working_area_clipped:false
 G0X341.72Y244.94
 F200;#000000
 ; gcode_before_path_color
@@ -4493,9 +4493,9 @@ G1X341.27Y244.78
 G1X341.72Y244.94
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96md8,node:path,mb:color:#000000,mb:id:pathSlcrom96md8,mb:clone_of:path631_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd8,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd8,mb:clone_of:path631_6_,clip_working_area_clipped:false
 G0X339.77Y244.28
 F200;#000000
 ; gcode_before_path_color
@@ -4537,7 +4537,7 @@ G1X339.77Y244.28
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96md8,node:path,mb:color:#000000,mb:id:pathSlcrom96md8,mb:clone_of:path631_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd8,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd8,mb:clone_of:path631_6_,clip_working_area_clipped:false
 G0X339.77Y244.28
 F200;#000000
 ; gcode_before_path_color
@@ -4578,9 +4578,9 @@ G1X339.19Y243.91
 G1X339.77Y244.28
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96md9,node:path,mb:color:#000000,mb:id:pathSlcrom96md9,mb:clone_of:path633_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd9,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd9,mb:clone_of:path633_6_,clip_working_area_clipped:false
 G0X336.46Y243.08
 F200;#000000
 ; gcode_before_path_color
@@ -4608,7 +4608,7 @@ G1X336.46Y243.08
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96md9,node:path,mb:color:#000000,mb:id:pathSlcrom96md9,mb:clone_of:path633_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd9,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd9,mb:clone_of:path633_6_,clip_working_area_clipped:false
 G0X336.46Y243.08
 F200;#000000
 ; gcode_before_path_color
@@ -4635,9 +4635,9 @@ G1X336.19Y242.98
 G1X336.46Y243.08
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mda,node:path,mb:color:#000000,mb:id:pathSlcrom96mda,mb:clone_of:path635_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnda,node:path,mb:color:#000000,mb:id:pathSlctbcdvnda,mb:clone_of:path635_6_,clip_working_area_clipped:false
 G0X334.16Y241.99
 F200;#000000
 ; gcode_before_path_color
@@ -4684,7 +4684,7 @@ G1X335.05Y240.57
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mda,node:path,mb:color:#000000,mb:id:pathSlcrom96mda,mb:clone_of:path635_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnda,node:path,mb:color:#000000,mb:id:pathSlctbcdvnda,mb:clone_of:path635_6_,clip_working_area_clipped:false
 G0X334.16Y241.99
 F200;#000000
 ; gcode_before_path_color
@@ -4730,9 +4730,9 @@ G1X334.77Y240.90
 G1X335.05Y240.57
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdb,node:path,mb:color:#000000,mb:id:pathSlcrom96mdb,mb:clone_of:path637_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndb,node:path,mb:color:#000000,mb:id:pathSlctbcdvndb,mb:clone_of:path637_6_,clip_working_area_clipped:false
 G0X331.70Y241.12
 F200;#000000
 ; gcode_before_path_color
@@ -4779,7 +4779,7 @@ G1X332.60Y239.70
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdb,node:path,mb:color:#000000,mb:id:pathSlcrom96mdb,mb:clone_of:path637_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndb,node:path,mb:color:#000000,mb:id:pathSlctbcdvndb,mb:clone_of:path637_6_,clip_working_area_clipped:false
 G0X331.70Y241.12
 F200;#000000
 ; gcode_before_path_color
@@ -4825,9 +4825,9 @@ G1X332.32Y240.03
 G1X332.60Y239.70
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdc,node:path,mb:color:#000000,mb:id:pathSlcrom96mdc,mb:clone_of:path639_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndc,node:path,mb:color:#000000,mb:id:pathSlctbcdvndc,mb:clone_of:path639_6_,clip_working_area_clipped:false
 G0X330.09Y240.83
 F200;#000000
 ; gcode_before_path_color
@@ -4847,7 +4847,7 @@ G1X330.09Y240.83
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdc,node:path,mb:color:#000000,mb:id:pathSlcrom96mdc,mb:clone_of:path639_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndc,node:path,mb:color:#000000,mb:id:pathSlctbcdvndc,mb:clone_of:path639_6_,clip_working_area_clipped:false
 G0X330.09Y240.83
 F200;#000000
 ; gcode_before_path_color
@@ -4866,9 +4866,9 @@ G1X329.80Y240.72
 G1X330.09Y240.83
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdh,node:path,mb:color:#000000,mb:id:pathSlcrom96mdh,mb:clone_of:path654_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndh,node:path,mb:color:#000000,mb:id:pathSlctbcdvndh,mb:clone_of:path654_6_,clip_working_area_clipped:false
 G0X333.39Y230.94
 F200;#000000
 ; gcode_before_path_color
@@ -4951,7 +4951,7 @@ G1X334.72Y230.29
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdh,node:path,mb:color:#000000,mb:id:pathSlcrom96mdh,mb:clone_of:path654_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndh,node:path,mb:color:#000000,mb:id:pathSlctbcdvndh,mb:clone_of:path654_6_,clip_working_area_clipped:false
 G0X333.39Y230.94
 F200;#000000
 ; gcode_before_path_color
@@ -5033,9 +5033,9 @@ G1X334.43Y230.13
 G1X334.72Y230.29
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mfw,node:path,mb:color:#000000,mb:id:pathSlcrom96mfw,mb:clone_of:wa_hyjuqe-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnfw,node:path,mb:color:#000000,mb:id:pathSlctbcdvnfw,mb:clone_of:wa_myfymy-0,clip_working_area_clipped:false
 G0X327.34Y230.41
 F200;#000000
 ; gcode_before_path_color
@@ -5057,7 +5057,7 @@ G1X327.34Y230.41
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mfw,node:path,mb:color:#000000,mb:id:pathSlcrom96mfw,mb:clone_of:wa_hyjuqe-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnfw,node:path,mb:color:#000000,mb:id:pathSlctbcdvnfw,mb:clone_of:wa_myfymy-0,clip_working_area_clipped:false
 G0X327.34Y230.41
 F200;#000000
 ; gcode_before_path_color
@@ -5078,9 +5078,9 @@ G1X327.28Y230.86
 G1X327.34Y230.41
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdg,node:path,mb:color:#000000,mb:id:pathSlcrom96mdg,mb:clone_of:path3572_7_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndg,node:path,mb:color:#000000,mb:id:pathSlctbcdvndg,mb:clone_of:path3572_7_,clip_working_area_clipped:false
 G0X343.31Y226.68
 F200;#000000
 ; gcode_before_path_color
@@ -5148,7 +5148,7 @@ G1X343.31Y226.68
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdg,node:path,mb:color:#000000,mb:id:pathSlcrom96mdg,mb:clone_of:path3572_7_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndg,node:path,mb:color:#000000,mb:id:pathSlctbcdvndg,mb:clone_of:path3572_7_,clip_working_area_clipped:false
 G0X343.31Y226.68
 F200;#000000
 ; gcode_before_path_color
@@ -5215,9 +5215,9 @@ G1X343.35Y226.47
 G1X343.31Y226.68
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdk,node:path,mb:color:#000000,mb:id:pathSlcrom96mdk,mb:clone_of:wa_fofije-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndk,node:path,mb:color:#000000,mb:id:pathSlctbcdvndk,mb:clone_of:wa_luroti-0,clip_working_area_clipped:false
 G0X349.57Y217.86
 F200;#000000
 ; gcode_before_path_color
@@ -5235,7 +5235,7 @@ G1X351.08Y218.39
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdk,node:path,mb:color:#000000,mb:id:pathSlcrom96mdk,mb:clone_of:wa_fofije-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndk,node:path,mb:color:#000000,mb:id:pathSlctbcdvndk,mb:clone_of:wa_luroti-0,clip_working_area_clipped:false
 G0X349.57Y217.86
 F200;#000000
 ; gcode_before_path_color
@@ -5252,9 +5252,9 @@ G1X351.40Y217.50
 G1X351.08Y218.39
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdi,node:path,mb:color:#000000,mb:id:pathSlcrom96mdi,mb:clone_of:polygon656_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndi,node:path,mb:color:#000000,mb:id:pathSlctbcdvndi,mb:clone_of:polygon656_6_,clip_working_area_clipped:false
 G0X356.41Y215.97
 F200;#000000
 ; gcode_before_path_color
@@ -5274,7 +5274,7 @@ G1X356.41Y215.97
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdi,node:path,mb:color:#000000,mb:id:pathSlcrom96mdi,mb:clone_of:polygon656_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndi,node:path,mb:color:#000000,mb:id:pathSlctbcdvndi,mb:clone_of:polygon656_6_,clip_working_area_clipped:false
 G0X356.41Y215.97
 F200;#000000
 ; gcode_before_path_color
@@ -5293,9 +5293,9 @@ G1X355.21Y216.54
 G1X356.41Y215.97
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdj,node:path,mb:color:#000000,mb:id:pathSlcrom96mdj,mb:clone_of:polygon658_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndj,node:path,mb:color:#000000,mb:id:pathSlctbcdvndj,mb:clone_of:polygon658_6_,clip_working_area_clipped:false
 G0X346.52Y213.46
 F200;#000000
 ; gcode_before_path_color
@@ -5315,7 +5315,7 @@ G1X346.52Y213.46
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdj,node:path,mb:color:#000000,mb:id:pathSlcrom96mdj,mb:clone_of:polygon658_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndj,node:path,mb:color:#000000,mb:id:pathSlctbcdvndj,mb:clone_of:polygon658_6_,clip_working_area_clipped:false
 G0X346.52Y213.46
 F200;#000000
 ; gcode_before_path_color
@@ -5334,9 +5334,9 @@ G1X347.59Y213.84
 G1X346.52Y213.46
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mfx,node:path,mb:color:#000000,mb:id:pathSlcrom96mfx,mb:clone_of:wa_bepynu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnfx,node:path,mb:color:#000000,mb:id:pathSlctbcdvnfx,mb:clone_of:wa_roteze-0,clip_working_area_clipped:false
 G0X336.73Y213.31
 F200;#000000
 ; gcode_before_path_color
@@ -5348,7 +5348,7 @@ G1X329.92Y232.54
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mfx,node:path,mb:color:#000000,mb:id:pathSlcrom96mfx,mb:clone_of:wa_bepynu-0,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnfx,node:path,mb:color:#000000,mb:id:pathSlctbcdvnfx,mb:clone_of:wa_roteze-0,clip_working_area_clipped:false
 G0X336.73Y213.31
 F200;#000000
 ; gcode_before_path_color
@@ -5359,9 +5359,9 @@ M03 S1300 ; color: #000000
 G1X329.92Y232.54
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96md6,node:path,mb:color:#000000,mb:id:pathSlcrom96md6,mb:clone_of:path627_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd6,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd6,mb:clone_of:path627_6_,clip_working_area_clipped:false
 G0X344.41Y245.93
 F200;#000000
 ; gcode_before_path_color
@@ -5394,7 +5394,7 @@ G1X344.41Y245.93
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96md6,node:path,mb:color:#000000,mb:id:pathSlcrom96md6,mb:clone_of:path627_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd6,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd6,mb:clone_of:path627_6_,clip_working_area_clipped:false
 G0X344.41Y245.93
 F200;#000000
 ; gcode_before_path_color
@@ -5426,9 +5426,9 @@ G1X344.04Y245.72
 G1X344.41Y245.93
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96md5,node:path,mb:color:#000000,mb:id:pathSlcrom96md5,mb:clone_of:path625_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd5,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd5,mb:clone_of:path625_6_,clip_working_area_clipped:false
 G0X346.32Y246.30
 F200;#000000
 ; gcode_before_path_color
@@ -5475,7 +5475,7 @@ G1X347.22Y244.88
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96md5,node:path,mb:color:#000000,mb:id:pathSlcrom96md5,mb:clone_of:path625_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd5,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd5,mb:clone_of:path625_6_,clip_working_area_clipped:false
 G0X346.32Y246.30
 F200;#000000
 ; gcode_before_path_color
@@ -5521,9 +5521,9 @@ G1X346.94Y245.21
 G1X347.22Y244.88
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96md4,node:path,mb:color:#000000,mb:id:pathSlcrom96md4,mb:clone_of:path623_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd4,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd4,mb:clone_of:path623_6_,clip_working_area_clipped:false
 G0X349.37Y245.45
 F200;#000000
 ; gcode_before_path_color
@@ -5551,7 +5551,7 @@ G1X349.37Y245.45
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96md4,node:path,mb:color:#000000,mb:id:pathSlcrom96md4,mb:clone_of:path623_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd4,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd4,mb:clone_of:path623_6_,clip_working_area_clipped:false
 G0X349.37Y245.45
 F200;#000000
 ; gcode_before_path_color
@@ -5578,9 +5578,9 @@ G1X348.91Y245.29
 G1X349.37Y245.45
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdl,node:path,mb:color:#000000,mb:id:pathSlcrom96mdl,mb:clone_of:polygon668_2_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndl,node:path,mb:color:#000000,mb:id:pathSlctbcdvndl,mb:clone_of:polygon668_2_,clip_working_area_clipped:false
 G0X362.81Y226.59
 F200;#000000
 ; gcode_before_path_color
@@ -5594,7 +5594,7 @@ G1X362.81Y226.59
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdl,node:path,mb:color:#000000,mb:id:pathSlcrom96mdl,mb:clone_of:polygon668_2_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndl,node:path,mb:color:#000000,mb:id:pathSlctbcdvndl,mb:clone_of:polygon668_2_,clip_working_area_clipped:false
 G0X362.81Y226.59
 F200;#000000
 ; gcode_before_path_color
@@ -5607,9 +5607,9 @@ G1X360.71Y226.60
 G1X362.81Y226.59
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcs,node:path,mb:color:#000000,mb:id:pathSlcrom96mcs,mb:clone_of:path595_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncs,node:path,mb:color:#000000,mb:id:pathSlctbcdvncs,mb:clone_of:path595_6_,clip_working_area_clipped:false
 G0X369.82Y204.66
 F200;#000000
 ; gcode_before_path_color
@@ -5655,7 +5655,7 @@ G1X368.21Y203.59
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcs,node:path,mb:color:#000000,mb:id:pathSlcrom96mcs,mb:clone_of:path595_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncs,node:path,mb:color:#000000,mb:id:pathSlctbcdvncs,mb:clone_of:path595_6_,clip_working_area_clipped:false
 G0X369.82Y204.66
 F200;#000000
 ; gcode_before_path_color
@@ -5700,9 +5700,9 @@ G1X368.18Y203.83
 G1X368.21Y203.59
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcr,node:path,mb:color:#000000,mb:id:pathSlcrom96mcr,mb:clone_of:path593_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncr,node:path,mb:color:#000000,mb:id:pathSlctbcdvncr,mb:clone_of:path593_6_,clip_working_area_clipped:false
 G0X370.63Y202.37
 F200;#000000
 ; gcode_before_path_color
@@ -5750,7 +5750,7 @@ G1X369.69Y202.03
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcr,node:path,mb:color:#000000,mb:id:pathSlcrom96mcr,mb:clone_of:path593_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncr,node:path,mb:color:#000000,mb:id:pathSlctbcdvncr,mb:clone_of:path593_6_,clip_working_area_clipped:false
 G0X370.63Y202.37
 F200;#000000
 ; gcode_before_path_color
@@ -5797,9 +5797,9 @@ G1X370.06Y202.13
 G1X369.69Y202.03
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcq,node:path,mb:color:#000000,mb:id:pathSlcrom96mcq,mb:clone_of:path591_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncq,node:path,mb:color:#000000,mb:id:pathSlctbcdvncq,mb:clone_of:path591_6_,clip_working_area_clipped:false
 G0X370.78Y198.95
 F200;#000000
 ; gcode_before_path_color
@@ -5843,7 +5843,7 @@ G1X369.88Y199.64
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcq,node:path,mb:color:#000000,mb:id:pathSlcrom96mcq,mb:clone_of:path591_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncq,node:path,mb:color:#000000,mb:id:pathSlctbcdvncq,mb:clone_of:path591_6_,clip_working_area_clipped:false
 G0X370.78Y198.95
 F200;#000000
 ; gcode_before_path_color
@@ -5886,9 +5886,9 @@ G1X370.15Y199.80
 G1X369.88Y199.64
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcp,node:path,mb:color:#000000,mb:id:pathSlcrom96mcp,mb:clone_of:path589_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncp,node:path,mb:color:#000000,mb:id:pathSlctbcdvncp,mb:clone_of:path589_6_,clip_working_area_clipped:false
 G0X372.22Y197.88
 F200;#000000
 ; gcode_before_path_color
@@ -5916,7 +5916,7 @@ G1X372.22Y197.88
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcp,node:path,mb:color:#000000,mb:id:pathSlcrom96mcp,mb:clone_of:path589_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncp,node:path,mb:color:#000000,mb:id:pathSlctbcdvncp,mb:clone_of:path589_6_,clip_working_area_clipped:false
 G0X372.22Y197.88
 F200;#000000
 ; gcode_before_path_color
@@ -5943,9 +5943,9 @@ G1X372.06Y198.31
 G1X372.22Y197.88
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mco,node:path,mb:color:#000000,mb:id:pathSlcrom96mco,mb:clone_of:path587_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnco,node:path,mb:color:#000000,mb:id:pathSlctbcdvnco,mb:clone_of:path587_6_,clip_working_area_clipped:false
 G0X371.29Y195.35
 F200;#000000
 ; gcode_before_path_color
@@ -5969,7 +5969,7 @@ G1X371.29Y195.35
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mco,node:path,mb:color:#000000,mb:id:pathSlcrom96mco,mb:clone_of:path587_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnco,node:path,mb:color:#000000,mb:id:pathSlctbcdvnco,mb:clone_of:path587_6_,clip_working_area_clipped:false
 G0X371.29Y195.35
 F200;#000000
 ; gcode_before_path_color
@@ -5992,9 +5992,9 @@ G1X370.85Y195.56
 G1X371.29Y195.35
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcn,node:path,mb:color:#000000,mb:id:pathSlcrom96mcn,mb:clone_of:path585_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncn,node:path,mb:color:#000000,mb:id:pathSlctbcdvncn,mb:clone_of:path585_6_,clip_working_area_clipped:false
 G0X373.07Y192.48
 F200;#000000
 ; gcode_before_path_color
@@ -6038,7 +6038,7 @@ G1X372.17Y193.17
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcn,node:path,mb:color:#000000,mb:id:pathSlcrom96mcn,mb:clone_of:path585_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncn,node:path,mb:color:#000000,mb:id:pathSlctbcdvncn,mb:clone_of:path585_6_,clip_working_area_clipped:false
 G0X373.07Y192.48
 F200;#000000
 ; gcode_before_path_color
@@ -6081,9 +6081,9 @@ G1X372.44Y193.33
 G1X372.17Y193.17
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcm,node:path,mb:color:#000000,mb:id:pathSlcrom96mcm,mb:clone_of:path583_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncm,node:path,mb:color:#000000,mb:id:pathSlctbcdvncm,mb:clone_of:path583_6_,clip_working_area_clipped:false
 G0X374.64Y191.11
 F200;#000000
 ; gcode_before_path_color
@@ -6125,7 +6125,7 @@ G1X374.64Y191.11
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcm,node:path,mb:color:#000000,mb:id:pathSlcrom96mcm,mb:clone_of:path583_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncm,node:path,mb:color:#000000,mb:id:pathSlctbcdvncm,mb:clone_of:path583_6_,clip_working_area_clipped:false
 G0X374.64Y191.11
 F200;#000000
 ; gcode_before_path_color
@@ -6166,9 +6166,9 @@ G1X374.47Y191.45
 G1X374.64Y191.11
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcl,node:path,mb:color:#000000,mb:id:pathSlcrom96mcl,mb:clone_of:path581_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncl,node:path,mb:color:#000000,mb:id:pathSlctbcdvncl,mb:clone_of:path581_6_,clip_working_area_clipped:false
 G0X375.24Y189.34
 F200;#000000
 ; gcode_before_path_color
@@ -6216,7 +6216,7 @@ G1X374.31Y189.00
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcl,node:path,mb:color:#000000,mb:id:pathSlcrom96mcl,mb:clone_of:path581_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncl,node:path,mb:color:#000000,mb:id:pathSlctbcdvncl,mb:clone_of:path581_6_,clip_working_area_clipped:false
 G0X375.24Y189.34
 F200;#000000
 ; gcode_before_path_color
@@ -6263,9 +6263,9 @@ G1X374.68Y189.10
 G1X374.31Y189.00
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mck,node:path,mb:color:#000000,mb:id:pathSlcrom96mck,mb:clone_of:path579_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnck,node:path,mb:color:#000000,mb:id:pathSlctbcdvnck,mb:clone_of:path579_6_,clip_working_area_clipped:false
 G0X375.91Y187.46
 F200;#000000
 ; gcode_before_path_color
@@ -6285,7 +6285,7 @@ G1X375.91Y187.46
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mck,node:path,mb:color:#000000,mb:id:pathSlcrom96mck,mb:clone_of:path579_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnck,node:path,mb:color:#000000,mb:id:pathSlctbcdvnck,mb:clone_of:path579_6_,clip_working_area_clipped:false
 G0X375.91Y187.46
 F200;#000000
 ; gcode_before_path_color
@@ -6304,9 +6304,9 @@ G1X375.81Y187.73
 G1X375.91Y187.46
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mde,node:path,mb:color:#000000,mb:id:pathSlcrom96mde,mb:clone_of:polygon643_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnde,node:path,mb:color:#000000,mb:id:pathSlctbcdvnde,mb:clone_of:polygon643_6_,clip_working_area_clipped:false
 G0X373.80Y182.99
 F200;#000000
 ; gcode_before_path_color
@@ -6326,7 +6326,7 @@ G1X373.80Y182.99
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mde,node:path,mb:color:#000000,mb:id:pathSlcrom96mde,mb:clone_of:polygon643_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnde,node:path,mb:color:#000000,mb:id:pathSlctbcdvnde,mb:clone_of:polygon643_6_,clip_working_area_clipped:false
 G0X373.80Y182.99
 F200;#000000
 ; gcode_before_path_color
@@ -6345,9 +6345,9 @@ G1X374.73Y183.32
 G1X373.80Y182.99
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mdd,node:path,mb:color:#000000,mb:id:pathSlcrom96mdd,mb:clone_of:polygon641_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndd,node:path,mb:color:#000000,mb:id:pathSlctbcdvndd,mb:clone_of:polygon641_6_,clip_working_area_clipped:false
 G0X381.99Y185.02
 F200;#000000
 ; gcode_before_path_color
@@ -6367,7 +6367,7 @@ G1X381.99Y185.02
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mdd,node:path,mb:color:#000000,mb:id:pathSlcrom96mdd,mb:clone_of:polygon641_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvndd,node:path,mb:color:#000000,mb:id:pathSlctbcdvndd,mb:clone_of:polygon641_6_,clip_working_area_clipped:false
 G0X381.99Y185.02
 F200;#000000
 ; gcode_before_path_color
@@ -6386,9 +6386,9 @@ G1X380.94Y185.52
 G1X381.99Y185.02
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcu,node:path,mb:color:#000000,mb:id:pathSlcrom96mcu,mb:clone_of:path599_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncu,node:path,mb:color:#000000,mb:id:pathSlctbcdvncu,mb:clone_of:path599_6_,clip_working_area_clipped:false
 G0X380.39Y191.32
 F200;#000000
 ; gcode_before_path_color
@@ -6428,7 +6428,7 @@ G1X380.39Y191.32
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcu,node:path,mb:color:#000000,mb:id:pathSlcrom96mcu,mb:clone_of:path599_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncu,node:path,mb:color:#000000,mb:id:pathSlctbcdvncu,mb:clone_of:path599_6_,clip_working_area_clipped:false
 G0X380.39Y191.32
 F200;#000000
 ; gcode_before_path_color
@@ -6467,9 +6467,9 @@ G1X380.24Y191.75
 G1X380.39Y191.32
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcv,node:path,mb:color:#000000,mb:id:pathSlcrom96mcv,mb:clone_of:path601_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncv,node:path,mb:color:#000000,mb:id:pathSlctbcdvncv,mb:clone_of:path601_6_,clip_working_area_clipped:false
 G0X379.60Y193.54
 F200;#000000
 ; gcode_before_path_color
@@ -6517,7 +6517,7 @@ G1X378.67Y193.20
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcv,node:path,mb:color:#000000,mb:id:pathSlcrom96mcv,mb:clone_of:path601_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncv,node:path,mb:color:#000000,mb:id:pathSlctbcdvncv,mb:clone_of:path601_6_,clip_working_area_clipped:false
 G0X379.60Y193.54
 F200;#000000
 ; gcode_before_path_color
@@ -6564,9 +6564,9 @@ G1X379.03Y193.31
 G1X378.67Y193.20
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcw,node:path,mb:color:#000000,mb:id:pathSlcrom96mcw,mb:clone_of:path603_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncw,node:path,mb:color:#000000,mb:id:pathSlctbcdvncw,mb:clone_of:path603_6_,clip_working_area_clipped:false
 G0X379.00Y195.25
 F200;#000000
 ; gcode_before_path_color
@@ -6594,7 +6594,7 @@ G1X379.00Y195.25
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcw,node:path,mb:color:#000000,mb:id:pathSlcrom96mcw,mb:clone_of:path603_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncw,node:path,mb:color:#000000,mb:id:pathSlctbcdvncw,mb:clone_of:path603_6_,clip_working_area_clipped:false
 G0X379.00Y195.25
 F200;#000000
 ; gcode_before_path_color
@@ -6621,9 +6621,9 @@ G1X378.91Y195.51
 G1X379.00Y195.25
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcx,node:path,mb:color:#000000,mb:id:pathSlcrom96mcx,mb:clone_of:path605_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncx,node:path,mb:color:#000000,mb:id:pathSlctbcdvncx,mb:clone_of:path605_6_,clip_working_area_clipped:false
 G0X377.67Y196.01
 F200;#000000
 ; gcode_before_path_color
@@ -6667,7 +6667,7 @@ G1X376.77Y196.70
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcx,node:path,mb:color:#000000,mb:id:pathSlcrom96mcx,mb:clone_of:path605_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncx,node:path,mb:color:#000000,mb:id:pathSlctbcdvncx,mb:clone_of:path605_6_,clip_working_area_clipped:false
 G0X377.67Y196.01
 F200;#000000
 ; gcode_before_path_color
@@ -6710,9 +6710,9 @@ G1X377.04Y196.86
 G1X376.77Y196.70
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcy,node:path,mb:color:#000000,mb:id:pathSlcrom96mcy,mb:clone_of:path607_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncy,node:path,mb:color:#000000,mb:id:pathSlctbcdvncy,mb:clone_of:path607_6_,clip_working_area_clipped:false
 G0X375.88Y198.88
 F200;#000000
 ; gcode_before_path_color
@@ -6736,7 +6736,7 @@ G1X375.88Y198.88
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcy,node:path,mb:color:#000000,mb:id:pathSlcrom96mcy,mb:clone_of:path607_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncy,node:path,mb:color:#000000,mb:id:pathSlctbcdvncy,mb:clone_of:path607_6_,clip_working_area_clipped:false
 G0X375.88Y198.88
 F200;#000000
 ; gcode_before_path_color
@@ -6759,9 +6759,9 @@ G1X375.45Y199.09
 G1X375.88Y198.88
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96mcz,node:path,mb:color:#000000,mb:id:pathSlcrom96mcz,mb:clone_of:path609_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncz,node:path,mb:color:#000000,mb:id:pathSlctbcdvncz,mb:clone_of:path609_6_,clip_working_area_clipped:false
 G0X374.74Y199.21
 F200;#000000
 ; gcode_before_path_color
@@ -6788,7 +6788,7 @@ G1X377.27Y200.12
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96mcz,node:path,mb:color:#000000,mb:id:pathSlcrom96mcz,mb:clone_of:path609_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvncz,node:path,mb:color:#000000,mb:id:pathSlctbcdvncz,mb:clone_of:path609_6_,clip_working_area_clipped:false
 G0X374.74Y199.21
 F200;#000000
 ; gcode_before_path_color
@@ -6814,9 +6814,9 @@ G1X377.12Y200.55
 G1X377.27Y200.12
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96md0,node:path,mb:color:#000000,mb:id:pathSlcrom96md0,mb:clone_of:path611_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd0,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd0,mb:clone_of:path611_6_,clip_working_area_clipped:false
 G0X376.48Y202.37
 F200;#000000
 ; gcode_before_path_color
@@ -6864,7 +6864,7 @@ G1X375.54Y202.03
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96md0,node:path,mb:color:#000000,mb:id:pathSlcrom96md0,mb:clone_of:path611_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd0,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd0,mb:clone_of:path611_6_,clip_working_area_clipped:false
 G0X376.48Y202.37
 F200;#000000
 ; gcode_before_path_color
@@ -6911,9 +6911,9 @@ G1X375.91Y202.14
 G1X375.54Y202.03
 M05
 
-; Layer:compSvg, outline of:pathSlcrom96mnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlctbcdvnnc, stroke:#000000, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#000000', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:pathSlcrom96md1,node:path,mb:color:#000000,mb:id:pathSlcrom96md1,mb:clone_of:path613_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd1,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd1,mb:clone_of:path613_6_,clip_working_area_clipped:false
 G0X375.89Y204.01
 F200;#000000
 ; gcode_before_path_color
@@ -6933,7 +6933,7 @@ G1X375.89Y204.01
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:pathSlcrom96md1,node:path,mb:color:#000000,mb:id:pathSlcrom96md1,mb:clone_of:path613_6_,clip_working_area_clipped:false
+;_gc_nextgen_svg_id:pathSlctbcdvnd1,node:path,mb:color:#000000,mb:id:pathSlctbcdvnd1,mb:clone_of:path613_6_,clip_working_area_clipped:false
 G0X375.89Y204.01
 F200;#000000
 ; gcode_before_path_color

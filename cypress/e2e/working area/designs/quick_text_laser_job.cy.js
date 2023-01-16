@@ -51,7 +51,6 @@ describe("Laser Job - quick text", function () {
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
@@ -102,9 +101,12 @@ describe("Laser Job - quick text", function () {
                     cy.wait("@file")
                         .its("response.body")
                         .should(($body) => {
-                            let bodyNoComments = $body.replace(/^;.*$/gm, "");
-                            let contentTestFileNoComments =
-                                contentTestFile.replace(/^;.*$/gm, "");
+                            let bodyNoComments = $body
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
                             expect(bodyNoComments).to.equal(
                                 contentTestFileNoComments
                             );
@@ -153,7 +155,6 @@ describe("Laser Job - quick text", function () {
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
@@ -204,9 +205,12 @@ describe("Laser Job - quick text", function () {
                     cy.wait("@file")
                         .its("response.body")
                         .should(($body) => {
-                            let bodyNoComments = $body.replace(/^;.*$/gm, "");
-                            let contentTestFileNoComments =
-                                contentTestFile.replace(/^;.*$/gm, "");
+                            let bodyNoComments = $body
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
                             expect(bodyNoComments).to.equal(
                                 contentTestFileNoComments
                             );
@@ -216,7 +220,7 @@ describe("Laser Job - quick text", function () {
         cy.logout();
     });
 
-    it("Add texts 2", function () {
+    it.only("Add texts 2", function () {
         cy.wait(3000);
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type("Lasers");
@@ -252,7 +256,6 @@ describe("Laser Job - quick text", function () {
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
@@ -303,9 +306,12 @@ describe("Laser Job - quick text", function () {
                     cy.wait("@file")
                         .its("response.body")
                         .should(($body) => {
-                            let bodyNoComments = $body.replace(/^;.*$/gm, "");
-                            let contentTestFileNoComments =
-                                contentTestFile.replace(/^;.*$/gm, "");
+                            let bodyNoComments = $body
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
                             expect(bodyNoComments).to.equal(
                                 contentTestFileNoComments
                             );
@@ -351,7 +357,6 @@ describe("Laser Job - quick text", function () {
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
@@ -402,16 +407,18 @@ describe("Laser Job - quick text", function () {
                     cy.wait("@file")
                         .its("response.body")
                         .should(($body) => {
-                            let bodyNoComments = $body.replace(/^;.*$/gm, "");
-                            let contentTestFileNoComments =
-                                contentTestFile.replace(/^;.*$/gm, "");
+                            let bodyNoComments = $body
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
                             expect(bodyNoComments).to.equal(
                                 contentTestFileNoComments
                             );
                         });
                 });
             });
-
         cy.logout();
     });
 

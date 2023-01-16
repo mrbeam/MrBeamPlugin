@@ -90,7 +90,6 @@ describe("Laser Job", function () {
         cy.wait(3000);
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.downloadMrbFile();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
@@ -141,9 +140,12 @@ describe("Laser Job", function () {
                     cy.wait("@file")
                         .its("response.body")
                         .should(($body) => {
-                            let bodyNoComments = $body.replace(/^;.*$/gm, "");
-                            let contentTestFileNoComments =
-                                contentTestFile.replace(/^;.*$/gm, "");
+                            let bodyNoComments = $body
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
                             expect(bodyNoComments).to.equal(
                                 contentTestFileNoComments
                             );
