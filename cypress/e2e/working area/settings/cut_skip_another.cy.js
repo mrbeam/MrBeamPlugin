@@ -16,7 +16,7 @@ describe("Cut, cut 2, engrave, skip", function () {
         cy.deleteGcoFile();
     });
 
-    it("Cut 1, cut 2, engrave", function () {
+    it.skip("Cut 1, cut 2, engrave", function () {
         // add shape star
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();

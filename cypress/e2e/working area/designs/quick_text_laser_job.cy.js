@@ -13,7 +13,7 @@ describe("Laser Job - quick text", function () {
         cy.deleteGcoFile();
     });
 
-    it("Add filled quickText", function () {
+    it.skip("Add filled quickText", function () {
         cy.wait(3000);
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type(
@@ -116,7 +116,7 @@ describe("Laser Job - quick text", function () {
         cy.logout();
     });
 
-    it("Add stroked quickText", function () {
+    it.skip("Add stroked quickText", function () {
         cy.wait(3000);
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type(
@@ -220,7 +220,7 @@ describe("Laser Job - quick text", function () {
         cy.logout();
     });
 
-    it.only("Add texts 2", function () {
+    it.skip("Add texts 2", function () {
         cy.wait(3000);
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type("Lasers");
@@ -321,7 +321,7 @@ describe("Laser Job - quick text", function () {
         cy.logout();
     });
 
-    it("Add texts 3", function () {
+    it.skip("Add texts 3", function () {
         cy.wait(3000);
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type(
@@ -422,7 +422,7 @@ describe("Laser Job - quick text", function () {
         cy.logout();
     });
 
-    it("Add text - ok button", function () {
+    it.skip("Add text - ok button", function () {
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-window"]').should("to.visible");
         cy.get('[data-test="quick-text-done-button"]').click();

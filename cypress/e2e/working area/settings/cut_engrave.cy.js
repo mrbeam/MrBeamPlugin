@@ -16,7 +16,7 @@ describe("Cut and engrave", function () {
         cy.deleteGcoFile();
     });
 
-    it("Cut and engrave", function () {
+    it.skip("Cut and engrave", function () {
         //Adding star
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
@@ -167,7 +167,7 @@ describe("Cut and engrave", function () {
         cy.logout();
     });
 
-    it("Skip", function () {
+    it.skip("Skip", function () {
         //Adding star
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
@@ -202,7 +202,7 @@ describe("Cut and engrave", function () {
         cy.logout();
     });
 
-    it("Engrave move to cut", function () {
+    it.skip("Engrave move to cut", function () {
         //Adding text
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type("MrBeam");

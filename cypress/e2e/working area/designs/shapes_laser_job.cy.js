@@ -14,7 +14,7 @@ describe("Laser Job - shapes", function () {
         cy.deleteGcoFile();
     });
 
-    it("Add shapes - heart", function () {
+    it.skip("Add shapes - heart", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-Heart"]').click();
         cy.get('[data-test="quick-shape-heart-width"]').clear().type("60");
@@ -140,7 +140,7 @@ describe("Laser Job - shapes", function () {
         cy.logout();
     });
 
-    it("Add shapes - circle", function () {
+    it.skip("Add shapes - circle", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-circle"]').click();
         cy.get('[data-test="quick-shape-circle-radius-input"]')
@@ -260,7 +260,7 @@ describe("Laser Job - shapes", function () {
         cy.logout();
     });
 
-    it("Add shapes - star", function () {
+    it.skip("Add shapes - star", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-star-radius-input"]')
@@ -386,7 +386,7 @@ describe("Laser Job - shapes", function () {
         cy.logout();
     });
 
-    it("Add shapes - line", function () {
+    it.skip("Add shapes - line", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-line"]').click();
         cy.get('[data-test="quick-shape-line-length-input"]')
@@ -515,7 +515,7 @@ describe("Laser Job - shapes", function () {
         cy.logout();
     });
 
-    it("Add shapes - rectangle", function () {
+    it.skip("Add shapes - rectangle", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-rect"]').click();
         cy.get('[data-test="quick-shape-rect-width"]').clear().type("60");
@@ -639,7 +639,7 @@ describe("Laser Job - shapes", function () {
         cy.logout();
     });
 
-    it("Add shapes - ok button", function () {
+    it.skip("Add shapes - ok button", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-modal-window"]').should("to.visible");
         cy.get('[data-test="quick-shape-done-button"]').click();

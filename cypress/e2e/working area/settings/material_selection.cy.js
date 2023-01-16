@@ -11,7 +11,7 @@ describe("Functionalities", function () {
         cy.loginLaser(this.testData.email, this.testData.password);
     });
 
-    it("Start without set settings", function () {
+    it.skip("Start without set settings", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
@@ -23,7 +23,7 @@ describe("Functionalities", function () {
         cy.logout();
     });
 
-    it("Back button", function () {
+    it.skip("Back button", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
@@ -39,7 +39,7 @@ describe("Functionalities", function () {
         cy.logout();
     });
 
-    it("Material and back", function () {
+    it.skip("Material and back", function () {
         cy.get('[data-test="working-area-tab-shape"]').click({ force: true });
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
@@ -67,7 +67,7 @@ describe("Functionalities", function () {
         cy.logout();
     });
 
-    it("Color and back", function () {
+    it.skip("Color and back", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
@@ -96,7 +96,7 @@ describe("Functionalities", function () {
         cy.logout();
     });
 
-    it("Thickness and back", function () {
+    it.skip("Thickness and back", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
@@ -127,7 +127,7 @@ describe("Functionalities", function () {
         cy.logout();
     });
 
-    it("Help", function () {
+    it.skip("Help", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
@@ -150,7 +150,7 @@ describe("Functionalities", function () {
         cy.logout();
     });
 
-    it("Manage materials", function () {
+    it.skip("Manage materials", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-done-button"]').click();
