@@ -4819,7 +4819,7 @@ msgstr "Datenschutzbestimmungen"
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:44
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:72
 msgid "https://www.mr-beam.org/en"
-msgstr "https://www.mr-beam.org/"
+msgstr "https://www.mr-beam.org"
 
 # Settings > About Screen
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:82
