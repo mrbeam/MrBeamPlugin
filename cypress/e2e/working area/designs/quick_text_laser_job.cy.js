@@ -13,11 +13,34 @@ describe("Laser Job - quick text", function () {
         cy.deleteGcoFile();
     });
 
-    it.skip("Add filled quickText", function () {
+    // Test quick text filled straight, concave down and concave up
+    it("Quick text filled", function () {
         cy.wait(3000);
+
+        // Add 1st design fill text straight
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type(
-            "FilledMrBeam"
+            "FilledTextStraight"
+        );
+        cy.get('[data-test="quick-text-color-picker-fill"]').click();
+        cy.get('[data-test="quick-text-modal-text-straight"]').click();
+        cy.get('[id="qt_colorPicker_fill"]').click();
+        cy.get('[id="qt_colorPicker_fill"] > .track > canvas').realClick({
+            position: "top",
+        });
+        cy.get('[data-test="quick-text-font-button-left"]').last().click();
+        cy.get('[data-test="quick-text-done-button"]').click();
+        cy.get('[id="translateHandle"]').move({
+            deltaX: 433.9689,
+            deltaY: 220.1241,
+            force: true,
+        });
+        cy.designTextSettings();
+
+        // Add 2nd design fill text concave down
+        cy.get('[data-test="working-area-tab-text"]').click();
+        cy.get('[data-test="quick-text-modal-text-input"]').type(
+            "FilledTextConcaveDown"
         );
         cy.get('[data-test="quick-text-modal-text-cw"]').click();
         cy.get('[data-test="quick-text-color-picker-fill"]').click();
@@ -29,236 +52,45 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-font-button-left"]').last().click();
         cy.get('[data-test="quick-text-done-button"]').click();
         cy.get('[id="translateHandle"]').move({
-            deltaX: 433.9689,
+            deltaX: 50.9689,
             deltaY: 220.1241,
             force: true,
         });
-        cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
-            .clear()
-            .type("-50.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
-            .clear()
-            .type("116.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
-            .clear()
-            .type("132.3 mm");
-        cy.laserButtonClick();
-        cy.selectMaterial();
-        cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.get(".modal-scrollable").click({ force: true });
-        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.wait(3000);
-        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-            .first()
-            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
-            .click({ force: true })
-            .invoke("prop", "innerText")
-            .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
-                cy.window()
-                    .document()
-                    .then(function (doc) {
-                        doc.addEventListener("click", () => {
-                            setTimeout(function () {
-                                doc.location.reload();
-                            }, 5000);
-                        });
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-card"]'
-                        )
-                            .filter(`:contains(${downloadFile})`)
-                            .find(
-                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
-                            );
-                        cy.wait(1000);
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-download"]'
-                        )
-                            .filter(":visible")
-                            .click();
-                    });
-                cy.readFile("cypress/fixtures/FilledMrBeam.gco", {
-                    timeout: 40000,
-                }).then((contentTestFile) => {
-                    cy.get(
-                        '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
-                    cy.get(
-                        '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
-                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-                        .first()
-                        .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            let bodyNoComments = $body
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            let contentTestFileNoComments = contentTestFile
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            expect(bodyNoComments).to.equal(
-                                contentTestFileNoComments
-                            );
-                        });
-                });
-            });
-        cy.logout();
-    });
+        //cy.designTextSettings();
 
-    it.skip("Add stroked quickText", function () {
-        cy.wait(3000);
+        // Add 3rd design fill text concave up
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type(
-            "StrokedMrBeam"
+            "FilledTextConcaveUp"
         );
-        cy.get('[data-test="quick-text-modal-text-cw"]').click();
-        cy.get('[data-test="quick-text-color-picker-fill"]').click();
-        cy.get('[data-test="quick-text-stroke-input"]').click();
-        cy.get('[id="qt_colorPicker_stroke"]').click();
-        cy.get('[id="qt_colorPicker_stroke"] > .track > canvas').realClick({
-            position: "left",
-        });
-        cy.get('[data-test="quick-text-circle-input"]').trigger("right");
-        cy.get('[data-test="quick-text-font-button-left"]').last().click();
-        cy.get('[data-test="quick-text-done-button"]').click();
-        cy.get('[id="translateHandle"]').move({
-            deltaX: 433.9689,
-            deltaY: 220.1241,
-            force: true,
-        });
-        cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
-            .clear()
-            .type("-50.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
-            .clear()
-            .type("116.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
-            .clear()
-            .type("132.3 mm");
-        cy.laserButtonClick();
-        cy.selectMaterial();
-        cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.get(".modal-scrollable").click({ force: true });
-        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.wait(3000);
-        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-            .first()
-            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
-            .click({ force: true })
-            .invoke("prop", "innerText")
-            .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
-                cy.window()
-                    .document()
-                    .then(function (doc) {
-                        doc.addEventListener("click", () => {
-                            setTimeout(function () {
-                                doc.location.reload();
-                            }, 5000);
-                        });
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-card"]'
-                        )
-                            .filter(`:contains(${downloadFile})`)
-                            .find(
-                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
-                            );
-                        cy.wait(1000);
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-download"]'
-                        )
-                            .filter(":visible")
-                            .click();
-                    });
-                cy.readFile("cypress/fixtures/StrokedMrBeam.gco", {
-                    timeout: 40000,
-                }).then((contentTestFile) => {
-                    cy.get(
-                        '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
-                    cy.get(
-                        '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
-                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-                        .first()
-                        .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            let bodyNoComments = $body
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            let contentTestFileNoComments = contentTestFile
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            expect(bodyNoComments).to.equal(
-                                contentTestFileNoComments
-                            );
-                        });
-                });
-            });
-        cy.logout();
-    });
-
-    it.skip("Add texts 2", function () {
-        cy.wait(3000);
-        cy.get('[data-test="working-area-tab-text"]').click();
-        cy.get('[data-test="quick-text-modal-text-input"]').type("Lasers");
         cy.get('[data-test="quick-text-modal-text-ccw"]').click();
         cy.get('[data-test="quick-text-color-picker-fill"]').click();
         cy.get('[id="qt_colorPicker_fill"]').click();
         cy.get('[id="qt_colorPicker_fill"] > .track > canvas').realClick({
             position: "top",
         });
-        cy.get('[data-test="quick-text-circle-input"]').trigger("right");
+        cy.get('[data-test="quick-text-circle-input"]').trigger("left");
         cy.get('[data-test="quick-text-font-button-left"]').last().click();
         cy.get('[data-test="quick-text-done-button"]').click();
-        cy.get('[data-test="tab-workingarea-translation"]')
-            .filter(":visible")
-            .clear()
-            .type("235.0, 238.0");
-        cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
-            .clear()
-            .type("250.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
-            .clear()
-            .type("225.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
-            .clear()
-            .type("230.3 mm");
+        cy.get('[id="translateHandle"]').move({
+            deltaX: 70.9689,
+            deltaY: 80.1241,
+            force: true,
+        });
+        //cy.designTextSettings();
+
+        // Start the laser job
         cy.laserButtonClick();
         cy.selectMaterial();
-        cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.wait(3000);
+        cy.get('[data-test="laser-job-start-button"]').dblclick({ force: true });
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
+
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -291,7 +123,7 @@ describe("Laser Job - quick text", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/fixtures/Lasers.gco", {
+                cy.readFile("cypress/fixtures/FilledTextStraight_2more.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -321,45 +153,88 @@ describe("Laser Job - quick text", function () {
         cy.logout();
     });
 
-    it.skip("Add texts 3", function () {
+    //Test quick text stroke straight, concave down and concave up
+    it("Quick text stroke", function () {
         cy.wait(3000);
+
+        // Add 1st design stroke text straight
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-text-input"]').type(
-            "MrBeam Lasers"
+            "StrokeTextStraight"
         );
-        cy.get('[data-test="quick-text-font-button-left"]').last().dblclick();
+        cy.get('[data-test="quick-text-color-picker-fill"]').click();
         cy.get('[data-test="quick-text-modal-text-straight"]').click();
         cy.get('[data-test="quick-text-stroke-input"]').click();
         cy.get('[id="qt_colorPicker_stroke"]').click();
         cy.get('[id="qt_colorPicker_stroke"] > .track > canvas').realClick({
             position: "left",
         });
+        cy.get('[data-test="quick-text-font-button-left"]').last().click();
         cy.get('[data-test="quick-text-done-button"]').click();
-        cy.get('[data-test="tab-workingarea-translation"]')
-            .filter(":visible")
-            .clear()
-            .type("235.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
-            .clear()
-            .type("-50.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
-            .clear()
-            .type("125.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
-            .clear()
-            .type("130.3 mm");
+        cy.get('[id="translateHandle"]').move({
+            deltaX: 433.9689,
+            deltaY: 220.1241,
+            force: true,
+        });
+        cy.designTextSettings();
+
+        // Add 2nd design stroke text concave down
+        cy.get('[data-test="working-area-tab-text"]').click();
+        cy.get('[data-test="quick-text-modal-text-input"]').type(
+            "StrokeTextConcaveDown"
+        );
+        cy.get('[data-test="quick-text-modal-text-cw"]').click();
+        cy.get('[data-test="quick-text-color-picker-fill"]').click();
+        cy.get('[data-test="quick-text-stroke-input"]').click();
+        cy.get('[id="qt_colorPicker_stroke"]').click();
+        cy.get('[id="qt_colorPicker_stroke"] > .track > canvas').realClick({
+            position: "left",
+        });
+        cy.get('[data-test="quick-text-circle-input"]').trigger("right");
+        cy.get('[data-test="quick-text-font-button-left"]').last().click();
+        cy.get('[data-test="quick-text-done-button"]').click();
+        cy.get('[id="translateHandle"]').move({
+            deltaX: 50.9689,
+            deltaY: 220.1241,
+            force: true,
+        });
+        //cy.designTextSettings();
+
+        // Add 3rd design stroke text concave up
+        cy.get('[data-test="working-area-tab-text"]').click();
+        cy.get('[data-test="quick-text-modal-text-input"]').type(
+            "StrokeTextConcaveUp"
+        );
+        cy.get('[data-test="quick-text-font-button-left"]').last().dblclick();
+        cy.get('[data-test="quick-text-modal-text-ccw"]').click();
+        cy.get('[data-test="quick-text-color-picker-fill"]').click();
+        cy.get('[data-test="quick-text-stroke-input"]').click();
+        cy.get('[id="qt_colorPicker_stroke"]').click();
+        cy.get('[id="qt_colorPicker_stroke"] > .track > canvas').realClick({
+            position: "left",
+        });
+        cy.get('[data-test="quick-text-circle-input"]').trigger("left");
+        cy.get('[data-test="quick-text-font-button-left"]').last().click();
+        cy.get('[data-test="quick-text-done-button"]').click();
+        cy.get('[id="translateHandle"]').move({
+            deltaX: 70.9689,
+            deltaY: 80.1241,
+            force: true,
+        });
+        //cy.designTextSettings();
+
+        // Start the laser job
         cy.laserButtonClick();
         cy.selectMaterial();
-        cy.get('[data-test="laser-job-start-button"]').dblclick();
+        cy.get('[data-test="laser-job-start-button"]').dblclick({ force: true });
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
+
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -392,7 +267,7 @@ describe("Laser Job - quick text", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/fixtures/MrBeam_Lasers.gco", {
+                cy.readFile("cypress/fixtures/StrokeTextStraight_2more.gco.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -422,11 +297,12 @@ describe("Laser Job - quick text", function () {
         cy.logout();
     });
 
-    it.skip("Add text - ok button", function () {
+    it("Add text - ok button", function () {
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-window"]').should("to.visible");
         cy.get('[data-test="quick-text-done-button"]').click();
         cy.get('[data-test="quick-text-modal-window"]').should("not.visible");
         cy.logout();
     });
+
 });

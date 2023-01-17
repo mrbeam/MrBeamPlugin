@@ -216,8 +216,8 @@ Cypress.Commands.add("assertValueCopiedToClipboard", (value) => {
 });
 
 Cypress.Commands.add("deleteGcoFile", () => {
-    cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-    cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+    cy.get('[data-test="mrbeam-ui-index-design-library"]').click({force: true});
+    cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click({force: true});
     cy.wait(3000);
     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
         .if("exist")
@@ -233,6 +233,21 @@ Cypress.Commands.add("deleteGcoFile", () => {
         });
     cy.get('[data-test="tab-designlib-filter-design-radio"]').click();
     cy.get('[data-test="mrbeam-ui-index-working-area"]').click();
+});
+
+Cypress.Commands.add("designTextSettings", () => {
+    cy.get('[data-test="tab-workingarea-rotation"]')
+            .filter(":visible")
+            .clear({force: true})
+            .type("-50.5");
+        cy.get('[data-test="tab-workingarea-horizontal"]')
+            .filter(":visible")
+            .clear({force: true})
+            .type("116.3 mm");
+        cy.get('[data-test="tab-workingarea-vertical"]')
+            .filter(":visible")
+            .clear({force: true})
+            .type("132.3 mm");
 });
 
 Cypress.Commands.add("laserButtonClick", () => {
