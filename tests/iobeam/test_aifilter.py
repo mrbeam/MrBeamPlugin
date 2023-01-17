@@ -2,11 +2,22 @@ import os
 
 from mock.mock import MagicMock
 
-from octoprint_mrbeam.iobeam.airfilter import AirFilter
+from octoprint_mrbeam.iobeam.airfilter import AirFilter, airfilter
 
 pluginmock = MagicMock(
     _basefolder=os.path.join(os.path.dirname(__package_path__), "octoprint_mrbeam")
 )
+
+
+def test_singelton():
+    # Arrange
+    air_filter = airfilter(pluginmock)
+
+    # Act
+    air_filter2 = airfilter(pluginmock)
+
+    # Assert
+    assert air_filter == air_filter2
 
 
 def test_model_name_AF1_or_fan():
@@ -197,15 +208,48 @@ def test_profile_for_airfilter_1():
         "carbonfilter": [
             {
                 "lifespan": 280,
-                "shopify_link": "https://store.mr-beam.org/products/activated-carbon-filter-for-the-mr-beam-air-filter-system-incl-5-prefilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+                "shopify_link": "products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
             }
         ],
+        "carbonfilter_stages": 1,
         "prefilter": [
             {
                 "lifespan": 40,
-                "shopify_link": "https://store.mr-beam.org/products/10er-pack-vorfilter-fur-mr-beam-air-filter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+                "shopify_link": "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
             }
         ],
+        "prefilter_stages": 1,
+    }
+
+
+def test_profile_for_airfilter_8():
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = 8
+
+    # Act
+    profile = air_filter.profile
+
+    # Assert
+    assert profile == {
+        "carbonfilter": [
+            {
+                "lifespan": 400,
+                "shopify_link": "products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+            }
+        ],
+        "carbonfilter_stages": 1,
+        "prefilter": [
+            {
+                "lifespan": 80,
+                "shopify_link": "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+            },
+            {
+                "lifespan": 100,
+                "shopify_link": "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+            },
+        ],
+        "prefilter_stages": 2,
     }
 
 
@@ -218,7 +262,7 @@ def test_get_profile_invalid_id():
     profile = air_filter.profile
 
     # Assert
-    assert profile == None
+    assert profile is None
 
 
 def test_get_profile_none_existing_id():
@@ -230,7 +274,20 @@ def test_get_profile_none_existing_id():
     profile = air_filter.profile
 
     # Assert
-    assert profile == None
+    assert profile is None
+
+
+def test_get_profile_for_none_id():
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = 1
+    air_filter.model_id = None
+
+    # Act
+    profile = air_filter.profile
+
+    # Assert
+    assert profile is None
 
 
 def test_get_lifespan_for_airfilter_1_carbonfilter():
@@ -291,3 +348,109 @@ def test_get_lifespan_for_invalid_model():
 
     # Assert
     assert lifespan == 280  # should be fallback value
+
+
+def test_get_lifespan_for_invalid_filter_stage_id():
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = 1
+
+    # Act
+    lifespan = air_filter.get_lifespan("prefilter", 20)
+
+    # Assert
+    assert lifespan == 40
+
+
+def test_get_lifespan_for_invalid_filter_stage_id_input():
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = 1
+
+    # Act
+    lifespan = air_filter.get_lifespan("prefilter", "invalid")
+
+    # Assert
+    assert lifespan == 40
+
+
+def test_get_list_of_lifespans_for_prefilter():
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = 1
+
+    # Act
+    lifespan = air_filter.get_lifespans("prefilter")
+
+    # Assert
+    assert lifespan == [40]
+
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = 8
+
+    # Act
+    lifespan = air_filter.get_lifespans("prefilter")
+
+    # Assert
+    assert lifespan == [80, 100]
+
+
+def test_get_list_of_lifespans_for_carbonfilter():
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = 1
+
+    # Act
+    lifespan = air_filter.get_lifespans("carbonfilter")
+
+    # Assert
+    assert lifespan == [280]
+
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = 8
+
+    # Act
+    lifespan = air_filter.get_lifespans("carbonfilter")
+
+    # Assert
+    assert lifespan == [400]
+
+
+def test_get_list_of_lifespans_profile_none():
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = None
+
+    # Act
+    shopify_link = air_filter.get_lifespans("prefilter")
+
+    # Assert
+    assert shopify_link is None
+
+
+def test_get_shopify_links_AF1_prefilter():
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = 1
+
+    # Act
+    shopify_link = air_filter.get_shopify_links("prefilter")
+
+    # Assert
+    assert shopify_link == [
+        "https://www.mr-beam.org/en/products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page"
+    ]
+
+
+def test_get_shopify_links_profile_none():
+    # Arrange
+    air_filter = AirFilter(pluginmock)
+    air_filter.model_id = None
+
+    # Act
+    shopify_link = air_filter.get_shopify_links("prefilter")
+
+    # Assert
+    assert shopify_link is None

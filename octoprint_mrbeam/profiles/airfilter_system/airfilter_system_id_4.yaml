@@ -1,7 +1,9 @@
 #airfilter 2 system
+prefilter_stages: 1
+carbonfilter_stages: 1
 prefilter:
   - lifespan: 40
-    shopify_link: 'Link to Shopify'#TODO
+    shopify_link: 'products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'
 carbonfilter:
   - lifespan: 280
-    shopify_link: 'Link to Shopify'#TODO
+    shopify_link: 'products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'

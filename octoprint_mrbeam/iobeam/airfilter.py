@@ -1,7 +1,9 @@
 # singleton
 import os
+from enum import Enum
 
 import yaml
+from flask_babel import gettext
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
@@ -35,6 +37,10 @@ class AirFilter(object):
     PREFILTER = "prefilter"
     CARBONFILTER = "carbonfilter"
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
+
+    class PROFILE_PARAMETERS(Enum):
+        SHOPIFY_LINK = "shopify_link"
+        LIFESPAN = "lifespan"
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.airfilter")
@@ -214,10 +220,16 @@ class AirFilter(object):
         self._profile = None
 
     def _load_current_profile(self):
+        """Loads the current profile of the air filter and safes it in self._profile.
+
+        Returns:
+            None
+        """
         if self._model_id is None:
             self._logger.debug(
                 "profile not loaded as id is not valid :{}".format(self.model_id)
             )
+            self._profile = None
         else:
             self._logger.debug(
                 "load profile for air filter system ID:{}".format(self.model_id)
@@ -271,52 +283,123 @@ class AirFilter(object):
         )
         return self._profile
 
-    def get_lifespan(self, filterstage, stage_id=0):
+    def get_lifespan(self, filter_stage, stage_id=0):
+        """Returns the lifespan of the filter stage.
+
+        Args:
+            filter_stage (str): Filter stage to get the lifespan from [FILTERSTAGES]
+            stage_id (int): id of the sub stage default: 0
+
+        Returns:
+            int: Lifespan of the filter stage in hours, None: otherwise
+        """
+        if not isinstance(stage_id, int):
+            self._logger.error(
+                "stage_id is not an integer will use 0 instead: {}".format(stage_id)
+            )
+            stage_id = 0
         current_airfilter_profile = self.profile
-        if filterstage not in self.FILTERSTAGES:
-            self._logger.error("filterstage {} is not known".format(filterstage))
+        self._logger.debug(
+            "get lifespan of filter_stage: {} stage id: {} in profile: {}".format(
+                filter_stage, stage_id, current_airfilter_profile
+            )
+        )
+        if filter_stage not in self.FILTERSTAGES:
+            self._logger.error("filter_stage {} is not known".format(filter_stage))
             return None
 
-        if filterstage == self.PREFILTER:
+        if filter_stage == self.PREFILTER:
             fallbackvalue = self.PREFILTER_LIFESPAN_FALLBACK
-        elif filterstage == self.CARBONFILTER:
+        elif filter_stage == self.CARBONFILTER:
             fallbackvalue = self.CARBON_LIFESPAN_FALLBACK
         else:
             fallbackvalue = 0
+            self._logger.warn(
+                "The selected filter stage does not have a fallback value, we will use 0 instead"
+            )
         # Handle the exceptions
         if (
             (isinstance(current_airfilter_profile, dict) is False)
-            or (filterstage not in current_airfilter_profile)
-            or (isinstance(current_airfilter_profile[filterstage], list) is False)
+            or (filter_stage not in current_airfilter_profile)
+            or (isinstance(current_airfilter_profile[filter_stage], list) is False)
+            or (len(current_airfilter_profile[filter_stage]) < stage_id + 1)
             or (
-                isinstance(current_airfilter_profile[filterstage][stage_id], dict)
+                isinstance(current_airfilter_profile[filter_stage][stage_id], dict)
                 is False
             )
             or (
                 isinstance(
-                    current_airfilter_profile[filterstage][stage_id]["lifespan"], int
+                    current_airfilter_profile[filter_stage][stage_id][
+                        self.PROFILE_PARAMETERS.LIFESPAN.value
+                    ],
+                    int,
                 )
                 is False
             )
         ):
             # Apply fallback
-            self._logger.debug(
-                "Current air filter system profile: {}".format(
-                    current_airfilter_profile
-                )
-            )
             self._logger.error(
                 "Current {} ID:{} lifespan couldn't be retrieved, fallback to the fallback value of: {}".format(
-                    filterstage, stage_id, fallbackvalue
+                    filter_stage, stage_id, fallbackvalue
                 )
             )
             return fallbackvalue
         # Reaching here means, everything looks good
-        self._logger.debug(
-            "Current {} ID:{} lifespan:{}".format(
-                filterstage,
-                stage_id,
-                current_airfilter_profile[filterstage][stage_id]["lifespan"],
+        return current_airfilter_profile[filter_stage][stage_id][
+            self.PROFILE_PARAMETERS.LIFESPAN.value
+        ]
+
+    def get_lifespans(self, filter_stage):
+        """Returns the lifespan of the given filter stage and sub stages.
+
+        Args:
+            filter_stage (str): name of the filter stage [FILTERSTAGES]
+
+        Returns:
+            list: list of lifespans of the given filter stage or None if the profile is None
+        """
+        current_airfilter_profile = self.profile
+        if current_airfilter_profile is not None:
+            stages = current_airfilter_profile.get(filter_stage + "_stages")
+            if stages is not None:
+                lifespans = []
+                for i in range(stages):
+                    lifespans.append(self.get_lifespan(filter_stage, i))
+                return lifespans
+
+        self._logger.error(
+            "Current amount of stages couldn't be retrieved - filter stage: {} profile: {}".format(
+                filter_stage, current_airfilter_profile
             )
         )
-        return current_airfilter_profile[filterstage][stage_id]["lifespan"]
+        return None
+
+    def get_shopify_links(self, filter_stage):
+        """Returns the shopify links of the given filter stage and sub stages.
+
+        Args:
+            filter_stage (str): name of the filter stage [FILTERSTAGES]
+
+        Returns:
+            list: list of shopify links of the given filter stage or None if the profile is None
+        """
+        current_airfilter_profile = self.profile
+        if current_airfilter_profile is not None:
+            stages = current_airfilter_profile.get(filter_stage + "_stages")
+            if stages is not None:
+                shopify_links = []
+                for i in range(stages):
+                    shopify_links.append(
+                        gettext("https://www.mr-beam.org/en/")
+                        + current_airfilter_profile[filter_stage][i][
+                            self.PROFILE_PARAMETERS.SHOPIFY_LINK.value
+                        ]
+                    )
+                return shopify_links
+
+        self._logger.error(
+            "Current amount of stages couldn't be retrieved - filter stage: {} profile: {}".format(
+                filter_stage, current_airfilter_profile
+            )
+        )
+        return None

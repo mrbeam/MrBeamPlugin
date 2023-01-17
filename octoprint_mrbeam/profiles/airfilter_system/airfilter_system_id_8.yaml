@@ -1,9 +1,11 @@
 #airfilter 3 system
+prefilter_stages: 2
+carbonfilter_stages: 1
 prefilter:
   - lifespan: 80 #TODO
-    shopify_link: 'https://store.mr-beam.org/products/10er-pack-vorfilter-fur-mr-beam-air-filter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' #TODO
+    shopify_link: 'products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' #TODO
   - lifespan: 100 #TODO
-    shopify_link: 'https://store.mr-beam.org/products/10er-pack-vorfilter-fur-mr-beam-air-filter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' #TODO
+    shopify_link: 'products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' #TODO
 carbonfilter:
   - lifespan: 400 #TODO
-    shopify_link: 'https://store.mr-beam.org/products/10er-pack-vorfilter-fur-mr-beam-air-filter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' #TODO
+    shopify_link: 'products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' #TODO
