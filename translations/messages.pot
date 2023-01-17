@@ -1,14 +1,14 @@
 # Translations template for PROJECT.
-# Copyright (C) 2022 ORGANIZATION
+# Copyright (C) 2023 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-12-12 16:11+0100\n"
+"POT-Creation-Date: 2023-01-17 15:25+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1199,7 +1199,7 @@ msgid "Next"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:518
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:81
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:87
 msgid "Close"
 msgstr ""
 
@@ -2337,47 +2337,47 @@ msgstr ""
 msgid "Share your work and inspire others!"
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:31
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:30
 msgid "By the way - Did you know?"
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:57
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:63
 msgid "You need a working internet connection for this forwarding to work."
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:61
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:67
 msgid "Browse the options"
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:62
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:68
 msgid "Restock Material"
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:71
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:94
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:77
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:100
 msgid "Laser job duration:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:73
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:95
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:79
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:101
 msgid "Estimated:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:79
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:85
 msgid "Repeat Job"
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:88
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:94
 msgid "Air Filter run-on"
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:93
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:99
 msgid ""
 "Please wait a few seconds until Mr Beam cleared most of the dust "
 "particles out of the working area."
 msgstr ""
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:99
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:105
 msgid "Cancel Air Filter run-on"
 msgstr ""
 
@@ -4133,6 +4133,13 @@ msgid "Privacy Policies"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:82
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:17
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:44
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:72
+msgid "https://www.mr-beam.org/en"
+msgstr ""
+
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:82
 msgid "Mr Beam Web Site"
 msgstr ""
 
@@ -4179,14 +4186,6 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:108
 msgid "Source code"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:109
-msgid "Recommend Mr Beam"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:109
-msgid "and earn cashback"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
