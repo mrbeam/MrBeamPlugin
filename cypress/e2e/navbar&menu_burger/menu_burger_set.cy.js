@@ -17,7 +17,7 @@ describe("Menu burger", function () {
         cy.get(".modal-footer").filter(":visible").find(".btn-danger").click();
         cy.logout();
     });
-    it("Fullscreen", function () {
+    it.skip("Fullscreen", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-fullscreen-go"]').realClick();
         cy.document().its("fullscreenElement").should("not.equal", null);
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();

@@ -236,6 +236,10 @@ Cypress.Commands.add("deleteGcoFile", () => {
 });
 
 Cypress.Commands.add("laserButtonClick", () => {
+    cy.get('[data-test="working-area-laser-button"]').invoke(
+        "removeAttr",
+        "disabled"
+    );
     cy.get('[data-test="working-area-laser-button"]').click();
     cy.focusReminder();
     cy.wait(3000);

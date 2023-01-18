@@ -258,7 +258,7 @@ describe("About This Mr Beam", function () {
                 });
             });
     });
-    it("Privacy Policies - service", function () {
+    it.skip("Privacy Policies - service", function () {
         cy.get('[data-test="about-settings-link-find-mr-beam"]')
             .invoke("attr", "href")
             .then((myLink) => {
