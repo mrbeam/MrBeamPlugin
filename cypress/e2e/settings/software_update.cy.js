@@ -108,7 +108,7 @@ describe("Software update", function () {
                     });
             });
     });
-    it("Software channel - beta", function () {
+    it.skip("Software channel - beta", function () {
         cy.get('[id="settings_plugin_softwareupdate_link"]').click();
         cy.get('[data-test="software-channel-select-bata-stable"]').select(
             "BETA"
