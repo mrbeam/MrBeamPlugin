@@ -368,6 +368,7 @@ $(function () {
         };
 
         self.shopifyLink = function (stagename, stageid) {
+            let link;
             if (stagename === "prefilter") {
                 link = self.prefilterShopify()[stageid];
             } else if (stagename === "carbonfilter") {
