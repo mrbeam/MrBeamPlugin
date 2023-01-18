@@ -148,7 +148,7 @@ describe("About This Mr Beam", function () {
         cy.logout();
     });
     // Linkedin status code 999
-    it("Links - linkedin", function () {
+    it.skip("Links - linkedin", function () {
         cy.get('[data-test="about-settings-link-linkedin"]')
             .invoke("attr", "href")
             .then((myLink) => {
