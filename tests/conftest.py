@@ -1,6 +1,8 @@
 # pytest config file
+import os
 
 import pytest
+from mock.mock import MagicMock
 
 from octoprint.settings import settings
 from octoprint_mrbeam import MrBeamPlugin
@@ -32,4 +34,8 @@ def pytest_generate_tests(metafunc):
 def mrbeam_plugin():
     mrbeam_plugin = MrBeamPlugin()
     mrbeam_plugin._settings = sett
+    mrbeam_plugin._basefolder = os.path.join(
+        os.path.dirname(__package_path__), "octoprint_mrbeam"
+    )
+    mrbeam_plugin._plugin_manager = MagicMock()
     yield mrbeam_plugin

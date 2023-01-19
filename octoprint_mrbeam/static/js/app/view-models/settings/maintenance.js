@@ -24,8 +24,6 @@ $(function () {
         );
         self.LASER_HEAD = gettext("laser head");
         self.GANTRY = gettext("mechanics");
-        self.PREFILTER_LIFESPAN = 40;
-        self.CARBON_FILTER_LIFESPAN = 280;
         self.LASER_HEAD_LIFESPAN = 40;
         self.GANTRY_LIFESPAN = 100;
         self.WARN_IF_CRITICAL_PERCENT = 70;
@@ -36,24 +34,14 @@ $(function () {
         self.carbonFilterUsage = ko.observable(0);
         self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
+        self.prefilterLifespans = ko.observable(0);
+        self.carbonfilterLifespans = ko.observable(0);
+        self.prefilterShopify = ko.observable(0);
+        self.carbonfilterShopify = ko.observable(0);
 
         self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
-
-        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.PREFILTER_LIFESPAN,
-        });
-        self.carbonFilterLifespanHours = _.sprintf(
-            gettext("/%(lifespan)s hrs"),
-            { lifespan: self.CARBON_FILTER_LIFESPAN }
-        );
-        self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.LASER_HEAD_LIFESPAN,
-        });
-        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.GANTRY_LIFESPAN,
-        });
 
         self.totalUsageHours = ko.computed(function () {
             return Math.floor(self.totalUsage() / 36) / 100;
@@ -74,14 +62,23 @@ $(function () {
         self.optimizeParameterPercentageValues = function (val) {
             return Math.min(roundDownToNearest10(val), 100);
         };
+
+        self.prefilterLifespan = function (stage) {
+            return self.prefilterLifespans()[stage];
+        };
+
+        self.carbonfilterLifespan = function (stage) {
+            return self.carbonfilterLifespans()[stage];
+        };
+
         self.prefilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-                (self.prefilterUsageHours() / self.PREFILTER_LIFESPAN) * 100
+                (self.prefilterUsageHours() / self.prefilterLifespan(0)) * 100
             );
         });
         self.carbonFilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-                (self.carbonFilterUsageHours() / self.CARBON_FILTER_LIFESPAN) *
+                (self.carbonFilterUsageHours() / self.carbonfilterLifespan(0)) *
                     100
             );
         });
@@ -356,6 +353,30 @@ $(function () {
             self.laserHeadSerial(
                 self.settings.settings.plugins.mrbeam.laserhead.serial()
             );
+            self.prefilterLifespans(
+                self.settings.settings.plugins.mrbeam.usage.prefilterLifespans()
+            );
+            self.carbonfilterLifespans(
+                self.settings.settings.plugins.mrbeam.usage.carbonfilterLifespans()
+            );
+            self.carbonfilterShopify(
+                self.settings.settings.plugins.mrbeam.usage.carbonfilterShopify()
+            );
+            self.prefilterShopify(
+                self.settings.settings.plugins.mrbeam.usage.prefilterShopify()
+            );
+        };
+
+        self.shopifyLink = function (stagename, stageid) {
+            let link;
+            if (stagename === "prefilter") {
+                link = self.prefilterShopify()[stageid];
+            } else if (stagename === "carbonfilter") {
+                link = self.carbonfilterShopify()[stageid];
+            } else {
+                link = null;
+            }
+            return link;
         };
 
         self.notifyMaintenanceRequired = function () {

@@ -36,7 +36,7 @@ from octoprint.events import Events as OctoPrintEvents
 
 from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
 from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
-from octoprint_mrbeam.iobeam.airfilter import airfilter
+from octoprint_mrbeam.iobeam.airfilter import airfilter, AirFilter
 
 IS_X86 = platform.machine() == "x86_64"
 from ._version import get_versions
@@ -525,6 +525,14 @@ class MrBeamPlugin(
                 carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
                 laserHeadUsage=self.usage_handler.get_laser_head_usage(),
                 gantryUsage=self.usage_handler.get_gantry_usage(),
+                prefilterLifespans=self.airfilter.get_lifespans(AirFilter.PREFILTER),
+                carbonfilterLifespans=self.airfilter.get_lifespans(
+                    AirFilter.CARBONFILTER
+                ),
+                carbonfilterShopify=self.airfilter.get_shopify_links(
+                    AirFilter.CARBONFILTER
+                ),
+                prefilterShopify=self.airfilter.get_shopify_links(AirFilter.PREFILTER),
             ),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(

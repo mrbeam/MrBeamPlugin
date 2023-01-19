@@ -13,8 +13,8 @@
                     <small class="maintenance-description">
                         {{ _('The pre filter filters all coarse particles from the exhaust air. Regular changing improves the air flow and preserves the main filter.*') }}
                     </small>
-                    <div class="maintenance-links">
-                        <a href="https://store.mr-beam.org/products/10er-pack-vorfilter-fur-mr-beam-air-filter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page"
+                    <div class="maintenance-links" data-bind="visible: shopifyLink('prefilter', 0)">
+                        <a data-bind="attr: {href: shopifyLink('prefilter', 0)}"
                            target="_blank" id="prefilter_shop_link" class="maintenance-link-shop">
                             <i class="icon-shopping-cart"></i>
                             {{ _('Buy now') }}
@@ -40,8 +40,8 @@
                     <small class="maintenance-description">
                         {{ _('The main filter is a combined hepa and activated carbon filter. It filters both tiny particles and odours from the exhaust air.*') }}
                     </small>
-                    <div class="maintenance-links">
-                        <a href="https://store.mr-beam.org/products/activated-carbon-filter-for-the-mr-beam-air-filter-system-incl-5-prefilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page"
+                    <div class="maintenance-links" data-bind="visible: shopifyLink('carbonfilter', 0)">
+                        <a data-bind="attr: {href: shopifyLink('carbonfilter', 0)}"
                            target="_blank" id="carbon_filter_shop_link" class="maintenance-link-shop">
                             <i class="icon-shopping-cart"></i>
                             {{ _('Buy now') }}
