@@ -24,11 +24,11 @@ $(function () {
         );
         self.LASER_HEAD = gettext("laser head");
         self.GANTRY = gettext("mechanics");
-        self.WARN_IF_CRITICAL_PERCENT = 70;
-        self.WARN_IF_USED_PERCENT = 100;
         self.PREFILTER_LIFESPAN = 40;
         self.CARBON_FILTER_LIFESPAN = 280;
         self.GANTRY_LIFESPAN = 100;
+        self.WARN_IF_CRITICAL_PERCENT = 70;
+        self.WARN_IF_USED_PERCENT = 100;
         self.laserHeadLifespan = ko.observable(0);
 
         self.totalUsage = ko.observable(0);
@@ -36,6 +36,10 @@ $(function () {
         self.carbonFilterUsage = ko.observable(0);
         self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
+        self.prefilterLifespans = ko.observable(0);
+        self.carbonfilterLifespans = ko.observable(0);
+        self.prefilterShopify = ko.observable(0);
+        self.carbonfilterShopify = ko.observable(0);
         self.prefilterLifespan = ko.observable(0);
 
         self.needsGantryMaintenance = ko.observable(true);
@@ -86,14 +90,23 @@ $(function () {
         self.optimizeParameterPercentageValues = function (val) {
             return Math.min(roundDownToNearest10(val), 100);
         };
+
+        self.prefilterLifespan = function (stage) {
+            return self.prefilterLifespans()[stage];
+        };
+
+        self.carbonfilterLifespan = function (stage) {
+            return self.carbonfilterLifespans()[stage];
+        };
+
         self.prefilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-                (self.prefilterUsageHours() / self.prefilterLifespan()) * 100
+                (self.prefilterUsageHours() / self.prefilterLifespan(0)) * 100
             );
         });
         self.carbonFilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-                (self.carbonFilterUsageHours() / self.CARBON_FILTER_LIFESPAN) *
+                (self.carbonFilterUsageHours() / self.carbonfilterLifespan(0)) *
                     100
             );
         });
@@ -437,6 +450,30 @@ $(function () {
             self.laserHeadLifespan(
                 self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()
             );
+            self.prefilterLifespans(
+                self.settings.settings.plugins.mrbeam.usage.prefilterLifespans()
+            );
+            self.carbonfilterLifespans(
+                self.settings.settings.plugins.mrbeam.usage.carbonfilterLifespans()
+            );
+            self.carbonfilterShopify(
+                self.settings.settings.plugins.mrbeam.usage.carbonfilterShopify()
+            );
+            self.prefilterShopify(
+                self.settings.settings.plugins.mrbeam.usage.prefilterShopify()
+            );
+        };
+
+        self.shopifyLink = function (stagename, stageid) {
+            let link;
+            if (stagename === "prefilter") {
+                link = self.prefilterShopify()[stageid];
+            } else if (stagename === "carbonfilter") {
+                link = self.carbonfilterShopify()[stageid];
+            } else {
+                link = null;
+            }
+            return link;
         };
 
         self.notifyMaintenanceRequired = function () {
