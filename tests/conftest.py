@@ -32,8 +32,10 @@ def pytest_generate_tests(metafunc):
 
 @pytest.fixture
 def mrbeam_plugin():
-    mrbeam_plugin = MagicMock(
-        _basefolder=os.path.join(os.path.dirname(__package_path__), "octoprint_mrbeam"),
-        _settings=sett,
+    mrbeam_plugin = MrBeamPlugin()
+    mrbeam_plugin._settings = sett
+    mrbeam_plugin._basefolder = os.path.join(
+        os.path.dirname(__package_path__), "octoprint_mrbeam"
     )
+    mrbeam_plugin._plugin_manager = MagicMock()
     yield mrbeam_plugin
