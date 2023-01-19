@@ -376,11 +376,7 @@ $(function () {
             } else {
                 link = null;
             }
-            if (link != null) {
-                return link;
-            } else {
-                return null;
-            }
+            return link;
         };
 
         self.notifyMaintenanceRequired = function () {
