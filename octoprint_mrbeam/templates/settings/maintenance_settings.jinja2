@@ -8,6 +8,19 @@
             <tr>
                 {######### PRE-FILTER #########}
                 <td class="maintenance-description-column">
+                    <h4>{{ _('Air Filter III: Pre-filter') }}</h4>
+                    <small class="maintenance-description">
+                        {{ _('The pre filter filters all coarse particles from the exhaust air. Regular changing improves the air flow and preserves the main filter.*') }}
+                    </small>
+                    <div class="maintenance-links" data-bind="visible: shopifyLink('prefilter', 0)">
+                        <a data-bind="attr: {href: shopifyLink('prefilter', 0)}"
+                           target="_blank" id="prefilter_shop_link" class="maintenance-link-shop">
+                            <i class="icon-shopping-cart"></i>
+                            {{ _('Buy now') }}
+                        </a>
+                    </div>
+                </td>
+                <td class="maintenance-description-column">
                     <h4>{{ _('Air Filter: Pre-filter') }}</h4>
                     <small class="maintenance-description">
                         {{ _('Please choose which pre-filter you are using, so the maintenance counter can be adjusted accordingly.') }}
@@ -67,6 +80,19 @@
             </tr>
             <tr>
                 {######### CARBON FILTER #########}
+                <td class="maintenance-description-column">
+                    <h4>{{ _('Air Filter III: Main filter') }}</h4>
+                    <small class="maintenance-description">
+                        {{ _('The main filter is a combined hepa and activated carbon filter. It filters both tiny particles and odours from the exhaust air.*') }}
+                    </small>
+                    <div class="maintenance-links" data-bind="visible: shopifyLink('carbonfilter', 0)">
+                        <a data-bind="attr: {href: shopifyLink('carbonfilter', 0)}"
+                           target="_blank" id="carbon_filter_shop_link" class="maintenance-link-shop">
+                            <i class="icon-shopping-cart"></i>
+                            {{ _('Buy now') }}
+                        </a>
+                    </div>
+                </td>
                 <td class="maintenance-description-column">
                     <h4>{{ _('Air Filter: Main filter') }}</h4>
                     <small class="maintenance-description">
