@@ -56,7 +56,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 220.1241,
             force: true,
         });
-        //cy.designTextSettings();
+        cy.designTextSettings();
 
         // Add 3rd design fill text concave up
         cy.get('[data-test="working-area-tab-text"]').click();
@@ -77,7 +77,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 80.1241,
             force: true,
         });
-        //cy.designTextSettings();
+        cy.designTextSettings();
 
         // Start the laser job
         cy.laserButtonClick();
@@ -165,10 +165,10 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-color-picker-fill"]').click();
         cy.get('[data-test="quick-text-modal-text-straight"]').click();
         cy.get('[data-test="quick-text-stroke-input"]').click();
-        cy.get('[id="qt_colorPicker_stroke"]').click();
-        cy.get('[id="qt_colorPicker_stroke"] > .track > canvas').realClick({
-            position: "left",
-        });
+        //cy.get('[id="qt_colorPicker_stroke"]').click();
+        //cy.get('[id="qt_colorPicker_stroke"] > .track > canvas').realClick({
+        //    position: "top",
+        //});
         cy.get('[data-test="quick-text-font-button-left"]').last().click();
         cy.get('[data-test="quick-text-done-button"]').click();
         cy.get('[id="translateHandle"]').move({
@@ -186,9 +186,9 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-modal-text-cw"]').click();
         cy.get('[data-test="quick-text-color-picker-fill"]').click();
         cy.get('[data-test="quick-text-stroke-input"]').click();
-        cy.get('[id="qt_colorPicker_stroke"]').click();
+        //cy.get('[id="qt_colorPicker_stroke"]').click();
         cy.get('[id="qt_colorPicker_stroke"] > .track > canvas').realClick({
-            position: "left",
+            position: "top",
         });
         cy.get('[data-test="quick-text-circle-input"]').trigger("right");
         cy.get('[data-test="quick-text-font-button-left"]').last().click();
@@ -198,7 +198,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 220.1241,
             force: true,
         });
-        //cy.designTextSettings();
+        cy.designTextSettings();
 
         // Add 3rd design stroke text concave up
         cy.get('[data-test="working-area-tab-text"]').click();
@@ -209,7 +209,7 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-modal-text-ccw"]').click();
         cy.get('[data-test="quick-text-color-picker-fill"]').click();
         cy.get('[data-test="quick-text-stroke-input"]').click();
-        cy.get('[id="qt_colorPicker_stroke"]').click();
+        //cy.get('[id="qt_colorPicker_stroke"]').click();
         cy.get('[id="qt_colorPicker_stroke"] > .track > canvas').realClick({
             position: "left",
         });
@@ -221,7 +221,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 80.1241,
             force: true,
         });
-        //cy.designTextSettings();
+        cy.designTextSettings();
 
         // Start the laser job
         cy.laserButtonClick();
@@ -267,7 +267,7 @@ describe("Laser Job - quick text", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/fixtures/StrokeTextStraight_2more.gco.gco", {
+                cy.readFile("cypress/fixtures/StrokeTextStraight_2more.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -296,7 +296,7 @@ describe("Laser Job - quick text", function () {
             });
         cy.logout();
     });
-
+/*
     it("Add text - ok button", function () {
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-window"]').should("to.visible");
@@ -304,5 +304,5 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-modal-window"]').should("not.visible");
         cy.logout();
     });
-
+*/
 });

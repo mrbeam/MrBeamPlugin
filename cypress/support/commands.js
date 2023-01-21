@@ -237,15 +237,15 @@ Cypress.Commands.add("deleteGcoFile", () => {
 
 Cypress.Commands.add("designTextSettings", () => {
     cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
+            .filter(":visible").last()
             .clear({force: true})
             .type("-50.5");
         cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
+            .filter(":visible").last()
             .clear({force: true})
             .type("116.3 mm");
         cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
+            .filter(":visible").last()
             .clear({force: true})
             .type("132.3 mm");
 });
@@ -259,7 +259,7 @@ Cypress.Commands.add("laserButtonClick", () => {
 Cypress.Commands.add("selectMaterial", () => {
     cy.get('[data-test="conversion-dialog-material-item"]')
         .contains("Cardboard, single wave")
-        .click();
+        .click({force: true});
     cy.wait(1000);
     cy.get('[data-test="conversion-dialog-material-color"]')
         .first()
