@@ -66,6 +66,12 @@ mrbeam.model = {
     },
 };
 
+// Mr Beam laserhead models
+mrbeam.laserhead_model = {
+    S: 1,
+    X: 3,
+};
+
 /**
  * Push a new PNotify notification.
  * If pn_obj contains attribute 'id',

@@ -4,9 +4,20 @@ import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
+from octoprint_mrbeam.util.device_info import MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_x, \
+    MODEL_MRBEAM_2_DC_R1, MODEL_MRBEAM_2_DC_R2, MODEL_MRBEAM_2
 
 LASERHEAD_MAX_TEMP_FALLBACK = 55.0
 LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
+LASERHEAD_STOCK_ID = 0
+LASERHEAD_S_ID = 1
+LASERHEAD_X_ID = 3
+
+SUPPORTED_LASERHEADS = {
+    LASERHEAD_STOCK_ID: [MODEL_MRBEAM_2, MODEL_MRBEAM_2_DC_R1, MODEL_MRBEAM_2_DC_R2, MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_x],
+    LASERHEAD_S_ID: [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_x],
+    LASERHEAD_X_ID: [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_x],
+}
 
 # singleton
 _instance = None
@@ -24,10 +35,11 @@ class LaserheadHandler(object):
     LASER_POWER_GOAL_MAX = 1300
     LASERHEAD_SERIAL_REGEXP = re.compile("^[0-9a-f-]{36}$")
     _LASERHEAD_MODEL_STRING_MAP = {
-        "0": '0',  # dreamcut, mrbeam2 and mrbeam laserheads
-        "1": 'S',  # dreamcut[S] laserhead
-        "3": 'x',  # dreamcut[x] laserhead
+        str(LASERHEAD_STOCK_ID): '0',  # dreamcut, mrbeam2 and mrbeam laserheads
+        str(LASERHEAD_S_ID): 'S',  # dreamcut[S] laserhead
+        str(LASERHEAD_X_ID): 'x',  # dreamcut[x] laserhead
     }
+
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.laserhead")
@@ -88,7 +100,7 @@ class LaserheadHandler(object):
             if str(read_model) in self._LASERHEAD_MODEL_STRING_MAP:
                 model = read_model
             else:
-                model = 0
+                model = LASERHEAD_STOCK_ID
                 self._logger.warn(
                     "Laserhead model received is not valid, Model: {} assume default model 0".format(read_model)
                 )
@@ -113,7 +125,7 @@ class LaserheadHandler(object):
 
                 if (self._current_used_lh_serial != self._last_used_lh_serial) and self._last_used_lh_model_id is not None:
                     # fmt: on
-                    if self._current_used_lh_model_id == 1:
+                    if self._current_used_lh_model_id in [LASERHEAD_S_ID, LASERHEAD_X_ID]:
                         self._settings.set_boolean(["laserheadChanged"], True)
                         self._settings.save()
                     self._logger.info(
@@ -294,6 +306,17 @@ class LaserheadHandler(object):
     def get_current_used_lh_model_id(self):
         return self._current_used_lh_model_id
 
+    def is_current_used_lh_model_supported(self):
+        """Checks if the current used laser head model is supported or not.
+
+        Returns:
+            boolean: True if the current used laser head model is supported, False otherwise
+        """
+        supported = SUPPORTED_LASERHEADS.get(self.get_current_used_lh_model_id()) is not None and self._plugin.get_model_id() in SUPPORTED_LASERHEADS.get(self.get_current_used_lh_model_id())
+        if not supported:
+            self._logger.error("Current used laser head model is not supported by this device model.")
+        return supported
+
     def _validate_lh_serial(self, serial):
         try:
             return bool(self.LASERHEAD_SERIAL_REGEXP.match(serial))
@@ -327,9 +350,9 @@ class LaserheadHandler(object):
                 "target_power", self.LASER_POWER_GOAL_DEFAULT
             )
 
-            # laserhead model S fix for correction factor
+            # laserhead model S and x fix for correction factor
             # TODO fix this GOAL_MAX problem for all laser heads in a separate issue SW-394
-            if self._current_used_lh_model_id == 1:
+            if self._current_used_lh_model_id in [LASERHEAD_S_ID, LASERHEAD_X_ID]:
                 if target_power < 0 or target_power >= p_85:
                     self._logger.warn(
                         "Laserhead target_power ({target}) over p_85 ({p_85}) => target_power will be set to GOAL_DEFAULT ({default}) for the calculation of the correction factor".format(

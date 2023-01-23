@@ -1,19 +1,74 @@
 <div id="laserhead_changed" class="modal hide fade" data-backdrop="static">
-    <div class="modal-header">
-        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-        <h3>{{ _('A new Laserhead has been detected') }}</h3>
-    </div>
-    <div class="modal-body">
+    {# Not supported laserhead  - START #}
+    <div class="modal-body" data-bind="visible: !laserhead_model_supported">
         <div>
             <img loading="lazy" src="/plugin/mrbeam/static/img/welcome_dialog/start.png">
-            <h4> {{ _("Your new Mr Beam dreamcut [S] Laserhead has been successfully installed.") }}</h4>
-            <p> {{ _("With this Laserhead you can work now even faster.") }}</p>
-            <p> {{ _("This means that we also update the default material settings to the new laserhead as long it is installed to provide you the best possible support. However, we do not update your custom materials, this will need your personal testing and finetuning.") }}</p>
-            <p> {{ _("Read about the changes you can expect with the new and improved MrBeam II dreamcut [S] Laserhead.") }} <a target="_blank" href="{{ _("https://support.mr-beam.org/en/support/solutions/articles/43000640531") }}"> » {{ _("Read more") }} </a></p>
+            <h4> {{ _("We are verv sorrv but the lust installed Laserhead will not work with vour device.") }}</h4>
+            <p> {{ _("Ever device older than the dreamcut row will not support the new and advanced Laserhead properlv. There are just toc many improvements that are missing in the earlier states of our model rows like Mr Beam and Mr Beam Il. Please contaci our support tor the Turther steps") }}</p>
         </div>
     </div>
+    {# Not supported laserhead  - END #}
+
+
+    {# Steps for laserhead S  - START #}
+    <div class="modal-body" data-bind="visible:laserhead_changed_step1_laserhead_s_show">
+        <div>
+            <img loading="lazy" src="/plugin/mrbeam/static/img/welcome_dialog/start.png">
+            <h4> {{ _("Your Mr Beam dreamcut [S] Laserhead has been successfully installed.") }}</h4>
+            <p> {{ _("With this Laserhead you can work now even faster.") }}</p>
+            <p> {{ _("This means that we also update the default material settings to the new laserhead as long it is installed to provide you the best possible support. However, we do not update your custom materials, this will need your personal testing and finetuning.") }}</p>
+            <p> {{ _("Read about the changes you can expect with the MrBeam II dreamcut [S] Laserhead.") }} <a
+                    target="_blank"
+                    href="{{ _("https://support.mr-beam.org/en/support/solutions/articles/43000640531") }}">
+                » {{ _("Read more") }} </a></p>
+        </div>
+    </div>
+    {# Steps for laserhead S  - END #}
+
+    {# Steps for laserhead x  - START #}
+    <div class="modal-body" data-bind="visible:laserhead_changed_step1_laserhead_x_show">
+        <div>
+            <img loading="lazy" src="/plugin/mrbeam/static/img/welcome_dialog/start.png">
+            <h4> {{ _("Your Mr Beam dreamcut [x] Laserhead has been successfully installed.") }}</h4>
+            <p> {{ _(" With this Laserhead you can work now even faster.") }}</p>
+            <p> {{ _("This means that we also update the default material settings to the new laserhead as long it is installed to provide you the best possible support. However, we do not update your custom materials, this will need your personal testing and finetuning.") }}</p>
+            <p> {{ _("Read about what changes vou can expect with a Laserhead Mr Beam Il dreamcut [x].") }} <a
+                    target="_blank"
+                    href="{{ _("https://support.mr-beam.org/en/support/solutions/articles/#TODO") }}">
+                » {{ _("Read more") }} </a></p>{#            TODO#}
+        </div>
+    </div>
+
+    <div class="modal-body" data-bind="visible:laserhead_changed_step2_laserhead_x_show">
+        <div>
+            <img loading="lazy" src="/plugin/mrbeam/static/img/welcome_dialog/start.png">
+            <h4> {{ _("Your Mr Beam dreamcut [x] Laserhead has been successfully installed.") }}</h4>
+            <p> {{ _("One important thina is: vou need a 90 Power Supply tor the new Laserhead because or Its Increased energy requirements. Check If vou have that, otnerwise look here.") }}</p>
+            <a
+                    target="_blank"
+                    href="{{ _("https://support.mr-beam.org/en/support/solutions/articles/43000640531") }}">
+                {#            TODO#}
+                {{ _("here") }} </a></p>
+        </div>
+    </div>
+
+
+    <div class="modal-body" data-bind="visible:laserhead_changed_step3_laserhead_x_show">
+        <div>
+            <img loading="lazy" src="/plugin/mrbeam/static/img/welcome_dialog/start.png">
+            <h4> {{ _("Please place the included sticker onto our Device!") }}</h4>
+            <p> {{ _("To keep the device in compliance with safety instructions and requlations. olease place the suoolied undated laser nower label over the previous „5W notice.") }}</p>
+            IMAGE {# TODO #}
+        </div>
+    </div>
+    {# Steps for laserhead x  - END #}
+
     <div class="modal-footer">
+        <button class="btn bet-default" id="laserhead_change_next_step"
+                data-bind="click: $root.laserhead_changed_previous_step, visible: laserhead_changed_show_previous_button()">{{ _("Previous") }}</button>
+        <button class="btn btn-primary" id="laserhead_change_next_step"
+                data-bind="click: $root.laserhead_changed_next_step, visible: !lastStep()">{{ _("Next") }}</button>
         <button class="btn btn-primary" id="laserhead_changed_detected" data-dismiss="modal" aria-hidden="true"
-                data-bind="click: $root.laserheadChangeAcknowledged">{{ _('OK') }}</button>
+                data-bind="visible: lastStep(), click: $root.laserheadChangeAcknowledged">{{ _('OK') }}</button>
     </div>
 </div>
