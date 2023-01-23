@@ -123,6 +123,8 @@ class LaserheadHandler(object):
                         self._current_used_lh_serial,
                         self._current_used_lh_model_id,
                     )
+                    self._analytics_handler.add_laserhead_changed(last_used_serial=self._last_used_lh_serial, last_used_model_id=self._last_used_lh_model_id, new_serial=self._current_used_lh_serial,
+                        new_model_id=self._current_used_lh_model_id)
                 self._write_lh_data_to_cache(lh_data)
 
                 self._calculate_and_write_correction_factor()
