@@ -235,7 +235,7 @@ Cypress.Commands.add("deleteGcoFile", () => {
     cy.get('[data-test="mrbeam-ui-index-working-area"]').click();
 });
 
-Cypress.Commands.add("designTextSettings", () => {
+Cypress.Commands.add("designSettings", () => {
     cy.get('[data-test="tab-workingarea-rotation"]')
             .filter(":visible").last()
             .clear({force: true})

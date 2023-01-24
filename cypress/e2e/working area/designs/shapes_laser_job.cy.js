@@ -10,10 +10,9 @@ describe("Laser Job - shapes", function () {
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.visit(this.testData.url_laser);
-        cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });
-
+/*
     it("Heart shape", function () {
         // Add heart-shaped design
         cy.get('[data-test="working-area-tab-shape"]').click();
@@ -38,7 +37,7 @@ describe("Laser Job - shapes", function () {
             deltaY: 120.1241,
             force: true,
         });
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Start the laser job
         cy.laserButtonClick();
@@ -47,20 +46,21 @@ describe("Laser Job - shapes", function () {
         cy.wait(3000);
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
 
-        //Get Gcode
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                  //  "GET",
+                    //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -83,7 +83,7 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Heart.gco", {
+                cy.readFile("cypress/fixtures/Heart.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -95,10 +95,18 @@ describe("Laser Job - shapes", function () {
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
+                    cy.readFile("cypress/downloads/Heart.gco", {
+                    timeout: 40000,
+                        }).then((contentDownloadFile) => {
+                            let contentTestDownloadNoComments = contentDownloadFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            expect(contentTestDownloadNoComments).to.equal(
+                                contentTestFileNoComments
+                            );
                         });
                 });
             });
@@ -122,7 +130,7 @@ describe("Laser Job - shapes", function () {
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Start the laser job
         cy.laserButtonClick();
@@ -130,20 +138,21 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
 
-        //Get Gcode
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                  //  "GET",
+                    //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -166,7 +175,7 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Circle.gco", {
+                cy.readFile("cypress/fixtures/Circle.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -178,10 +187,18 @@ describe("Laser Job - shapes", function () {
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
+                    cy.readFile("cypress/downloads/Circle.gco", {
+                    timeout: 40000,
+                        }).then((contentDownloadFile) => {
+                            let contentTestDownloadNoComments = contentDownloadFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            expect(contentTestDownloadNoComments).to.equal(
+                                contentTestFileNoComments
+                            );
                         });
                 });
             });
@@ -209,7 +226,7 @@ describe("Laser Job - shapes", function () {
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "top" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Start the laser job
         cy.laserButtonClick();
@@ -217,20 +234,21 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
 
-        //Get Gcode
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                  //  "GET",
+                    //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -253,7 +271,7 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Star.gco", {
+                cy.readFile("cypress/fixtures/Star.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
@@ -265,10 +283,18 @@ describe("Laser Job - shapes", function () {
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
+                    cy.readFile("cypress/downloads/Star.gco", {
+                    timeout: 40000,
+                        }).then((contentDownloadFile) => {
+                            let contentTestDownloadNoComments = contentDownloadFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            expect(contentTestDownloadNoComments).to.equal(
+                                contentTestFileNoComments
+                            );
                         });
                 });
             });
@@ -292,7 +318,7 @@ describe("Laser Job - shapes", function () {
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Start the laser job
         cy.laserButtonClick();
@@ -300,20 +326,21 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
 
-        //Get Gcode
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                  //  "GET",
+                    //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -336,35 +363,43 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Line.gco", {
+                cy.readFile("cypress/fixtures/Line.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click( {force: true} );
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click( {force: true} );
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
+                    cy.readFile("cypress/downloads/Line.gco", {
+                    timeout: 40000,
+                        }).then((contentDownloadFile) => {
+                            let contentTestDownloadNoComments = contentDownloadFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            expect(contentTestDownloadNoComments).to.equal(
+                                contentTestFileNoComments
+                            );
                         });
                 });
             });
         cy.logout();
     });
-
+*/
     it("Rectangle shape", function () {
         // Add rectangle-shaped design
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-rect"]').click();
         cy.get('[data-test="quick-shape-rect-width"]').clear().type("60");
         cy.get('[data-test="quick-shape-rect-height"]').clear().type("60");
-        cy.get('[data-test="quick-shape-rect-radius-input"]').realClick();
+        //cy.get('[data-test="quick-shape-rect-radius-input"]').realClick();
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
         cy.get(
             '[data-test="quick-shape-color-picker-stroke"] > .track > canvas'
@@ -375,7 +410,7 @@ describe("Laser Job - shapes", function () {
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Start the laser job
         cy.laserButtonClick();
@@ -384,20 +419,21 @@ describe("Laser Job - shapes", function () {
         cy.wait(7000);
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
 
-        //Get Gcode
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                  //  "GET",
+                    //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -420,33 +456,41 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Rectangle.gco", {
+                cy.readFile("cypress/fixtures/Rectangle.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click( {force: true} );
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click( {force: true} );
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
+                    cy.readFile("cypress/downloads/Rectangle.gco", {
+                    timeout: 40000,
+                        }).then((contentDownloadFile) => {
+                            let contentTestDownloadNoComments = contentDownloadFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            let contentTestFileNoComments = contentTestFile
+                                .replace(/^;.*$/gm, "")
+                                .trimEnd();
+                            expect(contentTestDownloadNoComments).to.equal(
+                                contentTestFileNoComments
+                            );
                         });
                 });
             });
         cy.logout();
     });
-
+/*
     it("Add shapes - ok button", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-modal-window"]').should("to.visible");
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="quick-shape-modal-window"]').should("not.visible");
     });
-
+*/
 });

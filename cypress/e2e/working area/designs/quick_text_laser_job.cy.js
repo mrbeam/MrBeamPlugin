@@ -35,7 +35,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 220.1241,
             force: true,
         });
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Add 2nd design fill text concave down
         cy.get('[data-test="working-area-tab-text"]').click();
@@ -56,7 +56,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 220.1241,
             force: true,
         });
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Add 3rd design fill text concave up
         cy.get('[data-test="working-area-tab-text"]').click();
@@ -77,7 +77,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 80.1241,
             force: true,
         });
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Start the laser job
         cy.laserButtonClick();
@@ -176,7 +176,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 220.1241,
             force: true,
         });
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Add 2nd design stroke text concave down
         cy.get('[data-test="working-area-tab-text"]').click();
@@ -198,7 +198,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 220.1241,
             force: true,
         });
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Add 3rd design stroke text concave up
         cy.get('[data-test="working-area-tab-text"]').click();
@@ -221,7 +221,7 @@ describe("Laser Job - quick text", function () {
             deltaY: 80.1241,
             force: true,
         });
-        cy.designTextSettings();
+        cy.designSettings();
 
         // Start the laser job
         cy.laserButtonClick();
@@ -296,7 +296,7 @@ describe("Laser Job - quick text", function () {
             });
         cy.logout();
     });
-/*
+
     it("Add text - ok button", function () {
         cy.get('[data-test="working-area-tab-text"]').click();
         cy.get('[data-test="quick-text-modal-window"]').should("to.visible");
@@ -304,5 +304,5 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-modal-window"]').should("not.visible");
         cy.logout();
     });
-*/
+
 });
