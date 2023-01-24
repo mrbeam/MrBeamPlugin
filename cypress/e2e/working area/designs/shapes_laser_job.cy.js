@@ -12,7 +12,7 @@ describe("Laser Job - shapes", function () {
         cy.visit(this.testData.url_laser);
         cy.deleteGcoFile();
     });
-/*
+
     it("Heart shape", function () {
         // Add heart-shaped design
         cy.get('[data-test="working-area-tab-shape"]').click();
@@ -88,10 +88,10 @@ describe("Laser Job - shapes", function () {
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click({force: true});
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click({force: true});
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
@@ -180,10 +180,10 @@ describe("Laser Job - shapes", function () {
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click({force: true});
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click({force: true});
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
@@ -276,10 +276,10 @@ describe("Laser Job - shapes", function () {
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click({force: true});
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click({force: true});
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
@@ -392,7 +392,7 @@ describe("Laser Job - shapes", function () {
             });
         cy.logout();
     });
-*/
+
     it("Rectangle shape", function () {
         // Add rectangle-shaped design
         cy.get('[data-test="working-area-tab-shape"]').click();
@@ -485,12 +485,12 @@ describe("Laser Job - shapes", function () {
             });
         cy.logout();
     });
-/*
+
     it("Add shapes - ok button", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-modal-window"]').should("to.visible");
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="quick-shape-modal-window"]').should("not.visible");
     });
-*/
+
 });
