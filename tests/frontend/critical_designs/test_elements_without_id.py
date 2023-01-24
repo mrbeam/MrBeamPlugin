@@ -1,6 +1,6 @@
 import logging
-from frontend import webdriverUtils
-from frontend.critical_designs.base_procedure import BaseProcedure
+from tests.frontend import webdriverUtils
+from tests.frontend.critical_designs.base_procedure import BaseProcedure
 
 
 class TestElementsWithoutId(BaseProcedure):

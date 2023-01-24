@@ -1,0 +1,42 @@
+<div class="tab-pane" id="material_store_content">
+    <div id="loading_spinner_wrapper">
+        <div id="loading_spinner">
+            <i class="icon icon-spinner icon-spin"></i>
+        </div>
+    </div>
+    <iframe id="material_store_iframe" class="hidden" loading="lazy" src="#"></iframe>
+    <div id="connection_error" class="hidden">
+        <div class="row-fluid no-internet-connection-section">
+            <div class="span12">
+                <div class="row-fluid">
+                    <div class="span3">
+                    </div>
+                    <div class="span6">
+                        <div class="row-fluid">
+                            <div class="span3">
+                                <div class="no-internet-icon">
+                                    <img loading="lazy" src="/plugin/mrbeam/static/img/no_internet.svg">
+                                </div>
+                            </div>
+                            <div class="span9">
+                                <div class="no-internet-content">
+                                    <h4>{{ _('The Mr&nbsp;Beam Material Store is not reachable') }}</h4>
+                                    <p>{{ _('In order to use our store it is necessary that your Mr&nbsp;Beam is connected to the internet.') }}</p>
+                                    <p>{{ _('Please connect your Mr&nbsp;Beam to your router with a cable, or via WiFi.') }}</p>
+                                    <div>
+                                        <button id="refresh_material_store_btn" class="btn refresh-connection">
+                                            {{ _('Refresh') }}
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="span3">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

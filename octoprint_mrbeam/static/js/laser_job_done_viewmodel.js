@@ -25,6 +25,7 @@ $(function () {
         self.is_dust_mode = ko.observable(false);
         self.job_duration = ko.observable(0);
         self.job_duration_formatted = ko.computed(function () {
+            // TODO use utils.js          return formatHHMMSS(self.job_duration());
             if (self.job_duration() < 0) {
                 return "--:--:--";
             }
@@ -66,7 +67,6 @@ $(function () {
             }
             self._fromData(payload);
             self.dialogElement.modal("show");
-            self.switchTimer();
             self.jobDoneDialog.shown = payload["ts"] || new Date().getTime();
         };
 
@@ -97,20 +97,6 @@ $(function () {
             }
         };
 
-        self.switchTimer = function (delay) {
-            setTimeout(self._switchNow, delay || self._switchDelay);
-        };
-
-        self._switchNow = function () {
-            $("#laser_job_done_image_check").removeClass("show");
-            $("#laser_job_done_image_text").addClass("show");
-        };
-
-        self._switchBack = function () {
-            $("#laser_job_done_image_check").addClass("show");
-            $("#laser_job_done_image_text").removeClass("show");
-        };
-
         self.repeat_job = function () {
             if (self.lastJob !== null) {
                 self.cancel_btn();
@@ -124,7 +110,6 @@ $(function () {
         self.cancel_btn = function () {
             self.is_job_done(false);
             self.dialogElement.modal("hide");
-            self._switchBack();
             self.jobDoneDialog.closed = new Date().getTime();
             self.jobDoneDialog.dur = Math.floor(
                 self.jobDoneDialog.closed / 1000 -
