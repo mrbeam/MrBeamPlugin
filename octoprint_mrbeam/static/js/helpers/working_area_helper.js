@@ -691,6 +691,7 @@ class WorkingAreaHelper {
                         "Access to stylesheet %s is denied. Ignoring...",
                         styleSheet.href
                     );
+                    return [];
                 }
             });
         return result;
