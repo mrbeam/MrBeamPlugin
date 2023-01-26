@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-01-17 15:25+0100\n"
+"POT-Creation-Date: 2023-01-26 11:00+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2339,6 +2339,18 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:30
 msgid "By the way - Did you know?"
+msgstr ""
+
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:58
+msgid "You can find a variety of laser materials on our website."
+msgstr ""
+
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:59
+msgid "Our Material Store has the same material available for purchase."
+msgstr ""
+
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:60
+msgid "We have similar materials for you in our Material Store."
 msgstr ""
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:63
