@@ -545,11 +545,10 @@ class LaserheadHandler(object):
             self._laserhead_properties = self._load_current_laserhead_properties()
             if self._laserhead_properties is not None:
                 self._laserhead_properties.update({'laserhead_id': laserhead_id})
+            self._logger.debug("_laserhead_properties - {}".format(self._laserhead_properties))
         else:
             self._logger.debug("no new laserhead_id -> return current laserhead_properties")
 
-        self._logger.debug(
-            "_laserhead_properties - {}".format(self._laserhead_properties))
         return self._laserhead_properties
 
     @property
@@ -566,7 +565,6 @@ class LaserheadHandler(object):
                 ("max_dust_factor" not in current_laserhead_properties) or
                 (isinstance(current_laserhead_properties["max_dust_factor"], float) is False)):
             # Apply fallback
-            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
             self._logger.exception(
                 "Current Laserhead max dust factor couldn't be retrieved, fallback to the factor value of: {}".format(
                     self.default_laserhead_max_dust_factor))
@@ -601,7 +599,6 @@ class LaserheadHandler(object):
                 ("max_correction_factor" not in current_laserhead_properties) or
                 (isinstance(current_laserhead_properties["max_correction_factor"], float) is False)):
             # Apply fallback
-            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
             self._logger.exception(
                 "Current Laserhead max correction factor couldn't be retrieved, fallback to the factor value of: {}".format(
                     self.default_laserhead_max_correction_factor))
@@ -636,7 +633,6 @@ class LaserheadHandler(object):
                 ("max_intensity_including_correction" not in current_laserhead_properties) or
                 (isinstance(current_laserhead_properties["max_intensity_including_correction"], int) is False)):
             # Apply fallback
-            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
             self._logger.exception(
                 "Current Laserhead max intensity including correction couldn't be retrieved, fallback to the factor value of: {}".format(
                     self.default_laserhead_max_intensity_including_correction))
