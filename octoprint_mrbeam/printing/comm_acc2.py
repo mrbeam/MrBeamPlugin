@@ -2127,15 +2127,6 @@ class MachineCom(object):
 
             # Apply power correction factor and limit again (in case there is something wrong with the calculation of
             # the correction factor)
-            if self._power_correction_factor > self._max_correction_factor:
-                self._logger.debug(
-                    "Power correction factor higher as allowed max, will limit to max value - %s => %s",
-                    self._power_correction_factor,
-                    self._max_correction_factor,
-                )
-            self._power_correction_factor = min(
-                self._power_correction_factor, self._max_correction_factor
-            )
             self._current_intensity = int(
                 round(self._current_intensity * self._power_correction_factor)
             )

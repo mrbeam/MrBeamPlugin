@@ -29,6 +29,12 @@ def test_send_command_correct_limit_intensity_input(
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1400,
             current_laserhead_max_correction_factor=1,
+            get_correction_settings=MagicMock(
+                return_value={
+                    "correction_enabled": True,  # correction enabled
+                    "correction_factor_override": None,  # Don't override
+                }
+            ),
         )
         with patch("octoprint.plugin.plugin_manager", return_value=MagicMock()):
             machineCom = MachineCom()
@@ -51,13 +57,19 @@ def test_send_command_limit_correction_factor(mrbeam_plugin):
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1500,
             current_laserhead_max_correction_factor=1.15,  # limit of the correction factor
+            get_correction_settings=MagicMock(
+                return_value={
+                    "correction_enabled": True,  # correction enabled
+                    "correction_factor_override": None,  # Don't override
+                }
+            ),
+            get_current_used_lh_data=MagicMock(
+                return_value={"info": {"correction_factor": 1.2}}
+            ),
         )
         with patch("octoprint.plugin.plugin_manager", return_value=MagicMock()):
             machineCom = MachineCom()
             machineCom._serial = MagicMock()
-            machineCom._current_lh_data = {
-                "correction_factor": 2
-            }  # current correction factor
 
             # Act
             machineCom._sendCommand("G1 X1 F5000 S1300")
@@ -74,11 +86,19 @@ def test_send_command_correct_intensity_under_max_intenstity(mrbeam_plugin):
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1500,
             current_laserhead_max_correction_factor=2,  # use very high correction factor to go over max intensity
+            get_correction_settings=MagicMock(
+                return_value={
+                    "correction_enabled": True,  # correction enabled
+                    "correction_factor_override": None,  # Don't override
+                }
+            ),
+            get_current_used_lh_data=MagicMock(
+                return_value={"info": {"correction_factor": 1.5}}
+            ),
         )
         with patch("octoprint.plugin.plugin_manager", return_value=MagicMock()):
             machineCom = MachineCom()
             machineCom._serial = MagicMock()
-            machineCom._current_lh_data = {"correction_factor": 1.5}
 
             # Act
             machineCom._sendCommand("G1 X1 F5000 S1300")
@@ -101,13 +121,17 @@ def test_send_command_correct_intensity_correction_under_1(mrbeam_plugin):
                     "correction_factor_override": None,
                 }
             ),
+            get_current_used_lh_data=MagicMock(
+                return_value={
+                    "info": {
+                        "correction_factor": 0.1  # use a value lower as min limit of 1
+                    }
+                }
+            ),
         )
         with patch("octoprint.plugin.plugin_manager", return_value=MagicMock()):
             machineCom = MachineCom()
             machineCom._serial = MagicMock()
-            machineCom._current_lh_data = {
-                "correction_factor": 0.1
-            }  # use a value lower as min limit of 1
 
             # Act
             machineCom._sendCommand("G1 X1 F5000 S1300")
@@ -130,13 +154,17 @@ def test_send_command_correction_factor_override(mrbeam_plugin):
                     "correction_factor_override": 1.3,  # override the correction factor
                 }
             ),
+            get_current_used_lh_data=MagicMock(
+                return_value={
+                    "info": {
+                        "correction_factor": 1.4  # this value should be ignored and the correction_factor_override used instead
+                    }
+                }
+            ),
         )
         with patch("octoprint.plugin.plugin_manager", return_value=MagicMock()):
             machineCom = MachineCom()
             machineCom._serial = MagicMock()
-            machineCom._current_lh_data = {
-                "correction_factor": 1.4
-            }  # this value should be ignored and the correction_factor_override used instead
 
             # Act
             machineCom._sendCommand("G1 X1 F5000 S1300")
@@ -185,13 +213,17 @@ def test_send_command_correction_disabled_factor_override(mrbeam_plugin):
                     "correction_factor_override": None,  # Don't override
                 }
             ),
+            get_current_used_lh_data=MagicMock(
+                return_value={
+                    "info": {
+                        "correction_factor": 1.4  # this factor should not be used as it is disabled
+                    }
+                }
+            ),
         )
         with patch("octoprint.plugin.plugin_manager", return_value=MagicMock()):
             machineCom = MachineCom()
             machineCom._serial = MagicMock()
-            machineCom._current_lh_data = {
-                "correction_factor": 1.4
-            }  # this factor should not be used as it is disabled
 
             # Act
             machineCom._sendCommand("G1 X1 F5000 S1300")
