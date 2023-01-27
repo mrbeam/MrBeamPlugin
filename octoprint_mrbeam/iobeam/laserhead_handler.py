@@ -9,6 +9,9 @@ from octoprint_mrbeam.util.device_info import MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_
 
 LASERHEAD_MAX_TEMP_FALLBACK = 55.0
 LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
+LASERHEAD_MAX_CORRECTION_FACTOR_FALLBACK = 1
+LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK = 1500
+
 LASERHEAD_STOCK_ID = 0
 LASERHEAD_S_ID = 1
 LASERHEAD_X_ID = 3
@@ -582,3 +585,74 @@ class LaserheadHandler(object):
         """
 
         return LASERHEAD_MAX_DUST_FACTOR_FALLBACK
+
+    @property
+    def current_laserhead_max_correction_factor(self):
+        """Return the current laser head max correction factor.
+
+        Returns:
+            float: Laser head max correction factor
+        """
+
+        current_laserhead_properties = self._get_laserhead_properties()
+
+        # Handle the exceptions
+        if ((isinstance(current_laserhead_properties, dict) is False) or
+                ("max_correction_factor" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["max_correction_factor"], float) is False)):
+            # Apply fallback
+            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
+            self._logger.exception(
+                "Current Laserhead max correction factor couldn't be retrieved, fallback to the factor value of: {}".format(
+                    self.default_laserhead_max_correction_factor))
+            return self.default_laserhead_max_correction_factor
+        # Reaching here means, everything looks good
+        self._logger.debug(
+            "Current Laserhead max correction factor:{}".format(current_laserhead_properties["max_correction_factor"]))
+        return current_laserhead_properties["max_correction_factor"]
+
+    @property
+    def default_laserhead_max_correction_factor(self):
+        """Default max correction factor for laser head. To be used by other modules at init time.
+
+        Returns:
+            float: Laser head default max correction factor
+        """
+        return LASERHEAD_MAX_CORRECTION_FACTOR_FALLBACK
+
+    @property
+    def current_laserhead_max_intensity_including_correction(self):
+        """
+        Returns the current laser head max intensity after the power correction for laser head was calculated on top.
+
+        Returns:
+            int: Laser head max intensity including the correction factor
+        """
+
+        current_laserhead_properties = self._get_laserhead_properties()
+
+        # Handle the exceptions
+        if ((isinstance(current_laserhead_properties, dict) is False) or
+                ("max_intensity_including_correction" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["max_intensity_including_correction"], int) is False)):
+            # Apply fallback
+            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
+            self._logger.exception(
+                "Current Laserhead max intensity including correction couldn't be retrieved, fallback to the factor value of: {}".format(
+                    self.default_laserhead_max_intensity_including_correction))
+            return self.default_laserhead_max_intensity_including_correction
+        # Reaching here means, everything looks good
+        self._logger.debug(
+            "Current Laserhead max intensity including correction:{}".format(current_laserhead_properties["max_intensity_including_correction"]))
+        return current_laserhead_properties["max_intensity_including_correction"]
+
+    @property
+    def default_laserhead_max_intensity_including_correction(self):
+        """
+        Default max intensity after the power correction for laser head was calculated on top. To be used by other modules at any time.
+
+        Returns:
+            int: Laser head default max intensity including the correction factor
+        """
+
+        return LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK

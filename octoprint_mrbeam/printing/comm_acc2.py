@@ -243,24 +243,16 @@ class MachineCom(object):
         self._current_lh_data = (
             _mrbeam_plugin_implementation.laserhead_handler.get_current_used_lh_data()
         )
-        self._intensity_upper_bound = int(
-            self._laserCutterProfile["laser"]["intensity_upper_bound"]
+        self._max_intensity_including_correction = (
+            _mrbeam_plugin_implementation.laserhead_handler.current_laserhead_max_intensity_including_correction
         )
 
-        self._power_correction_factor = 1
-        if self._power_correction_settings["correction_enabled"]:
-            lh_info = self._current_lh_data["info"]
-            if self._power_correction_settings["correction_factor_override"]:
-                self._power_correction_factor = self._power_correction_settings[
-                    "correction_factor_override"
-                ]
-            else:
-                if lh_info and "correction_factor" in lh_info:
-                    self._power_correction_factor = lh_info["correction_factor"]
-
-        self._logger.info(
-            "Power correction factor: {}".format(self._power_correction_factor)
+        # self._power_correction_factor
+        self._max_correction_factor = (
+            _mrbeam_plugin_implementation.laserhead_handler.current_laserhead_max_correction_factor
         )
+
+        self._set_correction_factor()
 
         self.watch_dog = AccWatchDog(self)
 
@@ -270,6 +262,37 @@ class MachineCom(object):
         self.recovery_thread = None
         self._start_monitoring_thread()
         self._start_status_polling_timer()
+
+    def _set_correction_factor(self):
+        _power_correction_factor = 1
+        if self._power_correction_settings["correction_enabled"]:
+            lh_info = self._current_lh_data["info"]
+            if self._power_correction_settings["correction_factor_override"]:
+                _power_correction_factor = self._power_correction_settings[
+                    "correction_factor_override"
+                ]
+            else:
+                if lh_info and "correction_factor" in lh_info:
+                    _power_correction_factor = lh_info["correction_factor"]
+
+        # Limit correction factor to values between 1 and _max_correction_factor
+        if _power_correction_factor < 1:
+            _power_correction_factor = 1
+
+        if _power_correction_factor > self._max_correction_factor:
+            self._logger.debug(
+                "Power correction factor higher as allowed max, will limit to max value - %s => %s",
+                _power_correction_factor,
+                self._max_correction_factor,
+            )
+        _power_correction_factor = min(
+            _power_correction_factor, self._max_correction_factor
+        )
+
+        self._power_correction_factor = _power_correction_factor
+        self._logger.info(
+            "Power correction factor: {}".format(self._power_correction_factor)
+        )
 
     def _start_monitoring_thread(self):
         self._monitoring_active = True
@@ -2089,9 +2112,6 @@ class MachineCom(object):
         obj = self._regex_intensity.search(cmd)
         if obj is not None:
             intensity_limit = int(self._laserCutterProfile["laser"]["intensity_limit"])
-            max_correction_factor = float(
-                self._laserCutterProfile["laser"]["max_correction_factor"]
-            )
             intensity_cmd = cmd[obj.start() : obj.end()]
             parsed_intensity = int(intensity_cmd[1:])
 
@@ -2107,29 +2127,29 @@ class MachineCom(object):
 
             # Apply power correction factor and limit again (in case there is something wrong with the calculation of
             # the correction factor)
-            if self._power_correction_factor > max_correction_factor:
+            if self._power_correction_factor > self._max_correction_factor:
                 self._logger.debug(
                     "Power correction factor higher as allowed max, will limit to max value - %s => %s",
                     self._power_correction_factor,
-                    max_correction_factor,
+                    self._max_correction_factor,
                 )
             self._power_correction_factor = min(
-                self._power_correction_factor, max_correction_factor
+                self._power_correction_factor, self._max_correction_factor
             )
             self._current_intensity = int(
                 round(self._current_intensity * self._power_correction_factor)
             )
             if (
-                self._intensity_upper_bound
-                and self._current_intensity > self._intensity_upper_bound
+                self._max_intensity_including_correction
+                and self._current_intensity > self._max_intensity_including_correction
             ):
                 self._logger.debug(
                     "Intensity higher as allowed max, will limit to max value - %s => %s",
                     self._current_intensity,
-                    self._intensity_upper_bound,
+                    self._max_intensity_including_correction,
                 )
             self._current_intensity = min(
-                self._current_intensity, self._intensity_upper_bound
+                self._current_intensity, self._max_intensity_including_correction
             )
 
             # self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor} and '
@@ -2386,19 +2406,7 @@ class MachineCom(object):
                     token = int(tokens[1])
                     if token == 1:
                         self._log("Enabling power correction...")
-                        lh_data = (
-                            _mrbeam_plugin_implementation.laserhead_handler.get_current_used_lh_data()
-                        )
-                        if lh_data["info"] and "correction_factor" in lh_data["info"]:
-                            self._power_correction_factor = lh_data["info"][
-                                "correction_factor"
-                            ]
-                        else:
-                            self._log(
-                                "Couldn't enable power correction, there is no correction factor for laser head {}.".format(
-                                    lh_data["serial"]
-                                )
-                            )
+                        self._set_correction_factor()
 
                     elif token == 0:
                         self._log("Disabling power correction...")

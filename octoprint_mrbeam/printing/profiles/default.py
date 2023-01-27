@@ -18,13 +18,14 @@ profile = dict(
     # if set to onebutton, MR Beam 2 One Button to start laser is activated.
     start_method="onebutton",
     laser=dict(
-        max_temperature=55.0,   # deprecated, moved to iobeam.laserhead_handler in SW-1077
+        max_temperature=55.0,  # deprecated, moved to iobeam.laserhead_handler in SW-1077
         hysteresis_temperature=48.0,
         cooling_duration=25,  # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
         intensity_factor=13,  # to get from 100% intesity to GCODE-intensity of 1300
         intensity_limit=1300,  # Limits intensity of ALL incomming G-Code commands (a correction factor is multiplied on top of this)
-        intensity_upper_bound=1500,  # Limits intensity of ALL G-Code commands even with correction factor to this upper bound
-        max_correction_factor=1.15,  # max value of the correction factor
+        # The following two values are now in the laserhead profile
+        # intensity_upper_bound=1500,  # Limits intensity of ALL G-Code commands even with correction factor to this upper bound
+        # max_correction_factor=1.15,  # max value of the correction factor
     ),
     dust=dict(extraction_limit=0.70, auto_mode_time=60),
     volume=dict(
