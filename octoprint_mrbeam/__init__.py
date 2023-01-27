@@ -321,9 +321,7 @@ class MrBeamPlugin(
         self._try_to_connect_laser()
 
     def _try_to_connect_laser(self):
-        """
-        Tries to connect the laser if both iobeam and laserhead are ready and the laser is not connected yet.
-        """
+        """Tries to connect the laser if both iobeam and laserhead are ready and the laser is not connected yet."""
         if (
             self._iobeam_connected
             and self._laserhead_ready
