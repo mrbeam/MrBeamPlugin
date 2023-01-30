@@ -60,7 +60,7 @@
 												css: {selected: $root.selected_material() === $data, custom: $data.custom === true, compatible_material: $data.compatible === true, incompatible_material: $data.compatible === false, laserhead_x: $data.laser_model === 'x', laserhead_S: $data.laser_model === 'S'},
 												attr: {mrb_name: $data.img, data_content: $data.materialLaserModel}
 									">
-                                    <span data-bind="text: $data.name"></span>
+                                    <span data-bind="text: $data.name" class="material_name"></span>
                                     <span class="delete_me"
                                           data-bind="click: function(data, event){ $root.delete_material($data, event); return false; }"><i
                                             class="icon icon-trash"></i></span>

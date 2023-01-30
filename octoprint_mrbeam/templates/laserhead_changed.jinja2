@@ -1,4 +1,7 @@
 <div id="laserhead_changed" class="modal hide fade" data-backdrop="static">
+    <div class="modal-header">
+        <h3>{{ _("A new Laserhead has been detected!.") }}</h3>
+    </div>
     {# Not supported laserhead  - START #}
     <div class="modal-body" data-bind="visible: !laserhead_model_supported">
         <div>
@@ -41,30 +44,26 @@
 
     <div class="modal-body" data-bind="visible:laserhead_changed_step2_laserhead_x_show">
         <div>
-            <img loading="lazy" src="/plugin/mrbeam/static/img/welcome_dialog/start.png">
-            <h4> {{ _("Your Mr Beam dreamcut [x] Laserhead has been successfully installed.") }}</h4>
-            <p> {{ _("One important thina is: vou need a 90 Power Supply tor the new Laserhead because or Its Increased energy requirements. Check If vou have that, otnerwise look here.") }}</p>
-            <a
-                    target="_blank"
-                    href="{{ _("https://support.mr-beam.org/en/support/solutions/articles/43000640531") }}">
-                {#            TODO#}
-                {{ _("here") }} </a></p>
+            <p><img loading="lazy" src="https://picsum.photos/200/300"></p>{# TODO #}
+            <h4> {{ _("Please make sure the correct power supply is connected!") }}</h4>
+            {% set link_for_for_support_page = _('https://support.mr-beam.org/en') %}
+            <p> {{ (_("You need a 90 Power Supply tor the new Laserhead because or Its increased energy requirements. Check If vou have that, otherwise look %(open)shere%(close)s." , open='<a href="%s/support/solutions/articles/43000640531" target="_blank">' % link_for_for_support_page, close='</a>')|safe) }}</p>{#            TODO fix link#}
+
         </div>
     </div>
 
 
     <div class="modal-body" data-bind="visible:laserhead_changed_step3_laserhead_x_show">
         <div>
-            <img loading="lazy" src="/plugin/mrbeam/static/img/welcome_dialog/start.png">
+            <p><img loading="lazy" src="https://picsum.photos/600/300"></p>{# TODO #}
             <h4> {{ _("Please place the included sticker onto our Device!") }}</h4>
-            <p> {{ _("To keep the device in compliance with safety instructions and requlations. olease place the suoolied undated laser nower label over the previous „5W notice.") }}</p>
-            IMAGE {# TODO #}
+            <p> {{ _('To keep the device in compliance with safety instructions and regulations. please place the supplied updated laser power label over the previous „5W” notice.') }}</p>
         </div>
     </div>
     {# Steps for laserhead x  - END #}
 
     <div class="modal-footer">
-        <button class="btn bet-default" id="laserhead_change_next_step"
+        <button class="btn btn-default btn-left" id="laserhead_change_next_step"
                 data-bind="click: $root.laserhead_changed_previous_step, visible: laserhead_changed_show_previous_button()">{{ _("Previous") }}</button>
         <button class="btn btn-primary" id="laserhead_change_next_step"
                 data-bind="click: $root.laserhead_changed_next_step, visible: !lastStep()">{{ _("Next") }}</button>
