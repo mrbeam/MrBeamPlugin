@@ -333,14 +333,13 @@ class OneButtonHandler(object):
 
         elif event == OctoPrintEvents.PRINT_PAUSED:
             # Webinterface / OctoPrint caused the pause state but ignore cooling state
-            if self.pause_laser_ts <= 0 and (
-                "cooling" not in payload or not payload["cooling"]
+            if self.pause_laser_ts <= 0 and (payload is None or not payload.get("cooling")
             ):
                 self._logger.debug("onEvent() pause_laser(need_to_release=False)")
                 self.pause_laser(
                     need_to_release=False,
                     trigger="OctoPrintEvents.PRINT_PAUSED",
-                    pause_print=False,
+                    pause_print=True,
                 )
 
         elif event == OctoPrintEvents.PRINT_RESUMED:

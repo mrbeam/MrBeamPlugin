@@ -2,6 +2,7 @@ from octoprint.events import Events as OctoPrintEvents
 
 
 class MrBeamEvents(object):
+    SAFECUTTER_RESPONSE = "SafecutterResponse"
     MRB_PLUGIN_INITIALIZED = "MrbPluginInitialized"
     BOOT_GRACE_PERIOD_END = "BootGracePeriodEnd"
 

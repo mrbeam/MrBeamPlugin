@@ -757,6 +757,7 @@ class MrBeamPlugin(
                 "js/app/view-models/settings/calibration/watterott/label-printer.js",
                 "js/app/view-models/modal/hard_refresh_overlay.js",
                 "js/app/view-models/modal/temperature_warning.js",
+                "js/app/view-models/modal/safecutter.js",
                 "js/app/view-models/mrbeam-simple-api-commands.js",
                 "js/app/view-models/mrbeam-constants.js",
                 "js/app/helpers/mutation-observer.js",

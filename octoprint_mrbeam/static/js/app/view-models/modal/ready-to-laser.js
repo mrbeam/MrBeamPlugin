@@ -26,6 +26,8 @@ $(function () {
         self.is_rtl_mode = ko.observable(false);
         self.lid_fully_open = ko.observable(false);
 
+         self.state.safecutterError = ko.observable(false);
+
         self.is_pause_mode = ko.observable(false);
 
         self.jobTimeEstimationString = ko.observable(

@@ -84,6 +84,7 @@ class IoBeamHandler(object):
     PROCESSING_TIME_WARNING_THRESHOLD = 0.7
 
     I2C_STATE_REQUEST_INTERVAL = 10 * 60  # 10 minutes if no job is running
+    SAFECUTTER_REQUEST_INTERVAL = 10 # poll request for data every 10 seconds
 
     MESSAGE_LENGTH_MAX = 4096
     MESSAGE_NEWLINE = "\n"
@@ -102,6 +103,7 @@ class IoBeamHandler(object):
     MESSAGE_DEVICE_UNUSED = "unused"
     MESSAGE_DEVICE_IOBEAM = "iobeam"
     MESSAGE_DEVICE_COMPRESSOR = "compressor"
+    MESSAGE_DEVICE_SAFECUTTER = "safecutter"
 
     MESSAGE_ACTION_ONEBUTTON_PRESSED = "pr"
     MESSAGE_ACTION_ONEBUTTON_DOWN = "dn"
@@ -135,6 +137,7 @@ class IoBeamHandler(object):
     MESSAGE_ACTION_FAN_EXHAUST = "exhaust"
     MESSAGE_ACTION_FAN_LINK_QUALITY = "link_quality"
     MESSAGE_ACTION_COMPRESSOR_ON = "on"
+    MESSAGE_ACTION_SAFECUTTER_SEND = "send"
 
     # Possible datasets
     DATASET_FAN_DYNAMIC = "fan_dynamic"
@@ -156,7 +159,7 @@ class IoBeamHandler(object):
     DATASET_I2C_MONITORING = "i2c_monitoring"
     DATASET_REED_SWITCH = "reed_switch"
     DATASET_ANALYTICS = "analytics"
-
+    DATASET_SAFECUTTER = "safecutter"
     def __init__(self, plugin, printer):
         self._plugin = plugin
         self._printer = printer
@@ -206,6 +209,7 @@ class IoBeamHandler(object):
         iobeam_worker.start()
 
         self._start_i2c_request_timer()
+        self._start_safecutter_request_timer()
 
     def isRunning(self):
         return self._worker.is_alive()
@@ -246,6 +250,14 @@ class IoBeamHandler(object):
         command = self.get_command_msg(self.MESSAGE_DEVICE_FAN, action, value)
         return self._send_command(command), command["request_id"]
 
+    def send_safecutter_command(self, value=None):
+        """Send the specified command as safecutter:send
+        :param command: One of the three values (0-idle,1-running,2-pause)
+        :return: True if the command was sent sucessfully (does not mean it was sucessfully executed)
+        """
+        command = self.get_command_msg(self.MESSAGE_DEVICE_SAFECUTTER, "send", value)
+        return self._send_command(command), command["request_id"]
+
     def send_compressor_command(self, value=0):
         command = self.get_command_msg(
             self.MESSAGE_DEVICE_COMPRESSOR, self.MESSAGE_ACTION_COMPRESSOR_ON, value
@@ -262,6 +274,25 @@ class IoBeamHandler(object):
         :return: True if the command was sent successful (does not mean it was successfully executed)
         """
         return self._send_command(self.get_request_msg([self.DATASET_ANALYTICS]))
+
+    # def send_safecutter_request(self, *args, **kwargs):
+    #     """
+    #     Requests a safecutter dataset from iobeam
+    #     :return: True if the command was sent successful (does not mean it was successfully executed)
+    #     """
+    #     self._logger.info("Safecutter data requested")
+    #     return self._send_command(self.get_request_msg([self.DATASET_SAFECUTTER]))
+
+    def onEventPause(self, event, payload):
+        self._logger.info("Paused %s %s",event,payload)
+        # self.send_safecutter_request()
+        self.send_safecutter_command(1)
+
+    def onEventIdle(self, event, payload):
+        self.send_safecutter_command(0)
+
+    def onEventRunning(self, event, payload):
+        self.send_safecutter_command(2)
 
     def _send_command(self, command):
         """Sends a command to iobeam.
@@ -420,6 +451,12 @@ class IoBeamHandler(object):
             OctoPrintEvents.PRINT_CANCELLED, self.send_analytics_request
         )
         self._event_bus.subscribe(OctoPrintEvents.ERROR, self.send_analytics_request)
+        self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.onEventPause)
+        self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEventRunning)
+        self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEventIdle)
+        self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEventIdle)
+        self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEventIdle)
+        self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.onEventRunning)
 
     def _initWorker(self, socket_file=None):
         self._logger.debug("initializing worker thread")
@@ -657,6 +694,7 @@ class IoBeamHandler(object):
 
         err = -1
         try:
+            # self._logger.info("Dataset received %s %s",dataset,name)
             if len(name) <= 0:
                 err = self._handle_invalid_dataset(name, dataset)
             elif self.MESSAGE_ERROR in dataset:
@@ -700,6 +738,8 @@ class IoBeamHandler(object):
                     err = self._handle_reed_switch(dataset)
                 elif name == self.DATASET_ANALYTICS:
                     err = self._handle_analytics_dataset(dataset)
+                elif name == self.DATASET_SAFECUTTER:
+                    err = self._handle_safecutter_dataset(dataset)
                 elif name == self.MESSAGE_DEVICE_UNUSED:
                     pass
                 elif name == self.MESSAGE_ERROR:
@@ -1057,6 +1097,39 @@ class IoBeamHandler(object):
             )
         return 0
 
+    def _handle_safecutter_dataset(self, dataset):
+        # if dataset.get("communication_errors", None):
+        self._logger.info("handle safecutter dataset called %s",dataset)
+
+        if self._printer.is_printing() and not dataset.get("value") == 0 :
+            payload = {
+                "file": "",
+                "filename": "",
+                "origin": "",
+                "time":0,
+                "mrb_state": "",
+                "file_lines_total":"",
+                "file_lines_read":0,
+                "file_lines_remaining": 0,
+                "lines_recovered": 0,
+            }
+            self._event_bus.fire(OctoPrintEvents.PRINT_PAUSED, payload)
+
+        if(int(dataset.get("value")) & 1 == 1):
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE,{"value": 1})
+
+        elif(int(dataset.get("value")) & 2 == 2):
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE,{"value": 2})
+
+        elif (int(dataset.get("value")) & 4 == 4):
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE,{"value": 4})
+
+        elif (int(dataset.get("value")) & 8 == 8):
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE,{"value": 8})
+
+           # return dataset.get("value")
+        return 0
+
     def _handle_debug(self, dataset):
         """Handle debug dataset.
 
@@ -1383,3 +1456,30 @@ class IoBeamHandler(object):
             self._logger.debug("request i2c state from iobeam")
             self._send_command(self.get_request_msg([self.DATASET_I2C]))
         self._start_i2c_request_timer()
+
+
+    def _start_safecutter_request_timer(self):
+        """Starts a timer to request the safecutter data from iobeam.
+
+        Returns:
+            None
+        """
+        # self._logger.info("safecutter timer started")
+        my_timer = threading.Timer(
+            self.SAFECUTTER_REQUEST_INTERVAL, self._request_safecutter_data
+        )
+        my_timer.daemon = True
+        my_timer.name = "request_safecutter_data"
+        my_timer.start()
+
+    def _request_safecutter_data(self):
+        """Requests the safecutter data from iobeam and starts the timer again.
+
+        Returns:
+            None
+        """
+        # if not self._printer.is_printing() and not self._printer.is_paused():
+
+        self._logger.debug("request safecutter data using iobeam")
+        self._send_command(self.get_request_msg([self.DATASET_SAFECUTTER]))
+        self._start_safecutter_request_timer()
