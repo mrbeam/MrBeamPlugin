@@ -72,8 +72,7 @@ $(function () {
                             "<li class='show_only_online'>" +
                             _.sprintf(
                                 gettext(
-                                    "The laser head of your Mr Beam has to be focused according to the thickness of the felt." +
-                                        "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."
+                                    "The laser head of your Mr Beam has to be focused according to the thickness of the felt. You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."
                                 ),
                                 {
                                     opening_tag:
@@ -85,8 +84,7 @@ $(function () {
                             "<li class='show_only_offline'>" +
                             _.sprintf(
                                 gettext(
-                                    "The laser head of your Mr Beam has to be focused according to the thickness of the felt." +
-                                        "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."
+                                    "The laser head of your Mr Beam has to be focused according to the thickness of the felt. You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."
                                 ),
                                 {
                                     opening_tag:
@@ -532,7 +530,7 @@ $(function () {
         self._get_i18n_conf = function () {
             return {
                 nextBtn: gettext("Next"),
-                // prevBtn: "Back",
+                prevBtn: gettext("Back"),
                 // doneBtn: "Done",
                 // skipBtn: "Skip",
                 closeTooltip: gettext("Close"),
@@ -547,16 +545,22 @@ $(function () {
             tour.push(
                 new TourStep({
                     id: "empty_woringarea",
-                    title: ["Working area has to be empty to start this tour."],
+                    title: [
+                        gettext(
+                            "Working area has to be empty to start this tour."
+                        ),
+                    ],
                     text: [
-                        "Click here to remove all designs from your working area.",
+                        gettext(
+                            "Click here to remove all designs from your working area."
+                        ),
                     ],
                     target: "clear_working_area_btn",
                     placement: "right",
                     nextOnTargetClick: true,
                     yOffset: -15,
                     showNextButton: true,
-                    nextLabel: "Cancel",
+                    nextLabel: gettext("Cancel"),
                 })
             );
 
@@ -573,7 +577,6 @@ $(function () {
             // sort design lib by upload and scroll to bottom
             self.files.listHelper.changeSorting("upload");
             self.files.setFilter("design");
-            // self.toggleFilter
 
             // reset any material selection
             try {
@@ -638,9 +641,9 @@ $(function () {
 
             self.onEventReadyToLaserStart = function (payload) {
                 let id = self._getCurrStepProp("id");
-                if (id == "preparing_laserjob") {
+                if (id === "preparing_laserjob") {
                     hopscotch.nextStep();
-                } else if (id == "start_laserjob") {
+                } else if (id === "start_laserjob") {
                     // hopscotch.refreshBubblePosition();
                     self._restartTour(200);
                 }
@@ -711,7 +714,7 @@ $(function () {
                 let myStepNum = hopscotch.getCurrStepNum();
                 // console.log("hopscotch _onShow: additionalJQueryTargets for step #"+ myStepNum +": " + additionalJQueryTargets);
                 $(additionalJQueryTargets).one("click", function () {
-                    if (hopscotch.getCurrStepNum() == myStepNum) {
+                    if (hopscotch.getCurrStepNum() === myStepNum) {
                         // console.log("additionalJQueryTargets: hopscotch.nextStep()");
                         hopscotch.nextStep();
                     } else {
@@ -723,7 +726,7 @@ $(function () {
                 let prevTarget = self._getCurrStepProp("prevTarget");
                 let myStepNum = hopscotch.getCurrStepNum();
                 $(prevTarget).one("click", function () {
-                    if (hopscotch.getCurrStepNum() == myStepNum) {
+                    if (hopscotch.getCurrStepNum() === myStepNum) {
                         hopscotch.prevStep();
                     }
                 });
@@ -732,18 +735,29 @@ $(function () {
         };
 
         self._onEnd = function () {
-            // console.log("hopscotch _onEnd: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+            console.log(
+                "hopscotch _onEnd: " +
+                    self._getCurrTourId() +
+                    " #" +
+                    hopscotch.getCurrStepNum() +
+                    ", " +
+                    self._getCurrStepProp("id")
+            );
+            // Restart tour if the working area was emptied manually by the user
             if (
-                self._getCurrTourId() == "pre-tour" &&
+                self._getCurrTourId() === "pre-tour" &&
                 mrbeam.viewModels.workingAreaViewModel &&
                 mrbeam.viewModels.workingAreaViewModel.working_area_empty()
             ) {
+                console.log("hopscotch _onEnd: pre-tour - working area empty");
                 setTimeout(function () {
                     if (self._getCurrTourId() == null) {
                         self.startTour();
                     }
                 }, 10);
                 self._analytics_tour_done = true;
+            } else {
+                $("#congratulations").modal("show");
             }
             if (self._analytics_tour_done) {
                 self._analytics_tour_finish();
@@ -753,8 +767,16 @@ $(function () {
         };
 
         self._onClose = function () {
-            // console.log("hopscotch _onClose: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+            console.log(
+                "hopscotch _onClose: " +
+                    self._getCurrTourId() +
+                    " #" +
+                    hopscotch.getCurrStepNum() +
+                    ", " +
+                    self._getCurrStepProp("id")
+            );
             self._analytics_tour_cancel();
+            $("#congratulations").modal("show");
         };
 
         // analytics //
