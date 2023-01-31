@@ -129,7 +129,20 @@ $(function () {
                 onproceed: function () {
                     OctoPrint.post("api/system/commands/core/shutdown").fail(
                         function (error) {
-                            //Todo warning
+                            console.error(
+                                "Unable to shut down device: ",
+                                error
+                            );
+                            new PNotify({
+                                title: gettext(
+                                    "The device could not be shut down."
+                                ),
+                                text: gettext(
+                                    "There was an error while shutting down the device. Please try again."
+                                ),
+                                type: "error",
+                                hide: true,
+                            });
                         }
                     );
                 },
