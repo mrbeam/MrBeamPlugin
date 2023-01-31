@@ -445,14 +445,15 @@ div.hopscotch-bubble .hopscotch-bubble-close.hide-all {
   display: none;
 }
 div.hopscotch-bubble .hopscotch-bubble-number {
-  background: transparent url(../img/sprite-green.png) 0 0 no-repeat;
+  background-color: #e25303;
+  border-radius: 20px;
   color: #fff;
   display: block;
   float: left;
   font-size: 17px;
   font-weight: 700;
   line-height: 31px;
-  padding: 0 10px 0 0;
+  padding: 0 0 0 0;
   text-align: center;
   width: 30px;
   height: 30px;

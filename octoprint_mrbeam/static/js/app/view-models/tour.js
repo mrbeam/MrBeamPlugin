@@ -204,6 +204,7 @@ $(function () {
                     ],
                     target: "designlib_tab_btn",
                     placement: "bottom",
+                    nextOnTargetClick: true,
                     xOffset: 30,
                     onNext: function () {
                         self._onNext();
@@ -229,11 +230,20 @@ $(function () {
                     ],
                     target:
                         $(
-                            '.file_list_entry[mrb_name="Schlusselanhanger.svg"]'
-                        )[0] || $(".file_list_entry").last()[0],
+                            '.file_list_entry[mrb_name="Schluesselanhaenger.svg"]'
+                        )[0] ||
+                        $(
+                            ".gcode_files .entry.files_template_model_svg .file_list_entry "
+                        ).last()[0],
                     additionalJQueryTargets: ".file_list_entry",
+                    nextOnTargetClick: true,
                     placement:
-                        $(".file_list_entry").length <= 8 ? "bottom" : "top",
+                        $(".files_template_model_svg").length +
+                            $(".files_template_model_dxf").length +
+                            $(".files_template_model_image").length <=
+                        8
+                            ? "bottom"
+                            : "top",
                     width: 400,
                     xOffset: -250,
                     yOffset: 30,
@@ -278,7 +288,8 @@ $(function () {
                         ),
                         gettext("Just 3 quick steps..."),
                     ],
-                    target: "job_print",
+                    nextOnTargetClick: true,
+                    target: "laser_button",
                     placement: "right",
                     yOffset: -15,
                 })
@@ -324,13 +335,21 @@ $(function () {
                             "</span>",
                     ],
                     target: "start_job_btn_focus_reminder",
+                    onPrev: function () {
+                        $("#laserhead_focus_reminder_modal").modal("hide");
+                    },
                     placement: "right",
                     delay: 200,
                     fixedElement: true,
                     yOffset: -150,
                     arrowOffset: 145,
+                    showPrevButton: true,
+                    prevTarget: "#start_job_btn_forgot_focus",
                     condition: function () {
-                        return self.settings.settings.plugins.mrbeam.focusReminder();
+                        return (
+                            self.settings.settings.plugins.mrbeam.focusReminder() &&
+                            !window.mrbeam.viewModels.vectorConversionViewModel.remindFirstTime()
+                        );
                     },
                 })
             );
@@ -341,14 +360,15 @@ $(function () {
                     id: "select_material",
                     title: gettext("Select the material"),
                     text: [
+                        gettext("For this guide we want to use felt."),
                         gettext(
-                            "For this guide we want to use felt.",
                             "However as you can see there are many different options. :)"
                         ),
                     ],
                     target:
-                        $('li.material_entry[mrb_name$="Felt.jpg"]')[0] ||
-                        $("li.material_entry")[0],
+                        $(
+                            'li.material_entry[mrb_name$="/plugin/mrbeam/static/img/materials/Felt.jpg"]'
+                        )[0] || $("li.material_entry")[0],
                     additionalJQueryTargets: "li.material_entry",
                     placement: "bottom",
                     delay: 400,
@@ -552,6 +572,8 @@ $(function () {
 
             // sort design lib by upload and scroll to bottom
             self.files.listHelper.changeSorting("upload");
+            self.files.setFilter("design");
+            // self.toggleFilter
 
             // reset any material selection
             try {
@@ -694,6 +716,15 @@ $(function () {
                         hopscotch.nextStep();
                     } else {
                         // console.log("additionalJQueryTargets: step does not match!");
+                    }
+                });
+            }
+            if (self._getCurrStepProp("prevTarget")) {
+                let prevTarget = self._getCurrStepProp("prevTarget");
+                let myStepNum = hopscotch.getCurrStepNum();
+                $(prevTarget).one("click", function () {
+                    if (hopscotch.getCurrStepNum() == myStepNum) {
+                        hopscotch.prevStep();
                     }
                 });
             }

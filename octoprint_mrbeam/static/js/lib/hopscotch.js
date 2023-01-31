@@ -2727,21 +2727,21 @@
             __p += '\n  </div>\n  <div class="hopscotch-actions">\n    ';
             if (buttons.showPrev) {
                 __p +=
-                    '<button class="hopscotch-nav-button prev hopscotch-prev">' +
+                    '<button class="btn prev hopscotch-prev">' +
                     ((__t = i18n.prevBtn) == null ? "" : __t) +
                     "</button>";
             }
             __p += "\n    ";
             if (buttons.showCTA) {
                 __p +=
-                    '<button class="hopscotch-nav-button next hopscotch-cta">' +
+                    '<button class="btn next hopscotch-cta">' +
                     ((__t = buttons.ctaLabel) == null ? "" : __t) +
                     "</button>";
             }
             __p += "\n    ";
             if (buttons.showNext) {
                 __p +=
-                    '<button class="hopscotch-nav-button next hopscotch-next">' +
+                    '<button class="btn btn-primary next hopscotch-next">' +
                     ((__t = i18n.nextBtn) == null ? "" : __t) +
                     "</button>";
             }
