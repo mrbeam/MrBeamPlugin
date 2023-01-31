@@ -116,6 +116,25 @@ $(function () {
                     });
                 });
         };
+
+        self.shutdownDevice = function () {
+            showConfirmationDialog({
+                message: gettext("You are about to shutdown the device."),
+                question: gettext(
+                    "Do you want to continue to shut down the device?"
+                ),
+                cancel: gettext("Cancel"),
+                proceed: gettext("Shutdown"),
+                proceedClass: "primary",
+                onproceed: function () {
+                    OctoPrint.post("api/system/commands/core/shutdown").fail(
+                        function (error) {
+                            //Todo warning
+                        }
+                    );
+                },
+            });
+        };
     }
 
     // view model class, parameters for constructor, container to bind to

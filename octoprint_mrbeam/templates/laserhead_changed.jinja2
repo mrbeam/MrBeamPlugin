@@ -66,8 +66,21 @@
         <button class="btn btn-default btn-left" id="laserhead_change_next_step"
                 data-bind="click: $root.laserhead_changed_previous_step, visible: laserhead_changed_show_previous_button()">{{ _("Back") }}</button>
         <button class="btn btn-primary" id="laserhead_change_next_step"
+                data-bind="click: $root.shutdownDevice, visible: laserhead_changed_step2_laserhead_x_show">{{ _("I forgot, shutdown to change") }}</button>
+        <button class="btn btn-primary" id="laserhead_change_next_step"
                 data-bind="click: $root.laserhead_changed_next_step, visible: !lastStep()">{{ _("Next") }}</button>
         <button class="btn btn-primary" id="laserhead_changed_detected" data-dismiss="modal" aria-hidden="true"
                 data-bind="visible: lastStep(), click: $root.laserheadChangeAcknowledged">{{ _('OK') }}</button>
     </div>
+</div>
+
+
+<div id="confirmShutdown" class="modal">
+  <div class="modal-body">
+    Are you sure?
+  </div>
+  <div class="modal-footer">
+    <button type="button" data-dismiss="modal" class="btn btn-primary" id="delete">Shutdown</button>
+    <button type="button" data-dismiss="modal" class="btn">Cancel</button>
+  </div>
 </div>
