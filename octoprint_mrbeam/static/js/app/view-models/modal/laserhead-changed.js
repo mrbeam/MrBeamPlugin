@@ -9,39 +9,6 @@ $(function () {
         self.laserhead_model_supported = ko.observable();
         self.step = ko.observable(1);
 
-        self.laserhead_changed_step1_laserhead_s_show = ko.computed(
-            function () {
-                return (
-                    self.laserhead_model_id() === mrbeam.laserhead_model.S &&
-                    self.step() === 1
-                );
-            }
-        );
-
-        self.laserhead_changed_step1_laserhead_x_show = ko.computed(
-            function () {
-                return (
-                    self.laserhead_model_id() === mrbeam.laserhead_model.X &&
-                    self.step() === 1
-                );
-            }
-        );
-        self.laserhead_changed_step2_laserhead_x_show = ko.computed(
-            function () {
-                return (
-                    self.laserhead_model_id() === mrbeam.laserhead_model.X &&
-                    self.step() === 2
-                );
-            }
-        );
-        self.laserhead_changed_step3_laserhead_x_show = ko.computed(
-            function () {
-                return (
-                    self.laserhead_model_id() === mrbeam.laserhead_model.X &&
-                    self.step() === 3
-                );
-            }
-        );
         self.laserhead_changed_show_previous_button = ko.computed(function () {
             return self.step() > 1;
         });
@@ -57,6 +24,33 @@ $(function () {
         self.lastStep = ko.computed(function () {
             return self.step() >= self.maxSteps();
         });
+
+        self.laserhead_changed_show_step_for_laserhead = function (
+            step,
+            laserhead
+        ) {
+            return (
+                self.laserhead_model_id() === laserhead && self.step() === step
+            );
+        };
+
+        self.show_step_for_laserhead_s = function (step) {
+            return ko.computed(function () {
+                return self.laserhead_changed_show_step_for_laserhead(
+                    step,
+                    mrbeam.laserhead_model.S
+                );
+            }, self);
+        };
+
+        self.show_step_for_laserhead_x = function (step) {
+            return ko.computed(function () {
+                return self.laserhead_changed_show_step_for_laserhead(
+                    step,
+                    mrbeam.laserhead_model.X
+                );
+            }, self);
+        };
 
         self.onUserLoggedIn = function () {
             if (self.loginState.currentUser?.()?.active) {
