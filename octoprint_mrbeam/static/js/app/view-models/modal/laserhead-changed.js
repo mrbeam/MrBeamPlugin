@@ -86,22 +86,22 @@ $(function () {
             )
                 .done(function () {
                     console.log(
-                        "simpleApiCall response for saving laserhead change detection: "
+                        "simpleApiCall response for saving laser head change detection: "
                     );
                 })
                 .fail(function () {
                     self.settings.requestData();
                     console.error(
-                        "Unable to save laserhead change detection state: ",
+                        "Unable to save laser head change detection state: ",
                         data
                     );
                     new PNotify({
                         title: gettext(
-                            "Error while saving laserhead change detection!"
+                            "Error while saving laser head change detection!"
                         ),
                         text: _.sprintf(
                             gettext(
-                                "Unable to save laserhead change detection at the moment.%(br)sCheck connection to Mr Beam and try again."
+                                "Unable to save laser head change detection at the moment.%(br)sCheck connection to Mr Beam and try again."
                             ),
                             { br: "<br/>" }
                         ),
