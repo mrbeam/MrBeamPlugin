@@ -5,8 +5,8 @@ $(function () {
 
         self.settings = params[0];
         self.loginState = params[1];
-        self.laserhead_model_id = ko.observable();
-        self.laserhead_model_supported = ko.observable();
+        self.laserheadModelId = ko.observable();
+        self.laserheadModelSupported = ko.observable();
         self.step = ko.observable(1);
 
         self.laserhead_changed_show_previous_button = ko.computed(function () {
@@ -14,7 +14,7 @@ $(function () {
         });
 
         self.maxSteps = ko.computed(function () {
-            if (self.laserhead_model_id() === mrbeam.laserhead_model.X) {
+            if (self.laserheadModelId() === mrbeam.laserheadModel.X) {
                 return 3;
             } else {
                 return 1;
@@ -30,7 +30,7 @@ $(function () {
             laserhead
         ) {
             return (
-                self.laserhead_model_id() === laserhead && self.step() === step
+                self.laserheadModelId() === laserhead && self.step() === step
             );
         };
 
@@ -38,7 +38,7 @@ $(function () {
             return ko.computed(function () {
                 return self.laserhead_changed_show_step_for_laserhead(
                     step,
-                    mrbeam.laserhead_model.S
+                    mrbeam.laserheadModel.S
                 );
             }, self);
         };
@@ -47,7 +47,7 @@ $(function () {
             return ko.computed(function () {
                 return self.laserhead_changed_show_step_for_laserhead(
                     step,
-                    mrbeam.laserhead_model.X
+                    mrbeam.laserheadModel.X
                 );
             }, self);
         };
@@ -55,10 +55,10 @@ $(function () {
         self.onUserLoggedIn = function () {
             if (self.loginState.currentUser?.()?.active) {
                 if (self.settings.settings.plugins.mrbeam.laserheadChanged()) {
-                    self.laserhead_model_id(
+                    self.laserheadModelId(
                         self.settings.settings.plugins.mrbeam.laserhead.model_id()
                     );
-                    self.laserhead_model_supported(
+                    self.laserheadModelSupported(
                         self.settings.settings.plugins.mrbeam.laserhead.model_supported()
                     );
                     $("#laserhead_changed").modal("show");

@@ -67,7 +67,7 @@ mrbeam.model = {
 };
 
 // Mr Beam laserhead models
-mrbeam.laserhead_model = {
+mrbeam.laserheadModel = {
     S: 1,
     X: 3,
 };

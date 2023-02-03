@@ -312,7 +312,7 @@ class LaserheadHandler(object):
         Returns:
             boolean: True if the current used laser head model is supported, False otherwise
         """
-        supported = SUPPORTED_LASERHEADS.get(self.get_current_used_lh_model_id()) is not None and self._plugin.get_model_id() in SUPPORTED_LASERHEADS.get(self.get_current_used_lh_model_id())
+        supported = self._plugin.get_model_id() in SUPPORTED_LASERHEADS.get(self.get_current_used_lh_model_id(), [])
         if not supported:
             self._logger.error("Current used laser head model is not supported by this device model.")
         return supported
