@@ -3,7 +3,7 @@
         <h3>{{ _("A new laser head has been detected!") }}</h3>
     </div>
     {# Not supported laserhead  - START #}
-    <div class="modal-body" data-bind="visible: !laserhead_model_supported">
+    <div class="modal-body" data-bind="visible: !laserheadModelSupported">
         <div>
             <img loading="lazy" src="/plugin/mrbeam/static/img/Welcome.png">
             <h4> {{ _("We are very sorry but the installed laser head will not work with your device.") }}</h4>
@@ -14,7 +14,7 @@
 
 
     {# Steps for laserhead S  - START #}
-    <div class="modal-body" data-bind="visible: show_step_for_laserhead_s(1)">
+    <div class="modal-body" data-bind="visible: showStepForLaserheadS(1)">
         <div>
             <img loading="lazy" src="/plugin/mrbeam/static/img/Welcome.png">
             <h4> {{ _("Your Mr Beam dreamcut [S] laser head has been successfully installed.") }}</h4>
@@ -29,7 +29,7 @@
     {# Steps for laserhead S  - END #}
 
     {# Steps for laserhead x  - START #}
-    <div class="modal-body" data-bind="visible: show_step_for_laserhead_x(1)">
+    <div class="modal-body" data-bind="visible: showStepForLaserheadX(1)">
         <div>
             <img loading="lazy" src="/plugin/mrbeam/static/img/Welcome.png">
             <h4> {{ _("Your Mr Beam II dreamcut [X] laser head has been successfully connected.") }}</h4>
@@ -42,7 +42,7 @@
         </div>
     </div>
 
-    <div class="modal-body" data-bind="visible: show_step_for_laserhead_x(2)">
+    <div class="modal-body" data-bind="visible: showStepForLaserheadX(2)">
         <div>
             <p><img loading="lazy" src="/plugin/mrbeam/static/img/speed_improvement.png"></p>
             <h4> {{ _("Your Mr Beam is even faster now!") }}</h4>
@@ -54,7 +54,7 @@
         </div>
     </div>
 
-    <div class="modal-body" data-bind="visible: show_step_for_laserhead_x(3)">
+    <div class="modal-body" data-bind="visible: showStepForLaserheadX(3)">
         <div>
             <p><img loading="lazy" src="/plugin/mrbeam/static/img/Powersupply.png"></p>
             <h4> {{ _("The new laser head needs a larger power supply!") }}</h4>
@@ -65,7 +65,7 @@
     </div>
 
 
-    <div class="modal-body" data-bind="visible: show_step_for_laserhead_x(4)">
+    <div class="modal-body" data-bind="visible: showStepForLaserheadX(4)">
         <div>
             <p><img loading="lazy" src="/plugin/mrbeam/static/img/10W_sticker.png"></p>
             <h4> {{ _("Please place the included sticker on your Mr Beam!") }}</h4>
@@ -76,11 +76,11 @@
 
     <div class="modal-footer">
         <button class="btn btn-default btn-left" id="laserhead_change_next_step"
-                data-bind="click: $root.laserhead_changed_previous_step, visible: laserhead_changed_show_previous_button()">{{ _("Back") }}</button>
+                data-bind="click: $root.laserheadChangedPreviousStep, visible: laserheadChangedShowPreviousButton()">{{ _("Back") }}</button>
         <button class="btn btn-primary" id="laserhead_change_next_step"
-                data-bind="click: $root.shutdownDevice, visible: show_step_for_laserhead_x(3)">{{ _("I forgot, shut down to change") }}</button>
+                data-bind="click: $root.shutdownDevice, visible: showStepForLaserheadX(3)">{{ _("I forgot, shut down to change") }}</button>
         <button class="btn btn-primary" id="laserhead_change_next_step"
-                data-bind="click: $root.laserhead_changed_next_step, visible: !lastStep()">{{ _("Next") }}</button>
+                data-bind="click: $root.laserheadChangedNextStep, visible: !lastStep()">{{ _("Next") }}</button>
         <button class="btn btn-primary" id="laserhead_changed_detected" data-dismiss="modal" aria-hidden="true"
                 data-bind="visible: lastStep(), click: $root.laserheadChangeAcknowledged">{{ _('OK') }}</button>
     </div>

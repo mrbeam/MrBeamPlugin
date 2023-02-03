@@ -9,7 +9,7 @@ $(function () {
         self.laserheadModelSupported = ko.observable();
         self.step = ko.observable(1);
 
-        self.laserhead_changed_show_previous_button = ko.computed(function () {
+        self.laserheadChangedShowPreviousButton = ko.computed(function () {
             return self.step() > 1;
         });
 
@@ -25,27 +25,24 @@ $(function () {
             return self.step() >= self.maxSteps();
         });
 
-        self.laserhead_changed_show_step_for_laserhead = function (
-            step,
-            laserhead
-        ) {
+        self.laserheadChangedShowStepForLaserhead = function (step, laserhead) {
             return (
                 self.laserheadModelId() === laserhead && self.step() === step
             );
         };
 
-        self.show_step_for_laserhead_s = function (step) {
+        self.showStepForLaserheadS = function (step) {
             return ko.computed(function () {
-                return self.laserhead_changed_show_step_for_laserhead(
+                return self.laserheadChangedShowStepForLaserhead(
                     step,
                     mrbeam.laserheadModel.S
                 );
             }, self);
         };
 
-        self.show_step_for_laserhead_x = function (step) {
+        self.showStepForLaserheadX = function (step) {
             return ko.computed(function () {
-                return self.laserhead_changed_show_step_for_laserhead(
+                return self.laserheadChangedShowStepForLaserhead(
                     step,
                     mrbeam.laserheadModel.X
                 );
@@ -66,13 +63,13 @@ $(function () {
             }
         };
 
-        self.laserhead_changed_next_step = function () {
+        self.laserheadChangedNextStep = function () {
             if (!self.lastStep()) {
                 self.step(self.step() + 1);
             }
         };
 
-        self.laserhead_changed_previous_step = function () {
+        self.laserheadChangedPreviousStep = function () {
             if (self.step() > 1) {
                 self.step(self.step() - 1);
             }
