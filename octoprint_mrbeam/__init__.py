@@ -188,6 +188,9 @@ class MrBeamPlugin(
         self._device_series = self._device_info.get_series()
         self.called_hosts = []
 
+        self._iobeam_connected = False
+        self._laserhead_ready = False
+
         # Create the ``laserCutterProfileManager`` early to inject into the ``Laser``
         # See ``laser_factory``
         self.laserCutterProfileManager = laserCutterProfileManager(
@@ -224,6 +227,10 @@ class MrBeamPlugin(
         # listens to StartUp event to start counting boot time grace period
         self._event_bus.subscribe(
             OctoPrintEvents.STARTUP, self._start_boot_grace_period_thread
+        )
+        self._event_bus.subscribe(IoBeamEvents.CONNECT, self._on_iobeam_connect)
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_HEAD_READ, self._on_laserhead_ready
         )
 
         self.start_time_ntp_timer()
@@ -284,6 +291,43 @@ class MrBeamPlugin(
         self._connectivity_checker = ConnectivityChecker(self)
 
         self._do_initial_log()
+
+    def _on_iobeam_connect(self, *args, **kwargs):
+        """Called when the iobeam socket is connected.
+
+        Args:
+            *args:
+            **kwargs:
+
+        Returns:
+
+        """
+        self._logger.info("MrBeamPlugin on_iobeam_connected")
+        self._iobeam_connected = True
+        self._try_to_connect_laser()
+
+    def _on_laserhead_ready(self, *args, **kwargs):
+        """Called when the laserhead is ready.
+
+        Args:
+            *args:
+            **kwargs:
+
+        Returns:
+
+        """
+        self._logger.info("MrBeamPlugin on_laserhead_ready")
+        self._laserhead_ready = True
+        self._try_to_connect_laser()
+
+    def _try_to_connect_laser(self):
+        """Tries to connect the laser if both iobeam and laserhead are ready and the laser is not connected yet."""
+        if (
+            self._iobeam_connected
+            and self._laserhead_ready
+            and self._printer.is_closed_or_error()
+        ):
+            self._printer.connect()
 
     def _init_frontend_logger(self):
         handler = logging.handlers.RotatingFileHandler(
@@ -629,7 +673,7 @@ class MrBeamPlugin(
         self._logger.info("Mr Beam Plugin stopped.")
 
     def set_serial_setting(self):
-        self._settings.global_set(["serial", "autoconnect"], True)
+        self._settings.global_set(["serial", "autoconnect"], False)
         self._settings.global_set(["serial", "baudrate"], 115200)
         self._settings.global_set(["serial", "port"], "/dev/ttyAMA0")
 
