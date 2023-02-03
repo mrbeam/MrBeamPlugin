@@ -511,11 +511,13 @@ class MrBeamPlugin(
                 doNotAskAgain=self._settings.get(["review", "doNotAskAgain"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
-            laserheadChanged=self._settings.get(["laserheadChanged"]),
+            laserheadChanged=self.laserhead_changed(),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
             laserhead=dict(
                 serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
                 model=self.laserhead_handler.get_current_used_lh_data()["model"],
+                model_id=self.laserhead_handler.get_current_used_lh_model_id(),
+                model_supported=self.laserhead_handler.is_current_used_lh_model_supported(),
             ),
             usage=dict(
                 totalUsage=self.usage_handler.get_total_usage(),
@@ -3041,6 +3043,9 @@ class MrBeamPlugin(
 
     def is_alpha_channel(self):
         return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.ALPHA.value
+
+    def laserhead_changed(self):
+        return self._settings.get(["laserheadChanged"])
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:
