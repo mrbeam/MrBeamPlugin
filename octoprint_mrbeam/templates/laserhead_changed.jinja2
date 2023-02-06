@@ -3,7 +3,7 @@
         <h3>{{ _("A new laser head has been detected!") }}</h3>
     </div>
     {# Not supported laserhead  - START #}
-    <div class="modal-body" data-bind="visible: !laserheadModelSupported">
+    <div class="modal-body" data-bind="visible: !laserheadModelSupported()">
         <div>
             <img loading="lazy" src="/plugin/mrbeam/static/img/Welcome.png">
             <h4> {{ _("We are very sorry but the installed laser head will not work with your device.") }}</h4>

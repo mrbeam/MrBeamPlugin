@@ -14,8 +14,11 @@ $(function () {
         });
 
         self.maxSteps = ko.computed(function () {
-            if (self.laserheadModelId() === mrbeam.laserheadModel.X) {
-                return 3;
+            if (
+                self.laserheadModelId() === mrbeam.laserheadModel.X &&
+                self.laserheadModelSupported()
+            ) {
+                return 4;
             } else {
                 return 1;
             }
@@ -33,18 +36,24 @@ $(function () {
 
         self.showStepForLaserheadS = function (step) {
             return ko.computed(function () {
-                return self.laserheadChangedShowStepForLaserhead(
-                    step,
-                    mrbeam.laserheadModel.S
+                return (
+                    self.laserheadModelSupported() &&
+                    self.laserheadChangedShowStepForLaserhead(
+                        step,
+                        mrbeam.laserheadModel.S
+                    )
                 );
             }, self);
         };
 
         self.showStepForLaserheadX = function (step) {
             return ko.computed(function () {
-                return self.laserheadChangedShowStepForLaserhead(
-                    step,
-                    mrbeam.laserheadModel.X
+                return (
+                    self.laserheadModelSupported() &&
+                    self.laserheadChangedShowStepForLaserhead(
+                        step,
+                        mrbeam.laserheadModel.X
+                    )
                 );
             }, self);
         };
