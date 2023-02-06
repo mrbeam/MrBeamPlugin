@@ -4,7 +4,7 @@ import sys, os, csv, json, collections
 MRBEAM = "Mr Beam II"
 MRB_DREAMCUT = "MrB II Dreamcut"
 MRB_DREAMCUT_S = "MrB II Dreamcut S"
-MRB_DREAMCUT_x = "MrB II Dreamcut x"
+MRB_DREAMCUT_X = "MrB II Dreamcut x"
 
 MRB_READY = "MrB II Dreamcut Ready"  # not used yet
 MRB_DREAMCUT_NOT_VALIDATED = "Dreamcut (not validated)"  # not used yet
@@ -12,20 +12,20 @@ MRB_DREAMCUT_S_NOT_VALIDATED = "Dreamcut S (not validated)"  # not used yet
 
 DEFAULT_LASER_MODEL = "0"
 LASER_MODEL_S = "S"
-LASER_MODEL_x = "x"
+LASER_MODEL_X = "x"
 
-VALID_MODELS = [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY, MRB_DREAMCUT_x]
+VALID_MODELS = [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY, MRB_DREAMCUT_X]
 
 
 def model_ids_to_csv_name(device_model_id, laser_model_id):
     convert = {
-        (device_info.MODEL_MRBEAM_2_DC_x, LASER_MODEL_x): MRB_DREAMCUT_x,
+        (device_info.MODEL_MRBEAM_2_DC_x, LASER_MODEL_X): MRB_DREAMCUT_X,
         (device_info.MODEL_MRBEAM_2_DC_x, LASER_MODEL_S): MRB_DREAMCUT_S,
         (device_info.MODEL_MRBEAM_2_DC_x, DEFAULT_LASER_MODEL): MRB_DREAMCUT,
-        (device_info.MODEL_MRBEAM_2_DC_S, LASER_MODEL_x): MRB_DREAMCUT_x,
+        (device_info.MODEL_MRBEAM_2_DC_S, LASER_MODEL_X): MRB_DREAMCUT_X,
         (device_info.MODEL_MRBEAM_2_DC_S, LASER_MODEL_S): MRB_DREAMCUT_S,
         (device_info.MODEL_MRBEAM_2_DC_S, DEFAULT_LASER_MODEL): MRB_DREAMCUT,
-        (device_info.MODEL_MRBEAM_2_DC, LASER_MODEL_x): MRB_DREAMCUT_x,
+        (device_info.MODEL_MRBEAM_2_DC, LASER_MODEL_X): MRB_DREAMCUT_X,
         (device_info.MODEL_MRBEAM_2_DC, LASER_MODEL_S): MRB_DREAMCUT_S,
         (device_info.MODEL_MRBEAM_2_DC, DEFAULT_LASER_MODEL): MRB_DREAMCUT,
         (device_info.MODEL_MRBEAM_2_DC_R2, DEFAULT_LASER_MODEL): MRBEAM,
