@@ -1,7 +1,7 @@
 from octoprint_mrbeam import parse_csv
 from octoprint_mrbeam.util.device_info import (
     MODEL_MRBEAM_2_DC,
-    MODEL_MRBEAM_2_DC_x,
+    MODEL_MRBEAM_2_DC_X,
     MODEL_MRBEAM_2_DC_S,
 )
 from octoprint_mrbeam.util.material_csv_parser import (
@@ -15,7 +15,7 @@ from octoprint_mrbeam.util.material_csv_parser import (
 
 def test_model_ids_to_csv_name():
     assert model_ids_to_csv_name(MODEL_MRBEAM_2_DC_S, LASER_MODEL_X) == MRB_DREAMCUT_X
-    assert model_ids_to_csv_name(MODEL_MRBEAM_2_DC_x, LASER_MODEL_X) == MRB_DREAMCUT_X
+    assert model_ids_to_csv_name(MODEL_MRBEAM_2_DC_X, LASER_MODEL_X) == MRB_DREAMCUT_X
     assert model_ids_to_csv_name(MODEL_MRBEAM_2_DC, LASER_MODEL_X) == MRB_DREAMCUT_X
 
 
@@ -24,7 +24,7 @@ def test_material_settings_parser():
         device_model=MODEL_MRBEAM_2_DC, laserhead_model=DEFAULT_LASER_MODEL
     )
     material_x = parse_csv(
-        device_model=MODEL_MRBEAM_2_DC_x, laserhead_model=LASER_MODEL_X
+        device_model=MODEL_MRBEAM_2_DC_X, laserhead_model=LASER_MODEL_X
     )
     material_s = parse_csv(
         device_model=MODEL_MRBEAM_2_DC_S, laserhead_model=LASER_MODEL_S

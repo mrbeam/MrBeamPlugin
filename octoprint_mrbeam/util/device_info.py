@@ -25,14 +25,14 @@ MODEL_MRBEAM_2_DC_R1 = "MRBEAM2_DC_R1"
 MODEL_MRBEAM_2_DC_R2 = "MRBEAM2_DC_R2"
 MODEL_MRBEAM_2_DC = "MRBEAM2_DC"
 MODEL_MRBEAM_2_DC_S = "MRBEAM2_DC_S"
-MODEL_MRBEAM_2_DC_x = "MRBEAM2_DC_x"
+MODEL_MRBEAM_2_DC_X = "MRBEAM2_DC_x"
 MODELS = {
     MODEL_MRBEAM_2: "Mr Beam II",
     MODEL_MRBEAM_2_DC_R1: "Mr Beam II dreamcut ready",
     MODEL_MRBEAM_2_DC_R2: "Mr Beam II dreamcut ready",
     MODEL_MRBEAM_2_DC: "Mr Beam II dreamcut",
     MODEL_MRBEAM_2_DC_S: "Mr Beam II dreamcut [S]",
-    MODEL_MRBEAM_2_DC_x: "Mr Beam II dreamcut [x]",
+    MODEL_MRBEAM_2_DC_X: "Mr Beam II dreamcut [x]",
 }
 MODEL_DEFAULT = MODEL_MRBEAM_2
 

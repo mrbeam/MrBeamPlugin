@@ -19,9 +19,9 @@ VALID_MODELS = [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY, MRB_DREAMCUT_X]
 
 def model_ids_to_csv_name(device_model_id, laser_model_id):
     convert = {
-        (device_info.MODEL_MRBEAM_2_DC_x, LASER_MODEL_X): MRB_DREAMCUT_X,
-        (device_info.MODEL_MRBEAM_2_DC_x, LASER_MODEL_S): MRB_DREAMCUT_S,
-        (device_info.MODEL_MRBEAM_2_DC_x, DEFAULT_LASER_MODEL): MRB_DREAMCUT,
+        (device_info.MODEL_MRBEAM_2_DC_X, LASER_MODEL_X): MRB_DREAMCUT_X,
+        (device_info.MODEL_MRBEAM_2_DC_X, LASER_MODEL_S): MRB_DREAMCUT_S,
+        (device_info.MODEL_MRBEAM_2_DC_X, DEFAULT_LASER_MODEL): MRB_DREAMCUT,
         (device_info.MODEL_MRBEAM_2_DC_S, LASER_MODEL_X): MRB_DREAMCUT_X,
         (device_info.MODEL_MRBEAM_2_DC_S, LASER_MODEL_S): MRB_DREAMCUT_S,
         (device_info.MODEL_MRBEAM_2_DC_S, DEFAULT_LASER_MODEL): MRB_DREAMCUT,

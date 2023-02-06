@@ -13,7 +13,7 @@ from octoprint_mrbeam.util.device_info import (
     MODEL_MRBEAM_2_DC_S,
     MODEL_MRBEAM_2_DC_R1,
     MODEL_MRBEAM_2_DC_R2,
-    MODEL_MRBEAM_2_DC_x,
+    MODEL_MRBEAM_2_DC_X,
 )
 
 
@@ -22,12 +22,12 @@ from octoprint_mrbeam.util.device_info import (
     [
         MODEL_MRBEAM_2_DC,
         MODEL_MRBEAM_2_DC_S,
-        MODEL_MRBEAM_2_DC_x,
+        MODEL_MRBEAM_2_DC_X,
     ],
     ids=[
         "MODEL_MRBEAM_2_DC",
         "MODEL_MRBEAM_2_DC_S",
-        "MODEL_MRBEAM_2_DC_x",
+        "MODEL_MRBEAM_2_DC_X",
     ],
 )
 @patch(
@@ -84,12 +84,12 @@ def test_is_current_used_lh_model_supported_lh_x_not_supported(_, model, mrbeam_
     [
         MODEL_MRBEAM_2_DC,
         MODEL_MRBEAM_2_DC_S,
-        MODEL_MRBEAM_2_DC_x,
+        MODEL_MRBEAM_2_DC_X,
     ],
     ids=[
         "MODEL_MRBEAM_2_DC",
         "MODEL_MRBEAM_2_DC_S",
-        "MODEL_MRBEAM_2_DC_x",
+        "MODEL_MRBEAM_2_DC_X",
     ],
 )
 @patch(
@@ -145,7 +145,7 @@ def test_is_current_used_lh_model_supported_lh_s_not_supported(_, model, mrbeam_
         MODEL_MRBEAM_2_DC_R2,
         MODEL_MRBEAM_2_DC,
         MODEL_MRBEAM_2_DC_S,
-        MODEL_MRBEAM_2_DC_x,
+        MODEL_MRBEAM_2_DC_X,
     ],
     ids=[
         "MODEL_MRBEAM_2",
@@ -153,7 +153,7 @@ def test_is_current_used_lh_model_supported_lh_s_not_supported(_, model, mrbeam_
         "MODEL_MRBEAM_2_DC_R2",
         "MODEL_MRBEAM_2_DC",
         "MODEL_MRBEAM_2_DC_S",
-        "MODEL_MRBEAM_2_DC_x",
+        "MODEL_MRBEAM_2_DC_X",
     ],
 )
 @patch(
