@@ -14,7 +14,7 @@ DEFAULT_LASER_MODEL = "0"
 LASER_MODEL_S = "S"
 LASER_MODEL_x = "x"
 
-VALID_VERSIONS = [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY, MRB_DREAMCUT_x]
+VALID_MODELS = [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY, MRB_DREAMCUT_x]
 
 
 def model_ids_to_csv_name(device_model_id, laser_model_id):
@@ -109,7 +109,7 @@ def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0"):
             if colorcode:
                 current_color = colorcode
 
-            if not mrbeamversion in VALID_VERSIONS:
+            if mrbeamversion not in VALID_MODELS:
                 # Either a comment line, unused setting or experimental settings
                 continue
 
