@@ -1,7 +1,6 @@
 import logging
-from frontend import webdriverUtils
-from frontend import uiUtils
-from frontend.quick_shapes.base_procedure import BaseProcedure
+from tests.frontend import webdriverUtils, uiUtils
+from tests.frontend.quick_shapes.base_procedure import BaseProcedure
 
 
 class TestStar(BaseProcedure):

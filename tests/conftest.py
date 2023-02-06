@@ -1,5 +1,13 @@
 # pytest config file
 
+import pytest
+
+from octoprint.settings import settings
+from octoprint_mrbeam import MrBeamPlugin
+
+sett = settings(init=True)  # Initialize octoprint settings, necessary for MrBeamPlugin
+
+
 # adds commandline option --baseurl
 def pytest_addoption(parser):
     parser.addoption("--baseurl", action="store", default="http://localhost:5000")
@@ -18,3 +26,10 @@ def pytest_generate_tests(metafunc):
     rsc_folder = metafunc.config.option.rsc_folder
     if "rsc_folder" in metafunc.fixturenames and rsc_folder is not None:
         metafunc.parametrize("rsc_folder", [rsc_folder])
+
+
+@pytest.fixture
+def mrbeam_plugin():
+    mrbeam_plugin = MrBeamPlugin()
+    mrbeam_plugin._settings = sett
+    yield mrbeam_plugin

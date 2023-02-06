@@ -1,17 +1,14 @@
-import time
-import logging
+import unittest
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from frontend import uiUtils
-from frontend import webdriverUtils
-from frontend import gcodeUtils
-from frontend import frontendTestUtils
+from tests.frontend import webdriverUtils, gcodeUtils, frontendTestUtils, uiUtils
 
 
-class BaseProcedure:
+@unittest.skip('DEPRECATED')
+class BaseProcedure(unittest.TestCase):
     def setup_method(self, method):
 
         # expectations (None means skip)

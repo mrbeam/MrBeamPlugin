@@ -230,7 +230,8 @@ $(function () {
                 }
             }
             // not_first_run
-            if (restrictions.not_first_run && !CONFIG_FIRST_RUN) {
+           // Setting this to false means the message won't show on the first run
+            if (!restrictions.not_first_run && CONFIG_FIRST_RUN) {
                 return false;
             }
             return true;

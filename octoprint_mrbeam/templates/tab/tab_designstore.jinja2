@@ -1,0 +1,45 @@
+<div class="tab-pane" id="designstore">
+    <div class="loading_spinner_wrapper">
+        <div class="loading_spinner">
+            <i class="icon icon-spinner icon-spin"></i>
+        </div>
+    </div>
+
+    <iframe loading="lazy" id="design_store_iframe" scrolling="auto" frameBorder="0"></iframe>
+
+    <div id="design_store_offline_placeholder" class="hidden">
+        <div class="row-fluid no-internet-connection-section">
+            <div class="span12">
+                <div class="row-fluid">
+                    <div class="span3">
+                    </div>
+                    <div class="span6">
+                        <div class="row-fluid">
+                            <div class="span3">
+                                <div class="no-internet-icon">
+                                    <img src="/plugin/mrbeam/static/img/no_internet.svg">
+                                </div>
+                            </div>
+                            <div class="span9">
+                                <div class="no-internet-content">
+                                    <h4>{{ _('The Mr&nbsp;Beam Design Store is not reachable') }}</h4>
+                                    <p>{{ _('In order to use our store it is necessary that your Mr&nbsp;Beam is connected to the internet.') }}</p>
+                                    <p>{{ _('Please connect your Mr&nbsp;Beam to your router with a cable, or via WiFi.') }}</p>
+                                    <div>
+                                        <button class="btn refresh-connection"  data-bind="click: $root.reloadDesignStoreIframe">
+                                            {{ _('Refresh') }}
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="span3">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -2449,6 +2449,15 @@ input.search-query,
   user-select: none;
 }
 
+#quick_text_stroke_and_fill input[type=radio]{
+  margin: 8px 5px 0 0;
+  transform: scale(1.2);
+}
+
+.mrb-quicktext-stroked-placeholder::-webkit-input-placeholder{
+    color: #ffffff;
+}
+
 .hidden {
   display: none;
 }
@@ -2746,64 +2755,133 @@ hides the force update buttons
 * === LASER JOB DONE #madewithmrbeam ===
 */
 
-.laser_job_done_image {
-  width: 100%;
-  height: 311px;
-  text-align: center;
-  background-repeat: no-repeat;
+.modal--laser-job-done.show {
+  text-shadow: 0 0 0 rgba(255, 255, 255, 0.95);
+}
+
+.modal--laser-job-done .modal-body {
+  padding-bottom: 0;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section {
+  height: 100px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0);
+  transition: text-shadow 0.8s ease-in;
+  border-radius: 8px;
+  background-color: #e25303;
+  position: relative;
+  padding: 25px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p {
+  font-size: 1.8em;
+  color: #ffffff;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p.modal__p--hashtag {
+  font-weight: bold;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div {
+  position: absolute;
+  bottom: 25px;
+  right: 25px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div a i {
+  font-size: 2.4em;
+  padding: 0 3px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p.modal__p--hashtag a,
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div a i {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p.modal__p--hashtag a:hover,
+.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div a i:hover {
+  color: #e25303;
+  text-decoration: none;
+  background-color: #ffffff;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section {
+  padding: 25px;
+  margin-bottom: 10px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details {
+  font-weight: bold;
   position: relative;
 }
 
-#laser_job_done_image_check {
-  font-size: 250px;
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details p {
+  font-size: 16px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details > div {
+  border: 1px solid #333333;
   position: absolute;
-  top: 10%;
-  left: 0;
-  text-align: center;
+  background: #ffffff;
+  margin: 20px 0;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details div div {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details div p {
+  font-size: 14px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-description p {
+  margin: 0 15px;
+  width: 75px;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--1 {
+  z-index: 3;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--2 {
+  top: 20px;
+  left: 10px;
+  z-index: 2;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--3 {
+  top: 10px;
+  left: 20px;
+  z-index: 1;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-picture{
+  height: 50px;
+  width: 50px;
+  background-size: cover;
+}
+
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-link a {
+  border: 1px solid;
   width: 100%;
   display: block;
-  color: transparent;
-  text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.25);
-  transition: text-shadow 3.5s ease;
-  pointer-events: none;
+  border-radius: 8px;
+  text-align: center;
+  padding: 5px;
 }
 
-#laser_job_done_image_check.show {
-  text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.7);
-}
-
-#laser_job_done_image_text {
-  text-align: left;
-  padding: 10% 9%;
-  /*line-height: 250%;*/
-  color: transparent;
-  text-shadow: 0px 0px 20px rgba(255, 255, 255, 0);
-  transition: text-shadow 0.8s ease-in;
-}
-
-#laser_job_done_image_text p {
-  font-weight: bold;
-  font-size: 1.8em;
-  color: transparent;
-}
-
-#laser_job_done_image_text a {
-  color: transparent;
+.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-link a:hover {
+  background-color: #e25303;
+  color: #ffffff;
   text-decoration: none;
 }
 
-#laser_job_done_image_text a:hover {
-  color: transparent;
-  text-decoration: none;
-}
-
-#laser_job_done_image_text.show {
-  text-shadow: 0px 0px 0px rgba(255, 255, 255, 0.95);
-}
-
-.laser_job_done_image_media_icon {
-  font-size: 2.4em;
-  padding: 0px 3px;
+.modal--laser-job-done .modal-footer > div {
+  display: inline-block;
+  margin-bottom: 10px;
 }
 
 /*
@@ -2987,7 +3065,7 @@ hides the force update buttons
   display: none !important;
 }
 
-/*MRB Menus*/
+/* MRB Menus */
 
 .mrb_menu ul.dropdown-menu,
 #navbar_login ul.dropdown-menu,
@@ -3111,9 +3189,9 @@ hides the force update buttons
   margin-bottom: 1px;
 }
 
-/*MRB Menus*/
+/* MRB Menus */
 
-/*App font family*/
+/* App font family */
 
 body,
 input,
@@ -3126,9 +3204,9 @@ div.hopscotch-bubble h3 {
   font-family: "RobotoFont", sans-serif;
 }
 
-/*App font family*/
+/* App font family */
 
-/*Setting buttons*/
+/* Setting buttons */
 
 #settings_plugin_softwareupdate button.btn.btn-primary.btn-block.sticky-footer {
   position: inherit;
@@ -3142,7 +3220,7 @@ div.hopscotch-bubble h3 {
   text-align: right;
 }
 
-/*Setting buttons*/
+/* Setting buttons */
 
 /*Working Area Scrolling*/
 
@@ -3155,9 +3233,9 @@ div.hopscotch-bubble h3 {
   height: 100%;
 }
 
-/*Working Area Scrolling*/
+/* Working Area Scrolling */
 
-/*Scrollbar styling*/
+/* Scrollbar styling */
 
 /* width */
 ::-webkit-scrollbar {
@@ -3179,9 +3257,9 @@ div.hopscotch-bubble h3 {
   background: #555;
 }
 
-/*Scrollbar styling*/
+/* Scrollbar styling */
 
-/*Pnotify styling*/
+/* Pnotify styling */
 
 .ui-pnotify-container.ui-pnotify-shadow {
   color: #383e42;
@@ -3224,9 +3302,9 @@ h4.ui-pnotify-title {
   background-color: #ff8686;
 }
 
-/*Pnotify styling*/
+/* Pnotify styling */
 
-/*Terminal button*/
+/* Terminal button */
 
 button#terminal-send {
   height: 30px;
@@ -3235,9 +3313,9 @@ button#terminal-send {
   float: right;
 }
 
-/*Terminal button*/
+/* Terminal button */
 
-/*FreshDesk button*/
+/* FreshDesk button */
 
 .freshwidget-theme {
   text-shadow: rgba(0, 0, 0, 0.2), -1px, -1px, 1px;
@@ -3319,17 +3397,17 @@ button#terminal-send {
   animation: slideupleft 0.3s ease !important;
 }
 
-/*FreshDesk button*/
+/* FreshDesk button */
 
-/*User Settings API Key button*/
+/* User Settings API Key button */
 
 #usersettings_access a.btn.add-on {
   border-radius: 6px;
 }
 
-/*User Settings API Key button*/
+/* User Settings API Key button */
 
-/*Design Store*/
+/* Design Store */
 
 #designstore_tab_btn .red-dot {
   height: 5px;
@@ -3401,12 +3479,34 @@ button#terminal-send {
   margin-top: 45px;
 }
 
-/*Design Store*/
+#designstore .loading_spinner_wrapper {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+}
+#designstore .loading_spinner {
+  position: relative;
+  left: 50%;
+  top: 50%;
+  color: #ffffff;
+}
+#designstore .loading_spinner i {
+  font-weight: bold;
+  font-size: 4em;
+}
 
-/*Support Standalone*/
+/* Design Store */
+
+/* Support Standalone */
+
 #support_overlay > div.modal-body.scrollable > table {
   margin: 20px auto;
 }
+
 /* Support Standalone */
 
 /* Hard refresh overlay */
@@ -3427,3 +3527,86 @@ button#terminal-send {
 }
 
 /* Hard refresh overlay */
+
+/* Material Store */
+
+#material_store_content #loading_spinner_wrapper {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+}
+#material_store_content #loading_spinner {
+  position: relative;
+  left: 50%;
+  top: 50%;
+  color: #ffffff;
+}
+#material_store_content #loading_spinner i {
+  font-weight: bold;
+  font-size: 4em;
+}
+
+#material_store_content #material_store_iframe {
+  width: 100%;
+  height: 90vh;
+  overflow: hidden;
+  border: none;
+}
+
+#material_store_content .no-internet-connection-section {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-55%);
+  display: block;
+}
+
+#material_store_content .no-internet-connection-section .no-internet-icon img {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-80%);
+  padding: 0 5%;
+}
+
+#material_store_content .no-internet-connection-section .no-internet-content {
+  text-align: center;
+  font-size: 20px;
+  padding: 0 60px;
+}
+
+#material_store_content
+  .no-internet-connection-section
+  .no-internet-content
+  h4 {
+  font-size: 20px;
+  margin-bottom: 40px;
+  line-height: 30px;
+  text-transform: uppercase;
+}
+
+#material_store_content .no-internet-connection-section .no-internet-content p {
+  margin-bottom: 30px;
+}
+
+#material_store_content
+  .no-internet-connection-section
+  .no-internet-content
+  .btn.refresh-connection {
+  margin-top: 45px;
+}
+
+/* Material Store */
+
+/* Corner Calibration */
+
+.corner_calibration {
+  max-width: 800px;
+}
+.corner_calibration .focus_reminder{
+  width: 250px;
+}
+
+/* Corner Calibration */

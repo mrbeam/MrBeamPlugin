@@ -1,36 +1,91 @@
-<div id="laser_job_done_dialog" class="modal hide fade" data-backdrop="static">
-
+<div id="laser_job_done_dialog" class="modal hide fade modal--laser-job-done" data-backdrop="static">
     <div data-bind="visible: !is_dust_mode()">
         <div class="modal-header">
             <a href="#" class="close" data-bind='click: cancel_btn' aria-hidden="true">&times;</a>
-            <h3>{{ _('Laser Job Finished') }}</h3>
+            <h3>{{ _('Laser Job Finished!') }}</h3>
         </div>
         <div class="modal-body">
-
-            <div class="laser_job_done_image" style="background-image: url('/plugin/mrbeam/static/img/done_empty.jpg')">
-                <i id="laser_job_done_image_check" class="icon-ok-sign show"></i>
-                <div id="laser_job_done_image_text">
-                        <p>{{ _('Inspire the Mr Beam Community') }}</p>
-                        <p>{{ _('and be inspired too!') }}</p>
-                        <p style="padding: 1.2em 0em 0em 0em;">{{ _('Tag your photos with') }}</p>
-                        <p style="font-size: 3.3em; padding: 0.2em 0px"><a href="https://www.instagram.com/mrbeamlasers/" target="_blank">#madewithmrbeam</a></p>
-                        <div>
-                            <i class="icon-instagram laser_job_done_image_media_icon"></i>
-                            <i class="icon-facebook-sign laser_job_done_image_media_icon"></i>
-                            <i class="icon-twitter-sign laser_job_done_image_media_icon"></i>
-                            <i class="icon-pinterest-sign laser_job_done_image_media_icon"></i>
-                            <i class="icon-youtube-sign laser_job_done_image_media_icon"></i>
-                            <i class="icon-linkedin-sign laser_job_done_image_media_icon"></i>
+            <div class="modal__modal-body--social-media-section">
+                <p>{{ _('Share your work and inspire others!') }}</p>
+                <p class="modal__p--hashtag"><a href="https://www.instagram.com/mrbeamlasers/" target="_blank">#madewithmrbeam</a>
+                </p>
+                <div>
+                    <a href="https://www.instagram.com/mrbeamlasers/" target="_blank"><i class="icon-instagram"></i></a>
+                    <a href="https://www.facebook.com/mrbeamlasercutter/" target="_blank"><i
+                            class="icon-facebook-sign"></i></a>
+                    <a href="https://twitter.com/MrBeamLasers" target="_blank"><i class="icon-twitter-sign"></i></a>
+                    <a href="https://www.pinterest.com/mrbeamlasers" target="_blank"><i class="icon-pinterest-sign"></i></a>
+                    <a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank"><i
+                            class="icon-youtube-sign"></i></a>
+                    <a href="https://www.linkedin.com/company/mrbeamlasers" target="_blank"><i
+                            class="icon-linkedin-sign"></i></a>
+                </div>
+            </div>
+            <div class="modal__modal-body--material-section" data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.name
+            && window.mrbeam.viewModels.vectorConversionViewModel.selected_material_color()
+            && window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness()?.thicknessMM">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div class="modal__material-details">
+                            <p>{{ _('By the way - Did you know?') }}</p>
+                            {% for i in [1,2,3] %}
+                            <div class="modal__material-details-box--{{ i }}">
+                                <!-- ko if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().img -->
+                                <div class="modal__material-picture"
+                                     data-bind="style: { backgroundImage: 'url(\'' + window.mrbeam.viewModels.vectorConversionViewModel.selected_material().img + '\')' }">
+                                </div>
+                                <!-- /ko -->
+                                <!-- ko if: !window.mrbeam.viewModels.vectorConversionViewModel.selected_material().img -->
+                                <div class="modal__material-picture"
+                                     data-bind="style: { backgroundImage: 'url(\'' + '/plugin/mrbeam/static/img/materials/custommaterial.png' + '\')' }">
+                                </div>
+                                <!-- /ko -->
+                                <div class="modal__material-description">
+                                    <div data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM !== -1">
+                                        <p data-bind="text: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name + ', ' +
+                                        window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM + gettext(' mm')"></p>
+                                    </div>
+                                    <div data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM === -1">
+                                        <p data-bind="text: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
+                    <div class="span6">
+                        <div class="modal__material-link">
+                            <p data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === null || window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === undefined"><span>{{ _('You can find a variety of laser materials on our website.') }}</span></p>
+                            <p data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === 'product'"><span>{{  _('Our Material Store has the same material available for purchase.') }}</span></p>
+                            <p data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === 'collection'"><span>{{ _('We have similar materials for you in our Material Store.') }}</span></p>
+                            <div class="alert alert-error" data-bind="visible: !window.mrbeam.isOnline">
+                              <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                {{ _('You need a working internet connection for this forwarding to work.') }}
+                            </div>
+                            <a target="_blank"
+                               data-bind="attr: { href: window.mrbeam.viewModels.materialSettingsViewModel.constructShopifyURL(window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name, window.mrbeam.viewModels.vectorConversionViewModel.selected_material_color()) }">
+                                <span data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type !== 'product'">{{ _('Browse the options') }}</span>
+                                <span data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === 'product'">{{ _('Restock Material') }}</span>
+                                </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <h4 data-bind='visible: readyToLaser.jobTimeEstimationCalculated'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'>    </span>
-                <small>({{ _('Estimated:') }} <span data-bind='text: readyToLaser.jobTimeEstimationString'></span>)</small>
-            </h4>
         </div>
         <div class="modal-footer">
-            <a class="btn" id="laser_job_done_repeat_btn" data-bind='click: repeat_job' aria-hidden="true"><i class="icon icon-repeat"></i> {{ _('Repeat Job') }}</a>
-            <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='click: cancel_btn' aria-hidden="true">{{ _('Close') }}</a>
+            <div class="pull-left">
+                <h4 data-bind='visible: readyToLaser.jobTimeEstimationCalculated'>{{ _('Laser job duration:') }} <span
+                        data-bind='text: job_duration_formatted()'>    </span>
+                    <small>({{ _('Estimated:') }} <span
+                            data-bind='text: readyToLaser.jobTimeEstimationString'></span>)</small>
+                </h4>
+            </div>
+            <div>
+                <a class="btn" id="laser_job_done_repeat_btn" data-bind='click: repeat_job' aria-hidden="true"><i
+                        class="icon icon-repeat"></i> {{ _('Repeat Job') }}</a>
+                <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='click: cancel_btn'
+                   aria-hidden="true">{{ _('Close') }}</a>
+            </div>
         </div>
     </div>
 

@@ -42,6 +42,7 @@ $(function () {
         self.availableHeight = ko.observable(undefined);
         self.availableWidth = ko.observable(undefined);
         self.px2mm_factor = 1; // initial value
+        self.workingAreaDPItoMM = 90 / 25.4;
         self.svgDPI = function () {
             return 90;
         }; // initial value, gets overwritten by settings in onAllBound()
@@ -80,6 +81,33 @@ $(function () {
         self.workingAreaHeightMM = ko.computed(function () {
             return self.profile.currentProfileData().volume.depth();
         }, self);
+
+        // QuickShape limits
+        self.rectangleMaxWidth = ko.computed(function () {
+            return self.workingAreaWidthMM();
+        }, self);
+        self.rectangleMaxHeight = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+        self.lineMaxLength = ko.computed(function () {
+            return self.workingAreaWidthMM();
+        }, self);
+        self.circleMaxRadius = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+        // TODO: The limit of the star radius should be calculated differently
+        self.starMaxRadius = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+        // TODO: The limit of the heart width should be calculated differently
+        self.heartMaxWidth = ko.computed(function () {
+            return self.workingAreaWidthMM();
+        }, self);
+        // TODO: The limit of the heart height should be calculated differently
+        self.heartMaxHeight = ko.computed(function () {
+            return self.workingAreaHeightMM();
+        }, self);
+
         self.imgTranslate = ko.computed(function () {
             // Used for the translate transformation of the picture on the work area
             return [-self.workingAreaWidthMM(), -self.workingAreaHeightMM()]
@@ -120,9 +148,10 @@ $(function () {
         ];
         self.currentQuickTextFile = undefined;
         self.currentQuickTextAnalyticsData = undefined;
-        self.currentQuickText = ko.observable();
+        self.currentQuickText = ko.observable(); // TODO check removal
         self.quickShapeNames = new Map([
             ["rect", gettext("Rectangle")],
+            ["line", gettext("Line")],
             ["circle", gettext("Circle")],
             ["star", gettext("Star")],
             ["heart", gettext("Heart")],
@@ -131,7 +160,10 @@ $(function () {
         self.currentQuickShapeAnalyticsData = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
-        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
+        self.lastQuickTextStroke = false;
+        self.lastQuickTextFill = true;
+        self.lastQuickTextStrokeColor = "#e25303";
+        self.lastQuickTextFillColor = "#000000";
         self.lastQuickTextCircle = 0;
         self.lastQuickTextClockwise = true;
 
@@ -259,6 +291,13 @@ $(function () {
             return self.placedDesigns().length === 0;
         });
 
+        self.spinnerShow = function () {
+            $("body").addClass("activitySpinnerActive");
+        };
+        self.spinnerHide = function () {
+            $("body").removeClass("activitySpinnerActive");
+        };
+
         self.clear = function () {
             self.abortFreeTransforms();
             snap.selectAll("#userContent>*:not(defs)").remove();
@@ -270,6 +309,7 @@ $(function () {
         };
 
         self.getUsedColors = function (elem) {
+            // TODO rewrite as snap plugin
             elem = !elem
                 ? snap.select("#userContent")
                 : typeof elem === "string"
@@ -286,11 +326,12 @@ $(function () {
                 : elem;
             return (
                 elem.selectAll("image").length > 0 ||
-                self.hasFilledVectors(elem)
+                self.hasFilledVectors(elem) // TODO use is_filled()
             );
         };
 
         self._getColorsOfSelector = function (
+            // TODO rewrite as snap plugin using is_stroked()
             selector,
             color_attr = "stroke",
             elem = null
@@ -301,7 +342,11 @@ $(function () {
             let items = root.selectAll(selector + "[" + color_attr + "]");
             for (var i = 0; i < items.length; i++) {
                 let col = items[i].attr()[color_attr];
+                const bb = items[i].getBBox();
                 if (
+                    bb.w > 0 &&
+                    // TODO: the line path has zero height so this should be done in a different manner
+                    // bb.h > 0 && // filters elements without dimension, e.g. <path> without d attrib.
                     col !== "undefined" &&
                     col !== "none" &&
                     col !== null &&
@@ -362,12 +407,7 @@ $(function () {
                 });
             } else {
                 console.warn(
-                    "Move Laser to " +
-                        x +
-                        "," +
-                        y +
-                        " command while machine state not idle: " +
-                        self.state.stateString()
+                    `Move Laser to ${x},${y} command while machine state not idle: ${self.state.stateString()}`
                 );
             }
         };
@@ -655,7 +695,7 @@ $(function () {
         self.placeSVG = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
             cb = function (fragment) {
                 var duration_load = Date.now() - start_ts;
                 start_ts = Date.now();
@@ -747,7 +787,7 @@ $(function () {
         self.placeDXF = function (file, callback) {
             var start_ts = Date.now();
             var url = self._getSVGserveUrl(file);
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
             cb = function (fragment, timestamps) {
                 var duration_load = timestamps.load_done
                     ? timestamps.load_done - start_ts
@@ -832,7 +872,7 @@ $(function () {
             origin = origin || "";
             start_ts = start_ts || Date.now();
 
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
 
             if (!analyticsData._skip) {
                 // this is a flag used by quickShape
@@ -890,7 +930,7 @@ $(function () {
             }
 
             try {
-                // bake() kills gradients because gradient coordinates are not transformed.
+                // bug: bake() kills gradients because gradient coordinates are not transformed.
                 var switches = $.extend(
                     {
                         showTransformHandles: true,
@@ -1029,7 +1069,8 @@ $(function () {
                 });
 
                 snap.select("#userContent").append(newSvg);
-                self._addClickAndHoverHandlers(snap.select("#" + id), fileObj); // after placement ids have changed => select freshly placed fragment via id.
+                // after placement ids have changed => select freshly placed fragment via id.
+                self._addClickAndHoverHandlers(snap.select("#" + id), fileObj);
 
                 return id;
             } catch (e) {
@@ -1040,7 +1081,7 @@ $(function () {
                 analyticsData.duration_processing = Date.now() - start_ts;
                 self._analyticsPrepareAndInsertSVG(analyticsData);
                 setTimeout(function () {
-                    $("body").removeClass("activitySpinnerActive");
+                    self.spinnerHide();
                 }, 1);
             }
         };
@@ -1069,8 +1110,7 @@ $(function () {
                 "switch",
                 "#adobe_illustrator_pgf",
             ];
-            //			var unsupportedElems = ['flowRoot', 'switch', '#adobe_illustrator_pgf'];
-            //
+
             for (var i = 0; i < unsupportedElems.length; i++) {
                 var myElem = fragment.selectAll(unsupportedElems[i]);
                 if (myElem.length !== 0) {
@@ -1147,7 +1187,6 @@ $(function () {
             self.showTransformHandles(file.previewId, true);
 
             var mb_meta = self._set_mb_attributes(svg);
-            // svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
         };
 
         /**
@@ -1261,10 +1300,10 @@ $(function () {
                     // like this: xmlns:x="&ns_extend;"
                     // We replace it to xmlns:x="ENTITYREF_ns_extend"
                     if (attr.value.match(/^&.+;$/)) {
-                        if (attr.name == "xmlns") {
+                        if (attr.name === "xmlns") {
                             namespaces[attr.name] =
                                 "http://www.w3.org/2000/svg";
-                        } else if (attr.name == "xmlns:xlink") {
+                        } else if (attr.name === "xmlns:xlink") {
                             // not sure if this is important
                             namespaces[attr.name] =
                                 "http://www.w3.org/1999/xlink";
@@ -2061,7 +2100,7 @@ $(function () {
         self.placeIMG = function (file, textMode) {
             var start_ts = Date.now();
             var url = self._getIMGserveUrl(file);
-            $("body").addClass("activitySpinnerActive");
+            self.spinnerShow();
             var img = new Image();
             textMode = textMode || false;
             img.onload = function () {
@@ -2126,7 +2165,7 @@ $(function () {
                 self._analyticsPlaceImage(analyticsData);
 
                 // remove Activity Spinner
-                $("body").removeClass("activitySpinnerActive");
+                self.spinnerHide();
             };
             img.src = url;
         };
@@ -2247,6 +2286,11 @@ $(function () {
         };
 
         self.moveSelectedDesign = function (ifX, ifY) {
+            const selection = snap.mbtransform.getSelection();
+            if (selection.length === 0) {
+                console.info("No selection to move.");
+                return;
+            }
             var diff = 2;
             var globalScale = self.scaleMatrix().a;
             var nx = diff * ifX;
@@ -2254,7 +2298,6 @@ $(function () {
             var ntx = nx / globalScale;
             var nty = ny / globalScale;
 
-            const selection = snap.mbtransform.getSelection();
             snap.mbtransform.manualTransform(selection, {
                 tx_rel: ntx,
                 ty_rel: nty,
@@ -2308,6 +2351,7 @@ $(function () {
             return [destWidthMM, destHeightMM];
         };
 
+        // TODO not used? Check removal
         self.getDocumentDimensionsInPt = function (
             doc_width,
             doc_height,
@@ -2566,42 +2610,48 @@ $(function () {
             self._updateTransformationButtons();
         };
 
-        self.getCompositionSVG = function (
-            fillAreas,
-            pxPerMM,
-            engraveStroke,
-            callback
-        ) {
+        /**
+         *
+         * @param {boolean} fillAreas: flag if rastering has to be done or not
+         * @param {number} pxPerMM: resolution used for rastering text, images and filled paths
+         * @returns {object}: {renderedSvg: result as string, jobTimeEstimationData: pathLengths & image summary, renderParams: params used for creation}
+         */
+        self.getCompositionSVG = async function (fillAreas, pxPerMM) {
+            // stop ongoing operations
             self.abortFreeTransforms();
+
+            self.spinnerShow();
+            const renderStart = Date.now();
+            console.log(`Frontend rendering startet ...`);
+
+            // create svg to do the rendering within
             var wMM = self.workingAreaWidthMM();
             var hMM = self.workingAreaHeightMM();
-            var wPT = (wMM * 90) / 25.4; // TODO ... switch to 96dpi ?
-            var hPT = (hMM * 90) / 25.4;
+            var wPT = wMM * self.workingAreaDPItoMM; // TODO ... switch to 96dpi ? Or even to mm?
+            var hPT = hMM * self.workingAreaDPItoMM;
             var compSvg = self.getNewSvg("compSvg", wPT, hPT);
+            compSvg.attr("viewBox", `0 0 ${wMM} ${hMM}`);
             var namespaces = self._getDocumentNamespaceAttributes(snap);
             compSvg.attr(namespaces);
             var attrs = {};
             var content = compSvg.g(attrs);
 
-            // TODO: here getBBox() should be reliably sized, but contains a lot of non renderable stuff.
-            let contentBBox = snap.select("#userContent").getBBox();
-            console.log("contentBBox", contentBBox);
+            // render paths and embed the resulting gcode
+            snap.select("#userContent").embed_gc(
+                self.flipYMatrix(),
+                self.gc_options(),
+                self.gc_meta
+            );
+
+            // copy all stuff placed by the user on the working area to the compSvg, cleanup afterwards and fill <defs> tag and fix references
             var userContent = snap.select("#userContent").clone();
             content.append(userContent);
             compSvg.selectAll(".deleteBeforeRendering").remove();
             const targetDefs = compSvg.select("svg>defs");
 
-            // if text in document
+            // if text in document embed the fonts as dataUris, copy textPaths and fix id references
             if (userContent.selectAll(".userText").length > 0) {
-                // embed the fonts as dataUris
-                $("#compSvg defs").append(
-                    '<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>'
-                );
-                self._qt_copyFontsToSvg(
-                    compSvg.select(".quickTextFontPlaceholder").node
-                );
-
-                // copy curved textPaths to defs
+                // embed textPaths
                 const allTextPaths = snap.selectAll(
                     "defs>.quicktext_curve_path"
                 );
@@ -2610,50 +2660,77 @@ $(function () {
                     const original_id = tp.attr("id");
                     const clone = tp.clone();
                     const destTextPath = clone.appendTo(targetDefs);
-                    // restore id to keep references working
                     destTextPath.attr({
                         id: original_id,
                         "mb:id": original_id,
                     });
                 }
+
+                const strokedText = userContent.selectAll(
+                    '.userText text[stroke^="#"]'
+                );
+                strokedText.forEach((t) => {
+                    const x = t.trace();
+                });
             }
 
-            // embed filters
+            // for bitmaps: embed filters
             // copy defs for filters (e.g. imgCropping, imgSharpening, etc...)
             var originalFilters = snap.selectAll("defs>filter");
             for (let i = 0; i < originalFilters.length; i++) {
                 const original_id = originalFilters[i].attr("id");
                 const clone = originalFilters[i].clone();
                 const destFilter = clone.appendTo(targetDefs);
-                // restore id to keep references working
                 destFilter.attr({ id: original_id, "mb:id": original_id });
             }
 
             // embed Images
-            self._embedAllImages(content).then(function (allEmbeddedImages) {
-                self.rasterInfill(
-                    compSvg,
-                    namespaces,
-                    wPT,
-                    hPT,
-                    fillAreas,
-                    wMM,
-                    hMM,
-                    pxPerMM,
-                    function (svgWithRenderedInfill) {
-                        callback(
-                            self._finalizeBackendSVG(
-                                svgWithRenderedInfill,
-                                namespaces
-                            )
-                        );
-                        $("#compSvg").remove();
-                    }
-                );
-            });
+            const allEmbeddedImages = await content.embedAllImages();
+            let svgWithRenderedInfill = await self.rasterInfill(
+                compSvg,
+                fillAreas,
+                pxPerMM
+            );
+
+            // console.log(`svgWithRenderedInfill ${svgWithRenderedInfill}}`);
+            const svgStr = self._finalizeBackendSVG(
+                svgWithRenderedInfill,
+                namespaces
+            );
+
+            const length_summary = self.get_gc_length_summary(compSvg);
+            // console.log(length_summary);
+            $("#compSvg").remove();
+
+            // hide spinner
+            const renderEnd = Date.now();
+            console.log(
+                `Frontend rendering finished in ${
+                    renderEnd - renderStart
+                } millis`
+            );
+            self.spinnerHide();
+
+            const params = {
+                fillAreas: fillAreas,
+                pxPerMM: pxPerMM,
+                wMM: wMM,
+                hMM: hMM,
+                wPT: wPT,
+                hPT: hPT,
+                gcFlipMatrix: self.flipYMatrix(),
+                gcOptions: self.gc_options(),
+                gcMeta: self.gc_meta,
+            };
+            return {
+                renderedSvg: svgStr,
+                jobTimeEstimationData: length_summary,
+                renderParams: params,
+            };
         };
 
         self._finalizeBackendSVG = function (compSvg, namespaces) {
+            // TODO check if viewbox, naespaces are already handled by getCompositionSVG()
             // set viewBox
             const wMM = self.workingAreaWidthMM();
             const hMM = self.workingAreaHeightMM();
@@ -2682,8 +2759,86 @@ $(function () {
                 svgStr = WorkingAreaHelper.fix_svg_string(svgStr);
                 return svgStr;
             } else {
-                // TODO raise exception
+                console.error(
+                    "Conversion error! _finalizeBackendSVG was called without content. Should never happen."
+                );
             }
+        };
+
+        self.get_gc_length_summary = function (svg) {
+            let summary = { vectors: {}, no_info: 0, bitmaps: [] };
+
+            const vectors = self.getStrokedVectors(svg);
+            let lastEnd = null;
+            vectors.forEach(function (e) {
+                const color = Snap.getRGB(e.attr("stroke")).hex;
+                const l = e.attr("mb:gc_length");
+                if (l) {
+                    if (!summary.vectors[color])
+                        summary.vectors[color] = {
+                            lengthInMM: 0,
+                            positioningInMM: 0,
+                        };
+                    summary.vectors[color].lengthInMM += parseFloat(l);
+                    if (lastEnd !== null) {
+                        let start = [
+                            parseFloat(e.attr("mb:start_x")),
+                            parseFloat(e.attr("mb:start_y")),
+                        ];
+                        const posLength = euclideanDistance(start, lastEnd);
+                        summary.vectors[color].positioningInMM += posLength;
+                    }
+                    lastEnd = [
+                        parseFloat(e.attr("mb:end_x")),
+                        parseFloat(e.attr("mb:end_y")),
+                    ];
+                } else {
+                    summary.no_info += 1;
+                }
+            });
+
+            const bitmaps = svg.selectAll("image.fillRendering");
+            bitmaps.forEach(function (b) {
+                const w = parseFloat(b.attr("mb:img_w"));
+                const h = parseFloat(b.attr("mb:img_h"));
+                const histogram = b
+                    .attr("mb:histogram")
+                    .split(",")
+                    .map((v) => parseInt(v));
+                const whitePixelRatio = parseFloat(
+                    b.attr("mb:whitePixelRatio")
+                );
+                const innerWhitePixelRatio = parseFloat(
+                    b.attr("mb:innerWhitePixelRatio")
+                );
+                const whitePixelsOutside = parseInt(
+                    b.attr("mb:whitePixelsOutside")
+                );
+                const brightnessChanges = parseInt(
+                    b.attr("mb:brightnessChanges")
+                );
+                const totalBrightnessChange = parseInt(
+                    b.attr("mb:totalBrightnessChange")
+                );
+                if (w && h && histogram) {
+                    summary.bitmaps.push({
+                        w: w,
+                        h: h,
+                        histogram: histogram,
+                        whitePixelRatio: whitePixelRatio,
+                        innerWhitePixelRatio: innerWhitePixelRatio,
+                        whitePixelsOutside: whitePixelsOutside,
+                        brightnessChanges: brightnessChanges,
+                        totalBrightnessChange: totalBrightnessChange,
+                    });
+                } else {
+                    summary.no_info += 1;
+                }
+            });
+
+            const items = vectors.length + bitmaps.length;
+            if (items > 0) summary.no_info = summary.no_info / items;
+            return summary;
         };
 
         self._normalize_mb_id = function (id) {
@@ -2814,7 +2969,8 @@ $(function () {
                         "line",
                         "polyline",
                         "polygon",
-                        "path",
+                        "text",
+                        "tspan"
                     ].indexOf(e.type) >= 0
                 ) {
                     var fill = e.attr("fill");
@@ -2850,6 +3006,21 @@ $(function () {
                 }
             }
             return false;
+        };
+
+        self.getStrokedVectors = function (paper) {
+            let elements = paper.selectAll(".vector_outline");
+            let out = [];
+            for (var i = 0; i < elements.length; i++) {
+                var e = elements[i];
+                // TODO use is_stroked() from render_fills
+                var stroke = e.attr("stroke");
+                var sw = e.attr("stroke-width");
+                if (stroke !== "none" && parseFloat(sw) > 0) {
+                    out.push(e);
+                }
+            }
+            return elements;
         };
 
         self.draw_gcode = function (points, intensity, target) {
@@ -2907,6 +3078,16 @@ $(function () {
                 "change",
                 self._qs_currentQuickShapeUpdate
             );
+            $("#qt_colorPicker_stroke").tinycolorpicker();
+            $("#qt_colorPicker_stroke").bind(
+                "change",
+                throttle((event) => self._qt_currentQuickTextUpdate(event), 200)
+            );
+            $("#qt_colorPicker_fill").tinycolorpicker();
+            $("#qt_colorPicker_fill").bind(
+                "change",
+                throttle((event) => self._qt_currentQuickTextUpdate(event), 200)
+            );
         };
 
         self.onAllBound = function (allViewModels) {
@@ -2955,6 +3136,8 @@ $(function () {
                     $("#wa_view_settings_body").collapse("toggle");
                 }
             });
+
+            self.initCrossHairDragging();
         };
 
         self.onTabChange = function (current, prev) {
@@ -3034,177 +3217,111 @@ $(function () {
             }
         };
 
-        self._embedAllImages = async function (svg) {
-            // TODO... improve selector to catch href & xlink:href (https://stackoverflow.com/questions/23034283/is-it-possible-to-use-htmls-queryselector-to-select-by-xlink-attribute-in-an)
-            // var allImages snap.selectAll("#userContent image[*|href]");
-            var allImages = svg.selectAll("image");
-            console.log(`embedding Images 0/${allImages.length}}`);
-
-            let pAll = await Promise.all(
-                allImages.items.map(async (elem, idx) => {
-                    const embedded = await elem.embedImage();
-                    console.log(
-                        `embedding Image ${idx + 1}/${allImages.length}}`
-                    );
-                    return embedded;
-                })
-            );
-
-            return pAll;
-        };
-
-        self._rasterAndEmbedResult = async function (
-            targetSvg,
-            rasterClusters,
-            wPT,
-            hPT,
-            wMM,
-            hMM,
+        // raster the infill and inject it as an image into the svg
+        self.rasterInfill = async function (
+            svg, // is compSvg reference
+            fillAreas,
             pxPerMM
         ) {
-            let pAll = await Promise.all(
-                rasterClusters.map(async (cluster, clusterIndex) => {
-                    const renderBBoxMM = cluster.bbox;
-                    const rasterResult = await cluster.svg.renderPNG(
-                        clusterIndex,
-                        wPT,
-                        hPT,
-                        wMM,
-                        hMM,
-                        pxPerMM,
-                        renderBBoxMM
-                    ); // returns { dataUrl: fillBitmap, size: size, bbox: bbox, clusterIndex:clusterIndex };
-                    if (rasterResult.dataUrl !== null) {
-                        const x = rasterResult.bbox.x;
-                        const y = rasterResult.bbox.y;
-                        const w = rasterResult.bbox.w;
-                        const h = rasterResult.bbox.h;
-                        var fillImage = targetSvg.image(
-                            rasterResult.dataUrl,
-                            x,
-                            y,
-                            w,
-                            h
-                        );
-                        fillImage.attr("id", `fillRendering${clusterIndex}`);
-                    }
-                    return rasterResult;
-                })
-            );
-
-            if (MRBEAM_DEBUG_RENDERING) {
-                debugBase64(
-                    pAll.map((r) => r.dataUrl),
-                    `Step 2: PNG`
-                );
-            }
-
-            console.log("_rasterAndEmbedResult promise all");
-            return pAll;
-        };
-
-        // raster the infill and inject it as an image into the svg
-        self.rasterInfill = function (
-            svg, // is compSvg reference
-            namespaces,
-            svgWidthPT,
-            svgHeightPT,
-            fillAreas,
-            wMM,
-            hMM,
-            pxPerMM,
-            callback
-        ) {
+            // split SVG and get an array of clusters
             let clusters = svg.splitRasterClusters(fillAreas);
+
+            // only render clusters overlapping the working area
+            const waBB = snap.select("#coordGrid").getBBox();
+            clusters = clusters.filter(function (c, idx) {
+                const intersects = Snap.path.isBBoxIntersect(c.bbox, waBB);
+                if (!intersects)
+                    console.info(
+                        `Cluster ${idx} is outside workingArea. Skipping`
+                    );
+                return intersects;
+            });
+
+            // get used fonts in text tags
+            const whitelist = svg.getUsedFonts();
+            // get font declarations for quickText fonts
+            const fontDecl = WorkingAreaHelper.getFontDeclarations(whitelist);
+            clusters = clusters.map((c) => {
+                c.svgDataUrl = svg.toWorkingAreaDataURL(
+                    self.workingAreaWidthMM(),
+                    self.workingAreaHeightMM(),
+                    fontDecl,
+                    svg.select("style")?.node?.innerHTML, // include SVG styling
+                    `.toRaster.rasterCluster${c.idx}`
+                );
+                return c;
+            });
 
             if (MRBEAM_DEBUG_RENDERING) {
                 debugBase64(
                     clusters.map((c) => {
-                        c.svg.attr(
-                            "viewBox",
-                            `0 0 ${self.workingAreaWidthMM()} ${self.workingAreaHeightMM()}`
-                        );
-                        return c.svg.toDataURL();
+                        return c.svgDataUrl;
                     }),
                     `Step 1: Raster Cluster SVGs`
                 );
             }
-
-            // get only filled items and embed the images
-            // loop over non overlapping clusters to-raster elements.
-            for (var c = 0; c < clusters.length; c++) {
-                var rasterCluster = clusters[c];
-                var rasterContentSvg = rasterCluster.svg; // Avoids wrapping svg in svg.
-                rasterContentSvg.attr("id", "rasterCluster_" + c);
-                rasterContentSvg.addClass("tmpSvg");
-
-                //console.log("Rastering cluster " + c);
-                var attrs = {};
-                _.merge(attrs, namespaces);
-                attrs.viewBox = "0 0 " + wMM + " " + hMM;
-                rasterContentSvg.attr(attrs);
-
-                var fillings = rasterContentSvg.removeUnfilled(fillAreas);
-                for (var i = 0; i < fillings.length; i++) {
-                    // TODO what is done here?
-                    var item = fillings[i];
-
-                    if (
-                        item.type !== "image" &&
-                        item.type !== "text" &&
-                        item.type !== "#text"
-                    ) {
-                        var style = item.attr("style");
-                        // remove stroke from other elements
-                        var styleNoStroke = "stroke: none;";
-                        if (style !== null) {
-                            styleNoStroke += style.replace(/stroke.+?;/g, "");
-                        }
-                        item.attr("stroke", "none");
-                        item.attr("style", styleNoStroke);
-                    }
-                }
-            }
-
             if (fillAreas) {
-                self._rasterAndEmbedResult(
-                    svg,
-                    clusters,
-                    svgWidthPT,
-                    svgHeightPT,
-                    wMM,
-                    hMM,
-                    pxPerMM
-                ).then(function (rasterResults) {
-                    // remove filled elements / respectively fillings of elements after embedding raster result
-                    for (let i = 0; i < rasterResults.length; i++) {
-                        const result = rasterResults[i];
-                        const cluster = clusters[result.clusterIndex];
-                        for (let e = 0; e < cluster.elements.length; e++) {
-                            let elem = cluster.elements[e];
-                            elem.unfillOrRemove();
-                        }
-                    }
-                    svg.selectAll(".deleteAfterRendering").remove();
-                    if (typeof callback === "function") {
-                        callback(svg);
-                        if (MRBEAM_DEBUG_RENDERING) {
-                            debugBase64(
-                                svg.toDataURL(),
-                                "Step 3: SVG with fill rendering"
+                let pngs = await Promise.all(
+                    clusters.map((c) =>
+                        url2png(c.svgDataUrl, pxPerMM, c.bbox).then(function (
+                            rasterResult
+                        ) {
+                            const fillImage = svg.image(
+                                rasterResult.dataUrl,
+                                c.bbox.x,
+                                c.bbox.y,
+                                c.bbox.w,
+                                c.bbox.h
                             );
-                        }
-                    }
-                    self._cleanup_render_mess();
-                });
-            } else {
-                callback(svg);
-            }
-        };
 
-        self._cleanup_render_mess = function () {
-            $("#rasterContentSvg").remove();
-            $(".tmpSvg").remove();
+                            // total path length of engraving line by line
+                            const gcLength =
+                                c.bbox.w * c.bbox.h * pxPerMM + c.bbox.h; // contains enlargement of bbox due to webfont loading bug.
+                            fillImage.attr({
+                                id: `fillRendering${c.idx}`,
+                                "mb:img_w": c.bbox.w, // for Job Time Estimation 2.0
+                                "mb:img_h": c.bbox.h,
+                                "mb:histogram": rasterResult.analysis.histogram,
+                                "mb:whitePixelRatio":
+                                    rasterResult.analysis.whitePixelRatio,
+                                "mb:innerWhitePixelRatio":
+                                    rasterResult.analysis.innerWhitePixelRatio,
+                                "mb:whitePixelsOutside":
+                                    rasterResult.analysis
+                                        .whitePixelsAtTheOutside,
+                                "mb:brightnessChanges":
+                                    rasterResult.analysis.brightnessChanges,
+                                "mb:totalBrightnessChange":
+                                    rasterResult.analysis.totalBrightnessChange,
+                                "mb:gc_length": gcLength,
+                                class: "fillRendering",
+                            });
+
+                            c.elements.forEach((el) => el.remove());
+                            return rasterResult;
+                        })
+                    )
+                );
+
+                if (MRBEAM_DEBUG_RENDERING) {
+                    debugBase64(
+                        pngs.map((r) => r.dataUrl),
+                        `Step 2: PNG of cluster`
+                    );
+                }
+
+                svg.selectAll(".deleteAfterRendering").remove();
+
+                if (MRBEAM_DEBUG_RENDERING) {
+                    debugBase64(
+                        svg.toDataURL(),
+                        "Step 3: SVG with fill rendering"
+                    );
+                }
+                return svg;
+            } else {
+                return Promise.resolve(svg);
+            }
         };
 
         self.onBeforeBinding = function () {
@@ -3274,6 +3391,7 @@ $(function () {
                     rect_w: w,
                     rect_h: h,
                     rect_radius: r,
+                    line_length: w,
                     circle_radius: w,
                     star_radius: w / 2,
                     star_corners: 5,
@@ -3332,6 +3450,7 @@ $(function () {
             $("#quick_shape_rect_w").val(params.rect_w).change();
             $("#quick_shape_rect_h").val(params.rect_h).change();
             $("#quick_shape_rect_radius").val(params.rect_radius).change();
+            $("#quick_shape_line_length").val(params.line_length).change();
             $("#quick_shape_circle_radius").val(params.circle_radius).change();
             $("#quick_shape_star_radius").val(params.star_radius).change();
             $("#quick_shape_star_corners").val(params.star_corners).change();
@@ -3397,17 +3516,20 @@ $(function () {
                 var qs_params = {
                     type: type,
                     color: $("#quick_shape_color").val(),
-                    rect_w: parseFloat($("#quick_shape_rect_w").val()),
-                    rect_h: parseFloat($("#quick_shape_rect_h").val()),
+                    rect_w: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_rect_w").val()), self.rectangleMaxWidth()),
+                    rect_h: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_rect_h").val()), self.rectangleMaxHeight()),
                     rect_radius: parseFloat(
                         $("#quick_shape_rect_radius").val()
                     ),
-                    circle_radius: parseFloat(
+                    line_length: WorkingAreaHelper.limitValue(parseFloat(
+                        $("#quick_shape_line_length").val()
+                    ), self.lineMaxLength()),
+                    circle_radius: WorkingAreaHelper.limitValue(parseFloat(
                         $("#quick_shape_circle_radius").val()
-                    ),
-                    star_radius: parseFloat(
+                    ), self.circleMaxRadius()),
+                    star_radius: WorkingAreaHelper.limitValue(parseFloat(
                         $("#quick_shape_star_radius").val()
-                    ),
+                    ), self.starMaxRadius()),
                     star_corners: parseInt(
                         $("#quick_shape_star_corners").val(),
                         10
@@ -3415,8 +3537,8 @@ $(function () {
                     star_sharpness: parseFloat(
                         $("#quick_shape_star_sharpness").val()
                     ),
-                    heart_w: parseFloat($("#quick_shape_heart_w").val()),
-                    heart_h: parseFloat($("#quick_shape_heart_h").val()),
+                    heart_w: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_heart_w").val()), self.heartMaxWidth()),
+                    heart_h: WorkingAreaHelper.limitValue(parseFloat($("#quick_shape_heart_h").val()), self.heartMaxHeight()),
                     heart_lr: parseFloat($("#quick_shape_heart_lr").val()),
                     stroke: $("#quick_shape_stroke").prop("checked"),
                     fill_color: $("#quick_shape_fill_brightness").val(),
@@ -3437,6 +3559,9 @@ $(function () {
                 var shape = g.select("path");
                 var d;
                 switch (qs_params.type) {
+                    case "#line":
+                        d = QuickShapeHelper.getLine(qs_params.line_length);
+                        break;
                     case "#circle":
                         d = QuickShapeHelper.getCircle(qs_params.circle_radius);
                         break;
@@ -3498,11 +3623,14 @@ $(function () {
                 );
 
                 // analytics
-                var analyticsData = {
+                let analyticsData = {
                     id: self.currentQuickShapeFile.id,
                     file_type: "quickShape",
                     type: type.substr(1),
-                    color: qs_params.color,
+                    stroke: qs_params.stroke,
+                    stroke_color: qs_params.color,
+                    fill: qs_params.fill,
+                    fill_color: qs_params.fill_color,
                     name: name,
                 };
                 for (let myKey in qs_params) {
@@ -3559,6 +3687,9 @@ $(function () {
          */
         self.editQuickText = function (file) {
             self.currentQuickTextFile = file;
+            const strokeColor =
+                self.currentQuickTextFile.strokeColor || "#e25303";
+            const fillColor = self.currentQuickTextFile.fillColor || "#000000";
             self._qt_currentQuickTextUpdate();
             $("#quick_text_dialog").one(
                 "hide",
@@ -3577,9 +3708,21 @@ $(function () {
                 self.currentQuickTextFile.previewId,
                 false
             );
-            $("#quick_text_dialog_intensity").val(
-                self.currentQuickTextFile.intensity
+            $("#quick_text_stroke").prop(
+                "checked",
+                self.currentQuickTextFile.stroke
             );
+            $("#qt_colorPicker_stroke")
+                .data("plugin_tinycolorpicker")
+                .setColor(strokeColor);
+            $("#quick_text_fill").prop(
+                "checked",
+                self.currentQuickTextFile.fill
+            );
+            $("#qt_colorPicker_fill")
+                .data("plugin_tinycolorpicker")
+                .setColor(fillColor);
+
             // round text radio buttons & slider
             $("#qt_round_text_section div.btn").removeClass("active");
             const cw = self.currentQuickTextFile.clockwise;
@@ -3602,16 +3745,19 @@ $(function () {
             self._qt_currentQuickTextUpdate();
         });
 
-        /**
-         * callback/subscription for the intensity slider
-         */
-        $("#quick_text_dialog_intensity").on("input change", function (e) {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.intensity = e.currentTarget.value;
-                self.lastQuickTextIntensity =
-                    self.currentQuickTextFile.intensity;
-                self._qt_currentQuickTextUpdate();
+        let quickTextRadioInput = $('input[type=radio][name=stroke_or_fill]');
+        quickTextRadioInput.on("change", function () {
+            if(self.currentQuickTextFile){
+                if (this.value === "stroke") {
+                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = true;
+                        self.currentQuickTextFile.fill = self.lastQuickTextFill = false;
+                }
+                if (this.value === "fill"){
+                        self.currentQuickTextFile.fill = self.lastQuickTextFill = true;
+                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = false;
+                }
             }
+            self._qt_currentQuickTextUpdate();
         });
 
         /**
@@ -3647,26 +3793,6 @@ $(function () {
             $("#qt_round_text_section").removeClass("straight");
             self._qt_setCirclePath(false, 30);
         });
-        //        /**
-        //         * callback/subscription for the circle direction toggler
-        //         */
-        //        $("#quick_text_dialog_clockwise").on("click", function (event) {
-        //            event.target
-        //                .closest(".mini_switch")
-        //                .classList.toggle("counterclockwise");
-        //            if (self.currentQuickTextFile) {
-        //                self.currentQuickTextFile.clockwise = !event.target
-        //                    .closest(".mini_switch")
-        //                    .classList.contains("counterclockwise");
-        //                $("#qt_round_text_section").toggleClass(
-        //                    "clockwise",
-        //                    self.currentQuickTextFile.clockwise
-        //                );
-        //                self.lastQuickTextClockwise =
-        //                    self.currentQuickTextFile.clockwise;
-        //                self._qt_currentQuickTextUpdate();
-        //            }
-        //        });
 
         /**
          * callback for the next font button
@@ -3710,15 +3836,15 @@ $(function () {
         self._qt_currentQuickTextUpdate = function () {
             if (self.currentQuickTextFile) {
                 self.currentQuickText(self.currentQuickTextFile.name);
+                let quickTextInputField = $("#quick_text_dialog_text_input");
                 const displayText =
                     self.currentQuickTextFile.name !== ""
                         ? self.currentQuickTextFile.name
-                        : $("#quick_text_dialog_text_input").attr(
+                        : quickTextInputField.attr(
                               "placeholder"
                           );
 
                 // get all parameters
-                const ity = self.currentQuickTextFile.intensity;
                 const font = self.fontMap[self.currentQuickTextFile.fontIndex];
                 const isStraightText = $("#quick_text_straight").hasClass(
                     "active"
@@ -3726,27 +3852,42 @@ $(function () {
                 const counterclockwise = $("#quick_text_ccw").hasClass(
                     "active"
                 );
-                const fill = `rgb(${ity},${ity},${ity})`;
+
+                const isFilled = self.currentQuickTextFile.fill;
+                const fillColor = (self.currentQuickTextFile.fillColor = $(
+                    "#quick_text_fill_brightness"
+                ).val());
+                const ity = rgb_from_hex(fillColor).x;
+                const fill = isFilled ? fillColor : "none";
+                const previewFill = isFilled ? fillColor : "#ffffff";
+                const isStroked = self.currentQuickTextFile.stroke;
+                const strokeColor = (self.currentQuickTextFile.strokeColor = $(
+                    "#quick_text_stroke_color"
+                ).val());
+                const stroke = isStroked ? strokeColor : "none";
+                const fakeStroke = `${strokeColor} 0px 0px 1px,${strokeColor} 0px 0px 1px,${strokeColor} 0px 0px 1px`;
                 const shadowIty = ity > 200 ? (ity - 200) / 100 : 0;
-                const shadow = `rgba(226, 85, 3, ${shadowIty}) 0px 0px 16px`;
+                const shadow = isStroked
+                    ? fakeStroke
+                    : `rgba(226, 85, 3, ${shadowIty}) 0px 0px 16px`;
                 const ligatures = isStraightText ? "initial" : "none";
                 const g = snap.select(
                     "#" + self.currentQuickTextFile.previewId
                 );
 
-                // update straight text DOM node
-                const straightText = g.select(".straightText");
-                straightText.attr({
+                const textAttrs = {
                     "font-family": font,
                     fill: fill,
-                });
+                    stroke: stroke,
+                };
+
+                // update straight text DOM node
+                const straightText = g.select(".straightText");
+                straightText.attr(textAttrs);
 
                 // update curved text DOM nodes
                 const curvedText = g.select(".curvedText");
-                curvedText.attr({
-                    "font-family": font,
-                    fill: fill,
-                });
+                curvedText.attr(textAttrs);
                 const textPathEl = curvedText.select("textPath");
                 const textPathAttr = textPathEl.attr();
                 const path = snap.select(textPathAttr.href);
@@ -3773,26 +3914,70 @@ $(function () {
                     straightText.node.textContent = "";
                     bb = curvedText.getBBox();
                 }
+
+                // update text stroke
+                let qtOutlineGroup = g.select(".qtOutlineGroup");
+                if (isStroked) {
+                    // create text stroke path if option is enabled and ignore if already added
+                    if (!qtOutlineGroup.select("path")) {
+                        qtOutlineGroup.path().attr({
+                            class: "qtOutline vector_outline",
+                        });
+                    }
+                    // add selected attributes to stroke path
+                    g.select("path").attr({
+                        stroke: strokeColor,
+                        fill: "#ffffff",
+                        "fill-opacity": 0,
+                    });
+                } else {
+                    qtOutlineGroup.select("path")?.remove();
+                }
+
+                // update text rect (rect is for selection only)
                 g.select("rect").attr({
                     x: bb.x,
                     y: bb.y,
                     width: bb.width,
                     height: bb.height,
+                    // When quicktext fill is enabled/disabled, the fill-opacity controls the inclusion/exclusion of the filling
+                    "fill-opacity": isFilled ? 1 : 0
                 });
 
                 // update font of input field
-                $("#quick_text_dialog_text_input").css({
+                quickTextInputField.css({
                     "text-shadow": shadow,
-                    color: fill,
+                    color: previewFill,
                     "font-family": font,
                     "font-variant-ligatures": ligatures,
                 });
+                // update input placeholder color if stroked
+                let StrokedQuickTextPlaceholderClass = 'mrb-quicktext-stroked-placeholder';
+                if(isStroked){
+                    quickTextInputField.addClass(StrokedQuickTextPlaceholderClass);
+                }
+                // update input placeholder color if not stroked
+                if(!isStroked && quickTextInputField.hasClass(StrokedQuickTextPlaceholderClass)){
+                    quickTextInputField.removeClass(StrokedQuickTextPlaceholderClass);
+                }
+
                 $("#quick_text_dialog_font_name").text(font);
+                //                $("#quick_text_fill_brightness").val(fillColor);
+                //                $("#quick_text_stroke_color").val(strokeColor);
 
                 // update fileslist title
                 $("#" + self.currentQuickTextFile.id + " .title").text(
                     displayText
                 );
+                // update engrave component color
+                $(`#${self.currentQuickTextFile.id} .engrave_component`).css({
+                    display: isFilled ? "inherit" : "none",
+                });
+                // update stroke component color
+                $(`#${self.currentQuickTextFile.id} .stroke_color`).css({
+                    "background-color": strokeColor,
+                    display: isStroked ? "inherit" : "none",
+                });
                 // update fileslist dimensions by triggering transform
                 setTimeout(function () {
                     g.mbtOnTransform();
@@ -3812,6 +3997,10 @@ $(function () {
                     file_type: "quickText",
                     text_length: self.currentQuickTextFile.name.length,
                     brightness: ity,
+                    fill: self.currentQuickTextFile.fill,
+                    fill_color: self.currentQuickTextFile.fillColor,
+                    stroke: self.currentQuickTextFile.stroke,
+                    stroke_color: self.currentQuickTextFile.strokeColor,
                     font: font,
                     font_index: self.currentQuickTextFile.fontIndex,
                     is_straight: isStraightText,
@@ -3932,7 +4121,10 @@ $(function () {
                 type: "quicktext",
                 typePath: ["quicktext"],
                 fontIndex: self.lastQuickTextFontIndex,
-                intensity: self.lastQuickTextIntensity,
+                stroke: self.lastQuickTextStroke,
+                fill: self.lastQuickTextFill,
+                strokeColor: self.lastQuickTextStrokeColor,
+                fillColor: self.lastQuickTextFillColor,
                 circle: self.lastQuickTextCircle,
                 clockwise: self.lastQuickTextClockwise,
             };
@@ -3949,6 +4141,7 @@ $(function () {
             // self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true}, file);
             // replaces all code below.
 
+            // TODO: Bug: SW-1445
             // path for curved text
             const path = snap
                 .path()
@@ -3962,24 +4155,31 @@ $(function () {
                 })
                 .toDefs();
 
+            const style = [
+                `white-space: pre`,
+                `font-size: ${size}px`,
+                `text-anchor: middle`,
+                `vector-effect: non-scaling-stroke`,
+                `stroke-width: 2px`,
+                `stroke-linejoin: round`,
+                `stroke-linecap: round`,
+            ].join("; ");
             const curvedText = uc.text(0, 0, placeholderText);
             curvedText.attr({
-                style:
-                    "white-space: pre; font-size: " +
-                    size +
-                    "px; font-family: Ubuntu; text-anchor: middle; font-variant-ligatures: none;",
+                style: style + "font-variant-ligatures: none;",
                 textpath: path,
             });
             curvedText.node.classList.add("curvedText");
-            curvedText.textPath.attr({ startOffset: "50%" });
+            curvedText.textPath.attr({ startOffset: "50%", style: style });
 
             const straightText = uc.text(0, 0, placeholderText);
             straightText.attr({
-                style:
-                    "white-space: pre; font-size: " +
-                    size +
-                    "px; font-family: Ubuntu; text-anchor: middle;",
+                style: style,
                 class: "straightText",
+            });
+
+            const textStroke = uc.g().attr({
+                class: "qtOutlineGroup",
             });
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
@@ -3990,13 +4190,13 @@ $(function () {
                 class: "deleteBeforeRendering",
             });
 
-            var group = uc.group(straightText, curvedText, box);
+            var group = uc.group(straightText, curvedText, textStroke, box);
             group.attr({
                 id: file.previewId,
                 "mb:id": self._normalize_mb_id(file.previewId),
                 class: "userText",
                 transform: `translate(${x},${y})`,
-                "mb:origin": origin, // TODO ??? wtf?
+                "mb:origin": `beamos://quicktext`,
             });
 
             self._addClickAndHoverHandlers(group, file);
@@ -4011,54 +4211,12 @@ $(function () {
             return file;
         };
 
-        /**
-         * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
-         * installed on the system which we can't assume.)
-         * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
-         * contains @font-face entries with wff2 files as dataUrls. Eg:
-         * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
-         * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
-         * AND their fontFamily name must be included in self.fontMap
-         * @private
-         * @param DomElement to add the font definition into
-         */
-        self._qt_copyFontsToSvg = function (elem) {
-            var styleSheets = document.styleSheets;
-            self._qt_removeFontsFromSvg(elem);
-            for (var ss = 0; ss < styleSheets.length; ss++) {
-                if (
-                    styleSheets[ss].href &&
-                    (styleSheets[ss].href.includes("quicktext-fonts.css") ||
-                        styleSheets[ss].href.includes("packed_plugins.css"))
-                ) {
-                    var rules = styleSheets[ss].cssRules;
-                    for (var r = 0; r < rules.length; r++) {
-                        if (rules[r].constructor == CSSFontFaceRule) {
-                            // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
-                            if (rules[r].style) {
-                                var fontName = rules[r].style.getPropertyValue(
-                                    "font-family"
-                                );
-                                fontName = fontName.replace(/["']/g, "").trim();
-                                if (self.fontMap.indexOf(fontName) > -1) {
-                                    $(elem).append(rules[r].cssText);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        /**
-         * removes the fonts added by _qt_copyFontsToSvg()
-         * @private
-         */
-        self._qt_removeFontsFromSvg = function (elem) {
-            $(elem).empty();
-        };
-
         self._qt_dialogClose = function () {
+            // render outline once the dialog is closed
+            const id = self.currentQuickTextFile.previewId;
+            const qtElem = snap.select("#" + id);
+            if (qtElem) qtElem.setQuicktextOutline(0.0, 0); // TODO Margin Bug
+
             if (self.currentQuickTextAnalyticsData.text_length !== 0) {
                 self._analyticsQuickTextUpdate(
                     self.currentQuickTextAnalyticsData
@@ -4070,8 +4228,190 @@ $(function () {
         //  QUICKTEXT end
         // ***********************************************************
 
+        // ***********************************************************
+        //  move laserhead by crosshair dragging
+        // ***********************************************************
+        self.initCrossHairDragging = function () {
+            const crosshairHandle = snap.select("#crosshair");
+            window.mrbeam.draggableCrosshair = { debug: false };
+
+            // TODO get from https://github.com/mrbeam/MrBeamPlugin/blob/2682b7a2e97373478e6516a98c8ba766d26ff317/octoprint_mrbeam/static/js/lasercutterprofiles.js#L276
+            // once this branch feature/SW-244... is merged.
+            const fx = self.profile.currentProfileData().axes.x.speed();
+            const fy = self.profile.currentProfileData().axes.y.speed();
+            const maxSpeed = Math.min(fx, fy);
+
+            crosshairHandle.mousedown(function (event) {
+                self.abortFreeTransforms();
+                window.mrbeam.draggableCrosshair.origin = self.state.currentPos();
+                window.mrbeam.draggableCrosshair.destination =
+                    window.mrbeam.draggableCrosshair.origin;
+
+                const boundaries = [
+                    0,
+                    0,
+                    self.workingAreaWidthMM(),
+                    self.workingAreaHeightMM(),
+                ];
+
+                // create a dummy crosshair attached to the pointer to visualize what this function does
+                const dummy = crosshairHandle.clone();
+                dummy.attr("id", "crosshairDummy");
+                snap.append(dummy);
+
+                // move our absolutely positioned ball under the pointer
+                const handleBBox = crosshairHandle.getBBox();
+                const initialPos = self._get_pointer_event_position_MM(
+                    event,
+                    snap.node
+                );
+                const handleOffset = {
+                    x: initialPos.x - handleBBox.cx,
+                    y: initialPos.y - handleBBox.cy,
+                };
+                setCrosshairPosMM(initialPos);
+
+                /* This adds the click-offset to the position,
+                 * asserts that the result it in the boundaries of the working area,
+                 * moves the dummy crosshair
+                 * and inverts the y axis for a mm coordinate in our gcode coords system.
+                 *
+                 * @param {object} pos from the event
+                 * @returns {object} corrected position {x: float, y: float}
+                 */
+                function setCrosshairPosMM(pos) {
+                    pos.x -= handleOffset.x;
+                    pos.y -= handleOffset.y;
+                    pos = self._assert_coords_in_boundaries(pos, boundaries);
+                    dummy.transform(Snap.matrix(1, 0, 0, 1, pos.x, pos.y));
+                    return { x: pos.x, y: boundaries[3] - pos.y };
+                }
+
+                function onMouseMove(event) {
+                    if (event.which !== 1) {
+                        // Mouse button released outside target workingArea or outside browser window
+                        stopCrossHairDragging(event);
+                        console.log("onMouseMove stopped", event.which);
+                    } else {
+                        const pos = self._get_pointer_event_position_MM(
+                            event,
+                            snap.node
+                        );
+                        const dest = setCrosshairPosMM(pos);
+                        window.mrbeam.draggableCrosshair.destination = dest;
+                    }
+                }
+
+                /*
+                 * moves the laserhead towards the destination.
+                 * maximum step 30mm
+                 */
+                function updateCrossHairDragging() {
+                    let origin = window.mrbeam.draggableCrosshair.origin;
+                    let dest = window.mrbeam.draggableCrosshair.destination;
+
+                    if (dest === null) {
+                        // drag finished or cancelled
+                        clearInterval(
+                            window.mrbeam.draggableCrosshair.interval
+                        );
+                    } else {
+                        if (self._distance(origin, dest) < 0.01) {
+                            // otherwise setInterval triggers constant gcode sending
+                            return;
+                        }
+                        const intermediatePos = self._getPointOfLineMM(
+                            origin,
+                            dest,
+                            30
+                        );
+
+                        self.move_laser_to_xy(
+                            intermediatePos.x,
+                            intermediatePos.y
+                        );
+
+                        // draw position of the last gcode command sent
+                        if (window.mrbeam.draggableCrosshair.debug) {
+                            const estimatedMoveDurationMS =
+                                (intermediatePos.dist / (maxSpeed / 60)) * 1000; // milliseconds
+                            console.log(
+                                "estimatedMove",
+                                estimatedMoveDurationMS
+                            );
+                            let debugC = snap.circle({
+                                cx: intermediatePos.x,
+                                cy: boundaries[3] - intermediatePos.y,
+                                r: 2,
+                                fill: "#ffff00",
+                            });
+                            setTimeout(function () {
+                                debugC.remove();
+                            }, estimatedMoveDurationMS);
+                        }
+
+                        // reflect current movement for the calculation of the next step towards destination
+                        window.mrbeam.draggableCrosshair.origin = intermediatePos;
+                    }
+                }
+
+                function stopCrossHairDragging(event) {
+                    clearInterval(window.mrbeam.draggableCrosshair.interval);
+                    window.mrbeam.draggableCrosshair.destination = null;
+
+                    self._sendAnalytics("workingarea_crosshair_dragging", {})
+
+                    const pos = self._get_pointer_event_position_MM(
+                        event,
+                        snap.node
+                    );
+                    const finalPos = setCrosshairPosMM(pos);
+                    self.move_laser_to_xy(finalPos.x, finalPos.y);
+                    console.info("Stop:", finalPos.x, finalPos.y);
+
+                    document.removeEventListener("mousemove", onMouseMove);
+                    document.removeEventListener(
+                        "mouseup",
+                        stopCrossHairDragging
+                    );
+                    setTimeout(function () {
+                        dummy.remove();
+                    }, 3000);
+                }
+
+                // start frequent gcode sending & update
+                window.mrbeam.draggableCrosshair.interval = setInterval(
+                    updateCrossHairDragging,
+                    300
+                );
+
+                // add listeners
+                document.addEventListener("mousemove", onMouseMove);
+                document.addEventListener("mouseup", stopCrossHairDragging);
+            });
+        };
+
+        self._distance = function (p1, p2) {
+            return Math.sqrt(
+                (p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y)
+            );
+        };
+
+        self._getPointOfLineMM = function (p1, p2, mm) {
+            const totalDist = self._distance(p1, p2);
+            const percent = Math.min(1, mm / totalDist);
+            const p = self._getPointOfLinePercent(p1, p2, percent);
+            p.dist = totalDist * percent;
+            return p;
+        };
+
+        self._getPointOfLinePercent = function (p1, p2, percent) {
+            const x = p1.x + percent * (p2.x - p1.x);
+            const y = p1.y + percent * (p2.y - p1.y);
+            return { x: x, y: y };
+        };
+
         // general modification keys
-        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_down = function (target, ev) {
             console.log("Keydown", target, ev);
             // ctrlKey for PC, metaKey for Mac command key
@@ -4079,7 +4419,6 @@ $(function () {
                 target.classList.add("ctrl");
             }
         };
-        // TODO: this does not seem to be used anywhere. Remove?
         self.wa_key_up = function (target, ev) {
             // ctrlKey for PC, metaKey for Mac command key
             if (ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) {
@@ -4098,7 +4437,7 @@ $(function () {
         self.mouse_drag_wa = function (target, ev) {
             if (ev.originalEvent.shiftKey) {
                 var pos = self._get_pointer_event_position_MM(
-                    ev,
+                    ev.originalEvent,
                     ev.currentTarget
                 );
                 var newOffX = self.zoomOffX() - pos.dx;
@@ -4122,7 +4461,7 @@ $(function () {
         self.mouse_drag_monitor = function (target, ev) {
             if (ev.originalEvent.buttons === 1) {
                 var pos = self._get_pointer_event_position_MM(
-                    ev,
+                    ev.originalEvent,
                     ev.currentTarget
                 );
                 var newOffX = self.zoomOffX() + pos.dx;
@@ -4152,9 +4491,15 @@ $(function () {
             var targetBBox = target.getBoundingClientRect();
             var xPerc = (event.clientX - targetBBox.left) / targetBBox.width;
             var yPerc = (event.clientY - targetBBox.top) / targetBBox.height;
-            var dxPerc = event.originalEvent.movementX / targetBBox.width;
-            var dyPerc = event.originalEvent.movementY / targetBBox.height;
+            var dxPerc = event.movementX / targetBBox.width;
+            var dyPerc = event.movementY / targetBBox.height;
             return { x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc };
+        };
+
+        self._assert_coords_in_boundaries = function (p, boundaries) {
+            p.x = Math.max(boundaries[0], Math.min(boundaries[2], p.x));
+            p.y = Math.max(boundaries[1], Math.min(boundaries[3], p.y));
+            return p;
         };
 
         /**

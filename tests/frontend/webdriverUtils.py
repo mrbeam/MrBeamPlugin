@@ -7,11 +7,10 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 # reduce log output
 from selenium.webdriver.remote.remote_connection import LOGGER as seleniumLogger
 
-seleniumLogger.setLevel(logging.WARNING)
-
 # avoid communication between selenium and webdriver beeing logged on debug level.
 from urllib3.connectionpool import log as urllibLogger
 
+seleniumLogger.setLevel(logging.WARNING)
 urllibLogger.setLevel(logging.WARNING)
 
 
@@ -30,8 +29,12 @@ def get_chrome_driver(debugTest=False):
     }  # access to console.log output incl. log levels below warning
 
     # caps["loggingPrefs"] = {"performance": "ALL"}
+    chromedriver_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "chromedriver",
+    )
     driver = webdriver.Chrome(
-        service_log_path=os.devnull, desired_capabilities=caps, options=opt
+        executable_path=chromedriver_path, service_log_path=os.devnull, desired_capabilities=caps, options=opt
     )
     return driver
 

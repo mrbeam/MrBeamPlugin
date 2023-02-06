@@ -1,4 +1,3 @@
-import logging
 import re
 import shutil
 import os
@@ -84,6 +83,7 @@ class Converter:
         self._log.info("Converter Initialized: %s", self.options)
         # todo need material,bounding_box_area here
         self._add_conversion_details_analytics()
+        self._save_job_time_estimation_v2_analytics(params.get("job_time_estimation_v2", -1))
 
     def setoptions(self, opts):
         # set default values if option is missing
@@ -153,6 +153,17 @@ class Converter:
                 _mrbeam_plugin_implementation.analytics_handler.add_design_file_details(
                     design_file
                 )
+
+    def _save_job_time_estimation_v2_analytics(self, estimation):
+        """Saves the v2 of the job time estimation in the analytics handler for later usage.
+
+        Args:
+            estimation: The job time estimation in seconds
+
+        Returns: None
+
+        """
+        _mrbeam_plugin_implementation.analytics_handler.current_job_time_estimation_v2 = estimation
 
     def init_output_file(self):
         # remove old file if exists.
@@ -596,6 +607,12 @@ class Converter:
                     # path
                     if i.tag == _add_ns("path", "svg"):
                         self._handle_node(i, layer)
+                        # TODO: get_path_d method is faulty; It returns None even if path exists
+                        # d = get_path_d(i)
+                        # if not d == None:
+                        #     self._handle_node(i, layer)
+                        # else:
+                        #     self._log.debug("Skipping path with empty d attribute.")
 
                     # rect, line, polygon, polyline, circle, ellipse
                     elif (

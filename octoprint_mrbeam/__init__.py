@@ -67,6 +67,7 @@ from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.rest_handler.docs_handler import DocsRestHandlerMixin
+from octoprint_mrbeam.services import settings_service
 from octoprint_mrbeam.services.settings_service import SettingsService
 from octoprint_mrbeam.services.burger_menu_service import BurgerMenuService
 from octoprint_mrbeam.services.document_service import DocumentService
@@ -384,7 +385,7 @@ class MrBeamPlugin(
         return dict(
             svgDPI=90,
             dxfScale=1,
-            beta_label="",
+            navbar_label="",
             job_time=0.0,
             terminal=False,
             terminal_show_checksums=True,
@@ -644,6 +645,7 @@ class MrBeamPlugin(
                 "js/helpers/element_helper.js",
                 "js/helpers/debug_rendering_helper.js",
                 "js/helpers/working_area_helper.js",
+                "js/lib/potrace.js",
                 "js/lib/jquery.tinycolorpicker.js",
                 "js/lasercutterprofiles.js",
                 "js/mother_viewmodel.js",
@@ -653,6 +655,7 @@ class MrBeamPlugin(
                 "js/working_area.js",
                 "js/camera.js",
                 "js/lib/snap.svg-min.js",
+                "js/snap_bugfixes.js",
                 "js/snap_helpers.js",
                 "js/lib/dxf.js",
                 "js/snap-dxf.js",
@@ -702,6 +705,7 @@ class MrBeamPlugin(
                 "js/messages.js",
                 "js/design_store.js",
                 "js/settings/dev_design_store.js",
+                                "js/material-store.js",
                 "js/settings_menu_navigation.js",
                 "js/calibration/calibration.js",
                 "js/calibration/corner_calibration.js",
@@ -710,6 +714,8 @@ class MrBeamPlugin(
                 "js/calibration/watterott/calibration_qa.js",
                 "js/calibration/watterott/label_printer.js",
                 "js/hard_refresh_overlay.js",
+                "js/app/view-models/mrbeam-simple-api-commands.js",
+                "js/app/view-models/mrbeam-constants.js",
             ],
             css=[
                 "css/mrbeam.css",
@@ -854,14 +860,17 @@ class MrBeamPlugin(
                 model=self.get_model_id(),
                 software_tier=self._settings.get(["dev", "software_tier"]),
                 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
-                beta_label=self.get_beta_label(),
+                navbar_label=self.get_navbar_label(),
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
-                settings_model=SettingsService(self._logger, DocumentService(self._logger)).get_template_settings_model(
+                settings_model=SettingsService(self._logger, DocumentService(self._logger),
+                                               environment=settings_service.get_environment_enum_from_plugin_settings(
+                                                   self._settings)).get_template_settings_model(
                     self.get_model_id()),
                 burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
                     self.get_model_id()),
+                isDevelop=self.is_dev_env(),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
@@ -1391,7 +1400,7 @@ class MrBeamPlugin(
             product_name=self._device_info.get_product_name(),
             hostname=self.getHostname(),
             serial=self._serial_num,
-            beta_label=self.get_beta_label(),
+            navbar_label=self.get_navbar_label(),
             e="null",
             gcodeThreshold=0,  # legacy
             gcodeMobileThreshold=0,  # legacy
@@ -1943,7 +1952,7 @@ class MrBeamPlugin(
             camera_stop_lens_calibration=[],
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
-            compare_pep440_versions=[]
+            compare_pep440_versions=[],
         )
 
     def on_api_command(self, command, data):
@@ -2315,8 +2324,11 @@ class MrBeamPlugin(
             "New undistorted image is requested. is_initial_calibration: %s",
             is_initial_calibration,
         )
-        self.lid_handler._photo_creator.is_initial_calibration = is_initial_calibration
-        self.lid_handler._startStopCamera("initial_calibration")
+        if is_initial_calibration:
+            self.lid_handler._photo_creator.is_initial_calibration = (
+                is_initial_calibration
+            )
+            self.lid_handler._startStopCamera(MrBeamEvents.INITIAL_CALIBRATION)
         succ = self.lid_handler.takeNewPic()
         if succ:
             resp_text = {
@@ -2915,16 +2927,21 @@ class MrBeamPlugin(
         result = result.upper()
         return result
 
-    def get_beta_label(self):
+    def get_navbar_label(self):
         chunks = []
-        if self._settings.get(["beta_label"]):
-            chunks.append(self._settings.get(["beta_label"]))
+        if self._settings.get(["navbar_label"]):
+            chunks.append(self._settings.get(["navbar_label"]))
+
         if self.is_beta_channel():
-            chunks.append(
-                '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">BETA</a>'
+            beta_link = '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">{}</a>'.format(
+                SWUpdateTier.BETA.value
             )
+            chunks.append(beta_link)
+        elif self.is_alpha_channel():
+            chunks.append(SWUpdateTier.ALPHA.value)
         elif self.is_develop_channel():
-            chunks.append("develop")
+            chunks.append(SWUpdateTier.DEV.value)
+
         if self.support_mode:
             chunks.append("SUPPORT")
 
@@ -3018,6 +3035,9 @@ class MrBeamPlugin(
 
     def is_develop_channel(self):
         return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.DEV.value
+
+    def is_alpha_channel(self):
+        return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.ALPHA.value
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:
