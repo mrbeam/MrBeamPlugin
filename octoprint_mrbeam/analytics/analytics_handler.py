@@ -38,7 +38,7 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     ANALYTICS_LOG_VERSION = (
-        25  # bumped for SW-1115 add feature id column to analytics in mr beam
+        26  # bumped for SW-2465 add laserhead changed event to analytics
     )
 
     def __init__(self, plugin):
@@ -420,6 +420,56 @@ class AnalyticsHandler(object):
 
         except Exception as e:
             self._logger.exception("Exception during add_laserhead_info: {}".format(e))
+
+    def add_laserhead_changed(
+        self,
+        last_used_serial,
+        last_used_model_id,
+        new_serial,
+        new_model_id,
+        header_extension=None,
+    ):
+        try:
+            laser_head = self._laserhead_handler.get_current_used_lh_data()
+            power_calibration = self._laserhead_handler.get_current_used_lh_power()
+            settings = self._laserhead_handler.get_correction_settings()
+            laserhead_info = {
+                AnalyticsKeys.Device.LaserHead.LAST_USED_SERIAL: last_used_serial,
+                AnalyticsKeys.Device.LaserHead.LAST_USED_HEAD_MODEL_ID: last_used_model_id,
+                AnalyticsKeys.Device.LaserHead.SERIAL: new_serial,
+                AnalyticsKeys.Device.LaserHead.HEAD_MODEL_ID: new_model_id,
+                AnalyticsKeys.Device.LaserHead.POWER_65: power_calibration.get(
+                    "power_65", None
+                ),
+                AnalyticsKeys.Device.LaserHead.POWER_75: power_calibration.get(
+                    "power_75", None
+                ),
+                AnalyticsKeys.Device.LaserHead.POWER_85: power_calibration.get(
+                    "power_85", None
+                ),
+                AnalyticsKeys.Device.LaserHead.TARGET_POWER: power_calibration.get(
+                    "target_power", None
+                ),
+                AnalyticsKeys.Device.LaserHead.CORRECTION_FACTOR: laser_head["info"][
+                    "correction_factor"
+                ],
+                AnalyticsKeys.Device.LaserHead.CORRECTION_ENABLED: settings[
+                    "correction_enabled"
+                ],
+                AnalyticsKeys.Device.LaserHead.CORRECTION_OVERRIDE: settings[
+                    "correction_factor_override"
+                ],
+            }
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.LASERHEAD_CHANGED,
+                payload=laserhead_info,
+                header_extension=header_extension,
+            )
+
+        except Exception as e:
+            self._logger.exception(
+                "Exception during add_laserhead_change: {}".format(e)
+            )
 
     # LID_HANDLER
     def add_camera_session_details(self, session_details, header_extension=None):

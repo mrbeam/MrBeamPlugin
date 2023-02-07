@@ -4,6 +4,7 @@ import sys, os, csv, json, collections
 MRBEAM = "Mr Beam II"
 MRB_DREAMCUT = "MrB II Dreamcut"
 MRB_DREAMCUT_S = "MrB II Dreamcut S"
+MRB_DREAMCUT_X = "MrB II Dreamcut x"
 
 MRB_READY = "MrB II Dreamcut Ready"  # not used yet
 MRB_DREAMCUT_NOT_VALIDATED = "Dreamcut (not validated)"  # not used yet
@@ -11,35 +12,25 @@ MRB_DREAMCUT_S_NOT_VALIDATED = "Dreamcut S (not validated)"  # not used yet
 
 DEFAULT_LASER_MODEL = "0"
 LASER_MODEL_S = "S"
+LASER_MODEL_X = "x"
+
+VALID_MODELS = [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY, MRB_DREAMCUT_X]
 
 
 def model_ids_to_csv_name(device_model_id, laser_model_id):
     convert = {
+        (device_info.MODEL_MRBEAM_2_DC_X, LASER_MODEL_X): MRB_DREAMCUT_X,
+        (device_info.MODEL_MRBEAM_2_DC_X, LASER_MODEL_S): MRB_DREAMCUT_S,
+        (device_info.MODEL_MRBEAM_2_DC_X, DEFAULT_LASER_MODEL): MRB_DREAMCUT,
+        (device_info.MODEL_MRBEAM_2_DC_S, LASER_MODEL_X): MRB_DREAMCUT_X,
+        (device_info.MODEL_MRBEAM_2_DC_S, LASER_MODEL_S): MRB_DREAMCUT_S,
+        (device_info.MODEL_MRBEAM_2_DC_S, DEFAULT_LASER_MODEL): MRB_DREAMCUT,
+        (device_info.MODEL_MRBEAM_2_DC, LASER_MODEL_X): MRB_DREAMCUT_X,
+        (device_info.MODEL_MRBEAM_2_DC, LASER_MODEL_S): MRB_DREAMCUT_S,
+        (device_info.MODEL_MRBEAM_2_DC, DEFAULT_LASER_MODEL): MRB_DREAMCUT,
+        (device_info.MODEL_MRBEAM_2_DC_R2, DEFAULT_LASER_MODEL): MRBEAM,
+        (device_info.MODEL_MRBEAM_2_DC_R1, DEFAULT_LASER_MODEL): MRBEAM,
         (device_info.MODEL_MRBEAM_2, DEFAULT_LASER_MODEL): MRBEAM,
-        (
-            device_info.MODEL_MRBEAM_2_DC,
-            DEFAULT_LASER_MODEL,
-        ): MRB_DREAMCUT,
-        (
-            device_info.MODEL_MRBEAM_2_DC,
-            LASER_MODEL_S,
-        ): MRB_DREAMCUT_S,
-        (
-            device_info.MODEL_MRBEAM_2_DC_S,
-            DEFAULT_LASER_MODEL,
-        ): MRB_DREAMCUT,
-        (
-            device_info.MODEL_MRBEAM_2_DC_S,
-            LASER_MODEL_S,
-        ): MRB_DREAMCUT_S,
-        (
-            device_info.MODEL_MRBEAM_2_DC_R1,
-            DEFAULT_LASER_MODEL,
-        ): MRBEAM,
-        (
-            device_info.MODEL_MRBEAM_2_DC_R2,
-            DEFAULT_LASER_MODEL,
-        ): MRBEAM,
     }
     if (device_model_id, laser_model_id) in convert.keys():
         return convert[(device_model_id, laser_model_id)]
@@ -118,7 +109,7 @@ def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0"):
             if colorcode:
                 current_color = colorcode
 
-            if not mrbeamversion in [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY]:
+            if mrbeamversion not in VALID_MODELS:
                 # Either a comment line, unused setting or experimental settings
                 continue
 
