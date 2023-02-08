@@ -12,8 +12,12 @@ $(function () {
         self.healthcheck_url = "";
 
         self.initialiseStore = function (healthcheck_url, url) {
-            if (typeof url === "string" && url.trim().length !== 0
-            && typeof healthcheck_url === "string" && healthcheck_url.trim().length !== 0) {
+            if (
+                typeof url === "string" &&
+                url.trim().length !== 0 &&
+                typeof healthcheck_url === "string" &&
+                healthcheck_url.trim().length !== 0
+            ) {
                 if (url !== self.material_store_iframe_src) {
                     self.material_store_iframe_src = url;
                     $("#material_store_iframe").attr(
@@ -67,9 +71,13 @@ $(function () {
         };
 
         self.sendMessageToMaterialStoreIframe = function (event, payload) {
-            const materialStoreIframe = document.getElementById('material_store_iframe');
+            const materialStoreIframe = document.getElementById(
+                "material_store_iframe"
+            );
             // IE patch although we don't officially support it
-            const iframeContentWindow = materialStoreIframe.contentWindow ? materialStoreIframe.contentWindow : materialStoreIframe.contentDocument.defaultView;
+            const iframeContentWindow = materialStoreIframe.contentWindow
+                ? materialStoreIframe.contentWindow
+                : materialStoreIframe.contentDocument.defaultView;
 
             const data = {
                 event: event,
@@ -82,14 +90,19 @@ $(function () {
                     self.material_store_iframe_src
                 );
             } else {
-                console.error("Material store Iframe window object is undefined");
+                console.error(
+                    "Material store Iframe window object is undefined"
+                );
             }
         };
 
         $("#material_store_iframe").attr("src", self.material_store_iframe_src);
         $("#material_store_iframe").on("load", self.onLoadMaterialStore);
         $("#refresh_material_store_btn").click(() =>
-            self.initialiseStore(self.healthcheck_url, self.material_store_iframe_src)
+            self.initialiseStore(
+                self.healthcheck_url,
+                self.material_store_iframe_src
+            )
         );
     }
 
