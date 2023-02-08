@@ -3,16 +3,24 @@ import yaml
 from octoprint.plugin import PluginSettings
 from yaml import SafeLoader
 
-from octoprint_mrbeam.decorator.catch_import_error import prevent_execution_on_import_error
+from octoprint_mrbeam.decorator.catch_import_error import (
+    prevent_execution_on_import_error,
+)
 from octoprint_mrbeam.model import EmptyImport
 from octoprint_mrbeam.software_update_information import SWUpdateTier
 
 try:
     from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils
 except ImportError:
-    MrBeamDocUtils = EmptyImport("from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils")
+    MrBeamDocUtils = EmptyImport(
+        "from octoprint_mrbeamdoc.utils.mrbeam_doc_utils import MrBeamDocUtils"
+    )
 
-from octoprint_mrbeam.model.settings_model import SettingsModel, AboutModel, MaterialStoreModel
+from octoprint_mrbeam.model.settings_model import (
+    SettingsModel,
+    AboutModel,
+    MaterialStoreModel,
+)
 
 MATERIAL_STORE_CONFIG_URL = "https://raw.githubusercontent.com/mrbeam/material-store-settings/master/config.yaml"
 
@@ -63,14 +71,20 @@ class SettingsService:
         """
         mrbeam_model_found = MrBeamDocUtils.get_mrbeam_model_enum_for(mrbeam_model)
         if mrbeam_model_found is None:
-            self._logger.error('MrBeamModel not identified %s', mrbeam_model)
+            self._logger.error("MrBeamModel not identified %s", mrbeam_model)
             return _empty_settings_model()
 
         definitions = MrBeamDocUtils.get_mrbeam_definitions_for(mrbeam_model_found)
         settings_model = SettingsModel()
-        settings_model.material_store = self._get_material_store_settings(self.environment)
+        settings_model.material_store = self._get_material_store_settings(
+            self.environment
+        )
         settings_model.about = AboutModel(
-            support_documents=[self._document_service.get_documents_for(definition) for definition in definitions])
+            support_documents=[
+                self._document_service.get_documents_for(definition)
+                for definition in definitions
+            ]
+        )
 
         return settings_model
 
@@ -79,40 +93,75 @@ class SettingsService:
         try:
             response = requests.get(MATERIAL_STORE_CONFIG_URL, allow_redirects=False)
         except requests.exceptions.RequestException as e:
-            self._logger.error('Material store settings couldn\'t be retrieved. Exception %s', e)
+            self._logger.error(
+                "Material store settings couldn't be retrieved. Exception %s", e
+            )
         else:
             if response.ok:
                 try:
-                    material_store_config_yml = yaml.load(response.content, Loader=SafeLoader)
-                    material_store_config = self._get_material_store_config_from_yml(material_store_config_yml,
-                                                                                     environment)
+                    material_store_config_yml = yaml.load(
+                        response.content, Loader=SafeLoader
+                    )
+                    material_store_config = self._get_material_store_config_from_yml(
+                        material_store_config_yml, environment
+                    )
                     material_store_settings.enabled = material_store_config.enabled
                     material_store_settings.url = material_store_config.url
-                    material_store_settings.healthcheck_url = material_store_config.healthcheck_url
+                    material_store_settings.healthcheck_url = (
+                        material_store_config.healthcheck_url
+                    )
                 except yaml.YAMLError as e:
-                    self._logger.error('Material store settings couldn\'t be parsed. Exception %s', e)
+                    self._logger.error(
+                        "Material store settings couldn't be parsed. Exception %s", e
+                    )
 
         return material_store_settings
 
-    def _get_material_store_config_from_yml(self, material_store_config_yml, environment):
+    def _get_material_store_config_from_yml(
+        self, material_store_config_yml, environment
+    ):
         material_store_config = MaterialStoreModel()
         if self._is_valid_material_store_config(environment, material_store_config_yml):
-            env_config_yml = material_store_config_yml['material-store']['environment'][environment.value.lower()]
-            material_store_config.enabled = env_config_yml['enabled']
-            material_store_config.url = env_config_yml['url']
-            material_store_config.healthcheck_url = env_config_yml['healthcheck_url']
+            env_config_yml = material_store_config_yml["material-store"]["environment"][
+                environment.value.lower()
+            ]
+            material_store_config.enabled = env_config_yml["enabled"]
+            material_store_config.url = env_config_yml["url"]
+            material_store_config.healthcheck_url = env_config_yml["healthcheck_url"]
         else:
             self._logger.warn(
-                'Couldn\'t find corresponding material store configuration to current environment -> %s <-',
-                environment.value.lower())
+                "Couldn't find corresponding material store configuration to current environment -> %s <-",
+                environment.value.lower(),
+            )
 
         return material_store_config
 
     def _is_valid_material_store_config(self, environment, material_store_config_yml):
-        return environment and material_store_config_yml and ('material-store' in material_store_config_yml) and (
-                'environment' in material_store_config_yml['material-store']) and (
-                       environment.value.lower() in material_store_config_yml['material-store']['environment']) and (
-                       'enabled' in material_store_config_yml['material-store']['environment'][
-                   environment.value.lower()]) and ('url' in material_store_config_yml['material-store']['environment'][
-            environment.value.lower()]) and ('healthcheck_url' in material_store_config_yml['material-store']['environment'][
-            environment.value.lower()])
+        return (
+            environment
+            and material_store_config_yml
+            and ("material-store" in material_store_config_yml)
+            and ("environment" in material_store_config_yml["material-store"])
+            and (
+                environment.value.lower()
+                in material_store_config_yml["material-store"]["environment"]
+            )
+            and (
+                "enabled"
+                in material_store_config_yml["material-store"]["environment"][
+                    environment.value.lower()
+                ]
+            )
+            and (
+                "url"
+                in material_store_config_yml["material-store"]["environment"][
+                    environment.value.lower()
+                ]
+            )
+            and (
+                "healthcheck_url"
+                in material_store_config_yml["material-store"]["environment"][
+                    environment.value.lower()
+                ]
+            )
+        )
