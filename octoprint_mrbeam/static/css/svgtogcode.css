@@ -488,6 +488,56 @@ li.material_entry span {
   box-sizing: border-box;
 }
 
+li.material_entry.custom.compatible_material::before,
+li.material_entry.custom.compatible_material::after {
+  z-index: 1;
+  position: absolute;
+  top: 3px;
+  font-weight: bold;
+  color: #e25303;
+  background: #ffffff;
+}
+
+li.material_entry.custom.compatible_material::before {
+  content: attr(data_content);
+  right: 22px;
+  font-size: 15px;
+}
+
+li.material_entry.custom.compatible_material::after {
+  content: "✓";
+  right: 4px;
+  font-size: 20px;
+}
+
+li.material_entry.custom.incompatible_material::before,
+li.material_entry.custom.incompatible_material::after {
+  z-index: 1;
+  position: absolute;
+  font-weight: bold;
+}
+
+li.material_entry.custom.incompatible_material::before {
+  content: attr(data_content);
+  right: 26px;
+  top: 3px;
+  font-size: 15px;
+  color: #e25303;
+  background: #ffffff;
+}
+
+li.material_entry.custom.incompatible_material::after {
+  content: "!";
+  right: 4px;
+  top: 4px;
+  font-size: 10px;
+  background-color: #e25303;
+  border-radius: 50%;
+  color: #ffffff;
+  padding: 0 8px;
+  height: 17px;
+}
+
 #thickness_list {
   width: 200px;
   white-space: initial;
@@ -555,6 +605,11 @@ li.material_entry span {
 }
 #safety_notes {
   font-weight: bold;
+}
+
+#safety_notes.incompatible_safety_warning {
+  color: #e25303;
+  white-space: pre-wrap;
 }
 
 #material_info p,
@@ -634,6 +689,16 @@ li.material_entry span {
 
 #dialog_vector_graphics_conversion .modal-body {
   /*min-height: 65vh;*/
+}
+
+#dialog_vector_graphics_conversion .modal-header h3 {
+  display: flex;
+}
+
+#dialog_vector_graphics_conversion .laserhead-model-icon {
+  color: #e25303;
+  font-size: 16px;
+  margin-left: 5px;
 }
 
 .modal.modal-left-side {

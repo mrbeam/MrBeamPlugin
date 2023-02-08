@@ -196,11 +196,22 @@ $(function () {
                 self.fromCurrentData = function (data) {
                     self._fromData(data);
                 };
+
+                self.onDataUpdaterPluginMessage = function (plugin, data) {
+                    if (plugin !== MRBEAM.PLUGIN_IDENTIFIER) {
+                        return;
+                    }
+                    if (MRBEAM.STATE_KEY in data) {
+                        self._fromData(data, "onDataUpdaterPluginMessage");
+                    }
+                };
             } // end if oneButton
         }; // end onStartupComplete
 
         self.onEventJobTimeEstimated = function (payload) {
-            self.formatJobTimeEstimation(payload["job_time_estimation"]);
+            self.formatJobTimeEstimation(
+                payload["job_time_estimation_rounded"]
+            );
             self._fromData(payload);
         };
 
@@ -272,10 +283,14 @@ $(function () {
                 }, 1000);
             }
 
-            if (!payload || !"mrb_state" in payload || !payload["mrb_state"]) {
+            if (
+                !payload ||
+                !(MRBEAM.STATE_KEY in payload) ||
+                !payload[MRBEAM.STATE_KEY]
+            ) {
                 return;
             }
-            var mrb_state = payload["mrb_state"];
+            let mrb_state = payload[MRBEAM.STATE_KEY];
             if (mrb_state) {
                 // TODO: All the handling of mrb_state data should be moved into a dedicated view model
                 window.mrbeam.mrb_state = mrb_state;
@@ -381,7 +396,11 @@ $(function () {
 
         self._sendCancelReadyToLaserMode = function () {
             data = { rtl_cancel: true };
-            OctoPrint.simpleApiCommand("mrbeam", "ready_to_laser", data);
+            OctoPrint.simpleApiCommand(
+                MRBEAM.PLUGIN_IDENTIFIER,
+                SimpleApiCommands.READY_TO_LASER,
+                data
+            );
         };
 
         self._sendReadyToLaserRequest = function (ready, dev_start_button) {
@@ -389,7 +408,11 @@ $(function () {
             if (dev_start_button) {
                 data.dev_start_button = "start";
             }
-            OctoPrint.simpleApiCommand("mrbeam", "ready_to_laser", data);
+            OctoPrint.simpleApiCommand(
+                MRBEAM.PLUGIN_IDENTIFIER,
+                SimpleApiCommands.READY_TO_LASER,
+                data
+            );
         };
 
         self._setTimeoutForDialog = function () {

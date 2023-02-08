@@ -51,7 +51,10 @@
 					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn">{{ _('working area') }}</a></li>
                     {# Translatots: Name of the tab #}
 					<li><a href="#designlib" data-toggle="tab" id="designlib_tab_btn">{{ _('design library') }}</a></li>
-                    <li><a href="#designstore" data-toggle="tab" id="designstore_tab_btn" onclick="window.mrbeam.viewModels.designStoreViewModel.goToStore()">{{ _('design store') }}</a></li>
+                    <li><a href="#designstore" data-toggle="tab" id="designstore_tab_btn" onclick="window.mrbeam.viewModels.designStoreViewModel.initialiseStore()">{{ _('design store') }}</a></li>
+                    {% if settings_model.material_store.enabled %}
+                        <li><a href="#material_store_content" data-toggle="tab" id="materialsotre_tab_btn" onclick="window.mrbeam.viewModels.materialStoreViewModel.initialiseStore('{{ settings_model.material_store.healthcheck_url }}', '{{ settings_model.material_store.url }}')">{{ _('material store') }}</a></li>
+                    {% endif %}
                     {% if not enableFocus %}
 					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">{{ _('focus') }}</a></li>
                     {% endif %}
@@ -121,7 +124,10 @@
                     {% endif %}
 					{% include 'tab_designlib.jinja2' %}
                     {% include 'tab_messages.jinja2' %}
-                    {% include 'tab_designstore.jinja2' %}
+                    {% include 'tab/tab_designstore.jinja2' %}
+                    {% if settings_model.material_store.enabled %}
+                        {% include 'tab/tab_materialstore.jinja2' %}
+                    {% endif %}
 					{% if not enableFocus %}
                     {%      include 'tab_focus.jinja2' %}
                     {% endif %}

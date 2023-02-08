@@ -104,14 +104,6 @@ class WorkingAreaHelper {
                 }
             }
 
-            // detect Illustrator by data-name (for 'export as svg')
-            if (root_attrs && root_attrs["data-name"]) {
-                gen = "illustrator";
-                version = "?";
-                //				console.log("Generator:", gen, version);
-                return { generator: gen, version: version };
-            }
-
             // Affinity designer by Serif
             // <svg ... xmlns:serif="http://www.serif.com/" ...>
             if (
@@ -206,6 +198,20 @@ class WorkingAreaHelper {
                         return { generator: gen, version: version };
                     }
                 }
+            }
+
+            // detect Illustrator by data-name (for 'export as svg')
+            // There is <svg data-name="something"> or <g id="another_name_1" data-name="another name 1"> in the DOM.
+            // Both optional and dependent on localization and user behaviour.
+            // this test is at the end, as it is pretty much an "I feel lucky" one. Unfortunately we don't have an alternative
+            if (
+                (root_attrs && root_attrs["data-name"]) ||
+                fragment.selectAll("g[data-name]").length > 0
+            ) {
+                gen = "illustrator";
+                version = "?";
+                // console.log("Generator:", gen, version);
+                return { generator: gen, version: version };
             }
         } catch (e) {
             console.error(
@@ -687,6 +693,7 @@ class WorkingAreaHelper {
                         "Access to stylesheet %s is denied. Ignoring...",
                         styleSheet.href
                     );
+                    return [];
                 }
             });
         return result;

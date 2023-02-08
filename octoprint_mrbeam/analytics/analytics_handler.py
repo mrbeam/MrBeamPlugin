@@ -37,7 +37,9 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
-    ANALYTICS_LOG_VERSION = 24  # bumped for SW-1115 add feature id column to analytics in mr beam
+    ANALYTICS_LOG_VERSION = (
+        25  # bumped for SW-1115 add feature id column to analytics in mr beam
+    )
 
     def __init__(self, plugin):
         self._plugin = plugin
@@ -73,7 +75,8 @@ class AnalyticsHandler(object):
 
         # Job-specific data
         self._current_job_id = None
-        self._current_job_time_estimation = -1
+        self._current_job_time_estimation_v1 = -1
+        self.current_job_time_estimation_v2 = -1
         self._current_job_final_status = None
         self._current_job_compressor_data = None
         self._current_dust_collector = None
@@ -147,7 +150,9 @@ class AnalyticsHandler(object):
         ).start()
 
     # INIT
-    def analytics_user_permission_change(self, analytics_enabled, header_extension=None):
+    def analytics_user_permission_change(
+        self, analytics_enabled, header_extension=None
+    ):
         try:
             self._logger.info(
                 "analytics user permission change: analyticsEnabled=%s",
@@ -159,7 +164,9 @@ class AnalyticsHandler(object):
                 self._settings.set_boolean(["analyticsEnabled"], True)
                 self._activate_analytics()
                 self._add_device_event(
-                    AnalyticsKeys.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=True), header_extension=header_extension
+                    AnalyticsKeys.Device.Event.ANALYTICS_ENABLED,
+                    payload=dict(enabled=True),
+                    header_extension=header_extension,
                 )
             else:
                 # can not log this since the user just disagreed
@@ -172,7 +179,9 @@ class AnalyticsHandler(object):
                 "Exception during analytics_user_permission_change: {}".format(e)
             )
 
-    def add_ui_render_call_event(self, host, remote_ip, referrer, language, user_agent, header_extension=None):
+    def add_ui_render_call_event(
+        self, host, remote_ip, referrer, language, user_agent, header_extension=None
+    ):
         try:
             call = {
                 AnalyticsKeys.Connectivity.Call.HOST: host,
@@ -183,7 +192,9 @@ class AnalyticsHandler(object):
             }
 
             self._add_connectivity_event(
-                AnalyticsKeys.Connectivity.Event.UI_RENDER_CALL, payload=call, header_extension=header_extension
+                AnalyticsKeys.Connectivity.Event.UI_RENDER_CALL,
+                payload=call,
+                header_extension=header_extension,
             )
         except Exception as e:
             self._logger.exception(
@@ -197,7 +208,9 @@ class AnalyticsHandler(object):
             }
 
             self._add_connectivity_event(
-                AnalyticsKeys.Connectivity.Event.CLIENT_OPENED, payload=data, header_extension=header_extension
+                AnalyticsKeys.Connectivity.Event.CLIENT_OPENED,
+                payload=data,
+                header_extension=header_extension,
             )
         except Exception as e:
             self._logger.exception(
@@ -206,7 +219,9 @@ class AnalyticsHandler(object):
 
     def add_frontend_event(self, event, payload=None, header_extension=None):
         try:
-            self._add_frontend_event(event, payload=payload, header_extension=header_extension)
+            self._add_frontend_event(
+                event, payload=payload, header_extension=header_extension
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_frontend_event: {}".format(e), analytics=True
@@ -215,19 +230,31 @@ class AnalyticsHandler(object):
     # TIMER_HANDLER
     def add_mrbeam_usage(self, usage_data, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Device.Event.MRBEAM_USAGE, payload=usage_data, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.MRBEAM_USAGE,
+                payload=usage_data,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception("Exception during add_mrbeam_usage: {}".format(e))
 
     def add_http_self_check(self, payload, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Device.Event.HTTP_SELF_CHECK, payload=payload, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.HTTP_SELF_CHECK,
+                payload=payload,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception("Exception during add_http_self_check: {}".format(e))
 
     def add_internet_connection(self, payload, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Device.Event.INTERNET_CONNECTION, payload=payload, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.INTERNET_CONNECTION,
+                payload=payload,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_internet_connection: {}".format(e)
@@ -235,19 +262,31 @@ class AnalyticsHandler(object):
 
     def add_ip_addresses(self, payload, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Device.Event.IPS, payload=payload, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.IPS,
+                payload=payload,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception("Exception during add_ip_addresses: {}".format(e))
 
     def add_disk_space(self, payload, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Device.Event.DISK_SPACE, payload=payload, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.DISK_SPACE,
+                payload=payload,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception("Exception during add_disk_space: {}".format(e))
 
     def add_software_versions(self, payload, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Device.Event.SOFTWARE_VERSIONS, payload=payload, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.SOFTWARE_VERSIONS,
+                payload=payload,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_software_versions: {}".format(e)
@@ -255,20 +294,30 @@ class AnalyticsHandler(object):
 
     def add_num_files(self, payload, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Device.Event.NUM_FILES, payload=payload, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.NUM_FILES,
+                payload=payload,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception("Exception during add_num_files: {}".format(e))
 
     def add_analytics_file_crop(self, payload, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Log.Event.ANALYTICS_FILE_CROP, payload=payload, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Log.Event.ANALYTICS_FILE_CROP,
+                payload=payload,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_analytics_file_crop: {}".format(e)
             )
 
     # MRB_LOGGER
-    def add_logger_event(self, event_details, wait_for_terminal_dump, header_extension=None):
+    def add_logger_event(
+        self, event_details, wait_for_terminal_dump, header_extension=None
+    ):
         try:
             filename = event_details["caller"].filename.replace(
                 __package_path__ + "/", ""
@@ -296,22 +345,32 @@ class AnalyticsHandler(object):
                     }
                 )
 
-            if wait_for_terminal_dump:  # If it is e.g. GRBL error, we will have to wait some time for the whole dump
+            if (
+                wait_for_terminal_dump
+            ):  # If it is e.g. GRBL error, we will have to wait some time for the whole dump
                 self.event_waiting_for_terminal_dump = dict(event_details)
             else:
                 self._add_log_event(
-                    AnalyticsKeys.Log.Event.EVENT_LOG, payload=event_details, analytics=False, header_extension=header_extension
+                    AnalyticsKeys.Log.Event.EVENT_LOG,
+                    payload=event_details,
+                    analytics=False,
+                    header_extension=header_extension,
                 )
         except Exception as e:
             self._logger.exception("Exception during add_logger_event: {}".format(e))
 
-    def log_terminal_dump(self, dump, header_extension=None):  # Will be used with e.g. GRBL errors
+    def log_terminal_dump(
+        self, dump, header_extension=None
+    ):  # Will be used with e.g. GRBL errors
         try:
             if self.event_waiting_for_terminal_dump is not None:
                 payload = dict(self.event_waiting_for_terminal_dump)
                 payload[AnalyticsKeys.Log.TERMINAL_DUMP] = dump
                 self._add_log_event(
-                    AnalyticsKeys.Log.Event.EVENT_LOG, payload=payload, analytics=False, header_extension=header_extension
+                    AnalyticsKeys.Log.Event.EVENT_LOG,
+                    payload=payload,
+                    analytics=False,
+                    header_extension=header_extension,
                 )
                 self.event_waiting_for_terminal_dump = None
             else:
@@ -330,21 +389,33 @@ class AnalyticsHandler(object):
             settings = self._laserhead_handler.get_correction_settings()
             laserhead_info = {
                 AnalyticsKeys.Device.LaserHead.SERIAL: laser_head["serial"],
-                AnalyticsKeys.Device.LaserHead.POWER_65: power_calibration.get("power_65", None),
-                AnalyticsKeys.Device.LaserHead.POWER_75: power_calibration.get("power_75", None),
-                AnalyticsKeys.Device.LaserHead.POWER_85: power_calibration.get("power_85", None),
+                AnalyticsKeys.Device.LaserHead.POWER_65: power_calibration.get(
+                    "power_65", None
+                ),
+                AnalyticsKeys.Device.LaserHead.POWER_75: power_calibration.get(
+                    "power_75", None
+                ),
+                AnalyticsKeys.Device.LaserHead.POWER_85: power_calibration.get(
+                    "power_85", None
+                ),
                 AnalyticsKeys.Device.LaserHead.TARGET_POWER: power_calibration.get(
                     "target_power", None
                 ),
                 AnalyticsKeys.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
-                AnalyticsKeys.Device.LaserHead.CORRECTION_FACTOR: laser_head["info"]["correction_factor"],
-                AnalyticsKeys.Device.LaserHead.CORRECTION_ENABLED: settings["correction_enabled"],
+                AnalyticsKeys.Device.LaserHead.CORRECTION_FACTOR: laser_head["info"][
+                    "correction_factor"
+                ],
+                AnalyticsKeys.Device.LaserHead.CORRECTION_ENABLED: settings[
+                    "correction_enabled"
+                ],
                 AnalyticsKeys.Device.LaserHead.CORRECTION_OVERRIDE: settings[
                     "correction_factor_override"
                 ],
             }
             self._add_device_event(
-                AnalyticsKeys.Device.Event.LASERHEAD_INFO, payload=laserhead_info, header_extension=header_extension
+                AnalyticsKeys.Device.Event.LASERHEAD_INFO,
+                payload=laserhead_info,
+                header_extension=header_extension,
             )
 
         except Exception as e:
@@ -353,7 +424,11 @@ class AnalyticsHandler(object):
     # LID_HANDLER
     def add_camera_session_details(self, session_details, header_extension=None):
         try:
-            self._add_log_event(AnalyticsKeys.Log.Event.CAMERA, payload=session_details, header_extension=header_extension)
+            self._add_log_event(
+                AnalyticsKeys.Log.Event.CAMERA,
+                payload=session_details,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_camera_session: {}".format(e), analytics=True
@@ -361,7 +436,11 @@ class AnalyticsHandler(object):
 
     def add_camera_image(self, payload, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Device.Event.CAMERA_IMAGE, payload=payload, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.CAMERA_IMAGE,
+                payload=payload,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_camera_image: {}".format(e), analytics=True
@@ -374,7 +453,11 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Log.Cpu.TEMP: temp,
                 AnalyticsKeys.Log.Cpu.THROTTLE_ALERTS: throttle_alerts,
             }
-            self._add_log_event(AnalyticsKeys.Log.Event.CPU, payload=cpu_data, header_extension=header_extension)
+            self._add_log_event(
+                AnalyticsKeys.Log.Event.CPU,
+                payload=cpu_data,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_cpu_log: {}".format(e), analytics=True
@@ -383,7 +466,11 @@ class AnalyticsHandler(object):
     # CONVERTER
     def add_material_details(self, material_details, header_extension=None):
         try:
-            self._add_job_event(AnalyticsKeys.Job.Event.Slicing.MATERIAL, payload=material_details, header_extension=header_extension)
+            self._add_job_event(
+                AnalyticsKeys.Job.Event.Slicing.MATERIAL,
+                payload=material_details,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_material_details: {}".format(e)
@@ -396,7 +483,11 @@ class AnalyticsHandler(object):
                     AnalyticsKeys.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
                 }
             )
-            self._add_job_event(AnalyticsKeys.Job.Event.Slicing.CONV_ENGRAVE, payload=eng_params, header_extension=header_extension)
+            self._add_job_event(
+                AnalyticsKeys.Job.Event.Slicing.CONV_ENGRAVE,
+                payload=eng_params,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_engraving_parameters: {}".format(e)
@@ -407,7 +498,11 @@ class AnalyticsHandler(object):
             # fmt: off
             cut_details[AnalyticsKeys.Device.LaserHead.HEAD_MODEL_ID] = self._laserhead_handler.get_current_used_lh_model_id()
             # fmt: on
-            self._add_job_event(AnalyticsKeys.Job.Event.Slicing.CONV_CUT, payload=cut_details, header_extension=header_extension)
+            self._add_job_event(
+                AnalyticsKeys.Job.Event.Slicing.CONV_CUT,
+                payload=cut_details,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_cutting_parameters: {}".format(e)
@@ -415,7 +510,11 @@ class AnalyticsHandler(object):
 
     def add_design_file_details(self, design_file, header_extension=None):
         try:
-            self._add_job_event(AnalyticsKeys.Job.Event.Slicing.DESIGN_FILE, payload=design_file, header_extension=header_extension)
+            self._add_job_event(
+                AnalyticsKeys.Job.Event.Slicing.DESIGN_FILE,
+                payload=design_file,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_design_file_details: {}".format(e)
@@ -424,14 +523,20 @@ class AnalyticsHandler(object):
     # USAGE
     def add_job_ntp_sync_details(self, sync_details, header_extension=None):
         try:
-            self._add_job_event(AnalyticsKeys.Job.Event.NTP_SYNC, payload=sync_details, header_extension=header_extension)
+            self._add_job_event(
+                AnalyticsKeys.Job.Event.NTP_SYNC,
+                payload=sync_details,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_job_ntp_sync_details: {}".format(e)
             )
 
     # COMM_ACC2
-    def add_grbl_flash_event(self, from_version, to_version, successful, err=None, header_extension=None):
+    def add_grbl_flash_event(
+        self, from_version, to_version, successful, err=None, header_extension=None
+    ):
         try:
             flashing = {
                 AnalyticsKeys.Device.Grbl.FROM_VERSION: from_version,
@@ -440,21 +545,31 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Device.ERROR: err,
             }
 
-            self._add_device_event(AnalyticsKeys.Device.Event.FLASH_GRBL, payload=flashing, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.FLASH_GRBL,
+                payload=flashing,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_grbl_flash_event: {}".format(e)
             )
 
     # SOFTWARE_UPDATE_INFORMATION
-    def add_software_channel_switch_event(self, old_channel, new_channel, header_extension=None):
+    def add_software_channel_switch_event(
+        self, old_channel, new_channel, header_extension=None
+    ):
         try:
             channels = {
                 AnalyticsKeys.Device.SoftwareChannel.OLD: old_channel,
                 AnalyticsKeys.Device.SoftwareChannel.NEW: new_channel,
             }
 
-            self._add_device_event(AnalyticsKeys.Device.Event.SW_CHANNEL_SWITCH, payload=channels, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.SW_CHANNEL_SWITCH,
+                payload=channels,
+                header_extension=header_extension,
+            )
 
         except Exception as e:
             self._logger.exception(
@@ -465,7 +580,9 @@ class AnalyticsHandler(object):
     def add_connections_state(self, connections, header_extension=None):
         try:
             self._add_connectivity_event(
-                AnalyticsKeys.Connectivity.Event.CONNECTIONS_STATE, payload=connections, header_extension=header_extension
+                AnalyticsKeys.Connectivity.Event.CONNECTIONS_STATE,
+                payload=connections,
+                header_extension=header_extension,
             )
         except Exception as e:
             self._logger.exception(
@@ -477,14 +594,22 @@ class AnalyticsHandler(object):
         try:
             # The fan_rpm_test might finish after the job is done, in that case it isn't interesting for us
             if self._current_job_id:
-                self._add_job_event(AnalyticsKeys.Job.Event.Print.FAN_RPM_TEST, payload=data, header_extension=header_extension)
+                self._add_job_event(
+                    AnalyticsKeys.Job.Event.Print.FAN_RPM_TEST,
+                    payload=data,
+                    header_extension=header_extension,
+                )
         except Exception as e:
             self._logger.exception("Exception during add_fan_rpm_test: {}".format(e))
 
     # OS_HEALTH_CARE
     def add_os_health_log(self, data, header_extension=None):
         try:
-            self._add_log_event(AnalyticsKeys.Log.Event.OS_HEALTH, payload=data, header_extension=header_extension)
+            self._add_log_event(
+                AnalyticsKeys.Log.Event.OS_HEALTH,
+                payload=data,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_os_health_log: {}".format(e), analytics=True
@@ -493,7 +618,11 @@ class AnalyticsHandler(object):
     # COMPRESSOR_HANDLER
     def add_compressor_data(self, data, header_extension=None):
         try:
-            self._add_device_event(AnalyticsKeys.Device.Event.COMPRESSOR, payload=data, header_extension=header_extension)
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.COMPRESSOR,
+                payload=data,
+                header_extension=header_extension,
+            )
         except Exception as e:
             self._logger.exception(
                 "Exception during add_compressor_static_data: {}".format(e)
@@ -569,7 +698,11 @@ class AnalyticsHandler(object):
             AnalyticsKeys.Device.LaserHead.LAST_USED_HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
             AnalyticsKeys.Device.Usage.USERS: len(self._plugin._user_manager._users),
         }
-        self._add_device_event(AnalyticsKeys.Device.Event.STARTUP, payload=payload, header_extension=header_extension)
+        self._add_device_event(
+            AnalyticsKeys.Device.Event.STARTUP,
+            payload=payload,
+            header_extension=header_extension,
+        )
 
     def _event_shutdown(self, event, payload, header_extension=None):
         payload = {
@@ -577,13 +710,19 @@ class AnalyticsHandler(object):
                 state="shutdown", repeat=False
             ).get_cpu_throttle_warnings(),
         }
-        self._add_device_event(AnalyticsKeys.Device.Event.SHUTDOWN, payload=payload, header_extension=header_extension)
+        self._add_device_event(
+            AnalyticsKeys.Device.Event.SHUTDOWN,
+            payload=payload,
+            header_extension=header_extension,
+        )
 
     def _event_slicing_started(self, event, payload, header_extension=None):
         _ = event
         _ = payload
         self._init_new_job()
-        self._add_job_event(AnalyticsKeys.Job.Event.Slicing.STARTED, header_extension=header_extension)
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Slicing.STARTED, header_extension=header_extension
+        )
         self._current_cpu_data = Cpu(state="slicing", repeat=False)
 
     def _event_slicing_done(self, event, payload, header_extension=None):
@@ -596,25 +735,37 @@ class AnalyticsHandler(object):
         payload = {
             AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"])),
         }
-        self._add_job_event(AnalyticsKeys.Job.Event.Slicing.DONE, payload=payload, header_extension=header_extension)
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Slicing.DONE,
+            payload=payload,
+            header_extension=header_extension,
+        )
 
     def _event_slicing_failed(self, event, payload, header_extension=None):
         _ = event
         _ = header_extension
         self._add_job_event(
-            AnalyticsKeys.Job.Event.Slicing.FAILED, payload={AnalyticsKeys.Job.ERROR: payload["reason"]}, header_extension=header_extension
+            AnalyticsKeys.Job.Event.Slicing.FAILED,
+            payload={AnalyticsKeys.Job.ERROR: payload["reason"]},
+            header_extension=header_extension,
         )
 
     def _event_slicing_cancelled(self, event, payload, header_extension=None):
         _ = event
         _ = payload
-        self._add_job_event(AnalyticsKeys.Job.Event.Slicing.CANCELLED, header_extension=header_extension)
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Slicing.CANCELLED, header_extension=header_extension
+        )
 
     def _add_cpu_data(self, dur=None, header_extension=None):
         if self._current_cpu_data:
             payload = self._current_cpu_data.get_cpu_data()
             payload["dur"] = dur
-            self._add_job_event(AnalyticsKeys.Job.Event.CPU, payload=payload, header_extension=header_extension)
+            self._add_job_event(
+                AnalyticsKeys.Job.Event.CPU,
+                payload=payload,
+                header_extension=header_extension,
+            )
 
     def _event_print_started(self, event, payload, header_extension=None):
         _ = event
@@ -624,7 +775,9 @@ class AnalyticsHandler(object):
             self._init_new_job()
         self._current_cpu_data = Cpu(state="laser", repeat=True)
         self._init_collectors()
-        self._add_job_event(AnalyticsKeys.Job.Event.Print.STARTED, header_extension=header_extension)
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Print.STARTED, header_extension=header_extension
+        )
 
     def _event_print_progress(self, event, payload, header_extension=None):
         _ = event
@@ -657,7 +810,11 @@ class AnalyticsHandler(object):
                 }
             )
 
-        self._add_job_event(AnalyticsKeys.Job.Event.Print.PROGRESS, data, header_extension=header_extension)
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Print.PROGRESS,
+            data,
+            header_extension=header_extension,
+        )
 
         if self._current_cpu_data:
             self._current_cpu_data.update_progress(payload["progress"])
@@ -671,14 +828,16 @@ class AnalyticsHandler(object):
         _ = event
         self._add_job_event(
             AnalyticsKeys.Job.Event.Print.PAUSED,
-            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))}, header_extension=header_extension
+            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))},
+            header_extension=header_extension,
         )
 
     def _event_print_resumed(self, event, payload, header_extension=None):
         _ = event
         self._add_job_event(
             AnalyticsKeys.Job.Event.Print.RESUMED,
-            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))}, header_extension=header_extension
+            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))},
+            header_extension=header_extension,
         )
 
     def _event_laser_cooling_pause(self, event, payload, header_extension=None):
@@ -689,7 +848,11 @@ class AnalyticsHandler(object):
             data[
                 AnalyticsKeys.Job.LaserHead.TEMP
             ] = self._current_lasertemp_collector.get_latest_value()
-        self._add_job_event(AnalyticsKeys.Job.Event.Cooling.START, payload=data, header_extension=header_extension)
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Cooling.START,
+            payload=data,
+            header_extension=header_extension,
+        )
 
     def _event_laser_cooling_resume(self, event, payload, header_extension=None):
         _ = event
@@ -699,16 +862,29 @@ class AnalyticsHandler(object):
             data[
                 AnalyticsKeys.Job.LaserHead.TEMP
             ] = self._current_lasertemp_collector.get_latest_value()
-        self._add_job_event(AnalyticsKeys.Job.Event.Cooling.DONE, payload=data, header_extension=header_extension)
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Cooling.DONE,
+            payload=data,
+            header_extension=header_extension,
+        )
 
     def _event_print_done(self, event, payload, header_extension=None):
         _ = event
         duration = {
             AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"])),
-            AnalyticsKeys.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+            AnalyticsKeys.Job.Duration.ESTIMATION: int(
+                round(self._current_job_time_estimation_v1)
+            ),
+            AnalyticsKeys.Job.Duration.ESTIMATION_V2: int(
+                round(self.current_job_time_estimation_v2)
+            ),
         }
         self._current_job_final_status = "Done"
-        self._add_job_event(AnalyticsKeys.Job.Event.Print.DONE, payload=duration, header_extension=header_extension)
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Print.DONE,
+            payload=duration,
+            header_extension=header_extension,
+        )
         self._add_collector_details()
         self._add_cpu_data(dur=payload["time"], header_extension=header_extension)
 
@@ -719,7 +895,11 @@ class AnalyticsHandler(object):
             AnalyticsKeys.Job.ERROR: payload["error_msg"],
         }
         self._current_job_final_status = "Failed"
-        self._add_job_event(AnalyticsKeys.Job.Event.Print.FAILED, payload=details, header_extension=header_extension)
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Print.FAILED,
+            payload=details,
+            header_extension=header_extension,
+        )
         self._add_collector_details()
         self._add_cpu_data(dur=payload["time"])
 
@@ -728,7 +908,8 @@ class AnalyticsHandler(object):
         self._current_job_final_status = "Cancelled"
         self._add_job_event(
             AnalyticsKeys.Job.Event.Print.CANCELLED,
-            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))}, header_extension=header_extension
+            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))},
+            header_extension=header_extension,
         )
         self._add_collector_details()
         self._add_cpu_data(dur=payload["time"])
@@ -738,7 +919,8 @@ class AnalyticsHandler(object):
         _ = payload
         self._add_job_event(
             AnalyticsKeys.Job.Event.LASERJOB_FINISHED,
-            payload={AnalyticsKeys.Job.STATUS: self._current_job_final_status}, header_extension=header_extension
+            payload={AnalyticsKeys.Job.STATUS: self._current_job_final_status},
+            header_extension=header_extension,
         )
         self._cleanup_job()
 
@@ -746,23 +928,37 @@ class AnalyticsHandler(object):
 
     def _event_job_time_estimated(self, event, payload, header_extension=None):
         _ = event
-        self._current_job_time_estimation = payload["job_time_estimation"]
+        self._current_job_time_estimation_v1 = payload["job_time_estimation_raw"]
 
         if self._current_job_id:
             payload = {
                 AnalyticsKeys.Job.Duration.ESTIMATION: int(
-                    round(self._current_job_time_estimation)
+                    round(self._current_job_time_estimation_v1)
                 ),
-                AnalyticsKeys.Job.Duration.CALC_DURATION_TOTAL: payload["calc_duration_total"],
-                AnalyticsKeys.Job.Duration.CALC_DURATION_WOKE: payload["calc_duration_woke"],
+                AnalyticsKeys.Job.Duration.ESTIMATION_V2: int(
+                    round(self.current_job_time_estimation_v2)
+                ),
+                AnalyticsKeys.Job.Duration.CALC_DURATION_TOTAL: payload[
+                    "calc_duration_total"
+                ],
+                AnalyticsKeys.Job.Duration.CALC_DURATION_WOKE: payload[
+                    "calc_duration_woke"
+                ],
                 AnalyticsKeys.Job.Duration.CALC_LINES: payload["calc_lines"],
             }
             self._add_job_event(
-                AnalyticsKeys.Job.Event.JOB_TIME_ESTIMATED, payload=payload, header_extension=header_extension)
+                AnalyticsKeys.Job.Event.JOB_TIME_ESTIMATED,
+                payload=payload,
+                header_extension=header_extension,
+            )
 
     def _add_other_plugin_data(self, event, event_payload, header_extension=None):
         try:
-            if "component" in event_payload and "type" in event_payload and "component_version" in event_payload:
+            if (
+                "component" in event_payload
+                and "type" in event_payload
+                and "component_version" in event_payload
+            ):
                 component = event_payload.get("component")
                 event_type = event_payload.get("type")
                 if event_type == AnalyticsKeys.Log.Event.EVENT_LOG:
@@ -771,7 +967,11 @@ class AnalyticsHandler(object):
                     data[AnalyticsKeys.Log.Component.VERSION] = event_payload.get(
                         "component_version"
                     )
-                    self._add_log_event(AnalyticsKeys.Log.Event.EVENT_LOG, payload=data, header_extension=header_extension)
+                    self._add_log_event(
+                        AnalyticsKeys.Log.Event.EVENT_LOG,
+                        payload=data,
+                        header_extension=header_extension,
+                    )
                 else:
                     self._logger.warn(
                         "Unknown type: '%s' from component %s. payload: %s",
@@ -787,7 +987,12 @@ class AnalyticsHandler(object):
                     data.update(
                         {"plugin_version": event_payload.get("plugin_version", None)}
                     )
-                    self._add_event_to_queue(plugin, event_name, payload=data, header_extension=header_extension)
+                    self._add_event_to_queue(
+                        plugin,
+                        event_name,
+                        payload=data,
+                        header_extension=header_extension,
+                    )
                 else:
                     self._logger.warn(
                         "Invalid plugin: '%s'. payload: %s", plugin, event_payload
@@ -801,26 +1006,57 @@ class AnalyticsHandler(object):
 
     # -------- ANALYTICS LOGS QUEUE ------------------------------------------------------------------------------------
     def _add_device_event(self, event, payload=None, header_extension=None):
-        self._add_event_to_queue(AnalyticsKeys.EventType.DEVICE, event, payload=payload, header_extension=header_extension)
-
-    def _add_log_event(self, event, payload=None, analytics=False, header_extension=None):
         self._add_event_to_queue(
-            AnalyticsKeys.EventType.LOG, event, payload=payload, analytics=analytics, header_extension=header_extension
+            AnalyticsKeys.EventType.DEVICE,
+            event,
+            payload=payload,
+            header_extension=header_extension,
+        )
+
+    def _add_log_event(
+        self, event, payload=None, analytics=False, header_extension=None
+    ):
+        self._add_event_to_queue(
+            AnalyticsKeys.EventType.LOG,
+            event,
+            payload=payload,
+            analytics=analytics,
+            header_extension=header_extension,
         )
 
     def _add_frontend_event(self, event, payload=None, header_extension=None):
         self._add_event_to_queue(
-            AnalyticsKeys.EventType.FRONTEND, event, payload=payload, analytics=True, header_extension=header_extension
+            AnalyticsKeys.EventType.FRONTEND,
+            event,
+            payload=payload,
+            analytics=True,
+            header_extension=header_extension,
         )
 
     def _add_job_event(self, event, payload=None, header_extension=None):
-        self._add_event_to_queue(AnalyticsKeys.EventType.JOB, event, payload=payload, header_extension=header_extension)
+        self._add_event_to_queue(
+            AnalyticsKeys.EventType.JOB,
+            event,
+            payload=payload,
+            header_extension=header_extension,
+        )
 
     def _add_connectivity_event(self, event, payload, header_extension=None):
         self._add_event_to_queue(
-            AnalyticsKeys.EventType.CONNECTIVITY, event, payload=payload, header_extension=header_extension)
+            AnalyticsKeys.EventType.CONNECTIVITY,
+            event,
+            payload=payload,
+            header_extension=header_extension,
+        )
 
-    def _add_event_to_queue(self, event_type, event_name, payload=None, header_extension=None, analytics=True):
+    def _add_event_to_queue(
+        self,
+        event_type,
+        event_name,
+        payload=None,
+        header_extension=None,
+        analytics=True,
+    ):
         try:
             data = dict()
             if isinstance(payload, dict):
@@ -839,11 +1075,15 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Header.NTP_SYNCED: self._plugin.is_time_ntp_synced(),
                 AnalyticsKeys.Header.SESSION_ID: self._session_id,
                 AnalyticsKeys.Header.VERSION_MRBEAM_PLUGIN: self._plugin_version,
-                AnalyticsKeys.Header.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
+                AnalyticsKeys.Header.SOFTWARE_TIER: self._settings.get(
+                    ["dev", "software_tier"]
+                ),
                 AnalyticsKeys.Header.DATA: data,
                 AnalyticsKeys.Header.UPTIME: get_uptime(),
                 AnalyticsKeys.Header.MODEL: self._plugin.get_model_id(),
-                AnalyticsKeys.Header.FEATURE_ID: header_extension.get(AnalyticsKeys.Header.FEATURE_ID, None)
+                AnalyticsKeys.Header.FEATURE_ID: header_extension.get(
+                    AnalyticsKeys.Header.FEATURE_ID, None
+                ),
             }
 
             if event_type == AnalyticsKeys.EventType.JOB:
@@ -908,7 +1148,9 @@ class AnalyticsHandler(object):
         if self._current_dust_collector:
             dust_summary = self._current_dust_collector.getSummary()
             dust_summary.update(lh_info)
-            self._add_job_event(AnalyticsKeys.Job.Event.Summary.DUST, payload=dust_summary)
+            self._add_job_event(
+                AnalyticsKeys.Job.Event.Summary.DUST, payload=dust_summary
+            )
         if self._current_intensity_collector:
             intensity_summary = self._current_intensity_collector.getSummary()
             intensity_summary.update(lh_info)
@@ -929,7 +1171,8 @@ class AnalyticsHandler(object):
         self._current_intensity_collector = None
         self._current_lasertemp_collector = None
         self._current_cpu_data = None
-        self._current_job_time_estimation = -1
+        self._current_job_time_estimation_v1 = -1
+        self.current_job_time_estimation_v2 = -1
         self._current_job_final_status = None
         self._current_job_compressor_data = None
 
