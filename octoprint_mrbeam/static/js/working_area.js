@@ -3242,6 +3242,22 @@ $(function () {
             // get font declarations for quickText fonts
             const fontDecl = WorkingAreaHelper.getFontDeclarations(whitelist);
             clusters = clusters.map((c) => {
+
+                c.elements.forEach((element) => {
+                    if(element.type === "path" && element.is_stroked()){
+                        let elementStyle = element.attr("style");
+                        let strokeStylingArray = elementStyle?.match(/stroke[^;]*;/g);
+                        let strokeAttr = element.attr("stroke");
+                        element.stroke = {
+                            strokeStyling: strokeStylingArray,
+                            strokeAttr: strokeAttr
+                        }
+                        let elementStyleWithoutStrokeStyling = elementStyle?.replace(new RegExp(strokeStylingArray.join('|'), 'g'), '');
+                        element.attr("style", elementStyleWithoutStrokeStyling);
+                        element.attr("stroke", "none");
+                    }
+                });
+
                 c.svgDataUrl = svg.toWorkingAreaDataURL(
                     self.workingAreaWidthMM(),
                     self.workingAreaHeightMM(),
@@ -3297,7 +3313,16 @@ $(function () {
                                 class: "fillRendering",
                             });
 
-                            c.elements.forEach((el) => el.remove());
+                            c.elements.forEach((element) => {
+                                if(element.type === "path" && "stroke" in element){
+                                    let elementStyle = element.attr("style");
+                                    element.attr("style", elementStyle + element.stroke.strokeStyling);
+                                    element.attr("stroke", element.stroke.strokeAttr);
+                                } else {
+                                    element.remove()
+                                }
+                            });
+
                             return rasterResult;
                         })
                     )
