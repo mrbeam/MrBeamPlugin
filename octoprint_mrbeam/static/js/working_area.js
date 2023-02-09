@@ -3244,10 +3244,7 @@ $(function () {
             clusters = clusters.map((c) => {
 
                 c.elements.forEach((element) => {
-                    if(element.type !== "#text" &&
-                    element.type !== "text" &&
-                    element.type !== "image" &&
-                    element.is_stroked()){
+                    if(element.is_stroked() && element.is_filled()){
                         let elementStyle = element.attr("style");
                         let strokeStylingArray = elementStyle?.match(/stroke[^;]*;/g);
                         let strokeAttr = element.attr("stroke");
@@ -3317,10 +3314,7 @@ $(function () {
                             });
 
                             c.elements.forEach((element) => {
-                                if(element.type !== "#text" &&
-                                element.type !== "text" &&
-                                element.type !== "image" &&
-                                "stroke" in element){
+                                if("stroke" in element){
                                     let elementStyle = element.attr("style");
                                     element.attr("style", elementStyle + element.stroke.strokeStyling);
                                     element.attr("stroke", element.stroke.strokeAttr);
