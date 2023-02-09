@@ -3316,7 +3316,7 @@ $(function () {
                             c.elements.forEach((element) => {
                                 if("stroke" in element){
                                     let elementStyle = element.attr("style");
-                                    element.attr("style", elementStyle + element.stroke.strokeStyling);
+                                    element.attr("style", elementStyle + element.stroke.strokeStyling.join(" "));
                                     element.attr("stroke", element.stroke.strokeAttr);
                                 } else {
                                     element.remove()
