@@ -3243,20 +3243,10 @@ $(function () {
             const fontDecl = WorkingAreaHelper.getFontDeclarations(whitelist);
             clusters = clusters.map((c) => {
 
-                c.elements.forEach((element) => {
-                    if(element.is_stroked() && element.is_filled()){
-                        let elementStyle = element.attr("style");
-                        let strokeStylingArray = elementStyle?.match(/stroke[^;]*;/g);
-                        let strokeAttr = element.attr("stroke");
-                        element.stroke = {
-                            strokeStyling: strokeStylingArray,
-                            strokeAttr: strokeAttr
-                        }
-                        let elementStyleWithoutStrokeStyling = elementStyle?.replace(new RegExp(strokeStylingArray.join('|'), 'g'), '');
-                        element.attr("style", elementStyleWithoutStrokeStyling);
-                        element.attr("stroke", "none");
-                    }
-                });
+                // remove any stroke details from stroked & filled vectors so that
+                // they are not rastered with the infill
+                c.elements.filter(element => element.is_stroked() && element.is_filled())
+                    .forEach(element => element.removeStrokeDetails());
 
                 c.svgDataUrl = svg.toWorkingAreaDataURL(
                     self.workingAreaWidthMM(),
@@ -3314,9 +3304,11 @@ $(function () {
                             });
 
                             c.elements.forEach((element) => {
-                                if("stroke" in element){
-                                    let elementStyle = element.attr("style");
-                                    element.attr("style", elementStyle + element.stroke.strokeStyling.join(" "));
+                                if(element.stroke){
+                                    // restore vector stroke details after rastering the infill
+                                    element.stroke.strokeStyling.forEach((propertyValue, style) => {
+                                        $(element.node).setStyleValue(style, propertyValue);
+                                    });
                                     element.attr("stroke", element.stroke.strokeAttr);
                                 } else {
                                     element.remove()
