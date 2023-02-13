@@ -225,4 +225,23 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         const node = elem.node.closest(selector);
         return Snap._.wrap(node);
     };
+
+    /**
+     * Removes the stroke and its styling from vector elements and saves them in a 'stroke' key in the same element
+     *
+     * @returns {Object} : a Snap Element with no stroke
+     */
+    Element.prototype.removeStrokeDetails = function () {
+        const element = this;
+        const strokeStyle = $(element.node).getAllStylesIncluding('stroke');
+        const strokeAttr = element.attr("stroke");
+        element.stroke = {
+            strokeStyling: strokeStyle,
+            strokeAttr: strokeAttr
+        };
+        strokeStyle.forEach(function (propertyValue, style){
+            $(element.node).setDefaultStyleValue(style);
+        });
+        element.attr("stroke", "none");
+    };
 });
