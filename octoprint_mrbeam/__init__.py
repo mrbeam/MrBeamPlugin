@@ -640,9 +640,9 @@ class MrBeamPlugin(
         # core UI here.
         assets = dict(
             js=[
+                "js/helpers/element_helper.js",
                 "js/lib/compare-versions.js",
                 "js/helpers/quick_shape_helper.js",
-                "js/helpers/element_helper.js",
                 "js/helpers/debug_rendering_helper.js",
                 "js/helpers/working_area_helper.js",
                 "js/lib/potrace.js",
