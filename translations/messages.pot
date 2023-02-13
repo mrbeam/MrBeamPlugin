@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-02-13 12:55+0100\n"
+"POT-Creation-Date: 2023-02-13 17:46+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -292,7 +292,7 @@ msgstr ""
 msgid "Ready to laser?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:126
+#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:125
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:970
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:501
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:131
@@ -910,22 +910,18 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:122
-msgid "You are about to shutdown the device."
-msgstr ""
-
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:123
 msgid "Do you want to continue to shut down the device?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:127
+#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:126
 msgid "Shutdown"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:137
+#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:136
 msgid "The device could not be shut down."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:140
+#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:139
 msgid "There was an error while shutting down the device. Please try again."
 msgstr ""
 

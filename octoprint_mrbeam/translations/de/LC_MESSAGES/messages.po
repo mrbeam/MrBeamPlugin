@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-02-13 12:55+0100\n"
-"PO-Revision-Date: 2023-02-13 13:16+0100\n"
+"POT-Creation-Date: 2023-02-13 17:46+0100\n"
+"PO-Revision-Date: 2023-02-13 17:46+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -337,7 +337,7 @@ msgstr "Datei %(stl)s nach %(gcode)s konvertiert. Dauer: %(time).2f Sekunden"
 msgid "Ready to laser?"
 msgstr "Bereit zum Lasern?"
 
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:126
+#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:125
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:970
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:501
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:131
@@ -1052,22 +1052,18 @@ msgstr ""
 "%(br)sÜberprüf deine Verbindung zu Mr Beam und versuch es erneut."
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:122
-msgid "You are about to shutdown the device."
-msgstr "Sie sind dabei, das Gerät abzuschalten."
-
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:123
 msgid "Do you want to continue to shut down the device?"
 msgstr "Soll das Gerät wirklich heruntergefahren werden?"
 
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:127
+#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:126
 msgid "Shutdown"
 msgstr "Herunterfahren"
 
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:137
+#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:136
 msgid "The device could not be shut down."
 msgstr "Das Gerät konnte nicht heruntergefahren werden."
 
-#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:140
+#: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:139
 msgid "There was an error while shutting down the device. Please try again."
 msgstr ""
 "Es gab einen Fehler währen dem herunterfahren, probiere es später noch "
@@ -6075,6 +6071,9 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
+
+#~ msgid "You are about to shutdown the device."
+#~ msgstr "Sie sind dabei, das Gerät abzuschalten."
 
 #~ msgid ""
 #~ "https://support.mr-beam.org/en/support/solutions/articles/43000640531"
