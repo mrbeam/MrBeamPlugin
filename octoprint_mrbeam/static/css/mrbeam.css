@@ -2840,6 +2840,9 @@ hides the force update buttons
 .modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-description p {
   margin: 0 15px;
   width: 75px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--1 {
