@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-02-14 13:34+0100\n"
+"POT-Creation-Date: 2023-02-14 14:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2334,7 +2334,7 @@ msgid "Laser Job Finished!"
 msgstr ""
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:9
-msgid "Share your work and inspire others!"
+msgid "Show your creation and use our hashtag"
 msgstr ""
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:30

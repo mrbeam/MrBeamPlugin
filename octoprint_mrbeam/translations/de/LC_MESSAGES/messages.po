@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-02-14 13:34+0100\n"
-"PO-Revision-Date: 2023-02-14 13:40+0100\n"
+"POT-Creation-Date: 2023-02-14 14:19+0100\n"
+"PO-Revision-Date: 2023-02-14 14:21+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -2713,8 +2713,9 @@ msgid "Laser Job Finished!"
 msgstr "Laser Job abgeschlossen!"
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:9
-msgid "Share your work and inspire others!"
-msgstr "Teile deine Arbeit und inspiriere andere!"
+#, fuzzy
+msgid "Show your creation and use our hashtag"
+msgstr "Zeig deine Kreation und nutze unseren Hashtag"
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:30
 msgid "By the way - Did you know?"
@@ -5930,6 +5931,9 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:71
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
+
+#~ msgid "Share your work and inspire others!"
+#~ msgstr "Teile deine Arbeit und inspiriere andere!"
 
 #~ msgid "Recommend Mr Beam"
 #~ msgstr "Mr Beam weiterempfehlen"
