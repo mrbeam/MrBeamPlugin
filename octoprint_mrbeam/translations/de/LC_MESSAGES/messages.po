@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-01-26 11:00+0100\n"
-"PO-Revision-Date: 2023-01-26 11:04+0100\n"
+"POT-Creation-Date: 2023-02-14 13:34+0100\n"
+"PO-Revision-Date: 2023-02-14 13:40+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -1392,7 +1392,7 @@ msgid "Next"
 msgstr "Weiter"
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:518
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:87
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:90
 msgid "Close"
 msgstr "Schließen"
 
@@ -2720,51 +2720,51 @@ msgstr "Teile deine Arbeit und inspiriere andere!"
 msgid "By the way - Did you know?"
 msgstr "Übrigens - wusstest du schon?"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:58
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:61
 msgid "You can find a variety of laser materials on our website."
 msgstr "Mehr Laser-Material kannst du auf unserer Webseite im Store finden."
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:59
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:62
 msgid "Our Material Store has the same material available for purchase."
 msgstr "Unser Material Store bietet das gleiche Material zum Kauf an."
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:60
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:63
 msgid "We have similar materials for you in our Material Store."
 msgstr "Wir haben ähnliche Materialien für dich in unserem Material Store."
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:63
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:66
 msgid "You need a working internet connection for this forwarding to work."
 msgstr ""
 "Du brauchst eine aktive Internetverbindung damit diese Weiterleitung "
 "funktioniert. "
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:67
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:70
 msgid "Browse the options"
-msgstr "Stöbere durch die Optionen"
+msgstr "Entdecke unsere große Materialauswahl"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:68
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:71
 msgid "Restock Material"
 msgstr "Material nachbestellen"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:77
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:100
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:80
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:103
 msgid "Laser job duration:"
 msgstr "Dauer des Laserjobs:"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:79
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:101
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:82
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:104
 msgid "Estimated:"
 msgstr "Geschätzt:"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:85
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:88
 msgid "Repeat Job"
 msgstr "Job wiederholen"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:94
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:97
 msgid "Air Filter run-on"
 msgstr "Air Filter Nachlauf"
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:99
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:102
 msgid ""
 "Please wait a few seconds until Mr Beam cleared most of the dust particles "
 "out of the working area."
@@ -2772,7 +2772,7 @@ msgstr ""
 "Bitte warte einige Sekunden, bis Mr Beam die meisten Staubpartikel aus dem "
 "Arbeitsbereich entfernt hat."
 
-#: octoprint_mrbeam/templates/laser_job_done.jinja2:105
+#: octoprint_mrbeam/templates/laser_job_done.jinja2:108
 msgid "Cancel Air Filter run-on"
 msgstr "Air Filter-Nachlauf abbrechen"
 
