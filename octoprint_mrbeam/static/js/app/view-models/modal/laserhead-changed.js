@@ -119,7 +119,6 @@ $(function () {
 
         self.shutdownDevice = function () {
             showConfirmationDialog({
-                message: gettext("You are about to shutdown the device."),
                 question: gettext(
                     "Do you want to continue to shut down the device?"
                 ),
