@@ -14,33 +14,31 @@
 			</div>
 
             <div id="quick_text_stroke_and_fill" class="form-horizontal">
-                <fieldset>
-                    <div class="control-group">
-                        <label class="control-label" for="quick_text_stroke">{{ _('Line Color') }}</label>
-                        <div class="controls">
-                            <input type="radio" value="stroke" id="quick_text_stroke" name="stroke_or_fill" data-bind="click: _qt_currentQuickTextUpdate()" />
-                            <div id="qt_colorPicker_stroke" class="tinyColorPicker">
-                                <a class="tcp_color"><div class="colorInner"></div></a>
-                                <div class="track"></div>
-                                <ul class="dropdown"><li></li></ul>
-                                <input type="hidden" class="colorInput" id="quick_text_stroke_color" >
-                            </div>
+                <div class="control-group">
+                    <label class="control-label">{{ _('Line Color') }}</label>
+                    <div class="controls">
+                        <input type="checkbox" value="stroke" id="quick_text_stroke" checked data-bind="click: _qt_currentQuickTextUpdate()" />
+                        <div id="qt_colorPicker_stroke" class="tinyColorPicker">
+                            <a class="tcp_color"><div class="colorInner"></div></a>
+                            <div class="track"></div>
+                            <ul class="dropdown"><li></li></ul>
+                            <input type="hidden" class="colorInput" id="quick_text_stroke_color" >
                         </div>
                     </div>
+                </div>
 
-                    <div class="control-group">
-                        <label class="control-label" for="quick_text_fill">{{ _('Fill Color') }}</label>
-                        <div class="controls">
-                            <input type="radio" value="fill" id="quick_text_fill" name="stroke_or_fill" data-bind="click: _qt_currentQuickTextUpdate()" />
-                            <div id="qt_colorPicker_fill" class="tinyColorPicker blackWhite">
-                                <a class="tcp_color"><div class="colorInner"></div></a>
-                                <div class="track"></div>
-                                <ul class="dropdown"><li></li></ul>
-                                <input type="hidden" class="colorInput" id="quick_text_fill_brightness">
-                            </div>
+                <div class="control-group">
+                    <label class="control-label">{{ _('Fill Color') }}</label>
+                    <div class="controls">
+                        <input type="checkbox" value="fill" id="quick_text_fill" data-bind="click: _qt_currentQuickTextUpdate()" />
+                        <div id="qt_colorPicker_fill" class="tinyColorPicker blackWhite">
+                            <a class="tcp_color"><div class="colorInner"></div></a>
+                            <div class="track"></div>
+                            <ul class="dropdown"><li></li></ul>
+                            <input type="hidden" class="colorInput" id="quick_text_fill_brightness">
                         </div>
                     </div>
-                </fieldset>
+                </div>
 
                 <div class="control-group">
                     <label class="control-label">{{ _('Baseline') }}</label>

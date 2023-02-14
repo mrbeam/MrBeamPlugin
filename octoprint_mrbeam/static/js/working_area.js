@@ -3242,6 +3242,12 @@ $(function () {
             // get font declarations for quickText fonts
             const fontDecl = WorkingAreaHelper.getFontDeclarations(whitelist);
             clusters = clusters.map((c) => {
+
+                // remove any stroke details from stroked & filled vectors so that
+                // they are not rastered with the infill
+                c.elements.filter(element => element.is_stroked() && element.is_filled())
+                    .forEach(element => element.removeStrokeDetails());
+
                 c.svgDataUrl = svg.toWorkingAreaDataURL(
                     self.workingAreaWidthMM(),
                     self.workingAreaHeightMM(),
@@ -3297,7 +3303,18 @@ $(function () {
                                 class: "fillRendering",
                             });
 
-                            c.elements.forEach((el) => el.remove());
+                            c.elements.forEach((element) => {
+                                if(element.stroke){
+                                    // restore vector stroke details after rastering the infill
+                                    element.stroke.strokeStyling.forEach((propertyValue, style) => {
+                                        $(element.node).setStyleValue(style, propertyValue);
+                                    });
+                                    element.attr("stroke", element.stroke.strokeAttr);
+                                } else {
+                                    element.remove()
+                                }
+                            });
+
                             return rasterResult;
                         })
                     )
@@ -3744,18 +3761,17 @@ $(function () {
             }
             self._qt_currentQuickTextUpdate();
         });
-
-        let quickTextRadioInput = $('input[type=radio][name=stroke_or_fill]');
-        quickTextRadioInput.on("change", function () {
-            if(self.currentQuickTextFile){
-                if (this.value === "stroke") {
-                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = true;
-                        self.currentQuickTextFile.fill = self.lastQuickTextFill = false;
-                }
-                if (this.value === "fill"){
-                        self.currentQuickTextFile.fill = self.lastQuickTextFill = true;
-                        self.currentQuickTextFile.stroke = self.lastQuickTextStroke = false;
-                }
+        $("#quick_text_stroke").on("click", function (e) {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.stroke = e.currentTarget.checked;
+                self.lastQuickTextStroke = self.currentQuickTextFile.stroke;
+            }
+            self._qt_currentQuickTextUpdate();
+        });
+        $("#quick_text_fill").on("click", function (e) {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.fill = e.currentTarget.checked;
+                self.lastQuickTextFill = self.currentQuickTextFile.fill;
             }
             self._qt_currentQuickTextUpdate();
         });
@@ -3836,11 +3852,10 @@ $(function () {
         self._qt_currentQuickTextUpdate = function () {
             if (self.currentQuickTextFile) {
                 self.currentQuickText(self.currentQuickTextFile.name);
-                let quickTextInputField = $("#quick_text_dialog_text_input");
                 const displayText =
                     self.currentQuickTextFile.name !== ""
                         ? self.currentQuickTextFile.name
-                        : quickTextInputField.attr(
+                        : $("#quick_text_dialog_text_input").attr(
                               "placeholder"
                           );
 
@@ -3945,22 +3960,12 @@ $(function () {
                 });
 
                 // update font of input field
-                quickTextInputField.css({
+                $("#quick_text_dialog_text_input").css({
                     "text-shadow": shadow,
                     color: previewFill,
                     "font-family": font,
                     "font-variant-ligatures": ligatures,
                 });
-                // update input placeholder color if stroked
-                let StrokedQuickTextPlaceholderClass = 'mrb-quicktext-stroked-placeholder';
-                if(isStroked){
-                    quickTextInputField.addClass(StrokedQuickTextPlaceholderClass);
-                }
-                // update input placeholder color if not stroked
-                if(!isStroked && quickTextInputField.hasClass(StrokedQuickTextPlaceholderClass)){
-                    quickTextInputField.removeClass(StrokedQuickTextPlaceholderClass);
-                }
-
                 $("#quick_text_dialog_font_name").text(font);
                 //                $("#quick_text_fill_brightness").val(fillColor);
                 //                $("#quick_text_stroke_color").val(strokeColor);
