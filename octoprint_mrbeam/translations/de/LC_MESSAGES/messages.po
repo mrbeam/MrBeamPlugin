@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2023-02-13 17:46+0100\n"
-"PO-Revision-Date: 2023-02-13 17:46+0100\n"
+"PO-Revision-Date: 2023-02-15 13:04+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -2857,7 +2857,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:40
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:61
 msgid "https://support.mr-beam.org/en"
-msgstr "https://support.mr-beam.org/"
+msgstr "https://support.mr-beam.org"
 
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:26
 msgid "Read more"
