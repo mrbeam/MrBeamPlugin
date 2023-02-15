@@ -115,6 +115,7 @@ class AnalyticsKeys:
             COMPRESSOR = "compressor"
             NUM_FILES = "num_files"
             CAMERA_IMAGE = "camera_image"
+            LASERHEAD_CHANGED = "laserhead_changed"
 
         class SoftwareChannel:
             OLD = "old_channel"

@@ -585,6 +585,25 @@ $(function () {
                 Object.keys(tmp).length
             );
             self.custom_materials(tmp);
+            $(document).on("mouseover", ".material_entry", function () {
+                let material_entry_element = $(this);
+                let material_name_DOMelement =
+                    material_entry_element.context.getElementsByClassName(
+                        "material_name"
+                    )[0];
+                let material_name_element = $(material_name_DOMelement);
+                if (
+                    material_name_DOMelement.offsetWidth <
+                        material_name_DOMelement.scrollWidth &&
+                    !material_name_element.attr("title")
+                ) {
+                    material_entry_element.tooltip({
+                        title: material_name_element.text(),
+                        placement: "top",
+                    });
+                    material_entry_element.tooltip("show");
+                }
+            });
         };
 
         self.get_closest_thickness_params = function () {
@@ -749,6 +768,8 @@ $(function () {
                             m.laser_model === MRBEAM_LASER_HEAD_MODEL;
                         if (m.laser_model === "S") {
                             m.customBeforeElementContent = "[S]";
+                        } else if (m.laser_model === "x") {
+                            m.customBeforeElementContent = "[x]";
                         }
                         if (!m.compatible) {
                             self.incompatible_custom_materials_keys.push(

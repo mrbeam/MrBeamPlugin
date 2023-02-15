@@ -12,13 +12,13 @@
                 <ul>
                     <div><strong>{{ _('Name') }}:</strong> {{ hostname }}</div>
                     <div><strong>{{ _('Serial number') }}:</strong> {{ serial }}</div>
-                    {% if laserhead_serial or laserhead_model == 'S' %}
+                    {% if laserhead_serial or laserhead_model in ['S', 'x'] %}
                         <div><strong>{{ _('Laser head') }}:</strong>
                         <ul class="list-unstyled">
                         {% if laserhead_serial %}
                             <li><strong>{{ _('Serial number') }}:</strong> {{ laserhead_serial }}</li>
                         {% endif %}
-                        {% if laserhead_model == 'S' %}
+                        {% if laserhead_model in ['S', 'x'] %}
                             <li><strong>{{ _('Model') }}:</strong> {{ laserhead_model }}</li>
                         {% endif %}
                         </ul>
@@ -79,7 +79,7 @@
 
                     <div><strong>{{ _('Online Support Portal') }}:</strong> <a href="https://www.mr-beam.org/support" target="_blank" data-test="about-settings-link-support">mr-beam.org/support</a></div>
                     <div><strong>{{ _('Privacy Policies') }}:</strong>
-                        <a href="http://shop.mr-beam.org/privacy" target="_blank" data-test="about-settings-link-web-site">{{ _('Mr Beam Web Site') }}</a> |
+                        <a href="{{ _('https://www.mr-beam.org/en') + '/policies/privacy-policy'}}" target="_blank" data-test="about-settings-link-web-site">{{ _('Mr Beam Web Site') }}</a> |
                         <a href="/plugin/findmymrbeam/static/docs/findmrbeamorg_privacy_policy.pdf" target="_blank" data-test="about-settings-link-find-mr-beam">{{ _('find.mr-beam service') }}</a> |
                         <a href="{{ _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') }}" target="_blank" data-test="about-settings-link-analytics">{{ _('Mr Beam Analytics') }}</a>
                     </div>
@@ -106,7 +106,6 @@
                     <div><strong>{{ _('find.mr-beam service') }}:</strong> <a href="http://find.mr-beam.org" target="_blank" data-test="about-settings-link-find-mr-beam-org"> find.mr-beam.org</a></div>
                     <div><strong>{{ _('Online resources') }}:</strong> <a href="{{ mrbeamorg_downloads }}" target="_blank" data-test="about-settings-link-downloads"> {{ _('Mr Beam Downloads') }}</a></div>
                     <div><strong>{{ _('Source code') }}:</strong> <a href="https://github.com/mrbeam" target="_blank" data-test="about-settings-link-github"> github.com/mrbeam</a></div>
-                    <div><strong>{{ _('Recommend Mr Beam') }}</strong> {{ _("and earn cashback") }}: <a href="https://www.aklamio.com/community/shops/mrbeam_de" target="_blank" data-test="about-settings-link-aklamio">aklamio.com</a></div>
                 </ul>
             </div>
         </div>

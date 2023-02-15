@@ -462,6 +462,10 @@ input[type="submit"].btn.btn-mini {
   text-decoration: none;
 }
 
+.btn-left {
+  float: left;
+}
+
 .clearfix {
   *zoom: 1;
 }
@@ -1173,6 +1177,10 @@ body {
 .octoprint-container .accordion-heading .laserhead-model-icon {
   padding-left: 15px;
   color: #e25303;
+}
+.octoprint-container .accordion-heading .laserhead-model-icon img {
+  height: 14px;
+  padding-bottom: 3px;
 }
 
 .octoprint-container .accordion-heading [class^="icon-"],
@@ -3603,8 +3611,6 @@ button#terminal-send {
 #hard_refresh_overlay .icon-warning-sign {
   color: #e25303;
 }
-
-/* Hard refresh overlay */
 
 /* Support Standalone */
 
