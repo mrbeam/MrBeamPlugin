@@ -79,62 +79,70 @@ $(function () {
     };
 
     getCanvasAnalysis = function (canvas) {
-        // count ratio of white pixel
-        const pixelData = canvas
-            .getContext("2d")
-            .getImageData(0, 0, canvas.width, canvas.height).data;
         let hist = new Array(256).fill(0);
         let brightnessChanges = 0;
         let totalBrightnessChange = 0;
         let whitePixelsAtTheOutside = 0;
-        let whitePixelsConsequentInLine = 0;
-        let lastYIdx = 0;
-        let firstNonWhitePixelOfLineFound = false;
-        let lastBrightness = -1;
-        for (var p = 0; p < pixelData.length; p += 4) {
-            const xIdx = (p / 4) % canvas.width;
-            const yIdx = (p / 4 - xIdx) / canvas.width;
-            const r = pixelData[p];
-            const g = pixelData[p + 1];
-            const b = pixelData[p + 2];
-            const a = pixelData[p + 3];
-            let brightness = Math.round(0.21 * r + 0.72 * g + 0.07 * b); // TODO: bug: rgba(0,0,0,127) should not be black, should be 50% gray
-            // blend brightness value on white background
-            if (a < 255) {
-                brightness = 255 - Math.round((a / 255) * brightness);
-            }
-            if (a === 0) brightness = 255; // transparent pixels are treated as white (means ignored)
-            hist[brightness]++;
-            if (lastBrightness !== brightness) {
-                brightnessChanges++;
-                totalBrightnessChange += Math.abs(lastBrightness - brightness);
-            }
-            lastBrightness = brightness;
+        let innerWhitePixelRatio = 0;
+        let whitePixelRatio = 0;
+        try {
+            // count ratio of white pixel
+            const pixelData = canvas
+                .getContext("2d")
+                .getImageData(0, 0, canvas.width, canvas.height).data;
+            let whitePixelsConsequentInLine = 0;
+            let lastYIdx = 0;
+            let firstNonWhitePixelOfLineFound = false;
+            let lastBrightness = -1;
+            for (var p = 0; p < pixelData.length; p += 4) {
+                const xIdx = (p / 4) % canvas.width;
+                const yIdx = (p / 4 - xIdx) / canvas.width;
+                const r = pixelData[p];
+                const g = pixelData[p + 1];
+                const b = pixelData[p + 2];
+                const a = pixelData[p + 3];
+                let brightness = Math.round(0.21 * r + 0.72 * g + 0.07 * b); // TODO: bug: rgba(0,0,0,127) should not be black, should be 50% gray
+                // blend brightness value on white background
+                if (a < 255) {
+                    brightness = 255 - Math.round((a / 255) * brightness);
+                }
+                if (a === 0) brightness = 255; // transparent pixels are treated as white (means ignored)
+                hist[brightness]++;
+                if (lastBrightness !== brightness) {
+                    brightnessChanges++;
+                    totalBrightnessChange += Math.abs(
+                        lastBrightness - brightness
+                    );
+                }
+                lastBrightness = brightness;
 
-            if (brightness < 255 && !firstNonWhitePixelOfLineFound) {
-                whitePixelsAtTheOutside += whitePixelsConsequentInLine; // left white pixels
-                whitePixelsConsequentInLine = 0;
-                firstNonWhitePixelOfLineFound = true;
+                if (brightness < 255 && !firstNonWhitePixelOfLineFound) {
+                    whitePixelsAtTheOutside += whitePixelsConsequentInLine; // left white pixels
+                    whitePixelsConsequentInLine = 0;
+                    firstNonWhitePixelOfLineFound = true;
+                }
+                if (yIdx !== lastYIdx) {
+                    // line switch
+                    whitePixelsAtTheOutside += whitePixelsConsequentInLine; // right white pixels
+                    whitePixelsConsequentInLine = 0;
+                    firstNonWhitePixelOfLineFound = false;
+                    lastYIdx = yIdx;
+                }
+                if (brightness === 255) {
+                    // count all white pixels in a row
+                    if (lastBrightness === 255) whitePixelsConsequentInLine++;
+                } else {
+                    whitePixelsConsequentInLine = 0;
+                }
             }
-            if (yIdx !== lastYIdx) {
-                // line switch
-                whitePixelsAtTheOutside += whitePixelsConsequentInLine; // right white pixels
-                whitePixelsConsequentInLine = 0;
-                firstNonWhitePixelOfLineFound = false;
-                lastYIdx = yIdx;
-            }
-            if (brightness === 255) {
-                // count all white pixels in a row
-                if (lastBrightness === 255) whitePixelsConsequentInLine++;
-            } else {
-                whitePixelsConsequentInLine = 0;
-            }
+            whitePixelsAtTheOutside += whitePixelsConsequentInLine;
+            innerWhitePixelRatio =
+                (hist[255] - whitePixelsAtTheOutside) /
+                (pixelData.length / 4 - whitePixelsAtTheOutside);
+            whitePixelRatio = hist[255] / (pixelData.length / 4);
+        } catch (e) {
+            console.error(e);
         }
-        whitePixelsAtTheOutside += whitePixelsConsequentInLine;
-        const innerWhitePixelRatio =
-            (hist[255] - whitePixelsAtTheOutside) /
-            (pixelData.length / 4 - whitePixelsAtTheOutside);
-        const whitePixelRatio = hist[255] / (pixelData.length / 4);
         return {
             whitePixelRatio: whitePixelRatio,
             innerWhitePixelRatio: innerWhitePixelRatio,

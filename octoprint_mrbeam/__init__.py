@@ -684,6 +684,7 @@ class MrBeamPlugin(
         # core UI here.
         assets = dict(
             js=[
+                "js/helpers/element_helper.js",
                 "js/lib/compare-versions.js",
                 "js/app/helpers/quick-shape.js",
                 "js/app/helpers/working-area.js",

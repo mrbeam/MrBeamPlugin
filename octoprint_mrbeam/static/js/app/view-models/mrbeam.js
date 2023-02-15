@@ -677,7 +677,7 @@ $(function () {
                                 modalElement.length === 1 &&
                                 $(this)
                                     .find(".modal.hide.fade")
-                                    .inlineStyle("display") === "none"
+                                    .getInlineStyle("display") === "none"
                             ) {
                                 setTimeout(() => {
                                     if (
@@ -686,7 +686,8 @@ $(function () {
                                             .hasClass("modal") &&
                                         $(this)
                                             .find(".modal.hide.fade")
-                                            .inlineStyle("display") === "none"
+                                            .getInlineStyle("display") ===
+                                            "none"
                                     ) {
                                         document.body.append(
                                             $(this).find(".modal.hide.fade")[0]
