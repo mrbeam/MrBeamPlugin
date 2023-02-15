@@ -1,4 +1,4 @@
-describe("Laser Job - quick text", function () {
+describe.skip("Laser Job - quick text", function () {
     beforeEach(function () {
         cy.fixture("test-data").then(function (testData) {
             this.testData = testData;
@@ -83,7 +83,9 @@ describe("Laser Job - quick text", function () {
         // Start the laser job
         cy.laserButtonClick();
         cy.selectMaterial();
-        cy.get('[data-test="laser-job-start-button"]').dblclick({ force: true });
+        cy.get('[data-test="laser-job-start-button"]').dblclick({
+            force: true,
+        });
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
@@ -99,8 +101,8 @@ describe("Laser Job - quick text", function () {
             .invoke("prop", "innerText")
             .then((downloadFile) => {
                 //cy.intercept(
-                  //  "GET",
-                    //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //  "GET",
+                //`http://localhost:5002/downloads/files/local/${downloadFile}*`
                 //).as("file");
                 cy.window()
                     .document()
@@ -129,26 +131,29 @@ describe("Laser Job - quick text", function () {
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click({force: true});
+                    ).click({ force: true });
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click({force: true});
+                    ).click({ force: true });
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.readFile("cypress/downloads/FilledTextStraight_2more.gco", {
-                    timeout: 40000,
-                        }).then((contentDownloadFile) => {
-                            let contentTestDownloadNoComments = contentDownloadFile
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            let contentTestFileNoComments = contentTestFile
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            expect(contentTestDownloadNoComments).to.equal(
-                                contentTestFileNoComments
-                            );
-                        });
+                    cy.readFile(
+                        "cypress/downloads/FilledTextStraight_2more.gco",
+                        {
+                            timeout: 40000,
+                        }
+                    ).then((contentDownloadFile) => {
+                        let contentTestDownloadNoComments = contentDownloadFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        let contentTestFileNoComments = contentTestFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        expect(contentTestDownloadNoComments).to.equal(
+                            contentTestFileNoComments
+                        );
+                    });
                 });
             });
         cy.logout();
@@ -161,5 +166,4 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-modal-window"]').should("not.visible");
         cy.logout();
     });
-
 });

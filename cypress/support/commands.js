@@ -216,8 +216,12 @@ Cypress.Commands.add("assertValueCopiedToClipboard", (value) => {
 });
 
 Cypress.Commands.add("deleteGcoFile", () => {
-    cy.get('[data-test="mrbeam-ui-index-design-library"]').click({force: true});
-    cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click({force: true});
+    cy.get('[data-test="mrbeam-ui-index-design-library"]').click({
+        force: true,
+    });
+    cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click({
+        force: true,
+    });
     cy.wait(3000);
     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
         .if("exist")
@@ -237,17 +241,20 @@ Cypress.Commands.add("deleteGcoFile", () => {
 
 Cypress.Commands.add("designSettings", () => {
     cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible").last()
-            .clear({force: true})
-            .type("-50.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible").last()
-            .clear({force: true})
-            .type("116.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible").last()
-            .clear({force: true})
-            .type("132.3 mm");
+        .filter(":visible")
+        .last()
+        .clear({ force: true })
+        .type("-50.5");
+    cy.get('[data-test="tab-workingarea-horizontal"]')
+        .filter(":visible")
+        .last()
+        .clear({ force: true })
+        .type("116.3 mm");
+    cy.get('[data-test="tab-workingarea-vertical"]')
+        .filter(":visible")
+        .last()
+        .clear({ force: true })
+        .type("132.3 mm");
 });
 
 Cypress.Commands.add("laserButtonClick", () => {
@@ -259,7 +266,7 @@ Cypress.Commands.add("laserButtonClick", () => {
 Cypress.Commands.add("selectMaterial", () => {
     cy.get('[data-test="conversion-dialog-material-item"]')
         .contains("Cardboard, single wave")
-        .click({force: true});
+        .click({ force: true });
     cy.wait(1000);
     cy.get('[data-test="conversion-dialog-material-color"]')
         .first()

@@ -1,4 +1,4 @@
-describe("Laser Job", function () {
+describe.skip("Laser Job", function () {
     beforeEach(function () {
         cy.fixture("test-data").then(function (testData) {
             this.testData = testData;

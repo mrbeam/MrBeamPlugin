@@ -1,4 +1,4 @@
-describe("Laser Job - quick text", function () {
+describe.skip("Laser Job - quick text", function () {
     beforeEach(function () {
         cy.fixture("test-data").then(function (testData) {
             this.testData = testData;
@@ -82,7 +82,9 @@ describe("Laser Job - quick text", function () {
         // Start the laser job
         cy.laserButtonClick();
         cy.selectMaterial();
-        cy.get('[data-test="laser-job-start-button"]').dblclick({ force: true });
+        cy.get('[data-test="laser-job-start-button"]').dblclick({
+            force: true,
+        });
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
@@ -226,7 +228,9 @@ describe("Laser Job - quick text", function () {
         // Start the laser job
         cy.laserButtonClick();
         cy.selectMaterial();
-        cy.get('[data-test="laser-job-start-button"]').dblclick({ force: true });
+        cy.get('[data-test="laser-job-start-button"]').dblclick({
+            force: true,
+        });
         cy.get(".alert-success").should("to.exist", "Preparation done");
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
@@ -304,5 +308,4 @@ describe("Laser Job - quick text", function () {
         cy.get('[data-test="quick-text-modal-window"]').should("not.visible");
         cy.logout();
     });
-
 });

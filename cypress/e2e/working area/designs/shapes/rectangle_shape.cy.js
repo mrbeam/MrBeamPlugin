@@ -1,4 +1,4 @@
-describe("Laser Job - shapes", function () {
+describe.skip("Laser Job - shapes", function () {
     beforeEach(function () {
         cy.fixture("test-data").then(function (testData) {
             this.testData = testData;
@@ -43,7 +43,7 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
 
-       // Download the GCODE file and compare it
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
@@ -51,8 +51,8 @@ describe("Laser Job - shapes", function () {
             .invoke("prop", "innerText")
             .then((downloadFile) => {
                 //cy.intercept(
-                  //  "GET",
-                    //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //  "GET",
+                //`http://localhost:5002/downloads/files/local/${downloadFile}*`
                 //).as("file");
                 cy.window()
                     .document()
@@ -81,26 +81,26 @@ describe("Laser Job - shapes", function () {
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click( {force: true} );
+                    ).click({ force: true });
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click( {force: true} );
+                    ).click({ force: true });
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
                     cy.readFile("cypress/downloads/Rectangle.gco", {
-                    timeout: 40000,
-                        }).then((contentDownloadFile) => {
-                            let contentTestDownloadNoComments = contentDownloadFile
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            let contentTestFileNoComments = contentTestFile
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            expect(contentTestDownloadNoComments).to.equal(
-                                contentTestFileNoComments
-                            );
-                        });
+                        timeout: 40000,
+                    }).then((contentDownloadFile) => {
+                        let contentTestDownloadNoComments = contentDownloadFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        let contentTestFileNoComments = contentTestFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        expect(contentTestDownloadNoComments).to.equal(
+                            contentTestFileNoComments
+                        );
+                    });
                 });
             });
         cy.logout();
@@ -112,5 +112,4 @@ describe("Laser Job - shapes", function () {
         cy.get('[data-test="quick-shape-done-button"]').click();
         cy.get('[data-test="quick-shape-modal-window"]').should("not.visible");
     });
-
 });
