@@ -40,7 +40,7 @@
                 <div class="control-group">
                     <div class="controls">
                         <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal">
+                            <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal" data-test="debug-settings-enable-terminal">
                             <strong>{{ _('Enable terminal') }}</strong>
                             <div>{{ _('Requires full page reload: <strong>Shift + F5</strong> (Windows and Linux) or <strong>Ctrl + Shift + r</strong> (Mac)') }}</div>
                         </label>
@@ -50,7 +50,7 @@
                 <div class="control-group">
                     <div class="controls">
                         <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums">
+                            <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums" data-test="debug-settings-show-chechsums">
                             <strong>{{ _('Show checksums') }}</strong>
                             <div>{{ _('Show gcode command checksums in terminal. Takes effect immediately.') }}</div>
                         </label>

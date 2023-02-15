@@ -50,7 +50,7 @@
 
 
 													<div class="row-fluid print-control btn-group" style="display: none;" data-bind="visible: loginState.isUser">
-														<button id="laser_button" data-cy=”working-area-laser-button” class="btn btn-danger span6"
+														<button id="laser_button" data-test="working-area-laser-button" class="btn btn-danger span6"
                                                                 data-bind="click: conversion.show_conversion_dialog, enable: {{ 'true' if isDevelop and 'enableLaserButton' in request.args else 'false'}} || (state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty()), attr: {title: state.titlePrintButton}"
                                                                 id="job_print">
                                                             <i class="icon-white icon-fire"
@@ -155,10 +155,12 @@
 														<span class="muted">{{ _('Set the height of the surface above the bottom for the camera preview to be accurate:') }}</span>
                                                         <div>
                                                             <input class="mrb_slider" type="range" min="0" max="38" step="1" id="objectZ_input_slider" value="0"
+																   data-test="tab-workingarea-object-height-slider"
                                                                    data-bind="value: camera.objectZ, valueUpdate: 'input'"
                                                                    style="width:60%; display: inline; margin: 1em 0 1em 5px;"
                                                             />
                                                             <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input_number" value="0"
+															   data-test="tab-workingarea-object-height-input"
 														       data-bind="value: camera.objectZ, valueUpdate: 'input'"
 														       style="width:3.5em; display: inline; margin: 0; padding-right:0;"
 														/>&nbsp;{{ _('mm') }}
@@ -171,7 +173,7 @@
 
                                         <div id="wa_view_settings" class="accordion-inner">
 											<div class="accordion-heading ">
-												<a id="wa_view_settings_toggle" href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
+												<a id="wa_view_settings_toggle" data-test="tab-workingarea-preview-settings" href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
 													<i class="icon-camera"></i> {{ _('Preview') }}:
 												</a>
 												<span class="caret" style="vertical-align: middle"></span>
@@ -251,21 +253,21 @@
 															{{ _('Brightness') }}:
 														</label>
 														<i class="icon-adjust"></i>
-                                                        <input id="preview-brightness" type="range" min="0" max="1" step="0.01"
+                                                        <input id="preview-brightness" data-test="tab-workingarea-preview-brightness" type="range" min="0" max="1" step="0.01"
                                                            style="width:80%;"
                                                            class="mrb_slider"
                                                            value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">
 													</div>
 													<div>
 														<label style="cursor: default;">
-															{{ _('Zoom') }}: <span data-bind="text:zoom_factor_text"></span>
+															{{ _('Zoom') }}: <span data-bind="text:zoom_factor_text" data-test="tab-workingarea-preview-zoom"></span>
 														</label>
 														<div id="zoom_monitor_wrapper">
 															<div id="zoom_monitor" data-bind="
 																	style: { 'padding-bottom': (100 * hwRatio())+'%' },
 																	event: { mousewheel: wheel_zoom_monitor }
 																 ">
-                                                                <div data-bind="style: {
+                                                                <div data-test="tab-workingarea-preview-scroll-to-zoom" data-bind="style: {
 																		width: (100*zoom())+'%',
 																		'padding-bottom': (100*zoom()*hwRatio())+'%',
 																		left: (zoomOffX() / workingAreaWidthMM() * 100) + '%',
@@ -307,14 +309,14 @@
                                 <div class="accordion-group" id="working_area_files">
 									<div class="accordion-heading">
 										<div class="accordion-toggle unselectable"><i class="icon-list"></i> {{ _('Designs') }}</div>
-										<a id="clear_working_area_btn" class="accordion-toggle pull-right" data-bind="style: {opacity: working_area_empty() ? 0.75 : 1}, click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
+										<a id="clear_working_area_btn" data-test="tab-workingarea-clear-wa" class="accordion-toggle pull-right" data-bind="style: {opacity: working_area_empty() ? 0.75 : 1}, click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
 									</div>
 									<div class="accordion-body">
 										<div class="accordion-inner">
 											<div class="row-fluid btn-group">
-												<div class="btn span4" id="working_area_tab_file_btn" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
-												<div class="btn span4" id="working_area_tab_text_btn" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Text') }} </div>
-												<div class="btn span4" id="working_area_tab_shape_btn" data-bind="click: newQuickShape"><i class="icon-heart-empty"></i> {{ _('Shape') }} </div>
+												<div class="btn span4" id="working_area_tab_file_btn" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}" data-test="working-area-tab-file"><i class="icon-file"></i> {{ _('File') }} </div>
+												<div class="btn span4" id="working_area_tab_text_btn" data-bind="click: newQuickText" data-test="working-area-tab-text"><i class="icon-font"></i> {{ _('Text') }} </div>
+												<div class="btn span4" id="working_area_tab_shape_btn" data-bind="click: newQuickShape"  data-test="working-area-tab-shape"><i class="icon-heart-empty"></i> {{ _('Shape') }} </div>
 {#												<div class="btn span3" id="working_area_tab_scan_btn" data-bind="click: enableScanMode"><i class="icon-copy"></i> {{ _('Scan') }} </div>#}
 {#												Camera not working, disabled till we fixed this. then set spans of the buttons above to span4 >#}
 {#												<div class="btn span4" data-bind="visible:files.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: files.takePhoto" >#}
@@ -324,7 +326,7 @@
 											</div>
                                         </div>
 
-										<div class="collapse in" id="wa_filelist">
+										<div class="collapse in" id="wa_filelist" data-test="tab-workingarea-collapse-in">
 											<div class="accordion-inner" style="padding-right:4px;">
 												<div class="scrollable" data-bind="foreach: placedDesigns" style="padding-right:4px;">
 													<div class="entry" data-bind="attr: { id: $data.id}, template: { name: $root.templateFor($data), data: $data }"></div>
@@ -351,67 +353,67 @@
 
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
-															<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
-															<div class="btn btn-mini toggleTransformBtn" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
-															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }, attr: {mrb_name: $data.name}"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+															<div class="btn btn-mini transformResetBtn" data-test="tab-workingarea-undo" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
+															<div class="btn btn-mini toggleTransformBtn" data-test="tab-workingarea-move" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+															<div class="btn btn-mini remove-design-btn" data-test="tab-workingarea-remove" data-bind="click: function() { $root.removeSVG($data); }, attr: {mrb_name: $data.name}"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
 														</div>
-														<div class="detail_information" >
+														<div class="detail_information" data-test="tab-workingarea-detail-information">
 															<div class="local_transformation muted">
 																<i class="icon-move" title="{{ _('translation') }}"></i>
-																<input class="decent_input translation wide" type="text" value="0, 0" data-bind="event: {
+																<input class="decent_input translation wide" data-test="tab-workingarea-translation" type="text" value="0, 0" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
-                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <input class="decent_input rotation" data-test="tab-workingarea-rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit: '°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-                                                <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
+                                                <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };" data-test="tab-workingarea-mirror">
 													<span class="mini_switch_label">ABC</span>
-													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label mini_switch_trigger" data-test="tab-workingarea-mirror-switch"><div></div></span>
 													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
 												</div>
                                                 <br/>
                                                	<div><!-- scale switch between mm and % -->
 													<div class="link_width_and_height">
 														<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-														<input class="decent_input horizontal unit_mm" type="text" value="? mm"
+														<input class="decent_input horizontal unit_mm" data-test="tab-workingarea-horizontal" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-														<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
+														<input class="decent_input horizontal_percent unit_percent" data-test="tab-workingarea-horizontal" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 
-														<div class="btn btn-mini btn-link scale_prop_btn" data-bind="event: { mousedown: function(){ $root.svgManualProportionalToggle($data, event); }}">
+														<div class="btn btn-mini btn-link scale_prop_btn" data-test="tab-workingarea-scale-prop-btn" data-bind="event: { mousedown: function(){ $root.svgManualProportionalToggle($data, event); }}">
 															<i class="icon-link" title="{{ _('proportional') }}"></i>
 															<i class="icon-unlink" title="{{ _('unproportional') }}"></i>
 														</div>
 
 														<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-														<input class="decent_input vertical unit_mm" type="text" value="? mm"
+														<input class="decent_input vertical unit_mm" data-test="tab-workingarea-vertical" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-														<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
+														<input class="decent_input vertical_percent unit_percent" data-test="tab-workingarea-vertical" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
 													</div>
-													<div class=" pull-right mini_switch unit_toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
+													<div class=" pull-right mini_switch unit_toggler" data-test="tab-workingarea-unit-toggler" data-bind="click: function(){ $root.svgManualUnitToggle($data, event); };">
 														<span class="mini_switch_label">{{ _('mm') }}</span>
 														<span class="mini_switch_label mini_switch_trigger"><div></div></span>
 														<span class="mini_switch_label">{{ _('%%') }}</span>
 													</div>
 												</div><!-- /scale switch between mm and % -->
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
-                                                <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
+                                                <input class="decent_input multiply" data-test="tab-workingarea-multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'[^0-9.,-]', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
@@ -419,9 +421,9 @@
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
-																		} ">{{ _('duplicate') }}</a>
+																		} " data-test="tab-workingarea-duplicate">{{ _('duplicate') }}</a>
 																<div class='dropdown pull-right mrb_menu' style='display:inline-block;' >
-																	<a href="#" class="wa_list_item_burger_menu dropdown-toggle" data-toggle="dropdown">
+																	<a href="#" class="wa_list_item_burger_menu dropdown-toggle" data-toggle="dropdown" data-test="tab-workingarea-burger-menu">
 																		<i class="icon-reorder"></i><b class="caret"></b>
 																	</a>
 																	<ul class="dropdown-menu">
@@ -429,16 +431,16 @@
 																			<i class="icon-sitemap" title="{{ _('split') }}"></i> {{ _('split') }}
                                                                         </li>
                                                                         <li>
-																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'stroke-color'); }} ">{{ _('by stroke color') }}</a>
+																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'stroke-color'); }} " data-test="tab-workingarea-by-stroke-color">{{ _('by stroke color') }}</a>
                                                                         </li>
                                                                         <li>
-                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'non-intersecting'); }} ">{{ _('into shapes (keep overlapping)') }}</a>
+                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'non-intersecting'); }} " data-test="tab-workingarea-into-shapes">{{ _('into shapes (keep overlapping)') }}</a>
                                                                         </li>
                                                                         <li>
-                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} ">{{ _('vertically') }}</a>
+                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} " data-test="tab-workingarea-vertically">{{ _('vertically') }}</a>
                                                                         </li>
                                                                         <li>
-                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} ">{{ _('horizontally') }}</a>
+                                                                            <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} " data-test="tab-workingarea-horizontally">{{ _('horizontally') }}</a>
 																		</li>
 																	</ul>
 																</div>
@@ -447,7 +449,7 @@
 															<div class="misfit_warning">
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>
 																<span>{{ _('Design exceeds the working area.') }}</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } " data-test="tab-workingarea-make-me-fit-svg">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>
@@ -458,54 +460,54 @@
                                         <div class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
                                         <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
                                         <div class="btn-group action-buttons pull-right">
-											<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
-                                            <div class="btn btn-mini toggleTransformBtn" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
-                                            <div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeIMG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+											<div class="btn btn-mini transformResetBtn" data-test="tab-workingarea-undo" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
+                                            <div class="btn btn-mini toggleTransformBtn" data-test="tab-workingarea-move" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+                                            <div class="btn btn-mini remove-design-btn" data-test="tab-workingarea-remove" data-bind="click: function() { $root.removeIMG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
                                         </div>
                                         <div class="detail_information" >
                                             <div class="local_transformation muted">
                                                 <i class="icon-move" title="{{ _('translation') }}"></i>
-                                                <input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
+                                                <input class="decent_input translation wide" data-test="tab-workingarea-translation" type="text" value="0,0" data-bind="event: {
                                                             keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 															keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
                                                             blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
-                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <input class="decent_input rotation" data-test="tab-workingarea-rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
                                                 <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
 													<span class="mini_switch_label">ABC</span>
-													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label mini_switch_trigger" data-test="tab-workingarea-mirror-switch"><div></div></span>
 													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
 												</div>
                                                 <br/>
 												<div><!-- scale switch between mm and % -->
 													<div class="link_width_and_height">
 														<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-														<input class="decent_input horizontal unit_mm" type="text" value="? mm"
+														<input class="decent_input horizontal unit_mm" data-test="tab-workingarea-horizontal" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-														<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
+														<input class="decent_input horizontal_percent unit_percent" data-test="tab-workingarea-horizontal" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 
-														<div class="btn btn-mini btn-link scale_prop_btn" data-bind="event: { mousedown: function(){ $root.svgManualProportionalToggle($data, event); }}">
+														<div class="btn btn-mini btn-link scale_prop_btn" data-test="tab-workingarea-scale-prop-btn" data-bind="event: { mousedown: function(){ $root.svgManualProportionalToggle($data, event); }}">
 															<i class="icon-link" title="{{ _('proportional') }}"></i>
 															<i class="icon-unlink" title="{{ _('unproportional') }}"></i>
 														</div>
 
 														<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-														<input class="decent_input vertical unit_mm" type="text" value="? mm"
+														<input class="decent_input vertical unit_mm" data-test="tab-workingarea-vertical" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-														<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
+														<input class="decent_input vertical_percent unit_percent" data-test="tab-workingarea-vertical" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -518,14 +520,14 @@
 													</div>
 												</div><!-- /scale switch between mm and % -->
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
-                                                <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
+                                                <input class="decent_input multiply" data-test="tab-workingarea-multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'[^0-9.,-]', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
-																		} ">{{ _('duplicate') }}</a>
+																		} " data-test="tab-workingarea-duplicate">{{ _('duplicate') }}</a>
 
                                                 {#                                                               We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
                                                 <div class="accordion md-accordion working_area_image_preprocessing"
@@ -535,6 +537,7 @@
                                                             <div class="mb-0 working_area_image_preprocessing_link">
                                                                 <button class="btn-link collapsed image-preprocessing-collapsible"
                                                                         type="button" data-toggle="collapse"
+																		data-test="tab-workingarea-image-preprocessing-collapsible"
                                                                         data-bind="attr: { 'data-target': '#preprocessing_sliders_' + $data.id }"
                                                                         aria-expanded="true"
                                                                         aria-controls="collapseOne">
@@ -554,6 +557,7 @@
                                                                             <input id="img-preprocess-contrast"
                                                                                    class="mrb_slider contrast small range_value_tooltip"
                                                                                    type="range" min="1" max="5" data-value="1"
+																				   data-test="tab-workingarea-img-preprocess-contrast"
                                                                                    value="1" step="0.05" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
@@ -565,6 +569,7 @@
                                                                             <input id="img-preprocess-brightness"
                                                                                    class="mrb_slider brightness small range_value_tooltip"
                                                                                    type="range" min="-0.8" max="0.8" data-value="0"
+																				   data-test="tab-workingarea-img-preprocess-brightness"
                                                                                    value="0" step="0.05" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
@@ -576,6 +581,7 @@
                                                                                title="{{ _('sharpen') }}"></i>
                                                                             <input id="img-preprocess-sharpen"
                                                                                    class="mrb_slider sharpen small range_value_tooltip"
+																				   data-test="tab-workingarea-img-preprocess-sharpen"
                                                                                    type="range" min="0" max="40" data-value="0"
                                                                                    value="0" step="1" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualSharpen($data, event); },
@@ -587,6 +593,7 @@
                                                                             <i class="" title="{{ _('gamma') }}">Γ</i>
                                                                             <input id="img-preprocess-gamma"
                                                                                    class="mrb_slider gamma small range_value_tooltip"
+																				   data-test="tab-workingarea-img-preprocess-gamma"
                                                                                    type="range" min="0.2" max="1.8" data-value="1"
                                                                                    value="1" step="0.05" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
@@ -599,6 +606,7 @@
                                                                         <input class="decent_input crop_top img_adjust"
                                                                                style="grid-area: tc; align-self: start"
                                                                                type="number" min="0" max="99" value="0"
+																			   data-test="tab-workingarea-crop-top"
                                                                                step="0.5" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
@@ -606,6 +614,7 @@
                                                                         <input class="decent_input crop_left img_adjust"
                                                                                style="grid-area: cl;" type="number"
                                                                                min="0" max="99" value="0" step="0.5"
+																			   data-test="tab-workingarea-crop-left"
                                                                                data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
@@ -616,6 +625,7 @@
                                                                         <input class="decent_input crop_right img_adjust"
                                                                                style="grid-area: cr;" type="number"
                                                                                min="0" max="99" value="0" step="0.5"
+																			   data-test="tab-workingarea-crop-right"
                                                                                data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
@@ -623,6 +633,7 @@
                                                                         <input class="decent_input crop_bottom img_adjust"
                                                                                style="grid-area: bc; align-self: end"
                                                                                type="number" min="0" max="99" value="0"
+																			   data-test="tab-workingarea-crop-bottom"
                                                                                step="0.5" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
@@ -643,7 +654,8 @@
                                                        title="{{ _('exceeds working area') }}"></i>&nbsp;
                                                     <span>{{ _('Design exceeds the working area.') }}</span>
                                                     <a href="#" name="working_area_tab_make_it_fit"
-                                                       data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
+                                                       data-bind="click: function(){ $root.fitSVG($data) } "
+													   data-test="tab-workingarea-make-me-fit-image">{{ _('Make it fit') }}</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -656,56 +668,56 @@
 										<div class="pull-left wa_used_color stroke_color"></div>
                                         <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
                                         <div class="btn-group action-buttons pull-right">
-											<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
-                                            <div class="btn btn-mini" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
-                                            <div class="btn btn-mini toggleTransformBtn" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
-                                            <div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+											<div class="btn btn-mini transformResetBtn" data-test="tab-workingarea-undo" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
+                                            <div class="btn btn-mini" data-test="tab-workingarea-edit" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
+                                            <div class="btn btn-mini toggleTransformBtn" data-test="tab-workingarea-move" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+                                            <div class="btn btn-mini remove-design-btn" data-test="tab-workingarea-remove" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
                                         </div>
                                         <div class="detail_information">
                                             <div class="local_transformation muted">
                                                 <i class="icon-move" title="{{ _('translation') }}"></i>
-                                                <input class="decent_input translation wide" type="text" value="0,0"
+                                                <input class="decent_input translation wide" data-test="tab-workingarea-translation" type="text" value="0,0"
                                                        data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
-                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <input class="decent_input rotation" data-test="tab-workingarea-rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
                                                 <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
 													<span class="mini_switch_label">ABC</span>
-													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label mini_switch_trigger" data-test="tab-workingarea-mirror-switch"><div></div></span>
 													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
 												</div>
 												<br/>
 												<div><!-- scale switch between mm and % -->
 													<div class="link_width_and_height">
 														<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-														<input class="decent_input horizontal unit_mm" type="text" value="? mm"
+														<input class="decent_input horizontal unit_mm" data-test="tab-workingarea-horizontal" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-														<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
+														<input class="decent_input horizontal_percent unit_percent" data-test="tab-workingarea-horizontal" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 
-														<div class="btn btn-mini btn-link scale_prop_btn" data-bind="event: { mousedown: function(){ $root.svgManualProportionalToggle($data, event); }}">
+														<div class="btn btn-mini btn-link scale_prop_btn" data-test="tab-workingarea-scale-prop-btn" data-bind="event: { mousedown: function(){ $root.svgManualProportionalToggle($data, event); }}">
 															<i class="icon-link" title="{{ _('proportional') }}"></i>
 															<i class="icon-unlink" title="{{ _('unproportional') }}"></i>
 														</div>
 
 														<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-														<input class="decent_input vertical unit_mm" type="text" value="? mm"
+														<input class="decent_input vertical unit_mm" data-test="tab-workingarea-vertical" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-														<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
+														<input class="decent_input vertical_percent unit_percent" data-test="tab-workingarea-vertical" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -718,19 +730,19 @@
 													</div>
 												</div><!-- /scale switch between mm and % -->
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
-                                                <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
+                                                <input class="decent_input multiply" data-test="tab-workingarea-multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'[^0-9.,-]', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
-																		} ">{{ _('duplicate') }}</a>
+																		} " data-test="tab-workingarea-duplicate">{{ _('duplicate') }}</a>
 
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
 																<span>{{ _('Design exceeds the working area.') }}</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } " data-test="tab-workingarea-make-me-fit-quick-text">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>
@@ -744,26 +756,26 @@
                                                         <!-- /ko -->
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
-															<div class="btn btn-mini transformResetBtn" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
-															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickShape($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
-															<div class="btn btn-mini toggleTransformBtn" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
-															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+															<div class="btn btn-mini transformResetBtn" data-test="tab-workingarea-undo" data-bind="click: function() { $root.transformReset($data); }"><i class="icon-undo" title="{{ _('Reset Transform') }}"></i></div>
+															<div class="btn btn-mini" data-test="tab-workingarea-edit" data-bind="click: function() { $root.editQuickShape($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
+															<div class="btn btn-mini toggleTransformBtn" data-test="tab-workingarea-move" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+															<div class="btn btn-mini remove-design-btn" data-test="tab-workingarea-remove" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
 														</div>
 														<div class="detail_information" >
 															<div class="local_transformation muted">
 																<i class="icon-move" title="{{ _('translation') }}"></i>
-																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
+																<input class="decent_input translation wide" data-test="tab-workingarea-translation" type="text" value="0,0" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:', '}); return true; },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
                                                 <i class="icon-repeat" title="{{ _('rotation') }}"></i>
-                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <input class="decent_input rotation" data-test="tab-workingarea-rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'°'}); return true; },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
                                                 <div class=" pull-right mini_switch mirror_toggler" data-bind="click: function(){ $root.svgManualMirror($data, event); };">
 													<span class="mini_switch_label">ABC</span>
-													<span class="mini_switch_label mini_switch_trigger"><div></div></span>
+													<span class="mini_switch_label mini_switch_trigger" data-test="tab-workingarea-mirror-switch"><div></div></span>
 													<span class="mini_switch_label" style="transform:scale(-1,1);">ABC</span>
 												</div>
 												<br/>
@@ -771,29 +783,29 @@
 												<div><!-- scale switch between mm and % -->
 													<div class="link_width_and_height">
 														<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-														<input class="decent_input horizontal unit_mm" type="text" value="? mm"
+														<input class="decent_input horizontal unit_mm" type="text" data-test="tab-workingarea-horizontal" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-														<input class="decent_input horizontal_percent unit_percent" type="text" value="? %"
+														<input class="decent_input horizontal_percent unit_percent" data-test="tab-workingarea-horizontal" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
 																					blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 
-														<div class="btn btn-mini btn-link scale_prop_btn" data-bind="event: { mousedown: function(){ $root.svgManualProportionalToggle($data, event); }}">
+														<div class="btn btn-mini btn-link scale_prop_btn" data-test="tab-workingarea-scale-prop-btn" data-bind="event: { mousedown: function(){ $root.svgManualProportionalToggle($data, event); }}">
 															<i class="icon-link" title="{{ _('proportional') }}"></i>
 															<i class="icon-unlink" title="{{ _('unproportional') }}"></i>
 														</div>
 
 														<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-														<input class="decent_input vertical unit_mm" type="text" value="? mm"
+														<input class="decent_input vertical unit_mm" data-test="tab-workingarea-vertical" type="text" value="? mm"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'mm'}); return true; },
 																					blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-														<input class="decent_input vertical_percent unit_percent" type="text" value="? %"
+														<input class="decent_input vertical_percent unit_percent" data-test="tab-workingarea-vertical" type="text" value="? %"
 															   data-bind="event: {
 																					keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																					keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {unit:'%'}); return true; },
@@ -808,19 +820,19 @@
 												</div><!-- /scale switch between mm and % -->
 
                                                 <i class="icon-th" title="{{ _('multiply') }}"></i>
-                                                <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
+                                                <input class="decent_input multiply" data-test="tab-workingarea-multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			keydown: function(d, event){ window.WorkingAreaHelper.arrowKeys(event, {delimiter:'[^0-9.,-]', digits:0}); return true; },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
                                                 <i class="icon-copy" title="{{ _('duplicate') }}"></i>
                                                 <a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
-																		} ">{{ _('duplicate') }}</a>
+																		} " data-test="tab-workingarea-duplicate">{{ _('duplicate') }}</a>
 
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
 																<span>{{ _('Design exceeds the working area.') }}</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } " data-test="tab-workingarea-make-me-fit-shape">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>

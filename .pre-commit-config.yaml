@@ -1,4 +1,4 @@
-exclude: ^(translations|octoprint_mrbeam/files)/
+exclude: ^(translations|octoprint_mrbeam/files|cypress/fixtures/*.gco)/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.4.0
