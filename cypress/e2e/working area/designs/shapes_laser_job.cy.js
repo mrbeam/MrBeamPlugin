@@ -1,4 +1,4 @@
-describe("Laser Job - shapes", function () {
+describe.skip("Laser Job - shapes", function () {
     beforeEach(function () {
         cy.fixture("test-data").then(function (testData) {
             this.testData = testData;
@@ -10,11 +10,11 @@ describe("Laser Job - shapes", function () {
         cy.wait(10000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.visit(this.testData.url_laser);
-        cy.deleteDownloadsFolder();
         cy.deleteGcoFile();
     });
 
-    it.skip("Add shapes - heart", function () {
+    it("Heart shape", function () {
+        // Add heart-shaped design
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-Heart"]').click();
         cy.get('[data-test="quick-shape-heart-width"]').clear().type("60");
@@ -37,65 +37,30 @@ describe("Laser Job - shapes", function () {
             deltaY: 120.1241,
             force: true,
         });
-        cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
-            .clear()
-            .type("-50.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
-            .clear()
-            .type("125.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
-            .clear()
-            .type("130.3 mm");
+        cy.designSettings();
+
+        // Start the laser job
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Cardboard, double wave")
-            .click();
-        cy.wait(1000);
-        cy.get('[id="material_thickness_-1"]').click();
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("95");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("1500");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("2");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("5");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("0.5");
-        cy.get('[data-test="conversion-dialog-line-dithering"]').click({
-            force: true,
-        });
-        cy.get(
-            '[data-test="conversion-dialog-engraving-mode-recommended"]'
-        ).dblclick({ force: true });
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(3000);
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
+
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                //  "GET",
+                //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -118,29 +83,38 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Heart.gco", {
+                cy.readFile("cypress/fixtures/Heart.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
-                        });
+                    cy.readFile("cypress/downloads/Heart.gco", {
+                        timeout: 40000,
+                    }).then((contentDownloadFile) => {
+                        let contentTestDownloadNoComments = contentDownloadFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        let contentTestFileNoComments = contentTestFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        expect(contentTestDownloadNoComments).to.equal(
+                            contentTestFileNoComments
+                        );
+                    });
                 });
             });
         cy.logout();
     });
 
-    it.skip("Add shapes - circle", function () {
+    it("Circle shape", function () {
+        // Add circle-shaped design
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-circle"]').click();
         cy.get('[data-test="quick-shape-circle-radius-input"]')
@@ -156,66 +130,29 @@ describe("Laser Job - shapes", function () {
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get('[data-test="tab-workingarea-translation"]')
-            .clear()
-            .type("235.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
-            .clear()
-            .type("-50.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
-            .clear()
-            .type("125.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
-            .clear()
-            .type("130.3 mm");
+        cy.designSettings();
+
+        // Start the laser job
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Anodized Aluminum")
-            .click();
-        cy.get('[id="material_thickness_-1"]').click();
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("95");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("900");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("2");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("5");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("0.5");
-        cy.get('[data-test="conversion-dialog-line-dithering"]').click({
-            force: true,
-        });
-        cy.get(
-            '[data-test="conversion-dialog-engraving-mode-recommended"]'
-        ).dblclick({ force: true });
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
+
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                //  "GET",
+                //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -238,29 +175,38 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Circle.gco", {
+                cy.readFile("cypress/fixtures/Circle.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
-                        });
+                    cy.readFile("cypress/downloads/Circle.gco", {
+                        timeout: 40000,
+                    }).then((contentDownloadFile) => {
+                        let contentTestDownloadNoComments = contentDownloadFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        let contentTestFileNoComments = contentTestFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        expect(contentTestDownloadNoComments).to.equal(
+                            contentTestFileNoComments
+                        );
+                    });
                 });
             });
         cy.logout();
     });
 
-    it.skip("Add shapes - star", function () {
+    it("Star shape", function () {
+        // Add star-shaped design
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-star"]').click();
         cy.get('[data-test="quick-shape-star-radius-input"]')
@@ -280,68 +226,29 @@ describe("Laser Job - shapes", function () {
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "top" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get('[data-test="tab-workingarea-translation"]')
-            .filter(":visible")
-            .clear()
-            .type("235.0, 238.0");
-        cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
-            .clear()
-            .type("250.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
-            .clear()
-            .type("225.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
-            .clear()
-            .type("230.3 mm");
+        cy.designSettings();
+
+        // Start the laser job
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Finn Cardboard")
-            .click();
-        cy.wait(1000);
-        cy.get('[id="material_thickness_1.5"]').click();
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("95");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("1200");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("2");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("5");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("0.5");
-        cy.get('[data-test="conversion-dialog-line-dithering"]').click({
-            force: true,
-        });
-        cy.get(
-            '[data-test="conversion-dialog-engraving-mode-recommended"]'
-        ).dblclick({ force: true });
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
+
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                //  "GET",
+                //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -364,29 +271,38 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Star.gco", {
+                cy.readFile("cypress/fixtures/Star.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
-                        });
+                    cy.readFile("cypress/downloads/Star.gco", {
+                        timeout: 40000,
+                    }).then((contentDownloadFile) => {
+                        let contentTestDownloadNoComments = contentDownloadFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        let contentTestFileNoComments = contentTestFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        expect(contentTestDownloadNoComments).to.equal(
+                            contentTestFileNoComments
+                        );
+                    });
                 });
             });
         cy.logout();
     });
 
-    it.skip("Add shapes - line", function () {
+    it("Line shape", function () {
+        // Add line-shaped design
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-line"]').click();
         cy.get('[data-test="quick-shape-line-length-input"]')
@@ -402,75 +318,29 @@ describe("Laser Job - shapes", function () {
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get('[data-test="tab-workingarea-translation"]')
-            .filter(":visible")
-            .clear()
-            .type("135.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
-            .clear()
-            .type("150.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
-            .clear()
-            .type("125.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
-            .clear()
-            .type("130.3 mm");
+        cy.designSettings();
+
+        // Start the laser job
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Polypropylene")
-            .click();
-        cy.get('[id="material_color_ff0000"]').click();
-        cy.wait(1000);
-        cy.get('[id="material_thickness_0.8"]').click();
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("95");
-        cy.get('[data-test="conversion-dialog-intensity-white"]')
-            .clear()
-            .type("20");
-        cy.get('[data-test="conversion-dialog-feedrate-white"]')
-            .clear()
-            .type("1000");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("1300");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("2");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("5");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("0.5");
-        cy.get('[data-test="conversion-dialog-line-dithering"]').click({
-            force: true,
-        });
-        cy.get(
-            '[data-test="conversion-dialog-engraving-mode-recommended"]'
-        ).dblclick({ force: true });
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
+
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                //  "GET",
+                //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -493,34 +363,43 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Line.gco", {
+                cy.readFile("cypress/fixtures/Line.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
-                        });
+                    cy.readFile("cypress/downloads/Line.gco", {
+                        timeout: 40000,
+                    }).then((contentDownloadFile) => {
+                        let contentTestDownloadNoComments = contentDownloadFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        let contentTestFileNoComments = contentTestFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        expect(contentTestDownloadNoComments).to.equal(
+                            contentTestFileNoComments
+                        );
+                    });
                 });
             });
         cy.logout();
     });
 
-    it.skip("Add shapes - rectangle", function () {
+    it("Rectangle shape", function () {
+        // Add rectangle-shaped design
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-rect"]').click();
         cy.get('[data-test="quick-shape-rect-width"]').clear().type("60");
         cy.get('[data-test="quick-shape-rect-height"]').clear().type("60");
-        cy.get('[data-test="quick-shape-rect-radius-input"]').realClick();
+        //cy.get('[data-test="quick-shape-rect-radius-input"]').realClick();
         cy.get('[data-test="quick-shape-color-picker-stroke"]').click();
         cy.get(
             '[data-test="quick-shape-color-picker-stroke"] > .track > canvas'
@@ -531,70 +410,30 @@ describe("Laser Job - shapes", function () {
             '[data-test="quick-shape-color-picker-fill"] > .track > canvas'
         ).realClick({ position: "bottom" });
         cy.get('[data-test="quick-shape-done-button"]').click();
-        cy.get('[data-test="tab-workingarea-translation"]')
-            .filter(":visible")
-            .clear()
-            .type("135.0, 138.0");
-        cy.get('[data-test="tab-workingarea-rotation"]')
-            .filter(":visible")
-            .clear()
-            .type("150.5");
-        cy.get('[data-test="tab-workingarea-horizontal"]')
-            .filter(":visible")
-            .clear()
-            .type("125.3 mm");
-        cy.get('[data-test="tab-workingarea-vertical"]')
-            .filter(":visible")
-            .clear()
-            .type("130.3 mm");
+        cy.designSettings();
+
+        // Start the laser job
         cy.laserButtonClick();
-        cy.get('[data-test="conversion-dialog-material-item"]')
-            .contains("Polypropylene")
-            .click();
-        cy.get('[id="material_color_ff0000"]').click();
-        cy.wait(1000);
-        cy.get('[id="material_thickness_0.8"]').click();
-        cy.get('[data-test="conversion-dialog-intensity-black"]')
-            .clear()
-            .type("95");
-        cy.get('[data-test="conversion-dialog-feedrate-black"]')
-            .clear()
-            .type("1300");
-        cy.get(
-            '[data-test="conversion-dialog-show-advanced-settings"]'
-        ).click();
-        cy.get('[data-test="conversion-dialog-passes-input-engrave"]')
-            .first()
-            .clear()
-            .type("2");
-        cy.get('[data-test="conversion-dialog-engraving-pierce-time"]')
-            .clear()
-            .type("5");
-        cy.get('[data-test="conversion-dialog-line-distance-input"]')
-            .clear()
-            .type("0.5");
-        cy.get('[data-test="conversion-dialog-line-dithering"]').click({
-            force: true,
-        });
-        cy.get(
-            '[data-test="conversion-dialog-engraving-mode-recommended"]'
-        ).dblclick({ force: true });
+        cy.selectMaterial();
         cy.get('[data-test="laser-job-start-button"]').dblclick();
         cy.wait(7000);
         cy.get(".modal-scrollable").click({ force: true });
         cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
         cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
         cy.wait(3000);
+
+        // Download the GCODE file and compare it
         cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
             .first()
             .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
             .click({ force: true })
             .invoke("prop", "innerText")
             .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
+                //cy.intercept(
+                //  "GET",
+                //`http://localhost:5002/downloads/files/local/${downloadFile}*`
+                //).as("file");
                 cy.window()
                     .document()
                     .then(function (doc) {
@@ -617,29 +456,37 @@ describe("Laser Job - shapes", function () {
                             .filter(":visible")
                             .click();
                     });
-                cy.readFile("cypress/downloads/Rectangle.gco", {
+                cy.readFile("cypress/fixtures/Rectangle.gco", {
                     timeout: 40000,
                 }).then((contentTestFile) => {
                     cy.get(
                         '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get(
                         '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
+                    ).click({ force: true });
                     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
                         .first()
                         .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
-                        });
+                    cy.readFile("cypress/downloads/Rectangle.gco", {
+                        timeout: 40000,
+                    }).then((contentDownloadFile) => {
+                        let contentTestDownloadNoComments = contentDownloadFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        let contentTestFileNoComments = contentTestFile
+                            .replace(/^;.*$/gm, "")
+                            .trimEnd();
+                        expect(contentTestDownloadNoComments).to.equal(
+                            contentTestFileNoComments
+                        );
+                    });
                 });
             });
         cy.logout();
     });
 
-    it.skip("Add shapes - ok button", function () {
+    it("Add shapes - ok button", function () {
         cy.get('[data-test="working-area-tab-shape"]').click();
         cy.get('[data-test="quick-shape-modal-window"]').should("to.visible");
         cy.get('[data-test="quick-shape-done-button"]').click();

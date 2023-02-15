@@ -216,8 +216,12 @@ Cypress.Commands.add("assertValueCopiedToClipboard", (value) => {
 });
 
 Cypress.Commands.add("deleteGcoFile", () => {
-    cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-    cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+    cy.get('[data-test="mrbeam-ui-index-design-library"]').click({
+        force: true,
+    });
+    cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click({
+        force: true,
+    });
     cy.wait(3000);
     cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
         .if("exist")
@@ -235,6 +239,24 @@ Cypress.Commands.add("deleteGcoFile", () => {
     cy.get('[data-test="mrbeam-ui-index-working-area"]').click();
 });
 
+Cypress.Commands.add("designSettings", () => {
+    cy.get('[data-test="tab-workingarea-rotation"]')
+        .filter(":visible")
+        .last()
+        .clear({ force: true })
+        .type("-50.5");
+    cy.get('[data-test="tab-workingarea-horizontal"]')
+        .filter(":visible")
+        .last()
+        .clear({ force: true })
+        .type("116.3 mm");
+    cy.get('[data-test="tab-workingarea-vertical"]')
+        .filter(":visible")
+        .last()
+        .clear({ force: true })
+        .type("132.3 mm");
+});
+
 Cypress.Commands.add("laserButtonClick", () => {
     cy.get('[data-test="working-area-laser-button"]').invoke(
         "removeAttr",
@@ -248,7 +270,7 @@ Cypress.Commands.add("laserButtonClick", () => {
 Cypress.Commands.add("selectMaterial", () => {
     cy.get('[data-test="conversion-dialog-material-item"]')
         .contains("Cardboard, single wave")
-        .click();
+        .click({ force: true });
     cy.wait(1000);
     cy.get('[data-test="conversion-dialog-material-color"]')
         .first()

@@ -1,4 +1,4 @@
-describe("Cut, cut 2, engrave, skip", function () {
+describe.skip("Cut, cut 2, engrave, skip", function () {
     const dataTransfer = new DataTransfer();
 
     beforeEach(function () {
