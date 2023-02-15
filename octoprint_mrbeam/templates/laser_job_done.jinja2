@@ -6,8 +6,8 @@
         </div>
         <div class="modal-body">
             <div class="modal__modal-body--social-media-section">
-                <p>{{ _('Share your work and inspire others!') }}</p>
-                <p class="modal__p--hashtag"><a href="https://www.instagram.com/mrbeamlasers/" target="_blank">#madewithmrbeam</a>
+                <p>{{ _('Show your creation and use our hashtag') }}</p>
+                <p class="modal__p--hashtag"><a href="https://mr-beam.org/madewithmrbeam?utm_source=beamos&utm_medium=software" target="_blank">#madewithmrbeam</a>
                 </p>
                 <div>
                     <a href="https://www.instagram.com/mrbeamlasers/" target="_blank"><i class="icon-instagram"></i></a>
@@ -43,10 +43,13 @@
                                 <div class="modal__material-description">
                                     <div data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM !== -1">
                                         <p data-bind="text: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name + ', ' +
-                                        window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM + gettext(' mm')"></p>
+                                        window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM + gettext(' mm'),
+                                        attr: { title: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name + ', ' +
+                                        window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM + gettext(' mm') }"></p>
                                     </div>
                                     <div data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM === -1">
-                                        <p data-bind="text: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name"></p>
+                                        <p data-bind="text: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name,
+                                        attr: { title: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name }"></p>
                                     </div>
                                 </div>
                             </div>
