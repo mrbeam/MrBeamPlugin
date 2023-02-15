@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2023-02-14 14:19+0100\n"
-"PO-Revision-Date: 2023-02-14 14:21+0100\n"
+"PO-Revision-Date: 2023-02-15 10:23+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -2713,7 +2713,6 @@ msgid "Laser Job Finished!"
 msgstr "Laser Job abgeschlossen!"
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:9
-#, fuzzy
 msgid "Show your creation and use our hashtag"
 msgstr "Zeig deine Kreation und nutze unseren Hashtag"
 
