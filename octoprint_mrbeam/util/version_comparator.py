@@ -16,9 +16,8 @@ def version_comparator(plugin):
 
 
 class VersionComparator:
-    """
-    Version Comperator class to compare two versions with the compare method
-    """
+    """Version Comperator class to compare two versions with the compare
+    method."""
 
     def __init__(self, identifier, priority, compare):
         self.identifier = identifier
@@ -40,16 +39,15 @@ class VersionComparator:
                 return item
 
 def compare_pep440_versions(v1, v2, comparator):
-    """
-        returns the PEP440 version comparison Boolean result
+    """returns the PEP440 version comparison Boolean result.
 
-        Args:
-            v1 (str): First version to be compared
-            v2 (str): Second version to be compared
-            comparator (str): Comparison operator
+    Args:
+        v1 (str): First version to be compared
+        v2 (str): Second version to be compared
+        comparator (str): Comparison operator
 
-        Returns:
-            Boolean: PEP440 version comparison result
+    Returns:
+        Boolean: PEP440 version comparison result
     """
     _logger = mrb_logger("octoprint.plugins.mrbeam." + __name__ + ".compare_pep440_versions")
     try:

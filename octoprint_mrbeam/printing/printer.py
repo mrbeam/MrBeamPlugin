@@ -48,9 +48,10 @@ class Laser(Printer):
 
     # overwrite connect to use comm_acc2
     def connect(self, port=None, baudrate=None, profile=None):
-        """
-        Connects to the printer. If port and/or baudrate is provided, uses these settings, otherwise autodetection
-        will be attempted.
+        """Connects to the printer.
+
+        If port and/or baudrate is provided, uses these settings,
+        otherwise autodetection will be attempted.
         """
         self._init_terminal()
 
@@ -94,18 +95,14 @@ class Laser(Printer):
         return self._stateMonitor._machinePosition == self.HOMING_POSITION
 
     def cancel_print(self):
-        """
-        Cancel the current printjob and do homing.
-        """
+        """Cancel the current printjob and do homing."""
         super(Laser, self).cancel_print()
         time.sleep(0.5)
         self.home(axes="wtf")
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
     def fail_print(self, error_msg=None):
-        """
-        Cancel the current printjob (as it failed) and do homing.
-        """
+        """Cancel the current printjob (as it failed) and do homing."""
         if self._comm is None:
             return
 
@@ -124,9 +121,7 @@ class Laser(Printer):
         self.commands(["G90", "G0 X%.3f Y%.3f F%d" % (x, y, movement_speed)])
 
     def increase_passes(self):
-        """
-        increase the number of passes by one.
-        """
+        """increase the number of passes by one."""
         if self._comm is None:
             return
         self._comm.increasePasses()
@@ -137,17 +132,13 @@ class Laser(Printer):
         self._comm.setPasses(value)
 
     def decrease_passes(self):
-        """
-        decrease the number of passes by one.
-        """
+        """decrease the number of passes by one."""
         if self._comm is None:
             return
         self._comm.decreasePasses()
 
     def pause_print(self, force=False, trigger=None):
-        """
-        Pause the current printjob.
-        """
+        """Pause the current printjob."""
         if self._comm is None:
             return
 
@@ -157,9 +148,7 @@ class Laser(Printer):
         self._comm.setPause(True, send_cmd=True, trigger=trigger)
 
     def cooling_start(self):
-        """
-        Pasue the laser for cooling
-        """
+        """Pasue the laser for cooling."""
         if self._comm is None:
             return
 

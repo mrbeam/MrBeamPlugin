@@ -147,14 +147,13 @@ class DustManager(object):
         self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
 
     def _handle_exhaust_data(self, args):
-        """
-        hanldes exhaust data comming from iobeam EXHAUST_DYNAMIC_VALUE event
+        """hanldes exhaust data comming from iobeam EXHAUST_DYNAMIC_VALUE
+        event.
 
         Args:
             args: data from the iobeam event
 
         Returns:
-
         """
         pressure = args.get("pressure", None)
         if pressure is not None:
@@ -288,9 +287,10 @@ class DustManager(object):
             self._logger.exception("Exception in _finish_test_fan_rpm")
 
     def _pause_laser(self, trigger, analytics=None, log_message=None):
-        """
-        Stops laser and switches to paused mode.
-        Should be called when air filters gets disconnected, dust value gets too high or when any error occurs...
+        """Stops laser and switches to paused mode. Should be called when air
+        filters gets disconnected, dust value gets too high or when any error
+        occurs...
+
         :param trigger: A string to identify the cause/trigger that initiated paused mode
         """
         if self._one_button_handler.is_printing():
@@ -299,8 +299,8 @@ class DustManager(object):
             self._one_button_handler.pause_laser(need_to_release=False, trigger=trigger)
 
     def _start_dust_extraction(self, value=None, cancel_all_timers=True):
-        """
-        Turn on fan on auto mode or set to constant value.
+        """Turn on fan on auto mode or set to constant value.
+
         :param value: Default: auto. 0-100 if constant value required.
         :return:
         """
@@ -450,8 +450,9 @@ class DustManager(object):
         return ok
 
     def _send_dust_to_analytics(self, val):
-        """
-        Sends dust value periodically to analytics_handler to get overall stats and dust profile.
+        """Sends dust value periodically to analytics_handler to get overall
+        stats and dust profile.
+
         :param val: measured dust value
         :return:
         """

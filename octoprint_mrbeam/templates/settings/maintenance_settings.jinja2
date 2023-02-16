@@ -1,4 +1,4 @@
-<div id="settings_maintenance">
+<div id="settings_maintenance" >
     <h3 class="maintenance-title">{{ _('Maintenance') }}</h3>
 {#    <p class="muted maintenance-notes">{{ _('Some notes about the general maintenance') }}<br>#}
 {#        <strong>{{ _('Please note that the replacement of any of the elements may be necessary earlier, depending on the usage.') }}</strong>#}
@@ -15,7 +15,7 @@
                     </small>
                     <div class="maintenance-links">
                         <a href="{{ _('https://www.mr-beam.org/en') + '/products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'}}"
-                           target="_blank" id="prefilter_shop_link" class="maintenance-link-shop">
+                           target="_blank" id="prefilter_shop_link" data-test="maintenance-links-buy-now-pre-filter" class="maintenance-link-shop">
                             <i class="icon-shopping-cart"></i>
                             {{ _('Buy now') }}
                         </a>
@@ -30,7 +30,7 @@
                     <h3><span data-bind="text: prefilterPercent() + ' %', style: {color: prefilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
-                    <button class="btn maintenance-reset-btn" data-bind="click: resetPrefilterUsage">{{ _('Reset') }}</button>
+                    <button class="btn maintenance-reset-btn" data-test="maintenance-reset-button-pre-filter" data-bind="click: resetPrefilterUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
             <tr>
@@ -42,7 +42,7 @@
                     </small>
                     <div class="maintenance-links">
                         <a href="{{ _('https://www.mr-beam.org/en') + '/products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'}}"
-                           target="_blank" id="carbon_filter_shop_link" class="maintenance-link-shop">
+                           target="_blank" id="carbon_filter_shop_link" data-test="maintenance-links-buy-now-main-filter" class="maintenance-link-shop">
                             <i class="icon-shopping-cart"></i>
                             {{ _('Buy now') }}
                         </a>
@@ -57,7 +57,7 @@
                     <h3><span data-bind="text: carbonFilterPercent() + ' %', style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
-                    <button class="btn maintenance-reset-btn" data-bind="click: resetCarbonFilterUsage">{{ _('Reset') }}</button>
+                    <button class="btn maintenance-reset-btn" data-test="maintenance-reset-button-carbon-filter" data-bind="click: resetCarbonFilterUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
             <tr>
@@ -70,12 +70,12 @@
                     </small>
                     <div class="maintenance-links">
                         <a href="{{ _('https://www.mr-beam.org/en') + '/products/laserkopf-reinigung?utm_campaign=maintenance_page&utm_medium=beamos&utm_source=beamos'}}"
-                           target="_blank" id="laser_head_shop_link" class="maintenance-link-shop">
+                           target="_blank" id="laser_head_shop_link" class="maintenance-link-shop" data-test="maintenance-links-buy-now-laser-head">
                             <i class="icon-shopping-cart"></i>
                             {{ _('Buy now') }}
                         </a>
                         <a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000504618-how-to-clean-a-laser-head"
-                           target="_blank" id="laser_head_kb_link" class="maintenance-link-knowledge-base">
+                           target="_blank" id="laser_head_kb_link" class="maintenance-link-knowledge-base" data-test="maintenance-links-how-laser-head">
                             <i class="fa fa-external-link"></i>
                             {{ _('How to clean a laser head') }}
                         </a>
@@ -90,7 +90,7 @@
                     <h3><span data-bind="text: laserHeadPercent() + ' %', style: {color: laserHeadShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
-                    <button class="btn maintenance-reset-btn" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
+                    <button class="btn maintenance-reset-btn" data-test="maintenance-reset-button-laser-head" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
             <tr data-bind="visible: needsGantryMaintenance()">
@@ -117,7 +117,7 @@
                     <h3><span data-bind="text: gantryPercent() + ' %', style: {color: gantryShowWarning()? '#e25303' : ''}"></span> <span>{{ _('used') }}</span></h3>
                 </td>
                 <td class="maintenance-reset-column">
-                    <button class="btn maintenance-reset-btn" data-bind="click: resetGantryUsage">{{ _('Reset') }}</button>
+                    <button class="btn maintenance-reset-btn" data-test="maintenance-reset-button-gantry" data-bind="click: resetGantryUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
         </table>
@@ -133,8 +133,8 @@
             {{ _('Please notice that there is no way to undo this operation') }}.
         </div>
         <div class="modal-footer">
-            <button type="button" data-dismiss="modal" class="btn btn-primary">{{ _('No') }}</button>
-            <button type="button" data-dismiss="modal" class="btn" id="reset_counter_btn">{{ _('Yes') }}</button>
+            <button type="button" data-dismiss="modal" data-test="maintenance-no-button" class="btn btn-primary">{{ _('No') }}</button>
+            <button type="button" data-dismiss="modal" data-test="maintenance-yes-button" class="btn" id="reset_counter_btn">{{ _('Yes') }}</button>
         </div>
     </div>
 </div>

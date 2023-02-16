@@ -3,9 +3,7 @@ import unittest
 
 
 class TestMigrationMig001(unittest.TestCase):
-    """
-    Testclass for the migration Mig001
-    """
+    """Testclass for the migration Mig001."""
 
     def setUp(self):
         self.m001 = Mig001NetconnectdDisableLogDebugLevel(None)

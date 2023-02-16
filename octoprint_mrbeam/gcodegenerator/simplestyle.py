@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-"""
-simplestyle.py
-Two simple functions for working with inline css
-and some color handling on top.
+"""simplestyle.py Two simple functions for working with inline css and some
+color handling on top.
 
 Copyright (C) 2005 Aaron Spike, aaron@ekips.org
 
@@ -173,7 +171,7 @@ svgcolors = {
 
 
 def parseStyle(s):
-    """Create a dictionary from the value of an inline style attribute"""
+    """Create a dictionary from the value of an inline style attribute."""
     if s is None:
         return {}
     else:
@@ -183,12 +181,15 @@ def parseStyle(s):
 
 
 def formatStyle(a):
-    """Format an inline style attribute from a dictionary"""
+    """Format an inline style attribute from a dictionary."""
     return ";".join([att + ":" + str(val) for att, val in a.iteritems()])
 
 
 def isColor(c):
-    """Determine if its a color we can use. If not, leave it unchanged."""
+    """Determine if its a color we can use.
+
+    If not, leave it unchanged.
+    """
     if c.startswith("#") and (len(c) == 4 or len(c) == 7):
         return True
     if c.lower() in svgcolors.keys():
@@ -199,7 +200,7 @@ def isColor(c):
 
 
 def parseColor(c):
-    """Creates a rgb int array"""
+    """Creates a rgb int array."""
     tmp = svgcolors.get(c.lower())
     if tmp is not None:
         c = tmp
@@ -232,12 +233,12 @@ def parseColor(c):
 
 
 def formatColoria(a):
-    """int array to #rrggbb"""
+    """int array to #rrggbb."""
     return "#%02x%02x%02x" % (a[0], a[1], a[2])
 
 
 def formatColorfa(a):
-    """float array to #rrggbb"""
+    """float array to #rrggbb."""
     return "#%02x%02x%02x" % (
         int(round(a[0] * 255)),
         int(round(a[1] * 255)),
@@ -246,12 +247,12 @@ def formatColorfa(a):
 
 
 def formatColor3i(r, g, b):
-    """3 ints to #rrggbb"""
+    """3 ints to #rrggbb."""
     return "#%02x%02x%02x" % (r, g, b)
 
 
 def formatColor3f(r, g, b):
-    """3 floats to #rrggbb"""
+    """3 floats to #rrggbb."""
     return "#%02x%02x%02x" % (
         int(round(r * 255)),
         int(round(g * 255)),

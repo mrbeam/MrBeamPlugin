@@ -43,9 +43,9 @@ CameraClass = PiCamera if PICAMERA_AVAILABLE else DummyCamera
 
 class MrbCamera(CameraClass, BaseCamera):
     def __init__(self, worker, stopEvent=None, shutter_speed=None, *args, **kwargs):
-        """
-        Record pictures asynchronously in order to perform corrections
+        """Record pictures asynchronously in order to perform corrections
         simultaneously on the previous images.
+
         :param worker: The pictures are recorded into this
         :type worker: str, "writable", filename or class with a write function (see PiCamera.capture input)
         :param stopEvent: will exit gracefully when this Event is set

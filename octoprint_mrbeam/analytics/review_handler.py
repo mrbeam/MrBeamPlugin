@@ -79,9 +79,7 @@ class ReviewHandler:
             self._logger.warn("Not accepting user review since it was already given.")
 
     def _sync_given_val_to_usage_handler(self):
-        """
-        _settings.get(["review", "given"]) is deprecated
-        """
+        """_settings.get(["review", "given"]) is deprecated."""
         if not self._usage_handler.get_review_given() and self._settings.get(
             ["review", "given"]
         ):

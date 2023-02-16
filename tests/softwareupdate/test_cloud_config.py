@@ -161,7 +161,9 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         ) as json_file:
             self.mock_config = yaml.safe_load(json_file)
         with open(
-            os.path.join(dirname(realpath(__file__)), "mock_config_relative_path_missing.json")
+            os.path.join(
+                dirname(realpath(__file__)), "mock_config_relative_path_missing.json"
+            )
         ) as json_file:
             self.mock_config_relative_path_missing = yaml.safe_load(json_file)
 
@@ -174,8 +176,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         "get_notification",
     )
     def test_server_not_reachable(self, show_notifications_mock, get_notification_mock):
-        """
-        Testcase to test what happens if the server is not reachable
+        """Testcase to test what happens if the server is not reachable.
 
         Args:
             show_notifications_mock: mock of the notifications system show methode
@@ -205,7 +206,6 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         )
         show_notifications_mock.assert_called_once()
 
-
     @patch.object(
         UserNotificationSystem,
         "show_notifications",
@@ -214,12 +214,15 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         UserNotificationSystem,
         "get_notification",
     )
-    def test_update_script_relative_path_message(self, show_notifications_mock, get_notification_mock):
+    def test_update_script_relative_path_message(
+        self, show_notifications_mock, get_notification_mock
+    ):
         with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
             get_notification_mock.return_value = None
             with requests_mock.Mocker() as rm:
                 plugin = self.plugin
                 plugin.set_explicit_update_check()
+                self.plugin._settings.set("ALPHA")
                 rm.get(
                     "https://api.github.com/repos/mrbeam/beamos_config/tags",
                     status_code=200,
@@ -244,15 +247,17 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 assert update_config == FALLBACK_UPDATE_CONFIG_EXPECTED
 
         show_notifications_mock.assert_called_with(
-            err_msg=["E-1003"], notification_id="update_fetching_information_err", replay=False
+            err_msg=["E-1003"],
+            notification_id="update_fetching_information_err",
+            replay=False,
         )
         show_notifications_mock.assert_called_once()
 
-
     @patch.object(DeviceInfo, "get_beamos_version_number")
+    @unittest.skip("only makes sense for manual testing")
     def test_cloud_config_buster_online(self, device_info_mock):
-        """
-        Testcase to test the buster config with the online available cloud config
+        """Testcase to test the buster config with the online available cloud
+        config.
 
         Args:
             device_info_mock: mocks the device info to change the image version
@@ -293,9 +298,10 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
                 )
 
     @patch.object(DeviceInfo, "get_beamos_version_number")
+    @unittest.skip("only makes sense for manual testing")
     def test_cloud_confg_legacy_online(self, device_info_mock):
-        """
-        Testcase to test the leagcy image config with the online available cloud config
+        """Testcase to test the leagcy image config with the online available
+        cloud config.
 
         Args:
             device_info_mock: mocks the device info to change the image version
@@ -337,8 +343,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
 
     @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_confg_buster_mock(self, device_info_mock):
-        """
-        tests the update info with a mocked server response
+        """tests the update info with a mocked server response.
 
         Args:
             device_info_mock: mocks the device info to change the image version
@@ -402,8 +407,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
 
     @patch.object(DeviceInfo, "get_beamos_version_number")
     def test_cloud_confg_legacy_mock(self, device_info_mock):
-        """
-        tests the updateinfo hook for the legacy image
+        """tests the updateinfo hook for the legacy image.
 
         Args:
             device_info_mock: mocks the device info to change the image version
@@ -480,8 +484,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         user_notification_system_show_mock,
         user_notification_system_get_mock,
     ):
-        """
-        Tests the update information hook with a fileerror
+        """Tests the update information hook with a fileerror.
 
         Args:
             user_notification_system_show_mock: mock of the notification system show methode
@@ -522,8 +525,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         user_notification_system_show_mock.assert_called_once()
 
     def validate_mrbeam_module_config(self, update_config, tier, beamos_version):
-        """
-        validates the config of the mrbeam software module
+        """validates the config of the mrbeam software module.
 
         Args:
             update_config: update config
@@ -540,8 +542,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         self.validate_module_config(update_config, tier, target_config, beamos_version)
 
     def validate_findmymrbeam_module_config(self, update_config, tier, beamos_version):
-        """
-        validates the config of a the findmymrbeam software module
+        """validates the config of a the findmymrbeam software module.
 
         Args:
             update_config: update config
@@ -556,8 +557,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         )
 
     def validate_netconnect_module_config(self, update_config, tier, beamos_version):
-        """
-        validates the config of a the netconnectd software module
+        """validates the config of a the netconnectd software module.
 
         Args:
             update_config: update config
@@ -575,8 +575,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
         self.validate_module_config(update_config, tier, target_config, beamos_version)
 
     def _set_tier_config(self, config, tier):
-        """
-        generates the updateinformation for a given software tier
+        """generates the updateinformation for a given software tier.
 
         Args:
             config: update config
@@ -593,8 +592,7 @@ class SoftwareupdateConfigTestCase(unittest.TestCase):
     def validate_module_config(
         self, update_config, tier, target_module_config, beamos_version
     ):
-        """
-        validates the updateinfromation fot the given software module
+        """validates the updateinfromation fot the given software module.
 
         Args:
             update_config: update config

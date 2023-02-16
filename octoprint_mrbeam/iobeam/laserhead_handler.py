@@ -4,9 +4,23 @@ import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
+from octoprint_mrbeam.util.device_info import MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_X, \
+    MODEL_MRBEAM_2_DC_R1, MODEL_MRBEAM_2_DC_R2, MODEL_MRBEAM_2
 
 LASERHEAD_MAX_TEMP_FALLBACK = 55.0
 LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
+LASERHEAD_MAX_CORRECTION_FACTOR_FALLBACK = 1
+LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK = 1500
+
+LASERHEAD_STOCK_ID = 0
+LASERHEAD_S_ID = 1
+LASERHEAD_X_ID = 3
+
+SUPPORTED_LASERHEADS = {
+    LASERHEAD_STOCK_ID: [MODEL_MRBEAM_2, MODEL_MRBEAM_2_DC_R1, MODEL_MRBEAM_2_DC_R2, MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X],
+    LASERHEAD_S_ID: [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X],
+    LASERHEAD_X_ID: [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X],
+}
 
 # singleton
 _instance = None
@@ -24,9 +38,11 @@ class LaserheadHandler(object):
     LASER_POWER_GOAL_MAX = 1300
     LASERHEAD_SERIAL_REGEXP = re.compile("^[0-9a-f-]{36}$")
     _LASERHEAD_MODEL_STRING_MAP = {
-        "0": '0',  # dreamcut, mrbeam2 and mrbeam laserheads
-        "1": 'S',  # dreamcut[S] laserhead
+        str(LASERHEAD_STOCK_ID): '0',  # dreamcut, mrbeam2 and mrbeam laserheads
+        str(LASERHEAD_S_ID): 'S',  # dreamcut[S] laserhead
+        str(LASERHEAD_X_ID): 'x',  # dreamcut[x] laserhead
     }
+
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.laserhead")
@@ -58,8 +74,7 @@ class LaserheadHandler(object):
 
     @property
     def _current_used_lh_model_string(self):
-        """
-        Returns the laserhead model name
+        """Returns the laserhead model name.
 
         Returns:
             str: laserhead model or None if Model name is not found
@@ -88,7 +103,7 @@ class LaserheadHandler(object):
             if str(read_model) in self._LASERHEAD_MODEL_STRING_MAP:
                 model = read_model
             else:
-                model = 0
+                model = LASERHEAD_STOCK_ID
                 self._logger.warn(
                     "Laserhead model received is not valid, Model: {} assume default model 0".format(read_model)
                 )
@@ -113,7 +128,7 @@ class LaserheadHandler(object):
 
                 if (self._current_used_lh_serial != self._last_used_lh_serial) and self._last_used_lh_model_id is not None:
                     # fmt: on
-                    if self._current_used_lh_model_id == 1:
+                    if self._current_used_lh_model_id in [LASERHEAD_S_ID, LASERHEAD_X_ID]:
                         self._settings.set_boolean(["laserheadChanged"], True)
                         self._settings.save()
                     self._logger.info(
@@ -123,6 +138,8 @@ class LaserheadHandler(object):
                         self._current_used_lh_serial,
                         self._current_used_lh_model_id,
                     )
+                    self._analytics_handler.add_laserhead_changed(last_used_serial=self._last_used_lh_serial, last_used_model_id=self._last_used_lh_model_id, new_serial=self._current_used_lh_serial,
+                        new_model_id=self._current_used_lh_model_id)
                 self._write_lh_data_to_cache(lh_data)
 
                 self._calculate_and_write_correction_factor()
@@ -252,8 +269,7 @@ class LaserheadHandler(object):
         self._lh_cache[self._current_used_lh_serial] = lh_data
 
     def get_current_used_lh_data(self):
-        """
-        Retrieves the current used laserhead data
+        """Retrieves the current used laserhead data.
 
         Returns:
             dict: current laserhead data if exists or default data otherwise
@@ -293,6 +309,17 @@ class LaserheadHandler(object):
     def get_current_used_lh_model_id(self):
         return self._current_used_lh_model_id
 
+    def is_current_used_lh_model_supported(self):
+        """Checks if the current used laser head model is supported or not.
+
+        Returns:
+            boolean: True if the current used laser head model is supported, False otherwise
+        """
+        supported = self._plugin.get_model_id() in SUPPORTED_LASERHEADS.get(self.get_current_used_lh_model_id(), [])
+        if not supported:
+            self._logger.error("Current used laser head model is not supported by this device model.")
+        return supported
+
     def _validate_lh_serial(self, serial):
         try:
             return bool(self.LASERHEAD_SERIAL_REGEXP.match(serial))
@@ -326,9 +353,9 @@ class LaserheadHandler(object):
                 "target_power", self.LASER_POWER_GOAL_DEFAULT
             )
 
-            # laserhead model S fix for correction factor
+            # laserhead model S and x fix for correction factor
             # TODO fix this GOAL_MAX problem for all laser heads in a separate issue SW-394
-            if self._current_used_lh_model_id == 1:
+            if self._current_used_lh_model_id in [LASERHEAD_S_ID, LASERHEAD_X_ID]:
                 if target_power < 0 or target_power >= p_85:
                     self._logger.warn(
                         "Laserhead target_power ({target}) over p_85 ({p_85}) => target_power will be set to GOAL_DEFAULT ({default}) for the calculation of the correction factor".format(
@@ -389,9 +416,7 @@ class LaserheadHandler(object):
         return correction_factor
 
     def _load_laser_heads_file(self):
-        """
-        Loads laser head data from a file
-        """
+        """Loads laser head data from a file."""
         self._logger.debug("Loading data from  {} started...!".format(self._laser_heads_file))
         try:
             with open(self._laser_heads_file, "r") as stream:
@@ -411,8 +436,8 @@ class LaserheadHandler(object):
             self._logger.error("Can't open file: {} {}".format(self._laser_heads_file, e))
 
     def _write_laser_heads_file(self, laser_heads_file=None):
-        """
-        Overwrites the file containing the laser heads info and creates the file if it doesn't exist
+        """Overwrites the file containing the laser heads info and creates the
+        file if it doesn't exist.
 
         Args:
             laser_heads_file (Yaml): path to the file to be used
@@ -438,12 +463,10 @@ class LaserheadHandler(object):
 
     @property
     def current_laserhead_max_temperature(self):
-        """
-        Return the current laser head max temperature
+        """Return the current laser head max temperature.
 
         Returns:
             float: Laser head max temp
-
         """
         current_laserhead_properties = self._get_laserhead_properties()
 
@@ -463,8 +486,8 @@ class LaserheadHandler(object):
 
     @property
     def default_laserhead_max_temperature(self):
-        """
-        Default max temperature for laser head. to be used by other modules at init time
+        """Default max temperature for laser head. to be used by other modules
+        at init time.
 
         Returns:
             float: Laser head default max temp
@@ -473,12 +496,11 @@ class LaserheadHandler(object):
         return LASERHEAD_MAX_TEMP_FALLBACK
 
     def _load_current_laserhead_properties(self):
-        """
-        Loads the current detected laser head related properties from the laser head profile files and return them
+        """Loads the current detected laser head related properties from the
+        laser head profile files and return them.
 
         Returns:
             dict: current laser head properties, None: otherwise
-
         """
         # 1. get the ID of the current laser head
         laserhead_id = self.get_current_used_lh_model_id()
@@ -508,12 +530,11 @@ class LaserheadHandler(object):
             return None
 
     def _get_laserhead_properties(self):
-        """
-        returns the current saved laser head properties or load new if the laser head id changed
+        """returns the current saved laser head properties or load new if the
+        laser head id changed.
 
         Returns:
             dict: current laser head properties, None: otherwise
-
         """
         # 1. get the ID of the current laser head
         laserhead_id = self.get_current_used_lh_model_id()
@@ -524,21 +545,18 @@ class LaserheadHandler(object):
             self._laserhead_properties = self._load_current_laserhead_properties()
             if self._laserhead_properties is not None:
                 self._laserhead_properties.update({'laserhead_id': laserhead_id})
+            self._logger.debug("_laserhead_properties - {}".format(self._laserhead_properties))
         else:
             self._logger.debug("no new laserhead_id -> return current laserhead_properties")
 
-        self._logger.debug(
-            "_laserhead_properties - {}".format(self._laserhead_properties))
         return self._laserhead_properties
 
     @property
     def current_laserhead_max_dust_factor(self):
-        """
-        Return the current laser head max dust factor
+        """Return the current laser head max dust factor.
 
         Returns:
             float: Laser head max dust factor
-
         """
         current_laserhead_properties = self._get_laserhead_properties()
 
@@ -547,7 +565,6 @@ class LaserheadHandler(object):
                 ("max_dust_factor" not in current_laserhead_properties) or
                 (isinstance(current_laserhead_properties["max_dust_factor"], float) is False)):
             # Apply fallback
-            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
             self._logger.exception(
                 "Current Laserhead max dust factor couldn't be retrieved, fallback to the factor value of: {}".format(
                     self.default_laserhead_max_dust_factor))
@@ -558,8 +575,8 @@ class LaserheadHandler(object):
 
     @property
     def default_laserhead_max_dust_factor(self):
-        """
-        Default max dust factor for laser head. to be used by other modules at init time
+        """Default max dust factor for laser head. to be used by other modules
+        at init time.
 
         Returns:
             float: Laser head default max dust factor
@@ -567,5 +584,71 @@ class LaserheadHandler(object):
 
         return LASERHEAD_MAX_DUST_FACTOR_FALLBACK
 
+    @property
+    def current_laserhead_max_correction_factor(self):
+        """Return the current laser head max correction factor.
 
+        Returns:
+            float: Laser head max correction factor
+        """
 
+        current_laserhead_properties = self._get_laserhead_properties()
+
+        # Handle the exceptions
+        if ((isinstance(current_laserhead_properties, dict) is False) or
+                ("max_correction_factor" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["max_correction_factor"], float) is False)):
+            # Apply fallback
+            self._logger.exception(
+                "Current Laserhead max correction factor couldn't be retrieved, fallback to the factor value of: {}".format(
+                    self.default_laserhead_max_correction_factor))
+            return self.default_laserhead_max_correction_factor
+        # Reaching here means, everything looks good
+        self._logger.debug(
+            "Current Laserhead max correction factor:{}".format(current_laserhead_properties["max_correction_factor"]))
+        return current_laserhead_properties["max_correction_factor"]
+
+    @property
+    def default_laserhead_max_correction_factor(self):
+        """Default max correction factor for laser head. To be used by other modules at init time.
+
+        Returns:
+            float: Laser head default max correction factor
+        """
+        return LASERHEAD_MAX_CORRECTION_FACTOR_FALLBACK
+
+    @property
+    def current_laserhead_max_intensity_including_correction(self):
+        """
+        Returns the current laser head max intensity after the power correction for laser head was calculated on top.
+
+        Returns:
+            int: Laser head max intensity including the correction factor
+        """
+
+        current_laserhead_properties = self._get_laserhead_properties()
+
+        # Handle the exceptions
+        if ((isinstance(current_laserhead_properties, dict) is False) or
+                ("max_intensity_including_correction" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["max_intensity_including_correction"], int) is False)):
+            # Apply fallback
+            self._logger.exception(
+                "Current Laserhead max intensity including correction couldn't be retrieved, fallback to the factor value of: {}".format(
+                    self.default_laserhead_max_intensity_including_correction))
+            return self.default_laserhead_max_intensity_including_correction
+        # Reaching here means, everything looks good
+        self._logger.debug(
+            "Current Laserhead max intensity including correction:{}".format(current_laserhead_properties["max_intensity_including_correction"]))
+        return current_laserhead_properties["max_intensity_including_correction"]
+
+    @property
+    def default_laserhead_max_intensity_including_correction(self):
+        """
+        Default max intensity after the power correction for laser head was calculated on top. To be used by other modules at any time.
+
+        Returns:
+            int: Laser head default max intensity including the correction factor
+        """
+
+        return LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK

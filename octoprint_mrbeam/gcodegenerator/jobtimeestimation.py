@@ -1,11 +1,13 @@
-"""
-This script takes a gcode file as an input and calculates an estimated job duration time.
+"""This script takes a gcode file as an input and calculates an estimated job
+duration time.
 
-This was the first job time estimation, in the code will be referred as "v1". Later another v2 estimation was introduced,
-calculated in the frontend, that is referred as "v2"
+This was the first job time estimation, in the code will be referred
+as "v1". Later another v2 estimation was introduced, calculated in the
+frontend, that is referred as "v2"
 
-It reads the gcode line by line extracting the coordinates and feed rates, and with those values calculates the duration
-of each of the ways. Finally it sums up all the durations to get the total duration.
+It reads the gcode line by line extracting the coordinates and feed
+rates, and with those values calculates the duration of each of the
+ways. Finally it sums up all the durations to get the total duration.
 The
 """
 
@@ -24,8 +26,9 @@ MATCH_COMMENT_ADD_TIME = re.compile(r"EXTRA_TIME [\+-]?[0-9]+\.?[0-9]*s")
 
 
 def time_from_comment(comment):
-    """
-    Returns the number of seconds read in the comment if the comment matches a float:
+    """Returns the number of seconds read in the comment if the comment matches
+    a float:
+
         ; [\+-]?[0-9]+\.?[0-9]*s
 
     Examples:
@@ -125,10 +128,18 @@ class JobTimeEstimation:
     def _send_v1_estimate_to_frontend(self):
         try:
             payload = dict()
-            payload["job_time_estimation_rounded"] = self._last_estimation.get("total_duration_rounded", -1)
-            payload["job_time_estimation_raw"] = self._last_estimation.get("total_duration_raw", -1)
-            payload["calc_duration_total"] = self._last_estimation.get("calc_duration_total", -1)
-            payload["calc_duration_woke"] = self._last_estimation.get("calc_duration_woke", -1)
+            payload["job_time_estimation_rounded"] = self._last_estimation.get(
+                "total_duration_rounded", -1
+            )
+            payload["job_time_estimation_raw"] = self._last_estimation.get(
+                "total_duration_raw", -1
+            )
+            payload["calc_duration_total"] = self._last_estimation.get(
+                "calc_duration_total", -1
+            )
+            payload["calc_duration_woke"] = self._last_estimation.get(
+                "calc_duration_woke", -1
+            )
             payload["calc_lines"] = self._last_estimation.get("calc_lines", -1)
             self._plugin.fire_event(MrBeamEvents.JOB_TIME_ESTIMATED, payload)
         except:
@@ -254,8 +265,9 @@ class JobTimeEstimation:
         return total_duration
 
     def estimate_job_duration(self, gcode_file, do_sleep=True):
-        """Read a gcode file and calculate what will be the total duration of the job.
-        Reads the G0 and G1 commands to extract the coordinates and the F commands to get the feed rates.
+        """Read a gcode file and calculate what will be the total duration of
+        the job. Reads the G0 and G1 commands to extract the coordinates and
+        the F commands to get the feed rates.
 
         Args:
                 gcode_file(str): the path to the gcode file.

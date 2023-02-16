@@ -462,6 +462,10 @@ input[type="submit"].btn.btn-mini {
   text-decoration: none;
 }
 
+.btn-left {
+  float: left;
+}
+
 .clearfix {
   *zoom: 1;
 }
@@ -1173,6 +1177,10 @@ body {
 .octoprint-container .accordion-heading .laserhead-model-icon {
   padding-left: 15px;
   color: #e25303;
+}
+.octoprint-container .accordion-heading .laserhead-model-icon img {
+  height: 14px;
+  padding-bottom: 3px;
 }
 
 .octoprint-container .accordion-heading [class^="icon-"],
@@ -2449,13 +2457,13 @@ input.search-query,
   user-select: none;
 }
 
-#quick_text_stroke_and_fill input[type=radio]{
+#quick_text_stroke_and_fill input[type="radio"] {
   margin: 8px 5px 0 0;
   transform: scale(1.2);
 }
 
-.mrb-quicktext-stroked-placeholder::-webkit-input-placeholder{
-    color: #ffffff;
+.mrb-quicktext-stroked-placeholder::-webkit-input-placeholder {
+  color: #ffffff;
 }
 
 .hidden {
@@ -2660,7 +2668,7 @@ input.search-query,
 hides the force update buttons
  */
 #settings_plugin_softwareupdate_scroll_wrapper div:nth-of-type(4) {
-  display:none;
+  display: none;
 }
 
 /*
@@ -2764,7 +2772,7 @@ hides the force update buttons
 }
 
 .modal--laser-job-done .modal-body .modal__modal-body--social-media-section {
-  height: 100px;
+  height: 150px;
   text-shadow: 0 0 20px rgba(255, 255, 255, 0);
   transition: text-shadow 0.8s ease-in;
   border-radius: 8px;
@@ -2776,31 +2784,61 @@ hides the force update buttons
 .modal--laser-job-done .modal-body .modal__modal-body--social-media-section p {
   font-size: 1.8em;
   color: #ffffff;
+  line-height: 31px;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p.modal__p--hashtag {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
+  p.modal__p--hashtag {
   font-weight: bold;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
+  div {
   position: absolute;
   bottom: 25px;
   right: 25px;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div a i {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
+  div
+  a
+  i {
   font-size: 2.4em;
   padding: 0 3px;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p.modal__p--hashtag a,
-.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div a i {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
+  p.modal__p--hashtag
+  a,
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
+  div
+  a
+  i {
   color: #ffffff;
   text-decoration: none;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--social-media-section p.modal__p--hashtag a:hover,
-.modal--laser-job-done .modal-body .modal__modal-body--social-media-section div a i:hover {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
+  p.modal__p--hashtag
+  a:hover,
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
+  div
+  a
+  i:hover {
   color: #e25303;
   text-decoration: none;
   background-color: #ffffff;
@@ -2811,60 +2849,109 @@ hides the force update buttons
   margin-bottom: 10px;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details {
   font-weight: bold;
   position: relative;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details p {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details
+  p {
   font-size: 16px;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details > div {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details
+  > div {
   border: 1px solid #333333;
   position: absolute;
   background: #ffffff;
   margin: 20px 0;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details div div {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details
+  div
+  div {
   display: inline-block;
   vertical-align: middle;
   line-height: 1;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details div p {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details
+  div
+  p {
   font-size: 14px;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-description p {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details
+  .modal__material-description
+  p {
   margin: 0 15px;
   width: 75px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--1 {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details
+  .modal__material-details-box--1 {
   z-index: 3;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--2 {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details
+  .modal__material-details-box--2 {
   top: 20px;
   left: 10px;
   z-index: 2;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-details-box--3 {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details
+  .modal__material-details-box--3 {
   top: 10px;
   left: 20px;
   z-index: 1;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-details .modal__material-picture{
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-details
+  .modal__material-picture {
   height: 50px;
   width: 50px;
   background-size: cover;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-link a {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-link
+  a {
   border: 1px solid;
   width: 100%;
   display: block;
@@ -2873,7 +2960,11 @@ hides the force update buttons
   padding: 5px;
 }
 
-.modal--laser-job-done .modal-body .modal__modal-body--material-section .modal__material-link a:hover {
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--material-section
+  .modal__material-link
+  a:hover {
   background-color: #e25303;
   color: #ffffff;
   text-decoration: none;
@@ -3506,7 +3597,6 @@ button#terminal-send {
 #support_overlay > div.modal-body.scrollable > table {
   margin: 20px auto;
 }
-
 /* Support Standalone */
 
 /* Hard refresh overlay */
@@ -3522,11 +3612,9 @@ button#terminal-send {
   padding-top: 20px;
   padding-bottom: 20px;
 }
-#hard_refresh_overlay .icon-warning-sign{
+#hard_refresh_overlay .icon-warning-sign {
   color: #e25303;
 }
-
-/* Hard refresh overlay */
 
 /* Material Store */
 
@@ -3605,7 +3693,7 @@ button#terminal-send {
 .corner_calibration {
   max-width: 800px;
 }
-.corner_calibration .focus_reminder{
+.corner_calibration .focus_reminder {
   width: 250px;
 }
 

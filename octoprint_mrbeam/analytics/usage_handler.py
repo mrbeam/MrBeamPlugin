@@ -178,12 +178,10 @@ class UsageHandler(object):
             self.write_usage_analytics(action="job_finished")
 
     def _event_laserhead_changed(self, event):
-        """
-        will be triggered if the laser head changed,
-        refreshes the laserhead max dust factor that will be used for the new laser head
+        """will be triggered if the laser head changed, refreshes the laserhead
+        max dust factor that will be used for the new laser head.
 
         Returns:
-
         """
         self._logger.debug("Laserhead changed recalculate dust mapping")
         self._calculate_dust_mapping()
@@ -410,8 +408,8 @@ class UsageHandler(object):
                 self._write_usage_data()
 
     def _repair_backup_usage_data(self):
-        """
-        repairs a broken usage backup file, where the version is saved in unicode
+        """repairs a broken usage backup file, where the version is saved in
+        unicode.
 
         Returns:
             boolean: successfull

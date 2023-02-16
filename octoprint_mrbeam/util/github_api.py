@@ -1,6 +1,5 @@
-"""
-This util contains all the necessary methods to communicate with the github api
-"""
+"""This util contains all the necessary methods to communicate with the github
+api."""
 import base64
 
 from requests.adapters import HTTPAdapter, MaxRetryError
@@ -15,8 +14,8 @@ _logger = mrb_logger("octoprint.plugins.mrbeam.util.github_api")
 REPO_URL = "https://api.github.com/repos/mrbeam/{repo}"
 
 def get_file_of_repo_for_tag(file, repo, tag):
-    """
-    return the content of the <file> of the repo <repo> for the given tag/branch/hash <tag>
+    """return the content of the <file> of the repo <repo> for the given
+    tag/branch/hash <tag>
 
     Args:
         file: file

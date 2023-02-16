@@ -19,8 +19,8 @@ RPI3_BENCH_TIME = 180
 
 
 def profile(lines=60, sortby="tottime", bench_time=None, out_file=None):
-    """
-    Run Octoprint and create a profile of it when it exits.
+    """Run Octoprint and create a profile of it when it exits.
+
     Note: You can Ctrl C to shut it down as well.
     The profiler dumps the stats when octoprint exits.
     If bench_time given, the process will terminate itself such that
@@ -31,8 +31,8 @@ def profile(lines=60, sortby="tottime", bench_time=None, out_file=None):
 
 
 def graph(out_file, img_format="svg", bench_time=None, ignore=()):
-    """
-    Run Octoprint and create a profile of it when it exits.
+    """Run Octoprint and create a profile of it when it exits.
+
     Note: You can Ctrl C to shut it down as well.
     A call graph image is created when octoprint exits.
     WARNING : This can take a long time
@@ -91,13 +91,12 @@ def bench(
     exit_kwargs=None,
     bench_time=None,
 ):
-    """
-    execute starting and stopping scripts around Octoprint execution
-    OctoPrint uses `signal` to intercept termination kills,
-    which it means it has to be launched in the main Thread.
-    The exit_func is run when octoprint exits.
-    If bench_time given, the process will terminate itself such that
-    OctoPrint does a clean exit
+    """execute starting and stopping scripts around Octoprint execution
+    OctoPrint uses `signal` to intercept termination kills, which it means it
+    has to be launched in the main Thread.
+
+    The exit_func is run when octoprint exits. If bench_time given, the
+    process will terminate itself such that OctoPrint does a clean exit
     """
 
     import os
@@ -141,6 +140,7 @@ def dump_stats(
 
 def read_bench(filename, sortby="tottime", lines=60, regex=None):
     """Print some lines from the Profile.
+
     Poor man's analysis tool - It is recommended to use RunSnakeRun.
     """
     s = StringIO.StringIO()

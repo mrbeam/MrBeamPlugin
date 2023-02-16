@@ -42,7 +42,7 @@ from ._version import get_versions
 
 __version__ = get_versions()["version"]
 if isinstance(__version__, unicode):
-    __version__ = unicodedata.normalize('NFKD', __version__).encode('ascii', 'ignore')
+    __version__ = unicodedata.normalize("NFKD", __version__).encode("ascii", "ignore")
 
 del get_versions
 
@@ -163,7 +163,6 @@ class MrBeamPlugin(
     TIME_NTP_SYNC_CHECK_INTERVAL_FAST = 10.0
     TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
 
-
     def __init__(self):
         self.mrbeam_plugin_initialized = False
         self._shutting_down = False
@@ -188,6 +187,9 @@ class MrBeamPlugin(
         self._grbl_version = None
         self._device_series = self._device_info.get_series()
         self.called_hosts = []
+
+        self._iobeam_connected = False
+        self._laserhead_ready = False
 
         # Create the ``laserCutterProfileManager`` early to inject into the ``Laser``
         # See ``laser_factory``
@@ -225,6 +227,10 @@ class MrBeamPlugin(
         # listens to StartUp event to start counting boot time grace period
         self._event_bus.subscribe(
             OctoPrintEvents.STARTUP, self._start_boot_grace_period_thread
+        )
+        self._event_bus.subscribe(IoBeamEvents.CONNECT, self._on_iobeam_connect)
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_HEAD_READ, self._on_laserhead_ready
         )
 
         self.start_time_ntp_timer()
@@ -286,6 +292,43 @@ class MrBeamPlugin(
 
         self._do_initial_log()
 
+    def _on_iobeam_connect(self, *args, **kwargs):
+        """Called when the iobeam socket is connected.
+
+        Args:
+            *args:
+            **kwargs:
+
+        Returns:
+
+        """
+        self._logger.info("MrBeamPlugin on_iobeam_connected")
+        self._iobeam_connected = True
+        self._try_to_connect_laser()
+
+    def _on_laserhead_ready(self, *args, **kwargs):
+        """Called when the laserhead is ready.
+
+        Args:
+            *args:
+            **kwargs:
+
+        Returns:
+
+        """
+        self._logger.info("MrBeamPlugin on_laserhead_ready")
+        self._laserhead_ready = True
+        self._try_to_connect_laser()
+
+    def _try_to_connect_laser(self):
+        """Tries to connect the laser if both iobeam and laserhead are ready and the laser is not connected yet."""
+        if (
+            self._iobeam_connected
+            and self._laserhead_ready
+            and self._printer.is_closed_or_error()
+        ):
+            self._printer.connect()
+
     def _init_frontend_logger(self):
         handler = logging.handlers.RotatingFileHandler(
             os.path.join(self._settings.getBaseFolder("logs"), "frontend.log"),
@@ -302,9 +345,8 @@ class MrBeamPlugin(
         return l
 
     def _do_initial_log(self):
-        """
-        Kicks an identifying log line
-        Was really important before we had
+        """Kicks an identifying log line Was really important before we had.
+
         @see self.get_additional_environment()
         """
         msg = "MrBeam Plugin"
@@ -513,11 +555,13 @@ class MrBeamPlugin(
                 doNotAskAgain=self._settings.get(["review", "doNotAskAgain"]),
             ),
             focusReminder=self._settings.get(["focusReminder"]),
-            laserheadChanged=self._settings.get(["laserheadChanged"]),
+            laserheadChanged=self.laserhead_changed(),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
             laserhead=dict(
                 serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
                 model=self.laserhead_handler.get_current_used_lh_data()["model"],
+                model_id=self.laserhead_handler.get_current_used_lh_model_id(),
+                model_supported=self.laserhead_handler.is_current_used_lh_model_supported(),
             ),
             usage=dict(
                 totalUsage=self.usage_handler.get_total_usage(),
@@ -538,9 +582,9 @@ class MrBeamPlugin(
         )
 
     def on_settings_save(self, data):
-        """
-        See octoprint.plugins.types.SettingsPlugin.get_settings_preprocessors to sanitize input data.
-        """
+        """See
+        octoprint.plugins.types.SettingsPlugin.get_settings_preprocessors to
+        sanitize input data."""
         try:
             # self._logger.info("ANDYTEST on_settings_save() %s", data)
             if "cam" in data and "previewOpacity" in data["cam"]:
@@ -629,7 +673,7 @@ class MrBeamPlugin(
         self._logger.info("Mr Beam Plugin stopped.")
 
     def set_serial_setting(self):
-        self._settings.global_set(["serial", "autoconnect"], True)
+        self._settings.global_set(["serial", "autoconnect"], False)
         self._settings.global_set(["serial", "baudrate"], 115200)
         self._settings.global_set(["serial", "port"], "/dev/ttyAMA0")
 
@@ -640,80 +684,77 @@ class MrBeamPlugin(
         # core UI here.
         assets = dict(
             js=[
-                "js/lib/compare-versions.js",
-                "js/helpers/quick_shape_helper.js",
                 "js/helpers/element_helper.js",
-                "js/helpers/debug_rendering_helper.js",
-                "js/helpers/working_area_helper.js",
+                "js/lib/compare-versions.js",
+                "js/app/helpers/quick-shape.js",
+                "js/app/helpers/working-area.js",
                 "js/lib/potrace.js",
                 "js/lib/jquery.tinycolorpicker.js",
-                "js/lasercutterprofiles.js",
-                "js/mother_viewmodel.js",
-                "js/folder_list_viewmodel.js",
-                "js/mrbeam.js",
-                "js/color_classifier.js",
-                "js/working_area.js",
-                "js/camera.js",
+                "js/app/view-models/lasercutter-profiles.js",
+                "js/app/view-models/mother.js",
+                "js/app/view-models/folder-list.js",
+                "js/app/view-models/mrbeam.js",
+                "js/app/helpers/color-classifier.js",
+                "js/app/view-models/working-area.js",
+                "js/app/view-models/camera.js",
                 "js/lib/snap.svg-min.js",
-                "js/snap_bugfixes.js",
-                "js/snap_helpers.js",
+                "js/app/snap-plugins/bugfixes.js",
+                "js/app/snap-plugins/helpers.js",
                 "js/lib/dxf.js",
-                "js/snap-dxf.js",
-                "js/render_fills.js",
-                "js/path_convert.js",
-                "js/matrix_oven.js",
-                "js/snap_separate.js",
-                "js/unref.js",
-                "js/snap_transform_plugin.js",
-                "js/convert.js",
-                "js/snap_gc_plugin.js",
-                "js/gcode_parser.js",
-                "js/gridify.js",
-                # "js/lib/photobooth_min.js",
-                "js/svg_cleaner.js",
-                "js/loginscreen_viewmodel.js",
-                "js/wizard_acl.js",
-                "js/netconnectd_wrapper.js",
-                "js/lasersaftey_viewmodel.js",
-                "js/ready_to_laser_viewmodel.js",
+                "js/app/snap-plugins/dxf.js",
+                "js/app/snap-plugins/render-fills.js",
+                "js/app/snap-plugins/path-convert.js",
+                "js/app/snap-plugins/matrix-oven.js",
+                "js/app/snap-plugins/separate.js",
+                "js/app/snap-plugins/unref.js",
+                "js/app/snap-plugins/transform.js",
+                "js/app/view-models/convert.js",
+                "js/app/snap-plugins/gcode.js",
+                "js/app/helpers/gcode-parser.js",
+                "js/app/snap-plugins/gridify.js",
+                "js/app/snap-plugins/svg-cleaner.js",
+                "js/app/view-models/modal/loginscreen.js",
+                "js/app/view-models/wizard/wizard-acl.js",
+                "js/app/view-models/wizard/netconnectd-wrapper.js",
+                "js/app/view-models/modal/lasersaftey.js",
+                "js/app/view-models/modal/ready-to-laser.js",
                 "js/lib/screenfull.min.js",
-                "js/settings/camera_settings.js",
-                "js/settings/backlash.js",
-                "js/settings/leds.js",
-                "js/path_magic.js",
+                "js/app/view-models/settings/camera.js",
+                "js/app/view-models/settings/backlash.js",
+                "js/app/view-models/settings/leds.js",
+                "js/app/helpers/path-magic.js",
                 "js/lib/simplify.js",
                 "js/lib/clipper.js",
-                "js/lib/Color.js",
-                "js/laser_job_done_viewmodel.js",
-                "js/loadingoverlay_viewmodel.js",
-                "js/wizard_general.js",
-                "js/wizard_analytics.js",
-                "js/wizard_gcode_deletion.js",
-                "js/software_channel_selector.js",
+                "js/lib/color.js",
+                "js/app/view-models/modal/laser-job-done.js",
+                "js/app/view-models/loadingoverlay.js",
+                "js/app/view-models/wizard/wizard-general.js",
+                "js/app/view-models/wizard/wizard-analytics.js",
+                "js/app/view-models/wizard/wizard-gcode-deletion.js",
+                "js/app/view-models/settings/software-channel-selector.js",
                 "js/lib/hopscotch.js",
-                "js/tour_viewmodel.js",
-                "js/feedback_widget.js",
-                "js/laserhead_changed.js",
-                "js/material_settings.js",
-                "js/analytics.js",
-                "js/maintenance.js",
-                "js/review.js",
-                "js/util.js",
-                "js/user_notification_viewmodel.js",
+                "js/app/view-models/tour.js",
+                "js/app/view-models/feedback-widget.js",
+                "js/app/view-models/modal/laserhead-changed.js",
+                "js/app/view-models/modal/material-settings.js",
+                "js/app/view-models/analytics.js",
+                "js/app/view-models/settings/maintenance.js",
+                "js/app/view-models/review.js",
+                "js/app/helpers/util.js",
+                "js/app/view-models/user-notification.js",
                 "js/lib/load-image.all.min.js",  # to load custom material images
-                "js/settings/custom_material.js",
-                "js/messages.js",
-                "js/design_store.js",
-                "js/settings/dev_design_store.js",
-                                "js/material-store.js",
-                "js/settings_menu_navigation.js",
-                "js/calibration/calibration.js",
-                "js/calibration/corner_calibration.js",
-                "js/calibration/lens_calibration.js",
-                "js/calibration/watterott/camera_alignment.js",
-                "js/calibration/watterott/calibration_qa.js",
-                "js/calibration/watterott/label_printer.js",
-                "js/hard_refresh_overlay.js",
+                "js/app/view-models/settings/custom-material.js",
+                "js/app/view-models/messages.js",
+                "js/app/view-models/design-store.js",
+                "js/app/view-models/settings/dev-design-store.js",
+                "js/app/view-models/material-store.js",
+                "js/app/view-models/settings/calibration/calibration.js",
+                "js/app/view-models/settings/calibration/corner-calibration.js",
+                "js/app/view-models/settings/calibration/lens-calibration.js",
+                "js/app/view-models/settings/calibration/watterott/camera-alignment.js",
+                "js/app/view-models/settings/calibration/watterott/calibration-qa.js",
+                "js/app/view-models/settings/calibration/watterott/label-printer.js",
+                "js/app/view-models/modal/hard_refresh_overlay.js",
                 "js/app/view-models/mrbeam-simple-api-commands.js",
                 "js/app/view-models/mrbeam-constants.js",
             ],
@@ -742,14 +783,14 @@ class MrBeamPlugin(
     # Enable or disable internal support user.
     @property
     def support_mode(self):
-        """Get the support mode"""
+        """Get the support mode."""
         ret = check_support_mode(self)
         self._fixEmptyUserManager()
         return ret
 
     @property
     def calibration_tool_mode(self):
-        """Get the calibration tool mode"""
+        """Get the calibration tool mode."""
         ret = check_calibration_tool_mode(self)
         self._fixEmptyUserManager()
         return ret
@@ -864,12 +905,16 @@ class MrBeamPlugin(
                 terminalEnabled=self._settings.get(["terminal"]) or self.support_mode,
                 lasersafety_confirmation_dialog_version=self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
                 lasersafety_confirmation_dialog_language=language,
-                settings_model=SettingsService(self._logger, DocumentService(self._logger),
-                                               environment=settings_service.get_environment_enum_from_plugin_settings(
-                                                   self._settings)).get_template_settings_model(
-                    self.get_model_id()),
-                burger_menu_model=BurgerMenuService(self._logger, DocumentService(self._logger)).get_burger_menu_model(
-                    self.get_model_id()),
+                settings_model=SettingsService(
+                    self._logger,
+                    DocumentService(self._logger),
+                    environment=settings_service.get_environment_enum_from_plugin_settings(
+                        self._settings
+                    ),
+                ).get_template_settings_model(self.get_model_id()),
+                burger_menu_model=BurgerMenuService(
+                    self._logger, DocumentService(self._logger)
+                ).get_burger_menu_model(self.get_model_id()),
                 isDevelop=self.is_dev_env(),
             )
         )
@@ -995,10 +1040,8 @@ class MrBeamPlugin(
         return result
 
     def get_template_vars(self):
-        """
-        Needed to have analytics settings page in German
-        while we do not have real internationalization yet.
-        """
+        """Needed to have analytics settings page in German while we do not
+        have real internationalization yet."""
         from flask import g
 
         return dict(language=g.locale.language if g.locale else "en")
@@ -1313,12 +1356,11 @@ class MrBeamPlugin(
     # simpleApiCommand: compare_pep440_versions;
     def handle_pep440_comparison_result(self, data):
         try:
-            result = compare_pep440_versions(data['v1'], data['v2'], data['operator'])
+            result = compare_pep440_versions(data["v1"], data["v2"], data["operator"])
             return make_response(json.dumps(result), 200)
         except KeyError as e:
             self._logger.error("Key is missing in data: %s", e)
             return make_response(json.dumps(None), 500)
-
 
     # ~~ helpers
 
@@ -1628,7 +1670,8 @@ class MrBeamPlugin(
 
     # ~ Calibration
     def generateCalibrationMarkersSvg(self):
-        """Used from the calibration screen to engrave the calibration markers"""
+        """Used from the calibration screen to engrave the calibration
+        markers."""
         # TODO mv this func to other file
         profile = self.laserCutterProfileManager.get_current_or_default()
         cm = CalibrationMarker(
@@ -1662,10 +1705,10 @@ class MrBeamPlugin(
         )
 
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-        """
-        Defines the maximum size that is accepted for upload.
-        If the uploaded file size exeeds this limit,
-        you'll see only a ERR_CONNECTION_RESET in Chrome.
+        """Defines the maximum size that is accepted for upload.
+
+        If the uploaded file size exeeds this limit, you'll see only a
+        ERR_CONNECTION_RESET in Chrome.
         """
         return [
             ("POST", r"/convert", 100 * 1024 * 1024),
@@ -2121,6 +2164,7 @@ class MrBeamPlugin(
             data = request.json
             event = data.get("event")
             payload = data.get("payload", dict())
+            header_extension = data.get("header_extension", dict())
             func = payload.get("function", None)
             f_level = payload.get("level", None)
             stack = None
@@ -2141,21 +2185,23 @@ class MrBeamPlugin(
                 pass
             msg = payload.get("msg", "")
             if func and func is not "null":
-                msg = u"{} ({})".format(msg, func)
+                msg = "{} ({})".format(msg, func)
             else:
-                msg = u"{}".format(msg)
+                msg = "{}".format(msg)
 
             self._frontend_logger.log(
                 level,
-                u"%s - %s - %s %s",
+                "%s - %s - %s %s",
                 browser_time,
                 f_level,
                 msg,
-                "\n  " + (u"\n   ".join(stack)) if stack else "",
+                "\n  " + ("\n   ".join(stack)) if stack else "",
             )
 
             if level >= logging.WARNING:
-                self.analytics_handler.add_frontend_event("console", payload)
+                self.analytics_handler.add_frontend_event(
+                    event="console", payload=payload, header_extension=header_extension
+                )
 
         except Exception as e:
             self._logger.exception(
@@ -2173,7 +2219,10 @@ class MrBeamPlugin(
             data = request.json
             event = data.get("event")
             payload = data.get("payload", dict())
-            self.analytics_handler.add_frontend_event(event, payload)
+            header_extension = data.get("header_extension", dict())
+            self.analytics_handler.add_frontend_event(
+                event=event, payload=payload, header_extension=header_extension
+            )
 
         except Exception as e:
             self._logger.exception(
@@ -2575,8 +2624,9 @@ class MrBeamPlugin(
                 )
 
     def fire_event(self, event, payload=None):
-        """
-        Fire an event into octoPrint's event system and adds mrb_check as payload
+        """Fire an event into octoPrint's event system and adds mrb_check as
+        payload.
+
         :param event:
         :param payload: payload. If None, a payload object with mrb_state is added
         """
@@ -2641,8 +2691,9 @@ class MrBeamPlugin(
         return get_update_information(self)
 
     def get_update_branch_info(self):
-        """
-        Gets you a list of plugins which are currently not configured to be updated from their default branch.
+        """Gets you a list of plugins which are currently not configured to be
+        updated from their default branch.
+
         Why do we need this? Frontend injects these data into SWupdate settings. So we can see if we put
         a component like Mr Beam Plugin to a special branch (for development.)
         :return: dict
@@ -2721,9 +2772,9 @@ class MrBeamPlugin(
         )
 
     def get_mrb_state(self):
-        """
-        Returns the data set 'mrb_state' which we add to the periodic status messages
-        and almost all events which are sent to the frontend.
+        """Returns the data set 'mrb_state' which we add to the periodic status
+        messages and almost all events which are sent to the frontend.
+
         Called (among others) by LaserStateMonitor.get_current_data in printer.py
         :return: mrb_state
         :rtype: dict
@@ -2778,8 +2829,8 @@ class MrBeamPlugin(
             self._settings.global_set(["server", "firstRun"], True)
 
     def getHostname(self):
-        """
-        Returns device hostname like 'MrBeam2-F930'.
+        """Returns device hostname like 'MrBeam2-F930'.
+
         If system hostname (/etc/hostname) is different it'll be set (overwritten!!) to the value from device_info
         :return: String hostname
         """
@@ -2822,10 +2873,10 @@ class MrBeamPlugin(
         return self._hostname
 
     def getSerialNum(self):
-        """
-        Gives you the device's Mr Beam serial number eg "00000000E79B0313-2C"
-        The value is solely read from device_info file (/etc/mrbeam)
-        and it's cached once read.
+        """Gives you the device's Mr Beam serial number eg
+        "00000000E79B0313-2C" The value is solely read from device_info file
+        (/etc/mrbeam) and it's cached once read.
+
         :return: serial number
         :rtype: String
         """
@@ -2834,20 +2885,19 @@ class MrBeamPlugin(
         return self._serial_num
 
     def get_model_id(self):
-        """
-        Gives you the device's model id like MRBEAM2 or MRBEAM2_DC
-        The value is solely read from device_info file (/etc/mrbeam)
-        and it's cached once read.
+        """Gives you the device's model id like MRBEAM2 or MRBEAM2_DC The value
+        is solely read from device_info file (/etc/mrbeam) and it's cached once
+        read.
+
         :return: model id
         :rtype: String
         """
         return self._device_info.get_model()
 
     def get_production_date(self):
-        """
-        Gives you the device's production date as string
-        The value is solely read from device_info file (/etc/mrbeam)
-        and it's cached once read.
+        """Gives you the device's production date as string The value is solely
+        read from device_info file (/etc/mrbeam) and it's cached once read.
+
         :return: production date
         :rtype: String
         """
@@ -2954,8 +3004,8 @@ class MrBeamPlugin(
         self.__calc_time_ntp_offset(log_out_of_sync=True)
 
     def __calc_time_ntp_offset(self, log_out_of_sync=False):
-        """
-        Checks if we have a NTP time and if the offset is < 1min.
+        """Checks if we have a NTP time and if the offset is < 1min.
+
         - If not, this function is called again. The first times with 10s delay, then 120sec.
         - If yes, this fact is logged with a shift_time which indicates the time the device was off from ntp utc time
             Technically it's the difference in time between the time that should have passed theoretically and
@@ -3038,6 +3088,9 @@ class MrBeamPlugin(
 
     def is_alpha_channel(self):
         return self._settings.get(["dev", "software_tier"]) == SWUpdateTier.ALPHA.value
+
+    def laserhead_changed(self):
+        return self._settings.get(["laserheadChanged"])
 
     def _get_mac_addresses(self):
         if not self._mac_addrs:

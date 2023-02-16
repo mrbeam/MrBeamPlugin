@@ -1,8 +1,8 @@
 <div class="corner_calibration">
 
     <div class="camera-calibration-title">
-        <button class="btn" data-bind="click: abortCornerCalibration">
-            <img src="plugin/mrbeam/static/img/back_arrow.svg" alt="">
+        <button class="btn" data-bind="click: abortCornerCalibration" data-test="view-corner-start-button-back">
+            <img loading="lazy" src="plugin/mrbeam/static/img/back_arrow.svg" alt="">
         </button>
         <span>{{ _('Corner Calibration') }}</span>
     </div>
@@ -42,7 +42,7 @@
         </li>
     </ol>
 
-    <svg id="calibration_svg" style="max-width: 80vh; border:1px solid lightgray" width="100%" height="100%"
+    <svg id="calibration_svg" data-test="view-corner-calibration-svg" style="max-width: 80vh; border:1px solid lightgray" width="100%" height="100%"
          viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
         <defs>
             <symbol id="cross">
@@ -135,12 +135,12 @@
     <!-- Debug images of the marker detection present in each corner of the screen -->
     <div data-bind="visible: window.mrbeam.isWatterottMode()">
         <div>
-            <img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
-            <img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
+            <img loading="lazy" id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
+            <img loading="lazy" id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
         </div>
         <div>
-            <img id="debug_SW_img" class="marker_debug_image" data-bind="attr: {src: dbSWImgUrl()}"/>
-            <img id="debug_SE_img" class="marker_debug_image" data-bind="attr: {src: dbSEImgUrl()}"/>
+            <img loading="lazy" id="debug_SW_img" class="marker_debug_image" data-bind="attr: {src: dbSWImgUrl()}"/>
+            <img loading="lazy" id="debug_SE_img" class="marker_debug_image" data-bind="attr: {src: dbSEImgUrl()}"/>
         </div>
     </div>
 </div>

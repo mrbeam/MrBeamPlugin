@@ -66,7 +66,7 @@ class BaseCamera(object):
         self.__closed = True
 
     def capture(self, output=None, *args, **kwargs):
-        """Take a picture immediatly and return the picture object
+        """Take a picture immediatly and return the picture object.
 
         Should acquire the ``self._busy`` lock during the capture
         """
@@ -74,10 +74,10 @@ class BaseCamera(object):
         raise NotImplementedError
 
     def async_capture(self, **kwargs):
-        """
-        Starts or signals the camera to start taking a new picture.
-        The new picture can be retrieved with MrbCamera.lastPic()
-        Wait for the picture to be taken with MrbCamera.wait()
+        """Starts or signals the camera to start taking a new picture. The new
+        picture can be retrieved with MrbCamera.lastPic() Wait for the picture
+        to be taken with MrbCamera.wait()
+
         :param kw:
         :type kw:
         :return:
@@ -94,12 +94,12 @@ class BaseCamera(object):
         return self._async_capture_thread
 
     def wait(self, timeout=None):
-        """Wait until the camera is available again to take a picture"""
+        """Wait until the camera is available again to take a picture."""
         self._busy.acquire()
         self._busy.release()
 
     def lastPic(self):
-        """Returns the last picture taken"""
+        """Returns the last picture taken."""
         return self.worker.latest
 
     def compensate_shutter_speed(self):
@@ -177,7 +177,8 @@ class DummyCamera(BaseCamera):
             )
 
     def capture(self, output=None, format="jpeg", *args, **kwargs):
-        """Mocks the behaviour of picamera.PiCamera.capture, with the caviat that"""
+        """Mocks the behaviour of picamera.PiCamera.capture, with the caviat
+        that."""
         import numpy as np
         import cv2
 

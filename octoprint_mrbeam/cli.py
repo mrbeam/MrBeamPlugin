@@ -10,7 +10,6 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # this is for the command line interface we're providing
 def get_cli_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
-
     _logger = mrb_logger("octoprint.plugins.mrbeam.cli")
 
     # # > octoprint plugins mrbeam:debug_event MrBeamDebugEvent -p 42

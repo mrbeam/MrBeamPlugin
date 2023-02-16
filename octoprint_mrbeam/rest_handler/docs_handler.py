@@ -14,9 +14,8 @@ except ImportError:
 
 
 class DocsRestHandlerMixin:
-    """
-    This class contains all the rest handlers and endpoints related to handle docs
-    """
+    """This class contains all the rest handlers and endpoints related to
+    handle docs."""
 
     @octoprint.plugin.BlueprintPlugin.route(
         "/docs/<string:model>/<string:language>/<string:doctype>.<string:extension>", methods=["GET"])
