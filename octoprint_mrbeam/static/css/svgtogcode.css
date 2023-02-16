@@ -501,6 +501,7 @@ li.material_entry.custom.compatible_material::after {
   top: 3px;
   font-weight: bold;
   color: #e25303;
+  background: #ffffff;
 }
 
 li.material_entry.custom.compatible_material::before {
@@ -544,6 +545,7 @@ li.material_entry.custom.incompatible_material::before {
   top: 3px;
   font-size: 15px;
   color: #e25303;
+  background: #ffffff;
 }
 
 li.material_entry.custom.incompatible_material::after {

@@ -42,8 +42,8 @@
                                 <!-- /ko -->
                                 <div class="modal__material-description">
                                     <div data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM !== -1">
-                                        <p data-bind="text: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name + ', ' +
-                                        window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM + gettext(' mm')"></p>
+                                        <p data-bind="text: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name + ' , ' +
+                                        window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM + gettext(' mm thick')"></p>
                                     </div>
                                     <div data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material_thickness().thicknessMM === -1">
                                         <p data-bind="text: window.mrbeam.viewModels.vectorConversionViewModel.selected_material().name"></p>
@@ -55,9 +55,9 @@
                     </div>
                     <div class="span6">
                         <div class="modal__material-link">
-                            <p data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === null || window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === undefined"><span>{{ _('You can find a variety of laser materials on our website.') }}</span></p>
-                            <p data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === 'product'"><span>{{  _('Our Material Store has the same material available for purchase.') }}</span></p>
-                            <p data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === 'collection'"><span>{{ _('We have similar materials for you in our Material Store.') }}</span></p>
+                            <p data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === null || window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === undefined"><span data-bind="text: gettext('You can find a variety of laser materials on our website.');"></span></p>
+                            <p data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === 'product'"><span data-bind="text: gettext('Our Material Store has the same material available for purchase.');"></span></p>
+                            <p data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.type === 'collection'"><span data-bind="text: gettext('We have similar materials for you in our Material Store.');"></span></p>
                             <div class="alert alert-error" data-bind="visible: !window.mrbeam.isOnline">
                               <button type="button" class="close" data-dismiss="alert">&times;</button>
                                 {{ _('You need a working internet connection for this forwarding to work.') }}
