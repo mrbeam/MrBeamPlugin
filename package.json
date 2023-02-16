@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@4tw/cypress-drag-drop": "^2.2.1",
+    "@4tw/cypress-drag-drop": "^2.2.3",
     "@types/minimatch": "^5.1.2",
     "cy-verify-downloads": "^0.1.11",
     "cypress": "^11.2.0",
