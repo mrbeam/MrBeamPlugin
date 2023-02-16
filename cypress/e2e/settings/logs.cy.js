@@ -30,6 +30,7 @@ describe("Navbar icons", function () {
                 cy.verifyDownload("octoprint.log");
             });
     });
+    // This test is inconsistent - failing on GitHub actions in the beforeEach hook sometimes
     it("Download frontend", function () {
         cy.get('[id="settings_logs_link"]').click();
         cy.window()
