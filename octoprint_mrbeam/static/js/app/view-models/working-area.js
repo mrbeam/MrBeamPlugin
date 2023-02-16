@@ -1757,7 +1757,7 @@ $(function () {
                     } else if (
                         event.target.classList.contains("unit_percent")
                     ) {
-                        const newWidth =
+                        let newWidth =
                             ((currentWidth / Math.abs(currentSx)) * value) /
                             100.0;
                         if (Math.abs(newWidth) < 0.1)
@@ -1801,7 +1801,7 @@ $(function () {
                     } else if (
                         event.target.classList.contains("unit_percent")
                     ) {
-                        const newHeight =
+                        let newHeight =
                             ((currentHeight / Math.abs(currentSy)) * value) /
                             100.0;
                         if (Math.abs(newHeight) < 0.1)

@@ -88,7 +88,11 @@ $(function () {
         };
 
         self._fromData = function (payload, event) {
-            if (!payload || !"mrb_state" in payload || !payload["mrb_state"]) {
+            if (
+                !payload ||
+                !("mrb_state" in payload) ||
+                !payload["mrb_state"]
+            ) {
                 return;
             }
             var mrb_state = payload["mrb_state"];

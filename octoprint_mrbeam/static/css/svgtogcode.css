@@ -588,7 +588,6 @@ li.material_entry.custom.incompatible_material::after {
   content: "";
   display: block;
   height: 0.5em;
-  background-color: white;
   position: relative;
   left: -1%;
   top: -0.35em;
