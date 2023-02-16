@@ -755,14 +755,14 @@ class AnalyticsHandler(object):
         )
 
     def _event_shutdown(self, event, payload, header_extension=None):
-        payload = {
+        response_payload = {
             AnalyticsKeys.Device.Cpu.THROTTLE_ALERTS: Cpu(
                 state="shutdown", repeat=False
             ).get_cpu_throttle_warnings(),
         }
         self._add_device_event(
             AnalyticsKeys.Device.Event.SHUTDOWN,
-            payload=payload,
+            payload=response_payload,
             header_extension=header_extension,
         )
 
