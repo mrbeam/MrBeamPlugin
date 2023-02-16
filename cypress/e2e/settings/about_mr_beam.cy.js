@@ -210,16 +210,6 @@ describe("About This Mr Beam", function () {
             });
         cy.logout();
     });
-    it("Link Recommend Mr Beam", function () {
-        cy.get('[data-test="about-settings-link-aklamio"]')
-            .invoke("attr", "href")
-            .then((myLink) => {
-                cy.request(myLink).then((resp) => {
-                    expect(resp.status).to.eq(200);
-                });
-            });
-        cy.logout();
-    });
     it("User manual - online", function () {
         cy.get(
             ':nth-child(2) > [data-test="about-settings-link-quickstart-online"]'
