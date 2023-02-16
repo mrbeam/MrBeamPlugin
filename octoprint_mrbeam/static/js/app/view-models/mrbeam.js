@@ -396,7 +396,7 @@ $(function () {
             $.ajax({
                 type: "HEAD",
                 async: true,
-                url: "http://find.mr-beam.org/onlinecheck",
+                url: "https://find.mr-beam.org/onlinecheck",
             })
                 .done(function () {
                     if (self._online_check_last_state !== true) {
