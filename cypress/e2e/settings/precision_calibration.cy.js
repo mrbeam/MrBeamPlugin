@@ -6,7 +6,7 @@ describe("Navbar icons", function () {
     });
     beforeEach(function () {
         cy.visit(this.testData.url_laser);
-        cy.wait(10000);
+        cy.wait(20000);
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
         cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({
