@@ -100,7 +100,7 @@ describe("Menu burger", function () {
     });
 
     // This will be replaced with the next test when we can mock grbl inside the docker image
-    it.skip("Guided Tour - When tour is started then it will run trough till end", function () {
+    it("Guided Tour - When tour is started then it will run trough till end", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-guided-tour"]').click();
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 1);
