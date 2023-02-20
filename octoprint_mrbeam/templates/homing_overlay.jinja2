@@ -51,7 +51,7 @@
                             {{ _('Then run a homing cycle so your Mr&nbsp;Beam can detect the position of the laser head.') }}<br/>
                         </div>
 						<div style='text-align: center; padding:.5em;'>
-                            <button class="btn btn-default" id="homing_overlay_homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { performHomingCycle('homing_overlay') }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button>
+                            <button class="btn btn-default" id="homing_overlay_homing_btn"  data-test="mrbeam-ui-homing_overlay_homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { performHomingCycle('homing_overlay') }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button>
 						</div>
 					</div>
                 </div>

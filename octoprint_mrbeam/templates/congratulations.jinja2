@@ -1,4 +1,4 @@
-<div id="congratulations" class="modal hide fade" data-backdrop="static">
+<div id="congratulations" data-test="mrbeam-ui-modal-congratulations" class="modal hide fade" data-backdrop="static">
     <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
         <h3>{{ _('Congratulations') }}</h3>
@@ -30,7 +30,6 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" id="" data-dismiss="modal" aria-hidden="true"
-                data-bind="">{{ _('Done') }}</button>
+        <button class="btn btn-primary" data-test="mrbeam-ui-modal-congratulations-ok-button" data-dismiss="modal" aria-hidden="true">{{ _('Done') }}</button>
     </div>
 </div>

@@ -5,7 +5,7 @@
             {% if laserhead_model == 'S' %}<span class="laserhead-model-icon"><img src="/plugin/mrbeam/static/img/laserhead_S.svg"></span>{% endif %}
             {% if laserhead_model == 'x' %}<span class="laserhead-model-icon"><img src="/plugin/mrbeam/static/img/laserhead_x.svg"></span>{% endif %}
         </h3>
-        <h3 data-bind="visible:slicing_in_progress()">{{ _('Preparing...') }}</h3>
+        <h3 data-bind="visible:slicing_in_progress()" data-test="mrbeam-ui-conversion-dialoge-header-preparing">{{ _('Preparing...') }}</h3>
     </div>
     <div class="modal-body scrollable" style="box-sizing: border-box">
         <div data-bind="visible:!slicing_in_progress()">
@@ -727,7 +727,7 @@
                        data-bind="click: function() {}">{{ _('I forgot') }}</a>
                     <a href="#" style="display: none;" class="btn" aria-hidden="true"
                        data-bind="click: move_laser_over_material">{{ _('Move over the material') }}</a>
-                    <a href="#" class="btn btn-primary" id="start_job_btn_focus_reminder" data-dismiss="modal"
+                    <a href="#" class="btn btn-primary" id="start_job_btn_focus_reminder" data-test="mrbeam-ui-start_job_btn_focus_reminder" data-dismiss="modal"
                        data-bind="click: show_conversion_dialog,
                             enabled: enableConvertButton,
                             visible: !slicing_in_progress()">{{ _('It\'s focused!') }}</a>
