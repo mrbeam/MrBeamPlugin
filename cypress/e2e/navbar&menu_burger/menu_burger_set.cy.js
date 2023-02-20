@@ -99,19 +99,11 @@ describe("Menu burger", function () {
         cy.logout();
     });
 
-    it("Guided Tour - When tour is started then it will run trough till end", function () {
+    // This will be replaced with the next test when we can mock grbl inside the docker image
+    it.skip("Guided Tour - When tour is started then it will run trough till end", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-guided-tour"]').click();
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 1);
-        cy.get(".hopscotch-next").click();
-
-        //TODO currently skipped as the homing button is not visible in the guided tour
-        cy.get(".hopscotch-bubble-container").should("be.visible");
-        cy.get(".hopscotch-bubble-number").should("have.text", 2);
-        cy.get('[data-test="mrbeam-ui-homing_overlay_homing_btn"]').click();
-
-        //TODO currently skipped as the homing button is not visible in the guided tour
-        cy.get(".hopscotch-bubble-number").should("have.text", 3);
         cy.get(".hopscotch-next").click();
 
         cy.get(".hopscotch-bubble-container").should("be.visible");
@@ -190,13 +182,119 @@ describe("Menu burger", function () {
         ).should("have.text", "Preparing...");
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 14);
+    });
 
-        //TODO wait some time
+    // Skip this test till we can mock grbl in the docker image and remove the previous test
+    it.skip("Guided Tour - When tour is started then it will run trough till end", function () {
+        // First page is start of the guided tour
+        cy.get('[data-test="mrbeam-ui-index-tab-guided-tour"]').click();
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 1);
+        cy.get(".hopscotch-next").click();
+
+        // Second page is homing
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 2);
+        cy.get('[data-test="mrbeam-ui-homing_overlay_homing_btn"]').click();
+
+        // Third page is telling to place felt in Working area
+        cy.get(".hopscotch-bubble-number").should("have.text", 3);
+        cy.get(".hopscotch-next").click();
+
+        // Fourth page is showing design library tab
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 4);
+        cy.get(".hopscotch-next").click();
+
+        // Fifth page is going to design library
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 5);
+        cy.get('[data-test="tab-designlib-filter-design-radio"]').should(
+            "be.checked"
+        );
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+
+        // Six page is selecting a design
+        cy.get('[data-test="tab-designlib-files-list"]').should("be.visible");
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 6);
+        cy.get(
+            '[data-test="tab-designlib-svg-preview-card"][mrb_name="Schluesselanhaenger.svg"]'
+        ).click();
+
+        // Seventh page is to move design
+        cy.get('[data-test="mrbeam-ui-tab-workingarea"]').should("be.visible");
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 7);
+        cy.get(".hopscotch-next").click();
+
+        // Eighth page is to click laser button
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 8);
+        cy.get('[data-test="working-area-laser-button"]').click();
+
+        // Ninth page is to show focus reminder
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 9);
+        cy.get('[data-test="mrbeam-ui-start_job_btn_focus_reminder"]').click();
+
+        // Tenth page is to to select material
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 10);
+        cy.get(
+            '[data-test="conversion-dialog-material-item"][mrb_name="/plugin/mrbeam/static/img/materials/Felt.jpg"]'
+        ).click();
+
+        // Eleventh page is to select color
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 11);
+        cy.get(
+            '[data-test="conversion-dialog-material-color"]#material_color_eb5a3e'
+        ).click();
+
+        // Twelveth page is to select thickness
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 12);
+        cy.get(
+            '[data-test="conversion-dialog-thickness-sample"]#material_thickness_3'
+        ).click();
+
+        // Thirteenth page is to start laser job
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 13);
+        cy.get('[data-test="laser-job-start-button"]').click();
+
+        // Fourteenth page is to show preparing
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(
+            '[data-test="mrbeam-ui-conversion-dialoge-header-preparing"]'
+        ).should("be.visible");
+        cy.get(
+            '[data-test="mrbeam-ui-conversion-dialoge-header-preparing"]'
+        ).should("have.text", "Preparing...");
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 14);
+
+        // Wait till preparing is done
         cy.get('[data-test="conversion-dialog-vector-graphics"]', {
             timeout: 10000,
         }).should("not.be.visible");
 
-        //TODO currently skipped as we can't start a laserjob
+        // Fifteenth page is to show ready to laser
         cy.get('[data-test="mrbeam-ui-modal-ready-to-laser"]').should(
             "be.visible"
         );
@@ -207,7 +305,7 @@ describe("Menu burger", function () {
         cy.get(".hopscotch-bubble-number").should("have.text", 15);
         cy.get(".hopscotch-next").click();
 
-        //TODO currently skipped as we can't start a laserjob
+        // Sixteenth page is to show congratulations screen
         cy.get('[data-test="mrbeam-ui-modal-congratulations"]').should(
             "be.visible"
         );
