@@ -172,11 +172,11 @@ $(function () {
                 payload.last_uploaded &&
                 oldLastUploaded &&
                 oldLastUploaded !== payload.last_uploaded &&
-                $("#designstore_tab_btn span.red-dot").length === 0
+                $("#designstore_tab_btn span.notify-icon").length === 0
             ) {
                 // Notify user
                 $("#designstore_tab_btn").append(
-                    '<span class="red-dot"></span>'
+                    '<span class="notify-icon"></span>'
                 );
             }
             self.lastUploadedDate(payload.last_uploaded);
@@ -276,7 +276,7 @@ $(function () {
 
         self.onUserNotified = function () {
             // Handle the 'new designs' notification icon
-            $("#designstore_tab_btn > span.red-dot").remove();
+            $("#designstore_tab_btn > span.notify-icon").remove();
             // Update user settings
             let oldLastUploaded = self.getLastUploadedDate();
             if (

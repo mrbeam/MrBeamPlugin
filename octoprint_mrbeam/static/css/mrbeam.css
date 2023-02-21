@@ -3500,10 +3500,10 @@ button#terminal-send {
 
 /* Design Store */
 
-#designstore_tab_btn .red-dot {
+#designstore_tab_btn .notify-icon {
   height: 5px;
   width: 5px;
-  background-color: red;
+  background-color: #e25303;
   border-radius: 50%;
   display: inline-block;
   margin: 0 0 7px 2px;
