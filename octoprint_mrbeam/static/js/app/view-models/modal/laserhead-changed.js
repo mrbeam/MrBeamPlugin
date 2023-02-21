@@ -1,7 +1,7 @@
 $(function () {
     function LaserheadChangedViewModel(params) {
         let self = this;
-        window.mrbeam.viewModels["LaserheadChangedViewModel"] = self;
+        window.mrbeam.viewModels["laserheadChangedViewModel"] = self;
 
         self.settings = params[0];
         self.loginState = params[1];
@@ -59,17 +59,29 @@ $(function () {
         };
 
         self.onUserLoggedIn = function () {
-            if (self.loginState.currentUser?.()?.active) {
-                if (self.settings.settings.plugins.mrbeam.laserheadChanged()) {
-                    self.laserheadModelId(
-                        self.settings.settings.plugins.mrbeam.laserhead.model_id()
-                    );
-                    self.laserheadModelSupported(
-                        self.settings.settings.plugins.mrbeam.laserhead.model_supported()
-                    );
-                    $("#laserhead_changed").modal("show");
-                }
+            if (self.laserHeadChanged()) {
+                self.laserheadModelId(
+                    self.settings.settings.plugins.mrbeam.laserhead.model_id()
+                );
+                self.laserheadModelSupported(
+                    self.settings.settings.plugins.mrbeam.laserhead.model_supported()
+                );
+                $("#laserhead_changed").modal("show");
             }
+        };
+
+        self.laserHeadChanged = function () {
+            return (
+                self.loginState.currentUser?.()?.active &&
+                self.settings.settings.plugins.mrbeam.laserheadChanged()
+            );
+        };
+
+        self.laserHeadXDetected = function () {
+            return (
+                self.laserHeadChanged() &&
+                self.laserheadModelId() === mrbeam.laserheadModel.X
+            );
         };
 
         self.laserheadChangedNextStep = function () {
