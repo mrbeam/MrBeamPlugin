@@ -68,6 +68,7 @@ $(function () {
             }
         };
 
+        // TODO: use this to get user settings in SW-2817
         self.getLastUploadedDate = function () {
             const userSettings = self.getUserSettings();
             if (userSettings?.mrbeam?.design_store_last_uploaded) {
@@ -156,6 +157,7 @@ $(function () {
                 user_token: self.getAuthToken(),
                 version: mrbeamPluginVersion,
                 language: MRBEAM_LANGUAGE,
+                // TODO: remove this once the design store is updated after SW-2537
                 last_uploaded: self.getLastUploadedDate(),
             };
 
@@ -166,6 +168,7 @@ $(function () {
             self.saveTokenInUserSettings(payload.token);
         };
 
+        // TODO: use this to show 'new designs' notification in SW-2817
         self.onLastUploadedDateReceived = function (payload) {
             let oldLastUploaded = self.getLastUploadedDate();
             if (
@@ -204,6 +207,7 @@ $(function () {
             }
         };
 
+        // TODO: use this to update user settings in SW-2817
         self.saveLastUploadedInUserSettings = function (lastUploaded) {
             let oldLastUploaded = self.getLastUploadedDate();
             let currentUserSettings = self.getUserSettings();
