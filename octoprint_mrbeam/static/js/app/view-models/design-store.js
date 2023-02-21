@@ -92,11 +92,6 @@ $(function () {
                             case "token":
                                 self.onTokenReceived(event.data.payload);
                                 break;
-                            case "lastUploadedDate":
-                                self.onLastUploadedDateReceived(
-                                    event.data.payload
-                                );
-                                break;
                             case "svg":
                                 self.onSvgReceived(event.data.payload);
                                 break;
