@@ -19,9 +19,16 @@ $(function () {
         self.navigation = params[1];
         self.analytics = params[2];
         self.settings = params[3];
+        self.laserheadChangedVM = params[4];
 
         self.lastUploadedDate = ko.observable("");
         self.eventListenerAdded = ko.observable(false);
+
+        self.onUserLoggedIn = function () {
+            if (self.laserheadChangedVM.laserHeadXDetected()) {
+                self.showNotifyIcon();
+            }
+        };
 
         self.initialiseStore = function () {
             let designStoreIframeElement = $("#design_store_iframe");
@@ -165,6 +172,13 @@ $(function () {
             };
 
             self.sendMessageToDesignStoreIframe("userData", userData);
+
+            if (self.laserheadChangedVM.laserHeadChanged()) {
+                self.sendMessageToDesignStoreIframe("laserheadChanged", {
+                    laserheadModelId:
+                        self.laserheadChangedVM.laserheadModelId(),
+                });
+            }
         };
 
         self.onTokenReceived = function (payload) {
@@ -323,6 +337,7 @@ $(function () {
             "navigationViewModel",
             "analyticsViewModel",
             "settingsViewModel",
+            "laserheadChangedViewModel",
         ],
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ["#designstore"],
