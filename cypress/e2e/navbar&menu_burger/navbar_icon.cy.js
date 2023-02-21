@@ -6,7 +6,9 @@ describe("Navbar icons", function () {
     });
     beforeEach(function () {
         cy.visit(this.testData.url_laser);
-        cy.wait(20000);
+        cy.get('[id="loading_overlay"]', { timeout: 20000 }).should(
+            "not.be.visible"
+        );
         cy.loginLaser(this.testData.email, this.testData.password);
     });
     it("Message", function () {

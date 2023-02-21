@@ -7,7 +7,9 @@ describe.skip("Laser Job - quick text", function () {
 
     beforeEach(function () {
         cy.visit(this.testData.url_laser);
-        cy.wait(20000);
+        cy.get('[id="loading_overlay"]', { timeout: 20000 }).should(
+            "not.be.visible"
+        );
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.visit(this.testData.url_laser);
         cy.deleteGcoFile();

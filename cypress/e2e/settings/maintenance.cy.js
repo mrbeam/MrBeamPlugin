@@ -7,7 +7,9 @@ describe("Maintenance", function () {
 
     beforeEach(function () {
         cy.visit(this.testData.url_laser);
-        cy.wait(20000);
+        cy.get('[id="loading_overlay"]', { timeout: 20000 }).should(
+            "not.be.visible"
+        );
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
         cy.get('[data-test="mrbeam-ui-index-tab-settings"]').click({

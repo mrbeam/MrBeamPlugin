@@ -8,7 +8,9 @@ describe.skip("Purchase", function () {
 
     beforeEach(function () {
         cy.visit(this.testData.url);
-        cy.wait(15000);
+        cy.get('[id="loading_overlay"]', { timeout: 20000 }).should(
+            "not.be.visible"
+        );
         cy.loginDesignStore(
             this.testData.email,
             this.testData.password,
