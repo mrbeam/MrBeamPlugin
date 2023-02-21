@@ -11,6 +11,9 @@ $(function () {
         // 'http://localhost:8080';
         self.DESIGN_STORE_IFRAME_HEALTHCHECK_SRC =
             self.DESIGN_STORE_IFRAME_SRC + "/api/healthcheck";
+        self.DESIGN_STORE_TAB_ELEMENT = $("#designstore_tab_btn");
+        self.DESIGN_STORE_NOTIFY_ICON_ELEMENT =
+            self.DESIGN_STORE_TAB_ELEMENT.find("span.notify-icon");
 
         self.loginState = params[0];
         self.navigation = params[1];
@@ -27,7 +30,7 @@ $(function () {
                 self.DESIGN_STORE_IFRAME_SRC
             ) {
                 self.prepareDesignStoreTab();
-                self.goToStore();
+                self.lazyLoadStore();
                 // Handle design store if offline
                 // This will show the network issue page if the device is offline
                 // However, if the device gets online afterwards, this will not change
@@ -174,15 +177,25 @@ $(function () {
             if (
                 payload.last_uploaded &&
                 oldLastUploaded &&
-                oldLastUploaded !== payload.last_uploaded &&
-                $("#designstore_tab_btn span.notify-icon").length === 0
+                oldLastUploaded !== payload.last_uploaded
             ) {
-                // Notify user
-                $("#designstore_tab_btn").append(
+                self.showNotifyIcon();
+            }
+            self.lastUploadedDate(payload.last_uploaded);
+        };
+
+        self.removeNotifyIcon = function () {
+            if (self.DESIGN_STORE_NOTIFY_ICON_ELEMENT.length !== 0) {
+                self.DESIGN_STORE_NOTIFY_ICON_ELEMENT.remove();
+            }
+        };
+
+        self.showNotifyIcon = function () {
+            if (self.DESIGN_STORE_NOTIFY_ICON_ELEMENT.length === 0) {
+                self.DESIGN_STORE_TAB_ELEMENT.append(
                     '<span class="notify-icon"></span>'
                 );
             }
-            self.lastUploadedDate(payload.last_uploaded);
         };
 
         self.onSvgReceived = function (payload) {
@@ -268,19 +281,16 @@ $(function () {
             });
         };
 
-        self.goToStore = function () {
+        self.lazyLoadStore = function () {
             // Lazy load the iframe
             $("#design_store_iframe").attr("loading", "eager");
-            if ($("#designstore_tab_btn").parent().hasClass("active")) {
-                self.sendMessageToDesignStoreIframe("goToStore", {});
-            }
             // TODO: use this to handle user being notified "event" in SW-2817
             self.onUserNotified();
         };
 
         self.onUserNotified = function () {
             // Handle the 'new designs' notification icon
-            $("#designstore_tab_btn > span.notify-icon").remove();
+            self.removeNotifyIcon();
             // Update user settings
             let oldLastUploaded = self.getLastUploadedDate();
             if (
