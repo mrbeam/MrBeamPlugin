@@ -344,9 +344,7 @@ $(function () {
                 let col = items[i].attr()[color_attr];
                 const bb = items[i].getBBox();
                 if (
-                    bb.w > 0 &&
-                    // TODO: the line path has zero height so this should be done in a different manner
-                    // bb.h > 0 && // filters elements without dimension, e.g. <path> without d attrib.
+                    (bb.w > 0 || bb.h > 0) &&
                     col !== "undefined" &&
                     col !== "none" &&
                     col !== null &&
