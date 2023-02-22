@@ -69,6 +69,7 @@ const mutationCallback = function (mutationsList, observer) {
             }
             // Backdrop Temporary Solution - end
 
+            // Workaround to override library styling upon dynamically rendering new elements
             guidedTourOverride();
         }
     }
