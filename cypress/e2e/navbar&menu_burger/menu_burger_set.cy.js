@@ -11,11 +11,13 @@ describe("Menu burger", function () {
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
     });
+    afterEach(function () {
+        cy.logout();
+    });
     it("Lasersafety", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-laser-safety"]').click();
         cy.get('[id="lasersafety_overlay"]').should("to.visible");
         cy.get(".modal-footer").filter(":visible").find(".btn-danger").click();
-        cy.logout();
     });
     it.skip("Fullscreen", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-fullscreen-go"]').realClick();
@@ -23,7 +25,6 @@ describe("Menu burger", function () {
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
         cy.get('[data-test="mrbeam-ui-index-tab-fullscreen-exit"]').realClick();
         cy.document().its("fullscreenElement").should("equal", null);
-        cy.logout();
     });
     it("Manual User", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-manual-user"]')
@@ -35,7 +36,6 @@ describe("Menu burger", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-        cy.logout();
     });
     it("Quickstart Guide", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-manual-user"]')
@@ -47,7 +47,6 @@ describe("Menu burger", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-        cy.logout();
     });
 
     it("Find mr beam", function () {
@@ -60,7 +59,6 @@ describe("Menu burger", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-        cy.logout();
     });
     it("Support", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-support"]').click();
@@ -94,9 +92,11 @@ describe("Menu burger", function () {
                 });
             });
         cy.get(".hopscotch-cta").click();
+        cy.get(
+            '[data-test="mrbeam-ui-modal-congratulations-ok-button"]'
+        ).click();
         cy.get(".hopscotch-bubble-container").should("not.exist");
         cy.get('[id="support_overlay"]').find(".close").click();
-        cy.logout();
     });
 
     // This will be replaced with the next test when we can mock grbl inside the docker image
