@@ -41,8 +41,7 @@ $(function () {
         };
 
         self.getUserSettings = function () {
-            const settings = self.loginState.currentUser?.()?.settings;
-            return settings;
+            return self.loginState.currentUser?.()?.settings;
         };
 
         self.getEmail = function () {
@@ -69,6 +68,7 @@ $(function () {
             }
         };
 
+        // TODO: use this to get user settings in SW-2817
         self.getLastUploadedDate = function () {
             const userSettings = self.getUserSettings();
             if (userSettings?.mrbeam?.design_store_last_uploaded) {
@@ -91,11 +91,6 @@ $(function () {
                                 break;
                             case "token":
                                 self.onTokenReceived(event.data.payload);
-                                break;
-                            case "lastUploadedDate":
-                                self.onLastUploadedDateReceived(
-                                    event.data.payload
-                                );
                                 break;
                             case "svg":
                                 self.onSvgReceived(event.data.payload);
@@ -162,6 +157,7 @@ $(function () {
                 user_token: self.getAuthToken(),
                 version: mrbeamPluginVersion,
                 language: MRBEAM_LANGUAGE,
+                // TODO: remove this once the design store is updated after SW-2537
                 last_uploaded: self.getLastUploadedDate(),
             };
 
@@ -172,17 +168,18 @@ $(function () {
             self.saveTokenInUserSettings(payload.token);
         };
 
+        // TODO: use this to show 'new designs' notification in SW-2817
         self.onLastUploadedDateReceived = function (payload) {
             let oldLastUploaded = self.getLastUploadedDate();
             if (
                 payload.last_uploaded &&
                 oldLastUploaded &&
                 oldLastUploaded !== payload.last_uploaded &&
-                $("#designstore_tab_btn span.red-dot").length === 0
+                $("#designstore_tab_btn span.notify-icon").length === 0
             ) {
                 // Notify user
                 $("#designstore_tab_btn").append(
-                    '<span class="red-dot"></span>'
+                    '<span class="notify-icon"></span>'
                 );
             }
             self.lastUploadedDate(payload.last_uploaded);
@@ -210,6 +207,7 @@ $(function () {
             }
         };
 
+        // TODO: use this to update user settings in SW-2817
         self.saveLastUploadedInUserSettings = function (lastUploaded) {
             let oldLastUploaded = self.getLastUploadedDate();
             let currentUserSettings = self.getUserSettings();
@@ -218,9 +216,6 @@ $(function () {
                 oldLastUploaded !== lastUploaded &&
                 currentUserSettings?.mrbeam
             ) {
-                delete currentUserSettings["mrbeam"][
-                    "design_store_last_uploaded"
-                ];
                 currentUserSettings["mrbeam"]["design_store_last_uploaded"] =
                     lastUploaded;
                 self.navigation.usersettings.updateSettings(
@@ -276,11 +271,17 @@ $(function () {
         self.goToStore = function () {
             // Lazy load the iframe
             $("#design_store_iframe").attr("loading", "eager");
-            // Handle the new designs notification icon
-            $("#designstore_tab_btn > span.red-dot").remove();
             if ($("#designstore_tab_btn").parent().hasClass("active")) {
                 self.sendMessageToDesignStoreIframe("goToStore", {});
             }
+            // TODO: use this to handle user being notified "event" in SW-2817
+            self.onUserNotified();
+        };
+
+        self.onUserNotified = function () {
+            // Handle the 'new designs' notification icon
+            $("#designstore_tab_btn > span.notify-icon").remove();
+            // Update user settings
             let oldLastUploaded = self.getLastUploadedDate();
             if (
                 self.lastUploadedDate() &&
