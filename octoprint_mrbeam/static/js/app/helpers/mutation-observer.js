@@ -14,6 +14,7 @@ const mutationCallback = function (mutationsList, observer) {
             // Backdrop Temporary Solution
             backdropTemporarySolution();
 
+            // Workaround to override library styling upon dynamically rendering new elements
             guidedTourOverride();
         }
     }
