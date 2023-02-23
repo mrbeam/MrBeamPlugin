@@ -82,7 +82,7 @@ describe("Library design", function () {
     });
 
     it("Delete selection - file", function () {
-        cy.get('[cy-data="tab-designlib-preview-card"][mrb_name="test.svg"]')
+        cy.get('[cy-data="tab-designlib-preview-card"]')
             .first()
             .invoke("prop", "innerText")
             .then((checkedItem) => {
@@ -126,9 +126,7 @@ describe("Library design", function () {
     });
 
     it("Delete designs by burger menu", function () {
-        cy.get(
-            '[cy-data="tab-designlib-preview-card"][mrb_name="test-burger-menu-deletion.svg"]'
-        )
+        cy.get('[cy-data="tab-designlib-preview-card"]')
             .first()
             .find('[data-test="tab-designlib-option-file"]')
             .click();

@@ -120,9 +120,7 @@ describe("Menu burger", function () {
         cy.get('[data-test="tab-designlib-files-list"]').should("be.visible");
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 6);
-        cy.get(
-            '[data-test="tab-designlib-svg-preview-card"][mrb_name="Schluesselanhaenger.svg"]'
-        ).click();
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').click();
 
         cy.get('[data-test="mrbeam-ui-tab-workingarea"]').should("be.visible");
         cy.get(".hopscotch-bubble-container").should("be.visible");
@@ -131,7 +129,7 @@ describe("Menu burger", function () {
 
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 8);
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.onlyLaserButtonClick();
 
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 9);
@@ -182,6 +180,16 @@ describe("Menu burger", function () {
         ).should("have.text", "Preparing...");
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 14);
+
+        //close preparing overlay
+        cy.get(".modal-scrollable").click({ force: true });
+
+        //Cancel  guided tour
+        cy.get(".hopscotch-bubble-close").click();
+
+        cy.get(
+            '[data-test="mrbeam-ui-modal-congratulations-ok-button"]'
+        ).click();
     });
 
     // Skip this test till we can mock grbl in the docker image and remove the previous test
@@ -218,9 +226,7 @@ describe("Menu burger", function () {
         cy.get('[data-test="tab-designlib-files-list"]').should("be.visible");
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 6);
-        cy.get(
-            '[data-test="tab-designlib-svg-preview-card"][mrb_name="Schluesselanhaenger.svg"]'
-        ).click();
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').click();
 
         // Seventh page is to move design
         cy.get('[data-test="mrbeam-ui-tab-workingarea"]').should("be.visible");
@@ -231,7 +237,7 @@ describe("Menu burger", function () {
         // Eighth page is to click laser button
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 8);
-        cy.get('[data-test="working-area-laser-button"]').click();
+        cy.onlyLaserButtonClick();
 
         // Ninth page is to show focus reminder
         cy.get(".hopscotch-bubble-container").should("be.visible");
