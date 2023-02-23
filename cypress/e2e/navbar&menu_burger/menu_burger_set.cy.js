@@ -120,7 +120,7 @@ describe("Menu burger", function () {
         cy.get('[data-test="tab-designlib-files-list"]').should("be.visible");
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 6);
-        cy.get('[data-test="tab-designlib-svg-preview-card"]').click();
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').first().click();
 
         cy.get('[data-test="mrbeam-ui-tab-workingarea"]').should("be.visible");
         cy.get(".hopscotch-bubble-container").should("be.visible");
@@ -226,7 +226,7 @@ describe("Menu burger", function () {
         cy.get('[data-test="tab-designlib-files-list"]').should("be.visible");
         cy.get(".hopscotch-bubble-container").should("be.visible");
         cy.get(".hopscotch-bubble-number").should("have.text", 6);
-        cy.get('[data-test="tab-designlib-svg-preview-card"]').click();
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').first().click();
 
         // Seventh page is to move design
         cy.get('[data-test="mrbeam-ui-tab-workingarea"]').should("be.visible");
