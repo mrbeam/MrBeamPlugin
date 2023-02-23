@@ -1,4 +1,5 @@
-describe("Purchase", function () {
+// skip all design store tests as the store is showing incompatible version screen in docker image
+describe.skip("Purchase", function () {
     beforeEach(function () {
         cy.fixture("test-data").then(function (testData) {
             this.testData = testData;
@@ -7,7 +8,9 @@ describe("Purchase", function () {
 
     beforeEach(function () {
         cy.visit(this.testData.url);
-        cy.wait(15000);
+        cy.get('[id="loading_overlay"]', { timeout: 20000 }).should(
+            "not.be.visible"
+        );
         cy.loginDesignStore(
             this.testData.email,
             this.testData.password,
