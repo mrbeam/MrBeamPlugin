@@ -4,7 +4,14 @@
 
 import datetime
 from octoprint.server.util.flask import get_json_command_from_request
-from octoprint_mrbeam.util.device_info import deviceInfo
+from octoprint_mrbeam.util.device_info import (
+    deviceInfo,
+    MODEL_MRBEAM_2_DC_S,
+    MODEL_MRBEAM_2_DC_R1,
+    MODEL_MRBEAM_2_DC_R2,
+    MODEL_MRBEAM_2_DC,
+    MODEL_MRBEAM_2_DC_X,
+)
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -33,13 +40,8 @@ class LabelPrinter(object):
         MRBEAM2_DC_R2=None,
         MRBEAM2_DC=dict(single="4260625360156", bundle="4260625360163"),
         MRBEAM2_DC_S=dict(single="4260625361023", bundle="4260625361030"),
+        MRBEAM2_DC_X=dict(single="4260625362136", bundle="4260625362143"),
     )
-
-    MRBEAM_2 = "MRBEAM2"
-    MRBEAM_2_DC_R1 = "MRBEAM2_DC_R1"
-    MRBEAM_2_DC_R2 = "MRBEAM2_DC_R2"
-    MRBEAM_2_DC = "MRBEAM2_DC"
-    MRBEAM_2_DC_S = "MRBEAM2_DC_S"
 
     def __init__(self, plugin, use_dummy_values=False):
         self._plugin = plugin
@@ -210,12 +212,17 @@ class LabelPrinter(object):
 
     def _get_model_abbrev(self):
         model = ""
-        if self._device_info.get_model() in (self.MRBEAM_2_DC_R1, self.MRBEAM_2_DC_R2):
+        if self._device_info.get_model() in (
+            MODEL_MRBEAM_2_DC_R1,
+            MODEL_MRBEAM_2_DC_R2,
+        ):
             model = "DCR"
-        elif self._device_info.get_model() in (self.MRBEAM_2_DC):
+        elif self._device_info.get_model() == MODEL_MRBEAM_2_DC:
             model = "DC"
-        elif self._device_info.get_model() == self.MRBEAM_2_DC_S:
+        elif self._device_info.get_model() == MODEL_MRBEAM_2_DC_S:
             model = "DC [S]"
+        elif self._device_info.get_model() == MODEL_MRBEAM_2_DC_X:
+            model = "DC [x]"
         return model
 
     def _get_production_date_formatted(self):
