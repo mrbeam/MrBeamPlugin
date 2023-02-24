@@ -99,7 +99,7 @@ function guidedTourOverride() {
             }
         });
 
-        // only add this observer once
+        // only add this observer once the user is going through the tour guide
         if (!mutationAdded) {
             const mutationTargetNodeBubble =
                 document.getElementsByClassName("hopscotch-bubble")[0];

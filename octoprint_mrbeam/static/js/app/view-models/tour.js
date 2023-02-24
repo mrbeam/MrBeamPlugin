@@ -531,8 +531,6 @@ $(function () {
             return {
                 nextBtn: gettext("Next"),
                 prevBtn: gettext("Back"),
-                // doneBtn: "Done",
-                // skipBtn: "Skip",
                 closeTooltip: gettext("Close"),
                 // stepNums : ["I", "II", "III"]
             };
