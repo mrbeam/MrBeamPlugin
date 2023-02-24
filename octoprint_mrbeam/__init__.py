@@ -757,6 +757,7 @@ class MrBeamPlugin(
                 "js/app/view-models/modal/hard_refresh_overlay.js",
                 "js/app/view-models/mrbeam-simple-api-commands.js",
                 "js/app/view-models/mrbeam-constants.js",
+                "js/app/helpers/mutation-observer.js",
             ],
             css=[
                 "css/mrbeam.css",

@@ -72,8 +72,7 @@ $(function () {
                             "<li class='show_only_online'>" +
                             _.sprintf(
                                 gettext(
-                                    "The laser head of your Mr Beam has to be focused according to the thickness of the felt." +
-                                        "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."
+                                    "The laser head of your Mr Beam has to be focused according to the thickness of the felt. You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."
                                 ),
                                 {
                                     opening_tag:
@@ -85,8 +84,7 @@ $(function () {
                             "<li class='show_only_offline'>" +
                             _.sprintf(
                                 gettext(
-                                    "The laser head of your Mr Beam has to be focused according to the thickness of the felt." +
-                                        "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."
+                                    "The laser head of your Mr Beam has to be focused according to the thickness of the felt. You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."
                                 ),
                                 {
                                     opening_tag:
@@ -204,6 +202,7 @@ $(function () {
                     ],
                     target: "designlib_tab_btn",
                     placement: "bottom",
+                    nextOnTargetClick: true,
                     xOffset: 30,
                     onNext: function () {
                         self._onNext();
@@ -229,11 +228,20 @@ $(function () {
                     ],
                     target:
                         $(
-                            '.file_list_entry[mrb_name="Schlusselanhanger.svg"]'
-                        )[0] || $(".file_list_entry").last()[0],
+                            '.file_list_entry[mrb_name="Schluesselanhaenger.svg"]'
+                        )[0] ||
+                        $(
+                            ".gcode_files .entry.files_template_model_svg .file_list_entry "
+                        ).last()[0],
                     additionalJQueryTargets: ".file_list_entry",
+                    nextOnTargetClick: true,
                     placement:
-                        $(".file_list_entry").length <= 8 ? "bottom" : "top",
+                        $(".files_template_model_svg").length +
+                            $(".files_template_model_dxf").length +
+                            $(".files_template_model_image").length <=
+                        8
+                            ? "bottom"
+                            : "top",
                     width: 400,
                     xOffset: -250,
                     yOffset: 30,
@@ -278,7 +286,8 @@ $(function () {
                         ),
                         gettext("Just 3 quick steps..."),
                     ],
-                    target: "job_print",
+                    nextOnTargetClick: true,
+                    target: "laser_button",
                     placement: "right",
                     yOffset: -15,
                 })
@@ -324,13 +333,21 @@ $(function () {
                             "</span>",
                     ],
                     target: "start_job_btn_focus_reminder",
+                    onPrev: function () {
+                        $("#laserhead_focus_reminder_modal").modal("hide");
+                    },
                     placement: "right",
                     delay: 200,
                     fixedElement: true,
                     yOffset: -150,
                     arrowOffset: 145,
+                    showPrevButton: true,
+                    prevTarget: "#start_job_btn_forgot_focus",
                     condition: function () {
-                        return self.settings.settings.plugins.mrbeam.focusReminder();
+                        return (
+                            self.settings.settings.plugins.mrbeam.focusReminder() &&
+                            !window.mrbeam.viewModels.vectorConversionViewModel.remindFirstTime()
+                        );
                     },
                 })
             );
@@ -341,14 +358,15 @@ $(function () {
                     id: "select_material",
                     title: gettext("Select the material"),
                     text: [
+                        gettext("For this guide we want to use felt."),
                         gettext(
-                            "For this guide we want to use felt.",
                             "However as you can see there are many different options. :)"
                         ),
                     ],
                     target:
-                        $('li.material_entry[mrb_name$="Felt.jpg"]')[0] ||
-                        $("li.material_entry")[0],
+                        $(
+                            'li.material_entry[mrb_name$="/plugin/mrbeam/static/img/materials/Felt.jpg"]'
+                        )[0] || $("li.material_entry")[0],
                     additionalJQueryTargets: "li.material_entry",
                     placement: "bottom",
                     delay: 400,
@@ -512,9 +530,7 @@ $(function () {
         self._get_i18n_conf = function () {
             return {
                 nextBtn: gettext("Next"),
-                // prevBtn: "Back",
-                // doneBtn: "Done",
-                // skipBtn: "Skip",
+                prevBtn: gettext("Back"),
                 closeTooltip: gettext("Close"),
                 // stepNums : ["I", "II", "III"]
             };
@@ -527,16 +543,22 @@ $(function () {
             tour.push(
                 new TourStep({
                     id: "empty_woringarea",
-                    title: ["Working area has to be empty to start this tour."],
+                    title: [
+                        gettext(
+                            "Working area has to be empty to start this tour."
+                        ),
+                    ],
                     text: [
-                        "Click here to remove all designs from your working area.",
+                        gettext(
+                            "Click here to remove all designs from your working area."
+                        ),
                     ],
                     target: "clear_working_area_btn",
                     placement: "right",
                     nextOnTargetClick: true,
                     yOffset: -15,
                     showNextButton: true,
-                    nextLabel: "Cancel",
+                    nextLabel: gettext("Cancel"),
                 })
             );
 
@@ -552,6 +574,7 @@ $(function () {
 
             // sort design lib by upload and scroll to bottom
             self.files.listHelper.changeSorting("upload");
+            self.files.setFilter("design");
 
             // reset any material selection
             try {
@@ -616,9 +639,9 @@ $(function () {
 
             self.onEventReadyToLaserStart = function (payload) {
                 let id = self._getCurrStepProp("id");
-                if (id == "preparing_laserjob") {
+                if (id === "preparing_laserjob") {
                     hopscotch.nextStep();
-                } else if (id == "start_laserjob") {
+                } else if (id === "start_laserjob") {
                     // hopscotch.refreshBubblePosition();
                     self._restartTour(200);
                 }
@@ -689,7 +712,7 @@ $(function () {
                 let myStepNum = hopscotch.getCurrStepNum();
                 // console.log("hopscotch _onShow: additionalJQueryTargets for step #"+ myStepNum +": " + additionalJQueryTargets);
                 $(additionalJQueryTargets).one("click", function () {
-                    if (hopscotch.getCurrStepNum() == myStepNum) {
+                    if (hopscotch.getCurrStepNum() === myStepNum) {
                         // console.log("additionalJQueryTargets: hopscotch.nextStep()");
                         hopscotch.nextStep();
                     } else {
@@ -697,22 +720,42 @@ $(function () {
                     }
                 });
             }
+            if (self._getCurrStepProp("prevTarget")) {
+                let prevTarget = self._getCurrStepProp("prevTarget");
+                let myStepNum = hopscotch.getCurrStepNum();
+                $(prevTarget).one("click", function () {
+                    if (hopscotch.getCurrStepNum() === myStepNum) {
+                        hopscotch.prevStep();
+                    }
+                });
+            }
             self._analytics_tour_step_show();
         };
 
         self._onEnd = function () {
-            // console.log("hopscotch _onEnd: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+            console.log(
+                "hopscotch _onEnd: " +
+                    self._getCurrTourId() +
+                    " #" +
+                    hopscotch.getCurrStepNum() +
+                    ", " +
+                    self._getCurrStepProp("id")
+            );
+            // Restart tour if the working area was emptied manually by the user
             if (
-                self._getCurrTourId() == "pre-tour" &&
+                self._getCurrTourId() === "pre-tour" &&
                 mrbeam.viewModels.workingAreaViewModel &&
                 mrbeam.viewModels.workingAreaViewModel.working_area_empty()
             ) {
+                console.log("hopscotch _onEnd: pre-tour - working area empty");
                 setTimeout(function () {
                     if (self._getCurrTourId() == null) {
                         self.startTour();
                     }
                 }, 10);
                 self._analytics_tour_done = true;
+            } else {
+                $("#congratulations").modal("show");
             }
             if (self._analytics_tour_done) {
                 self._analytics_tour_finish();
@@ -722,8 +765,16 @@ $(function () {
         };
 
         self._onClose = function () {
-            // console.log("hopscotch _onClose: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+            console.log(
+                "hopscotch _onClose: " +
+                    self._getCurrTourId() +
+                    " #" +
+                    hopscotch.getCurrStepNum() +
+                    ", " +
+                    self._getCurrStepProp("id")
+            );
             self._analytics_tour_cancel();
+            $("#congratulations").modal("show");
         };
 
         // analytics //

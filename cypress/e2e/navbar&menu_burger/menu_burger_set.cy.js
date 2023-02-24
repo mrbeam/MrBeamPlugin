@@ -13,11 +13,13 @@ describe("Menu burger", function () {
         cy.loginLaser(this.testData.email, this.testData.password);
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
     });
+    afterEach(function () {
+        cy.logout();
+    });
     it("Lasersafety", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-laser-safety"]').click();
         cy.get('[id="lasersafety_overlay"]').should("to.visible");
         cy.get(".modal-footer").filter(":visible").find(".btn-danger").click();
-        cy.logout();
     });
     it.skip("Fullscreen", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-fullscreen-go"]').realClick();
@@ -25,7 +27,6 @@ describe("Menu burger", function () {
         cy.get('[data-test="mrbeam-ui-index-menu-burger"]').click();
         cy.get('[data-test="mrbeam-ui-index-tab-fullscreen-exit"]').realClick();
         cy.document().its("fullscreenElement").should("equal", null);
-        cy.logout();
     });
     it("Manual User", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-manual-user"]')
@@ -37,7 +38,6 @@ describe("Menu burger", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-        cy.logout();
     });
     it("Quickstart Guide", function () {
         cy.get('[data-test="mrbeam-ui-index-tab-manual-user"]')
@@ -49,7 +49,6 @@ describe("Menu burger", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-        cy.logout();
     });
 
     it("Find mr beam", function () {
@@ -62,7 +61,6 @@ describe("Menu burger", function () {
                     expect(resp.status).to.eq(200);
                 });
             });
-        cy.logout();
     });
     // This is failing in GitHub Actions as the find mr beam page is showing instead of the mr beam plugin
     it.skip("Support", function () {
@@ -97,8 +95,234 @@ describe("Menu burger", function () {
                 });
             });
         cy.get(".hopscotch-cta").click();
+        cy.get(
+            '[data-test="mrbeam-ui-modal-congratulations-ok-button"]'
+        ).click();
         cy.get(".hopscotch-bubble-container").should("not.exist");
         cy.get('[id="support_overlay"]').find(".close").click();
-        cy.logout();
+    });
+
+    // This will be replaced with the next test when we can mock grbl inside the docker image
+    it("Guided Tour - When tour is started then it will run trough till end", function () {
+        cy.get('[data-test="mrbeam-ui-index-tab-guided-tour"]').click();
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 1);
+        cy.get(".hopscotch-next").click();
+
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 4);
+        cy.get(".hopscotch-next").click();
+
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 5);
+        cy.get('[data-test="tab-designlib-filter-design-radio"]').should(
+            "be.checked"
+        );
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+
+        cy.get('[data-test="tab-designlib-files-list"]').should("be.visible");
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 6);
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').first().click();
+
+        cy.get('[data-test="mrbeam-ui-tab-workingarea"]').should("be.visible");
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 7);
+        cy.get(".hopscotch-next").click();
+
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 8);
+        cy.onlyLaserButtonClick();
+
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 9);
+        cy.get('[data-test="mrbeam-ui-start_job_btn_focus_reminder"]').click();
+
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 10);
+        cy.get(
+            '[data-test="conversion-dialog-material-item"][mrb_name="/plugin/mrbeam/static/img/materials/Felt.jpg"]'
+        ).click();
+
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 11);
+        cy.get(
+            '[data-test="conversion-dialog-material-color"]#material_color_eb5a3e'
+        ).click();
+
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 12);
+        cy.get(
+            '[data-test="conversion-dialog-thickness-sample"]#material_thickness_3'
+        ).click();
+
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 13);
+        cy.get('[data-test="laser-job-start-button"]').click();
+
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(
+            '[data-test="mrbeam-ui-conversion-dialoge-header-preparing"]'
+        ).should("be.visible");
+        cy.get(
+            '[data-test="mrbeam-ui-conversion-dialoge-header-preparing"]'
+        ).should("have.text", "Preparing...");
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 14);
+
+        //close preparing overlay
+        cy.get(".modal-scrollable").click({ force: true });
+
+        //Cancel  guided tour
+        cy.get(".hopscotch-bubble-close").click();
+
+        cy.get(
+            '[data-test="mrbeam-ui-modal-congratulations-ok-button"]'
+        ).click();
+    });
+
+    // Skip this test till we can mock grbl in the docker image and remove the previous test
+    it.skip("Guided Tour - When tour is started then it will run trough till end", function () {
+        // First page is start of the guided tour
+        cy.get('[data-test="mrbeam-ui-index-tab-guided-tour"]').click();
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 1);
+        cy.get(".hopscotch-next").click();
+
+        // Second page is homing
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 2);
+        cy.get('[data-test="mrbeam-ui-homing_overlay_homing_btn"]').click();
+
+        // Third page is telling to place felt in Working area
+        cy.get(".hopscotch-bubble-number").should("have.text", 3);
+        cy.get(".hopscotch-next").click();
+
+        // Fourth page is showing design library tab
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 4);
+        cy.get(".hopscotch-next").click();
+
+        // Fifth page is going to design library
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 5);
+        cy.get('[data-test="tab-designlib-filter-design-radio"]').should(
+            "be.checked"
+        );
+        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+
+        // Six page is selecting a design
+        cy.get('[data-test="tab-designlib-files-list"]').should("be.visible");
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 6);
+        cy.get('[data-test="tab-designlib-svg-preview-card"]').first().click();
+
+        // Seventh page is to move design
+        cy.get('[data-test="mrbeam-ui-tab-workingarea"]').should("be.visible");
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 7);
+        cy.get(".hopscotch-next").click();
+
+        // Eighth page is to click laser button
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 8);
+        cy.onlyLaserButtonClick();
+
+        // Ninth page is to show focus reminder
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 9);
+        cy.get('[data-test="mrbeam-ui-start_job_btn_focus_reminder"]').click();
+
+        // Tenth page is to to select material
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 10);
+        cy.get(
+            '[data-test="conversion-dialog-material-item"][mrb_name="/plugin/mrbeam/static/img/materials/Felt.jpg"]'
+        ).click();
+
+        // Eleventh page is to select color
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 11);
+        cy.get(
+            '[data-test="conversion-dialog-material-color"]#material_color_eb5a3e'
+        ).click();
+
+        // Twelveth page is to select thickness
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 12);
+        cy.get(
+            '[data-test="conversion-dialog-thickness-sample"]#material_thickness_3'
+        ).click();
+
+        // Thirteenth page is to start laser job
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 13);
+        cy.get('[data-test="laser-job-start-button"]').click();
+
+        // Fourteenth page is to show preparing
+        cy.get('[data-test="conversion-dialog-vector-graphics"]').should(
+            "be.visible"
+        );
+        cy.get(
+            '[data-test="mrbeam-ui-conversion-dialoge-header-preparing"]'
+        ).should("be.visible");
+        cy.get(
+            '[data-test="mrbeam-ui-conversion-dialoge-header-preparing"]'
+        ).should("have.text", "Preparing...");
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 14);
+
+        // Wait till preparing is done
+        cy.get('[data-test="conversion-dialog-vector-graphics"]', {
+            timeout: 10000,
+        }).should("not.be.visible");
+
+        // Fifteenth page is to show ready to laser
+        cy.get('[data-test="mrbeam-ui-modal-ready-to-laser"]').should(
+            "be.visible"
+        );
+        cy.get('[data-test="mrbeam-ui-rady-to-laser-start-text"]').should(
+            "be.visible"
+        );
+        cy.get(".hopscotch-bubble-container").should("be.visible");
+        cy.get(".hopscotch-bubble-number").should("have.text", 15);
+        cy.get(".hopscotch-next").click();
+
+        // Sixteenth page is to show congratulations screen
+        cy.get('[data-test="mrbeam-ui-modal-congratulations"]').should(
+            "be.visible"
+        );
+        cy.get(
+            '[data-test="mrbeam-ui-modal-congratulations-ok-button"]'
+        ).click();
+        cy.get('[data-test="mrbeam-ui-modal-congratulations"]').should(
+            "not.be.visible"
+        );
     });
 });
