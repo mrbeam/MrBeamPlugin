@@ -36,13 +36,14 @@ $(function () {
         self.carbonFilterUsage = ko.observable(0);
         self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
+        self.prefilterLifespan = ko.observable(0);
 
         self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
 
         self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.PREFILTER_LIFESPAN,
+            lifespan: self.prefilterLifespan(),
         });
         self.carbonFilterLifespanHours = _.sprintf(
             gettext("/%(lifespan)s hrs"),
@@ -76,7 +77,7 @@ $(function () {
         };
         self.prefilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-                (self.prefilterUsageHours() / self.PREFILTER_LIFESPAN) * 100
+                (self.prefilterUsageHours() / self.prefilterLifespan()) * 100
             );
         });
         self.carbonFilterPercent = ko.computed(function () {
@@ -140,6 +141,25 @@ $(function () {
             } else if (self.componentToReset() === self.GANTRY) {
                 return gettext("Did you clean the mechanics?");
             }
+        });
+
+        self.heavyDutyPrefilter = ko.observable(false);
+
+        self.heavyDutyPrefilter.subscribe(function (newValue) {
+            OctoPrint.settings
+                .savePluginSettings("mrbeam", { heavyDutyPrefilter: newValue })
+                .done(function (response) {
+                    OctoPrint.settings
+                        .get("mrbeam", "heavyDutyPrefilter")
+                        .done(function (response) {
+                            self.prefilterLifespan(
+                                response.plugins.mrbeam.usage.prefilterLifespan
+                            );
+                        });
+                })
+                .fail(function () {
+                    console.error("Error saving settings.");
+                });
         });
 
         // The settings are already loaded here, Gina confirmed.
@@ -355,6 +375,12 @@ $(function () {
             );
             self.laserHeadSerial(
                 self.settings.settings.plugins.mrbeam.laserhead.serial()
+            );
+            self.prefilterLifespan(
+                self.settings.settings.plugins.mrbeam.usage.prefilterLifespan()
+            );
+            self.heavyDutyPrefilter(
+                self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
             );
             self.laserHeadLifespan(
                 self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()

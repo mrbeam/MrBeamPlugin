@@ -3,7 +3,6 @@
 {#    <p class="muted maintenance-notes">{{ _('Some notes about the general maintenance') }}<br>#}
 {#        <strong>{{ _('Please note that the replacement of any of the elements may be necessary earlier, depending on the usage.') }}</strong>#}
 {#    </p>#}
-
     <div class="scrollable maintenance-scrollable">
         <table class="table table-striped table-hover table-condensed table-hover maintenance-table">
             <tr>
@@ -14,6 +13,10 @@
                         {{ _('The pre filter filters all coarse particles from the exhaust air. Regular changing improves the air flow and preserves the main filter.*') }}
                     </small>
                     <div class="maintenance-links">
+                        <label class="checkbox">
+                            <input type="checkbox" data-bind="checked: heavyDutyPrefilter">
+                            {{ _('Heavy-duty pre-filter in use') }}
+                        </label>
                         <a href="{{ _('https://www.mr-beam.org/en') + '/products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'}}"
                            target="_blank" id="prefilter_shop_link" data-test="maintenance-links-buy-now-pre-filter" class="maintenance-link-shop">
                             <i class="icon-shopping-cart"></i>
