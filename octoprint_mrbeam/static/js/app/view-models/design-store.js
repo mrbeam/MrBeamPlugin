@@ -25,7 +25,7 @@ $(function () {
         self.eventListenerAdded = ko.observable(false);
 
         self.onUserLoggedIn = function () {
-            if (self.laserheadChangedVM.laserHeadXDetected()) {
+            if (self.laserheadChangedVM.laserheadXDetectedForFirstTime()) {
                 self.showNotifyIcon();
             }
         };
@@ -173,7 +173,7 @@ $(function () {
 
             self.sendMessageToDesignStoreIframe("userData", userData);
 
-            if (self.laserheadChangedVM.laserHeadChanged()) {
+            if (self.laserheadChangedVM.isLaserheadChanged()) {
                 self.sendMessageToDesignStoreIframe("laserheadChanged", {
                     laserheadModelId:
                         self.laserheadChangedVM.laserheadModelId(),

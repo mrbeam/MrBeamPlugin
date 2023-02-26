@@ -59,7 +59,7 @@ $(function () {
         };
 
         self.onUserLoggedIn = function () {
-            if (self.laserHeadChanged()) {
+            if (self.isLaserheadChanged()) {
                 self.laserheadModelId(
                     self.settings.settings.plugins.mrbeam.laserhead.model_id()
                 );
@@ -70,16 +70,16 @@ $(function () {
             }
         };
 
-        self.laserHeadChanged = function () {
+        self.isLaserheadChanged = function () {
             return (
                 self.loginState.currentUser?.()?.active &&
                 self.settings.settings.plugins.mrbeam.laserheadChanged()
             );
         };
 
-        self.laserHeadXDetected = function () {
+        self.laserheadXDetectedForFirstTime = function () {
             return (
-                self.laserHeadChanged() &&
+                self.isLaserheadChanged() &&
                 self.laserheadModelId() === mrbeam.laserheadModel.X
             );
         };
