@@ -3618,6 +3618,15 @@ button#terminal-send {
 
 /* Material Store */
 
+#materialstore_tab_btn .notify-icon {
+  height: 5px;
+  width: 5px;
+  background-color: #e25303;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0 0 7px 2px;
+}
+
 #material_store_content #loading_spinner_wrapper {
   position: absolute;
   top: 0px;
