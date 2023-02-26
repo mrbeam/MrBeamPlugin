@@ -47,6 +47,14 @@ $(function () {
             self.sendMessageToMaterialStoreIframe(
                 MATERIAL_STORE_EVENT_TYPE.MR_BEAM_LOAD
             );
+
+            // send new laserhead model ID if changed
+            if (self.laserheadChangedVM.isLaserheadChanged()) {
+                self.sendMessageToMaterialStoreIframe("laserheadChanged", {
+                    laserheadModelId:
+                        self.laserheadChangedVM.laserheadModelId(),
+                });
+            }
         };
 
         self.onLoadMaterialStore = function () {

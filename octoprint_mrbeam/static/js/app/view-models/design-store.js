@@ -166,6 +166,7 @@ $(function () {
 
             self.sendMessageToDesignStoreIframe("userData", userData);
 
+            // send new laserhead model ID if changed
             if (self.laserheadChangedVM.isLaserheadChanged()) {
                 self.sendMessageToDesignStoreIframe("laserheadChanged", {
                     laserheadModelId:
