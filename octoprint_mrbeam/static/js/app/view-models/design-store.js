@@ -13,20 +13,15 @@ $(function () {
             self.DESIGN_STORE_IFRAME_SRC + "/api/healthcheck";
         self.DESIGN_STORE_TAB_ELEMENT = $("#designstore_tab_btn");
 
-        self.loginState = params[0];
-        self.navigation = params[1];
-        self.analytics = params[2];
-        self.settings = params[3];
-        self.laserheadChangedVM = params[4];
+        self.mrBeamVM = params[0];
+        self.loginState = params[1];
+        self.navigation = params[2];
+        self.analytics = params[3];
+        self.settings = params[4];
+        self.laserheadChangedVM = params[5];
 
         self.lastUploadedDate = ko.observable("");
         self.eventListenerAdded = ko.observable(false);
-
-        self.onUserLoggedIn = function () {
-            if (self.laserheadChangedVM.laserheadXDetectedForFirstTime()) {
-                self.showNotifyIcon();
-            }
-        };
 
         self.initialiseStore = function () {
             let designStoreIframeElement = $("#design_store_iframe");
@@ -196,25 +191,6 @@ $(function () {
             self.lastUploadedDate(payload.last_uploaded);
         };
 
-        self.removeNotifyIcon = function () {
-            const designStoreNotificationElement =
-                self.DESIGN_STORE_TAB_ELEMENT.find("span.notify-icon");
-            if (designStoreNotificationElement.length !== 0) {
-                designStoreNotificationElement.remove();
-            }
-        };
-
-        self.showNotifyIcon = function () {
-            if (
-                self.DESIGN_STORE_TAB_ELEMENT.find("span.notify-icon")
-                    .length === 0
-            ) {
-                self.DESIGN_STORE_TAB_ELEMENT.append(
-                    '<span class="notify-icon"></span>'
-                );
-            }
-        };
-
         self.onSvgReceived = function (payload) {
             self.downloadSvgToMrBeam(payload.svg_string, payload.file_name);
         };
@@ -307,7 +283,7 @@ $(function () {
 
         self.onUserNotified = function () {
             // Handle the 'new designs' notification icon
-            self.removeNotifyIcon();
+            self.mrBeamVM.removeNotifyIcon(self.DESIGN_STORE_TAB_ELEMENT);
             // Update user settings
             let oldLastUploaded = self.getLastUploadedDate();
             if (
@@ -336,6 +312,7 @@ $(function () {
         DesignStoreViewModel,
         // e.g. loginStateViewModel, settingsViewModel, ...
         [
+            "mrbeamViewModel",
             "loginStateViewModel",
             "navigationViewModel",
             "analyticsViewModel",

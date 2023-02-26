@@ -8,6 +8,10 @@ $(function () {
         };
 
         window.mrbeam.viewModels["materialStoreViewModel"] = self;
+
+        self.mrBeamVM = params[0];
+        self.laserheadChangedVM = params[1];
+
         self.material_store_iframe_src = "";
         self.healthcheck_url = "";
 
@@ -36,6 +40,7 @@ $(function () {
             } else {
                 self.showConnectionError();
             }
+            self.mrBeamVM.removeNotifyIcon($("#materialstore_tab_btn"));
         };
 
         self.sendInitDetailsToMaterialStoreIframe = function () {
@@ -108,7 +113,7 @@ $(function () {
 
     OCTOPRINT_VIEWMODELS.push({
         construct: MaterialStoreViewModel,
-        dependencies: [],
+        dependencies: ["mrbeamViewModel", "laserheadChangedViewModel"],
         elements: ["#material_store_content"],
     });
 });
