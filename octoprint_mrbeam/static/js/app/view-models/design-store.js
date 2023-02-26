@@ -12,8 +12,6 @@ $(function () {
         self.DESIGN_STORE_IFRAME_HEALTHCHECK_SRC =
             self.DESIGN_STORE_IFRAME_SRC + "/api/healthcheck";
         self.DESIGN_STORE_TAB_ELEMENT = $("#designstore_tab_btn");
-        self.DESIGN_STORE_NOTIFY_ICON_ELEMENT =
-            self.DESIGN_STORE_TAB_ELEMENT.find("span.notify-icon");
 
         self.loginState = params[0];
         self.navigation = params[1];
@@ -199,13 +197,18 @@ $(function () {
         };
 
         self.removeNotifyIcon = function () {
-            if (self.DESIGN_STORE_NOTIFY_ICON_ELEMENT.length !== 0) {
-                self.DESIGN_STORE_NOTIFY_ICON_ELEMENT.remove();
+            const designStoreNotificationElement =
+                self.DESIGN_STORE_TAB_ELEMENT.find("span.notify-icon");
+            if (designStoreNotificationElement.length !== 0) {
+                designStoreNotificationElement.remove();
             }
         };
 
         self.showNotifyIcon = function () {
-            if (self.DESIGN_STORE_NOTIFY_ICON_ELEMENT.length === 0) {
+            if (
+                self.DESIGN_STORE_TAB_ELEMENT.find("span.notify-icon")
+                    .length === 0
+            ) {
                 self.DESIGN_STORE_TAB_ELEMENT.append(
                     '<span class="notify-icon"></span>'
                 );
