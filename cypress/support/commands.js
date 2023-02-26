@@ -267,6 +267,14 @@ Cypress.Commands.add("laserButtonClick", () => {
     cy.wait(3000);
 });
 
+Cypress.Commands.add("onlyLaserButtonClick", () => {
+    cy.get('[data-test="working-area-laser-button"]').invoke(
+        "removeAttr",
+        "disabled"
+    );
+    cy.get('[data-test="working-area-laser-button"]').click();
+});
+
 Cypress.Commands.add("selectMaterial", () => {
     cy.get('[data-test="conversion-dialog-material-item"]')
         .contains("Cardboard, single wave")

@@ -1,4 +1,4 @@
-				<div class="tab-pane active" id="workingarea">
+				<div class="tab-pane active" id="workingarea" data-test="mrbeam-ui-tab-workingarea">
 					<div class="container-fluid">
 						<div class="row-fluid">
 							<div class="span4 accordion full-col" style="margin-bottom:0;">
@@ -51,8 +51,7 @@
 
 													<div class="row-fluid print-control btn-group" style="display: none;" data-bind="visible: loginState.isUser">
 														<button id="laser_button" data-test="working-area-laser-button" class="btn btn-danger span6"
-                                                                data-bind="click: conversion.show_conversion_dialog, enable: {{ 'true' if isDevelop and 'enableLaserButton' in request.args else 'false'}} || (state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty()), attr: {title: state.titlePrintButton}"
-                                                                id="job_print">
+                                                                data-bind="click: conversion.show_conversion_dialog, enable: {{ 'true' if isDevelop and 'enableLaserButton' in request.args else 'false'}} || (state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty()), attr: {title: state.titlePrintButton}">
                                                             <i class="icon-white icon-fire"
                                                                data-bind="css: { 'wobble': state.isPrinting()}"></i>
                                                             <span>{{ _('Laser') }}</span>

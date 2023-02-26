@@ -1,4 +1,4 @@
-<div id="ready_to_laser_dialog" class="modal hide fade" data-backdrop="static">
+<div id="ready_to_laser_dialog" class="modal hide fade" data-backdrop="static" data-test="mrbeam-ui-modal-ready-to-laser">
 
     <div data-bind='visible: !is_cooling_mode() || !state.interlocksClosed()'>
         <div class="modal-header">
@@ -22,7 +22,7 @@
             <a class="btn pull-left" data-bind='visible: !is_rtl_mode(), click: cancel_btn' aria-hidden="true">{{ _('Cancel Laser Job') }}</a>
             <h4 class="pull-right" data-bind='visible: !is_fan_connected()'>{{ _('Plug in air filter system') }}</h4>
             <h4 class="pull-right" data-bind='visible: !state.interlocksClosed() && is_fan_connected()'>{{ _('Close the lid') }}</h4>
-            <h4 id="ready_to_laser_dev_start_btn" class="pull-right dev_start_button" data-bind='visible: state.interlocksClosed() && is_fan_connected() && is_rtl_mode()'>
+            <h4 id="ready_to_laser_dev_start_btn" data-test="mrbeam-ui-rady-to-laser-start-text" class="pull-right dev_start_button" data-bind='visible: state.interlocksClosed() && is_fan_connected() && is_rtl_mode()'>
                 {{ _('Press the button to start') }}
             </h4>
             <h4 id="ready_to_laser_dev_resume_btn" class="pull-right dev_start_button" data-bind='visible: state.interlocksClosed() && is_fan_connected() && !is_rtl_mode()'>

@@ -3698,3 +3698,11 @@ button#terminal-send {
 }
 
 /* Corner Calibration */
+
+/* Guided Tour */
+div.hopscotch-bubble .hopscotch-bubble-number {
+  background: #e25303 none !important;
+  border-radius: 20px !important;
+  padding: 0 0 0 0 !important;
+}
+/* Guided Tour */

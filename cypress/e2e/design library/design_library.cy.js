@@ -7,7 +7,9 @@ describe("Library design", function () {
 
     beforeEach(function () {
         cy.visit(this.testData.url);
-        cy.wait(15000);
+        cy.get('[id="loading_overlay"]', { timeout: 20000 }).should(
+            "not.be.visible"
+        );
         cy.loginLibrary(this.testData.email, this.testData.password);
         cy.wait(7000);
     });
