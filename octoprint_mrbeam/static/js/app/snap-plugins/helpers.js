@@ -157,7 +157,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 <svg version="1.1"
     ${[...namespaces].join(" ")}
     width="${width}" height="${height}"
-    xxviewBox="${att.viewBox}">
+    viewBox="${att.viewBox}">
     <defs>
         ${defs}
         <style>${fontDecl}</style>
