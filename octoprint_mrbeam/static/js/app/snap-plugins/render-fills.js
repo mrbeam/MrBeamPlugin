@@ -681,6 +681,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     }
 
     function processElementByType(elem, className, fillPaths) {
+        // sanitize text elements
+        if (elem.node.nodeName.includes("text")) {
+            sanitizeText(elem);
+        }
         if (elem.type === "g") return []; // means empty group
         if (elem.type === "defs") return []; // means empty defs
         // TODO: SW-1446
@@ -722,5 +726,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             }
         }
         return [];
+    }
+
+    function sanitizeText(elem) {
+        elem.node.childNodes.forEach((child) => {
+            if (child.textContent) {
+                // replace < and & with their html entities to avoid breaking the svg
+                child.textContent = child.textContent.replace(/&/g, "&amp;");
+                child.textContent = child.textContent.replace(/</g, "&lt;");
+            }
+        });
     }
 });
