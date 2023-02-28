@@ -196,3 +196,21 @@ input[type="radio"] {
   filter: invert(41%) sepia(50%) saturate(6758%) hue-rotate(12deg)
     brightness(99%) contrast(98%);
 }
+
+/* Welcome wizard - start */
+
+#wizard_firstrun_start {
+  padding-bottom: 20px;
+}
+
+#wizard_firstrun_start img {
+  margin-bottom: 30px;
+}
+
+#wizard_firstrun_start h4,
+#wizard_firstrun_start p {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* Welcome wizard - end */
