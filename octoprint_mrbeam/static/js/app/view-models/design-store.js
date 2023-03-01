@@ -23,6 +23,12 @@ $(function () {
         self.lastUploadedDate = ko.observable("");
         self.eventListenerAdded = ko.observable(false);
 
+        self.onUserLoggedIn = function () {
+            if (self.laserheadChangedVM.laserheadXDetectedForFirstTime()) {
+                self.mrBeamVM.removeNotifyIcon(self.DESIGN_STORE_TAB_ELEMENT);
+            }
+        };
+
         self.initialiseStore = function () {
             let designStoreIframeElement = $("#design_store_iframe");
             if (
@@ -167,10 +173,11 @@ $(function () {
             self.sendMessageToDesignStoreIframe("userData", userData);
 
             // send new laserhead model ID if changed
-            if (self.laserheadChangedVM.isLaserheadChanged()) {
-                self.sendMessageToDesignStoreIframe("laserheadChanged", {
-                    laserheadModelId:
-                        self.laserheadChangedVM.laserheadModelId(),
+            if (self.laserheadChangedVM.laserheadXDetected()) {
+                self.sendMessageToDesignStoreIframe("selectFilter", {
+                    type: "recommendedBy",
+                    subsection: "laserheadModel",
+                    value: "x",
                 });
             }
         };
@@ -189,7 +196,6 @@ $(function () {
             ) {
                 self.showNotifyIcon();
             }
-            self.lastUploadedDate(payload.last_uploaded);
         };
 
         self.onSvgReceived = function (payload) {
