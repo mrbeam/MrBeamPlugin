@@ -5,6 +5,7 @@ $(function () {
         const MATERIAL_STORE_EVENT_TYPE = {
             MR_BEAM_LOAD: "loadedFromMrBeamDevice",
             DISPLAY_PRODUCT: "displayProduct",
+            SELECT_FILTER: "selectFilter",
         };
 
         window.mrbeam.viewModels["materialStoreViewModel"] = self;
@@ -49,11 +50,15 @@ $(function () {
             );
 
             // send new laserhead model ID if changed
-            if (self.laserheadChangedVM.isLaserheadChanged()) {
-                self.sendMessageToMaterialStoreIframe("laserheadChanged", {
-                    laserheadModelId:
-                        self.laserheadChangedVM.laserheadModelId(),
-                });
+            if (self.laserheadChangedVM.laserheadXDetected()) {
+                self.sendMessageToMaterialStoreIframe(
+                    MATERIAL_STORE_EVENT_TYPE.SELECT_FILTER,
+                    {
+                        type: "recommendedBy",
+                        subsection: "laserheadModel",
+                        value: "x",
+                    }
+                );
             }
         };
 
