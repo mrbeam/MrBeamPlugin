@@ -213,4 +213,16 @@ input[type="radio"] {
   padding-right: 20px;
 }
 
+#wizard_firstrun_end div a:hover {
+  text-decoration: none;
+}
+
+#wizard_firstrun_end div a i {
+  font-size: 7em;
+  padding: 0 3px;
+}
+
+#wizard_firstrun_end h3 {
+  color: #e25303;
+}
 /* Welcome wizard - end */
