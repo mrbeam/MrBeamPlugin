@@ -342,7 +342,7 @@ $(function () {
         self.onUserLoggedIn = function () {
             self.removeOpSafeModeOptionFromSystemMenu();
 
-            if (self.laserheadChangedVM.laserheadXDetectedForFirstTime()) {
+            if (self.laserheadChangedVM.laserheadXDetected()) {
                 self.showNotifyIcon($("#designstore_tab_btn"));
                 self.showNotifyIcon($("#materialstore_tab_btn"));
             }
