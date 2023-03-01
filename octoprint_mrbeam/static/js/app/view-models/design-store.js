@@ -171,10 +171,11 @@ $(function () {
 
             self.sendMessageToDesignStoreIframe("userData", userData);
 
-            if (self.laserheadChangedVM.isLaserheadChanged()) {
-                self.sendMessageToDesignStoreIframe("laserheadChanged", {
-                    laserheadModelId:
-                        self.laserheadChangedVM.laserheadModelId(),
+            if (self.laserheadChangedVM.laserheadXDetected()) {
+                self.sendMessageToDesignStoreIframe("selectFilter", {
+                    type: "recommendedBy",
+                    subsection: "laserheadModel",
+                    value: "x",
                 });
             }
         };

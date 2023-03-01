@@ -77,7 +77,7 @@ $(function () {
             );
         };
 
-        self.laserheadXDetectedForFirstTime = function () {
+        self.laserheadXDetected = function () {
             return (
                 self.isLaserheadChanged() &&
                 self.laserheadModelId() === mrbeam.laserheadModel.X
