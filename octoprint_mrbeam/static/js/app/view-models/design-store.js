@@ -23,12 +23,6 @@ $(function () {
         self.lastUploadedDate = ko.observable("");
         self.eventListenerAdded = ko.observable(false);
 
-        self.onUserLoggedIn = function () {
-            if (self.laserheadChangedVM.laserheadXDetectedForFirstTime()) {
-                self.mrBeamVM.removeNotifyIcon(self.DESIGN_STORE_TAB_ELEMENT);
-            }
-        };
-
         self.initialiseStore = function () {
             let designStoreIframeElement = $("#design_store_iframe");
             if (
@@ -194,7 +188,7 @@ $(function () {
                 oldLastUploaded &&
                 oldLastUploaded !== payload.last_uploaded
             ) {
-                self.showNotifyIcon();
+                self.mrBeamVM.showNotifyIcon(self.DESIGN_STORE_TAB_ELEMENT);
             }
         };
 
