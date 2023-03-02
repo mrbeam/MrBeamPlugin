@@ -53,7 +53,7 @@
 					<li><a href="#designlib" data-toggle="tab" id="designlib_tab_btn" data-test="mrbeam-ui-index-design-library">{{ _('design library') }}</a></li>
                     <li><a href="#designstore" data-toggle="tab" id="designstore_tab_btn" onclick="window.mrbeam.viewModels.designStoreViewModel.initialiseStore()" data-test="mrbeam-ui-index-design-store">{{ _('design store') }}</a></li>
                     {% if settings_model.material_store.enabled %}
-                        <li><a href="#material_store_content" data-toggle="tab" id="materialsotre_tab_btn" onclick="window.mrbeam.viewModels.materialStoreViewModel.initialiseStore('{{ settings_model.material_store.healthcheck_url }}', '{{ settings_model.material_store.url }}')">{{ _('material store') }}</a></li>
+                        <li><a href="#material_store_content" data-toggle="tab" id="materialstore_tab_btn" onclick="window.mrbeam.viewModels.materialStoreViewModel.initialiseStore('{{ settings_model.material_store.healthcheck_url }}', '{{ settings_model.material_store.url }}')">{{ _('material store') }}</a></li>
                     {% endif %}
                     {% if not enableFocus %}
 					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">{{ _('focus') }}</a></li>
