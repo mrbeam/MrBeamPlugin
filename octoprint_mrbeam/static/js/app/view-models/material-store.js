@@ -8,6 +8,14 @@ $(function () {
             SELECT_FILTER: "selectFilter",
         };
 
+        const MATERIAL_STORE_LASERHEAD_FILTER_VALUE = {
+            LASERHEAD_X: "laserheadX",
+        };
+
+        const MATERIAL_STORE_FILTER_TYPE = {
+            LASERHEAD: MATERIAL_STORE_LASERHEAD_FILTER_VALUE,
+        };
+
         window.mrbeam.viewModels["materialStoreViewModel"] = self;
 
         self.mrBeamVM = params[0];
@@ -54,9 +62,7 @@ $(function () {
                 self.sendMessageToMaterialStoreIframe(
                     MATERIAL_STORE_EVENT_TYPE.SELECT_FILTER,
                     {
-                        type: "recommendedBy",
-                        subsection: "laserheadModel",
-                        value: "x",
+                        value: MATERIAL_STORE_FILTER_TYPE.LASERHEAD.LASERHEAD_X,
                     }
                 );
             }
