@@ -684,6 +684,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         // sanitize text elements
         if (elem.node.nodeName.includes("text")) {
             sanitizeText(elem);
+            // replace & from font-family with &amp; to prevent encoding errors
+            if (
+                window.getComputedStyle(elem.node)["fontFamily"].includes("&")
+            ) {
+                elem.node.style.fontFamily = elem.node.style.fontFamily.replace(
+                    /&/g,
+                    "&amp;"
+                );
+            }
         }
         if (elem.type === "g") return []; // means empty group
         if (elem.type === "defs") return []; // means empty defs
