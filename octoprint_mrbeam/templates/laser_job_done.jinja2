@@ -9,9 +9,7 @@
                 <p>{{ _('Show your creation and use our hashtag') }}</p>
                 <p class="modal__p--hashtag"><a href="https://mr-beam.org/madewithmrbeam?utm_source=beamos&utm_medium=software" target="_blank">#madewithmrbeam</a>
                 </p>
-                <div>
-                    {%  include 'modules/social_media_channels.jinja2' %}
-                </div>
+                {%  include 'modules/social_media_channels.jinja2' %}
             </div>
             <div class="modal__modal-body--material-section" data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.name
             && window.mrbeam.viewModels.vectorConversionViewModel.selected_material_color()

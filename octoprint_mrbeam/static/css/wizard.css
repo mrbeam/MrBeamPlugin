@@ -217,9 +217,8 @@ input[type="radio"] {
   text-decoration: none;
 }
 
-#wizard_firstrun_end div a i {
-  font-size: 7em;
-  padding: 0 3px;
+#wizard_firstrun_end .social_media_square_icons {
+  font-size: 2.55em;
 }
 
 #wizard_firstrun_end h3 {

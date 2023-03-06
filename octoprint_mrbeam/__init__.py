@@ -773,6 +773,9 @@ class MrBeamPlugin(
                 "css/wizard.css",
                 "css/tab_messages.css",
                 "css/software_update.css",
+                "css/fontawesome.min.css",
+                "css/brands.min.css",
+                "css/v4-font-face.min.css",
             ],
             less=["less/mrbeam.less"],
         )

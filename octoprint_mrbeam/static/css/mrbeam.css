@@ -2806,42 +2806,54 @@ hides the force update buttons
 .modal--laser-job-done
   .modal-body
   .modal__modal-body--social-media-section
-  div
-  a
-  i {
-  font-size: 2.4em;
-  padding: 0 3px;
+  p.modal__p--hashtag
+  a {
+  color: #ffffff;
 }
 
 .modal--laser-job-done
   .modal-body
   .modal__modal-body--social-media-section
-  p.modal__p--hashtag
-  a,
-.modal--laser-job-done
-  .modal-body
-  .modal__modal-body--social-media-section
   div
   a
   i {
-  color: #ffffff;
+  background-color: #ffffff;
+  color: #e25303;
   text-decoration: none;
 }
 
 .modal--laser-job-done
   .modal-body
   .modal__modal-body--social-media-section
+  .social_media_square_icons {
+  font-size: 1.5em;
+}
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
+  .social_media_square_icons
+  a {
+  margin-left: 5px;
+}
+
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
   p.modal__p--hashtag
-  a:hover,
+  a:hover {
+  color: #e25303;
+  text-decoration: none;
+  background-color: #ffffff;
+}
 .modal--laser-job-done
   .modal-body
   .modal__modal-body--social-media-section
   div
   a
   i:hover {
-  color: #e25303;
+  color: #ffffff;
   text-decoration: none;
-  background-color: #ffffff;
+  background-color: #e25303;
 }
 
 .modal--laser-job-done .modal-body .modal__modal-body--material-section {
@@ -3714,15 +3726,45 @@ div.hopscotch-bubble .hopscotch-bubble-number {
   border-radius: 20px !important;
   padding: 0 0 0 0 !important;
 }
-#congratulations div a i {
-  font-size: 7em;
+
+#congratulations .social_media_square_icons {
+  font-size: 2.4em;
   padding: 0 3px;
 }
+
 #congratulations.modal {
   width: 700px;
   left: 45%;
 }
+
 #congratulations div a:hover {
   text-decoration: none;
 }
+
+#congratulations p {
+  margin-bottom: 1.5em;
+}
 /* Guided Tour */
+
+/* Sozial Media Icons */
+.social_media_square_icons a i {
+  background-color: #e25303;
+  border-radius: 0.3em;
+  padding: 0.1em;
+  width: 1.2em;
+  height: 1.2em;
+  text-align: center;
+  vertical-align: middle;
+  top: 50%;
+  position: static;
+  line-height: 1.2em;
+}
+
+.social_media_square_icons a i {
+  color: #ffffff;
+}
+
+.social_media_square_icons a:hover {
+  filter: brightness(0.8);
+}
+/* Sozial Media Icons */
