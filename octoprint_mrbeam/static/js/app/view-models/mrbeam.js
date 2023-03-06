@@ -204,6 +204,7 @@ $(function () {
         self.loginState = parameters[3];
         self.system = parameters[4];
         self.analytics = parameters[5];
+        self.laserheadChangedVM = parameters[6];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
@@ -340,6 +341,11 @@ $(function () {
 
         self.onUserLoggedIn = function () {
             self.removeOpSafeModeOptionFromSystemMenu();
+
+            if (self.laserheadChangedVM.laserheadXDetected()) {
+                self.showNotifyIcon($("#designstore_tab_btn"));
+                self.showNotifyIcon($("#materialstore_tab_btn"));
+            }
 
             if (!self._ajaxErrorRegistered) {
                 $(document).ajaxError(function (
@@ -606,6 +612,7 @@ $(function () {
                 );
             }
         };
+
         self.presetLoginUser = function () {
             if (MRBEAM_ENV_SUPPORT_MODE) {
                 self.loginState.loginUser(
@@ -619,6 +626,7 @@ $(function () {
                 self.loginState.loginPass("a");
             }
         };
+
         /**
          * MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
          * Hides the option "Restart OctoPrint in safe mode"
@@ -628,6 +636,19 @@ $(function () {
             self.system.systemActions.remove(function (c) {
                 return c.action === "restart_safe";
             });
+        };
+
+        self.showNotifyIcon = function (element) {
+            if (element.find("span.notify-icon").length === 0) {
+                element.append('<span class="notify-icon"></span>');
+            }
+        };
+
+        self.removeNotifyIcon = function (element) {
+            const storeNotificationElement = element.find("span.notify-icon");
+            if (storeNotificationElement.length !== 0) {
+                storeNotificationElement.remove();
+            }
         };
     }
 
@@ -643,6 +664,7 @@ $(function () {
             "loginStateViewModel",
             "systemViewModel",
             "analyticsViewModel",
+            "laserheadChangedViewModel",
         ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
