@@ -3768,3 +3768,9 @@ div.hopscotch-bubble .hopscotch-bubble-number {
   filter: brightness(0.8);
 }
 /* Sozial Media Icons */
+
+/* Font Awesome v4 backward compatibility for version v6 */
+.fa {
+  font-family: "FontAwesome";
+}
+/* Font Awesome v4 backward compatibility for version v6 */
