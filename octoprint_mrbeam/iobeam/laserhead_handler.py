@@ -11,6 +11,7 @@ LASERHEAD_MAX_TEMP_FALLBACK = 55.0
 LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
 LASERHEAD_MAX_CORRECTION_FACTOR_FALLBACK = 1
 LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK = 1500
+LASERHEAD_LIFESPAN_FALLBACK = 40
 
 LASERHEAD_STOCK_ID = 0
 LASERHEAD_S_ID = 1
@@ -652,3 +653,36 @@ class LaserheadHandler(object):
         """
 
         return LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK
+
+    @property
+    def current_laserhead_lifespan(self):
+        """Return the current laser head lifespan.
+
+        Returns:
+            float: Laser head lifespan
+        """
+
+        current_laserhead_properties = self._get_laserhead_properties()
+
+        # Handle the exceptions
+        if ((isinstance(current_laserhead_properties, dict) is False) or
+                ("lifespan" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["lifespan"], int) is False)):
+            # Apply fallback
+            self._logger.exception(
+                "Current Laserhead lifespan couldn't be retrieved, fallback to the factor value of: {}".format(
+                    self.default_laserhead_lifespan))
+            return self.default_laserhead_lifespan
+        # Reaching here means, everything looks good
+        self._logger.debug(
+            "Current Laserhead lifespan:{}".format(current_laserhead_properties["lifespan"]))
+        return current_laserhead_properties["lifespan"]
+
+    @property
+    def default_laserhead_lifespan(self):
+        """Default lifespan for laser head. To be used by other modules at init time.
+
+        Returns:
+            float: Laser head default lifespan
+        """
+        return LASERHEAD_LIFESPAN_FALLBACK
