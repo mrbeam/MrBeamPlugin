@@ -126,7 +126,6 @@ $(function () {
                     }
                 );
             } else {
-                // $("#wizard_dialog div.modal-footer button.button-finish").show();
                 $("#wizard_dialog div.modal-footer button.button-finish").text(
                     gettext("Let's go!")
                 );

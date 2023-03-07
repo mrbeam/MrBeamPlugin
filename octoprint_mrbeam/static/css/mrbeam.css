@@ -3748,6 +3748,7 @@ div.hopscotch-bubble .hopscotch-bubble-number {
 
 /* Sozial Media Icons */
 .social_media_square_icons a i {
+  color: #ffffff;
   background-color: #e25303;
   border-radius: 0.3em;
   padding: 0.1em;
@@ -3760,10 +3761,6 @@ div.hopscotch-bubble .hopscotch-bubble-number {
   line-height: 1.2em;
 }
 
-.social_media_square_icons a i {
-  color: #ffffff;
-}
-
 .social_media_square_icons a:hover {
   filter: brightness(0.8);
 }
@@ -3771,6 +3768,6 @@ div.hopscotch-bubble .hopscotch-bubble-number {
 
 /* Font Awesome v4 backward compatibility for version v6 */
 .fa {
-  font-family: "FontAwesome";
+  font-family: "FontAwesome", serif;
 }
 /* Font Awesome v4 backward compatibility for version v6 */
