@@ -35,6 +35,7 @@ MODELS = {
     MODEL_MRBEAM_2_DC_X: "Mr Beam II dreamcut [x]",
 }
 MODEL_DEFAULT = MODEL_MRBEAM_2
+DC_SERIES = [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X]
 
 
 class DeviceInfo(object):
@@ -84,8 +85,8 @@ class DeviceInfo(object):
             self._model = self._device_data.get(self.KEY_MODEL, MODEL_DEFAULT)
         return self._model
 
-    def is_mrbeam2_dc_or_dc_s(self):
-        return self.get_model() in (MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S)
+    def is_mrbeam2_dc_series(self):
+        return self.get_model() in DC_SERIES
 
     def get_production_date(self):
         return self._device_data.get(self.KEY_PRODUCTION_DATE, None)
