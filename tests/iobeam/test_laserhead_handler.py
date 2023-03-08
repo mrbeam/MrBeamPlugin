@@ -330,3 +330,67 @@ def test_default_laserhead_max_intensity_including_correction(mrbeam_plugin):
 
     # Assert
     assert max_intensity == 1500
+
+
+@pytest.mark.parametrize(
+    "laserhead,expected_value",
+    [
+        (LASERHEAD_STOCK_ID, 2),
+        (LASERHEAD_S_ID, 3),
+        (LASERHEAD_X_ID, 3),
+        (None, 3),
+        (1000, 3),
+    ],
+    ids=[
+        "Laserhead Stock",
+        "Laserhead S",
+        "Laserhead X",
+        "None Laserhead",
+        "unknown Laserhead",
+    ],
+)
+def test_current_laserhead_max_dust_factor(mrbeam_plugin, laserhead, expected_value):
+    # Arrange
+    with patch(
+        "octoprint_mrbeam.iobeam.laserhead_handler.LaserheadHandler.get_current_used_lh_model_id",
+        return_value=laserhead,
+    ):
+        laserhead_handler = LaserheadHandler(mrbeam_plugin)
+
+        # Act
+        max_dust_factor = laserhead_handler.current_laserhead_max_dust_factor
+
+        # Assert
+        assert max_dust_factor == expected_value
+
+
+@pytest.mark.parametrize(
+    "laserhead,expected_value",
+    [
+        (LASERHEAD_STOCK_ID, 40),
+        (LASERHEAD_S_ID, 40),
+        (LASERHEAD_X_ID, 80),
+        (None, 40),
+        (1000, 40),
+    ],
+    ids=[
+        "Laserhead Stock",
+        "Laserhead S",
+        "Laserhead X",
+        "None Laserhead",
+        "unknown Laserhead",
+    ],
+)
+def test_current_laserhead_lifespan(laserhead, expected_value, mrbeam_plugin):
+    # Arrange
+    with patch(
+        "octoprint_mrbeam.iobeam.laserhead_handler.LaserheadHandler.get_current_used_lh_model_id",
+        return_value=laserhead,
+    ):
+        laserhead_handler = LaserheadHandler(mrbeam_plugin)
+
+        # Act
+        lifespan = laserhead_handler.current_laserhead_lifespan
+
+        # Assert
+        assert lifespan == expected_value

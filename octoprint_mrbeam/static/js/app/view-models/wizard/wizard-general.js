@@ -8,6 +8,7 @@ $(function () {
         self.ACL_TAB = "wizard_plugin_corewizard_acl_link";
         self.LASER_SAFETY_TAB = "wizard_plugin_corewizard_lasersafety_link";
         self.ANALYTICS_TAB = "wizard_plugin_corewizard_analytics_link";
+        self.GUIDED_TOUR_TAB = "wizard_plugin_corewizard_guided_tour_link";
         self.END_TAB = "";
 
         self.WELCOME_TABS_IN_ORDER = [
@@ -103,6 +104,36 @@ $(function () {
         self.onAfterWizardTabChange = function (current) {
             self._changeNavDesignActiveTab(current);
             $("#wizard_dialog > .modal-body").scrollTop(0);
+            self._showGuidedTourButton(current);
+        };
+
+        self._showGuidedTourButton = function (current) {
+            console.log("current", current);
+            if (current === self.GUIDED_TOUR_TAB) {
+                $(
+                    "#wizard_dialog div.modal-footer button.button-finish"
+                ).show();
+                $("#wizard_dialog div.modal-footer button.button-finish").text(
+                    "Start guided Tour"
+                );
+                $("#wizard_dialog div.modal-footer button.button-next").text(
+                    "Skip tour"
+                );
+                $("#wizard_dialog div.modal-footer button.button-finish").click(
+                    function () {
+                        $("#wizard_dialog").modal("hide");
+                        self.tour.startTourFromStep(1);
+                    }
+                );
+            } else {
+                $("#wizard_dialog div.modal-footer button.button-finish").text(
+                    gettext("Let's go!")
+                );
+                $("#wizard_dialog div.modal-footer button.button-next").text(
+                    "Next"
+                );
+                self.onStartupComplete();
+            }
         };
 
         self.onWizardFinish = function () {
