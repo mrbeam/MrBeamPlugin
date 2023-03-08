@@ -659,7 +659,7 @@ class LaserheadHandler(object):
         """Return the current laser head lifespan.
 
         Returns:
-            float: Laser head lifespan
+            int: Laser head lifespan
         """
 
         current_laserhead_properties = self._get_laserhead_properties()
@@ -683,6 +683,6 @@ class LaserheadHandler(object):
         """Default lifespan for laser head. To be used by other modules at init time.
 
         Returns:
-            float: Laser head default lifespan
+            int: Laser head default lifespan
         """
         return LASERHEAD_LIFESPAN_FALLBACK
