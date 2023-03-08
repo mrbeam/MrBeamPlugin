@@ -126,6 +126,15 @@ class WizardConfig:
                 template="wizard/wizard_analytics.jinja2",
                 div="wizard_plugin_corewizard_analytics",
             ),
+            wizard_guided_tour=dict(
+                type="wizard",
+                name=gettext("Guided Tour"),
+                required=True,
+                mandatory=False,
+                suffix="_guided_tour",
+                template="wizard/wizard_guided_tour.jinja2",
+                div="wizard_plugin_corewizard_guided_tour",
+            ),
         )
 
         return welcome_wizard_tabs

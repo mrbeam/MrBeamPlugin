@@ -1,33 +1,10 @@
-<div id="congratulations" data-test="mrbeam-ui-modal-congratulations" class="modal hide fade" data-backdrop="static">
+<div id="congratulations" data-test="mrbeam-ui-modal-congratulations" class="modal hide fade modal" data-backdrop="static">
     <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
         <h3>{{ _('Congratulations') }}</h3>
     </div>
     <div class="modal-body">
-        <div>
-            <img loading="lazy" src="https://picsum.photos/600/300">
-            <h4> {{ _("TODO") }}{#TODO SW-2544 add the final text and design#}</h4>
-            <p> {{ _("Link to community") }}</p>
-            <p> {{ _("Link to inspiration instagram and blog") }}</p>
-            <p> {{ _("#madewithmrbeam") }}</p>
-            <p> {{ _("Youtube for tutorials") }}</p>
-            <div class="modal__modal-body--social-media-section">
-                <p>{{ _('Share your work and inspire others!') }}</p>
-                <p class="modal__p--hashtag"><a href="https://www.instagram.com/mrbeamlasers/" target="_blank">#madewithmrbeam</a>
-                </p>
-                <div>
-                    <a href="https://www.instagram.com/mrbeamlasers/" target="_blank"><i class="icon-instagram"></i></a>
-                    <a href="https://www.facebook.com/mrbeamlasercutter/" target="_blank"><i
-                            class="icon-facebook-sign"></i></a>
-                    <a href="https://twitter.com/MrBeamLasers" target="_blank"><i class="icon-twitter-sign"></i></a>
-                    <a href="https://www.pinterest.com/mrbeamlasers" target="_blank"><i class="icon-pinterest-sign"></i></a>
-                    <a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank"><i
-                            class="icon-youtube-sign"></i></a>
-                    <a href="https://www.linkedin.com/company/mrbeamlasers" target="_blank"><i
-                            class="icon-linkedin-sign"></i></a>
-                </div>
-            </div>
-        </div>
+        {% include 'wizard/firstrun_end.jinja2' %}
     </div>
     <div class="modal-footer">
         <button class="btn btn-primary" data-test="mrbeam-ui-modal-congratulations-ok-button" data-dismiss="modal" aria-hidden="true">{{ _('Done') }}</button>

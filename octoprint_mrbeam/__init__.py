@@ -761,6 +761,9 @@ class MrBeamPlugin(
                 "js/app/helpers/mutation-observer.js",
             ],
             css=[
+                "css/fontawesome_v6/css/fontawesome.min.css",
+                "css/fontawesome_v6/css/brands.min.css",
+                "css/fontawesome_v6/css/v4-font-face.min.css",
                 "css/mrbeam.css",
                 "css/backlash_settings.css",
                 "css/tab_designlib.css",
