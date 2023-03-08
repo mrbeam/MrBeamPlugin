@@ -292,15 +292,13 @@ input[type="radio"] {
   border-radius: 100%;
   padding: 10px 10px;
   min-width: auto;
+  margin-bottom: 16px;
 }
 .btn.connection-wizard__btn--back img {
   width: 20px;
 }
 #connection-wizard--selected-option .connection-wizard__span--a {
   margin-right: 0;
-}
-.btn.connection-wizard__btn--back {
-  margin-bottom: 16px;
 }
 .connection-wizard--selected-option {
   margin-bottom: 20px;
