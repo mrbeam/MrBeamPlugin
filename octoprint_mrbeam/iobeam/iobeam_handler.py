@@ -20,10 +20,10 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 _instance = None
 
 
-def ioBeamHandler(plugin):
+def ioBeamHandler(plugin, printer):
     global _instance
     if _instance is None:
-        _instance = IoBeamHandler(plugin)
+        _instance = IoBeamHandler(plugin, printer)
     return _instance
 
 
@@ -82,6 +82,8 @@ class IoBeamHandler(object):
 
     PROCESSING_TIMES_LOG_LENGTH = 100
     PROCESSING_TIME_WARNING_THRESHOLD = 0.7
+
+    I2C_STATE_REQUEST_INTERVAL = 10  # 10 * 60  # 10 minutes if no job is running
 
     MESSAGE_LENGTH_MAX = 4096
     MESSAGE_NEWLINE = "\n"
@@ -155,8 +157,9 @@ class IoBeamHandler(object):
     DATASET_REED_SWITCH = "reed_switch"
     DATASET_ANALYTICS = "analytics"
 
-    def __init__(self, plugin):
+    def __init__(self, plugin, printer):
         self._plugin = plugin
+        self._printer = printer
         self._event_bus = plugin._event_bus
         self._socket_file = plugin._settings.get(["dev", "sockets", "iobeam"])
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam")
@@ -201,6 +204,8 @@ class IoBeamHandler(object):
         iobeam_worker = threading.Timer(1.0, self._initWorker, [self._socket_file])
         iobeam_worker.daemon = True
         iobeam_worker.start()
+
+        self._start_i2c_request_timer()
 
     def isRunning(self):
         return self._worker.is_alive()
@@ -1353,3 +1358,28 @@ class IoBeamHandler(object):
         )
 
         self._plugin.fire_event(MrBeamEvents.ANALYTICS_DATA, payload)
+
+    def _start_i2c_request_timer(self):
+        """Starts a timer to request the i2c state from iobeam.
+
+        Returns:
+            None
+        """
+
+        my_timer = threading.Timer(
+            self.I2C_STATE_REQUEST_INTERVAL, self._request_i2c_state
+        )
+        my_timer.daemon = True
+        my_timer.name = "request_i2c_state"
+        my_timer.start()
+
+    def _request_i2c_state(self):
+        """Requests the i2c state from iobeam and starts the timer again.
+
+        Returns:
+            None
+        """
+        if not self._printer.is_printing() and not self._printer.is_paused():
+            self._logger.debug("request i2c state from iobeam")
+            self._send_command(self.get_request_msg([self.DATASET_I2C]))
+        self._start_i2c_request_timer()
