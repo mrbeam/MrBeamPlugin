@@ -199,18 +199,242 @@ input[type="radio"] {
 
 /* Welcome wizard - start */
 
+/* First wizard - start */
 #wizard_firstrun_start {
   padding-bottom: 20px;
 }
-
 #wizard_firstrun_start img {
   margin-bottom: 30px;
 }
-
 #wizard_firstrun_start h4,
 #wizard_firstrun_start p {
   padding-left: 20px;
   padding-right: 20px;
 }
+/* First wizard - end */
 
+/* Connection wizard - start */
+#wizard_plugin_corewizard_connection {
+  height: 100%;
+}
+.mrb-height-100 {
+  height: 100%;
+}
+.mrb-wrap {
+  min-height: 100%;
+  margin-bottom: -40px;
+}
+.mrb-relative-position {
+  position: relative;
+}
+.mrb-absolute-position {
+  position: absolute;
+}
+.mrb-primary-background-color {
+  background-color: #e25303;
+  color: #ffffff;
+}
+.mrb-primary-background-color:hover {
+  background-color: #e25303;
+  color: #ffffff;
+}
+.mrb-bold {
+  font-weight: bold;
+}
+.connection-wizard__span--a,
+.connection-wizard__span--b {
+  right: 0;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  width: auto !important;
+  min-height: auto !important;
+}
+.connection-wizard__span--a {
+  bottom: 0;
+  background-color: #383e42;
+  margin-right: 4px;
+}
+.connection-wizard__span--b {
+  top: 0;
+  background-color: #e25303;
+}
+.connection-wizard__div--notice {
+  background-color: #f8d5c1;
+  border: 1px solid #e25303;
+  border-radius: 8px;
+  margin: 14px 0 0 0 !important;
+  padding: 10px;
+  display: flex;
+}
+.connection-wizard__div--notice .span1 span {
+  color: #e25303;
+  width: 22px !important;
+  height: 22px;
+  border: 2px solid;
+  border-radius: 50%;
+  text-align: center;
+  font-weight: bold;
+  min-height: 0 !important;
+  display: inherit;
+}
+.connection-wizard__div--notice p {
+  font-size: 12px;
+  line-height: 16px;
+  margin: 0 0 0 12px;
+}
+.connection-wizard__a--select {
+  display: flex;
+}
+.btn.connection-wizard__btn--back {
+  border-radius: 100%;
+  padding: 10px 10px;
+  min-width: auto;
+}
+.btn.connection-wizard__btn--back img {
+  width: 20px;
+}
+#connection-wizard--selected-option .connection-wizard__span--a {
+  margin-right: 0;
+}
+.btn.connection-wizard__btn--back {
+  margin-bottom: 16px;
+}
+.connection-wizard--selected-option {
+  margin-bottom: 20px;
+}
+.connection-wizard--selected-option__div--main-content {
+  margin-top: 16px;
+}
+.connection-wizard--selected-option__div--main-content-left {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.connection-wizard--selected-option__div--main-content-left ul {
+  margin-left: 0;
+}
+.connection-wizard--selected-option__div--main-content-left ul li {
+  list-style: none;
+  display: flex;
+}
+.connection-wizard--selected-option__div--main-content-left ul li p {
+  padding-left: 6px;
+  margin-bottom: 0;
+}
+.connection-wizard--selected-option__div--main-content
+  .connection-wizard__div--notice {
+  font-size: inherit;
+  background-color: #ffffff;
+  border: 1px solid #b2f382;
+  display: inherit;
+  margin: 0 !important;
+}
+.connection-wizard--selected-option__div--main-content
+  .connection-wizard__div--notice
+  .span1
+  span {
+  color: #b2f382;
+}
+.connection-wizard--selected-option__div--main-content
+  .connection-wizard__div--notice
+  h4 {
+  display: inline;
+  margin-left: 6px;
+}
+.connection-wizard--selected-option__div--main-content
+  .connection-wizard__div--notice
+  p {
+  margin: 0 0 10px;
+}
+.connection-wizard--selected-option__div--main-content
+  .connection-wizard__div--notice
+  p:first-child {
+  margin-top: 10px;
+}
+.connection-wizard--selected-option__div--main-content
+  .connection-wizard__div--notice
+  p:last-child {
+  margin-bottom: 0;
+}
+#connection-wizard--selected-option-c
+  .connection-wizard--selected-option__div--main-content
+  .connection-wizard__div--notice
+  h4 {
+  margin-left: -26px;
+}
+#connection-wizard--selected-option-c
+  .connection-wizard--selected-option__div--main-content-left
+  h5 {
+  margin-top: 0;
+}
+#connection-wizard--selected-option-c
+  .connection-wizard--selected-option__div--main-content-left,
+#connection-wizard--selected-option-c .connection-wizard__div--notice {
+  margin-bottom: 20px !important;
+}
+#wizard_welcome_wifi_configuration
+  table
+  .wizard_welcome_wifi_configuration_wifis_quality {
+  padding: 10px 5px !important;
+}
+#wizard_welcome_wifi_configuration table .sizing-box {
+  height: 20px;
+  width: 56px;
+  float: right;
+}
+#wizard_welcome_wifi_configuration table .signal-bars .bar {
+  width: 8%;
+  margin-left: 1%;
+  min-height: 20%;
+  display: inline-block;
+  border: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+#wizard_welcome_wifi_configuration table .signal-bars .bar.first-bar {
+  height: 20%;
+}
+#wizard_welcome_wifi_configuration table .signal-bars .bar.second-bar {
+  height: 40%;
+}
+#wizard_welcome_wifi_configuration table .signal-bars .bar.third-bar {
+  height: 60%;
+}
+#wizard_welcome_wifi_configuration table .signal-bars .bar.fourth-bar {
+  height: 80%;
+}
+#wizard_welcome_wifi_configuration table .signal-bars .bar.fifth-bar {
+  height: 99%;
+}
+#wizard_welcome_wifi_configuration table .four-bars .bar.fifth-bar,
+#wizard_welcome_wifi_configuration table .three-bars .bar.fifth-bar,
+#wizard_welcome_wifi_configuration table .three-bars .bar.fourth-bar,
+#wizard_welcome_wifi_configuration table .one-bar .bar:not(.first-bar),
+#wizard_welcome_wifi_configuration
+  table
+  .two-bars
+  .bar:not(.first-bar):not(.second-bar) {
+  background-color: #fafafa;
+  border: thin solid #f3f3f3;
+}
+#wizard_welcome_wifi_configuration table .good .bar {
+  background-color: #16a085;
+  border: thin solid darken(#16a085, 7%);
+}
+#wizard_welcome_wifi_configuration table .bad .bar {
+  background-color: #e74c3c;
+  border: thin solid darken(#e74c3c, 20%);
+}
+#wizard_welcome_wifi_configuration table .ok .bar {
+  background-color: #f1c40f;
+  border: thin solid darken(#f1c40f, 7%);
+}
+#connection-wizard--selected-option-b
+  .connection-wizard--selected-option__div--main-content
+  .connection-wizard__div--notice
+  p {
+  padding-left: 8px;
+}
+/* Connection wizard - end */
 /* Welcome wizard - end */
