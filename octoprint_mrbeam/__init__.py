@@ -569,6 +569,7 @@ class MrBeamPlugin(
                 carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
                 laserHeadUsage=self.usage_handler.get_laser_head_usage(),
                 gantryUsage=self.usage_handler.get_gantry_usage(),
+                laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
             ),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
@@ -760,6 +761,9 @@ class MrBeamPlugin(
                 "js/app/helpers/mutation-observer.js",
             ],
             css=[
+                "css/fontawesome_v6/css/fontawesome.min.css",
+                "css/fontawesome_v6/css/brands.min.css",
+                "css/fontawesome_v6/css/v4-font-face.min.css",
                 "css/mrbeam.css",
                 "css/backlash_settings.css",
                 "css/tab_designlib.css",

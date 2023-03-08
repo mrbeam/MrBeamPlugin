@@ -437,4 +437,16 @@ input[type="radio"] {
   padding-left: 8px;
 }
 /* Connection wizard - end */
+
+/* Last wizard - start */
+#wizard_firstrun_end div a:hover {
+  text-decoration: none;
+}
+#wizard_firstrun_end .social_media_square_icons {
+  font-size: 2.55em;
+}
+#wizard_firstrun_end h3 {
+  color: #e25303;
+}
+/* Last wizard - end */
 /* Welcome wizard - end */

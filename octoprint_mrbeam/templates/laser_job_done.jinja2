@@ -9,17 +9,7 @@
                 <p>{{ _('Show your creation and use our hashtag') }}</p>
                 <p class="modal__p--hashtag"><a href="https://mr-beam.org/madewithmrbeam?utm_source=beamos&utm_medium=software" target="_blank">#madewithmrbeam</a>
                 </p>
-                <div>
-                    <a href="https://www.instagram.com/mrbeamlasers/" target="_blank"><i class="icon-instagram"></i></a>
-                    <a href="https://www.facebook.com/mrbeamlasercutter/" target="_blank"><i
-                            class="icon-facebook-sign"></i></a>
-                    <a href="https://twitter.com/MrBeamLasers" target="_blank"><i class="icon-twitter-sign"></i></a>
-                    <a href="https://www.pinterest.com/mrbeamlasers" target="_blank"><i class="icon-pinterest-sign"></i></a>
-                    <a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank"><i
-                            class="icon-youtube-sign"></i></a>
-                    <a href="https://www.linkedin.com/company/mrbeamlasers" target="_blank"><i
-                            class="icon-linkedin-sign"></i></a>
-                </div>
+                {%  include 'modules/social_media_channels.jinja2' %}
             </div>
             <div class="modal__modal-body--material-section" data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.name
             && window.mrbeam.viewModels.vectorConversionViewModel.selected_material_color()
