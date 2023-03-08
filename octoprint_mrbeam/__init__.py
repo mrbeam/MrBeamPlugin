@@ -569,6 +569,7 @@ class MrBeamPlugin(
                 carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
                 laserHeadUsage=self.usage_handler.get_laser_head_usage(),
                 gantryUsage=self.usage_handler.get_gantry_usage(),
+                laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
             ),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
