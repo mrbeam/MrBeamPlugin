@@ -83,7 +83,7 @@ class IoBeamHandler(object):
     PROCESSING_TIMES_LOG_LENGTH = 100
     PROCESSING_TIME_WARNING_THRESHOLD = 0.7
 
-    I2C_STATE_REQUEST_INTERVAL = 10  # 10 * 60  # 10 minutes if no job is running
+    I2C_STATE_REQUEST_INTERVAL = 10 * 60  # 10 minutes if no job is running
 
     MESSAGE_LENGTH_MAX = 4096
     MESSAGE_NEWLINE = "\n"
