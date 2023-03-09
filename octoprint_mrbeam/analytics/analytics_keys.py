@@ -116,6 +116,7 @@ class AnalyticsKeys:
             NUM_FILES = "num_files"
             CAMERA_IMAGE = "camera_image"
             LASERHEAD_CHANGED = "laserhead_changed"
+            FIRE_DETECTED = "fire_detected"
 
         class SoftwareChannel:
             OLD = "old_channel"

@@ -38,7 +38,7 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     ANALYTICS_LOG_VERSION = (
-        26  # bumped for SW-2465 add laserhead changed event to analytics
+        27  # bumped for SW-2786 add laserhead changed event to analytics
     )
 
     def __init__(self, plugin):
@@ -677,6 +677,16 @@ class AnalyticsHandler(object):
             self._logger.exception(
                 "Exception during add_compressor_static_data: {}".format(e)
             )
+
+    def add_fire_detected(self, data, header_extension=None):
+        try:
+            self._add_device_event(
+                AnalyticsKeys.Device.Event.FIRE_DETECTED,
+                payload=data,
+                header_extension=header_extension,
+            )
+        except Exception as e:
+            self._logger.exception("Exception during add_fire_detected: {}".format(e))
 
     # -------- OCTOPRINT AND MR BEAM EVENTS ----------------------------------------------------------------------------
     def _subscribe(self):

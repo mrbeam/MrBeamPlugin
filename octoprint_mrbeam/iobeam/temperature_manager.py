@@ -22,13 +22,18 @@ class TemperatureManager(object):
     TEMP_TIMER_INTERVAL = 3
     TEMP_MAX_AGE = 10  # seconds
 
+    MAX_ALLOWED_TEMPERATURE = 75.0  # degrees
+    MIN_ALLOWED_TEMPERATURE = -5.0  # degrees
+
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.temperaturemanager")
         self._plugin = plugin
         self._event_bus = plugin._event_bus
-        self.temperature = None
+        self.temperature = 20.0
         self.temperature_ts = 0
-        self.temperature_max = plugin.laserhead_handler.current_laserhead_max_temperature
+        self.cooling_pause_trigger_temperature = (
+            plugin.laserhead_handler.current_laserhead_max_temperature
+        )
         self.hysteresis_temperature = (
             plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"
@@ -51,8 +56,8 @@ class TemperatureManager(object):
 
         self.dev_mode = plugin._settings.get_boolean(["dev", "iobeam_disable_warnings"])
 
-        msg = "TemperatureManager: initialized. temperature_max: {max}, {key}: {value}".format(
-            max=self.temperature_max,
+        msg = "TemperatureManager: initialized. cooling_pause_trigger_temperature: {max}, {key}: {value}".format(
+            max=self.cooling_pause_trigger_temperature,
             key="cooling_duration"
             if self.mode_time_based
             else "hysteresis_temperature",
@@ -73,8 +78,6 @@ class TemperatureManager(object):
         self._subscribe()
         self._start_temp_timer()
 
-
-
     def _subscribe(self):
         self._iobeam.subscribe(IoBeamValueEvents.LASER_TEMP, self.handle_temp)
 
@@ -89,8 +92,14 @@ class TemperatureManager(object):
         self._shutting_down = True
 
     def reset(self, kwargs):
-        self._logger.info("TemperatureManager: Reset trigger Received : {}".format(kwargs.get("event", None)))
-        self.temperature_max = self._plugin.laserhead_handler.current_laserhead_max_temperature
+        self._logger.info(
+            "TemperatureManager: Reset trigger Received : {}".format(
+                kwargs.get("event", None)
+            )
+        )
+        self.cooling_pause_trigger_temperature = (
+            self._plugin.laserhead_handler.current_laserhead_max_temperature
+        )
         self.hysteresis_temperature = (
             self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"
@@ -104,8 +113,8 @@ class TemperatureManager(object):
         self.mode_time_based = self.cooling_duration > 0
         self.is_cooling_since = 0
 
-        msg = "TemperatureManager: Reset Done. temperature_max: {max}, {key}: {value}".format(
-            max=self.temperature_max,
+        msg = "TemperatureManager: Reset Done. cooling_pause_trigger_temperature: {max}, {key}: {value}".format(
+            max=self.cooling_pause_trigger_temperature,
             key="cooling_duration"
             if self.mode_time_based
             else "hysteresis_temperature",
@@ -129,8 +138,43 @@ class TemperatureManager(object):
         elif event == OctoPrintEvents.SHUTDOWN:
             self.shutdown()
 
+    def _filter_temperature(self, tmp_new):
+        tmp = self.temperature
+
+        tmp_fire_warning = self.cooling_pause_trigger_temperature + 5
+
+        if tmp_fire_warning > self.MAX_ALLOWED_TEMPERATURE - 5:
+            tmp_fire_warning = self.MAX_ALLOWED_TEMPERATURE - 5
+            self._logger.warn(
+                "Fire warning temperature (%s) is higher as the max allowed temperature (%s) -> will set it to (%s)",
+                str(tmp_fire_warning),
+                str(self.MAX_ALLOWED_TEMPERATURE - 5),
+                tmp_fire_warning,
+            )
+
+        if (
+            tmp_new > self.MAX_ALLOWED_TEMPERATURE
+        ) or tmp_new < self.MIN_ALLOWED_TEMPERATURE:
+            self._logger.error("Error Tmp out of range: %s", str(tmp_new))
+        else:
+            # if the temperature change is to big we slowly increase/decrease the temperature
+            if abs(tmp_new - tmp) > 3:
+                if tmp_new > tmp:
+                    tmp = tmp + 1
+                else:
+                    tmp = tmp - 1
+            else:
+                tmp = tmp_new
+            if tmp > tmp_fire_warning:
+                self._logger.warn("!!Fire Warning!!")
+                analytics_data = dict(
+                    temperature=tmp,
+                )
+                self._analytics_handler.add_fire_detected(analytics_data)
+        return tmp
+
     def handle_temp(self, kwargs):
-        self.temperature = kwargs["temp"]
+        self.temperature = self._filter_temperature(kwargs["temp"])
         if self.temperature_ts <= 0:
             self._logger.info(
                 "laser_temp - first temperature from laserhead: %s", self.temperature
@@ -216,11 +260,12 @@ class TemperatureManager(object):
     def _check_temp_val(self):
         # cooling break
         if not self.is_cooling() and (
-            self.temperature is None or self.temperature > self.temperature_max
+            self.temperature is None
+            or self.temperature > self.cooling_pause_trigger_temperature
         ):
             msg = "Laser temperature exceeded limit. Current temp: %s, max: %s" % (
                 self.temperature,
-                self.temperature_max,
+                self.cooling_pause_trigger_temperature,
             )
             self.cooling_stop(err_msg=msg)
         # resume hysteresis temp based
@@ -242,7 +287,7 @@ class TemperatureManager(object):
             and self.mode_time_based
             and time.time() - self.is_cooling_since > self.cooling_duration
             and self.temperature is not None
-            and self.temperature < self.temperature_max
+            and self.temperature < self.cooling_pause_trigger_temperature
         ):
             self._logger.warn(
                 "Cooling break duration passed: %ss - Current temp: %s",
