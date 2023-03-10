@@ -28,6 +28,28 @@ $(function () {
             );
         });
 
+        self.handleLaserSafetyConditionsBackgroundColor = ko.computed(
+            function () {
+                let laserSafetyConditions = $(
+                    ".laser-safety-conditions__div--agreement"
+                );
+                if (
+                    self.checkbox1() &&
+                    self.checkbox2() &&
+                    self.checkbox3() &&
+                    self.checkbox4() &&
+                    self.checkbox5() &&
+                    self.checkbox6()
+                ) {
+                    laserSafetyConditions.css("background-color", "#f5fcec");
+                    laserSafetyConditions.css("border-color", "#f5fcec");
+                } else {
+                    laserSafetyConditions.css("background-color", "#f8d5c1");
+                    laserSafetyConditions.css("border-color", "#f8d5c1");
+                }
+            }
+        );
+
         // for stand alone dialog version
         self.agree = function () {
             var result = self._handleExit();
