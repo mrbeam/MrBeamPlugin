@@ -140,10 +140,6 @@ input[type="radio"] {
   margin-left: 26px;
 }
 
-#analytics_initial_consent_radio {
-  padding: 12px 0;
-}
-
 /*
 * === What's new dialog ===
 */
@@ -447,4 +443,10 @@ input[type="radio"] {
   color: #e25303;
 }
 /* Last wizard - end */
+/* Getting better wizard - start */
+#wizard_plugin_corewizard_analytics .get-better-together img {
+  margin-bottom: 20px;
+  display: block;
+}
+/* Getting better wizard - end */
 /* Welcome wizard - end */

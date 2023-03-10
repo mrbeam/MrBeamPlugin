@@ -119,8 +119,8 @@ class WizardConfig:
             ),
             wizard_analytics=dict(
                 type="wizard",
-                name=gettext("Analytics"),
-                required=self._is_analytics_wizard_required(),
+                name=gettext("Better together"),
+                required=True,
                 mandatory=False,
                 suffix="_analytics",
                 template="wizard/wizard_analytics.jinja2",
@@ -188,7 +188,7 @@ class WizardConfig:
             ),
             wizard_analytics=dict(
                 type="wizard",
-                name=gettext("Analytics"),
+                name=gettext("Better together"),
                 required=self._is_analytics_wizard_required(),
                 mandatory=False,
                 suffix="_analytics",
