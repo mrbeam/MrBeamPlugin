@@ -20,15 +20,15 @@ $(function () {
         self.onStartup = function () {
             // needs to be scrollable on touch devices
             $("#wizard_dialog .modal-body").addClass("scrollable");
-            self.onConnectionOptionSelection(
+            self.showSelectedOption(
                 $("#connection-wizard__a--option-a"),
                 $("#connection-wizard--selected-option-a")
             );
-            self.onConnectionOptionSelection(
+            self.showSelectedOption(
                 $("#connection-wizard__a--option-b"),
                 $("#connection-wizard--selected-option-b")
             );
-            self.onConnectionOptionSelection(
+            self.showSelectedOption(
                 $("#connection-wizard__a--option-c"),
                 $("#connection-wizard--selected-option-c")
             );
@@ -37,10 +37,7 @@ $(function () {
             });
         };
 
-        self.onConnectionOptionSelection = function (
-            triggerElement,
-            divElementToShow
-        ) {
+        self.showSelectedOption = function (triggerElement, divElementToShow) {
             console.log(divElementToShow);
             triggerElement.click(function () {
                 $("#connection-wizard--general-connection-details").hide(300);
