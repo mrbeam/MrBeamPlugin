@@ -4,7 +4,7 @@ $(function () {
         window.mrbeam.viewModels["wizardWhatsnewViewModel"] = self;
 
         self.START_TAB = "wizard_firstrun_start_link";
-        self.WIFI_TAB = "wizard_plugin_corewizard_wifi_netconnectd_link";
+        self.WIFI_TAB = "wizard_plugin_corewizard_connection_link";
         self.ACL_TAB = "wizard_plugin_corewizard_acl_link";
         self.LASER_SAFETY_TAB = "wizard_plugin_corewizard_lasersafety_link";
         self.ANALYTICS_TAB = "wizard_plugin_corewizard_analytics_link";

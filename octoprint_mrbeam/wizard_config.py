@@ -96,8 +96,8 @@ class WizardConfig:
                 required=self._is_wifi_wizard_required(),
                 mandatory=False,
                 suffix="_wifi",
-                template="wizard/wizard_wifi.jinja2",
-                div="wizard_plugin_corewizard_wifi_netconnectd",
+                template="wizard/wizard_connection.jinja2",
+                div="wizard_plugin_corewizard_connection",
             ),
             wizard_acl=dict(
                 type="wizard",
