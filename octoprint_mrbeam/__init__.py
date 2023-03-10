@@ -992,7 +992,7 @@ class MrBeamPlugin(
             ),
             dict(
                 type="settings",
-                name=gettext("Analytics"),
+                name=gettext("Better Together"),
                 template="settings/analytics_settings.jinja2",
                 suffix="_analytics",
                 custom_bindings=False,
