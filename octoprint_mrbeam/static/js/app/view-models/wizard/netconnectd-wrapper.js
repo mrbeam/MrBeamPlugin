@@ -38,7 +38,6 @@ $(function () {
         };
 
         self.showSelectedOption = function (triggerElement, divElementToShow) {
-            console.log(divElementToShow);
             triggerElement.click(function () {
                 $("#connection-wizard--general-connection-details").hide(300);
                 $("#connection-wizard--selected-option").show(300);
