@@ -1,6 +1,6 @@
 {# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
 <!-- LASERSAFETY_CONFIRMATION_DIALOG_VERSION: {{ lasersafety_confirmation_dialog_version }}, LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE: {{ lasersafety_confirmation_dialog_language }} -->
-<div id="laser-safety-conditions" class="row-fluid">
+<div id="laser-safety-conditions" class="row">
     <div class="span12">
         <h4>{{ _('Laser safety') }}</h4>
         <p>{{ _('Attention! To protect both your own health and the health of others when operating the Mr Beam, read the following instructions carefully and attentively!') }}</p>
@@ -137,7 +137,6 @@
                     <li><small>
                         {{ _('If you decide to not be reminded on every login, we need to store your agreement on our servers.') }}
                         {{ _('This includes your login email address and technical device data.') }}<br />
-                         Check our <a href="http://shop.mr-beam.org/privacy" target="_blank" style="color:grey; text-decoration: underline;">privacy statement</a> for details.
                         {{ _("Check our %(open)sprivacy statement%(close)s for details.", open='<a href="https://mr-beam.org/privacy-policy" target="_blank" style="color:grey; text-decoration: underline;">', close='</a>')|safe }}
                     </small></li>
                 </ul>

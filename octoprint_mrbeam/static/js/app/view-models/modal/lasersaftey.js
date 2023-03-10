@@ -183,7 +183,7 @@ $(function () {
                 });
 
                 $(
-                    "#wizard_plugin_corewizard_lasersafety > ul > .wizard_safety_agreement"
+                    "#wizard_plugin_corewizard_lasersafety .wizard_safety_agreement"
                 )[0].scrollIntoView(true);
 
                 return false;
