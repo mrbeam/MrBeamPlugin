@@ -272,7 +272,7 @@ class MrBeamPlugin(
         )
         self.led_event_listener.set_fps(self._settings.get(["leds", "fps"]))
         # start iobeam socket only once other handlers are already initialized so that we can handle info message
-        self.iobeam = ioBeamHandler(self)
+        self.iobeam = ioBeamHandler(self, self._printer)
         self.dust_manager = dustManager(self)
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
