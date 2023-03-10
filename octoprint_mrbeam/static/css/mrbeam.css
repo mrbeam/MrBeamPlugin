@@ -3771,3 +3771,69 @@ div.hopscotch-bubble .hopscotch-bubble-number {
   font-family: "FontAwesome", serif;
 }
 /* Font Awesome v4 backward compatibility for version v6 */
+
+/* Laser safety conditions - start */
+#laser-safety-conditions ul li:first-child {
+  margin-top: 15px;
+}
+#laser-safety-conditions ul li::before {
+  content: "!";
+  display: inline-block;
+  margin-right: 20px;
+  color: #e25303;
+  width: 15px !important;
+  height: 15px;
+  border: 2px solid;
+  border-radius: 50%;
+  text-align: center;
+  font-weight: bold;
+  font-size: 11px;
+  vertical-align: middle;
+}
+#laser-safety-conditions
+  ul.laser-safety-conditions__ul--safety-instructions
+  li:last-child::before {
+  color: transparent;
+}
+#laser-safety-conditions ul li {
+  list-style: none;
+  display: -webkit-box;
+  width: 90%;
+}
+#laser-safety-conditions
+  ul.laser-safety-conditions__ul--safety-instructions
+  li:last-child {
+  color: #777777;
+}
+.laser-safety-conditions__div--agreement {
+  background-color: #f8d5c1;
+  border: 1px solid #e25303;
+  border-radius: 8px;
+  margin: 14px 0 0 0 !important;
+  padding: 10px;
+}
+.laser-safety-conditions__div--agreement .checkbox {
+  color: inherit !important;
+}
+#laser-safety-conditions input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  border: 1px solid #ffffff;
+  outline: none;
+}
+#laser-safety-conditions input[type="checkbox"]:checked {
+  background-color: #ffffff;
+}
+#laser-safety-conditions input[type="checkbox"]:checked::before {
+  content: "\2713";
+  color: #000000;
+  font-size: 14px;
+  line-height: 16px;
+  text-align: center;
+  background-color: #ffffff;
+  display: block;
+}
+#laser-safety-conditions ul.laser-safety-conditions__ul--last-note li p {
+  color: #e25303;
+}
+/* Laser safety conditions - end */

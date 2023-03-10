@@ -139,7 +139,7 @@ class MrBeamPlugin(
     ENV_LASER_SAFETY = "laser_safety"
     ENV_ANALYTICS = "analytics"
 
-    LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.4"
+    LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.5"
 
     LASERSAFETY_CONFIRMATION_STORAGE_URL = "https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec"
     USER_SETTINGS_KEY_MRBEAM = "mrbeam"
