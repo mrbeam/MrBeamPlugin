@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-13 12:06+0100\n"
-"PO-Revision-Date: 2023-03-13 15:00+0100\n"
+"POT-Creation-Date: 2023-03-13 17:06+0100\n"
+"PO-Revision-Date: 2023-03-13 17:10+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -16,6 +16,110 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.2.2\n"
+
+#: octoprint_mrbeam/__init__.py:960
+#: octoprint_mrbeam/static/js/app/view-models/mother.js:730
+#: octoprint_mrbeam/static/js/app/view-models/mother.js:741
+#: octoprint_mrbeam/templates/settings/file_settings.jinja2:2
+msgid "Files"
+msgstr "Dateien"
+
+#: octoprint_mrbeam/__init__.py:967
+#: octoprint_mrbeam/templates/settings/camera_settings.jinja2:4
+msgid "Camera"
+msgstr "Kamera"
+
+#: octoprint_mrbeam/__init__.py:974
+#: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:2
+msgid "Precision Calibration"
+msgstr "Feinjustierung"
+
+#: octoprint_mrbeam/__init__.py:981
+#: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:56
+#: octoprint_mrbeam/templates/settings/debug_settings.jinja2:5
+msgid "Debug"
+msgstr "Debug"
+
+#: octoprint_mrbeam/__init__.py:988
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
+msgid "About This Mr Beam"
+msgstr "Über diesen Mr Beam"
+
+#: octoprint_mrbeam/__init__.py:995
+msgid "Better Together"
+msgstr "Gemeinsam Vorankommen"
+
+#: octoprint_mrbeam/__init__.py:1002
+#: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
+msgid "Reminders"
+msgstr "Erinnerungen"
+
+#: octoprint_mrbeam/__init__.py:1009
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:2
+msgid "Maintenance"
+msgstr "Wartung"
+
+#: octoprint_mrbeam/__init__.py:1016
+#: octoprint_mrbeam/templates/settings/leds_settings.jinja2:2
+msgid "Mr Beam Lights"
+msgstr "Mr Beam Lights"
+
+#: octoprint_mrbeam/__init__.py:1023
+#: octoprint_mrbeam/templates/settings/custom_material_settings.jinja2:2
+msgid "Custom Material Settings"
+msgstr "Benutzerdefinierte Materialeinstellungen"
+
+#: octoprint_mrbeam/__init__.py:2389
+msgid "A new picture is being taken, please wait a little..."
+msgstr "Es wird ein neues Bild gemacht, bitte warte einen Moment..."
+
+#: octoprint_mrbeam/__init__.py:2394
+msgid "Either the camera is busy or the lid is not open."
+msgstr ""
+"Entweder ist die Kamera nicht erreichbar oder der Deckel ist nicht geöffnet."
+
+#: octoprint_mrbeam/wizard_config.py:95
+msgid "Connection"
+msgstr "Verbinden"
+
+#: octoprint_mrbeam/wizard_config.py:104
+msgid "Your user"
+msgstr "Dein Nutzerkonto"
+
+#: octoprint_mrbeam/wizard_config.py:113
+msgid "For your safety"
+msgstr "Zu deiner Sicherheit"
+
+#: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
+#: octoprint_mrbeam/wizard_config.py:122 octoprint_mrbeam/wizard_config.py:191
+msgid "Better together"
+msgstr "Gemeinsam Vorankommen"
+
+#: octoprint_mrbeam/wizard_config.py:131
+msgid "Guided Tour"
+msgstr "Geführte Tour"
+
+# tab title
+#: octoprint_mrbeam/wizard_config.py:155
+msgid "Design Store"
+msgstr "Design-Store"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:1
+#: octoprint_mrbeam/wizard_config.py:164
+msgid "New Toolset Features"
+msgstr "Neue Funktionen für den Arbeitsbereich"
+
+#: octoprint_mrbeam/templates/settings/file_settings.jinja2:28
+#: octoprint_mrbeam/templates/wizard/wizard_beta_news_0.jinja2:3
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:1
+#: octoprint_mrbeam/wizard_config.py:173 octoprint_mrbeam/wizard_config.py:220
+msgid "GCode auto-deletion"
+msgstr "Automatisches GCode-Löschen"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:1
+#: octoprint_mrbeam/wizard_config.py:182
+msgid "...and more!"
+msgstr "...und mehr!"
 
 #: octoprint_mrbeam/printing/comm_acc2.py:426
 #: octoprint_mrbeam/printing/comm_acc2.py:482
@@ -305,12 +409,6 @@ msgid ""
 msgstr ""
 "Die hochgeladene Datei wurde nicht in den Arbeitsbereich hinzugefügt, da "
 "bereits eine andere Datei mit demselben Namen existiert."
-
-#: octoprint_mrbeam/static/js/app/view-models/mother.js:730
-#: octoprint_mrbeam/static/js/app/view-models/mother.js:741
-#: octoprint_mrbeam/templates/settings/file_settings.jinja2:2
-msgid "Files"
-msgstr "Dateien"
 
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:740
 msgid "1 File"
@@ -4717,11 +4815,6 @@ msgstr "Qualitäts-Check"
 msgid "Labels"
 msgstr "Labels"
 
-#: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:56
-#: octoprint_mrbeam/templates/settings/debug_settings.jinja2:5
-msgid "Debug"
-msgstr "Debug"
-
 #: octoprint_mrbeam/templates/calibration/watterott/tab_calibration_qa.jinja2:36
 #: octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:34
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:58
@@ -4822,10 +4915,6 @@ msgstr "4 Markierungen sind innerhalb des grünen Rechtecks"
 #: octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:99
 msgid "No black pixels are in the green rectangle"
 msgstr "Keine schwarzen Pixel befinden sich im grünen Rechteck"
-
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
-msgid "About This Mr Beam"
-msgstr "Über diesen Mr Beam"
 
 # don’t change the link
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:5
@@ -4969,10 +5058,6 @@ msgstr "Mr Beam Downloads"
 msgid "Source code"
 msgstr "Quellcode"
 
-#: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
-msgid "Better together"
-msgstr "Gemeinsam Vorankommen"
-
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:13
 msgid ""
 "We know that your Mr Beam is important to you, and we want to make it even "
@@ -5020,10 +5105,6 @@ msgstr "Nein, widersprechen"
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:36
 msgid "Privacy policy"
 msgstr "Datenschutzerklärung"
-
-#: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:2
-msgid "Precision Calibration"
-msgstr "Feinjustierung"
 
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:8
 msgid ""
@@ -5091,10 +5172,6 @@ msgstr "Identifiziere die schärfste Linie auf der Gravur."
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:42
 msgid "Enter the line's number (including sign) here: "
 msgstr "Gebe hier die Zeilennummer (einschließlich Vorzeichen) ein: "
-
-#: octoprint_mrbeam/templates/settings/camera_settings.jinja2:4
-msgid "Camera"
-msgstr "Kamera"
 
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:9
 msgid "Status"
@@ -5293,10 +5370,6 @@ msgstr ""
 msgid "You need to make a corner calibration first"
 msgstr "Bitte mache zuerst eine Eckkalibrierung."
 
-#: octoprint_mrbeam/templates/settings/custom_material_settings.jinja2:2
-msgid "Custom Material Settings"
-msgstr "Benutzerdefinierte Materialeinstellungen"
-
 #: octoprint_mrbeam/templates/settings/custom_material_settings.jinja2:7
 #: octoprint_mrbeam/templates/settings/custom_material_settings.jinja2:12
 #, python-format
@@ -5460,12 +5533,6 @@ msgstr ""
 "Hier sind einige Vorschläge, je nachdem, mit welchem Programm Du Deine DXF-"
 "Dateien erstellst: Illustrator: 1, Vector Works: 10, ArchiCAD: 1000"
 
-#: octoprint_mrbeam/templates/settings/file_settings.jinja2:28
-#: octoprint_mrbeam/templates/wizard/wizard_beta_news_0.jinja2:3
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:1
-msgid "GCode auto-deletion"
-msgstr "Automatisches GCode-Löschen"
-
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:32
 #: octoprint_mrbeam/templates/wizard/wizard_beta_news_0.jinja2:10
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:6
@@ -5501,10 +5568,6 @@ msgstr "GCode-Dateien automatisch löschen"
 msgid "recommended"
 msgstr "empfohlen"
 
-#: octoprint_mrbeam/templates/settings/leds_settings.jinja2:2
-msgid "Mr Beam Lights"
-msgstr "Mr Beam Lights"
-
 #: octoprint_mrbeam/templates/settings/leds_settings.jinja2:12
 msgid "Adjust the overall brightness of Mr Beam Lights."
 msgstr "Passe die Gesamthelligkeit der Mr Beam Lights an."
@@ -5516,10 +5579,6 @@ msgstr "Animationsgeschwindigkeit"
 #: octoprint_mrbeam/templates/settings/leds_settings.jinja2:22
 msgid "Adjust the animation speed of Mr Beam Lights."
 msgstr "Passe die Animationsgeschwindigkeit der Mr Beam Lights an."
-
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:2
-msgid "Maintenance"
-msgstr "Wartung"
 
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:12
 msgid "Air Filter: Pre-filter"
@@ -5618,10 +5677,6 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:133
 msgid "Please notice that there is no way to undo this operation"
 msgstr "Dies kann nicht rückgängig gemacht werden"
-
-#: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
-msgid "Reminders"
-msgstr "Erinnerungen"
 
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:7
 msgid "Focus Reminder"
@@ -6045,35 +6100,7 @@ msgstr "Aktion"
 msgid "Address"
 msgstr "Adresse"
 
-# use Socket in german
-# netconnectd is a name, yes, with d in the end
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:235
-msgid "netconnectd socket"
-msgstr "netconnectd Socket"
-
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:238
-msgid "Advanced options"
-msgstr "Erweiterte Optionen"
-
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:240
-msgid "Start AP"
-msgstr "AP starten"
-
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:240
-msgid "Stop AP"
-msgstr "AP stoppen"
-
-# don’t translate Daemon
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:240
-msgid "Daemon offline"
-msgstr "Daemon offline"
-
-# don’t translate Daemon
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:241
-msgid "Reset daemon"
-msgstr "Dämon zurücksetzen"
-
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:250
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:239
 msgid ""
 "Select your WiFi network. Then enter the password needed to connect to your "
 "regular home network (WiFi) as usual."
@@ -6082,7 +6109,7 @@ msgstr ""
 "benötigt wird, um sich wie gewohnt mit deinem regulären Heimnetzwerk (WLAN) "
 "zu verbinden."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:251
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:240
 msgid ""
 "Make sure your router is nearby and the connection strength to your Mr Beam "
 "is strong."
@@ -6150,10 +6177,6 @@ msgstr ""
 "Für mehr Informationen über unseren Design-Store, besuche unsere "
 "%(tag_open)sKnowledge Base%(tag_close)s."
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:1
-msgid "New Toolset Features"
-msgstr "Neue Funktionen für den Arbeitsbereich"
-
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:4
 msgid "We revised our working  area toolset:"
 msgstr "Wir haben unseren Werkzeugsatz für den Arbeitsbereich überarbeitet:"
@@ -6180,10 +6203,6 @@ msgstr ""
 "Texte können jetzt gekrümmt sein. Du kannst sogar Text in Kreisen erstellen. "
 "Eine runde Sache finden wir! ;-)"
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:1
-msgid "...and more!"
-msgstr "...und mehr!"
-
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:6
 msgid ""
 "New material settings: We added settings for Sign Material, Stamp Rubber, "
@@ -6207,6 +6226,28 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:12
 msgid "We hope you enjoy this new experience!"
 msgstr "Wir hoffen, dass Du viel Freude mit diesem Update hast!"
+
+# use Socket in german
+# netconnectd is a name, yes, with d in the end
+#~ msgid "netconnectd socket"
+#~ msgstr "netconnectd Socket"
+
+#~ msgid "Advanced options"
+#~ msgstr "Erweiterte Optionen"
+
+#~ msgid "Start AP"
+#~ msgstr "AP starten"
+
+#~ msgid "Stop AP"
+#~ msgstr "AP stoppen"
+
+# don’t translate Daemon
+#~ msgid "Daemon offline"
+#~ msgstr "Daemon offline"
+
+# don’t translate Daemon
+#~ msgid "Reset daemon"
+#~ msgstr "Dämon zurücksetzen"
 
 # Laser Safety Notes!
 #~ msgid "Remind me on every login."
@@ -6761,32 +6802,11 @@ msgstr "Wir hoffen, dass Du viel Freude mit diesem Update hast!"
 #~ msgid "scale"
 #~ msgstr "Skalierung"
 
-#~ msgid "A new picture is being taken, please wait a little..."
-#~ msgstr "Es wird ein neues Bild gemacht, bitte warte einen Moment..."
-
-#~ msgid "Either the camera is busy or the lid is not open."
-#~ msgstr ""
-#~ "Entweder ist die Kamera nicht erreichbar oder der Deckel ist nicht "
-#~ "geöffnet."
-
-#~ msgid "Connection"
-#~ msgstr "Verbinden"
-
-#~ msgid "Your user"
-#~ msgstr "Dein Nutzerkonto"
-
-#~ msgid "For your safety"
-#~ msgstr "Zu deiner Sicherheit"
-
 #~ msgid "Improved camera"
 #~ msgstr "Verbesserte Kamera"
 
 #~ msgid "SVG split"
 #~ msgstr "SVGs Zerteilen"
-
-# tab title
-#~ msgid "Design Store"
-#~ msgstr "Design-Store"
 
 #~ msgid "Please login again to start this laser job."
 #~ msgstr "Bitte logge Dich erneut ein, um diesen Laserjob zu starten."
