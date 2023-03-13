@@ -123,22 +123,14 @@
         <li>
             <p>
                 {{ _('If you have any concerns about laser safety or do not agree with the above conditions, do not use this software.') }}
+                <br><br><strong>{{ _('Thank you for your attention.') }}</strong>
             </p>
         </li>
     </ul>
-    <h5>{{ _('Thank you for your attention.') }}</h5>
     <div class="control-group wizard_safety_agreement">
         <label class="checkbox">
             <input type="checkbox" data-bind="checked: showAgain">
-            <div>{{ _('Remind me on every login.') }}</div>
-            <ul style="color:grey">
-                <li><small>{{ _('Internet connection required to take effect.') }}</small></li>
-                <li><small>
-                    {{ _('If you decide to not be reminded on every login, we need to store your agreement on our servers.') }}
-                    {{ _('This includes your login email address and technical device data.') }}<br />
-                    {{ _("Check our %(open)sprivacy statement%(close)s for details.", open='<a href="https://mr-beam.org/privacy-policy" target="_blank" style="color:grey; text-decoration: underline;">', close='</a>')|safe }}
-                </small></li>
-            </ul>
+            {{ _('Show this information again next time. <br> Otherwise you can also find it here: Settings / Laser safety') }}
         </label>
     </div>
 </div>
