@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2023-03-13 12:06+0100\n"
-"PO-Revision-Date: 2023-03-13 14:54+0100\n"
+"PO-Revision-Date: 2023-03-13 15:00+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -1990,7 +1990,7 @@ msgstr "Was gibt's Neues in Beta"
 
 #: octoprint_mrbeam/templates/congratulations.jinja2:4
 msgid "Congratulations"
-msgstr "Eckenkalibrierung"
+msgstr "Glückwunsch"
 
 #: octoprint_mrbeam/templates/calibration/watterott/tab_done_print_labels.jinja2:3
 #: octoprint_mrbeam/templates/congratulations.jinja2:10
