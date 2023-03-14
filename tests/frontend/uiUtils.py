@@ -89,7 +89,6 @@ def login(driver, user="dev@mr-beam.org", pw="a"):
 
 
 def loginOctoprint_1_4(driver, user, pw):
-
     wait = WebDriverWait(driver, 3, poll_frequency=0.5)
     inputUser = _fill_input(driver, "#login-user", user)
     inputPassword = _fill_input(driver, "#login-password", pw)

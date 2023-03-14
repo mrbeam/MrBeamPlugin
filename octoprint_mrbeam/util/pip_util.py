@@ -67,8 +67,7 @@ def get_version_of_pip_module(pip_name, pip_command=None, disable_pip_ver_check=
 
 
 def get_pip_caller(venv, _logger=None):
-    """
-    gets the pip caller of the givenv venv
+    """gets the pip caller of the givenv venv.
 
     Args:
         venv: path to venv

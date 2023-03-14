@@ -20,17 +20,15 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 _instance = None
 
 
-def ioBeamHandler(plugin):
+def ioBeamHandler(plugin, printer):
     global _instance
     if _instance is None:
-        _instance = IoBeamHandler(plugin)
+        _instance = IoBeamHandler(plugin, printer)
     return _instance
 
 
 class IoBeamEvents(object):
-    """
-    These events are meant to be handled by OctoPrints event system
-    """
+    """These events are meant to be handled by OctoPrints event system."""
 
     CONNECT = "iobeam.connect"
     DISCONNECT = "iobeam.disconnect"
@@ -44,10 +42,8 @@ class IoBeamEvents(object):
 
 
 class IoBeamValueEvents(object):
-    """
-    These Values / events are not intended to be handled byt OctoPrints event system
-    but by IoBeamHandler's own event system
-    """
+    """These Values / events are not intended to be handled byt OctoPrints
+    event system but by IoBeamHandler's own event system."""
 
     LASER_TEMP = "iobeam.laser.temp"
     DUST_VALUE = "iobeam.dust.value"
@@ -86,6 +82,8 @@ class IoBeamHandler(object):
 
     PROCESSING_TIMES_LOG_LENGTH = 100
     PROCESSING_TIME_WARNING_THRESHOLD = 0.7
+
+    I2C_STATE_REQUEST_INTERVAL = 10 * 60  # 10 minutes if no job is running
 
     MESSAGE_LENGTH_MAX = 4096
     MESSAGE_NEWLINE = "\n"
@@ -159,8 +157,9 @@ class IoBeamHandler(object):
     DATASET_REED_SWITCH = "reed_switch"
     DATASET_ANALYTICS = "analytics"
 
-    def __init__(self, plugin):
+    def __init__(self, plugin, printer):
         self._plugin = plugin
+        self._printer = printer
         self._event_bus = plugin._event_bus
         self._socket_file = plugin._settings.get(["dev", "sockets", "iobeam"])
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam")
@@ -206,6 +205,8 @@ class IoBeamHandler(object):
         iobeam_worker.daemon = True
         iobeam_worker.start()
 
+        self._start_i2c_request_timer()
+
     def isRunning(self):
         return self._worker.is_alive()
 
@@ -228,8 +229,8 @@ class IoBeamHandler(object):
         return self._interlocks.keys()
 
     def send_temperature_request(self):
-        """
-        Request a single temperature value from iobeam.
+        """Request a single temperature value from iobeam.
+
         :return: True if the command was sent sucessfully.
         """
         return self._send_command(
@@ -237,8 +238,8 @@ class IoBeamHandler(object):
         )
 
     def send_fan_command(self, action, value=None):
-        """
-        Send the specified command as fan:<command>
+        """Send the specified command as fan:<command>
+
         :param command: One of the three values (ON:<0-100>/OFF/AUTO)
         :return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
         """
@@ -263,8 +264,8 @@ class IoBeamHandler(object):
         return self._send_command(self.get_request_msg([self.DATASET_ANALYTICS]))
 
     def _send_command(self, command):
-        """
-        Sends a command to iobeam
+        """Sends a command to iobeam.
+
         :param command: Must not be None. May or may not end with a new line.
         :return: Boolean success
         """
@@ -333,8 +334,8 @@ class IoBeamHandler(object):
         )
 
     def subscribe(self, event, callback):
-        """
-        Subscibe to an event
+        """Subscibe to an event.
+
         :param event:
         :param callback:
         """
@@ -562,8 +563,8 @@ class IoBeamHandler(object):
             self._logger.exception("Exception in _work(): ")
 
     def _handle_messages(self, messages):
-        """
-        Handles incoming list of messages from the socket.
+        """Handles incoming list of messages from the socket.
+
         :param messages: list of incoming dict messages
         :return: int: number of invalid messages 0 means all messages were handled correctly
         """
@@ -644,8 +645,8 @@ class IoBeamHandler(object):
         return error_count, message_count
 
     def _handle_dataset(self, name, dataset):
-        """
-        Handle dataset
+        """Handle dataset.
+
         :param name: name of the dataset
         :param dataset: the contents of the dataset
         :return: error count
@@ -717,8 +718,8 @@ class IoBeamHandler(object):
         return error_count
 
     def _handle_fan_dynamic(self, dataset):
-        """
-        Handle dynamic fan data
+        """Handle dynamic fan data.
+
         :param dataset:
         :return: error count
         """
@@ -795,8 +796,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_fan_static(self, dataset):
-        """
-        Handle static fan data
+        """Handle static fan data.
+
         :param dataset:
         :return: error count
         """
@@ -814,8 +815,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_compressor_static(self, dataset):
-        """
-        Handle static compressor data
+        """Handle static compressor data.
+
         :param dataset:
         :return: error count
         """
@@ -850,8 +851,9 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_laser(self, dataset):
-        """
-        Handle laser dataset, which may contain laser temperature, serial and power
+        """Handle laser dataset, which may contain laser temperature, serial
+        and power.
+
         :param dataset:
         :return: error count
         """
@@ -866,8 +868,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_laserhead(self, dataset):
-        """
-        Handle laserhead dataset, iobeam sends the whole laserhead data.
+        """Handle laserhead dataset, iobeam sends the whole laserhead data.
+
         :param dataset:
         :return: error count
         """
@@ -878,8 +880,9 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_pcf(self, dataset):
-        """
-        Handle pcf dataset, which includes onbutton, interlocks, lid and steprun
+        """Handle pcf dataset, which includes onbutton, interlocks, lid and
+        steprun.
+
         :param dataset: pcf dataset, e.g. {"intlk": {...}, "lid": {...}, ...}
         :return: error count
         """
@@ -897,8 +900,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_onebutton(self, dataset):
-        """
-        Handle onebtn dataset
+        """Handle onebtn dataset.
+
         :param dataset: onebtn dataset, e.g. {"state": "dn", "duration": "1.2"}
         :return: error count
         """
@@ -936,8 +939,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_interlock(self, dataset):
-        """
-        Handle interlock message
+        """Handle interlock message.
+
         :param dataset: interlock dataset, e.g. {"0": "cl", "1": "cl", ...}
         :return: error count
         """
@@ -971,8 +974,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_lid(self, action):
-        """
-        Handle lid message
+        """Handle lid message.
+
         :param action: lid action, e.g. "cl" or "op"
         :return: error count
         """
@@ -990,8 +993,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_iobeam(self, dataset):
-        """
-        Handle iobeam dataset
+        """Handle iobeam dataset.
+
         :param dataset:
         :return: error count
         """
@@ -1031,8 +1034,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_hw_malfunction(self, dataset):
-        """
-        Handle hw malfunction dataset.
+        """Handle hw malfunction dataset.
+
         :param dataset:
         :return: error count
         """
@@ -1055,8 +1058,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_debug(self, dataset):
-        """
-        Handle debug dataset
+        """Handle debug dataset.
+
         :param dataset:
         :return: error count
         """
@@ -1064,8 +1067,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_exhaust(self, dataset):
-        """
-        Handle exhaust dataset
+        """Handle exhaust dataset.
+
         :param dataset:
         :return: error count
         """
@@ -1079,8 +1082,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_link_quality(self, dataset):
-        """
-        Handle link quality dataset
+        """Handle link quality dataset.
+
         :param dataset:
         :return: error count
         """
@@ -1088,8 +1091,9 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_invalid_dataset(self, name, dataset):
-        """
-        Handle datasets of an invalid format, or datasets which have some missing data
+        """Handle datasets of an invalid format, or datasets which have some
+        missing data.
+
         :param name:
         :param dataset:
         :return:
@@ -1098,8 +1102,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_unknown_dataset(self, name, dataset):
-        """
-        Handle dataset which has unknown name
+        """Handle dataset which has unknown name.
+
         :param name:
         :param dataset:
         :return:
@@ -1110,8 +1114,8 @@ class IoBeamHandler(object):
         return 0
 
     def _handle_invalid_message(self, message):
-        """
-        Handle invalid message, which could be any unexpected message
+        """Handle invalid message, which could be any unexpected message.
+
         :param message:
         :return:
         """
@@ -1119,8 +1123,8 @@ class IoBeamHandler(object):
         return 1
 
     def _handle_error_message(self, message):
-        """
-        Handle error message
+        """Handle error message.
+
         :param message:
         :return:
         """
@@ -1131,8 +1135,9 @@ class IoBeamHandler(object):
         return 1
 
     def _handle_response(self, message):
-        """
-        Handle response, which is typically a response to a command sent earlier
+        """Handle response, which is typically a response to a command sent
+        earlier.
+
         :param message: response message, e.g. {"response": {"command": {"device": "fan", ...}, "state": "ok"}}
         :return: error count
         """
@@ -1222,8 +1227,8 @@ class IoBeamHandler(object):
             self.log_debug_processing_stats()
 
     def log_debug_processing_stats(self):
-        """
-        Not exactly sure what my idea was with this...
+        """Not exactly sure what my idea was with this...
+
         # TODO: find a way to trigger this manually for debugging and general curiosity.
         :return:
         """
@@ -1275,8 +1280,8 @@ class IoBeamHandler(object):
             return None
 
     def get_command_msg(self, device, action, value=None):
-        """
-        Make and return command in required format
+        """Make and return command in required format.
+
         :param device: device for which command should be executed
         :param action: action to be executed for given device
         :param value: additional value (optional, but required for some commands like fan:on:50)
@@ -1291,8 +1296,8 @@ class IoBeamHandler(object):
         return command
 
     def get_request_msg(self, datasets):
-        """
-        Make and return data request message in required format
+        """Make and return data request message in required format.
+
         :param datasets:
         :return: data request message
         """
@@ -1353,3 +1358,28 @@ class IoBeamHandler(object):
         )
 
         self._plugin.fire_event(MrBeamEvents.ANALYTICS_DATA, payload)
+
+    def _start_i2c_request_timer(self):
+        """Starts a timer to request the i2c state from iobeam.
+
+        Returns:
+            None
+        """
+
+        my_timer = threading.Timer(
+            self.I2C_STATE_REQUEST_INTERVAL, self._request_i2c_state
+        )
+        my_timer.daemon = True
+        my_timer.name = "request_i2c_state"
+        my_timer.start()
+
+    def _request_i2c_state(self):
+        """Requests the i2c state from iobeam and starts the timer again.
+
+        Returns:
+            None
+        """
+        if not self._printer.is_printing() and not self._printer.is_paused():
+            self._logger.debug("request i2c state from iobeam")
+            self._send_command(self.get_request_msg([self.DATASET_I2C]))
+        self._start_i2c_request_timer()

@@ -15,13 +15,16 @@
      * @param {...string} keyword
      * @returns {Object} : an array of styling objects
      */
-    $.fn.getAllStylesIncluding = function(keyword) {
+    $.fn.getAllStylesIncluding = function (keyword) {
         const element = this[0];
         const computedStyles = window.getComputedStyle(element);
         const styles = [];
 
         for (const style in computedStyles) {
-            if (computedStyles.hasOwnProperty(style) && style.includes(keyword)) {
+            if (
+                computedStyles.hasOwnProperty(style) &&
+                style.includes(keyword)
+            ) {
                 styles.push({ [style]: computedStyles[style] });
             }
         }
@@ -35,7 +38,7 @@
      * @param {...*} styleValue
      * @returns {undefined}
      */
-    $.fn.setStyleValue = function(style, styleValue) {
+    $.fn.setStyleValue = function (style, styleValue) {
         const element = this[0];
         element.style.setProperty(style, styleValue);
     };
@@ -45,9 +48,8 @@
      * @param {...string} style
      * @returns {undefined}
      */
-    $.fn.setDefaultStyleValue = function(style) {
+    $.fn.setDefaultStyleValue = function (style) {
         const element = this[0];
         element.style.setProperty(style, null);
     };
-
 })(jQuery);

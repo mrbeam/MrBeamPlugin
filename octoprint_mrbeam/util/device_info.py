@@ -25,14 +25,17 @@ MODEL_MRBEAM_2_DC_R1 = "MRBEAM2_DC_R1"
 MODEL_MRBEAM_2_DC_R2 = "MRBEAM2_DC_R2"
 MODEL_MRBEAM_2_DC = "MRBEAM2_DC"
 MODEL_MRBEAM_2_DC_S = "MRBEAM2_DC_S"
+MODEL_MRBEAM_2_DC_X = "MRBEAM2_DC_X"
 MODELS = {
     MODEL_MRBEAM_2: "Mr Beam II",
     MODEL_MRBEAM_2_DC_R1: "Mr Beam II dreamcut ready",
     MODEL_MRBEAM_2_DC_R2: "Mr Beam II dreamcut ready",
     MODEL_MRBEAM_2_DC: "Mr Beam II dreamcut",
     MODEL_MRBEAM_2_DC_S: "Mr Beam II dreamcut [S]",
+    MODEL_MRBEAM_2_DC_X: "Mr Beam II dreamcut [x]",
 }
 MODEL_DEFAULT = MODEL_MRBEAM_2
+DC_SERIES = [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X]
 
 
 class DeviceInfo(object):
@@ -71,10 +74,10 @@ class DeviceInfo(object):
         return self._device_data.get(self.KEY_HOSTNAME)
 
     def get_model(self, refresh=False):
-        """
-        Gives you the device's model id like MRBEAM2 or MRBEAM2_DC
-        The value is solely read from device_info file (/etc/mrbeam)
-        and it's cached once read.
+        """Gives you the device's model id like MRBEAM2 or MRBEAM2_DC The value
+        is solely read from device_info file (/etc/mrbeam) and it's cached once
+        read.
+
         :return: model
         :rtype: String
         """
@@ -82,15 +85,14 @@ class DeviceInfo(object):
             self._model = self._device_data.get(self.KEY_MODEL, MODEL_DEFAULT)
         return self._model
 
-    def is_mrbeam2_dc_or_dc_s(self):
-        return self.get_model() in (MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S)
+    def is_mrbeam2_dc_series(self):
+        return self.get_model() in DC_SERIES
 
     def get_production_date(self):
         return self._device_data.get(self.KEY_PRODUCTION_DATE, None)
 
     def get_beamos_version(self):
-        """
-        Expect the beamos date to be formatted as TIER-YYYY-MM-DD
+        """Expect the beamos date to be formatted as TIER-YYYY-MM-DD.
 
         returns the tier of the beamos and the date of the image creation
 
@@ -113,8 +115,7 @@ class DeviceInfo(object):
             return None, BEAMOS_LEGACY_DATE
 
     def get_beamos_version_number(self):
-        """
-        returns the beamos version
+        """returns the beamos version.
 
         Returns:
             version of beamos

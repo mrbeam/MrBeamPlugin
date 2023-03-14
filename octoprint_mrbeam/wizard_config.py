@@ -82,10 +82,12 @@ class WizardConfig:
         return link_ids
 
     def _welcome_wizard_config(self):
-        """
-        Add here the tabs that should be present in the welcome wizard.
-        The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
-        The welcome and what's new wizard are actually the same wizard, so both are configured in the same place.
+        """Add here the tabs that should be present in the welcome wizard.
+
+        The order of the tabs is set in __init__.py > __plugin_load__()
+        > __plugin_settings_overlay__['appearance']['order]. The welcome
+        and what's new wizard are actually the same wizard, so both are
+        configured in the same place.
         """
         welcome_wizard_tabs = dict(
             wizard_wifi=dict(
@@ -94,8 +96,8 @@ class WizardConfig:
                 required=self._is_wifi_wizard_required(),
                 mandatory=False,
                 suffix="_wifi",
-                template="wizard/wizard_wifi.jinja2",
-                div="wizard_plugin_corewizard_wifi_netconnectd",
+                template="wizard/wizard_connection.jinja2",
+                div="wizard_plugin_corewizard_connection",
             ),
             wizard_acl=dict(
                 type="wizard",
@@ -117,24 +119,35 @@ class WizardConfig:
             ),
             wizard_analytics=dict(
                 type="wizard",
-                name=gettext("Analytics"),
+                name=gettext("Better together"),
                 required=self._is_analytics_wizard_required(),
                 mandatory=False,
                 suffix="_analytics",
                 template="wizard/wizard_analytics.jinja2",
                 div="wizard_plugin_corewizard_analytics",
             ),
+            wizard_guided_tour=dict(
+                type="wizard",
+                name=gettext("Guided Tour"),
+                required=True,
+                mandatory=False,
+                suffix="_guided_tour",
+                template="wizard/wizard_guided_tour.jinja2",
+                div="wizard_plugin_corewizard_guided_tour",
+            ),
         )
 
         return welcome_wizard_tabs
 
     def _whatsnew_wizard_config(self):
-        """
-        Add here the tabs that should be present in the what's new wizard. Remove when unnecessary.
-        The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
-        The welcome and what's new wizard are actually the same wizard, so both are configured in the same place.
+        """Add here the tabs that should be present in the what's new wizard.
+        Remove when unnecessary. The order of the tabs is set in __init__.py >
+        __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
+        The welcome and what's new wizard are actually the same wizard, so both
+        are configured in the same place.
 
-        Change the "required" to False if that slide should not be present in the dialog, revert otherwise.
+        Change the "required" to False if that slide should not be
+        present in the dialog, revert otherwise.
         """
         whatsnew_wizard_tabs = dict(
             wizard_whatsnew_0=dict(
@@ -175,7 +188,7 @@ class WizardConfig:
             ),
             wizard_analytics=dict(
                 type="wizard",
-                name=gettext("Analytics"),
+                name=gettext("Better together"),
                 required=self._is_analytics_wizard_required(),
                 mandatory=False,
                 suffix="_analytics",
@@ -192,12 +205,14 @@ class WizardConfig:
 
     @staticmethod
     def _beta_news_wizard_config():
-        """
-        Add here the tabs that should be present in the beta news wizard. Remove when unnecessary.
-        The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
-        The welcome, what's new and beta news wizards are actually the same wizard, so all are configured in the same place.
+        """Add here the tabs that should be present in the beta news wizard.
+        Remove when unnecessary. The order of the tabs is set in __init__.py >
+        __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
+        The welcome, what's new and beta news wizards are actually the same
+        wizard, so all are configured in the same place.
 
-        Change the "required" to False if that slide should not be present in the dialog, revert otherwise.
+        Change the "required" to False if that slide should not be
+        present in the dialog, revert otherwise.
         """
         beta_news_wizard_tabs = dict(
             wizard_beta_news_0=dict(

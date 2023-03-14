@@ -14,9 +14,8 @@ from octoprint_mrbeam.model.burger_menu_model import BurgerMenuModel
 
 
 class BurgerMenuService:
-    """
-    In this class we gather all the service layer calculations needed regarding the burger menu
-    """
+    """In this class we gather all the service layer calculations needed
+    regarding the burger menu."""
 
     def __init__(self, logger, document_service):
         self._logger = logger
@@ -24,10 +23,10 @@ class BurgerMenuService:
 
     @prevent_execution_on_import_error(MrBeamDocUtils, default_return=BurgerMenuModel())
     def get_burger_menu_model(self, mrbeam_model):
-        """
-        mrbeam_model String: Name of the running mrbeam_model
+        """mrbeam_model String: Name of the running mrbeam_model.
 
-        Return BurgerMenuModel containing all the burger menu related information for this specific mrbeam_model
+        Return BurgerMenuModel containing all the burger menu related
+        information for this specific mrbeam_model
         """
         mrbeam_model_found = MrBeamDocUtils.get_mrbeam_model_enum_for(mrbeam_model)
         if mrbeam_model_found is None:

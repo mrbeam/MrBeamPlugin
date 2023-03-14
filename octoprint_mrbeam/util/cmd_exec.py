@@ -5,8 +5,8 @@ from logging import DEBUG
 
 
 def exec_cmd(cmd, log=True, shell=True, loglvl=DEBUG):
-    """
-    Executes a system command
+    """Executes a system command.
+
     :param cmd:
     :return: True if system returncode was 0,
                      False if the command returned with an error,
@@ -32,8 +32,8 @@ def exec_cmd(cmd, log=True, shell=True, loglvl=DEBUG):
 
 
 def exec_cmd_output(cmd, log=True, shell=False, loglvl=DEBUG):
-    """
-    Executes a system command and returns its output.
+    """Executes a system command and returns its output.
+
     :param cmd:
     :return: Tuple(String:output , int return_code)
     """

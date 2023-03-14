@@ -281,8 +281,8 @@ class Migration(object):
             self._logger.exception("Unhandled exception during migration: {}".format(e))
 
     def _run_migration(self):
-        """
-        run the new migrations
+        """run the new migrations.
+
         @return:
         """
         self._logger.debug("beamos_version: {}".format(self.beamos_version))
@@ -381,8 +381,8 @@ class Migration(object):
         return LooseVersion(self.version_current) > LooseVersion(self.version_previous)
 
     def _compare_versions(self, lower_vers, higher_vers, equal_ok=True):
-        """
-        Compares two versions and returns true if lower_vers < higher_vers
+        """Compares two versions and returns true if lower_vers < higher_vers.
+
         :param lower_vers: needs to be inferior to higher_vers to be True
         :param lower_vers: needs to be superior to lower_vers to be True
         :param equal_ok: returned value if lower_vers and higher_vers are equal.
@@ -473,9 +473,10 @@ class Migration(object):
             )
 
     def fix_wifi_ap_name(self):
-        """
-        image 'PROD 2018-01-12 19:15 1515784545' has wifi AP name: 'MrBeam-F930'
-        Let's correct it to actual wifi AP name
+        """image 'PROD 2018-01-12 19:15 1515784545' has wifi AP name:
+        'MrBeam-F930'.
+
+        Let's correct it to actual wifi AP name.
         """
         host = self.plugin.getHostname()
         # at some point change this to: command = "sudo /root/scripts/change_apname {}".format(host)
@@ -529,8 +530,8 @@ class Migration(object):
             self._logger.info("migrate_from_0_0_0() nothing to do here.")
 
     def setup_iptables(self):
-        """
-        Creates iptables config file.
+        """Creates iptables config file.
+
         This is required to redirect all incoming traffic to localhost.
         """
         self._logger.info("setup_iptables() ")
@@ -576,10 +577,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         )
 
     def add_grbl_130_maxTravel(self):
-        """
-        Since we introduced GRBL settings sync (aka correct_settings), we have grbl settings in machine profiles
-        So we need to add the old value for 'x max travel' for C-Series devices there.
-        """
+        """Since we introduced GRBL settings sync (aka correct_settings), we
+        have grbl settings in machine profiles So we need to add the old value
+        for 'x max travel' for C-Series devices there."""
         if self.plugin._device_series == "2C":
             default_profile = laserCutterProfileManager().get_default()
             default_profile["grbl"]["settings"][130] = 501.1
@@ -780,11 +780,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             self.plugin._settings.set_boolean(["gcodeAutoDeletion"], False)
 
     def fix_s_series_mount_manager(self):
-        """
-        fixes a problem with the images before 19.7.2021
-        the rc.local file was missing the clear command for the mount_manager
-        this replaces the rc.local file with the one containing this row
-        """
+        """fixes a problem with the images before 19.7.2021 the rc.local file
+        was missing the clear command for the mount_manager this replaces the
+        rc.local file with the one containing this row."""
         self._logger.info("start fix_s_series_mount_manager")
         src_rc_local = os.path.join(
             __package_path__, self.MIGRATE_FILES_FOLDER, "rc.local"
@@ -833,8 +831,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
     ##########################################################
 
     def is_lasercutterProfile_set(self):
-        """
-        Is a non-generic lasercutterProfile set as default profile?
+        """Is a non-generic lasercutterProfile set as default profile?
+
         :return: True if a non-generic lasercutterProfile is set as default
         """
         return laserCutterProfileManager().get_default()["id"] != "my_default"
@@ -876,8 +874,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             )
 
     def set_lasercutterPorfile_2C(self):
-        """
-        Series C came with no default lasercutterProfile set.
+        """Series C came with no default lasercutterProfile set.
+
         FYI: the image contained only a profile called 'MrBeam2B' which was never used since it wasn't set as default
         """
         profile_id = "MrBeam2C"
@@ -955,7 +953,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self._logger.info("Done")
 
     def fix_settings(self):
-        """Sanitize the data from the settings"""
+        """Sanitize the data from the settings."""
 
         from octoprint.settings import settings
 
@@ -963,10 +961,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         data = settings().get(["plugins", "mrbeam"])
 
         def _set(path, _data, set_func, fullpath=None):
-            """
-            If _data has given path, then set settings
-            with that value.
-            """
+            """If _data has given path, then set settings with that value."""
             if not isinstance(path, (Iterable, Sized)) or len(path) <= 0:
                 return
             elif isinstance(_data, Mapping) and path[0] in _data.keys():
@@ -1035,10 +1030,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     @logExceptions
     def hostname_helper_scripts(self):
-        """
-        Add systemd files and scripts to auto change the hostname on boot and/or
-        change of name in /etc/mrbeam
-        """
+        """Add systemd files and scripts to auto change the hostname on boot
+        and/or change of name in /etc/mrbeam."""
         self._logger.info("Removing previous first_boot_script...")
         for rm_fname in [
             "/root/scripts/change_hostname",
@@ -1065,23 +1058,18 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
             # os.renames(src, fname)
 
     def update_custom_material_settings(self):
-        """
-        Updates custom material settings keys and values
-        It replaces 'laser_type 'key with 'laser_model' and
-        it sets the value according to the latest laserhead
-        model updates
-        It also replaces 'model' key with 'device_model'
-        """
+        """Updates custom material settings keys and values It replaces
+        'laser_type 'key with 'laser_model' and it sets the value according to
+        the latest laserhead model updates It also replaces 'model' key with
+        'device_model'."""
         self._logger.info("start update_custom_material_settings")
         my_materials = materials(self.plugin)
         for k, v in my_materials.get_custom_materials().items():
             my_materials.put_custom_material(k, v)
 
     def fix_octoprint_prerelease_setting(self):
-        """
-        Removes the prerelease flag from the OctoPrint update
-        config so it will only use releases of OctoPrint
-        """
+        """Removes the prerelease flag from the OctoPrint update config so it
+        will only use releases of OctoPrint."""
         self._logger.info("start fix_octoprint_prerelease_setting")
         self.plugin._settings.global_set(
             ["plugins", "softwareupdate", "checks", "octoprint", "prerelease"],
@@ -1091,11 +1079,9 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
         self.plugin._settings.save()
 
     def update_focus_reminder_setting(self):
-        """
-        Updates the 'focusReminder' flag in settings
-        Enforce the flag to True so the user can see
-        the laser head removal warning at least once
-        """
+        """Updates the 'focusReminder' flag in settings Enforce the flag to
+        True so the user can see the laser head removal warning at least
+        once."""
         self._logger.info("start update_focus_reminder_setting")
         self.plugin._settings.set_boolean(["focusReminder"], True)
         self.plugin._settings.save()

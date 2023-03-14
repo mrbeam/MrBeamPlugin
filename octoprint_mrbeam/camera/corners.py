@@ -26,8 +26,8 @@ _logger = mrb_logger("octoprint.plugins.mrbeam.camera.corners")
 
 # @logtime()
 def warpImgByCorners(image, corners, zoomed_out=False):
-    """
-    Warps the region delimited by the corners in order to straighten it.
+    """Warps the region delimited by the corners in order to straighten it.
+
     :param image: takes an opencv image
     :param corners: as qd-dict
     :param zoomed_out: whether to zoom out the pic to account for object height
@@ -82,7 +82,7 @@ def warpImgByCorners(image, corners, zoomed_out=False):
 def save_corner_calibration(
     path, newCorners, newMarkers, hostname=None, plugin_version=None, from_factory=False
 ):
-    """Save the settings onto a calibration file"""
+    """Save the settings onto a calibration file."""
 
     # transform dict
     for new_ in [newCorners, newMarkers]:
@@ -128,10 +128,8 @@ def write_corner_calibration(pic_settings, path):
 
 
 def get_corner_calibration(pic_settings):
-    """
-    Returns the corner calibration written to pic_settings
-    If given a dict, assumes this is already the pic_setings.
-    """
+    """Returns the corner calibration written to pic_settings If given a dict,
+    assumes this is already the pic_setings."""
     if isinstance(pic_settings, Mapping):
         return pic_settings
     elif not isfile(pic_settings) or os.stat(pic_settings).st_size == 0:
@@ -155,8 +153,9 @@ def get_deltas_and_refs(
     new_mtx=None,
     from_factory=False,
 ):
-    """Returns the relative positions (delta) of the markers and corners according to the calibration (in px)
-    By default, returns delta for the raw pictures.
+    """Returns the relative positions (delta) of the markers and corners
+    according to the calibration (in px) By default, returns delta for the raw
+    pictures.
 
     If `undistorted==True` and matrix and dist are given, will return the undistorted coordinates
     calculated from the raw settings.

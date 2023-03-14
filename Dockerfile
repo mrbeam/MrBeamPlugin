@@ -54,9 +54,13 @@ RUN source ./venv2/bin/activate \
 RUN source ./venv2/bin/activate \
     && pip install opencv-python==3.2.0.7
 
-COPY --chown=mrbeam ./docker-octoprint-config.yaml /home/mrbeam/.octoprint/config.yaml
+COPY --chown=mrbeam docker_config/docker-octoprint-config.yaml /home/mrbeam/.octoprint/config.yaml
 
-COPY --chown=mrbeam docker-beamos_version /etc/beamos_version
+COPY --chown=mrbeam ./cypress/downloads ./cypress/fixtures /home/mrbeam/.octoprint/uploads/
+
+COPY --chown=mrbeam docker_config/docker-users.yaml /home/mrbeam/.octoprint/users.yaml
+
+COPY --chown=mrbeam docker_config/docker-beamos_version /etc/beamos_version
 
 COPY --chown=mrbeam . /home/mrbeam/MrBeamPlugin/
 

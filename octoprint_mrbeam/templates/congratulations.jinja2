@@ -1,0 +1,12 @@
+<div id="congratulations" data-test="mrbeam-ui-modal-congratulations" class="modal hide fade modal" data-backdrop="static">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3>{{ _('Congratulations') }}</h3>
+    </div>
+    <div class="modal-body">
+        {% include 'wizard/firstrun_end.jinja2' %}
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" data-test="mrbeam-ui-modal-congratulations-ok-button" data-dismiss="modal" aria-hidden="true">{{ _('Done') }}</button>
+    </div>
+</div>

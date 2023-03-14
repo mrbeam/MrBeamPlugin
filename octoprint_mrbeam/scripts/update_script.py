@@ -108,8 +108,7 @@ def _parse_arguments():
 
 
 def get_dependencies(path):
-    """
-    return the dependencies saved in the <path>
+    """return the dependencies saved in the <path>
 
     Args:
          path: path to the dependencies.txt file
@@ -126,7 +125,7 @@ def get_dependencies(path):
             mrbeam-ledstrips==0.2.2-alpha.2
     output: [[iobeam][==][0.7.15]]
             [[mrb-hw-info][==][0.0.25]]
-            [[mrbeam-ledstrips][==][0.2.2-alpha.2]]        
+            [[mrbeam-ledstrips][==][0.2.2-alpha.2]]
     """
     try:
         with open(dependencies_path, "r") as f:
@@ -139,9 +138,7 @@ def get_dependencies(path):
 
 
 def get_update_info():
-    """
-    returns the update info saved in the update_info.json file
-    """
+    """returns the update info saved in the update_info.json file."""
     update_info_path = os.path.join(_default_basedir("OctoPrint"), "update_info.json")
     try:
         with open(update_info_path, "r") as f:
@@ -154,15 +151,13 @@ def get_update_info():
 
 
 def build_wheels(build_queue):
-    """
-    build the wheels of the packages in the queue
+    """build the wheels of the packages in the queue.
 
     Args:
         build_queue: dict of venvs with a list of packages to build the wheels
 
     Returns:
         None
-
     """
     try:
         if not os.path.isdir(PIP_WHEEL_TEMP_FOLDER):
@@ -200,8 +195,7 @@ def build_wheels(build_queue):
 
 
 def install_wheels(install_queue):
-    """
-    installs the wheels in the given venv of the queue
+    """installs the wheels in the given venv of the queue.
 
     Args:
         install_queue: dict of venvs with a list of packages to install
@@ -240,8 +234,7 @@ def install_wheels(install_queue):
 
 
 def build_queue(update_info, dependencies, plugin_archive):
-    """
-    build the queue of packages to install
+    """build the queue of packages to install.
 
     Args:
         update_info: a dict of informations how to update the packages
@@ -315,9 +308,8 @@ def build_queue(update_info, dependencies, plugin_archive):
 
 
 def run_update():
-    """
-    collects the dependencies and the update info, builds the wheels and installs them in the correct venv
-    """
+    """collects the dependencies and the update info, builds the wheels and
+    installs them in the correct venv."""
 
     args = _parse_arguments()
 
@@ -338,8 +330,7 @@ def run_update():
 
 
 def retryget(url, retrys=3, backoff_factor=0.3):
-    """
-    retrys the get <retrys> times
+    """retrys the get <retrys> times.
 
     Args:
         url: url to access
@@ -365,8 +356,8 @@ def retryget(url, retrys=3, backoff_factor=0.3):
 
 
 def loadPluginTarget(archive, folder):
-    """
-    download the archive of the Plugin and copy dependencies and update script in the working directory
+    """download the archive of the Plugin and copy dependencies and update
+    script in the working directory.
 
     Args:
         archive: path of the archive to download and unzip
@@ -431,8 +422,8 @@ def loadPluginTarget(archive, folder):
 
 
 def main():
-    """
-    loads the dependencies.txt and the update_script of the given target and executes the new update_script
+    """loads the dependencies.txt and the update_script of the given target and
+    executes the new update_script.
 
     Args:
         target: target of the Mr Beam Plugin to update to

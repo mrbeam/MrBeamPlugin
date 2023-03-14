@@ -243,24 +243,16 @@ class MachineCom(object):
         self._current_lh_data = (
             _mrbeam_plugin_implementation.laserhead_handler.get_current_used_lh_data()
         )
-        self._intensity_upper_bound = int(
-            self._laserCutterProfile["laser"]["intensity_upper_bound"]
+        self._max_intensity_including_correction = (
+            _mrbeam_plugin_implementation.laserhead_handler.current_laserhead_max_intensity_including_correction
         )
 
-        self._power_correction_factor = 1
-        if self._power_correction_settings["correction_enabled"]:
-            lh_info = self._current_lh_data["info"]
-            if self._power_correction_settings["correction_factor_override"]:
-                self._power_correction_factor = self._power_correction_settings[
-                    "correction_factor_override"
-                ]
-            else:
-                if lh_info and "correction_factor" in lh_info:
-                    self._power_correction_factor = lh_info["correction_factor"]
-
-        self._logger.info(
-            "Power correction factor: {}".format(self._power_correction_factor)
+        # self._power_correction_factor
+        self._max_correction_factor = (
+            _mrbeam_plugin_implementation.laserhead_handler.current_laserhead_max_correction_factor
         )
+
+        self._set_correction_factor()
 
         self.watch_dog = AccWatchDog(self)
 
@@ -270,6 +262,37 @@ class MachineCom(object):
         self.recovery_thread = None
         self._start_monitoring_thread()
         self._start_status_polling_timer()
+
+    def _set_correction_factor(self):
+        _power_correction_factor = 1
+        if self._power_correction_settings["correction_enabled"]:
+            lh_info = self._current_lh_data["info"]
+            if self._power_correction_settings["correction_factor_override"]:
+                _power_correction_factor = self._power_correction_settings[
+                    "correction_factor_override"
+                ]
+            else:
+                if lh_info and "correction_factor" in lh_info:
+                    _power_correction_factor = lh_info["correction_factor"]
+
+        # Limit correction factor to values between 1 and _max_correction_factor
+        if _power_correction_factor < 1:
+            _power_correction_factor = 1
+
+        if _power_correction_factor > self._max_correction_factor:
+            self._logger.debug(
+                "Power correction factor higher as allowed max, will limit to max value - %s => %s",
+                _power_correction_factor,
+                self._max_correction_factor,
+            )
+        _power_correction_factor = min(
+            _power_correction_factor, self._max_correction_factor
+        )
+
+        self._power_correction_factor = _power_correction_factor
+        self._logger.info(
+            "Power correction factor: {}".format(self._power_correction_factor)
+        )
 
     def _start_monitoring_thread(self):
         self._monitoring_active = True
@@ -302,8 +325,10 @@ class MachineCom(object):
         )
 
     def get_home_position(self):
-        """
-        Returns the home position which usually where the head is after homing. (Except in C series)
+        """Returns the home position which usually where the head is after
+        homing.
+
+        (Except in C series)
         :return: Tuple of (x, y) position
         """
         if (
@@ -468,8 +493,8 @@ class MachineCom(object):
         # self._logger.info("ANDYTEST Leaving _send_loop()")
 
     def _sendCommand(self, cmd=None):
-        """
-        Takes command from:
+        """Takes command from:
+
          - parameter passed to this function, (!! treated as real time command)
          - self._cmd or
          - self._commandQueue.get()
@@ -777,8 +802,9 @@ class MachineCom(object):
             self._real_time_commands["soft_reset"] = False
 
     def _handle_rt_command(self, cmd):
-        """
-        If cmd is a RT command, the RT command is sent and True is returned, False otherwise.
+        """If cmd is a RT command, the RT command is sent and True is returned,
+        False otherwise.
+
         :param cmd:
         :return:
         """
@@ -1112,8 +1138,8 @@ class MachineCom(object):
         # 	self._reset_status_polling_waittime()
 
     def _handle_error_message(self, line):
-        """
-        Handles error messages from GRBL
+        """Handles error messages from GRBL.
+
         :param line: GRBL error respnse
         """
         line = line.rstrip() if line else line
@@ -1302,8 +1328,8 @@ class MachineCom(object):
             )
 
     def _handle_settings_message(self, line):
-        """
-        Handles grbl settings message like '$130=515.1'
+        """Handles grbl settings message like '$130=515.1'.
+
         :param line:
         """
         match = self.pattern_grbl_setting.match(line)
@@ -1323,23 +1349,28 @@ class MachineCom(object):
             self._grbl_settings[id] = dict(value=value, comment=comment)
 
     def _start_recovery_thread(self):
-        """
-        This starts a recovery process in another thread.
-        Recovery is when GRBL reported an MRB_CHECKSUM_ERROR.
-        In this case:
-        GRBL switches to ALARM state and does not process any commands in it's serial buffer
-        however it will proceed with all commands already in the planning buffer.
-        Now our job is to resend all commands that were skipped by GRBL.
-        First we need to send a ALARM_RESET command ($X) to end grbl's alarm state.
-        Then we send all commands which got declined beginning with the one which caused the checksum error.
-        It's important that there are now new commands from the file put into the sending pipeling
-        once we sent the ALARM_RESET until e sent all commands the need to be resent (marked dirty).
-        self._recovery_lock blocks the sending-queue from reading new commands from the file.
-        Once the lock is set and we waited some time for the sending queue to clear (this timeout mechanism should
-        be improved e.g. by using a lock), we can feed the recovery commands lead by a ALARM_RESET into the sending queue.
-        All commands that have been sent after the error are marked as 'dirty', ALARM_RESET is the first 'clean' command
-        after the error. We have to make sure that we re-send all dirty commands before we re-open the sending-queue for
-        new commands from the file.
+        """This starts a recovery process in another thread.
+
+        Recovery is when GRBL reported an MRB_CHECKSUM_ERROR. In this
+        case: GRBL switches to ALARM state and does not process any
+        commands in it's serial buffer however it will proceed with all
+        commands already in the planning buffer. Now our job is to
+        resend all commands that were skipped by GRBL. First we need to
+        send a ALARM_RESET command ($X) to end grbl's alarm state. Then
+        we send all commands which got declined beginning with the one
+        which caused the checksum error. It's important that there are
+        now new commands from the file put into the sending pipeling
+        once we sent the ALARM_RESET until e sent all commands the need
+        to be resent (marked dirty). self._recovery_lock blocks the
+        sending-queue from reading new commands from the file. Once the
+        lock is set and we waited some time for the sending queue to
+        clear (this timeout mechanism should be improved e.g. by using a
+        lock), we can feed the recovery commands lead by a ALARM_RESET
+        into the sending queue. All commands that have been sent after
+        the error are marked as 'dirty', ALARM_RESET is the first
+        'clean' command after the error. We have to make sure that we
+        re-send all dirty commands before we re-open the sending-queue
+        for new commands from the file.
         """
         if self._recovery_lock and not self._recovery_ignore_further_alarm_responses:
             # Already in recovery
@@ -1416,9 +1447,8 @@ class MachineCom(object):
             self._logger.exception("Exception in recovery thread: ")
 
     def correct_grbl_settings(self, retries=3):
-        """
-        This triggers a reload of GRBL settings and does a validation and correction afterwards.
-        """
+        """This triggers a reload of GRBL settings and does a validation and
+        correction afterwards."""
         if (
             time.time() - self._grbl_settings_correction_ts
             > self.GRBL_SETTINGS_READ_WINDOW
@@ -1587,8 +1617,8 @@ class MachineCom(object):
         )
 
     def _gcode_command_for_cmd(self, cmd):
-        """
-        Tries to parse the provided ``cmd`` and extract the GCODE command identifier from it (e.g. "G0" for "G0 X10.0").
+        """Tries to parse the provided ``cmd`` and extract the GCODE command
+        identifier from it (e.g. "G0" for "G0 X10.0").
 
         Arguments:
             cmd (str): The command to try to parse.
@@ -1666,10 +1696,8 @@ class MachineCom(object):
         return None
 
     def _poll_status(self):
-        """
-        Called by RepeatedTimer self._status_polling_timer every 0.1 secs
-        We need to descide here if we should send a status request
-        """
+        """Called by RepeatedTimer self._status_polling_timer every 0.1 secs We
+        need to descide here if we should send a status request."""
         try:
             if self.isOperational():
                 if time.time() >= self._status_polling_next_ts:
@@ -1682,15 +1710,13 @@ class MachineCom(object):
             self._logger.exception("Exception in status polling call: ")
 
     def _reset_status_polling_waittime(self):
-        """
-        Resets wait time till we should do next status polling
-        This is typically called after we received an ok with a position
-        """
+        """Resets wait time till we should do next status polling This is
+        typically called after we received an ok with a position."""
         self._status_polling_next_ts = time.time() + self._status_polling_interval
 
     def _set_status_polling_interval_for_state(self, state=None):
-        """
-        Sets polling interval according to current state
+        """Sets polling interval according to current state.
+
         :param state: (optional) state, if None, self._state is used
         """
         state = state or self._state
@@ -1707,8 +1733,8 @@ class MachineCom(object):
             self._send_event.set()
 
     def _log(self, message, is_command=False):
-        """
-        deprecated. use mrb_logger with flag serial=True instead
+        """deprecated. use mrb_logger with flag serial=True instead.
+
         :param message:
         """
         if is_command and not self._terminal_show_checksums:
@@ -1717,8 +1743,9 @@ class MachineCom(object):
         self._logger.comm(message, serial=True)
 
     def _fire_print_failed(self, err_msg=None):
-        """
-        Tests it printer is in printing state and fire PRINT_FAILED event if so.
+        """Tests it printer is in printing state and fire PRINT_FAILED event if
+        so.
+
         :param err_msg:
         :return:
         """
@@ -1732,8 +1759,9 @@ class MachineCom(object):
             eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 
     def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
-        """
-        Flashes the specified grbl file (.hex). This file must not contain a bootloader.
+        """Flashes the specified grbl file (.hex). This file must not contain a
+        bootloader.
+
         :param grbl_file: (optional) if not provided the default grbl file is used.
         :param verify_only: If true, nothing is written, current grbl is verified only
         :param is_connected: If True, serial connection to grbl is closed before flashing and reconnected afterwards.
@@ -1879,8 +1907,8 @@ class MachineCom(object):
 
     @staticmethod
     def get_grbl_file_name(grbl_version=None):
-        """
-        Gets you the filename according to the given grbl version.
+        """Gets you the filename according to the given grbl version.
+
         :param grbl_version: (optional) grbl version - If no grbl version is provided it returns you the filename of the default version for this release.
         :return: filename
         """
@@ -1893,11 +1921,12 @@ class MachineCom(object):
         return grbl_file
 
     def reset_grbl_auto_update_config(self):
-        """
-        Resets grbl auto update configuration in lasercutterProfile if current grbl version is expected version.
-        This makes sure that once the auto update got executed sucessfully it's not done again and again.
+        """Resets grbl auto update configuration in lasercutterProfile if
+        current grbl version is expected version. This makes sure that once the
+        auto update got executed sucessfully it's not done again and again.
         Only has effect IF:
-         - grbl_auto_update_enabled in config.yaml is True (default)
+
+        - grbl_auto_update_enabled in config.yaml is True (default)
         """
         if (
             self.grbl_auto_update_enabled
@@ -1929,9 +1958,9 @@ class MachineCom(object):
                 )
 
     def rescue_from_home_pos(self, retry=0):
-        """
-        In case the laserhead is pushed deep into homing corner and constantly keeps endstops/limit switches pushed,
-        this is going to rescue it from there before homing cycle is started.
+        """In case the laserhead is pushed deep into homing corner and
+        constantly keeps endstops/limit switches pushed, this is going to
+        rescue it from there before homing cycle is started.
 
         This method tests:
         - If GRBL version supports rescue (means reports limit data)
@@ -2083,9 +2112,6 @@ class MachineCom(object):
         obj = self._regex_intensity.search(cmd)
         if obj is not None:
             intensity_limit = int(self._laserCutterProfile["laser"]["intensity_limit"])
-            max_correction_factor = float(
-                self._laserCutterProfile["laser"]["max_correction_factor"]
-            )
             intensity_cmd = cmd[obj.start() : obj.end()]
             parsed_intensity = int(intensity_cmd[1:])
 
@@ -2101,29 +2127,20 @@ class MachineCom(object):
 
             # Apply power correction factor and limit again (in case there is something wrong with the calculation of
             # the correction factor)
-            if self._power_correction_factor > max_correction_factor:
-                self._logger.debug(
-                    "Power correction factor higher as allowed max, will limit to max value - %s => %s",
-                    self._power_correction_factor,
-                    max_correction_factor,
-                )
-            self._power_correction_factor = min(
-                self._power_correction_factor, max_correction_factor
-            )
             self._current_intensity = int(
                 round(self._current_intensity * self._power_correction_factor)
             )
             if (
-                self._intensity_upper_bound
-                and self._current_intensity > self._intensity_upper_bound
+                self._max_intensity_including_correction
+                and self._current_intensity > self._max_intensity_including_correction
             ):
                 self._logger.debug(
                     "Intensity higher as allowed max, will limit to max value - %s => %s",
                     self._current_intensity,
-                    self._intensity_upper_bound,
+                    self._max_intensity_including_correction,
                 )
             self._current_intensity = min(
-                self._current_intensity, self._intensity_upper_bound
+                self._current_intensity, self._max_intensity_including_correction
             )
 
             # self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor} and '
@@ -2296,9 +2313,8 @@ class MachineCom(object):
             self.watch_dog.notify_command(cmd_obj)
 
     def _handle_user_command(self, cmd):
-        """
-        Handles commands the user can enter on the terminal starting with /
-        """
+        """Handles commands the user can enter on the terminal starting with
+        /"""
         try:
             cmd = cmd.strip()
             self._log("Command: %s" % cmd)
@@ -2381,19 +2397,7 @@ class MachineCom(object):
                     token = int(tokens[1])
                     if token == 1:
                         self._log("Enabling power correction...")
-                        lh_data = (
-                            _mrbeam_plugin_implementation.laserhead_handler.get_current_used_lh_data()
-                        )
-                        if lh_data["info"] and "correction_factor" in lh_data["info"]:
-                            self._power_correction_factor = lh_data["info"][
-                                "correction_factor"
-                            ]
-                        else:
-                            self._log(
-                                "Couldn't enable power correction, there is no correction factor for laser head {}.".format(
-                                    lh_data["serial"]
-                                )
-                            )
+                        self._set_correction_factor()
 
                     elif token == 0:
                         self._log("Disabling power correction...")
@@ -2843,11 +2847,11 @@ class MachineComPrintCallback(object):
 
 
 class PrintingFileInformation(object):
-    """
-    Encapsulates information regarding the current file being printed: file name, current position, total size and
-    time the print started.
-    Allows to reset the current file position to 0 and to calculate the current progress as a floating point
-    value between 0 and 1.
+    """Encapsulates information regarding the current file being printed: file
+    name, current position, total size and time the print started.
+
+    Allows to reset the current file position to 0 and to calculate the
+    current progress as a floating point value between 0 and 1.
     """
 
     def __init__(self, filename):
@@ -2876,9 +2880,10 @@ class PrintingFileInformation(object):
         return FileDestinations.LOCAL
 
     def getProgress(self):
-        """
-        The current progress of the file, calculated as relation between file position and absolute size. Returns -1
-        if file size is None or < 1.
+        """The current progress of the file, calculated as relation between
+        file position and absolute size.
+
+        Returns -1 if file size is None or < 1.
         """
         if self._size is None or not self._size > 0:
             return -1
@@ -2887,28 +2892,23 @@ class PrintingFileInformation(object):
         )
 
     def reset(self):
-        """
-        Resets the current file position to 0.
-        """
+        """Resets the current file position to 0."""
         self._pos = 0
 
     def start(self):
-        """
-        Marks the print job as started and remembers the start time.
-        """
+        """Marks the print job as started and remembers the start time."""
         self._start_time = time.time()
 
     def close(self):
-        """
-        Closes the print job.
-        """
+        """Closes the print job."""
         pass
 
 
 class PrintingGcodeFileInformation(PrintingFileInformation):
-    """
-    Encapsulates information regarding an ongoing direct print. Takes care of the needed file handle and ensures
-    that the file is closed in case of an error.
+    """Encapsulates information regarding an ongoing direct print.
+
+    Takes care of the needed file handle and ensures that the file is
+    closed in case of an error.
     """
 
     def __init__(self, filename, offsets_callback=None, current_tool_callback=None):
@@ -2932,18 +2932,14 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
         self._lines_read_bak = 0
 
     def start(self):
-        """
-        Opens the file for reading and determines the file size.
-        """
+        """Opens the file for reading and determines the file size."""
         PrintingFileInformation.start(self)
         self._handle = open(self._filename, "r")
         self._lines_read = 0
         self._lines_read_bak = 0
 
     def close(self):
-        """
-        Closes the file if it's still open.
-        """
+        """Closes the file if it's still open."""
         PrintingFileInformation.close(self)
         if self._handle is not None:
             try:
@@ -2953,9 +2949,7 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
         self._handle = None
 
     def resetToBeginning(self):
-        """
-        resets the file handle so you can read from the beginning again.
-        """
+        """resets the file handle so you can read from the beginning again."""
         self._logger.debug(
             "resetToBeginning() self._lines_read %s, self._lines_read_bak: %s",
             self._lines_read,
@@ -2965,9 +2959,7 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
         self._lines_read = 0
 
     def getNext(self):
-        """
-        Retrieves the next line for printing.
-        """
+        """Retrieves the next line for printing."""
         if self._handle is None:
             raise ValueError("File %s is not open for reading" % self._filename)
 
@@ -3063,9 +3055,7 @@ class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
         self._comment_size = 0
 
     def getNext(self):
-        """
-        Retrieves the next line for printing.
-        """
+        """Retrieves the next line for printing."""
         if self._gcode is None:
             raise ValueError("Line buffer is not filled")
 

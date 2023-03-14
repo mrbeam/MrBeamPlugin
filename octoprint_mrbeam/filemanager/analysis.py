@@ -4,8 +4,9 @@ import octoprint.filemanager.analysis as octo_analysis
 
 
 class GcodeAnalysisQueue(octo_analysis.GcodeAnalysisQueue):
-    """
-    A queue to analyze GCODE files. Analysis results are :class:`dict` instances structured as follows:
+    """A queue to analyze GCODE files. Analysis results are :class:`dict`
+    instances structured as follows:
+
     @see octoprint.filemanager.analysis.GcodeAnalysisQueue
 
     .. list-table::
@@ -18,9 +19,9 @@ class GcodeAnalysisQueue(octo_analysis.GcodeAnalysisQueue):
     """
 
     def _do_analysis(self, high_priority=False):
-        """Perform analysis of a given gocode file
-        Performs the actual analysis of the current entry which can be accessed via ``self._current``. Needs to be
-        overridden by sub classes.
+        """Perform analysis of a given gocode file Performs the actual analysis
+        of the current entry which can be accessed via ``self._current``. Needs
+        to be overridden by sub classes.
 
         Arguments:
             high_priority (bool): Whether the current entry has high priority or not.
@@ -28,7 +29,6 @@ class GcodeAnalysisQueue(octo_analysis.GcodeAnalysisQueue):
         Returns:
             object: The result of the analysis which will be forwarded to the ``finished_callback`` provided during
                 construction.
-
         """
         try:
             # throttle = settings().getFloat(["gcodeAnalysis", "throttle_highprio"]) if high_priority \

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Test the gcode creating functions
-"""
+"""Test the gcode creating functions."""
 
 from itertools import cycle
 import pytest
@@ -34,10 +32,10 @@ DEFAULT_OUT_GCO = "out.gco"
 
 
 def _test_raster_files(datafiles, paths, options, repeat=0, keep_out_file_name=False):
-    """
-    Run the files from given path through the image processor with
-    the given options. If options is not the same list length as paths,
-    it will cycle around.
+    """Run the files from given path through the image processor with the given
+    options. If options is not the same list length as paths, it will cycle
+    around.
+
     :param paths: list of file paths
     :param options: list of kwargs (Mapping) forwarded to ImageProcessor.img_to_gcode
     :param repeat: repeat an additional N times (runs Once if repeat==0)
@@ -63,10 +61,8 @@ def _test_raster_files(datafiles, paths, options, repeat=0, keep_out_file_name=F
 @IN_FILES
 @pytest.mark.skip("skipping")
 def test_all(datafiles):
-    """
-    Test images over and over for detecting cpu stress,
-    mostly to test how long the conversions take
-    """
+    """Test images over and over for detecting cpu stress, mostly to test how
+    long the conversions take."""
     paths = [path for path in datafiles.listdir() if str(path).endswith(".png")]
     options = []
     _test_raster_files(datafiles, paths, options, STRESS_COUNT)
@@ -88,10 +84,8 @@ def test_trivial_img2gcode(datafiles):
 @pytest.mark.skip("skipping stress test")
 @IN_FILES
 def test_gcode_stress_test(datafiles):
-    """
-    Test images over and over for detecting cpu stress,
-    mostly to test how long the conversions take
-    """
+    """Test images over and over for detecting cpu stress, mostly to test how
+    long the conversions take."""
     paths = [
         str(datafiles / "simple.png"),
         str(datafiles / "gradient.png"),
@@ -103,10 +97,9 @@ def test_gcode_stress_test(datafiles):
 @pytest.mark.skip("skipping")
 @IN_FILES
 def test_islands(datafiles):
-    """
-    Test the separation of islands.
-    Only pertinent with very large engravings with
-    multiple islands
+    """Test the separation of islands.
+
+    Only pertinent with very large engravings with multiple islands
     """
     paths = [
         str(datafiles / "islands1.png"),
@@ -119,10 +112,9 @@ def test_islands(datafiles):
 @pytest.mark.skip("skipping stress test")
 @IN_FILES
 def test_memory_stress(datafiles):
-    """
-    Test whether the memory management is sufficient.
-    Only pertinent with very large engravings with
-    multiple islands
+    """Test whether the memory management is sufficient.
+
+    Only pertinent with very large engravings with multiple islands
     """
     paths = [
         str(datafiles / "islands_large.png"),
@@ -134,10 +126,8 @@ def test_memory_stress(datafiles):
 @IN_FILES
 @pytest.mark.skip("skipping")
 def test_time_estimation(datafiles):
-    """
-    Compare the real engraving / laser job time to the
-    predicted duration
-    """
+    """Compare the real engraving / laser job time to the predicted
+    duration."""
     paths = []
     options = []
     _test_raster_files(datafiles, paths, options)
@@ -147,8 +137,8 @@ def test_time_estimation(datafiles):
 @IN_FILES
 @pytest.mark.skip("skipping")
 def test_modes(datafiles):
-    """
-    Test whether the different modes produce an output.
+    """Test whether the different modes produce an output.
+
     Does not analyse the result file.
     """
     paths = [
@@ -162,10 +152,8 @@ def test_modes(datafiles):
 @IN_FILES
 @pytest.mark.skip("skipping")
 def test_work_area_clip(datafiles):
-    """
-    Test whether the ouptut gcode of clipping images
-    gets properly cropped.
-    """
+    """Test whether the ouptut gcode of clipping images gets properly
+    cropped."""
     # TODO How to input .mrb files?
     paths = []
     options = []

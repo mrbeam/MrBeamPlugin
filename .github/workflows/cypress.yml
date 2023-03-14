@@ -1,0 +1,209 @@
+name: Cypress Tests
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - alpha
+      - beta
+      - stable
+
+env:
+  # These two are just for internal use, to wire the container network
+  MRBEAM_PLUGIN_URL: "http://plugin-address.org:5002/"
+  MRBEAM_PLUGIN_DOMAIN_NAME: "plugin-address.org"
+  JIRA_PROJECT_KEY: "SW"
+  XRAY_JUNIT_IMPORT: "https://xray.cloud.getxray.app/api/v2/import/execution/junit"
+  TEST_PLAN_KEY: "SW-2354"
+
+jobs:
+  mrb-docker:
+    runs-on: ubuntu-latest
+    outputs:
+      domain: ${{ env.MRBEAM_PLUGIN_DOMAIN_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and export
+        uses: docker/build-push-action@v3
+        with:
+          push: false
+          context: .
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: ./Dockerfile
+          tags: mrbeam_plugin:latest
+          outputs: type=docker,dest=/tmp/image.tar
+      - name: Upload MrBeamPlugin image
+        uses: actions/upload-artifact@v3
+        with:
+          name: mrbeam_plugin
+          path: /tmp/image.tar
+
+  ui-chrome-tests:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    container:
+      image: cypress/browsers:node16.17.0-chrome106
+      options: --add-host=${{ needs.mrb-docker.outputs.domain }}:host-gateway
+      # This is necessary to use the docker daemon from the GitHub actions virtual machine
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    needs: mrb-docker
+    strategy:
+      fail-fast: false
+      matrix:
+        # run copies of the current job in parallel
+        containers: [ 0, 1, 2, 3, 4 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download MrBeamPlugin image
+        uses: actions/download-artifact@v3
+        with:
+          name: mrbeam_plugin
+          path: /tmp
+      - name: Load Docker image
+        run: |
+          apt-get --allow-releaseinfo-change update
+          apt-get install docker.io -y
+          docker load --input /tmp/image.tar
+          docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
+      - env:
+          CYPRESS_TEST_USER_EMAIL: ${{ secrets.CYPRESS_TEST_USER_EMAIL }}
+          CYPRESS_TEST_USER_PASSWORD: ${{ secrets.CYPRESS_TEST_USER_PASSWORD }}
+          CYPRESS_TEST_DESIGN_STORE_TOKEN: ${{ secrets.CYPRESS_TEST_DESIGN_STORE_TOKEN }}
+        run: |
+          envsubst < ./cypress/fixtures/test-data.template.json > ./cypress/fixtures/test-data.json
+          envsubst < ./cypress.config-template.js > ./cypress.config.js
+      - name: Run Cypress e2e - Chrome
+        uses: cypress-io/github-action@v4
+        with:
+          wait-on: ${{ env.MRBEAM_PLUGIN_URL }}
+          browser: chrome
+          config-file: cypress.config.js
+          command: yarn ts-node cypress/scripts/cypress-ci-run.ts
+        env:
+          TOTAL_RUNNERS: 5
+          THIS_RUNNER: ${{ matrix.containers }}
+          # Recommended: pass the GitHub token lets this action correctly
+          # determine the unique run id necessary to re-run the checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: report_${{ matrix.containers }}
+          path: cypress/results
+
+      - name: Upload Cypress screenshots
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshots_${{ matrix.containers }}
+          path: cypress/screenshots
+
+  xray-import:
+    runs-on: ubuntu-latest
+    needs: ui-chrome-tests
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Download JUnit reports
+        uses: actions/download-artifact@v3
+        with:
+          path: cypress/results
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: cypress/results
+      - name: Merge reports
+        run: |
+          npm install --only=dev
+          npm run merge-reports
+      - name: Import to Xray
+        id: xray
+        run: |
+          token=$(curl -H "Content-Type: application/json" -X POST --data '{ "client_id": "${{ secrets.JIRA_CLIENT_ID }}","client_secret": "${{ secrets.JIRA_CLIENT_SECRET }}" }'  https://xray.cloud.getxray.app/api/v2/authenticate| tr -d '"')
+          xray_import_response=$(curl -H "Content-Type: text/xml" -X POST -H "Authorization: Bearer $token"  --data @"cypress/results/combined.xml" ${{ env.XRAY_JUNIT_IMPORT }}?projectKey=${{ env.JIRA_PROJECT_KEY }}&testPlanKey=${{ env.TEST_PLAN_KEY }})
+          echo "xray_import_response=$xray_import_response" >> $GITHUB_OUTPUT
+      - name: Change test execution issue details
+        id: issue-details
+        # test_exec_id: extracts the newly created test execution issue url from the previous response
+        # test_exec_summary: contains the latest commit message. Should be something like "SW-1234 summary"
+        # tested_issue_id: extracts the "SW-1234" from the commit message, to add it as a link to the text execution issue
+        # tested_issue_assignee: extracts the accountId of the assignee of the tested ticket
+        # tested_issue_fix_version: extracts the fixVersion of the tested ticket
+        run: |
+          test_exec_url=$(printf '%s\n' '${{ steps.xray.outputs.xray_import_response }}' | jq -r .self)
+          echo $test_exec_url
+          echo "test_exec_url=$test_exec_url" >> $GITHUB_OUTPUT
+
+          last_commit_message=$(echo $(git log -1 --pretty=format:"%s"))
+          test_exec_summary=$(echo "Test execution for $last_commit_message" | tr \" " ")
+          echo $test_exec_summary
+
+          tested_issue_id=$(echo $last_commit_message | sed -E -e 's/.*(SW-[0-9]+).*/\1/g')
+          echo $tested_issue_id
+
+          tested_issue_details=$(curl -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} -X GET 'https://mr-beam.atlassian.net/rest/api/2/issue/'$tested_issue_id )
+          tested_issue_assignee=$(printf '%s' $tested_issue_details | jq --raw-output .fields.assignee.accountId)
+          echo $tested_issue_assignee
+
+          tested_issue_fix_version=$(printf '%s' $tested_issue_details | jq -r .fields.fixVersions[].name)
+          echo $tested_issue_fix_version
+          echo "tested_issue_fix_version=$tested_issue_fix_version" >> $GITHUB_OUTPUT
+
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} \
+            -X PUT $test_exec_url -H 'Content-Type: application/json' \
+            --data \
+              '{
+                "fields": {
+                  "summary": "[GitHub:Cypress] '"$test_exec_summary"'",
+                  "assignee": { "accountId": "'"$tested_issue_assignee"'" }
+                },
+                "update": {
+                  "issuelinks": [
+                    {
+                      "add": {
+                        "type": {
+                          "name":"Test",
+                          "outward":"tests"
+                        },
+                        "outwardIssue": {
+                          "key": "'"$tested_issue_id"'"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }'
+
+      - name: Add fix version if available
+        continue-on-error: true
+        if: ${{ steps.issue-details.outputs.tested_issue_fix_version }}
+        run: |
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} \
+            -X PUT ${{ steps.issue-details.outputs.test_exec_url }} -H 'Content-Type: application/json' \
+            --data \
+              '{
+                "update": {
+                  "fixVersions": [
+                    {
+                      "add": {"name": "'"${{ steps.issue-details.outputs.tested_issue_fix_version }}"'"}
+                    }
+                  ]
+                }
+              }'
+
+      - name: Move test execution to done
+        # 21 is the id for the status "Done"
+        run: |
+          curl -D- -u ${{ secrets.JIRA_SW_EMAIL }}:${{ secrets.JIRA_SW_API_TOKEN }} \
+            -X POST ${{ steps.issue-details.outputs.test_exec_url }}'/transitions' -H 'Content-Type: application/json' \
+            --data '{ "transition": { "id": "21" } }'

@@ -3,7 +3,7 @@
   "repo": "MrBeamPlugin",
   "restart": "environment",
   "pip": "https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-  "type": "github_commit",
+  "type": "github_release",
   "user": "mrbeam",
   "force_base": false,
   "dependencies": {
@@ -33,62 +33,46 @@
   "stable_branch": {
     "branch": "stable",
     "name": "stable",
-    "commitish": [
-      "stable"
-    ]
+    "commitish": ["stable"]
   },
   "prerelease_branches": [
     {
       "name": "alpha",
       "branch": "alpha",
-      "commitish": [
-        "alpha",
-        "beta",
-        "stable"
-      ]
+      "commitish": ["alpha", "beta", "stable"]
     },
     {
       "name": "beta",
       "branch": "beta",
-      "commitish": [
-        "beta",
-        "stable"
-      ]
+      "commitish": ["beta", "stable"]
     }
   ],
   "release_compare": "python_unequal",
+  "update_folder": "/tmp/octoprint/mrbeamplugin",
+  "update_script_relative_path": "scripts/update_script.py",
+  "update_script": "{python} 'octoprint_mrbeam/scripts/update_script.py' --branch={branch} --force={force} '{folder}' {target}",
+  "methode": "update_script",
   "tiers": {
     "stable": {
-      "branch": "mrbeam2-stable",
-      "branch_default": "mrbeam2-stable",
-      "type": "github_commit"
+      "branch": "stable",
+      "branch_default": "stable"
     },
     "beta": {
-      "branch": "mrbeam2-beta",
-      "branch_default": "mrbeam2-beta",
-      "type": "github_commit",
+      "branch": "beta",
+      "branch_default": "beta",
       "prerelease_channel": "beta",
       "prerelease": true
     },
     "develop": {
       "type": "github_commit",
       "branch": "alpha",
-      "branch_default": "alpha",
-      "update_folder": "/tmp/octoprint/mrbeamplugin",
-      "update_script_relative_path": "scripts/update_script.py",
-      "update_script": "{python} 'octoprint_mrbeam/scripts/update_script.py' --branch={branch} --force={force} '{folder}' {target}",
-      "methode": "update_script"
+      "branch_default": "alpha"
     },
     "alpha": {
-      "branch": "mrbeam2-alpha",
-      "branch_default": "mrbeam2-alpha",
+      "branch": "alpha",
+      "branch_default": "alpha",
       "prerelease_channel": "alpha",
-      "prerelease": true,
-      "type": "github_release",
-      "update_folder": "/tmp/octoprint/mrbeamplugin",
-      "update_script_relative_path": "scripts/update_script.py",
-      "update_script": "{python} 'octoprint_mrbeam/scripts/update_script.py' --branch={branch} --force={force} '{folder}' {target}",
-      "methode": "update_script"
+      "prerelease": true
     }
   },
   "displayVersion": "dummy"

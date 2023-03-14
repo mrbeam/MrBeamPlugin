@@ -9,17 +9,7 @@
                 <p>{{ _('Show your creation and use our hashtag') }}</p>
                 <p class="modal__p--hashtag"><a href="https://mr-beam.org/madewithmrbeam?utm_source=beamos&utm_medium=software" target="_blank">#madewithmrbeam</a>
                 </p>
-                <div>
-                    <a href="https://www.instagram.com/mrbeamlasers/" target="_blank"><i class="icon-instagram"></i></a>
-                    <a href="https://www.facebook.com/mrbeamlasercutter/" target="_blank"><i
-                            class="icon-facebook-sign"></i></a>
-                    <a href="https://twitter.com/MrBeamLasers" target="_blank"><i class="icon-twitter-sign"></i></a>
-                    <a href="https://www.pinterest.com/mrbeamlasers" target="_blank"><i class="icon-pinterest-sign"></i></a>
-                    <a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank"><i
-                            class="icon-youtube-sign"></i></a>
-                    <a href="https://www.linkedin.com/company/mrbeamlasers" target="_blank"><i
-                            class="icon-linkedin-sign"></i></a>
-                </div>
+                {%  include 'modules/social_media_channels.jinja2' %}
             </div>
             <div class="modal__modal-body--material-section" data-bind="if: window.mrbeam.viewModels.vectorConversionViewModel.selected_material()?.name
             && window.mrbeam.viewModels.vectorConversionViewModel.selected_material_color()
@@ -98,7 +88,7 @@
         </div>
         <div class="modal-body">
 
-            <img data-bind='visible: is_dust_mode()' src="/plugin/mrbeam/static/img/dusting.jpg">
+            <img loading="lazy" data-bind='visible: is_dust_mode()' src="/plugin/mrbeam/static/img/dusting.jpg">
             <h5 data-bind='visible: is_dust_mode()'>{{ _('Please wait a few seconds until Mr Beam cleared most of the dust particles out of the working area.') }}</h5>
             <h4 data-bind='readyToLaser.jobTimeEstimationCalculated'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'>    </span>
                 <small>({{ _('Estimated:') }} <span data-bind='text: readyToLaser.jobTimeEstimationString'></span>)</small>

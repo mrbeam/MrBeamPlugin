@@ -1,67 +1,43 @@
-
-
-
 {# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #}
 {# Wording changes must be done in both templates: wizard_analytics.jinja and analytics_settings.jinja !! #}
 {# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #}
 
-<div id="settings_mrbeam_analytics">
-    <h3>{{ _('Analytics') }}</h3>
-    {% set privacy_policy = _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') %}
-    <form class="form-horizontal">
-        <div class="control-group">
-{#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
-            <div>
-                <h4>
-                    {{ _('Help us improve Mr Beam!') }} <i class="fa fa-heartbeat" aria-hidden="true" style="margin-right: 3px"></i>
-                </h4>
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.analyticsEnabled">
-                    <strong>{{ _('Enable analytics') }}</strong>
-                </label>
-                <p>
-                    {{ _('In order to improve your experience with the Mr Beam,<br/>we would like to gather some analytics data on the device operations.') }}<br/>
-                    {{ _('No information will be shared with external sources.') }}
-                </p>
-
-
-                <div class="accordion md-accordion" id="settings_analytics_what_we_save_and_dont_accordion">
-                  <div class="card">
-                    <div class="card-header" id="settings_analytics_what_we_save_heading">
-                      <div class="mb-0">
-                        <button class="btn-link collapsed analytics-collapsible" type="button" data-toggle="collapse" data-target="#settings_analytics_what_we_save"
-                                aria-expanded="true" aria-controls="collapseOne">
-                            {{ _('More information about what data we use') }}
-                        </button>
-                      </div>
+<div class="get-better-together" id="settings_analytics">
+   <div class="row">
+       <div class="span12">
+            <img class="hide" loading="lazy" src="{{ url_for('plugin.mrbeam.static', filename='img/getting-better-together.png') }}">
+            <h4>{{ _('Better together') }}</h4>
+            <ul>
+                <li>
+                    <p>
+                        {{ _('We know that your Mr Beam is important to you, and we want to make it even better. That\'s why we\'re asking for your help in improving it by sharing optional diagnostic and usage data. These data would allow us to better understand your needs and preferences, leading to faster identification and resolution of issues, and ultimately, improved features and functionality.') }}
+                    <br>
+                    <br>
+                        {{ _('We understand that your privacy is crucial, and we want to assure you that none of the data collected includes your personal information such as your name, login details, designs, or any other private content. You are in full control, and you can change your mind at any time by going to <strong>"Settings > Better together"</strong>.') }}
+                    </p>
+                </li>
+                <li>
+                    <i class="fa fa-heart-o" aria-hidden="true"></i>
+                    <p>
+                        {{ _('Join us and shape the future of Mr Beam Products. Together, we can make them even more amazing!"') }}
+                    </p>
+                </li>
+                <li>
+                    <div class="row-fluid">
+                        <div class="span6">
+                            <div id="analytics_initial_consent_radio">
+                              <label><input type="radio" name="analytics_consent" value="agree" data-bind="checked: analyticsRadioBtnValue()">
+                                <strong>{{ _('Yes, contribute') }}</strong></label>
+                              <label><input type="radio" name="analytics_consent" value="disagree" data-bind="checked: analyticsRadioBtnValue()">
+                                {{ _('No, not at the moment') }}</label>
+                            </div>
+                        </div>
+                        <div class="span6">
+                            <div class="privacy-policy"><a target="_blank" href="{{ url_for('plugin.mrbeam.static', filename='docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') }}">{{ _('Privacy policy') }}</a></div>
+                        </div>
                     </div>
-                    <div id="settings_analytics_what_we_save" class="collapse" aria-labelledby="settings_analytics_what_we_save_heading" data-parent="#settings_analytics_what_we_save_accordion">
-                      <div class="card-body">
-                        {{ _('Data we would <b>save</b>:') }}
-                        <ul>
-                            <li>{{ _('Job data like duration, materials or parameters.') }}</li>
-                            <li>{{ _('Mr Beam device data like serial number, local IP addresses and version numbers.') }}</li>
-                            <li>{{ _('More technical data, including error reports.') }}</li>
-                        </ul>
-                        {{ _('Data we will <b>not save</b>:') }}
-                        <ul>
-                            <li>{{ _('Your designs, its content or file names.') }}</li>
-                            <li>{{ _('Usernames, email addresses or passwords.') }}</li>
-                            <li>{{ _('Camera pictures (except if explicitly and actively sent by you.)') }}</li>
-                            <li>{{ _('Location or public IP addresses.') }}</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <p style="color: darkgray;font-size: 0.9em">
-                    {{ _("Want more detailed information? You can check our %(open)sprivacy policy%(close)s.", open='<a href="%s" target="_blank">' % privacy_policy, close='</a>')|safe }}
-                    {#{ _('Want more detailed information? You can check our') }} <a href="/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_{{ plugin_mrbeam_language }}.pdf" target="_blank">{{ _('privacy policy.') }}</a> #}
-                </p>
-
-            </div>
+                </li>
+            </ul>
         </div>
-    </form>
-
+    </div>
 </div>

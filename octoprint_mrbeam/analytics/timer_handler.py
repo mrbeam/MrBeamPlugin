@@ -220,9 +220,8 @@ class TimerHandler:
         self._plugin.analytics_handler.add_software_versions(sw_versions)
 
     def _software_versions_and_checksums(self):
-        """
-        Deprecated
-        Checksum calculation significantly slows down the device.
+        """Deprecated Checksum calculation significantly slows down the device.
+
         Furthermore we never used these checksums for anything.
         :return:
         """

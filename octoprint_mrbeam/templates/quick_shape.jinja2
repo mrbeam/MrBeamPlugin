@@ -1,4 +1,4 @@
-<div id="quick_shape_dialog" class="modal hide fade modal-left-side" >
+<div id="quick_shape_dialog" class="modal hide fade modal-left-side" data-test="quick-shape-modal-window">
     <div class="modal-header">
 {#        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>#}
         <h3>{{ _('Quick Shape') }}</h3>
@@ -6,11 +6,11 @@
     <div class="modal-body">
 		<div class="tabbable">
 			<ul id="shape_tabs" class="nav nav-tabs">
-				<li class="active"><a id="shape_tab_link_rect" href="#rect" data-bind="click: function(){switchQuickShape('#rect')}" data-toggle="tab"><i class="icon icon-check-empty"></i></a></li>
-				<li><a id="shape_tab_link_line" href="#line" data-bind="click: function(){switchQuickShape('#line')}" data-toggle="tab"><i class="icon icon-minus"></i></a></li>
-				<li><a id="shape_tab_link_circle" href="#circle" data-bind="click: function(){switchQuickShape('#circle')}" data-toggle="tab"><i class="icon icon-circle-blank"></i></a></li>
-				<li><a id="shape_tab_link_star" href="#star" data-bind="click: function(){switchQuickShape('#star')}" data-toggle="tab"><i class="icon icon-star-empty"></i></a></li>
-				<li><a id="shape_tab_link_heart" href="#heart" data-bind="click: function(){switchQuickShape('#heart')}" data-toggle="tab"><i class="icon icon-heart-empty"></i></a></li>
+				<li class="active"><a id="shape_tab_link_rect" href="#rect" data-bind="click: function(){switchQuickShape('#rect')}" data-toggle="tab"><i class="icon icon-check-empty" data-test="quick-shape-rect"></i></a></li>
+				<li><a id="shape_tab_link_line" href="#line" data-bind="click: function(){switchQuickShape('#line')}" data-toggle="tab"><i class="icon icon-minus" data-test="quick-shape-line"></i></a></li>
+				<li><a id="shape_tab_link_circle" href="#circle" data-bind="click: function(){switchQuickShape('#circle')}" data-toggle="tab"><i class="icon icon-circle-blank" data-test="quick-shape-circle"></i></a></li>
+				<li><a id="shape_tab_link_star" href="#star" data-bind="click: function(){switchQuickShape('#star')}" data-toggle="tab"><i class="icon icon-star-empty" data-test="quick-shape-star"></i></a></li>
+				<li><a id="shape_tab_link_heart" href="#heart" data-bind="click: function(){switchQuickShape('#heart')}" data-toggle="tab"><i class="icon icon-heart-empty" data-test="quick-shape-Heart"></i></a></li>
 			</ul>
 
 			<div class="tab-content">
@@ -19,14 +19,14 @@
 						<div class="control-group">
 							<label class="control-label"><i class="icon icon-resize-horizontal"></i></label>
 							<div class="controls">
-								<input type="number" id="quick_shape_rect_w" min="0" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: rectangleMaxWidth}">
+								<input type="number" id="quick_shape_rect_w" min="0" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: rectangleMaxWidth}" data-test="quick-shape-rect-width">
                                 <span style="display:inline-block">mm</span>
 							</div>
 						</div>
 						<div class="control-group">
 							<label class="control-label"><i class="icon icon-resize-vertical"></i></label>
 							<div class="controls">
-								<input type="number" id="quick_shape_rect_h" min="0" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: rectangleMaxHeight}">
+								<input type="number" id="quick_shape_rect_h" min="0" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: rectangleMaxHeight}" data-test="quick-shape-rect-height">
                                 <span style="display:inline-block">mm</span>
 							</div>
 						</div>
@@ -35,7 +35,7 @@
 							<div class="controls">
 								<!--<label class="control-label"><i class="icon icon-check-empty"></i></label>-->
                                 <input id="quick_shape_rect_radius" class="mrb_slider" type="range" value="0" min="0" max="100"
-									   data-bind="textInput: _qs_currentQuickShapeUpdate()" />
+									   data-bind="textInput: _qs_currentQuickShapeUpdate()" data-test="quick-shape-rect-radius-input"/>
 								<!--<label class="control-label"><i class="icon icon-circle-blank"></i></label>-->
 							</div>
 						</div>
@@ -48,7 +48,7 @@
 						<div class="control-group">
 							<label class="control-label"><i class="icon icon-resize-horizontal"></i></label>
 							<div class="controls">
-								<input type="number" id="quick_shape_line_length" min="1" step="0.1" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: lineMaxLength}">
+								<input type="number" id="quick_shape_line_length" min="1" step="0.1" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: lineMaxLength}" data-test="quick-shape-line-length-input">
                                 <span style="display:inline-block">mm</span>
 							</div>
 						</div>
@@ -59,7 +59,7 @@
 						<div class="control-group">
 							<label class="control-label"><i class="icon"></i>Ø</label>
 							<div class="controls">
-								<input type="number" id="quick_shape_circle_radius" min="0.1" step="0.1" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: circleMaxRadius}">
+								<input type="number" id="quick_shape_circle_radius" min="0.1" step="0.1" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: circleMaxRadius}" data-test="quick-shape-circle-radius-input">
                                 <span style="display:inline-block">mm</span>
 							</div>
 						</div>
@@ -70,21 +70,21 @@
 						<div class="control-group">
 							<label class="control-label"><i class="icon"></i>Ø</label>
 							<div class="controls">
-								<input type="number" id="quick_shape_star_radius" class="input-block" min="0.0" step="0.1" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: starMaxRadius}">
+								<input type="number" id="quick_shape_star_radius" class="input-block" min="0.0" step="0.1" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: starMaxRadius}" data-test="quick-shape-star-radius-input">
                                 <span style="display:inline-block">mm</span>
 							</div>
 						</div>
 						<div class="control-group">
 							<label class="control-label"><i class="icon"></i>{{ _('Corners') }}</label>
 							<div class="controls">
-								<input type="number" id="quick_shape_star_corners" class="input-block" min="3" max="32" step="1" data-bind="textInput: _qs_currentQuickShapeUpdate()">
+								<input type="number" id="quick_shape_star_corners" class="input-block" min="3" max="32" step="1" data-bind="textInput: _qs_currentQuickShapeUpdate()" data-test="quick-shape-star-corners-input">
 							</div>
 						</div>
 						<div class="control-group">
 							<label class="control-label"><i class="icon"></i>{{ _('Sharpness') }}</label>
 							<div class="controls">
 {#								<input type="range" id="quick_shape_star_sharpness" class="precisionslider quickshape-slider padding-top" step="0.1" min="0" max="0.9" data-bind="textInput: _qs_currentQuickShapeUpdate()" value="0.5">#}
-								<input type="range" id="quick_shape_star_sharpness" class="mrb_slider" step="0.1" min="0" max="0.9" data-bind="textInput: _qs_currentQuickShapeUpdate()" value="0.5">
+								<input type="range" id="quick_shape_star_sharpness" class="mrb_slider" step="0.1" min="0" max="0.9" data-bind="textInput: _qs_currentQuickShapeUpdate()" value="0.5" data-test="quick-shape-star-sharpness-input">
 							</div>
 						</div>
 					</form>
@@ -94,14 +94,14 @@
 						<div class="control-group">
 							<label class="control-label"><i class="icon icon-resize-horizontal"></i></label>
 							<div class="controls">
-								<input type="number" id="quick_shape_heart_w" class="input-block" min="0" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: heartMaxWidth}">
+								<input type="number" id="quick_shape_heart_w" class="input-block" min="0" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: heartMaxWidth}" data-test="quick-shape-heart-width" >
                                 <span style="display:inline-block">mm</span>
 							</div>
 						</div>
 						<div class="control-group">
 							<label class="control-label"><i class="icon icon-resize-vertical"></i></label>
 							<div class="controls">
-								<input type="number" id="quick_shape_heart_h" class="input-block" min="0" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: heartMaxHeight}">
+								<input type="number" id="quick_shape_heart_h" class="input-block" min="0" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: heartMaxHeight}" data-test="quick-shape-heart-height">
                                 <span style="display:inline-block">mm</span>
 							</div>
 						</div>
@@ -109,7 +109,7 @@
 							<label class="control-label"><i class="icon icon-magic"></i></label>
 							<div class="controls">
 {#								<input type="range" id="quick_shape_heart_lr" class="precisionslider quickshape-slider padding-top" step="0.1" min="-0.5" max="0.5" data-bind="textInput: _qs_currentQuickShapeUpdate()" value="0">#}
-								<input type="range" id="quick_shape_heart_lr" class="mrb_slider" step="0.1" min="-0.5" max="0.5" data-bind="textInput: _qs_currentQuickShapeUpdate()" value="0">
+								<input type="range" id="quick_shape_heart_lr" class="mrb_slider" step="0.1" min="-0.5" max="0.5" data-bind="textInput: _qs_currentQuickShapeUpdate()" value="0" data-test="quick-shape-heart-range">
 							</div>
 						</div>
 					</form>
@@ -121,7 +121,7 @@
 						<label class="control-label">{{ _('Line Color') }}</label>
 						<div class="controls">
 							<input type="checkbox" value="stroke" id="quick_shape_stroke" checked data-bind="click: _qs_currentQuickShapeUpdate()" />
-							<div id="qs_colorPicker_stroke" class="tinyColorPicker">
+							<div id="qs_colorPicker_stroke" class="tinyColorPicker" data-test="quick-shape-color-picker-stroke">
 								<a class="tcp_color"><div class="colorInner"></div></a>
 								<div class="track"></div>
 								<ul class="dropdown"><li></li></ul>
@@ -135,8 +135,8 @@
 					<div class="control-group">
 						<label class="control-label">{{ _('Fill Color') }}</label>
 						<div class="controls">
-							<input type="checkbox" value="fill" id="quick_shape_fill" data-bind="click: _qs_currentQuickShapeUpdate()" />
-							<div id="qs_colorPicker_fill" class="tinyColorPicker blackWhite">
+							<input type="checkbox" value="fill" id="quick_shape_fill" data-bind="click: _qs_currentQuickShapeUpdate()" data-test="quick-shape-fill-input"/>
+							<div id="qs_colorPicker_fill" class="tinyColorPicker blackWhite" data-test="quick-shape-color-picker-fill">
 								<a class="tcp_color"><div class="colorInner"></div></a>
 								<div class="track"></div>
 								<ul class="dropdown"><li></li></ul>
@@ -149,6 +149,6 @@
 		</div>
     </div>
     <div class="modal-footer">
-        <a class="btn btn-primary" id="quick_shape_shape_done_btn" type="submit" data-dismiss="modal" aria-hidden="true">{{ _('OK') }}</a>
+        <a class="btn btn-primary" id="quick_shape_shape_done_btn" type="submit" data-dismiss="modal" aria-hidden="true" data-test="quick-shape-done-button">{{ _('OK') }}</a>
     </div>
 </div>

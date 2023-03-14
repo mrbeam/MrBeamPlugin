@@ -60,9 +60,7 @@ class MrBeamEvents(object):
 
     @classmethod
     def register_with_octoprint(cls):
-        """
-        this has to be called during plugin's Constructor
-        """
+        """this has to be called during plugin's Constructor."""
         for k, v in vars(MrBeamEvents).iteritems():
             if (
                 isinstance(k, basestring)

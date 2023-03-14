@@ -71,8 +71,9 @@ class MrbLogger(object):
         self.logger.setLevel(*args, **kwargs)
 
     def log(self, level, msg, *args, **kwargs):
-        """
-        Logs the given message like the regular python logger. Still there are mrb-specific options available.
+        """Logs the given message like the regular python logger. Still there
+        are mrb-specific options available.
+
         :param level: log level
         :param msg: the message to log
         :param args: arguments to logger or to the message

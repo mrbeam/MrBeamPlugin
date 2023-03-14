@@ -477,7 +477,7 @@ body.colorDragInProgress #drop_overlay {
   display: block;
 }
 
-li.material_entry span {
+li.material_entry .material_name {
   position: absolute;
   top: 0;
   background-color: rgba(255, 255, 255, 0.85);
@@ -486,6 +486,12 @@ li.material_entry span {
   left: 0;
   padding: 3px 8px;
   box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+li.material_entry.custom.compatible_material .material_name,
+li.material_entry.custom.incompatible_material .material_name {
+  padding-right: 40px;
 }
 
 li.material_entry.custom.compatible_material::before,
@@ -495,13 +501,27 @@ li.material_entry.custom.compatible_material::after {
   top: 3px;
   font-weight: bold;
   color: #e25303;
-  background: #ffffff;
 }
 
 li.material_entry.custom.compatible_material::before {
-    content: attr(data_content);
-    right: 22px;
-    font-size: 15px;
+  content: attr(data_content);
+  right: 19px;
+  font-size: 15px;
+  padding-right: 3px;
+}
+
+li.material_entry.custom.compatible_material.laserhead_x::before,
+li.material_entry.custom.incompatible_material.laserhead_x::before {
+  content: url("/plugin/mrbeam/static/img/laserhead_x.svg");
+  width: 20px;
+  top: 5px;
+}
+
+li.material_entry.custom.compatible_material.laserhead_S::before,
+li.material_entry.custom.incompatible_material.laserhead_S::before {
+  content: url("/plugin/mrbeam/static/img/laserhead_S.svg");
+  width: 20px;
+  top: 5px;
 }
 
 li.material_entry.custom.compatible_material::after {
@@ -519,22 +539,21 @@ li.material_entry.custom.incompatible_material::after {
 
 li.material_entry.custom.incompatible_material::before {
   content: attr(data_content);
-  right: 26px;
+  right: 23px;
+  padding-right: 3px;
   top: 3px;
   font-size: 15px;
   color: #e25303;
-  background: #ffffff;
 }
 
 li.material_entry.custom.incompatible_material::after {
   content: "!";
   right: 4px;
   top: 4px;
-  font-size: 10px;
   background-color: #e25303;
   border-radius: 50%;
   color: #ffffff;
-  padding: 0 8px;
+  padding: 0 7px;
   height: 17px;
 }
 
@@ -569,7 +588,6 @@ li.material_entry.custom.incompatible_material::after {
   content: "";
   display: block;
   height: 0.5em;
-  background-color: white;
   position: relative;
   left: -1%;
   top: -0.35em;
@@ -691,7 +709,7 @@ li.material_entry.custom.incompatible_material::after {
   /*min-height: 65vh;*/
 }
 
-#dialog_vector_graphics_conversion .modal-header h3{
+#dialog_vector_graphics_conversion .modal-header h3 {
   display: flex;
 }
 
@@ -699,6 +717,11 @@ li.material_entry.custom.incompatible_material::after {
   color: #e25303;
   font-size: 16px;
   margin-left: 5px;
+}
+
+#dialog_vector_graphics_conversion .modal-header .laserhead-model-icon img {
+  height: 16px;
+  padding-bottom: 2px;
 }
 
 .modal.modal-left-side {
@@ -1244,4 +1267,9 @@ svg#area_preview.overModalBG {
   background: url(/plugin/mrbeam/static/img/calibration/calpic_wait.svg) center
     no-repeat;
   background-size: cover;
+}
+
+.material_tooltip {
+  width: 100%;
+  height: 20px;
 }

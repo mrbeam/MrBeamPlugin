@@ -1,9 +1,11 @@
-<div id="dialog_vector_graphics_conversion" class="modal hide fade">
+<div id="dialog_vector_graphics_conversion" data-test="conversion-dialog-vector-graphics" class="modal hide fade">
     <div class="modal-header">
         <h3 data-bind="visible:!slicing_in_progress()">{{ _('Material') }}
             <span data-bind="visible:customized_material()">{{ _('(customized)') }}</span>
-            {% if laserhead_model == 'S' %}<span class="laserhead-model-icon">[S]</span>{% endif %}</h3>
-        <h3 data-bind="visible:slicing_in_progress()">{{ _('Preparing...') }}</h3>
+            {% if laserhead_model == 'S' %}<span class="laserhead-model-icon"><img src="/plugin/mrbeam/static/img/laserhead_S.svg"></span>{% endif %}
+            {% if laserhead_model == 'x' %}<span class="laserhead-model-icon"><img src="/plugin/mrbeam/static/img/laserhead_x.svg"></span>{% endif %}
+        </h3>
+        <h3 data-bind="visible:slicing_in_progress()" data-test="mrbeam-ui-conversion-dialoge-header-preparing">{{ _('Preparing...') }}</h3>
     </div>
     <div class="modal-body scrollable" style="box-sizing: border-box">
         <div data-bind="visible:!slicing_in_progress()">
@@ -16,19 +18,20 @@
                 </div>
 
                 <div id="material_type" data-bind="css: {active : selected_material() === null}">
-                    <div id="material_burger_menu" class="dropdown pull-right">
-                        <a id="materials_manage" href="#"
+                    <div id="material_burger_menu" data-test="custom-material-materials-manage-menu-burger" class="dropdown pull-right">
+                        <a id="materials_manage" data-test="custom-material-materials-manage" href="#"
                            data-bind="click: function(){ $('#material_type').addClass('manage'); }"
                            style="text-decoration: none;">
                             <i class="icon-edit icon-large"></i>&nbsp;{{ _('Manage materials') }}
                         </a>
                         <a id="materials_manage_done" href="#"
                            data-bind="click: function(){ $('#material_type').removeClass('manage'); }"
-                           style="text-decoration: none;">
+                           style="text-decoration: none;"
+                           data-test="custom-material-done">
                             <i class="icon-ok icon-large"></i>&nbsp; {{ _('Done') }}
                         </a>
                         <div>
-                            <a id="materials_manage_info" class="show_only_online"
+                            <a id="materials_manage_info" data-test="custom-material-learn-how" class="show_only_online"
                                href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000431865-save-custom-material-settings"
                                target="_blank" style="text-decoration: none;">
                                 <i class="icon-external-link"></i>&nbsp; {{ _('Learn how to save<br />custom material settings...') }}
@@ -51,14 +54,15 @@
                                        data-bind="value: filterQuery, valueUpdate: 'input'"
                                        placeholder="{{ _('Search...') }}">
                             </form>
-                            <ul id="material_list" data-bind="foreach: filteredMaterials">
+                            <ul id="material_list" data-bind="foreach: filteredMaterials" data-test="conversion-dialog-material-list">
                                 <li class='material_entry hover_shadow'
+                                    data-test="conversion-dialog-material-item"
                                     data-bind="click: function(vm, event){$root.set_material($data, event); $root.moveJobsToEngravingDefaultOption($data)},
 												style: { backgroundImage: 'url(\'' + ($data.img || '/plugin/mrbeam/static/img/materials/custommaterial.png') + '\')' },
-												css: {selected: $root.selected_material() === $data, custom: $data.custom === true, compatible_material: $data.compatible === true, incompatible_material: $data.compatible === false },
-												attr: {mrb_name: $data.img, data_content: $data.customBeforeElementContent}
+												css: {selected: $root.selected_material() === $data, custom: $data.custom === true, compatible_material: $data.compatible === true, incompatible_material: $data.compatible === false, laserhead_x: $data.laser_model === 'x', laserhead_S: $data.laser_model === 'S'},
+												attr: {mrb_name: $data.img, data_content: $data.materialLaserModel}
 									">
-                                    <span data-bind="text: $data.name"></span>
+                                    <span data-bind="text: $data.name" class="material_name"></span>
                                     <span class="delete_me"
                                           data-bind="click: function(data, event){ $root.delete_material($data, event); return false; }"><i
                                             class="icon icon-trash"></i></span>
@@ -76,7 +80,7 @@
                                 <b>{{ _('Select a color close to the material\'s color to improve the result.') }}</b>">
                         <label>{{ _('Color') }}</label>
                         <ul id="color_list" data-bind="foreach: material_colors">
-                            <li class='material_color_entry hover_shadow' data-bind="
+                            <li class='material_color_entry hover_shadow' data-test="conversion-dialog-material-color" data-bind="
 								click: function(vm, event){ $root.set_material_color($data, event); $root.moveJobsToEngravingColorDefaultOption($data)},
 								attr: {id: 'material_color_'+$data },
 								css: {active: $data === $root.selected_material_color() },
@@ -94,7 +98,7 @@
                                     {{ _('When cutting the material it is important to tell Mr Beam the thickness so that it can select the correct laser settings.') }}">
                         <label>{{ _('Thickness') }}</label>
                         <div id="thickness_list" data-bind="foreach: material_thicknesses">
-                            <div class="thickness_sample hover_shadow"
+                            <div class="thickness_sample hover_shadow" data-test="conversion-dialog-thickness-sample"
                                  data-bind="
 										click: function(vm, event){ $root.set_material_thickness($data, event); $root.moveJobsToEngravingEngraveModeSelected($data)},
 										attr: {id: 'material_thickness_'+$data.thicknessMM },
@@ -216,8 +220,9 @@
                             <h6 style="font-weight: normal;">
                                 <a class="show_only_online"
                                    href="https://support.mr-beam.org/support/solutions/articles/43000562372-laser-parameters"
-                                   target="_blank">
-                                    <i class="icon-external-link"></i> {{ _('Help') }}
+                                   target="_blank"
+                                   data-test="conversion-dialog-help">
+                                    <i class="icon-external-link" data-test="conversion-dialog-help-icon"></i> {{ _('Help') }}
                                 </a>
                                 <a class="show_only_offline" href="#"
                                    onclick="mrbeam.openOfflineKbUrl('43000562372-laser-parameters.pdf')"
@@ -234,7 +239,8 @@
                     <div class="span3" style="display:flex;">
                         <div class="assigned_colors color_drop_zone img_drop_zone"
                              ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)"
-                             ondrop="window.mrbeam.colorDragging.colorDrop(event)"></div>
+                             ondrop="window.mrbeam.colorDragging.colorDrop(event)"
+                             data-test="conversion-dialog-no-job"></div>
                     </div>
                     <div class="span9">
                         <div class="job_parameters">
@@ -247,6 +253,7 @@
                 <div id="engrave_job" class="job_row row-fluid">
                     <div class="span3" style="display:flex;">
                         <div id="engrave_job_drop_zone_conversion_dialog"
+                             data-test="conversion-dialog-engrave-job-zone"
                              class="assigned_colors img_drop_zone color_drop_zone"
                              ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)"
                              ondrop="window.mrbeam.colorDragging.colorDrop(event)">
@@ -274,11 +281,13 @@
                                         <div class="input-append">
                                             <input id="svgtogcode_img_intensity_white"
                                                    class="img_intensity_input percentage_input" type="number"
-                                                   data-bind="value: imgIntensityWhite, event: {change: flag_customized_material}">
+                                                   data-bind="value: imgIntensityWhite, event: {change: flag_customized_material}"
+                                                   data-test="conversion-dialog-intensity-white">
                                             <div class="svgtogcode_grayscale">&nbsp;</div>
                                             <input id="svgtogcode_img_intensity_black"
                                                    class="img_intensity_input percentage_input" type="number"
-                                                   data-bind="value: imgIntensityBlack, event: {change: flag_customized_material}">
+                                                   data-bind="value: imgIntensityBlack, event: {change: flag_customized_material}"
+                                                   data-test="conversion-dialog-intensity-black">
                                         </div>
                                         &nbsp;%
                                     </div>
@@ -295,11 +304,13 @@
                                         <div class="input-append">
                                             <input id="svgtogcode_img_feedrate_white"
                                                    class="img_intensity_input speed_input" type="number"
-                                                   data-bind="value: imgFeedrateWhite, event: {change: flag_customized_material}">
+                                                   data-bind="value: imgFeedrateWhite, event: {change: flag_customized_material}"
+                                                   data-test="conversion-dialog-feedrate-white">
                                             <div class="svgtogcode_grayscale">&nbsp;</div>
                                             <input id="svgtogcode_img_feedrate_black"
                                                    class="img_intensity_input speed_input" type="number"
-                                                   data-bind="value: imgFeedrateBlack, event: {change: flag_customized_material}">
+                                                   data-bind="value: imgFeedrateBlack, event: {change: flag_customized_material}"
+                                                   data-test="conversion-dialog-feedrate-black">
                                         </div>
                                         &nbsp;{{ _('mm/min') }}
                                     </div>
@@ -343,7 +354,8 @@
                                     <label class="control-label">{{ _('Passes') }}</label>
                                     <div class="controls">
                                         <input data-bind="value: engravingPasses, event: {change: flag_customized_material}"
-                                               class="passes_input engrave_passes_input" type="number"/>&nbsp;&times;&nbsp;&nbsp;
+                                               class="passes_input engrave_passes_input" type="number"
+                                               data-test="conversion-dialog-passes-input-engrave"/>&nbsp;&times;&nbsp;&nbsp;
                                     </div>
                                 </div>
                             </div>
@@ -358,7 +370,8 @@
                                     <div class="controls">
                                         <input id="parameter_assignment_pierce_time_in"
                                                data-bind="value: engravingPiercetime, event: {change: flag_customized_material}"
-                                               class="param_piercetime decimal_input pierce_time_input" type="number"/>&nbsp;{{ _('ms') }}
+                                               class="param_piercetime decimal_input pierce_time_input" type="number"
+                                               data-test="conversion-dialog-engraving-pierce-time"/>&nbsp;{{ _('ms') }}
                                     </div>
                                 </div>
                                 <div class="input-control-and-label" data-toggle="tooltip" data-placement="right"
@@ -368,7 +381,8 @@
                                     <div class="controls"><input id="svgtogcode_img_line_dist"
                                                                  class="decimal_input line_distance_input" type="number"
                                                                  step="0.05"
-                                                                 data-bind="value: beamDiameter"/>&nbsp;{{ _('mm') }}
+                                                                 data-bind="value: beamDiameter"
+                                                                 data-test="conversion-dialog-line-distance-input"/>&nbsp;{{ _('mm') }}
                                     </div>
                                 </div>
 
@@ -397,7 +411,9 @@
                                             <button type="button" value="precise"
                                                     id="parameter_assignment_engraving_mode_precise_btn"
                                                     data-bind="event: {click: updateEngravingMode}"
-                                                    class="btn btn-default active">{{ _('Recommended') }}</button>
+                                                    class="btn btn-default active"
+                                                    data-test="conversion-dialog-engraving-mode-recommended">{{ _('Recommended') }}
+                                                    </button>
                                             {# TODO: SW-1447 #}
                                             {#<button type="button" value="fast"
                                                     id="parameter_assignment_engraving_mode_fast_btn"
@@ -406,7 +422,9 @@
                                             <button type="button" value="basic"
                                                     id="parameter_assignment_engraving_mode_basic_btn"
                                                     data-bind="event: {click: updateEngravingMode}"
-                                                    class="btn btn-default">{{ _('Basic') }}</button>
+                                                    class="btn btn-default"
+                                                    data-test="conversion-dialog-engraving-mode-basic">{{ _('Basic') }}
+                                                    </button>
                                         </div>
                                     </div>
 
@@ -420,7 +438,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox"
-                                                   data-bind="checked: imgDithering, event: {change: flag_customized_material}"/>{{ _('Dithering') }}
+                                                   data-bind="checked: imgDithering, event: {change: flag_customized_material}" data-test="conversion-dialog-line-dithering"/>{{ _('Dithering') }}
                                         </label>
                                     </div>
                                 </div>
@@ -502,7 +520,8 @@
                                     <div class="controls"><input
                                             class="param_intensity img_intensity_input percentage_input" type="number"
                                             data-bind="event: {change: flag_customized_material}"
-                                            onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;%
+                                            onblur="window.mrbeam.colorDragging.checkConversionParameters()"
+                                            data-test="conversion-dialog-cut-intensity-input"/>&nbsp;%
                                     </div>
                                 </div>
                             </div>
@@ -516,7 +535,8 @@
                                     <label class="control-label">{{ _('Speed') }}</label>
                                     <div class="controls"><input class="param_feedrate speed_input" type="number"
                                                                  data-bind="event: {change: function(){flag_customized_material(); recalcJobTime();}}"
-                                                                 onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;{{ _('mm/min') }}
+                                                                 onblur="window.mrbeam.colorDragging.checkConversionParameters()"
+                                                                 data-test="conversion-dialog-cut-feedrate-input"/>&nbsp;{{ _('mm/min') }}
                                     </div>
                                 </div>
                             </div>
@@ -531,7 +551,8 @@
                                         <div class="compressor_control">
                                             <span class="compressor_min_max_label">min</span>
                                             <input class="mrb_slider param_cut_compressor compressor_input" type="range"
-                                                   value="3" data-bind="event: {change: flag_customized_material}"/>
+                                                   value="3" data-bind="event: {change: flag_customized_material}"
+                                                   data-test="conversion-dialog-cut-compressor-input"/>
                                             <span class="compressor_min_max_label">max</span>
                                         </div>
                                     </div>
@@ -552,12 +573,13 @@
                                     <div class="controls">
                                         <input
                                             data-bind="event: {change: function(){flag_customized_material(); recalcJobTime();}}"
-                                            class="param_passes passes_input cut_passes_input" type="number"/>&nbsp;&times;&nbsp;&nbsp;
+                                            class="param_passes passes_input cut_passes_input" type="number" data-test="conversion-dialog-cut-passes-input"/>&nbsp;&times;&nbsp;&nbsp;
                                         <span style="display: inline-block">
                                             <label data-bind="visible: showExpertSettings">
                                                 <input
                                                     data-bind="event: {change: function(){flag_customized_material(); recalcJobTime();}}"
-                                                    type="checkbox" class="param_progressive"/>
+                                                    type="checkbox" class="param_progressive"
+                                                    data-test="conversion-dialog-progressive"/>
                                                 {{ _('progressive') }}
                                             </label>
                                         </span>
@@ -575,7 +597,8 @@
                                     <div class="controls"><input
                                                             data-bind="event: {change: function(){flag_customized_material(); recalcJobTime();}}"
                                                             class="param_piercetime pierce_time_input"
-                                                            type="number"/>&nbsp;{{ _('ms') }}</div>
+                                                            type="number"
+                                                            data-test="conversion-dialog-cut-piercetime-input"/>&nbsp;{{ _('ms') }}</div>
                                 </div>
                             </div>
                         </form>
@@ -629,13 +652,13 @@
         <div class="pull-left" style="text-align:left;" data-bind="visible: !slicing_in_progress()">
             <label class="checkbox">
                 <input type="checkbox" id="parameter_assignment_show_advanced_settings_cb"
-                       data-bind="checked: showExpertSettings">{{ _('show advanced settings') }}
+                       data-bind="checked: showExpertSettings" data-test="conversion-dialog-show-advanced-settings">{{ _('show advanced settings') }}
             </label>
         </div>
 
         <a href="#" class="btn" aria-hidden="true"
-           data-bind="click: $root.cancel_conversion(), visible: !slicing_in_progress()">{{ _('Back') }}</a>
-        <a href="#" class="btn btn-primary" id="start_job_btn"
+           data-bind="click: $root.cancel_conversion(), visible: !slicing_in_progress()" data-test="laser-job-back-button">{{ _('Back') }}</a>
+        <a href="#" class="btn btn-primary" id="start_job_btn" data-test="laser-job-start-button"
            data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } },
 					enabled: enableConvertButton,
 					visible: !slicing_in_progress(),
@@ -645,7 +668,7 @@
     <div id="empty_job_modal" class="modal hide fade" tabindex="-1" role="dialog"
          aria-labelledby="empty_job_label" aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <div class="modal-content">
+            <div class="modal-content" data-test="conversion-dialog-settings-to-be-adjusted">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                     <h3 id="empty_job_label">{{ _('Settings to be adjusted') }}</h3>
@@ -661,7 +684,7 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Ok') }}</button>
+                    <button class="btn" data-dismiss="modal" aria-hidden="true" data-test="conversion-dialog-settings-to-be-adjusted-btn">{{ _('Ok') }}</button>
                 </div>
             </div>
         </div>
@@ -687,7 +710,7 @@
                            onclick="mrbeam.openOfflineKbUrl('43000073345_Focusing_the_laser_head.pdf');">
                             <i class="icon-file-text" aria-hidden="true"></i> {{ _(' Learn how to do this.') }}</a>
                     </p>
-                    <img id="laserhead_focus_reminder_image" src="/plugin/mrbeam/static/img/focus_reminder.png">
+                    <img loading="lazy" id="laserhead_focus_reminder_image" src="/plugin/mrbeam/static/img/focus_reminder.png">
                     <div id="laserhead_focus_reminder_alert">
                         <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
                         <span>{{ _('Reminder: Never remove any components while your Mr Beam is switched on! To make sure your Mr Beam is turned off, take out the key and unplug the power supply.') }}</span>
@@ -700,11 +723,11 @@
                                    data-bind="checked: dontRemindMeAgainChecked"/> {{ _('Don\'t remind me again') }}
                         </label>
                     </div>
-                    <a href="#" class="btn" aria-hidden="true" data-dismiss="modal"
+                    <a href="#" class="btn" aria-hidden="true" data-dismiss="modal" id="start_job_btn_forgot_focus"
                        data-bind="click: function() {}">{{ _('I forgot') }}</a>
                     <a href="#" style="display: none;" class="btn" aria-hidden="true"
                        data-bind="click: move_laser_over_material">{{ _('Move over the material') }}</a>
-                    <a href="#" class="btn btn-primary" id="start_job_btn_focus_reminder" data-dismiss="modal"
+                    <a href="#" class="btn btn-primary" id="start_job_btn_focus_reminder" data-test="mrbeam-ui-start_job_btn_focus_reminder" data-dismiss="modal"
                        data-bind="click: show_conversion_dialog,
                             enabled: enableConvertButton,
                             visible: !slicing_in_progress()">{{ _('It\'s focused!') }}</a>

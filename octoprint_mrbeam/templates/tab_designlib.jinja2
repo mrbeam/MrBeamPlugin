@@ -18,42 +18,42 @@
 										</div>
 										<div class="action_btns">
 											<div class="btn-group">
-												<a class="btn btn-danger" href="#" data-bind="click: function() { if ($root.enableRemove($data)) { $root.deleteSelection(); } else { console.warn('Insufficient permissions to delete files!'); return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon icon-trash"></i> {{ _('Delete Selection') }}</a>
-												<a class="btn btn-link"  href="#" data-bind="click: $root.cancelSelection"><i class="icon icon-remove"></i> {{ _('Unselect all') }}</a>
+												<a class="btn btn-danger" data-test="tab-designlib-delete-selection" href="#" data-bind="click: function() { if ($root.enableRemove($data)) { $root.deleteSelection(); } else { console.warn('Insufficient permissions to delete files!'); return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon icon-trash"></i> {{ _('Delete Selection') }}</a>
+												<a class="btn btn-link" data-test="tab-designlib-unselect-all" href="#" data-bind="click: $root.cancelSelection"><i class="icon icon-remove"></i> {{ _('Unselect all') }}</a>
 											</div>
 										</div>
 									</div>
 									<div id="files_search" class="">
 										<form class="form-search" data-bind="submit: performSearch">
-											<input type="text" style="width:94%;" class="input-block search-query" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
+											<input type="text" style="width:94%;" class="input-block search-query" data-test="tab-designlib-search-input" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
 										</form>
 									</div>
 									<ul class="file_list_filter" id="files_filter">
                                         <div><strong>{{ _('Sort') }}</strong></div>
 										<li>
-                                            <input type="radio" name="designLibSorting" id="design_lib_sort_name_radio" data-bind="click: function() { $root.listHelper.changeSorting('name'); return true;}" />
+                                            <input type="radio" name="designLibSorting" id="design_lib_sort_name_radio" data-bind="click: function() { $root.listHelper.changeSorting('name'); return true;}" data-test="tab-designlib-sort-name-radio"/>
                                             <label for="design_lib_sort_name_radio">{{ _('Name') }} ({{ _('ascending') }})</label>
                                         </li>
 										<li>
-                                            <input type="radio" name="designLibSorting" id="design_lib_sort_upload_radio" data-bind="click: function() { $root.listHelper.changeSorting('upload'); return true;}" />
+                                            <input type="radio" name="designLibSorting" id="design_lib_sort_upload_radio" data-bind="click: function() { $root.listHelper.changeSorting('upload'); return true;}" data-test="tab-designlib-sort-upload-radio"/>
                                             <label for="design_lib_sort_upload_radio">{{ _('Upload date') }} ({{ _('descending') }})</label>
                                         </li>
                                         <li>
-                                            <input type="radio" name="designLibSorting" id="design_lib_sort_size_radio" data-bind="click: function() { $root.listHelper.changeSorting('size'); return true;}" />
+                                            <input type="radio" name="designLibSorting" id="design_lib_sort_size_radio" data-bind="click: function() { $root.listHelper.changeSorting('size'); return true;}" data-test="tab-designlib-sort-size-radio"/>
                                             <label for="design_lib_sort_size_radio">{{ _('File size') }} ({{ _('descending') }})</label>
                                         </li>
                                         <br>
                                         <div><strong>{{ _('Filter') }}</strong></div>
                                         <li>
-                                            <input type="radio" name="designLibFilter" id="design_lib_filter_design_radio" data-bind="click: function() { $root.setFilter('design'); return true;}" />
+                                            <input type="radio" name="designLibFilter" id="design_lib_filter_design_radio" data-bind="click: function() { $root.setFilter('design'); return true;}" data-test="tab-designlib-filter-design-radio"/>
                                             <label for="design_lib_filter_design_radio">{{ _('Design files') }}</label>
                                         </li>
 										<li>
-                                            <input type="radio" name="designLibFilter" id="design_lib_filter_gcode_radio" data-bind="click: function() { $root.setFilter('machinecode'); return true;}" />
+                                            <input type="radio" name="designLibFilter" id="design_lib_filter_gcode_radio" data-bind="click: function() { $root.setFilter('machinecode'); return true;}" data-test="tab-designlib-filter-gcode-radio"/>
                                             <label for="design_lib_filter_gcode_radio">{{ _('GCode files') }}</label>
                                         </li>
                                         <li>
-                                            <input type="radio" name="designLibFilter" id="design_lib_filter_recent_radio" data-bind="click: function() { $root.setFilter('recentjob'); return true;}" />
+                                            <input type="radio" name="designLibFilter" id="design_lib_filter_recent_radio" data-bind="click: function() { $root.setFilter('recentjob'); return true;}" data-test="tab-designlib-filter-recent-radio"/>
                                             <label for="design_lib_filter_recent_radio">{{ _('Recent jobs') }}</label>
                                         </li>
 									</ul>
@@ -66,7 +66,7 @@
 											<span class="btn fileinput-button " data-bind="css: {disabled: !$root.loginState.isUser(), span12: !hasCamera(), span8: hasCamera()}" style="margin-bottom: 10px">
 												<i class="icon-upload-alt icon-white"></i>
 												<span>{{ _('Upload') }}</span>
-												<input id="gcode_upload" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser()">
+												<input id="gcode_upload" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser()" data-test="tab-designlib-upload-file">
 											</span>
 											<a class="btn btn-primary span4" href="#" role="button" data-bind="visible:hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: takePhoto" >
 												<i class="icon-camera icon-white"></i>
@@ -87,18 +87,18 @@
 									<div id="files" >
 										<div class="folder_navigation clearfix">
 											<div class="entry back pull-left" data-bind="visible: currentPath() != ''" style="display: none">
-												<a class="back-arrow btn-link" data-bind="click: function() { $root.cancelSelection(); $root.navigateUp(); }">
+												<a class="back-arrow btn-link" data-test="tab-designlib-back" data-bind="click: function() { $root.cancelSelection(); $root.navigateUp(); }">
 													<i class="fa fa-arrow-left"></i> {{  _('Back') }}
 												</a>  |
 												<span class="back-path muted">{{ _('Currently in') }} <span data-bind="text: currentPath"></span></span>
 											</div>
-											<a class="btn-link addfolder-button pull-right" data-bind="
+											<a class="btn-link addfolder-button pull-right" data-test="tab-designlib-add-folder" data-bind="
 												click: function() { if ($root.loginState.isUser()) { $root.showAddFolderDialog(); } },
 												css: {disabled: !$root.loginState.isUser()}">
 												{{ _('Add Folder') }} <i class="icon icon-plus-sign"></i>
 											</a>
 										</div>
-										<div id="files_list" style="height: calc(100vh - 100px); overflow-y: auto;">
+										<div id="files_list" style="height: calc(100vh - 100px); overflow-y: auto;" data-test="tab-designlib-files-list">
 
 											<!-- ko allowBindings: false -->
 											<div class="only_folders clearfix">
@@ -112,24 +112,24 @@
 													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }, css:$root.templateFor($data)"></div>
 												</div>
 
-													<script type="text/html" id="files_template_machinecode_gcode">
-														<div class="file_list_entry icon_card rounded_container">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
-															<div class="preview" data-bind="
+													<script type="text/html" id="files_template_machinecode_gcode" data-test="tab-designlib-mechinecode-file-id">
+														<div class="file_list_entry icon_card rounded_container" data-test="tab-designlib-mechinecode-file-card">
+															<div class="selection_box" data-test="tab-designlib-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}" data-test="tab-designlib-mechinecode-file-select-box"><i class="icon icon-ok"></i></div>
+															<div class="preview" data-test="tab-designlib-mechinecode-file" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-cog"></i></div>
-															<div class="title dropdown dropup" >
+															<div class="title dropdown dropup" data-test="tab-designlib-mechinecode-file-title">
 																<span class="title_shortened" data-bind="css: $root.getSuccessClass($data), style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' }, text: name, attr: {title: name}" ></span>
-																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
+																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false" data-test="tab-designlib-mechinecode-file-icon-reorder">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
-																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}" data-test="tab-designlib-mechinecode-file-download"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}" data-test="tab-designlib-mechinecode-file-remove"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																	 <li class="divider"></li>
 																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
@@ -139,9 +139,9 @@
 														</div>
 													</script>
 
-													<script type="text/html" id="files_template_model_svg">
-														<div class="file_list_entry preview_card rounded_container" data-bind="attr: {mrb_name: name}">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
+													<script type="text/html" id="files_template_model_svg" data-test="tab-designlib-files-svg">
+														<div class="file_list_entry preview_card rounded_container" data-test="tab-designlib-svg-preview-card" cy-data="tab-designlib-preview-card" data-bind="attr: {mrb_name: name}">
+															<div class="selection_box" data-test="tab-designlib-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok" data-test="tab-designlib-checked-file"></i></div>
 															<div class="preview" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
@@ -154,14 +154,14 @@
 															<div class="title dropdown dropup" >
 																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
-																	<i class="icon-reorder pull-right"></i>
+																	<i class="icon-reorder pull-right" data-test="tab-designlib-option-file"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
-																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}" data-test="tab-designlib-download-file"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}" data-test="tab-designlib-remove-file"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																	 <li class="divider"></li>
 																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
@@ -172,8 +172,8 @@
 													</script>
 
 													<script type="text/html" id="files_template_recentjob_svg">
-														<div class="file_list_entry preview_card recentjob rounded_container" data-bind="attr: {mrb_name: name}">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
+														<div class="file_list_entry preview_card recentjob rounded_container" data-bind="attr: {mrb_name: name}" data-test="tab-designlib-recentjob-file-card">
+															<div class="selection_box" data-test="tab-designlib-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
 															<div class="preview" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
@@ -185,12 +185,12 @@
 															</div>
 															<div class="title dropdown dropup" >
 																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
-																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
+																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false" data-test="tab-designlib-recentjob-file-icon-reorder">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
-																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}" data-test="tab-designlib-recentjob-file-download"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
 																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFile($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
@@ -205,8 +205,8 @@
 
 													<script type="text/html" id="files_template_model_dxf">
 														<div class="file_list_entry icon_card rounded_container">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
-															<div class="preview" data-bind="
+															<div class="selection_box" data-test="tab-designlib-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
+															<div class="preview" data-test="tab-designlib-dxf-preview-card" cy-data="tab-designlib-preview-card" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-picture"></i></div>
@@ -231,8 +231,8 @@
 													</script>
 
 													<script type="text/html" id="files_template_model_image">
-														<div class="file_list_entry preview_card rounded_container" data-bind="attr: {mrb_name: name}">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
+														<div class="file_list_entry preview_card rounded_container" data-test="tab-designlib-image-preview-card" cy-data="tab-designlib-preview-card" data-bind="attr: {mrb_name: name}">
+															<div class="selection_box" data-test="tab-designlib-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok" data-test="tab-designlib-checked-image"></i></div>
 															<div class="preview" data-bind="
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
@@ -273,17 +273,17 @@
 													</script>
 
 													<script type="text/html" id="files_template_folder">
-														<div class="file_list_entry folder">
-															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}, clickBubble: false;"><i class="icon icon-ok"></i></div>
-															<div class="preview" data-bind=" click: function(data){ $root.cancelSelection(); $root.changeFolder(data); }"></div>
-															<div class="title dropdown dropup">
+														<div class="file_list_entry folder" data-test="tab-designlib-folder-list">
+															<div class="selection_box" data-test="tab-designlib-folder-select-box" data-bind="click: function(data, ev){$root.updateSelection($data, ev)}, clickBubble: false;"><i class="icon icon-ok" data-test="tab-designlib-checked-folder"></i></div>
+															<div class="preview" data-test="tab-designlib-folder-preview" data-bind=" click: function(data){ $root.cancelSelection(); $root.changeFolder(data); }"></div>
+															<div class="title dropdown dropup" data-test="tab-designlib-dropdown-folder">
 																<span class="title_shortened" data-bind="text: display, attr: {title: name}, style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' " ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
-																	<i class="icon-reorder pull-right"></i>
+																	<i class="icon-reorder pull-right" data-test="tab-designlib-option-folder"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFolder($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.hideAndRemoveFolder($data, event); } else { return; } }, css: {disabled: !$root.enableRemove($data)}" data-test="tab-designlib-remove-folder"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
 																</ul>
 															</div>

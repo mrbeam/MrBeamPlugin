@@ -13,6 +13,7 @@ class AnalyticsKeys:
         VERSION_MRBEAM_PLUGIN = "version_mrbeam_plugin"
         UPTIME = "uptime"
         MODEL = "model"
+        FEATURE_ID = "feature_id"
 
     class EventType:
         JOB = "job"
@@ -114,6 +115,7 @@ class AnalyticsKeys:
             COMPRESSOR = "compressor"
             NUM_FILES = "num_files"
             CAMERA_IMAGE = "camera_image"
+            LASERHEAD_CHANGED = "laserhead_changed"
 
         class SoftwareChannel:
             OLD = "old_channel"

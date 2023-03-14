@@ -20,7 +20,9 @@ else:
 
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
     """Recursive dictionnary update.
-    Can associate an operation for superposing leaves."""
+
+    Can associate an operation for superposing leaves.
+    """
     if isinstance(d1, dict) and isinstance(d2, dict):
         out = copy(d1)
         for k in set(chain(d1.keys(), d2.keys())):
@@ -40,7 +42,9 @@ def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
 
 
 def nested_items(my_dict):
-    """Returns an Iterator of the keys, values and relative parent in a nested dict.
+    """Returns an Iterator of the keys, values and relative parent in a nested
+    dict.
+
     Allows you to use the relative parent to modify the values in place.
     Example: See `dict_map`
     """
@@ -63,8 +67,8 @@ def dict_map(func, my_dict):
 
 
 def dict_get(mapping, path, default=None):
-    """
-    Use a path to get an item from a deep map.
+    """Use a path to get an item from a deep map.
+
     ``path`` has to be Iterable.
     """
     if mapping is None or path is None:
@@ -88,8 +92,9 @@ def dict_get(mapping, path, default=None):
 
 
 def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
-    """
-    returns a function that threads an other function and running a callback if provided.
+    """returns a function that threads an other function and running a callback
+    if provided.
+
     Returns the started thread object.
     It also logs any Exceptions that happen in that function.
     see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
@@ -131,8 +136,8 @@ def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
 
 
 def makedirs(path, parent=False, exist_ok=True, *a, **kw):
-    """
-    Same as os.makedirs but doesn't throw exception if dir exists
+    """Same as os.makedirs but doesn't throw exception if dir exists.
+
     @param parentif: bool create the parent directory for the path given and not the full path
                      (avoids having to use os.path.dirname)
     Python >= 3.5 see mkdir(parents=True, exist_ok=True)

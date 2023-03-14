@@ -10,7 +10,10 @@ module.exports = defineConfig({
     viewportHeight: 980,
     viewportWidth: 1920,
     chromeWebSecurity: false,
+    numTestsKeptInMemory: 0,
     e2e: {
+        experimentalStudio: true,
+        experimentalRunAllSpecs: true,
         setupNodeEvents(on, config) {
             return require("./cypress/plugins/index.js")(on, config);
         },
@@ -20,5 +23,17 @@ module.exports = defineConfig({
     reporterOptions: {
         mochaFile: "cypress/results/test-results-[hash].xml",
         testCaseSwitchClassnameAndName: false,
+    },
+    compilerOptions: {
+        types: ["cypress", "@4tw/cypress-drag-drop"],
+        types: ["cypress", "node", "cypress-real-events"],
+    },
+    retries: {
+        // Configure retry attempts for `cypress run`
+        // Default is 0
+        runMode: 2,
+        // Configure retry attempts for `cypress open`
+        // Default is 0
+        openMode: 0,
     },
 });
