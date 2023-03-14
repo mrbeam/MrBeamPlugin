@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-13 17:06+0100\n"
-"PO-Revision-Date: 2023-03-14 08:55+0100\n"
+"POT-Creation-Date: 2023-03-14 10:10+0100\n"
+"PO-Revision-Date: 2023-03-14 10:11+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -551,7 +551,7 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:71
 #: octoprint_mrbeam/templates/wizard/wizard_guided_tour.jinja2:1
-msgid "Step-by-Step Tour Guide To Your First Laser Job"
+msgid "Step-by-Step Guided Tour To Your First Laser Job"
 msgstr "Schritt-für-Schritt-Anleitung zu Deinem ersten Laserjob"
 
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:76
@@ -869,14 +869,14 @@ msgstr "Klicke hier, um alle Designs von der Arbeitsfläche zu entfernen."
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:551
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:125
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:100
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:83
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:88
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:33
 msgid "Next"
 msgstr "Weiter"
 
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:552
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:660
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:79
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:84
 #: octoprint_mrbeam/templates/review.jinja2:53
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:91
 msgid "Back"
@@ -2075,8 +2075,8 @@ msgid "Let's go!"
 msgstr "Auf geht's!"
 
 #: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:46
-msgid "Welcome dialog"
-msgstr "Welcome Dialog"
+msgid "Welcome to the #madewithmrbeam community"
+msgstr "Willkommen in der #madewithmrbeam Community!"
 
 #: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:50
 msgid "What's New"
@@ -2970,8 +2970,8 @@ msgstr ""
 
 # don’t change the link
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:25
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:40
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:61
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:45
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:66
 msgid "https://support.mr-beam.org/en"
 msgstr "https://support.mr-beam.org"
 
@@ -2992,17 +2992,42 @@ msgstr " Mit diesem Laserkopf kannst du jetzt noch schneller arbeiten."
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:37
 msgid ""
 "We have adapted the standard material settings to the new laser head so that "
-"you can start directly. Your personal material settings remain unchanged. To "
-"adjust them to the increased performance of the laser head, you must perform "
-"tests yourself and save the results."
+"you can start directly. Attention: Using your personal material settings "
+"without adjustment increases the risk of material ignition!"
 msgstr ""
 "Wir haben die Standard-Materialeinstellungen an den neuen Laserkopf "
-"angepasst, sodass du direkt starten kannst. Deine persönlich angelegten "
-"Materialeinstellungen bleiben unverändert. Um diese an die erhöhte Leistung "
-"des Laserkopfes anzupasssen, musst du selbst Tests vornehmen und die "
-"Ergebnisse abspeichern."
+"angepasst, sodass du direkt starten kannst. Achtung! Wenn du deine "
+"persönlichen Materialeinstellungen ohne Anpassungen verwendest, erhöht sich "
+"das Risiko einer Materialentzündung!"
 
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:38
+msgid ""
+"Heads Up! Your new laser head is so powerful that using the Mr Beam cutting "
+"mat is not recommended anymore. Read why and know about alternatives in the "
+"<a target='_blank' href='https://www.mr-beam.org/en/products/mr-beam-zwei-"
+"dreamcut-x-laserkopf'>FAQ</a>."
+msgstr ""
+"Achtung! Dein neuer Laserkopf ist so leistungsstark, dass die Verwendung der "
+"Mr Beam Schneidematte nicht mehr empfohlen wird.  Lese in den <a "
+"target=‘_blank’ href=‘https://www.mr-beam.org/products/mr-beam-zwei-dreamcut-"
+"x-laserkopf’>FAQ</a> warum und informiere dich über Alternativen."
+
+#: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:11
+#: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:14
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:39
+#, python-format
+msgid ""
+"To evaluate if you need a new calibration, and to test the quality of your "
+"current lens calibration please follow the instructions shown in our "
+"Knowledge Base article %(opening_tag)sTest your camera "
+"calibration%(closing_tag)s."
+msgstr ""
+"Um zu beurteilen, ob eine Linsenkalibrierung durchgeführt werden sollte oder "
+"um die Qualität der aktuellen Linsenkalibrierung zu testen, folge bitte den "
+"Anweisungen in unserem Knowledge Base-Artikel "
+"%(opening_tag)sLinsenkalibrierung%(closing_tag)s."
+
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:43
 msgid ""
 "All the new features that await you with the dreamcut [X] laser head can be "
 "found in this Knowledgebase article:"
@@ -3010,15 +3035,15 @@ msgstr ""
 "Alle Neuerungen, die dich mit dem dreamcut [X] Laserkopf erwarten, findest "
 "du in diesem Wissensdatenbank-Artikel:"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:41
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:46
 msgid "Learn more"
 msgstr "Mehr erfahren"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:48
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:53
 msgid "Your Mr Beam is even faster now!"
 msgstr "Dein Mr Beam is jetzt noch schneller!"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:50
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:55
 msgid ""
 "If you had a Mr Beam II dreamcut before, you can now cut up to four times as "
 "fast."
@@ -3026,7 +3051,7 @@ msgstr ""
 "Wenn du vorher einen Mr Beam II dreamcut hattest, kannst du jetzt bis zu "
 "viermal so schnell schneiden."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:51
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:56
 msgid ""
 "If you had a Mr Beam II dreamcut [S] before, you can now cut up to twice as "
 "fast."
@@ -3034,7 +3059,7 @@ msgstr ""
 "Wenn du vorher einen Mr Beam II dreamcut [S] hattest, kannst du jetzt bis zu "
 "zweimal so schnell schneiden."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:53
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:58
 msgid ""
 "<b>Please keep in mind:</b> The faster you laser, the more particles are "
 "released. This means that your filters will wear out faster. So check "
@@ -3044,11 +3069,11 @@ msgstr ""
 "freigesetzt. Somit werden auch deine Filter schneller verschleißen. Prüfe "
 "also regelmäßig, ob du die Filter tauschen musst."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:60
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:65
 msgid "The new laser head needs a larger power supply!"
 msgstr "Der neue Laserkopf braucht ein größeres Netzteil!"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:62
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:67
 #, python-format
 msgid ""
 "Due to its slightly increased power requirements, you will need a 90W power "
@@ -3061,23 +3086,26 @@ msgstr ""
 "aktuell einsetzt, erfährst du in diesem Wissensdatenbank-Artikel mehr dazu: "
 "%(open)sMehr erfahren%(close)s."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:71
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:76
 msgid "Please place the included sticker on your Mr Beam!"
 msgstr "Bitte platziere den mitgelieferten Aufkleber auf deinem Mr Beam!"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:72
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:77
 msgid ""
-"Please cover the 5W safety label on the back of your Mr Beam with the new "
-"10W label."
+"To maintain legal requirements, it is mandatory to update the safety labels "
+"on your Mr Beam laser cutter. Put the sticker with updated power and "
+"wavelength on top of the existing label like shown in the example."
 msgstr ""
-"Bitte überklebe den 5W Sicherheitsaufkleber auf der Rückseite deines Mr Beam "
-"mit dem neuen 10W Aufkleber."
+"Um die gesetzlichen Bestimmungen einzuhalten, ist es zwingend erforderlich, "
+"die Sicherheitsaufkleber auf deinem Mr Beam Laser Cutter zu aktualisieren. "
+"Überklebe das Feld mit der aktualisierten Leistung und Wellenlänge auf dem "
+"bestehenden Aufkleber, wie im Beispiel gezeigt."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:81
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:86
 msgid "I forgot, shut down to change"
 msgstr "Vergessen, ausschalten um zu tauschen"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:85
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:90
 #: octoprint_mrbeam/templates/quick_shape.jinja2:152
 #: octoprint_mrbeam/templates/quick_text.jinja2:73
 #: octoprint_mrbeam/templates/review.jinja2:56
@@ -3085,11 +3113,11 @@ msgstr "Vergessen, ausschalten um zu tauschen"
 msgid "OK"
 msgstr "OK"
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:4
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:5
 msgid "Laser safety"
 msgstr "Lasersicherheit"
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:5
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:6
 msgid ""
 "Attention! To protect both your own health and the health of others when "
 "operating the Mr Beam, read the following instructions carefully and "
@@ -3100,29 +3128,30 @@ msgstr ""
 "aufmerksam durch!"
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:7
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:8
 msgid "Laser Classification:"
 msgstr "Laser-Klassifizierung:"
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:8
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:9
 msgid ""
-"Your Mr Beam laser cutter is a Class 1 laser product according to IEC 60825, "
-"which means that no harmful laser light can escape from the device when "
-"operated as intended. This is guaranteed by redundant safety systems. This "
-"safety system must not be tampered with or bypassed under any circumstances."
+"Your Mr Beam laser cutter is a Class 1 laser product according to IEC "
+"60825-1, which means that no harmful laser light can escape from the device "
+"when operated as intended. This is guaranteed by redundant safety systems. "
+"This safety system must not be tampered with or bypassed under any "
+"circumstances."
 msgstr ""
-"Ihr Mr Beam Lasercutter ist gemäß IEC 60825 ein Laserprodukt der Klasse 1. "
+"Ihr Mr Beam Lasercutter ist gemäß IEC 60825-1 ein Laserprodukt der Klasse 1. "
 "Das bedeutet, dass bei bestimmungsgemäßem Betrieb kein schädliches "
 "Laserlicht aus dem Gerät austreten kann. Dies wird durch redundante "
 "Sicherheitssysteme gewährleistet. Dieses Sicherheitssystem darf keinesfalls "
 "manipuliert oder umgangen werden."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:10
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:11
 msgid "Safety instructions:"
 msgstr "Sicherheitshinweise:"
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:14
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:15
 msgid ""
 "Always keep the safety housing and safety lid of your Mr Beam laser cutter "
 "in good working order."
@@ -3131,7 +3160,7 @@ msgstr ""
 "Lasercutters immer in einwandfreiem Zustand."
 
 # Laser Safety Notes!umgehe
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:19
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:20
 msgid ""
 "Never modify, disable, or bypass the safety housing, safety lid, safety "
 "switches, or other safety-related devices on your laser cutter."
@@ -3141,7 +3170,7 @@ msgstr ""
 "Vorrichtungen an Ihrem Lasercutter."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:24
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:25
 msgid ""
 "Damaged or modified laser cutters must not be used. Ask a certified service "
 "technician to repair it immediately."
@@ -3151,18 +3180,18 @@ msgstr ""
 "reparieren."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:29
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:30
 msgid "Always act responsibly towards yourself and others."
 msgstr ""
 "Handeln Sie immer verantwortungsbewusst gegenüber sich selbst und Anderen."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:34
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:35
 msgid "Never leave your laser cutter unattended during operation."
 msgstr ""
 "Lassen Sie Ihren Lasercutter während des Betriebs niemals unbeaufsichtigt."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:39
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:40
 msgid ""
 "Never operate your laser cutter without proper exhaust filtration or exhaust "
 "system."
@@ -3170,7 +3199,7 @@ msgstr ""
 "Betreiben Sie Ihren Lasercutter niemals ohne geeignete Abluftfilterung bzw. "
 "Abluftanlage."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:44
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:45
 msgid ""
 "At no time during operation should people or animals be exposed to "
 "unfiltered fumes."
@@ -3178,7 +3207,7 @@ msgstr ""
 "Während des Betriebs dürfen Menschen und Tiere zu keinem Zeitpunkt "
 "ungefilterten Dämpfen ausgesetzt sein."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:49
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:50
 msgid ""
 "Use a suitable filter for this purpose or discharge the exhaust air safely "
 "into the open air (taking local legislation into account)."
@@ -3186,7 +3215,7 @@ msgstr ""
 "Nutzen Sie dazu einen geeigneten Filter oder führen Sie die Abluft sicher "
 "ins Freie ab (unter Berücksichtigung der lokalen Gesetzgebung)."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:54
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:55
 msgid ""
 "Never place reflective, mirror-like, highly flammable or explosive materials "
 "in your laser cutter."
@@ -3195,14 +3224,14 @@ msgstr ""
 "explosive Materialien in Ihren Lasercutter."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:59
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:60
 msgid "Never place the machine on a highly flammable or explosive surface."
 msgstr ""
 "Stellen Sie die Maschine niemals auf eine leicht entzündliche oder explosive "
 "Unterlage."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:64
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:65
 msgid ""
 "Your laser cutter may only be operated by persons who are aware of the risks "
 "and dangers of operation."
@@ -3210,7 +3239,7 @@ msgstr ""
 "Ihr Lasercutter darf ausschließlich von Personen bedient werden, die sich "
 "der Risiken und Gefahren des Betriebs bewusst sind."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:69
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:70
 msgid ""
 "If you allow third parties access to your laser cutter, ensure that they "
 "receive careful and responsible instruction, including all the instructions "
@@ -3220,7 +3249,7 @@ msgstr ""
 "sie eine sorgfältige und verantwortungsbewusste Einweisung, inklusive aller "
 "hier aufgeführten Hinweise, sicher."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:74
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:75
 msgid ""
 "If the laser cutter is connected to a network, make sure that access to the "
 "laser cutter itself as well as to the network is sufficiently protected "
@@ -3234,7 +3263,7 @@ msgstr ""
 "eines ungesicherten Zugangs. Schalten Sie dazu mit dem Schlüsselschalter "
 "Ihren Lasercutter bei Nichtbetrieb stromlos."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:79
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:80
 msgid ""
 "Note: Versions in other languages are a translation of the German original "
 "and for information purposes only. In case of any discrepancy, the German "
@@ -3244,12 +3273,12 @@ msgstr ""
 "Originals und nur zu Informationszwecken. Im Falle einer Abweichung gilt das "
 "deutsche Original."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:84
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:85
 msgid "To continue, please agree to the following items."
 msgstr "Um fortzufahren, stimmen Sie bitte folgenden Punkten zu."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:88
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:89
 msgid ""
 "I understand that laser light is potentially dangerous. I understand that I "
 "am legally responsible for both the proper and improper use of my laser "
@@ -3259,7 +3288,7 @@ msgstr ""
 "sowohl rechtlich für den sachgemäßen, als auch für den unsachgemäßen "
 "Gebrauch meines Lasercutters verantwortlich bin."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:94
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:95
 msgid ""
 "This laser cutter protects health with a safety enclosure, safety lid, "
 "safety electronics, exhaust system, and other safety features. I understand "
@@ -3273,7 +3302,7 @@ msgstr ""
 "unzureichenden Schutz führt."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:100
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:101
 msgid ""
 "I understand that I am responsible for keeping my laser cutter and all "
 "attached safety devices in good working order. I will take care of regular "
@@ -3285,14 +3314,14 @@ msgstr ""
 "leite ich eine sofortige Reparatur ein."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:106
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:107
 msgid "I will never leave my laser cutter unattended during operation."
 msgstr ""
 "Ich werde meinen Lasercutter während des Betriebes nie unbeaufsichtigt "
 "lassen."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:112
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:113
 msgid ""
 "I am responsible for allowing access to my laser cutter only to instructed "
 "and authorized personnel."
@@ -3301,7 +3330,7 @@ msgstr ""
 "eingewiesenen und autorisierten Personen zu gewähren."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:118
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:119
 msgid ""
 "I have connected the laser cutter to a trusted network and ensured that only "
 "instructed and authorized persons can access it. When I am not using the "
@@ -3313,7 +3342,7 @@ msgstr ""
 "den Strom ausschalten und den Schlüssel abziehen."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:125
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:126
 msgid ""
 "If you have any concerns about laser safety or do not agree with the above "
 "conditions, do not use this software."
@@ -3322,11 +3351,11 @@ msgstr ""
 "Bedingungen nicht einverstanden sein, verwenden Sie diese Software nicht."
 
 # Laser Safety Notes!
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:126
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:127
 msgid "Thank you for your attention."
 msgstr "Vielen Dank für Ihre Aufmerksamkeit."
 
-#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:133
+#: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:134
 msgid ""
 "Show this information again next time. <br> Otherwise you can also find it "
 "here: Settings / Laser safety"
@@ -3862,7 +3891,7 @@ msgid "Name"
 msgstr "Name"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:35
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:203
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:204
 msgid "ascending"
 msgstr "aufsteigend"
 
@@ -3872,7 +3901,7 @@ msgstr "Hochladedatum"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:39
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:43
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:203
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:204
 msgid "descending"
 msgstr "absteigend"
 
@@ -4368,7 +4397,7 @@ msgid "Auto-connect on server startup"
 msgstr "Automatische Verbindung beim Start des Servers"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:298
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:227
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:228
 msgid "Connect"
 msgstr "Verbinden"
 
@@ -4688,20 +4717,6 @@ msgstr ""
 "Die Linsenkalibrierung entfernt einen Fischaugen-Effekt der Kamera. Verwende "
 "dies, wenn Du mit der Präzision der Kamera unzufrieden bist und eine neue "
 "Eckenkalibrierung sie nicht besser macht."
-
-#: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:11
-#: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:14
-#, python-format
-msgid ""
-"To evaluate if you need a new calibration, and to test the quality of your "
-"current lens calibration please follow the instructions shown in our "
-"Knowledge Base article %(opening_tag)sTest your camera "
-"calibration%(closing_tag)s."
-msgstr ""
-"Um zu beurteilen, ob eine Linsenkalibrierung durchgeführt werden sollte oder "
-"um die Qualität der aktuellen Linsenkalibrierung zu testen, folge bitte den "
-"Anweisungen in unserem Knowledge Base-Artikel "
-"%(opening_tag)sLinsenkalibrierung%(closing_tag)s."
 
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:18
 msgid ""
@@ -5098,8 +5113,8 @@ msgid "Yes, contribute"
 msgstr "Ja, dazu beitragen"
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:32
-msgid "No, disagree"
-msgstr "Nein, widersprechen"
+msgid "No, not at the moment"
+msgstr "Nein, jetzt lieber nicht"
 
 # Settings > About Screen
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:36
@@ -5724,7 +5739,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/tab/tab_designstore.jinja2:30
 #: octoprint_mrbeam/templates/tab/tab_materialstore.jinja2:28
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:233
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:234
 msgid "Refresh"
 msgstr "Aktualisieren"
 
@@ -5845,12 +5860,12 @@ msgid "Confirm Password"
 msgstr "Passwort bestätigen"
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:6
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:62
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:63
 msgid "Used to setup"
 msgstr "Zum Setup verwendet"
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:8
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:67
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:68
 msgid "Option A: WiFi direct connection"
 msgstr "Möglichkeit A: WLAN Direktverbindung"
 
@@ -5873,18 +5888,16 @@ msgstr ""
 "Internet und die damit einhergehenden Funktionen."
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:21
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:34
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:44
-msgid "Select"
-msgstr "Auswählen"
+msgid "Select A"
+msgstr "A Auswählen"
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:28
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:110
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:111
 msgid "recommended option"
 msgstr "Empfohlene Möglichkeit"
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:30
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:114
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:115
 msgid "Option B: Network cable connection to the router"
 msgstr "Möglichkeit B: Netzwerkkabel Verbindung zum Router"
 
@@ -5896,12 +5909,16 @@ msgstr ""
 "Verbinde deinen Mr Beam via Netzwerkkabel (Ethernet) mit deinem Router und "
 "mache ihn so zu einem Teil deines Heimnetzwerks. "
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:40
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:165
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:34
+msgid "Select B"
+msgstr "B Auswählen"
+
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:41
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:166
 msgid "Option C: WiFi connection to the router"
 msgstr "Möglichkeit C: WLAN Verbindung zum Router"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:41
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:42
 msgid ""
 "Connect your Mr Beam via WiFi to your router and make it part of your home "
 "network."
@@ -5909,7 +5926,11 @@ msgstr ""
 "Verbinde deinen Mr Beam via WLAN mit deinem Router und mache ihn so zu einem "
 "Teil deines Heimnetzwerks."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:68
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:45
+msgid "Select C"
+msgstr "C Auswählen"
+
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:69
 msgid ""
 "No Internet access or network infrastructure is required. You may not be "
 "able to use the Internet on your computer while connected to Mr Beam."
@@ -5918,21 +5939,21 @@ msgstr ""
 "Möglicherweise kannst du das Internet an deinem Computer nicht nutzen, "
 "solange du mit dem Mr Beam verbunden bist."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:69
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:118
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:174
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:70
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:119
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:175
 msgid "Pros / Cons"
 msgstr "Pro / Contra"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:71
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:72
 msgid "No internet necessary"
 msgstr "Kein Internet nötig"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:72
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:73
 msgid "No router setup necessary"
 msgstr "Keine Routereinrichtung nötig"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:73
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:74
 msgid ""
 "No internet access on your computer while your computer is in the WiFi of "
 "your Mr Beam"
@@ -5940,34 +5961,34 @@ msgstr ""
 "Kein Internetzugang auf deinem Computer während sich dein Computer im WLAN "
 "deines Mr Beams befindet"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:74
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:75
 msgid "Software updates only possible via USB stick"
 msgstr "Software-Uptate nur über USB-Stick möglich"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:75
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:76
 msgid "No direct access to Design Store"
 msgstr "Kein direkter Zugriff auf Design Store"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:76
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:77
 msgid "No sending of support requests possible"
 msgstr "Kein Absenden von Supportanfragen möglich"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:86
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:134
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:194
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:87
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:135
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:195
 msgid "This is how it’s done"
 msgstr "So gehst du vor"
 
 # feststehender Begriff
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:96
-msgid "Select WLAN of your Mr Beam."
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:97
+msgid "Select WiFi of your Mr Beam."
 msgstr "WLAN deines Mr Beams auswählen."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:97
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:98
 msgid "Name: MrBeam-XXXX <br> Password: mrbeamsetup"
 msgstr "Name: MrBeam-XXXX <br> Passwort: mrbeamsetup"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:98
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:99
 msgid ""
 "XXXX stands for your specific device name. You can find it on a sticker on "
 "the back of your Mr Beam."
@@ -5975,7 +5996,7 @@ msgstr ""
 "XXXX steht für deinen spezifischen Gerätenamen. Du findest ihn auf einem "
 "Aufkleber an der Rückseite deines Mr Beams."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:115
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:116
 msgid ""
 "Connect the Mr Beam to the network router via cable. This configuration is "
 "particularly stable due to the cable connection."
@@ -5983,7 +6004,7 @@ msgstr ""
 "Verbinde den Mr Beam per Kabel mit dem Netzwerk-Router. Diese Konfiguration "
 "ist durch die Kabelverbindung besonders stabil."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:116
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:117
 msgid ""
 "Attention. Make sure you do NOT plug it into the similar looking connector "
 "for your Airfilter system. The connectors are labeled."
@@ -5991,7 +6012,7 @@ msgstr ""
 "Achtung! Achte darauf, dass du es NICHT in den ähnlich aussehenden Anschluss "
 "für dein Airfilter System steckst. Die Anschlüsse sind beschriftet."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:117
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:118
 msgid ""
 "After that you can access your Mr Beam with any computer (<a href=\"https://"
 "find.mr-beam.org\" target=\"_blank\">find.mr-beam.org</a>) that is on the "
@@ -6001,33 +6022,33 @@ msgstr ""
 "href=“https://find.mr-beam.org” target=“_blank”>find.mr-beam.org</a>) der "
 "sich im selben Heimnetzwerk befindet."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:120
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:121
 msgid "Most stable and easiest way to connect (recommended)"
 msgstr "Stabilste und einfachste Verbindungsart (empfohlen)"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:121
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:122
 msgid "Accessible from anywhere in your network"
 msgstr "Ansteuerbar von überall in deinem Netzwerk"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:122
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:123
 msgid "Software updates via your secured home network access"
 msgstr "Software-Updates über deinen gesicherten Heiminternetzugang"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:123
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:178
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:124
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:179
 msgid "Support tickets can be sent directly from your Mr Beam"
 msgstr "Support-Tickets können direkt von deinem Mr Beam gesendet werden"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:124
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:179
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:125
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:180
 msgid "Access to the entire Mr Beam Design and Material Store"
 msgstr "Zugriff auf den gesamten Mr Beam Design und Material Store"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:139
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:140
 msgid "img/welcome_dialog/connection-option-detail-b-inner-en.png"
 msgstr "img/welcome_dialog/connection-option-detail-b-inner-de.png"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:144
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:145
 msgid ""
 "In your Google Chrome browser, enter the URL <a href=\"https://find.mr-beam."
 "org\" target=\"_blank\">find.mr-beam.org</a> and select the name of your Mr "
@@ -6037,18 +6058,18 @@ msgstr ""
 "org” target=“_blank”>find.mr-beam.org</a>  ein und wähle den Namen deines Mr "
 "Beams aus."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:145
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:146
 msgid ""
 "You can find the device name on the stickers on the back of your Mr Beam."
 msgstr ""
 "Den Gerätenamen findest du bei den Aufklebern an der Rückseite deines Mr "
 "Beams."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:146
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:147
 msgid "You're done."
 msgstr "Schon fertig."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:170
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:171
 msgid ""
 "Connect Mr Beam via WiFi to your network. Configure your Mr Beam for your "
 "WiFi with WiFi name and password."
@@ -6056,7 +6077,7 @@ msgstr ""
 "Verbinde den Mr Beam per WLAN mit deinem Netzwerk. Konfiguriere deinen Mr "
 "Beam für dein WLAN mit WLAN-Name und Passwort."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:171
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:172
 msgid ""
 "After that you can access it with any computer (<a href=\"https://find.mr-"
 "beam.org\" target=\"_blank\">find.mr-beam.org</a>) that is in the same home "
@@ -6066,41 +6087,41 @@ msgstr ""
 "mr-beam.org” target=“_blank”>find.mr-beam.org</a>) der sich im selben "
 "Heimnetzwerk befindet."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:176
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:177
 msgid "Controllable from everywhere in your network"
 msgstr "Ansteuerbar aus in deinem Netzwerk"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:177
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:178
 msgid "Software updates via your secured home network"
 msgstr "Software-Updates über deinen gesicherten Heiminternetzugang"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:180
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:181
 msgid "The router must be close enough to the Mr Beam"
 msgstr "Der Router muss nah genug am Mr Beam dran sein"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:203
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:204
 msgid "Sort by"
 msgstr "Sortieren nach"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:203
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:209
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:204
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:210
 msgid "SSID"
 msgstr "SSID"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:203
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:210
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:204
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:211
 msgid "Quality"
 msgstr "Qualität"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:211
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:212
 msgid "Action"
 msgstr "Aktion"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:216
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:217
 msgid "Address"
 msgstr "Adresse"
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:239
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:240
 msgid ""
 "Select your WiFi network. Then enter the password needed to connect to your "
 "regular home network (WiFi) as usual."
@@ -6109,7 +6130,7 @@ msgstr ""
 "benötigt wird, um sich wie gewohnt mit deinem regulären Heimnetzwerk (WLAN) "
 "zu verbinden."
 
-#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:240
+#: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:241
 msgid ""
 "Make sure your router is nearby and the connection strength to your Mr Beam "
 "is strong."
@@ -6226,6 +6247,22 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:12
 msgid "We hope you enjoy this new experience!"
 msgstr "Wir hoffen, dass Du viel Freude mit diesem Update hast!"
+
+#~ msgid "FAQ"
+#~ msgstr "FAQ"
+
+#~ msgid "Welcome dialog"
+#~ msgstr "Welcome Dialog"
+
+#~ msgid ""
+#~ "Please cover the 5W safety label on the back of your Mr Beam with the new "
+#~ "10W label."
+#~ msgstr ""
+#~ "Bitte überklebe den 5W Sicherheitsaufkleber auf der Rückseite deines Mr "
+#~ "Beam mit dem neuen 10W Aufkleber."
+
+#~ msgid "No, disagree"
+#~ msgstr "Nein, widersprechen"
 
 # use Socket in german
 # netconnectd is a name, yes, with d in the end
@@ -6514,9 +6551,6 @@ msgstr "Wir hoffen, dass Du viel Freude mit diesem Update hast!"
 #~ "%(strong_open)sWie gehts weiter?%(strong_close)s Hier findest Du "
 #~ "verschiedene Informationen, Tipps und Hilfe, um das Beste aus Deinem Mr "
 #~ "Beam herauszuholen:"
-
-#~ msgid "Welcome to the Mr Beam community!"
-#~ msgstr "Willkommen in der Mr Beam Community!"
 
 #~ msgid ""
 #~ "\n"

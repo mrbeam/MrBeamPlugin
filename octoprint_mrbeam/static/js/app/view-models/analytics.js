@@ -47,6 +47,9 @@ $(function () {
 
     function AnalyticsViewModel(params) {
         let self = this;
+
+        const CONSENT_TO_ANALYTICS = "agree";
+        const DO_NOT_CONSENT_TO_ANALYTICS = "disagree";
         window.mrbeam.viewModels["analyticsViewModel"] = self;
         self.settings = params[0];
 
@@ -58,6 +61,9 @@ $(function () {
 
         // Do not use before onStartupComplete!
         self.analyticsEnabled = ko.observable(false);
+        self.analyticsRadioBtnValue = ko.observable(
+            DO_NOT_CONSENT_TO_ANALYTICS
+        );
         self.isStartupComplete = false;
         self.error_sqeuence = 0;
 
@@ -117,6 +123,13 @@ $(function () {
 
         self.onAllBound = function () {
             self._updateAnalyticsEnabledValue();
+
+            $("input[type=radio][name=analytics_consent]").on(
+                "change",
+                function () {
+                    self.changeAnalyticsConsent(this.value);
+                }
+            );
             /* This is commented out to stop console logging for the time being
 
             if (console.everything) {
@@ -164,6 +177,27 @@ $(function () {
             self.analyticsEnabled(
                 self.settings.settings.plugins.mrbeam.analyticsEnabled()
             );
+
+            if (self.analyticsEnabled()) {
+                self.analyticsRadioBtnValue(CONSENT_TO_ANALYTICS);
+            } else {
+                self.analyticsRadioBtnValue(DO_NOT_CONSENT_TO_ANALYTICS);
+            }
+        };
+
+        self.changeAnalyticsConsent = function (newValue) {
+            if (newValue === CONSENT_TO_ANALYTICS) {
+                self.settings.settings.plugins.mrbeam.analyticsEnabled(true);
+            } else {
+                self.settings.settings.plugins.mrbeam.analyticsEnabled(false);
+            }
+
+            self.settings.saveData(undefined, function (newSettings) {
+                console.log(
+                    "Analytics consent change",
+                    newSettings.plugins.mrbeam.analyticsEnabled
+                );
+            });
         };
 
         self._handleClick = function (e) {
@@ -249,6 +283,6 @@ $(function () {
         ["settingsViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-        [],
+        ["#settings_analytics"],
     ]);
 });
