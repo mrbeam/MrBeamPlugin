@@ -995,7 +995,7 @@ class MrBeamPlugin(
                 name=gettext("Better Together"),
                 template="settings/analytics_settings.jinja2",
                 suffix="_analytics",
-                custom_bindings=False,
+                custom_bindings=True,
             ),
             dict(
                 type="settings",
