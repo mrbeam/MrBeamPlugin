@@ -279,7 +279,7 @@ class LaserheadHandler(object):
             data = dict(
                 serial=self._current_used_lh_serial,
                 model=self._current_used_lh_model_string,
-                info=self._lh_cache[self._current_used_lh_serial],
+                info=self._lh_cache.get(self._current_used_lh_serial),
             )
         else:
             data = dict(
@@ -318,7 +318,7 @@ class LaserheadHandler(object):
         """
         supported = self._plugin.get_model_id() in SUPPORTED_LASERHEADS.get(self.get_current_used_lh_model_id(), [])
         if not supported:
-            self._logger.error("Current used laser head model is not supported by this device model.")
+            self._logger.error("Current used laser head model (%s) is not supported by this device model.(%s) ", self.get_current_used_lh_model_id() , self._plugin.get_model_id())
         return supported
 
     def _validate_lh_serial(self, serial):

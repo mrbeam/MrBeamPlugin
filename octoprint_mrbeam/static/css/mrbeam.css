@@ -3836,6 +3836,23 @@ div.hopscotch-bubble .hopscotch-bubble-number {
 #laser-safety-conditions ul.laser-safety-conditions__ul--last-note li p {
   color: #e25303;
 }
+#laser-safety-conditions ul.laser-safety-conditions__ul--last-note li p strong {
+  color: #333333;
+}
+#laser-safety-conditions h5 {
+  margin-left: 25px;
+}
+.wizard_safety_agreement {
+  margin-top: 40px;
+  margin-left: 25px;
+}
+.wizard_safety_agreement label {
+  font-size: 12px;
+  line-height: 14px;
+}
+.wizard_safety_agreement input {
+  margin-right: 20px;
+}
 /* Laser safety conditions - end */
 
 /* Better together - start */

@@ -430,6 +430,9 @@ input[type="radio"] {
   p {
   padding-left: 8px;
 }
+.connection-wizard--general-connection-details--option {
+  cursor: pointer;
+}
 /* Connection wizard - end */
 
 /* Last wizard - start */
