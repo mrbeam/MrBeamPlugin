@@ -1124,9 +1124,11 @@ $(function () {
             }
 
             // inform user about unsupported elements
-            self.svg_contains_unsupported_element_warning(
-                unsupportedElemsDetected
-            );
+            if (unsupportedElemsDetected.length > 0) {
+                self.svg_contains_unsupported_element_warning(
+                    unsupportedElemsDetected
+                );
+            }
 
             // remove other unnecessary or invisible ("display=none") elements
             let removeElements = fragment.selectAll(
