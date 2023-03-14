@@ -231,17 +231,6 @@
                                                     </table>
                                                 </div>
                                                 <button class="btn btn-primary btn-block" data-bind="click: function() { $root.netconnectdViewModel.refresh() }, enable: $root.netconnectdViewModel.daemonOnline() && $root.netconnectdViewModel.status.wifi.present()">{{ _('Refresh') }}</button>
-                                                <div>
-                                                    <small class="muted">{{ _('netconnectd socket') }}: <span data-bind="text: netconnectdViewModel.settings.plugins.netconnectd.socket"></span></small>
-                                                </div>
-                                                <div>
-                                                    <div><small><a href="#" class="muted" onclick="$(this).children().toggleClass('icon-caret-right icon-caret-down').parent().parent().parent().next().slideToggle('fast')"><i class="icon-caret-right"></i> {{ _('Advanced options') }}</a></small></div>
-                                                    <div class="hide row-fluid">
-                                                        <button class="btn span6" data-bind="click: function() { if ($root.netconnectdViewModel.apRunning()) { $root.netconnectdViewModel.sendStopAp(); } else { $root.netconnectdViewModel.sendStartAp(); } }, enable: $root.netconnectdViewModel.daemonOnline()"><span data-bind="visible: !$root.netconnectdViewModel.apRunning() && $root.netconnectdViewModel.daemonOnline()">{{ _('Start AP') }}</span><span data-bind="visible: $root.netconnectdViewModel.apRunning() && $root.netconnectdViewModel.daemonOnline()">{{ _('Stop AP') }}</span><span data-bind="visible: !$root.netconnectdViewModel.daemonOnline()">{{ _('Daemon offline') }}</span></button>
-                                                        <button class="btn span6" data-bind="click: function() { $root.netconnectdViewModel.sendReset() }, enable: $root.netconnectdViewModel.daemonOnline()">{{ _('Reset daemon') }}</button>
-                                                    </div>
-                                                </div>
-                                                <p>&nbsp;<p/>
                                             </div>
                                         </div>
                                     </div>
