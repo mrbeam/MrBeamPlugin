@@ -204,6 +204,7 @@ $(function () {
         self.loginState = parameters[3];
         self.system = parameters[4];
         self.analytics = parameters[5];
+        self.laserheadChangedVM = parameters[6];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
@@ -340,6 +341,11 @@ $(function () {
 
         self.onUserLoggedIn = function () {
             self.removeOpSafeModeOptionFromSystemMenu();
+
+            if (self.laserheadChangedVM.laserheadXDetected()) {
+                self.showNotifyIcon($("#designstore_tab_btn"));
+                self.showNotifyIcon($("#materialstore_tab_btn"));
+            }
 
             if (!self._ajaxErrorRegistered) {
                 $(document).ajaxError(function (
@@ -606,6 +612,7 @@ $(function () {
                 );
             }
         };
+
         self.presetLoginUser = function () {
             if (MRBEAM_ENV_SUPPORT_MODE) {
                 self.loginState.loginUser(
@@ -619,6 +626,7 @@ $(function () {
                 self.loginState.loginPass("a");
             }
         };
+
         /**
          * MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
          * Hides the option "Restart OctoPrint in safe mode"
@@ -629,85 +637,19 @@ $(function () {
                 return c.action === "restart_safe";
             });
         };
-        // Backdrop Temporary Solution - start
-        // Todo: should be removed once OctoPrint is updated
-        const mutationTargetNode = document.body;
-        const mutationConfig = {
-            childList: true,
-            attributes: false,
-            characterData: false,
-            subtree: false,
-            attributeOldValue: false,
-            characterDataOldValue: false,
-        };
-        const mutationCallback = function (mutationsList, observer) {
-            for (let mutation of mutationsList) {
-                if (mutation.type === "childList") {
-                    let modalElement = $(".modal-scrollable");
-                    let backDrop = $(".modal-backdrop");
-                    if (modalElement.length !== 0) {
-                        modalElement.each(function () {
-                            if (
-                                !$(this)[0].hasChildNodes() &&
-                                modalElement.length === 1
-                            ) {
-                                setTimeout(() => {
-                                    if (
-                                        !$(this)[0].hasChildNodes() &&
-                                        modalElement.length === 1 &&
-                                        document.visibilityState === "visible"
-                                    ) {
-                                        $("body").removeClass("modal-open");
-                                        backDrop.remove();
-                                        $(this).removeClass("modal-scrollable");
-                                        console.warn(
-                                            "mutationCallback: removed incomplete modal after 500ms"
-                                        );
-                                    }
-                                }, 500);
-                            } else if (
-                                !$(this)[0].hasChildNodes() &&
-                                modalElement.length > 1 &&
-                                $(this).next().hasClass("modal-backdrop")
-                            ) {
-                                $(this).next().remove();
-                                $(this)[0].remove();
-                            } else if (
-                                $(this)[0].hasChildNodes() &&
-                                modalElement.length === 1 &&
-                                $(this)
-                                    .find(".modal.hide.fade")
-                                    .getInlineStyle("display") === "none"
-                            ) {
-                                setTimeout(() => {
-                                    if (
-                                        $(this)
-                                            .find(".modal.hide.fade")
-                                            .hasClass("modal") &&
-                                        $(this)
-                                            .find(".modal.hide.fade")
-                                            .getInlineStyle("display") ===
-                                            "none"
-                                    ) {
-                                        document.body.append(
-                                            $(this).find(".modal.hide.fade")[0]
-                                        );
-                                    }
-                                }, 500);
-                            }
-                        });
-                    } else if (
-                        modalElement.length === 0 &&
-                        backDrop.length !== 0
-                    ) {
-                        backDrop.remove();
-                    }
-                }
+
+        self.showNotifyIcon = function (element) {
+            if (element.find("span.notify-icon").length === 0) {
+                element.append('<span class="notify-icon"></span>');
             }
         };
-        const observer = new MutationObserver(mutationCallback);
-        observer.observe(mutationTargetNode, mutationConfig);
-        // Backdrop Temporary Solution - end
+
+        self.removeNotifyIcon = function (element) {
+            const storeNotificationElement = element.find("span.notify-icon");
+            if (storeNotificationElement.length !== 0) {
+                storeNotificationElement.remove();
+            }
+        };
     }
 
     // view model class, parameters for constructor, container to bind to
@@ -722,6 +664,7 @@ $(function () {
             "loginStateViewModel",
             "systemViewModel",
             "analyticsViewModel",
+            "laserheadChangedViewModel",
         ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...

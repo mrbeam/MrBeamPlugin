@@ -11,11 +11,14 @@ $(function () {
         // 'http://localhost:8080';
         self.DESIGN_STORE_IFRAME_HEALTHCHECK_SRC =
             self.DESIGN_STORE_IFRAME_SRC + "/api/healthcheck";
+        self.DESIGN_STORE_TAB_ELEMENT = $("#designstore_tab_btn");
 
-        self.loginState = params[0];
-        self.navigation = params[1];
-        self.analytics = params[2];
-        self.settings = params[3];
+        self.mrBeamVM = params[0];
+        self.loginState = params[1];
+        self.navigation = params[2];
+        self.analytics = params[3];
+        self.settings = params[4];
+        self.laserheadChangedVM = params[5];
 
         self.lastUploadedDate = ko.observable("");
         self.eventListenerAdded = ko.observable(false);
@@ -27,7 +30,7 @@ $(function () {
                 self.DESIGN_STORE_IFRAME_SRC
             ) {
                 self.prepareDesignStoreTab();
-                self.goToStore();
+                self.lazyLoadStore();
                 // Handle design store if offline
                 // This will show the network issue page if the device is offline
                 // However, if the device gets online afterwards, this will not change
@@ -41,8 +44,7 @@ $(function () {
         };
 
         self.getUserSettings = function () {
-            const settings = self.loginState.currentUser?.()?.settings;
-            return settings;
+            return self.loginState.currentUser?.()?.settings;
         };
 
         self.getEmail = function () {
@@ -69,6 +71,7 @@ $(function () {
             }
         };
 
+        // TODO: use this to get user settings in SW-2817
         self.getLastUploadedDate = function () {
             const userSettings = self.getUserSettings();
             if (userSettings?.mrbeam?.design_store_last_uploaded) {
@@ -91,11 +94,6 @@ $(function () {
                                 break;
                             case "token":
                                 self.onTokenReceived(event.data.payload);
-                                break;
-                            case "lastUploadedDate":
-                                self.onLastUploadedDateReceived(
-                                    event.data.payload
-                                );
                                 break;
                             case "svg":
                                 self.onSvgReceived(event.data.payload);
@@ -162,30 +160,36 @@ $(function () {
                 user_token: self.getAuthToken(),
                 version: mrbeamPluginVersion,
                 language: MRBEAM_LANGUAGE,
+                // TODO: remove this once the design store is updated after SW-2537
                 last_uploaded: self.getLastUploadedDate(),
             };
 
             self.sendMessageToDesignStoreIframe("userData", userData);
+
+            // send new laserhead model ID if changed
+            if (self.laserheadChangedVM.laserheadXDetected()) {
+                self.sendMessageToDesignStoreIframe("selectFilter", {
+                    type: "recommendedBy",
+                    subsection: "laserheadModel",
+                    value: "x",
+                });
+            }
         };
 
         self.onTokenReceived = function (payload) {
             self.saveTokenInUserSettings(payload.token);
         };
 
+        // TODO: use this to show 'new designs' notification in SW-2817
         self.onLastUploadedDateReceived = function (payload) {
             let oldLastUploaded = self.getLastUploadedDate();
             if (
                 payload.last_uploaded &&
                 oldLastUploaded &&
-                oldLastUploaded !== payload.last_uploaded &&
-                $("#designstore_tab_btn span.red-dot").length === 0
+                oldLastUploaded !== payload.last_uploaded
             ) {
-                // Notify user
-                $("#designstore_tab_btn").append(
-                    '<span class="red-dot"></span>'
-                );
+                self.mrBeamVM.showNotifyIcon(self.DESIGN_STORE_TAB_ELEMENT);
             }
-            self.lastUploadedDate(payload.last_uploaded);
         };
 
         self.onSvgReceived = function (payload) {
@@ -210,6 +214,7 @@ $(function () {
             }
         };
 
+        // TODO: use this to update user settings in SW-2817
         self.saveLastUploadedInUserSettings = function (lastUploaded) {
             let oldLastUploaded = self.getLastUploadedDate();
             let currentUserSettings = self.getUserSettings();
@@ -218,9 +223,6 @@ $(function () {
                 oldLastUploaded !== lastUploaded &&
                 currentUserSettings?.mrbeam
             ) {
-                delete currentUserSettings["mrbeam"][
-                    "design_store_last_uploaded"
-                ];
                 currentUserSettings["mrbeam"]["design_store_last_uploaded"] =
                     lastUploaded;
                 self.navigation.usersettings.updateSettings(
@@ -273,14 +275,17 @@ $(function () {
             });
         };
 
-        self.goToStore = function () {
+        self.lazyLoadStore = function () {
             // Lazy load the iframe
             $("#design_store_iframe").attr("loading", "eager");
-            // Handle the new designs notification icon
-            $("#designstore_tab_btn > span.red-dot").remove();
-            if ($("#designstore_tab_btn").parent().hasClass("active")) {
-                self.sendMessageToDesignStoreIframe("goToStore", {});
-            }
+            // TODO: use this to handle user being notified "event" in SW-2817
+            self.onUserNotified();
+        };
+
+        self.onUserNotified = function () {
+            // Handle the 'new designs' notification icon
+            self.mrBeamVM.removeNotifyIcon(self.DESIGN_STORE_TAB_ELEMENT);
+            // Update user settings
             let oldLastUploaded = self.getLastUploadedDate();
             if (
                 self.lastUploadedDate() &&
@@ -308,10 +313,12 @@ $(function () {
         DesignStoreViewModel,
         // e.g. loginStateViewModel, settingsViewModel, ...
         [
+            "mrbeamViewModel",
             "loginStateViewModel",
             "navigationViewModel",
             "analyticsViewModel",
             "settingsViewModel",
+            "laserheadChangedViewModel",
         ],
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ["#designstore"],

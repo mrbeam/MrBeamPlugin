@@ -139,7 +139,7 @@ class MrBeamPlugin(
     ENV_LASER_SAFETY = "laser_safety"
     ENV_ANALYTICS = "analytics"
 
-    LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.4"
+    LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.5"
 
     LASERSAFETY_CONFIRMATION_STORAGE_URL = "https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec"
     USER_SETTINGS_KEY_MRBEAM = "mrbeam"
@@ -272,7 +272,7 @@ class MrBeamPlugin(
         )
         self.led_event_listener.set_fps(self._settings.get(["leds", "fps"]))
         # start iobeam socket only once other handlers are already initialized so that we can handle info message
-        self.iobeam = ioBeamHandler(self)
+        self.iobeam = ioBeamHandler(self, self._printer)
         self.dust_manager = dustManager(self)
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
@@ -569,6 +569,7 @@ class MrBeamPlugin(
                 carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
                 laserHeadUsage=self.usage_handler.get_laser_head_usage(),
                 gantryUsage=self.usage_handler.get_gantry_usage(),
+                laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
             ),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
@@ -757,8 +758,12 @@ class MrBeamPlugin(
                 "js/app/view-models/modal/hard_refresh_overlay.js",
                 "js/app/view-models/mrbeam-simple-api-commands.js",
                 "js/app/view-models/mrbeam-constants.js",
+                "js/app/helpers/mutation-observer.js",
             ],
             css=[
+                "css/fontawesome_v6/css/fontawesome.min.css",
+                "css/fontawesome_v6/css/brands.min.css",
+                "css/fontawesome_v6/css/v4-font-face.min.css",
                 "css/mrbeam.css",
                 "css/backlash_settings.css",
                 "css/tab_designlib.css",
@@ -987,7 +992,7 @@ class MrBeamPlugin(
             ),
             dict(
                 type="settings",
-                name=gettext("Analytics"),
+                name=gettext("Better Together"),
                 template="settings/analytics_settings.jinja2",
                 suffix="_analytics",
                 custom_bindings=False,

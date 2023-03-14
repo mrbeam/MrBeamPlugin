@@ -96,8 +96,8 @@ class WizardConfig:
                 required=self._is_wifi_wizard_required(),
                 mandatory=False,
                 suffix="_wifi",
-                template="wizard/wizard_wifi.jinja2",
-                div="wizard_plugin_corewizard_wifi_netconnectd",
+                template="wizard/wizard_connection.jinja2",
+                div="wizard_plugin_corewizard_connection",
             ),
             wizard_acl=dict(
                 type="wizard",
@@ -119,12 +119,21 @@ class WizardConfig:
             ),
             wizard_analytics=dict(
                 type="wizard",
-                name=gettext("Analytics"),
-                required=self._is_analytics_wizard_required(),
+                name=gettext("Better together"),
+                required=True,
                 mandatory=False,
                 suffix="_analytics",
                 template="wizard/wizard_analytics.jinja2",
                 div="wizard_plugin_corewizard_analytics",
+            ),
+            wizard_guided_tour=dict(
+                type="wizard",
+                name=gettext("Guided Tour"),
+                required=True,
+                mandatory=False,
+                suffix="_guided_tour",
+                template="wizard/wizard_guided_tour.jinja2",
+                div="wizard_plugin_corewizard_guided_tour",
             ),
         )
 
@@ -179,7 +188,7 @@ class WizardConfig:
             ),
             wizard_analytics=dict(
                 type="wizard",
-                name=gettext("Analytics"),
+                name=gettext("Better together"),
                 required=self._is_analytics_wizard_required(),
                 mandatory=False,
                 suffix="_analytics",
