@@ -112,7 +112,6 @@ $(function () {
             self.tour.startTourFromStep(1);
         };
         self._showGuidedTourButton = function (current) {
-            console.log("current", current);
             if (current === self.GUIDED_TOUR_TAB) {
                 $(
                     "#wizard_dialog div.modal-footer button.button-finish"
