@@ -61,7 +61,9 @@ $(function () {
 
         // Do not use before onStartupComplete!
         self.analyticsEnabled = ko.observable(false);
-        self.analyticsRadioBtnValue = ko.observable(DO_NOT_CONSENT_TO_ANALYTICS);
+        self.analyticsRadioBtnValue = ko.observable(
+            DO_NOT_CONSENT_TO_ANALYTICS
+        );
         self.isStartupComplete = false;
         self.error_sqeuence = 0;
 
@@ -122,9 +124,12 @@ $(function () {
         self.onAllBound = function () {
             self._updateAnalyticsEnabledValue();
 
-            $('input[type=radio][name=analytics_consent]').on('change', function() {
-                self.changeAnalyticsConsent(this.value);
-            });
+            $("input[type=radio][name=analytics_consent]").on(
+                "change",
+                function () {
+                    self.changeAnalyticsConsent(this.value);
+                }
+            );
             /* This is commented out to stop console logging for the time being
 
             if (console.everything) {
@@ -193,7 +198,7 @@ $(function () {
                     newSettings.plugins.mrbeam.analyticsEnabled
                 );
             });
-        }
+        };
 
         self._handleClick = function (e) {
             if (!self.enableClickAnalytics) {
