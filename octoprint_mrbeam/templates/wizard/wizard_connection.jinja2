@@ -1,5 +1,5 @@
-<div id="connection-wizard--general-connection-details" class="row mrb-height-100">
-    <div class="span4 mrb-height-100">
+<div id="connection-wizard--general-connection-details" class="row mrb-height-100 connection-wizard--general-connection-details">
+    <div class="span4 mrb-height-100 connection-wizard--general-connection-details--option" id="connection-wizard__a--option-a">
         <div class="mrb-wrap">
             <div class="mrb-relative-position">
                 <img loading="lazy" src="{{ url_for('plugin.mrbeam.static', filename='img/welcome_dialog/connection-option-a.png')}}">
@@ -18,10 +18,10 @@
             </div>
         </div>
         <div class="connection-wizard__a--select">
-            <a id="connection-wizard__a--option-a" class="btn span12" href="#">{{ _('Select') }}</a>
+            <span class="btn span12">{{ _('Select A') }}</span>
         </div>
     </div>
-    <div class="span4 mrb-height-100">
+    <div class="span4 mrb-height-100 connection-wizard--general-connection-details--option" id="connection-wizard__a--option-b">
         <div class="mrb-wrap">
             <div class="mrb-relative-position">
                 <img loading="lazy" src="{{ url_for('plugin.mrbeam.static', filename='img/welcome_dialog/connection-option-b.png') }}">
@@ -31,17 +31,18 @@
             <p>{{ _('Connect your Mr Beam via network cable (Ethernet) to your router and make it part of your home network. ') }}</p>
         </div>
         <div class="connection-wizard__a--select">
-            <a id="connection-wizard__a--option-b" class="btn span12 mrb-primary-background-color" href="#">{{ _('Select') }}</a>
+            <span class="btn span12 mrb-primary-background-color" href="#">{{ _('Select B') }}</span>
         </div>
     </div>
-    <div class="span4 mrb-height-100">
+    <div class="span4 mrb-height-100 connection-wizard--general-connection-details--option" id="connection-wizard__a--option-c">
         <div class="mrb-wrap">
-            <img loading="lazy" src="{{ url_for('plugin.mrbeam.static', filename='img/welcome_dialog/connection-option-c.png') }}">
+            <img loading="lazy"
+                 src="{{ url_for('plugin.mrbeam.static', filename='img/welcome_dialog/connection-option-c.png') }}">
             <h5>{{ _('Option C: WiFi connection to the router') }}</h5>
             <p>{{ _('Connect your Mr Beam via WiFi to your router and make it part of your home network.') }}</p>
         </div>
         <div class="connection-wizard__a--select">
-            <a id="connection-wizard__a--option-c" class="btn span12" href="#">{{ _('Select') }}</a>
+            <span class="btn span12">{{ _('Select C') }}</span>
         </div>
     </div>
 </div>
@@ -93,7 +94,7 @@
                             </div>
                             <div class="row-fluid">
                                 <div class="span12">
-                                    <p>{{ _('Select WLAN of your Mr Beam.') }}</p>
+                                    <p>{{ _('Select WiFi of your Mr Beam.') }}</p>
                                     <p>{{ _('Name: MrBeam-XXXX <br> Password: mrbeamsetup') }}</p>
                                     <p>{{ _('XXXX stands for your specific device name. You can find it on a sticker on the back of your Mr Beam.') }}</p>
                                 </div>

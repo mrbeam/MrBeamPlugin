@@ -43,7 +43,7 @@ $(function () {
 
             if (self.isWelcome) {
                 $("#wizard_dialog div.modal-header h3").text(
-                    gettext("Welcome dialog")
+                    gettext("Welcome to the #madewithmrbeam community")
                 );
             } else if (self.isWhatsnew) {
                 $("#wizard_dialog div.modal-header h3").text(

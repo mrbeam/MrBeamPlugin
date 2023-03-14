@@ -69,7 +69,7 @@ $(function () {
                     id: "start_screen",
                     title: [
                         gettext(
-                            "Step-by-Step Tour Guide To Your First Laser Job"
+                            "Step-by-Step Guided Tour To Your First Laser Job"
                         ),
                     ],
                     text: [

@@ -1,11 +1,12 @@
 {# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
 <!-- LASERSAFETY_CONFIRMATION_DIALOG_VERSION: {{ lasersafety_confirmation_dialog_version }}, LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE: {{ lasersafety_confirmation_dialog_language }} -->
 <div id="laser-safety-conditions">
+    <img loading="lazy" src="{{ url_for('plugin.mrbeam.static', filename='img/laser_savety.jpg') }}">
     <h4>{{ _('Laser safety') }}</h4>
     <p>{{ _('Attention! To protect both your own health and the health of others when operating the Mr Beam, read the following instructions carefully and attentively!') }}</p>
     <br>
     <h4>{{ _('Laser Classification:') }}</h4>
-    <p>{{ _('Your Mr Beam laser cutter is a Class 1 laser product according to IEC 60825, which means that no harmful laser light can escape from the device when operated as intended. This is guaranteed by redundant safety systems. This safety system must not be tampered with or bypassed under any circumstances.') }}</p>
+    <p>{{ _('Your Mr Beam laser cutter is a Class 1 laser product according to IEC 60825-1, which means that no harmful laser light can escape from the device when operated as intended. This is guaranteed by redundant safety systems. This safety system must not be tampered with or bypassed under any circumstances.') }}</p>
     <br>
     <h4>{{ _('Safety instructions:') }}</h4>
     <ul class="laser-safety-conditions__ul--safety-instructions">
