@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2023-03-13 17:06+0100\n"
-"PO-Revision-Date: 2023-03-13 17:55+0100\n"
+"PO-Revision-Date: 2023-03-14 08:55+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -2748,7 +2748,7 @@ msgstr "Fokussiere den Laserkopf, um ein gutes Ergebnis zu erzielen!"
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:708
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:711
 msgid " Learn how to do this."
-msgstr "Lerne wie das geht"
+msgstr " Lerne wie das geht."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:716
 msgid ""
