@@ -120,7 +120,7 @@ class WizardConfig:
             wizard_analytics=dict(
                 type="wizard",
                 name=gettext("Better together"),
-                required=True,
+                required=self._is_analytics_wizard_required(),
                 mandatory=False,
                 suffix="_analytics",
                 template="wizard/wizard_analytics.jinja2",

@@ -2,7 +2,7 @@
 {# Wording changes must be done in both templates: wizard_analytics.jinja and analytics_settings.jinja !! #}
 {# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #}
 
-<div class="get-better-together">
+<div class="get-better-together" id="settings_analytics">
    <div class="row">
        <div class="span12">
             <img class="hide" loading="lazy" src="{{ url_for('plugin.mrbeam.static', filename='img/getting-better-together.png') }}">
@@ -26,9 +26,9 @@
                     <div class="row-fluid">
                         <div class="span6">
                             <div id="analytics_initial_consent_radio">
-                              <label><input type="radio" name="analytics_init_consent" value="agree" data-bind="checked: analyticsInitialConsent">
+                              <label><input type="radio" name="analytics_consent" value="agree" data-bind="checked: analyticsRadioBtnValue()">
                                 <strong>{{ _('Yes, contribute') }}</strong></label>
-                              <label><input type="radio" name="analytics_init_consent" value="disagree" data-bind="checked: analyticsInitialConsent">
+                              <label><input type="radio" name="analytics_consent" value="disagree" data-bind="checked: analyticsRadioBtnValue()">
                                 {{ _('No, not at the moment') }}</label>
                             </div>
                         </div>
