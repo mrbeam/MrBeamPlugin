@@ -34,6 +34,7 @@ $(function () {
         self.isWhatsnew = MRBEAM_WIZARD_TO_SHOW === "WHATSNEW";
         self.isBetaNews = MRBEAM_WIZARD_TO_SHOW === "BETA_NEWS";
         self.aboutToStart = true;
+        self.startGuidedTourEventListner = false;
 
         self.onAfterBinding = function () {
             $("#wizard_dialog div.modal-footer button.button-finish").text(
@@ -43,7 +44,7 @@ $(function () {
 
             if (self.isWelcome) {
                 $("#wizard_dialog div.modal-header h3").text(
-                    gettext("Welcome dialog")
+                    gettext("Welcome to the #madewithmrbeam community")
                 );
             } else if (self.isWhatsnew) {
                 $("#wizard_dialog div.modal-header h3").text(
@@ -106,9 +107,11 @@ $(function () {
             $("#wizard_dialog > .modal-body").scrollTop(0);
             self._showGuidedTourButton(current);
         };
-
+        self._startGuidedTour = function () {
+            $("#wizard_dialog").modal("hide");
+            self.tour.startTourFromStep(1);
+        };
         self._showGuidedTourButton = function (current) {
-            console.log("current", current);
             if (current === self.GUIDED_TOUR_TAB) {
                 $(
                     "#wizard_dialog div.modal-footer button.button-finish"
@@ -119,13 +122,21 @@ $(function () {
                 $("#wizard_dialog div.modal-footer button.button-next").text(
                     "Skip tour"
                 );
-                $("#wizard_dialog div.modal-footer button.button-finish").click(
-                    function () {
-                        $("#wizard_dialog").modal("hide");
-                        self.tour.startTourFromStep(1);
-                    }
-                );
+                document
+                    .querySelector(
+                        "#wizard_dialog div.modal-footer button.button-finish"
+                    )
+                    .addEventListener("click", self._startGuidedTour);
+                self.startGuidedTourEventListner = true;
             } else {
+                if (self.startGuidedTourEventListner) {
+                    document
+                        .querySelector(
+                            "#wizard_dialog div.modal-footer button.button-finish"
+                        )
+                        .removeEventListener("click", self._startGuidedTour);
+                    self.startGuidedTourEventListner = false;
+                }
                 $("#wizard_dialog div.modal-footer button.button-finish").text(
                     gettext("Let's go!")
                 );
