@@ -147,7 +147,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             .map((e) => {
                 const transform = e.transform().totalMatrix.toString();
                 const clone = e.clone().attr("transform", transform);
-                const str = clone.outerSVG();
+                const str = clone.toRenderedElementString();
                 clone.remove();
                 return str;
             })
@@ -157,7 +157,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 <svg version="1.1"
     ${[...namespaces].join(" ")}
     width="${width}" height="${height}"
-    xxviewBox="${att.viewBox}">
+    viewBox="${att.viewBox}">
     <defs>
         ${defs}
         <style>${fontDecl}</style>
@@ -168,6 +168,28 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 `;
 
         return svg;
+    };
+
+    Element.prototype.toRenderedElementString = function () {
+        const element = this;
+
+        // Create a new parent element to hold the SVG
+        const parentElement = document.createElement("div");
+
+        // Append the parent element to the document body (but don't show it)
+        parentElement.style.display = "none";
+        parentElement.appendChild(element.node);
+
+        // Append the element to the hidden parent element
+        document.body.appendChild(parentElement);
+
+        // Get innerHTML of the parent element
+        const elementInnerHTML = parentElement.innerHTML;
+
+        // Remove the parent element from the DOM
+        document.body.removeChild(parentElement);
+
+        return elementInnerHTML.toString();
     };
 
     Element.prototype.toWorkingAreaDataURL = function (
