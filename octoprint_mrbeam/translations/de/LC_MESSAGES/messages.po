@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-14 10:10+0100\n"
-"PO-Revision-Date: 2023-03-14 10:11+0100\n"
+"POT-Creation-Date: 2023-03-15 11:36+0100\n"
+"PO-Revision-Date: 2023-03-15 11:39+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -91,6 +91,7 @@ msgid "For your safety"
 msgstr "Zu deiner Sicherheit"
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:8
 #: octoprint_mrbeam/wizard_config.py:122 octoprint_mrbeam/wizard_config.py:191
 msgid "Better together"
 msgstr "Gemeinsam Vorankommen"
@@ -867,16 +868,17 @@ msgid "Click here to remove all designs from your working area."
 msgstr "Klicke hier, um alle Designs von der Arbeitsfläche zu entfernen."
 
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:551
+#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:144
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:125
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:100
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:88
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:84
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:33
 msgid "Next"
 msgstr "Weiter"
 
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:552
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:660
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:84
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:80
 #: octoprint_mrbeam/templates/review.jinja2:53
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:91
 msgid "Back"
@@ -1034,11 +1036,11 @@ msgstr "Stern"
 msgid "Heart"
 msgstr "Herz"
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1404
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1411
 msgid "Limited split result."
 msgstr "Nur teilweise zerteiltes Ergebnis."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1405
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1412
 msgid ""
 "Splitting this design would result in too many parts. Here are "
 "${split_result.length} parts. You can split the last one again if necessary."
@@ -1047,41 +1049,45 @@ msgstr ""
 "${split_result.length} Teile. Du kannst den letzten Teil bei Bedarf noch "
 "einmal zerteilen."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1416
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1423
 msgid "No different line colors found."
 msgstr "Keine unterschiedlichen Linienfarben gefunden."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1419
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1426
 msgid "No non-intersecting shapes found."
 msgstr "Keine nicht-überlappenden Formen gefunden."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1426
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1433
 msgid "Looks like a single path."
 msgstr "Sieht nach einem einzigen Pfad aus."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1429
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1436
 msgid "Element not splittable with this method."
 msgstr "Element is nicht zerteilbar mit dieser Methode."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1431
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1438
 msgid "Can't split this design."
 msgstr "Dieses Design kann nicht zerteilt werden."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1971
-#, python-format
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1982
+#, fuzzy, python-format
+#| msgid ""
+#| "The SVG file contains unsupported elements: '%(elemName)s' These elements "
+#| "got removed."
 msgid ""
-"The SVG file contains unsupported elements: '%(elemName)s' These elements "
-"got removed."
+"The SVG file contains unsupported elements: '%(unsupportedElemsDetected)s'. "
+"These elements got removed."
 msgstr ""
 "Die SVG-Datei enthält nicht unterstützte Elemente: %(elemName)s' Diese "
 "Elemente wurden entfernt."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1979
-#, python-format
-msgid "Unsupported elements in SVG: '%(elemName)s'"
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1990
+#, fuzzy, python-format
+#| msgid "Unsupported elements in SVG: '%(elemName)s'"
+msgid "Unsupported elements in SVG: '%(unsupportedElemsDetected)s'"
 msgstr "Nicht unterstützte Elemente in SVG: '%(elemName)s'"
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1992
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2005
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their "
@@ -1092,11 +1098,11 @@ msgstr ""
 "willst,%(br)skonvertiere sie in Pfade.%(br)sAnsonsten werden sie mit Füllung "
 "graviert."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:1999
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2012
 msgid "Text elements found"
 msgstr "Textelemente gefunden"
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2012
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2025
 msgid ""
 "The SVG file contained style elements with online references. Since online "
 "references are not supported, we removed them. The image might look a bit "
@@ -1106,11 +1112,11 @@ msgstr ""
 "Referenzen nicht unterstützt werden, haben wir sie entfernt. Das Bild könnte "
 "jetzt etwas anders aussehen."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2017
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2030
 msgid "Style elements removed"
 msgstr "Style-Elemente entfernt"
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2031
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2044
 msgid ""
 "The selected design file can not be handled. Please make sure it is a valid "
 "design file."
@@ -1118,25 +1124,25 @@ msgstr ""
 "Die ausgewählte Design-Datei kann nicht bearbeitet werden. Bitte stelle "
 "sicher, dass es sich um eine gültige Design-Datei handelt."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2037
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2050
 msgid "File error."
 msgstr "Dateifehler."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2051
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2064
 msgid "The selected design file does not have any content."
 msgstr "Die ausgewählte Design-Datei hat keinen Inhalt."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2057
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2070
 msgid "Empty File."
 msgstr "Leere Datei."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2071
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2084
 msgid "An unknown error occurred while processing this design file."
 msgstr ""
 "Ein bekannter Fehler ist während der Verarbeitung dieser Designdatei "
 "aufgetreten."
 
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2079
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2092
 msgid ""
 "Please try reloading this browser window and try again. If this error "
 "remains, contact the Mr Beam Support Team. Make sure you provide the error "
@@ -1150,8 +1156,8 @@ msgstr ""
 #: octoprint_mrbeam/static/js/app/view-models/settings/calibration/calibration.js:120
 #: octoprint_mrbeam/static/js/app/view-models/settings/calibration/corner-calibration.js:124
 #: octoprint_mrbeam/static/js/app/view-models/settings/calibration/corner-calibration.js:367
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2086
-#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2091
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2099
+#: octoprint_mrbeam/static/js/app/view-models/working-area.js:2104
 msgid "Error"
 msgstr "Fehler"
 
@@ -2069,22 +2075,34 @@ msgstr ""
 "Dein GCode-Löschstatus kann im Moment nicht gespeichert werden.%(br)sBitte "
 "prüfe die Verbindung zu Mr Beam und versuche es erneut."
 
-#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:40
-#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:130
+#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:41
+#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:141
 msgid "Let's go!"
 msgstr "Auf geht's!"
 
-#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:46
+#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:47
 msgid "Welcome to the #madewithmrbeam community"
 msgstr "Willkommen in der #madewithmrbeam Community!"
 
-#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:50
+#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:51
 msgid "What's New"
 msgstr "Was gibt's Neues"
 
-#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:54
+#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:55
 msgid "What's New in Beta"
 msgstr "Was gibt's Neues in Beta"
+
+#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:120
+#, fuzzy
+#| msgid "Guided Tour"
+msgid "Start guided Tour"
+msgstr "Geführte Tour"
+
+#: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:123
+#, fuzzy
+#| msgid "Skip"
+msgid "Skip tour"
+msgstr "Überspringen"
 
 #: octoprint_mrbeam/templates/congratulations.jinja2:4
 msgid "Congratulations"
@@ -2970,8 +2988,8 @@ msgstr ""
 
 # don’t change the link
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:25
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:45
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:66
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:41
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:62
 msgid "https://support.mr-beam.org/en"
 msgstr "https://support.mr-beam.org"
 
@@ -3012,22 +3030,7 @@ msgstr ""
 "target=‘_blank’ href=‘https://www.mr-beam.org/products/mr-beam-zwei-dreamcut-"
 "x-laserkopf’>FAQ</a> warum und informiere dich über Alternativen."
 
-#: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:11
-#: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:14
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:39
-#, python-format
-msgid ""
-"To evaluate if you need a new calibration, and to test the quality of your "
-"current lens calibration please follow the instructions shown in our "
-"Knowledge Base article %(opening_tag)sTest your camera "
-"calibration%(closing_tag)s."
-msgstr ""
-"Um zu beurteilen, ob eine Linsenkalibrierung durchgeführt werden sollte oder "
-"um die Qualität der aktuellen Linsenkalibrierung zu testen, folge bitte den "
-"Anweisungen in unserem Knowledge Base-Artikel "
-"%(opening_tag)sLinsenkalibrierung%(closing_tag)s."
-
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:43
 msgid ""
 "All the new features that await you with the dreamcut [X] laser head can be "
 "found in this Knowledgebase article:"
@@ -3035,15 +3038,15 @@ msgstr ""
 "Alle Neuerungen, die dich mit dem dreamcut [X] Laserkopf erwarten, findest "
 "du in diesem Wissensdatenbank-Artikel:"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:46
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:42
 msgid "Learn more"
 msgstr "Mehr erfahren"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:53
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:49
 msgid "Your Mr Beam is even faster now!"
 msgstr "Dein Mr Beam is jetzt noch schneller!"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:55
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:51
 msgid ""
 "If you had a Mr Beam II dreamcut before, you can now cut up to four times as "
 "fast."
@@ -3051,7 +3054,7 @@ msgstr ""
 "Wenn du vorher einen Mr Beam II dreamcut hattest, kannst du jetzt bis zu "
 "viermal so schnell schneiden."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:56
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:52
 msgid ""
 "If you had a Mr Beam II dreamcut [S] before, you can now cut up to twice as "
 "fast."
@@ -3059,7 +3062,7 @@ msgstr ""
 "Wenn du vorher einen Mr Beam II dreamcut [S] hattest, kannst du jetzt bis zu "
 "zweimal so schnell schneiden."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:58
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:54
 msgid ""
 "<b>Please keep in mind:</b> The faster you laser, the more particles are "
 "released. This means that your filters will wear out faster. So check "
@@ -3069,11 +3072,11 @@ msgstr ""
 "freigesetzt. Somit werden auch deine Filter schneller verschleißen. Prüfe "
 "also regelmäßig, ob du die Filter tauschen musst."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:65
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:61
 msgid "The new laser head needs a larger power supply!"
 msgstr "Der neue Laserkopf braucht ein größeres Netzteil!"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:67
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:63
 #, python-format
 msgid ""
 "Due to its slightly increased power requirements, you will need a 90W power "
@@ -3086,11 +3089,11 @@ msgstr ""
 "aktuell einsetzt, erfährst du in diesem Wissensdatenbank-Artikel mehr dazu: "
 "%(open)sMehr erfahren%(close)s."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:76
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:72
 msgid "Please place the included sticker on your Mr Beam!"
 msgstr "Bitte platziere den mitgelieferten Aufkleber auf deinem Mr Beam!"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:77
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:73
 msgid ""
 "To maintain legal requirements, it is mandatory to update the safety labels "
 "on your Mr Beam laser cutter. Put the sticker with updated power and "
@@ -3101,11 +3104,11 @@ msgstr ""
 "Überklebe das Feld mit der aktualisierten Leistung und Wellenlänge auf dem "
 "bestehenden Aufkleber, wie im Beispiel gezeigt."
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:86
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:82
 msgid "I forgot, shut down to change"
 msgstr "Vergessen, ausschalten um zu tauschen"
 
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:90
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:86
 #: octoprint_mrbeam/templates/quick_shape.jinja2:152
 #: octoprint_mrbeam/templates/quick_text.jinja2:73
 #: octoprint_mrbeam/templates/review.jinja2:56
@@ -4718,6 +4721,20 @@ msgstr ""
 "dies, wenn Du mit der Präzision der Kamera unzufrieden bist und eine neue "
 "Eckenkalibrierung sie nicht besser macht."
 
+#: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:11
+#: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:14
+#, python-format
+msgid ""
+"To evaluate if you need a new calibration, and to test the quality of your "
+"current lens calibration please follow the instructions shown in our "
+"Knowledge Base article %(opening_tag)sTest your camera "
+"calibration%(closing_tag)s."
+msgstr ""
+"Um zu beurteilen, ob eine Linsenkalibrierung durchgeführt werden sollte oder "
+"um die Qualität der aktuellen Linsenkalibrierung zu testen, folge bitte den "
+"Anweisungen in unserem Knowledge Base-Artikel "
+"%(opening_tag)sLinsenkalibrierung%(closing_tag)s."
+
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:18
 msgid ""
 "If you do a new lens calibration and later want to go back to the default "
@@ -5074,6 +5091,7 @@ msgid "Source code"
 msgstr "Quellcode"
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:13
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:12
 msgid ""
 "We know that your Mr Beam is important to you, and we want to make it even "
 "better. That's why we're asking for your help in improving it by sharing "
@@ -5088,6 +5106,7 @@ msgstr ""
 "Fehler schneller beheben und Funktionen weiter verbessern."
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:16
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:15
 msgid ""
 "We understand that your privacy is crucial, and we want to assure you that "
 "none of the data collected includes your personal information such as your "
@@ -5101,6 +5120,7 @@ msgstr ""
 "Gehe hierzu einfach zu <strong>„Einstellungen > Besser werden“</strong>."
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:22
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:21
 msgid ""
 "Join us and shape the future of Mr Beam Products. Together, we can make them "
 "even more amazing!\""
@@ -5109,15 +5129,18 @@ msgstr ""
 "ihn immer besser machen!"
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:30
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:29
 msgid "Yes, contribute"
 msgstr "Ja, dazu beitragen"
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:32
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:31
 msgid "No, not at the moment"
 msgstr "Nein, jetzt lieber nicht"
 
 # Settings > About Screen
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:36
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:35
 msgid "Privacy policy"
 msgstr "Datenschutzerklärung"
 
