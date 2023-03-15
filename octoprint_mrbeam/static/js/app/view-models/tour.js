@@ -250,6 +250,9 @@ $(function () {
                             '.file_list_entry[mrb_name="Schluesselanhaenger.svg"]'
                         )[0] ||
                         $(
+                            '.file_list_entry[mrb_name="Schlusselanhanger.svg"]'
+                        )[0] ||
+                        $(
                             ".gcode_files .entry.files_template_model_svg .file_list_entry "
                         ).last()[0],
                     additionalJQueryTargets: ".file_list_entry",

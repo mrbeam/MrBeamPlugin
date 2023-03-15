@@ -117,10 +117,10 @@ $(function () {
                     "#wizard_dialog div.modal-footer button.button-finish"
                 ).show();
                 $("#wizard_dialog div.modal-footer button.button-finish").text(
-                    "Start guided Tour"
+                    gettext("Start guided Tour")
                 );
                 $("#wizard_dialog div.modal-footer button.button-next").text(
-                    "Skip tour"
+                    gettext("Skip tour")
                 );
                 document
                     .querySelector(
@@ -141,7 +141,7 @@ $(function () {
                     gettext("Let's go!")
                 );
                 $("#wizard_dialog div.modal-footer button.button-next").text(
-                    "Next"
+                    gettext("Next")
                 );
                 self.onStartupComplete();
             }

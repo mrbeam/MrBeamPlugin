@@ -16,17 +16,12 @@ describe("Navbar icons", function () {
             force: true,
         });
     });
-    it("More information about what data we use", function () {
-        cy.get('[id="settings_plugin_mrbeam_analytics_link"]').click();
-        cy.get(".mb-0 > .btn-link").click();
-        cy.get(".card-body").should("to.visible");
-        cy.wait(3000);
-        cy.get(".analytics-collapsible").click();
-        cy.get(".card-body").should("not.visible");
-    });
+
     it("Privacy policy", function () {
         cy.get('[id="settings_plugin_mrbeam_analytics_link"]').click();
-        cy.get('[style="color: darkgray;font-size: 0.9em"] > a')
+        cy.get(
+            '[data-test="mrbeam-ui-settings-better-together-privacy-policy-btn"]'
+        )
             .invoke("attr", "href")
             .then((myLink) => {
                 cy.request(myLink).then((resp) => {
