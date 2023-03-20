@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-15 11:36+0100\n"
-"PO-Revision-Date: 2023-03-15 11:39+0100\n"
+"POT-Creation-Date: 2023-03-16 17:11+0100\n"
+"PO-Revision-Date: 2023-03-16 17:15+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -438,8 +438,8 @@ msgstr "Bereit zum Lasern?"
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/laserhead-changed.js:137
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:970
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:538
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:580
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:541
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:583
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:131
 #: octoprint_mrbeam/templates/calibration/user/view_lens_calibration.jinja2:118
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:101
@@ -697,11 +697,11 @@ msgstr ""
 "Bitte klicken Sie auf diese Kachel, um es auf die <strong>Arbeitsfläche</"
 "strong> zu legen."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:276
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:279
 msgid "Great! You can now move the design"
 msgstr "Prima! Jetzt kannst Du das Design verschieben"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:278
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:281
 msgid ""
 "First click on it and then drag and drop it to place it on top of the "
 "material."
@@ -709,48 +709,48 @@ msgstr ""
 "Klicke zuerst darauf und ziehe es dann per Drag & Drop, um es auf Dein "
 "Arbeits-Material zu bringen."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:281
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:284
 msgid "Click \"next\" when you're done."
 msgstr "Klicke auf \"Weiter\", wenn Du fertig bist."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:282
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:285
 msgid ""
 "Hint: You can also type the coordinates directly into the left-side list."
 msgstr ""
 "Tipp: Du kannst die Koordinaten auch direkt in der Liste (links) eintippen."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:299
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:302
 msgid "And... let’s proceed to select the parameters!"
 msgstr "Und.... weiter geht’s mit der Auswahl der Laserparameter."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:303
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:306
 msgid "Don't worry, the laser won't fire immediately."
 msgstr "Keine Sorge, der Laser wird nicht sofort ausgelöst."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:306
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:309
 msgid "Just 3 quick steps..."
 msgstr "Nur 3 kurze Schritte....."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:318
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:321
 msgid "Reminder: Is your laser head focused?"
 msgstr "Erinnerung: Hast Du den Laserkopf fokussiert?"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:320
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:323
 msgid ""
 "The height of the laser head needs to be adjusted according to your material."
 msgstr ""
 "Die Höhe des Laserkopfes muss entsprechend Deinem Material angepasst werden."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:323
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:326
 msgid "We assumed that it is already focused."
 msgstr "Wir gehen davon aus, dass er bereits fokussiert ist."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:324
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:327
 msgid "<strong>If it is focused</strong> click on \"It's focused!\""
 msgstr "<strong>Wenn er fokussiert ist</strong>, klicke auf “Fokussiert!”"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:329
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:342
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:332
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:345
 #, python-format
 msgid ""
 "<strong>If it's NOT focused</strong> you should cancel this tour here and "
@@ -763,38 +763,38 @@ msgstr ""
 # custom material?
 # geht es hier nun wirklich um "eigenes Material" ?
 # englische version evtl ändern
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:378
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:381
 msgid "Select the material"
 msgstr "Wähle das Material"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:380
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:383
 msgid "For this guide we want to use felt."
 msgstr "Für diese Tour möchten wir Filz verwenden."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:381
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:384
 msgid "However as you can see there are many different options. :)"
 msgstr "Aber wie zu sehen ist, gibt es viele verschiedene Möglichkeiten :)"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:400
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:403
 msgid "Select the color of the material"
 msgstr "Wähle die Farbe des Materials aus"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:402
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:405
 msgid ""
 "This is important because different colors absorb the laser differently."
 msgstr ""
 "Das ist wichtig, da verschiedene Farben den Laser unterschiedlich "
 "absorbieren."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:421
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:424
 msgid "Select the thickness of the material"
 msgstr "Wähle die Dicke des Materials aus"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:423
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:426
 msgid "Select 3mm."
 msgstr "Wähle 3mm."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:424
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:427
 msgid ""
 "Today we want our felt to be cut as well as engraved. Therefore we have to "
 "select its thickness."
@@ -802,20 +802,20 @@ msgstr ""
 "Hier wollen wir, dass unser Filz sowohl geschnitten als auch graviert wird. "
 "Deshalb müssen wir eine Dicke auswählen."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:427
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:430
 msgid "(If you want to engrave only, the thickness doesn't matter.)"
 msgstr "(Wenn Du nur gravieren möchtest spielt die Dicke keine Rolle.)"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:445
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:448
 msgid "We’re ready to go!"
 msgstr "Wir sind soweit!"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:447
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:450
 msgid "Press Start and your Mr&nbsp;Beam&nbsp;II will prepare your laser job."
 msgstr ""
 "Klicke auf Start und Mr&nbsp;Beam&nbsp;II wird Deinen Laserjob vorbereiten."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:450
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:453
 msgid ""
 "Should our pre-configured material settings not really cut it (pun "
 "intended), you can tweak them in the lower section of this screen."
@@ -823,15 +823,15 @@ msgstr ""
 "Sollten unsere vorkonfigurierten Materialeinstellungen nicht wirklich "
 "passen, kannst Du diese im unteren Bereich dieses Bildschirms anpassen."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:466
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:469
 msgid "Mr Beam is now preparing your laser job"
 msgstr "Mr Beam bereitet jetzt Deinen Laserjob vor"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:467
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:470
 msgid "This takes a few seconds. Just relax."
 msgstr "Dies dauert einige Sekunden. Du kannst Dich etwas zurücklehnen."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:477
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:480
 msgid ""
 "Done! As soon as you click the start button on your Mr&nbsp;Beam&nbsp;II, "
 "the magic will begin 🎉"
@@ -839,11 +839,11 @@ msgstr ""
 "Fertig! Wenn Du jetzt auf den Start-Knopf an Deinem Mr&nbsp;Beam&nbsp;II "
 "drückst, beginnt die Magie 🎉"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:481
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:484
 msgid "Thank you for doing this first laser job with us."
 msgstr "Danke, dass Du diesen ersten Laserjob mit uns gemacht hast."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:485
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:488
 #, python-format
 msgid ""
 "For more in-depth information you can check our %(opening_tag)sKnowledge "
@@ -853,21 +853,21 @@ msgstr ""
 "Base%(closing_tag)s besuchen, wo Du viele wissenswerte Artikel zu Mr Beam "
 "findest."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:500
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:503
 msgid "Done!"
 msgstr "Fertig!"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:525
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:566
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:528
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:569
 msgid "Working area has to be empty to start this tour."
 msgstr "Die Arbeitsfläche muss leer sein, um diese Tour zu starten."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:529
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:571
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:532
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:574
 msgid "Click here to remove all designs from your working area."
 msgstr "Klicke hier, um alle Designs von der Arbeitsfläche zu entfernen."
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:551
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:554
 #: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:144
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:125
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:100
@@ -876,7 +876,7 @@ msgstr "Klicke hier, um alle Designs von der Arbeitsfläche zu entfernen."
 msgid "Next"
 msgstr "Weiter"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:552
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:555
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:660
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:80
 #: octoprint_mrbeam/templates/review.jinja2:53
@@ -884,7 +884,7 @@ msgstr "Weiter"
 msgid "Back"
 msgstr "Zurück"
 
-#: octoprint_mrbeam/static/js/app/view-models/tour.js:553
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:556
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:80
 msgid "Close"
 msgstr "Schließen"
@@ -1070,22 +1070,18 @@ msgid "Can't split this design."
 msgstr "Dieses Design kann nicht zerteilt werden."
 
 #: octoprint_mrbeam/static/js/app/view-models/working-area.js:1982
-#, fuzzy, python-format
-#| msgid ""
-#| "The SVG file contains unsupported elements: '%(elemName)s' These elements "
-#| "got removed."
+#, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(unsupportedElemsDetected)s'. "
 "These elements got removed."
 msgstr ""
-"Die SVG-Datei enthält nicht unterstützte Elemente: %(elemName)s' Diese "
-"Elemente wurden entfernt."
+"Die SVG-Datei enthält nicht unterstützte Elemente: "
+"%(unsupportedElemsDetected)s’ Diese Elemente wurden entfernt."
 
 #: octoprint_mrbeam/static/js/app/view-models/working-area.js:1990
-#, fuzzy, python-format
-#| msgid "Unsupported elements in SVG: '%(elemName)s'"
+#, python-format
 msgid "Unsupported elements in SVG: '%(unsupportedElemsDetected)s'"
-msgstr "Nicht unterstützte Elemente in SVG: '%(elemName)s'"
+msgstr "Nicht unterstützte Elemente in SVG: ‘%(unsupportedElemsDetected)s’"
 
 #: octoprint_mrbeam/static/js/app/view-models/working-area.js:2005
 #, python-format
@@ -2093,14 +2089,10 @@ msgid "What's New in Beta"
 msgstr "Was gibt's Neues in Beta"
 
 #: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:120
-#, fuzzy
-#| msgid "Guided Tour"
 msgid "Start guided Tour"
 msgstr "Geführte Tour"
 
 #: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-general.js:123
-#, fuzzy
-#| msgid "Skip"
 msgid "Skip tour"
 msgstr "Überspringen"
 
