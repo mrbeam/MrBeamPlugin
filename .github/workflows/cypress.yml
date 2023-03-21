@@ -70,7 +70,7 @@ jobs:
           apt-get install docker.io -y
           docker load --input /tmp/image.tar
           docker run --name mrbeam-plugin -d -p5002:5000 mrbeam_plugin
-          sleep(20)
+          sleep 20
           docker logs mrbeam-plugin
       - env:
           CYPRESS_TEST_USER_EMAIL: ${{ secrets.CYPRESS_TEST_USER_EMAIL }}
