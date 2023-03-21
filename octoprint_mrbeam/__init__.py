@@ -1346,8 +1346,37 @@ class MrBeamPlugin(
         )
         with open(srcFile, "r") as fh:
             gcoString = fh.read()
+            materialsettings = parse_csv(
+                device_model=self.get_model_id(),
+                laserhead_model=self.laserhead_handler.get_current_used_lh_model_id(),
+            )
+            material_settings_cardboard_engrave = (
+                materialsettings.get("materials", {})
+                .get("Cardboard, corrugated single wave", {})
+                .get("colors", {})
+                .get("8b624a", {})
+                .get("engrave", {})
+            )
 
-            # TODO replace feedrates and intensity?
+            materialsettings_cardboard_engrave_intensity = (
+                self.laserCutterProfileManager.get_current_or_default()
+                .get("laser")
+                .get("intensity_factor")
+                * (material_settings_cardboard_engrave.get("eng_i", [0, 200])[1])
+            )
+            materialsettings_cardboard_engrave_feedrate = (
+                material_settings_cardboard_engrave.get("eng_f", [0, 1200])[1]
+            )
+
+            self._logger.debug(
+                "materialsettings, cardboard, engrave feedrate: %s, intensity: %s",
+                materialsettings_cardboard_engrave_feedrate,
+                materialsettings_cardboard_engrave_intensity,
+            )
+
+            gcoString = gcoString.replace(
+                "{intensity}", str(materialsettings_cardboard_engrave_intensity)
+            ).replace("{feedrate}", str(materialsettings_cardboard_engrave_feedrate))
 
             destFile = "precision_calibration.gco"
 
