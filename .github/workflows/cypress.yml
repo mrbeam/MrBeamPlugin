@@ -80,7 +80,7 @@ jobs:
           envsubst < ./cypress/fixtures/test-data.template.json > ./cypress/fixtures/test-data.json
           envsubst < ./cypress.config-template.js > ./cypress.config.js
       - name: Run Cypress e2e - Chrome
-        uses: cypress-io/github-action@v4
+        uses: cypress-io/github-action@v5
         with:
           wait-on: ${{ env.MRBEAM_PLUGIN_URL }}
           browser: chrome
