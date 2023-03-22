@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     container:
-      image: cypress/browsers:node16.17.0-chrome106
+      image: cypress/browsers:node18.12.0-chrome106-ff106
       options: --add-host=${{ needs.mrb-docker.outputs.domain }}:host-gateway
       # This is necessary to use the docker daemon from the GitHub actions virtual machine
       volumes:
