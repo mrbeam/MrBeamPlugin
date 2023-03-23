@@ -269,46 +269,35 @@ $(function () {
                 self.isLocked(false);
             }
         };
-
-        self.onDataUpdaterPluginMessage = function (plugin, data) {
-            if ("event" in data) {
-                // calibration daemon state should be synchronised
-                // even when not showing the settings screen
-                // TODO AXEL : This doesn't seem to work ...
-                console.log(data);
-                if (
-                    data["event"] == "lensCalibStart" ||
-                    data["event"] == "lensCalibAlive"
-                ) {
+        self.onEventLensCalibStart = function (payload) {
+            self._fromData(payload, "onEventLensCalibStart");
+        };
+        self.onEventLensCalibExit = function (payload) {
+            self._fromData(payload, "onEventLensCalibExit");
+        };
+        self.onEventLensCalibDone = function (payload) {
+            self._fromData(payload, "onEventLensCalibDone");
+        };
+        self._fromData = function (payload, event) {
+            if (event) {
+                if (["onEventLensCalibStart"].includes(event)) {
                     self.lensDaemonAlive(true);
-                } else if (data["event"] == "lensCalibExit") {
+                } else if (
+                    ["onEventLensCalibExit", "onEventLensCalibDone"].includes(
+                        event
+                    )
+                ) {
                     self.lensDaemonAlive(false);
                 }
             }
         };
+
         self._testCameraSettingsActive = function () {
             let isActive =
                 self.settingsActive() &&
                 $("#settings_plugin_mrbeam_camera").hasClass("active");
             self.cameraSettingsActive(isActive);
         };
-
-        // self.larger = function(){
-        // 	var val = Math.min(self.calSvgScale() + 1, 10);
-        // 	self.calSvgScale(val);
-        // }
-        // self.smaller = function(){
-        // 	var val = Math.max(self.calSvgScale() - 1, 1);
-        // 	self.calSvgScale(val);
-        // }
-        // self.move = function(dx, dy){
-        // 	self.calSvgDx(self.calSvgDx()+dx);
-        // 	self.calSvgDy(self.calSvgDy()+dy);
-        // }
-        // self.resetMove = function(){
-        // 	self.calSvgDx(0);
-        // 	self.calSvgDy(0);
-        // }
 
         self.changeUserView = function (toView) {
             Object.entries(CUSTOMER_CAMERA_VIEWS).forEach(
@@ -338,7 +327,8 @@ $(function () {
         self.forceTakeNewPicture = function () {
             if (
                 self.readyToLaser.lid_fully_open() &&
-                !self.readyToLaser.state.interlocksClosed()
+                !self.readyToLaser.state.interlocksClosed() &&
+                !self.lensDaemonAlive()
             ) {
                 OctoPrint.simpleApiCommand(
                     MRBEAM.PLUGIN_IDENTIFIER,
