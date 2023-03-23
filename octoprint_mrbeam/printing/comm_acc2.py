@@ -2607,7 +2607,7 @@ class MachineCom(object):
                         time.time() - self._pauseWaitStartTime
                     )
                     self._pauseWaitStartTime = None
-                self._pause_delay_time = time.time()  # get_uptime()
+                self._pause_delay_time = time.time()
                 payload[
                     "time"
                 ] = (
