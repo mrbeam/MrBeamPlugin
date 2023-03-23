@@ -2586,7 +2586,6 @@ class MachineCom(object):
             payload = {}
         else:
             payload = self._get_printing_file_state()
-        # payload = self._get_printing_file_state()
         payload["trigger"] = trigger
         self._logger.debug(
             "pause %s send_cmd: %s trigger: %s force: %s ispaused: %s",
