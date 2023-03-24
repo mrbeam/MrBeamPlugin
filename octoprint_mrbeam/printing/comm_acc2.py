@@ -450,7 +450,9 @@ class MachineCom(object):
                     and self._commandQueue.empty()
                     and not self._recovery_lock
                 ):
-                    cmd = self._getNext()  # get next cmd form file
+                    cmd = (
+                        self._getNext() if self._currentFile is not None else None
+                    )  # get next cmd form file
                     if cmd is not None:
                         self.sendCommand(cmd)
                         self._callback.on_comm_progress()
@@ -466,8 +468,9 @@ class MachineCom(object):
                                 self.watch_dog.log_state(
                                     trigger="after_set_print_finished"
                                 )
-                        self._currentFile.resetToBeginning()
-                        cmd = self._getNext()  # get next cmd form file
+                        if self._currentFile:
+                            self._currentFile.resetToBeginning()
+                            cmd = self._getNext()  # get next cmd form file
                         if cmd is not None:
                             self.sendCommand(cmd)
                             self._callback.on_comm_progress()
@@ -1070,6 +1073,7 @@ class MachineCom(object):
                             self._sync_command_ts,
                             analytics=True,
                         )
+                        # recover from unintended pause, force it and send the realtime command
                         self.setPause(
                             False,
                             send_cmd=True,
@@ -2270,7 +2274,9 @@ class MachineCom(object):
         return cmd
 
     def _gcode_Resume_sent(self, cmd, cmd_type=None):
-        self._changeState(self.STATE_PRINTING)
+        if self.isPaused():
+            # only change state to printing if it was in pause state before
+            self._changeState(self.STATE_PRINTING)
         return cmd
 
     def _gcode_F_sending(self, cmd, cmd_type=None):
@@ -2564,27 +2570,52 @@ class MachineCom(object):
     def setPause(
         self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False
     ):
+        """Pause or resume the print.
+
+        Args:
+            pause (bool): True to pause, False to resume.
+            send_cmd (bool): True to send a cycle_start realtime command to the printer.
+            pause_for_cooling (bool): True if the pause is for cooling, False otherwise.
+            trigger (str): The source of the pause request.
+            force (bool): True to force the pause, False otherwise.
+
+        Returns:
+            None
+        """
         if not self._currentFile:
-            return
-
-        payload = self._get_printing_file_state()
+            payload = {}
+        else:
+            payload = self._get_printing_file_state()
         payload["trigger"] = trigger
-
+        self._logger.debug(
+            "pause %s send_cmd: %s trigger: %s force: %s ispaused: %s",
+            pause,
+            send_cmd,
+            trigger,
+            force,
+            self.isPaused(),
+        )
         if not pause and (self.isPaused() or force):
-            if self._pauseWaitStartTime:
-                self._pauseWaitTimeLost = self._pauseWaitTimeLost + (
-                    time.time() - self._pauseWaitStartTime
-                )
-                self._pauseWaitStartTime = None
-            self._pause_delay_time = time.time()
-            payload[
-                "time"
-            ] = self.getPrintTime()  # we need the pasue time to be removed from time
-            self.watch_dog.start()
             if send_cmd is True:
-                self._real_time_commands["cycle_start"] = True
-            self._send_event.set()
-            eventManager().fire(OctoPrintEvents.PRINT_RESUMED, payload)
+                self._real_time_commands[
+                    "cycle_start"
+                ] = True  # sends realtime command to resume print
+            if self.isPaused():
+                # continue from intentional pause
+                if self._pauseWaitStartTime:
+                    self._pauseWaitTimeLost = self._pauseWaitTimeLost + (
+                        time.time() - self._pauseWaitStartTime
+                    )
+                    self._pauseWaitStartTime = None
+                self._pause_delay_time = time.time()
+                payload[
+                    "time"
+                ] = (
+                    self.getPrintTime()
+                )  # we need the pause time to be removed from time
+                self.watch_dog.start()
+                self._send_event.set()
+                eventManager().fire(OctoPrintEvents.PRINT_RESUMED, payload)
         elif pause and (self.isPrinting() or force):
             if not self._pauseWaitStartTime:
                 self._pauseWaitStartTime = time.time()
@@ -2738,7 +2769,7 @@ class MachineCom(object):
 
     def getPrintTime(self):
         if self._currentFile is None or self._currentFile.getStartTime() is None:
-            return None
+            return 0.0
         else:
             return (
                 time.time() - self._currentFile.getStartTime() - self._pauseWaitTimeLost
@@ -2748,6 +2779,8 @@ class MachineCom(object):
         return self._grbl_version
 
     def _get_printing_file_state(self):
+        if self._currentFile is None:
+            return {}
         file_state = {
             "file": self._currentFile.getFilename(),
             "filename": os.path.basename(self._currentFile.getFilename()),
