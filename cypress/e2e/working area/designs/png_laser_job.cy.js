@@ -87,10 +87,7 @@ describe.skip("Laser Job", function () {
         cy.laserButtonClick();
         cy.selectMaterial();
         cy.downloadGcoFile();
-        cy.compareFiles(
-            "cypress/fixtures/mirror.2x.gco",
-            "cypress/downloads/mirror.2x.gco"
-        );
+        cy.compareFiles("cypress/fixtures/mirror.2x.gco", "cypress/downloads/mirror.2x.gco")
         cy.logout();
     });
 });

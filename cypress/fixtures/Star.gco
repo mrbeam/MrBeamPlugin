@@ -1,6 +1,6 @@
-;Generated from temp.svg 838777d4476700ac600939edd48bd20e49e4a655
-; gc_nexgen gc_options: beamOS:0.13.0a1.post3.dev0+g5b816a7b on 092ebd5498d7, gc_nextgen:0.1, enabled:true, precision:0.05, optimize_travel:true, small_paths_first:true, clip_working_area:true, clipRect:0,0,500,390, userAgent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/110.0.5481.178 Safari/537.36
-; created:2023-02-28 16:09:51
+;Generated from temp.svg be0f3764c3dcb9f8e02510fada33a1d32b40f03a
+; gc_nexgen gc_options: beamOS:0.13.0a1.post11.dev0+gc565d0fa on 8302c3e12fe3, gc_nextgen:0.1, enabled:true, precision:0.05, optimize_travel:true, small_paths_first:true, clip_working_area:true, clipRect:0,0,500,390, userAgent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/111.0.5563.66 Safari/537.36
+; created:2023-03-24 09:52:11
 ; laser params: {u'#e25303': {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e25303', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}}
 
 ; speedup cooling fan
@@ -4016,9 +4016,9 @@ M5
 M100P100 ; mrbeam_compressor: 100
 G4P0.2
 
-; Layer:compSvg, outline of:pathSleog1swz1r, stroke:#e25303, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e25303', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
+; Layer:compSvg, outline of:pathSlfmd4kbn1r, stroke:#e25303, {u'passes': 2, u'feedrate': 200, u'progressive': False, u'color': u'#e25303', u'intensity': 1300, u'intensity_user': 100, u'cut_compressor': 100, 'mpr': 13.0, 'svgDPI': 90, u'engrave': False, u'pierce_time': 0, 'laserhead_model_id': None}
 ; pass:1/2
-;_gc_nextgen_svg_id:wa_visejy-0,node:path,mb:color:#e25303,mb:id:wa_visejy-0,clip_working_area_clipped:true
+;_gc_nextgen_svg_id:wa_tucuta-0,node:path,mb:color:#e25303,mb:id:wa_tucuta-0,clip_working_area_clipped:true
 G0X22.85Y331.46
 F200;#e25303
 ; gcode_before_path_color
@@ -4042,7 +4042,7 @@ G1X22.85Y331.46
 M05
 
 ; pass:2/2
-;_gc_nextgen_svg_id:wa_visejy-0,node:path,mb:color:#e25303,mb:id:wa_visejy-0,clip_working_area_clipped:true
+;_gc_nextgen_svg_id:wa_tucuta-0,node:path,mb:color:#e25303,mb:id:wa_tucuta-0,clip_working_area_clipped:true
 G0X22.85Y331.46
 F200;#e25303
 ; gcode_before_path_color
