@@ -270,22 +270,23 @@ $(function () {
             }
         };
         self.onEventLensCalibStart = function (payload) {
-            self._fromData(payload, "onEventLensCalibStart");
+            self._fromData(payload, MRBEAM.EVENTS.LENS_CALIB_START);
         };
         self.onEventLensCalibExit = function (payload) {
-            self._fromData(payload, "onEventLensCalibExit");
+            self._fromData(payload, MRBEAM.EVENTS.LENS_CALIB_EXIT);
         };
         self.onEventLensCalibDone = function (payload) {
-            self._fromData(payload, "onEventLensCalibDone");
+            self._fromData(payload, MRBEAM.EVENTS.LENS_CALIB_DONE);
         };
         self._fromData = function (payload, event) {
             if (event) {
-                if (["onEventLensCalibStart"].includes(event)) {
+                if ([MRBEAM.EVENTS.LENS_CALIB_START].includes(event)) {
                     self.lensDaemonAlive(true);
                 } else if (
-                    ["onEventLensCalibExit", "onEventLensCalibDone"].includes(
-                        event
-                    )
+                    [
+                        MRBEAM.EVENTS.LENS_CALIB_EXIT,
+                        MRBEAM.EVENTS.LENS_CALIB_DONE,
+                    ].includes(event)
                 ) {
                     self.lensDaemonAlive(false);
                 }
