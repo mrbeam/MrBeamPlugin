@@ -661,11 +661,11 @@ class IoBeamHandler(object):
                             )
                     except Exception as e2:
                         self._logger.debug("Some error with data '%s'", json_data)
-                        self._logger.error(e2)
+                        self._logger.exception("exception - %s", e2)
                         error_count += 1
 
         except Exception as e:
-            self._logger.exception(e)
+            self._logger.exception("exception - %s", e)
 
         return error_count, message_count
 

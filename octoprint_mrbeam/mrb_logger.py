@@ -90,6 +90,9 @@ class MrbLogger(object):
         except TypeError:
             # If it's already unicode we get this TypeError
             pass
+        except Exception as exc:
+            self.log(logging.ERROR, "Error in MrbLogger.log: %s - %s", msg, exc)
+            pass
         if kwargs.pop("terminal", True if level >= logging.WARN else False):
             self._terminal(level, msg, *args, **kwargs)
         if kwargs.pop("terminal_as_comm", False) or level == self.LEVEL_COMM:
