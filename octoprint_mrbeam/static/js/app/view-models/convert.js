@@ -1130,7 +1130,15 @@ $(function () {
                 (rasters_present && !assigned_images)
             );
         };
-
+        self._requestHardwareErrors = function () {
+            OctoPrint.simpleApiCommand("mrbeam", "request_hardware_errors", {})
+                .done(function (response) {})
+                .fail(function () {
+                    console.error(
+                        "Error while trying to request hardware errors."
+                    );
+                });
+        };
         // shows conversion dialog and extracts svg first
         self.show_conversion_dialog = function () {
             if (self.showFocusReminder() && self.remindFirstTime()) {
@@ -1138,6 +1146,7 @@ $(function () {
                 self.remindFirstTime(false);
                 return;
             }
+            self._requestHardwareErrors();
             self.remindFirstTime(true);
 
             self.workingArea.abortFreeTransforms();

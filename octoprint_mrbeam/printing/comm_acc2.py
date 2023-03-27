@@ -40,6 +40,7 @@ from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
+
 ### MachineCom #########################################################################################################
 class MachineCom(object):
 
@@ -1640,10 +1641,48 @@ class MachineCom(object):
 
         return gcode.group(1)
 
+    def _onExitState(self, current_state, new_state):
+        """
+        Called when the state machine is exiting a state.
+
+        Args:
+            current_state: current state
+            new_state: new state
+
+        Returns:
+            None
+        """
+        # if we're unexpected exiting the printing or paused state to locked show the job cancelled  error notification
+        if (
+            current_state == self.STATE_PRINTING and new_state == self.STATE_LOCKED
+        ) or (current_state == self.STATE_PAUSED and new_state == self.STATE_LOCKED):
+            self._fire_print_failed()
+            self._show_job_cancelled_due_to_internal_error()
+
+    def _show_job_cancelled_due_to_internal_error(self):
+        """
+        Shows the job cancelled due to internal error notification.
+
+        Returns:
+            None
+        """
+        notification = (
+            _mrbeam_plugin_implementation.user_notification_system.get_notification(
+                notification_id="job_cancelled_due_to_internal_error",
+                err_code="E-0220-1005",
+                replay=True,
+            )
+        )
+        _mrbeam_plugin_implementation.user_notification_system.show_notifications(
+            notification
+        )
+
     # internal state management
     def _changeState(self, newState):
         if self._state == newState:
             return
+
+        self._onExitState(self._state, newState)
 
         self._set_status_polling_interval_for_state(state=newState)
 

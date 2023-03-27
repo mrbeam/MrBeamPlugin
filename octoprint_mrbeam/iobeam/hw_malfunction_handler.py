@@ -21,6 +21,32 @@ def hwMalfunctionHandler(plugin):
     return _instance
 
 
+class HwMalfunction:
+    def __init__(self, malfunction_id, msg, data, error_code=None, priority=0):
+        self.id = malfunction_id
+        self._msg = msg
+        self.data = data
+        self.priority = priority
+        self.error_code = error_code
+
+    @property
+    def msg(self):
+        """Returns the message to be shown to the user."""
+        # if error_code is set, only show the code else show the message
+        if self.error_code:
+            return "Error Code: {}".format(self.error_code)
+
+        return self._msg
+
+    def __str__(self):
+        return "HwMalfunction(id:{id}, msg:{msg}, data:{data}, prio:{priority})".format(
+            id=self.id, msg=self.msg, data=self.data, priority=self.priority
+        )
+
+    def __repr__(self):
+        return self.__str__()
+
+
 class HwMalfunctionHandler(object):
     MALFUNCTION_ID_BOTTOM_OPEN = "bottom_open"
     MALFUNCTION_ID_LASERHEADUNIT_MISSING = "laserheadunit_missing"
@@ -35,7 +61,7 @@ class HwMalfunctionHandler(object):
 
         self._messages_to_show = {}
         self._timer = None
-        self.hardware_malfunction = False
+        self._hardware_malfunction = False
 
         self._event_bus.subscribe(
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
@@ -52,21 +78,42 @@ class HwMalfunctionHandler(object):
             payload=payload,
         )
         dataset = {malfunction_id: data}
+        if not self.error_already_reported(malfunction_id):
+            self.report_hw_malfunction(dataset, from_plugin=True)
+        else:
+            self._logger.debug("error already reported: %s", malfunction_id)
 
-        self.report_hw_malfunction(dataset, from_plugin=True)
+    def error_already_reported(self, malfunction_id):
+        return self._messages_to_show.get(malfunction_id) is not None
+
+    @property
+    def hardware_malfunction(self):
+        if (
+            self._messages_to_show is None
+            or len(self._messages_to_show) == 0
+            or not self._messages_to_show
+            or self._messages_to_show == {}
+        ):
+            self._hardware_malfunction = False
+        return self._hardware_malfunction
 
     def report_hw_malfunction(self, dataset, from_plugin=False):
-        self.hardware_malfunction = True
+        self._hardware_malfunction = True
         self._logger.warn("hardware_malfunction: %s", dataset)
         for malfunction_id, data in dataset.items():
             data = data or {}
             msg = data.get("msg", malfunction_id)
-            data["msg"] = msg
-            data["priority"] = data.get("priority", 0)
-            self._messages_to_show[malfunction_id] = data
+            malfunction = HwMalfunction(
+                malfunction_id,
+                msg,
+                data,
+                error_code=data.get("code", None),
+                priority=data.get("priority", 0),
+            )
+            self._messages_to_show[malfunction_id] = malfunction
             self._plugin.fire_event(
                 MrBeamEvents.HARDWARE_MALFUNCTION,
-                dict(id=malfunction_id, msg=msg, data=data),
+                dict(id=malfunction_id, msg=msg, data=malfunction.data),
             )
 
         dataset.update({"from_plugin": from_plugin})
@@ -87,10 +134,10 @@ class HwMalfunctionHandler(object):
         notifications = []
         general_malfunctions = []
         messages_sorted = sorted(
-            self._messages_to_show.items(), key=lambda k: k[1]["priority"], reverse=True
+            self._messages_to_show.items(), key=lambda k: k[1].priority, reverse=True
         )
 
-        for malfunction_id, data in messages_sorted:
+        for malfunction_id, malfunction in messages_sorted:
             if malfunction_id == self.MALFUNCTION_ID_BOTTOM_OPEN:
                 notifications.append(
                     self._user_notification_system.get_notification(
@@ -101,12 +148,14 @@ class HwMalfunctionHandler(object):
                 notifications.append(
                     self._user_notification_system.get_notification(
                         notification_id="err_leaserheadunit_missing",
-                        err_msg=data.get("msg", None),
+                        err_msg=malfunction.msg,
+                        err_code=malfunction.error_code,
                         replay=True,
                     )
                 )
             else:
-                general_malfunctions.append(data.get("msg", None))
+                general_malfunctions.append(malfunction.msg)
+            self._messages_to_show.pop(malfunction_id, None)
 
         if general_malfunctions:
             notifications.append(
