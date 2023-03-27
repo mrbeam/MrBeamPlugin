@@ -190,7 +190,7 @@
                         <i class="icon-warning-sign"></i>{{ _('You need to make a corner calibration first') }}
                     </p>
                     <button class="btn btn-default" data-test="camera-settings-start-button-lens"
-                            data-bind="click: changeUserView('lens'), enable: !lensDaemonAlive() && !camera.needsRawCornerCalibration()">
+                            data-bind="click: changeUserView('lens'), enable: !camera.needsRawCornerCalibration()">
                         {{ _('Start') }}
                     </button>
                 </div>
