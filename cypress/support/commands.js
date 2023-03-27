@@ -386,10 +386,10 @@ Cypress.Commands.add("compareFiles", (fixturesFile, downloadedFile) => {
             timeout: 40000,
         }).then((contentDownloadFile) => {
             let contentTestDownloadNoComments = contentDownloadFile
-                .replace(/^;.*$/gm, "")
+                .replace(/(^[\s]*\n|^\s*;.*\n)/gm, "")
                 .trimEnd();
             let contentTestFileNoComments = contentTestFile
-                .replace(/^;.*$/gm, "")
+                .replace(/(^[\s]*\n|^\s*;.*\n)/gm, "")
                 .trimEnd();
             expect(contentTestDownloadNoComments).to.equal(
                 contentTestFileNoComments
