@@ -180,12 +180,12 @@ $(function () {
             // if error code is present show this instead show error message
             if (
                 notification_conf.err_code &&
-                notification_conf.err_code.length > 0
+                notification_conf.err_code.length
             ) {
                 pn_obj.text += self._getErrorCode(notification_conf.err_code);
             } else if (
                 notification_conf.err_msg &&
-                notification_conf.err_msg.length > 0
+                notification_conf.err_msg.length
             ) {
                 pn_obj.text += self._getErrorString(notification_conf.err_msg);
             }

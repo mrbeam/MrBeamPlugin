@@ -1654,8 +1654,8 @@ class MachineCom(object):
         """
         # if we're unexpected exiting the printing or paused state to locked show the job cancelled  error notification
         if (
-            current_state == self.STATE_PRINTING and new_state == self.STATE_LOCKED
-        ) or (current_state == self.STATE_PAUSED and new_state == self.STATE_LOCKED):
+            current_state == self.STATE_PRINTING or current_state == self.STATE_PAUSED
+        ) and new_state == self.STATE_LOCKED:
             self._fire_print_failed()
             self._show_job_cancelled_due_to_internal_error()
 
