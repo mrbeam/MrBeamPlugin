@@ -28,7 +28,14 @@ class TemperatureManager(object):
         self._event_bus = plugin._event_bus
         self.temperature = None
         self.temperature_ts = 0
-        self.temperature_max = plugin.laserhead_handler.current_laserhead_max_temperature
+        self._temperature_triggered_cooling = None
+        self.high_temperature_warning = False
+        self.temperature_max = (
+            plugin.laserhead_handler.current_laserhead_max_temperature
+        )
+        self._high_tmp_warn_offset = (
+            self._plugin.laserhead_handler.current_laserhead_high_temperature_warn_offset
+        )
         self.hysteresis_temperature = (
             plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"
@@ -51,8 +58,9 @@ class TemperatureManager(object):
 
         self.dev_mode = plugin._settings.get_boolean(["dev", "iobeam_disable_warnings"])
 
-        msg = "TemperatureManager: initialized. temperature_max: {max}, {key}: {value}".format(
+        msg = "TemperatureManager: initialized. temperature_max: {max}, high_tmp_warn_threshold: {high_tmp_warn_threshold}, {key}: {value}".format(
             max=self.temperature_max,
+            high_tmp_warn_threshold=self.high_tmp_warn_threshold,
             key="cooling_duration"
             if self.mode_time_based
             else "hysteresis_temperature",
@@ -65,6 +73,10 @@ class TemperatureManager(object):
         self._event_bus.subscribe(
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING,
+            self._on_event_high_temperature_warning,
+        )
 
     def _on_mrbeam_plugin_initialized(self, event, payload):
         self._iobeam = self._plugin.iobeam
@@ -73,7 +85,8 @@ class TemperatureManager(object):
         self._subscribe()
         self._start_temp_timer()
 
-
+    def _on_event_high_temperature_warning(self, event, payload):
+        self.reset({"event": event})
 
     def _subscribe(self):
         self._iobeam.subscribe(IoBeamValueEvents.LASER_TEMP, self.handle_temp)
@@ -89,8 +102,17 @@ class TemperatureManager(object):
         self._shutting_down = True
 
     def reset(self, kwargs):
-        self._logger.info("TemperatureManager: Reset trigger Received : {}".format(kwargs.get("event", None)))
-        self.temperature_max = self._plugin.laserhead_handler.current_laserhead_max_temperature
+        self._logger.info(
+            "TemperatureManager: Reset trigger Received : {}".format(
+                kwargs.get("event", None)
+            )
+        )
+        self.temperature_max = (
+            self._plugin.laserhead_handler.current_laserhead_max_temperature
+        )
+        self._high_tmp_warn_offset = (
+            self._plugin.laserhead_handler.current_laserhead_high_temperature_warn_offset
+        )
         self.hysteresis_temperature = (
             self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "hysteresis_temperature"
@@ -104,8 +126,9 @@ class TemperatureManager(object):
         self.mode_time_based = self.cooling_duration > 0
         self.is_cooling_since = 0
 
-        msg = "TemperatureManager: Reset Done. temperature_max: {max}, {key}: {value}".format(
+        msg = "TemperatureManager: Reset Done. temperature_max: {max}, high_tmp_warn_threshold: {high_tmp_warn_threshold}, {key}: {value}".format(
             max=self.temperature_max,
+            high_tmp_warn_threshold=self.high_tmp_warn_threshold,
             key="cooling_duration"
             if self.mode_time_based
             else "hysteresis_temperature",
@@ -114,6 +137,10 @@ class TemperatureManager(object):
             else self.hysteresis_temperature,
         )
         self._logger.info(msg)
+
+    @property
+    def high_tmp_warn_threshold(self):
+        return self.temperature_max + self._high_tmp_warn_offset
 
     def onEvent(self, event, payload):
         self._logger.debug("TemperatureManager: Event received: {}".format(event))
@@ -139,9 +166,10 @@ class TemperatureManager(object):
         self._check_temp_val()
         self._analytics_handler.collect_laser_temp_value(self.temperature)
 
-    def cooling_stop(self, err_msg=None):
+    def cooling_stop(self, err_msg=None, tmp=None):
         """Stop the laser for cooling purpose."""
         if self._one_button_handler and self._one_button_handler.is_printing():
+            self._temperature_triggered_cooling = tmp
             self._logger.error(
                 "cooling_stop() %s - _msg_is_temperature_recent: %s",
                 err_msg,
@@ -213,7 +241,28 @@ class TemperatureManager(object):
         if not self.is_temperature_recent():
             self.cooling_stop(err_msg="Laser temperature is not recent. Stopping laser")
 
+    def dismiss_high_temperature_warning(self):
+        self.high_temperature_warning = False
+        self._temperature_triggered_cooling = None
+        self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED)
+
     def _check_temp_val(self):
+        if self.temperature is not None:
+            if self.temperature > self.high_tmp_warn_threshold:
+                self._logger.warn(
+                    "High temperature warning triggered: tmp:%s threshold: %s",
+                    self.temperature,
+                    self.high_tmp_warn_threshold,
+                )
+                self.high_temperature_warning = True
+                self._event_bus.fire(
+                    MrBeamEvents.HIGH_TEMPERATURE_WARNING,
+                    dict(
+                        tmp=self.temperature,
+                        threshold=self.high_tmp_warn_threshold,
+                    ),
+                )
+
         # cooling break
         if not self.is_cooling() and (
             self.temperature is None or self.temperature > self.temperature_max
@@ -222,7 +271,7 @@ class TemperatureManager(object):
                 self.temperature,
                 self.temperature_max,
             )
-            self.cooling_stop(err_msg=msg)
+            self.cooling_stop(err_msg=msg, tmp=self.temperature)
         # resume hysteresis temp based
         elif (
             self.is_cooling()

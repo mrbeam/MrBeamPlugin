@@ -3628,6 +3628,15 @@ button#terminal-send {
   color: #e25303;
 }
 
+/* Hard refresh overlay */
+
+/* Temperature Warning Modal */
+#temperature_warning_modal {
+  width: 700px;
+  margin-left: -350px;
+}
+/* Temperature Warning Modal */
+
 /* Material Store */
 
 #materialstore_tab_btn .notify-icon {

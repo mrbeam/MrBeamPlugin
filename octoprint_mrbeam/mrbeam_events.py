@@ -33,6 +33,9 @@ class MrBeamEvents(object):
     LASER_COOLING_PAUSE = "LaserCoolingPause"
     LASER_COOLING_RESUME = "LaserCoolingResume"
 
+    HIGH_TEMPERATURE_WARNING = "HighTemperatureWarning"
+    HIGH_TEMPERATURE_WARNING_DISMISSED = "HighTemperatureWarningDismissed"
+
     DUSTING_MODE_START = "DustingModeStart"
 
     ANALYTICS_DATA = "MrbAnalyticsData"
