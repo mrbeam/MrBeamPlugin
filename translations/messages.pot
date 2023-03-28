@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-24 12:42+0100\n"
+"POT-Creation-Date: 2023-03-28 09:23+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4397,6 +4397,7 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:16
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:15
 msgid ""
 "We understand that your privacy is crucial, and we want to assure you "
 "that none of the data collected includes your personal information such "
@@ -5004,11 +5005,8 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:15
 msgid ""
-"We understand that your privacy is crucial, and we want to assure you "
-"that none of the data collected includes your personal information such "
-"as your name, login details, designs, or any other private content. You "
-"are in full control, and you can change your mind at any time by going to"
-" <strong>\"Settings > Better together\"</strong>."
+"You are in full control, and you can change your mind at any time by "
+"going to <strong>\"Settings > Better together\"</strong>."
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:6
