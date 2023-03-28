@@ -26,10 +26,12 @@ class AnalyticsKeys:
         ID = "job_id"
         ERROR = "err"
         STATUS = "status"
+        TRIGGER = "trigger"
 
         class Event:
             LASERJOB_STARTED = "laserjob_started"
             LASERJOB_FINISHED = "laserjob_finished"
+            LASERJOB_ABORTED = "laserjob_aborted"
             CPU = "cpu"  # This comes both in the slicing and the print
             JOB_TIME_ESTIMATED = "job_time_estimated"  # This comes after the slicing but before the printing
             NTP_SYNC = "ntp_sync"
@@ -52,6 +54,7 @@ class AnalyticsKeys:
                 RESUMED = "p_resumed"
                 CANCELLED = "p_cancelled"
                 FAILED = "p_failed"
+                ABORTED = "p_aborted"
                 DONE = "p_done"
 
             class Cooling:
@@ -116,6 +119,10 @@ class AnalyticsKeys:
             NUM_FILES = "num_files"
             CAMERA_IMAGE = "camera_image"
             LASERHEAD_CHANGED = "laserhead_changed"
+
+        class HighTempWarning:
+            TRIGGERED = "high_temp_warning_triggered"
+            DISMISSED = "high_temp_warning_dismissed"
 
         class SoftwareChannel:
             OLD = "old_channel"

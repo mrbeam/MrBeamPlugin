@@ -114,6 +114,7 @@ class AnalyticsHandler(object):
         _ = payload
         self._laserhead_handler = self._plugin.laserhead_handler
         self._dust_manager = self._plugin.dust_manager
+        self._temperature_manager = self._plugin.temperature_manager
         self._compressor_handler = self._plugin.compressor_handler
 
         self._subscribe()
@@ -736,6 +737,17 @@ class AnalyticsHandler(object):
         self._event_bus.subscribe(
             MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_JOB_ABORTED, self._on_event_laser_job_aborted
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING,
+            self._on_event_high_temperature_warning,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED,
+            self._on_event_high_temperature_warning_dismissed,
+        )
 
     def _event_startup(self, event, payload, header_extension=None):
         _ = event
@@ -964,6 +976,30 @@ class AnalyticsHandler(object):
         self._add_collector_details()
         self._add_cpu_data(dur=payload["time"])
 
+    def _on_event_laser_job_aborted(self, event, payload, header_extension=None):
+        """Action of a aborted job. Will add a event to analytics and upload it directly.
+
+        Args:
+            event: event that triggered the action
+            payload: payload of the event
+            header_extension: extension for the header
+
+        Returns:
+            None
+        """
+        _ = event
+        trigger = payload.get("trigger", None)
+
+        self._current_job_final_status = "Aborted"
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.LASERJOB_ABORTED,
+            payload={
+                AnalyticsKeys.Job.TRIGGER: trigger,
+            },
+            header_extension=header_extension,
+        )
+        self.upload()
+
     def _event_laser_job_finished(self, event, payload, header_extension=None):
         _ = event
         _ = payload
@@ -1052,6 +1088,59 @@ class AnalyticsHandler(object):
         except Exception as e:
             self._logger.exception(
                 "Exception during _add_other_plugin_data: {}".format(e)
+            )
+
+    def _on_event_high_temperature_warning(self, event, payload, header_extension=None):
+        """Action of a high temperature warning. Will add a event to analytics with the current temperature and the threshold to trigger the warning.
+
+        Args:
+            event: event that triggered this action
+            payload: payload of the event
+            header_extension: extension to the header
+
+        Returns:
+            None
+        """
+        _ = event
+        try:
+            self._add_device_event(
+                AnalyticsKeys.Device.HighTempWarning.TRIGGERED,
+                payload=dict(
+                    temperature=payload.get("tmp", 0),
+                    threshold=self._temperature_manager.high_tmp_warn_threshold,
+                ),
+                header_extension=header_extension,
+            )
+        except Exception as e:
+            self._logger.exception(
+                "Exception during on_event_high_temperature_warning: {}".format(e)
+            )
+
+    def _on_event_high_temperature_warning_dismissed(
+        self, event, payload, header_extension=None
+    ):
+        """Action of a high temperature warning dismissed. Will add a event to analytics."
+
+        Args:
+            event: event that triggered this action
+            payload: payload of the event
+            header_extension: extension to the header
+
+        Returns:
+            None
+        """
+        _ = event
+        _ = payload
+        try:
+            self._add_device_event(
+                AnalyticsKeys.Device.HighTempWarning.DISMISSED,
+                header_extension=header_extension,
+            )
+        except Exception as e:
+            self._logger.exception(
+                "Exception during on_event_high_temperature_warning_dismissed: {}".format(
+                    e
+                )
             )
 
     # -------- ANALYTICS LOGS QUEUE ------------------------------------------------------------------------------------

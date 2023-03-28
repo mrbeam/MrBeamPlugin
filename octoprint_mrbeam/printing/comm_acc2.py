@@ -2537,6 +2537,31 @@ class MachineCom(object):
         if not self.isOperational():
             return
 
+        self._cancelPrint()
+
+        payload = self._get_printing_file_state()
+        if failed:
+            if not payload.get("error_msg", None):
+                payload["error_msg"] = error_msg
+
+            eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
+        else:
+            eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
+
+    def abortPrint(self):
+        """Abort the print.
+
+        Returns:
+
+        """
+        self._cancelPrint()
+
+    def _cancelPrint(self):
+        """Cancels the print.
+
+        Returns:
+            None
+        """
         # first pause (feed hold) before doing the soft reset in order to retain machine pos.
         self._sendCommand(self.COMMAND_HOLD)
         time.sleep(0.5)
@@ -2550,16 +2575,6 @@ class MachineCom(object):
         self._acc_line_buffer.reset()
         self._send_event.clear(completely=True)
         self._changeState(self.STATE_LOCKED)
-
-        payload = self._get_printing_file_state()
-
-        if failed:
-            if not payload.get("error_msg", None):
-                payload["error_msg"] = error_msg
-
-            eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
-        else:
-            eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
     def setPause(
         self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False

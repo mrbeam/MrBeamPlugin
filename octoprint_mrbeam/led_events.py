@@ -63,6 +63,12 @@ class LedEventListener(CommandTrigger):
         MrBeamEvents.PRINT_PROGRESS
     ] = "mrbeam_ledstrips_cli progress:{__progress}"
 
+    # Fire warning
+    LED_EVENTS[MrBeamEvents.HIGH_TEMPERATURE_WARNING] = "mrbeam_ledstrips_cli Error"
+    LED_EVENTS[
+        MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED
+    ] = "mrbeam_ledstrips_cli ClientOpened"
+
     # Camera Calibration Screen Events
     LED_EVENTS[
         MrBeamEvents.RAW_IMAGE_TAKING_START
