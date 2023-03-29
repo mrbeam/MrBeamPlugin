@@ -3635,6 +3635,19 @@ button#terminal-send {
   width: 700px;
   margin-left: -350px;
 }
+#temperature_warning_modal .warning {
+  color: #e25303;
+  font-weight: bold;
+  display: flex;
+}
+#temperature_warning_modal .warning:before {
+  content: "\f071";
+  font-family: FontAwesome3, serif;
+  margin-right: 20px;
+  color: #e25303;
+  font-size: 30px;
+  margin-top: 10px;
+}
 /* Temperature Warning Modal */
 
 /* Material Store */
