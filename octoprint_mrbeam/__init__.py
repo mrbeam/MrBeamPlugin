@@ -922,7 +922,6 @@ class MrBeamPlugin(
                     self._logger, DocumentService(self._logger)
                 ).get_burger_menu_model(self.get_model_id()),
                 isDevelop=self.is_dev_env(),
-                high_temperature_warning=self.temperature_manager.high_temperature_warning,
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
@@ -1373,6 +1372,14 @@ class MrBeamPlugin(
     def handle_temperature_warning_dismissal(self, data):
         self.temperature_manager.dismiss_high_temperature_warning()
         return NO_CONTENT
+
+    # simpleApiCommand: temperature_warning_status;
+    def return_temperature_warning_status(self, data):
+        return jsonify(
+            dict(
+                high_temperature_warning=self.temperature_manager.high_temperature_warning
+            )
+        )
 
     # ~~ helpers
 
@@ -2009,6 +2016,7 @@ class MrBeamPlugin(
             cancel_final_extraction=[],
             compare_pep440_versions=[],
             dismiss_temperature_warning=[],
+            temperature_warning_status=[],
         )
 
     def on_api_command(self, command, data):
@@ -2140,6 +2148,8 @@ class MrBeamPlugin(
             return self.handle_pep440_comparison_result(data)
         elif command == "dismiss_temperature_warning":
             return self.handle_temperature_warning_dismissal(data)
+        elif command == "temperature_warning_status":
+            return self.return_temperature_warning_status(data)
 
         return NO_CONTENT
 
