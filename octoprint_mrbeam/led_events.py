@@ -189,6 +189,18 @@ class LedEventListener(CommandTrigger):
         if not event in self._subscriptions:
             return
 
+        if self._plugin.temperature_manager.high_temperature_warning and event not in [
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING,
+            MrBeamEvents.SHUTDOWN_PREPARE_START,
+            MrBeamEvents.SHUTDOWN_PREPARE_CANCEL,
+            MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS,
+            Events.SHUTDOWN,
+        ]:
+            self._logger.debug(
+                "LED_EVENT %s: Ignoring because of high temperature warning", event
+            )
+            return
+
         for command, commandType, debug in self._subscriptions[event]:
             command = self._handleStartupCommand(command)
             self._execute_command(command, commandType, debug, event, payload)
