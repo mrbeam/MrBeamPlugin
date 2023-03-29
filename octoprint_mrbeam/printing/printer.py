@@ -126,7 +126,7 @@ class Laser(Printer):
         Returns:
             None
         """
-        self._comm.abortPrint()
+        self._comm.abort_print()
         time.sleep(0.5)
         self.home(axes="wtf")
         eventManager().fire(MrBeamEvents.LASER_JOB_ABORTED, dict(trigger=event))

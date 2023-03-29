@@ -2537,7 +2537,7 @@ class MachineCom(object):
         if not self.isOperational():
             return
 
-        self._cancelPrint()
+        self._cancel_print()
 
         payload = self._get_printing_file_state()
         if failed:
@@ -2548,15 +2548,15 @@ class MachineCom(object):
         else:
             eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
-    def abortPrint(self):
+    def abort_print(self):
         """Abort the print.
 
         Returns:
 
         """
-        self._cancelPrint()
+        self._cancel_print()
 
-    def _cancelPrint(self):
+    def _cancel_print(self):
         """Cancels the print.
 
         Returns:

@@ -102,6 +102,14 @@ class TemperatureManager(object):
         self._shutting_down = True
 
     def reset(self, kwargs):
+        """Resets the temperature manager to its initial state.
+
+        Args:
+            kwargs:
+
+        Returns:
+            None
+        """
         self._logger.info(
             "TemperatureManager: Reset trigger Received : {}".format(
                 kwargs.get("event", None)
