@@ -977,7 +977,7 @@ class AnalyticsHandler(object):
         self._add_cpu_data(dur=payload["time"])
 
     def _on_event_laser_job_aborted(self, event, payload, header_extension=None):
-        """Action of a aborted job. Will add a event to analytics and upload it directly.
+        """Callback for aborted laser job event . Will add an event to analytics and upload it directly.
 
         Args:
             event: event that triggered the action
@@ -1091,7 +1091,7 @@ class AnalyticsHandler(object):
             )
 
     def _on_event_high_temperature_warning(self, event, payload, header_extension=None):
-        """Action of a high temperature warning. Will add a event to analytics with the current temperature and the threshold to trigger the warning.
+        """Callback for  high temperature warning event. Will add an event to analytics with the current temperature and the set threshold for triggering the user warning.
 
         Args:
             event: event that triggered this action
@@ -1119,7 +1119,7 @@ class AnalyticsHandler(object):
     def _on_event_high_temperature_warning_dismissed(
         self, event, payload, header_extension=None
     ):
-        """Action of a high temperature warning dismissed. Will add a event to analytics."
+        """Callback for high temperature warning dismissed event. Will add an event to analytics."
 
         Args:
             event: event that triggered this action
