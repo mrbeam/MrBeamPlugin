@@ -3,6 +3,8 @@ $(function () {
         let self = this;
         window.mrbeam.viewModels["TemperatureWarningModalViewModel"] = self;
 
+        self.warningTriggeredTime = null;
+
         self.hardRefreshCheckbox = ko.observable(false);
         self.audio = new Audio(
             "/plugin/mrbeam/static/audio/high_temperature_warning.mp3"
@@ -39,7 +41,7 @@ $(function () {
                 .done(function (data) {
                     $("#temperature_warning_modal").modal("hide");
                     self.audio.pause();
-                    self.audio.currentTime = 0; // reset audio to start
+                    self.audio.currentTime = 0;
                 })
                 .fail(function (response) {
                     console.log("Failed to dismiss temperature warning!");
@@ -50,7 +52,14 @@ $(function () {
         self._showTemperatureWarning = function () {
             $("#temperature_warning_modal").modal("show");
 
-            self.audio.play();
+            // Play sound only if the last sound is longer than 5 minutes ago
+            if (
+                self.warningTriggeredTime > Date.now() + 300000 ||
+                self.warningTriggeredTime === null
+            ) {
+                self.warningTriggeredTime = Date.now();
+                self.audio.play();
+            }
         };
     }
 
