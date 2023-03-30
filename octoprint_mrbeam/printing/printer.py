@@ -126,10 +126,10 @@ class Laser(Printer):
         Returns:
             None
         """
-        self._comm.abort_print()
+        self._comm.abort_print(event)
         time.sleep(0.5)
         self.home(axes="wtf")
-        eventManager().fire(MrBeamEvents.LASER_JOB_ABORTED, dict(trigger=event))
+        self._event_bus.fire(MrBeamEvents.LASER_JOB_ABORTED, {"trigger": event})
 
     def position(self, x, y):
         printer_profile = self._printerProfileManager.get_current_or_default()

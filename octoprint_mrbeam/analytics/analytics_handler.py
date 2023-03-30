@@ -730,6 +730,9 @@ class AnalyticsHandler(object):
         self._event_bus.subscribe(
             MrBeamEvents.LASER_JOB_FAILED, self._event_laser_job_finished
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_JOB_ABORTED, self._event_laser_job_finished
+        )
         self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
         self._event_bus.subscribe(
             MrBeamEvents.ANALYTICS_DATA, self._add_other_plugin_data
@@ -738,7 +741,7 @@ class AnalyticsHandler(object):
             MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated
         )
         self._event_bus.subscribe(
-            MrBeamEvents.LASER_JOB_ABORTED, self._on_event_laser_job_aborted
+            MrBeamEvents.PRINT_ABORTED, self._on_event_print_aborted
         )
         self._event_bus.subscribe(
             MrBeamEvents.HIGH_TEMPERATURE_WARNING,
@@ -951,7 +954,6 @@ class AnalyticsHandler(object):
         self._add_cpu_data(dur=payload["time"], header_extension=header_extension)
 
     def _event_print_failed(self, event, payload, header_extension=None):
-        _ = event
         details = {
             AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"])),
             AnalyticsKeys.Job.ERROR: payload["error_msg"],
@@ -976,8 +978,8 @@ class AnalyticsHandler(object):
         self._add_collector_details()
         self._add_cpu_data(dur=payload["time"])
 
-    def _on_event_laser_job_aborted(self, event, payload, header_extension=None):
-        """Callback for aborted laser job event . Will add an event to analytics and upload it directly.
+    def _on_event_print_aborted(self, event, payload, header_extension=None):
+        """Callback for aborted print event . Will add an event to analytics.
 
         Args:
             event: event that triggered the action
@@ -992,13 +994,14 @@ class AnalyticsHandler(object):
 
         self._current_job_final_status = "Aborted"
         self._add_job_event(
-            AnalyticsKeys.Job.Event.LASERJOB_ABORTED,
+            AnalyticsKeys.Job.Event.Print.ABORTED,
             payload={
                 AnalyticsKeys.Job.TRIGGER: trigger,
             },
             header_extension=header_extension,
         )
-        self.upload()
+        self._add_collector_details()
+        self._add_cpu_data(dur=payload.get("time"))
 
     def _event_laser_job_finished(self, event, payload, header_extension=None):
         _ = event

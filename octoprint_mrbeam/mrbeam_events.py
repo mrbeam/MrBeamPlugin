@@ -20,6 +20,7 @@ class MrBeamEvents(object):
     LASER_PAUSE_SAFETY_TIMEOUT_BLOCK = "LaserPauseSafetyTimeoutBlock"
 
     PRINT_CANCELING_DONE = "PrintCancelingDone"
+    PRINT_ABORTED = "PrintAborted"
 
     PRINT_DONE_PAYLOAD = "PrintDonePayload"
 

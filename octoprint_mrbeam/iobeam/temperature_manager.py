@@ -257,21 +257,23 @@ class TemperatureManager(object):
         self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED)
 
     def _check_temp_val(self):
-        if self.temperature is not None:
-            if self.temperature > self.high_tmp_warn_threshold:
-                self._logger.warn(
-                    "High temperature warning triggered: tmp:%s threshold: %s",
-                    self.temperature,
-                    self.high_tmp_warn_threshold,
-                )
-                self.high_temperature_warning = True
-                self._event_bus.fire(
-                    MrBeamEvents.HIGH_TEMPERATURE_WARNING,
-                    dict(
-                        tmp=self.temperature,
-                        threshold=self.high_tmp_warn_threshold,
-                    ),
-                )
+        if (
+            self.temperature is not None
+            and self.temperature > self.high_tmp_warn_threshold
+        ):
+            self._logger.warn(
+                "High temperature warning triggered: tmp:%s threshold: %s",
+                self.temperature,
+                self.high_tmp_warn_threshold,
+            )
+            self.high_temperature_warning = True
+            self._event_bus.fire(
+                MrBeamEvents.HIGH_TEMPERATURE_WARNING,
+                dict(
+                    tmp=self.temperature,
+                    threshold=self.high_tmp_warn_threshold,
+                ),
+            )
 
         # cooling break
         if not self.is_cooling() and (

@@ -31,7 +31,6 @@ class AnalyticsKeys:
         class Event:
             LASERJOB_STARTED = "laserjob_started"
             LASERJOB_FINISHED = "laserjob_finished"
-            LASERJOB_ABORTED = "laserjob_aborted"
             CPU = "cpu"  # This comes both in the slicing and the print
             JOB_TIME_ESTIMATED = "job_time_estimated"  # This comes after the slicing but before the printing
             NTP_SYNC = "ntp_sync"

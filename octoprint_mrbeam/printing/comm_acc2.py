@@ -2548,13 +2548,14 @@ class MachineCom(object):
         else:
             eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
-    def abort_print(self):
+    def abort_print(self, trigger):
         """Abort the print.
 
         Returns:
 
         """
         self._cancel_print()
+        eventManager().fire(MrBeamEvents.PRINT_ABORTED, dict(trigger=trigger))
 
     def _cancel_print(self):
         """Cancels the print.
