@@ -401,7 +401,7 @@ MrB II Dreamcut x,,#434343,3,100,500,5,3,0,no,
 MrB II Dreamcut x,,#ff0000,Engrave,0-80,2000-2000,1,3,0,no,
 MrB II Dreamcut x,,#ff0000,3,100,400,5,3,0,no,
 MrB II Dreamcut x,Acrylic,#ffffff,Engrave,0-100,2000-1500,1,3,0,no,
-MrB II Dreamcut x,Acrylic,#ffffff,3,100,200,5,3,0,no,
+MrB II Dreamcut x,Acrylic,#ffffff,3,100,200,4,3,0,no,
 MrB II Dreamcut x,Balsa Wood,#d4b26f,Engrave,0-15,2000-1800,1,3,0,no,
 MrB II Dreamcut x,,#d4b26f,1,100,1200,1,3,0,no,tested by Hilmar
 MrB II Dreamcut x,,#d4b26f,2,100,1000,1,3,0,no,tested by Hilmar
@@ -409,14 +409,14 @@ MrB II Dreamcut x,,#d4b26f,3,100,800,1,3,0,no,
 MrB II Dreamcut x,,#d4b26f,4,100,600,1,3,0,no,
 MrB II Dreamcut x,Balsa Wood,#d4b26f,6,100,400,1,3,0,no,tested by Hilmar
 MrB II Dreamcut x,Bamboo,#e7c982,Engrave,0-30,2000-2000,1,3,0,no,
-MrB II Dreamcut x,"Cardboard, corrugated single wave",#8b624a,Engrave,0-50,2000-2000,1,3,0,no,
-MrB II Dreamcut x,,#8b624a,1.5,100,900,2,3,0,no,
+MrB II Dreamcut x,"Cardboard, corrugated single wave",#8b624a,Engrave,0-15,2000-2000,1,3,0,no,
+MrB II Dreamcut x,,#8b624a,1.5,100,700,1,3,0,no,
 MrB II Dreamcut x,,#8b624a,2,100,900,2,3,0,no,
 MrB II Dreamcut x,,#8b624a,3,100,800,2,3,0,no,
-MrB II Dreamcut x,,#8b624a,4,100,980,3,3,0,no,
-MrB II Dreamcut x,"Cardboard, corrugated double wave",#8b624a,Engrave,0-50,2000-2000,1,3,0,no,
-MrB II Dreamcut x,,#8b624a,4,100,650,3,3,0,no,
-MrB II Dreamcut x,,#8b624a,5,100,600,3,3,0,no,
+MrB II Dreamcut x,,#8b624a,4,100,750,2,3,0,no,
+MrB II Dreamcut x,"Cardboard, corrugated double wave",#8b624a,Engrave,0-15,2000-2000,1,3,0,no,
+MrB II Dreamcut x,,#8b624a,4,100,700,2,3,0,no,tested
+MrB II Dreamcut x,,#8b624a,5,100,600,2,3,0,no,
 MrB II Dreamcut x,Cork,#c19c73,Engrave,0-14,2000-2000,1,3,0,no,tested
 MrB II Dreamcut x,Felt,#6fa8dc,Engrave,0-60,2000-2000,1,3,0,no,tested
 MrB II Dreamcut x,,#6fa8dc,3,100,800,1,3,0,no,
