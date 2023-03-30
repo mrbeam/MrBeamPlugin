@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-30 14:36+0200\n"
+"POT-Creation-Date: 2023-03-30 16:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4272,19 +4272,20 @@ msgstr ""
 msgid "Temperature Warning, please check your Mr Beam!"
 msgstr ""
 
-#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:6
+#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:8
 msgid ""
-"Despite that the laser head is making a cooling break, the temperature in"
-" the device is increasing steadily."
+"Attention:<br>The temperature in your Mr Beam is higher than "
+"usual.<br><br>This is an indication of a fire. Check the working area to "
+"make sure that everything is alright!"
 msgstr ""
 
-#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:9
+#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:13
 msgid ""
-"Attention: This can be a hint towards a fire. Check on your Mr Bean "
-"immediately and make sure, everything is alright."
+"Your Mr Beam can only be used again when the temperature drops further. "
+"This may take a few minutes."
 msgstr ""
 
-#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:14
+#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:15
 msgid "All good!"
 msgstr ""
 

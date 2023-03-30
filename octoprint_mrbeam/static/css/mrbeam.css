@@ -3648,6 +3648,14 @@ button#terminal-send {
   font-size: 30px;
   margin-top: 10px;
 }
+#temperature_warning_modal .temperature_warning_footer_text {
+  display: flex;
+}
+#temperature_warning_modal .temperature_warning_footer_text span {
+  color: #6d6d6d;
+  text-align: left;
+  margin-right: 70px;
+}
 /* Temperature Warning Modal */
 
 /* Material Store */
