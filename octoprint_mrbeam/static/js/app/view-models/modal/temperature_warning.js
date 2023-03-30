@@ -54,7 +54,7 @@ $(function () {
 
             // Play sound only if the last sound is longer than 5 minutes ago
             if (
-                self.warningTriggeredTime > Date.now() + 300000 ||
+                self.warningTriggeredTime + 300000 < Date.now() ||
                 self.warningTriggeredTime === null
             ) {
                 self.warningTriggeredTime = Date.now();
