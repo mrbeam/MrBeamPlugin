@@ -21,6 +21,7 @@ class TemperatureManager(object):
 
     TEMP_TIMER_INTERVAL = 3
     TEMP_MAX_AGE = 10  # seconds
+    COOLING_OFF_THRESHOLD = 4  # degrees, threshold after how many degrees below max temp the laser head is considered cooled down
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.temperaturemanager")
@@ -28,7 +29,6 @@ class TemperatureManager(object):
         self._event_bus = plugin._event_bus
         self.temperature = None
         self.temperature_ts = 0
-        self._temperature_triggered_cooling = None
         self.high_temperature_warning = False
         self.temperature_max = (
             plugin.laserhead_handler.current_laserhead_max_temperature
@@ -174,17 +174,15 @@ class TemperatureManager(object):
         self._check_temp_val()
         self._analytics_handler.collect_laser_temp_value(self.temperature)
 
-    def cooling_stop(self, err_msg=None, tmp=None):
+    def cooling_stop(self, err_msg=None):
         """Stop the laser for cooling purpose."""
         if self._one_button_handler and self._one_button_handler.is_printing():
-            self._temperature_triggered_cooling = tmp
-            self._logger.error(
+            self._logger.info(
                 "cooling_stop() %s - _msg_is_temperature_recent: %s",
                 err_msg,
                 self._msg_is_temperature_recent,
                 analytics=self._id_is_temperature_recent,
             )
-            self._logger.info("cooling_stop()")
             self.is_cooling_since = time.time()
             self._one_button_handler.cooling_down_pause()
             self._plugin.fire_event(
@@ -250,8 +248,12 @@ class TemperatureManager(object):
             self.cooling_stop(err_msg="Laser temperature is not recent. Stopping laser")
 
     def dismiss_high_temperature_warning(self):
+        """Dismisses the high temperature warning.
+
+        Returns:
+            None
+        """
         self.high_temperature_warning = False
-        self._temperature_triggered_cooling = None
         self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED)
 
     def _check_temp_val(self):
@@ -279,7 +281,7 @@ class TemperatureManager(object):
                 self.temperature,
                 self.temperature_max,
             )
-            self.cooling_stop(err_msg=msg, tmp=self.temperature)
+            self.cooling_stop(err_msg=msg)
         # resume hysteresis temp based
         elif (
             self.is_cooling()
@@ -299,7 +301,7 @@ class TemperatureManager(object):
             and self.mode_time_based
             and time.time() - self.is_cooling_since > self.cooling_duration
             and self.temperature is not None
-            and self.temperature < self.temperature_max
+            and self.temperature < self.temperature_max - self.COOLING_OFF_THRESHOLD
         ):
             self._logger.warn(
                 "Cooling break duration passed: %ss - Current temp: %s",
