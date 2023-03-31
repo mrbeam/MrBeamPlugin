@@ -32,6 +32,8 @@ from octoprint.util import (
     sanitize_ascii,
 )
 
+from octoprint_mrbeam.error_codes import ErrorCodes
+from octoprint_mrbeam.notifications import NotificationIds
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
@@ -1641,7 +1643,7 @@ class MachineCom(object):
 
         return gcode.group(1)
 
-    def _onExitState(self, current_state, new_state):
+    def _on_exit_state(self, current_state, new_state):
         """
         Called when the state machine is exiting a state.
 
@@ -1668,8 +1670,8 @@ class MachineCom(object):
         """
         notification = (
             _mrbeam_plugin_implementation.user_notification_system.get_notification(
-                notification_id="job_cancelled_due_to_internal_error",
-                err_code="E-0220-1005",
+                notification_id=NotificationIds.JOB_CANCELLED_DUE_TO_INTERNAL_ERROR,
+                err_code=ErrorCodes.LASERJOB_CANCELED_DUE_ERROR,
                 replay=True,
             )
         )
@@ -1682,7 +1684,7 @@ class MachineCom(object):
         if self._state == newState:
             return
 
-        self._onExitState(self._state, newState)
+        self._on_exit_state(self._state, newState)
 
         self._set_status_polling_interval_for_state(state=newState)
 

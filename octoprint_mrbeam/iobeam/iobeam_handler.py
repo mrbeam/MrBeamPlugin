@@ -264,7 +264,7 @@ class IoBeamHandler(object):
         """
         return self._send_command(self.get_request_msg([self.DATASET_ANALYTICS]))
 
-    def send_malfunction_request(self, *args, **kwargs):
+    def request_available_malfunctions(self, *args, **kwargs):
         """Requests if malfunctions are present.
 
         Args:

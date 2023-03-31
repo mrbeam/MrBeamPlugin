@@ -88,12 +88,7 @@ class HwMalfunctionHandler(object):
 
     @property
     def hardware_malfunction(self):
-        if (
-            self._messages_to_show is None
-            or len(self._messages_to_show) == 0
-            or not self._messages_to_show
-            or self._messages_to_show == {}
-        ):
+        if not self._messages_to_show:
             self._hardware_malfunction = False
         return self._hardware_malfunction
 
