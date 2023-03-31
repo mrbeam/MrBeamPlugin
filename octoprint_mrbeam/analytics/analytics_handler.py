@@ -794,11 +794,11 @@ class AnalyticsHandler(object):
         _ = event
         if self._current_cpu_data:
             self._current_cpu_data.record_cpu_data()
-            self._add_cpu_data(dur=payload["time"])
+            self._add_cpu_data(dur=payload.get("time", 0.0))
         self._current_job_final_status = "Sliced"
 
         payload = {
-            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"])),
+            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0))),
         }
         self._add_job_event(
             AnalyticsKeys.Job.Event.Slicing.DONE,
@@ -893,7 +893,9 @@ class AnalyticsHandler(object):
         _ = event
         self._add_job_event(
             AnalyticsKeys.Job.Event.Print.PAUSED,
-            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))},
+            payload={
+                AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0)))
+            },
             header_extension=header_extension,
         )
 
@@ -901,7 +903,9 @@ class AnalyticsHandler(object):
         _ = event
         self._add_job_event(
             AnalyticsKeys.Job.Event.Print.RESUMED,
-            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))},
+            payload={
+                AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0)))
+            },
             header_extension=header_extension,
         )
 
@@ -936,7 +940,7 @@ class AnalyticsHandler(object):
     def _event_print_done(self, event, payload, header_extension=None):
         _ = event
         duration = {
-            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"])),
+            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0))),
             AnalyticsKeys.Job.Duration.ESTIMATION: int(
                 round(self._current_job_time_estimation_v1)
             ),
@@ -951,12 +955,14 @@ class AnalyticsHandler(object):
             header_extension=header_extension,
         )
         self._add_collector_details()
-        self._add_cpu_data(dur=payload["time"], header_extension=header_extension)
+        self._add_cpu_data(
+            dur=payload.get("time", 0.0), header_extension=header_extension
+        )
 
     def _event_print_failed(self, event, payload, header_extension=None):
         details = {
-            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"])),
-            AnalyticsKeys.Job.ERROR: payload["error_msg"],
+            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0))),
+            AnalyticsKeys.Job.ERROR: payload.get("error_msg", "unknown"),
         }
         self._current_job_final_status = "Failed"
         self._add_job_event(
@@ -965,18 +971,20 @@ class AnalyticsHandler(object):
             header_extension=header_extension,
         )
         self._add_collector_details()
-        self._add_cpu_data(dur=payload["time"])
+        self._add_cpu_data(dur=payload.get("time", 0.0))
 
     def _event_print_cancelled(self, event, payload, header_extension=None):
         _ = event
         self._current_job_final_status = "Cancelled"
         self._add_job_event(
             AnalyticsKeys.Job.Event.Print.CANCELLED,
-            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))},
+            payload={
+                AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0)))
+            },
             header_extension=header_extension,
         )
         self._add_collector_details()
-        self._add_cpu_data(dur=payload["time"])
+        self._add_cpu_data(dur=payload.get("time", 0.0))
 
     def _on_event_print_aborted(self, event, payload, header_extension=None):
         """Callback for aborted print event . Will add an event to analytics.

@@ -43,7 +43,6 @@ from octoprint_mrbeam.util import (
     get_thread,
     dict_merge,
     dict_map,
-    _basestring,
 )
 from octoprint_mrbeam.util.img import differed_imwrite
 from octoprint_mrbeam.util.log import logme, logtime, logExceptions, json_serialisor
@@ -52,13 +51,13 @@ import yaml
 from octoprint_mrbeam.support import check_calibration_tool_mode
 
 # Remote connection for calibration
-# SSH_FILE = "/home/pi/.ssh/pi_id_rsa"
+# SSH_FILE = "/var/lib/mrbeam/.ssh/pi_id_rsa"
 # REMOTE_CALIBRATION_FOLDER = "/home/calibrationfiles/"
 # REMOTE_CALIBRATE_EXEC = path.join(REMOTE_CALIBRATION_FOLDER, "calibrate2.py")
 # MY_HOSTNAME = "MrBeam-8ae9"
 
 _logger = mrb_logger(__name__, lvl=logging.INFO)
-DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 FACTORY = "factory"
 USER = "user"
 
@@ -107,7 +106,7 @@ def undist_points(inPts, mtx, dist, new_mtx=None, reverse=False):
 
 
 def undist_dict(dict_pts, *a, **kw):
-    keys = dict_pts.keys()
+    keys = list(dict_pts.keys())
     inPts = [
         dict_pts[k] for k in keys
     ]  # Preserve in the order in which we have the keys
@@ -180,11 +179,11 @@ class BoardDetectorDaemon(Thread):
         self.images = []
 
         # Locks
-        self._started = Event()
-        self._started.clear()
+        self._starter = Event()
+        self._starter.clear()
         self.waiting = Event()
-        self._stop = Event()
-        self._stop.clear()
+        self._stopper = Event()
+        self._stopper.clear()
         self._terminate = Event()
         self._terminate.clear()
         self._pause = Event()
@@ -207,7 +206,7 @@ class BoardDetectorDaemon(Thread):
 
     def stop(self, signum=signal.SIGTERM, frame=None):
         self._logger.debug("Stopping")
-        self._stop.set()
+        self._stopper.set()
 
     def stopAsap(self, signum=signal.SIGTERM, frame=None):
         if self.is_alive():
@@ -216,17 +215,19 @@ class BoardDetectorDaemon(Thread):
                 os.kill(proc.pid, signal.SIGKILL)
             self._logger.info("Terminating board detector")
             self._terminate.set()
-            self._stop.set()
-        self._logger.debug("Not alive, no need to stop.")
+            self._stopper.set()
+        else:
+            self._logger.debug("Not alive, no need to stop.")
+            self.fire_event(MrBeamEvents.LENS_CALIB_EXIT)
 
     def start(self):
         self._logger.debug("Starting board detector")
-        self._started.set()
+        self._starter.set()
         Thread.start(self)
 
     @property
-    def started(self):
-        return self._started.is_set()
+    def starter(self):
+        return self._starter.is_set()
 
     def pause(self):
         self._logger.debug("Pausing")
@@ -234,7 +235,7 @@ class BoardDetectorDaemon(Thread):
 
     @property
     def stopping(self):
-        return self._stop.is_set() or self._terminate.is_set()
+        return self._stopper.is_set() or self._terminate.is_set()
 
     def add(
         self,
@@ -279,7 +280,7 @@ class BoardDetectorDaemon(Thread):
                 self._logger.debug(
                     "Unexpected KeyError %s not in runningProcs - %s",
                     path,
-                    self.runningProcs.keys(),
+                    list(self.runningProcs.keys()),
                 )
         self.state.remove(path)
         if self.idle:
@@ -313,10 +314,7 @@ class BoardDetectorDaemon(Thread):
 
     @property
     def detectedBoards(self):
-        # return len(list(filter(lambda x: x.ready() and x.get()[1] is not None, self.tasks)))
-        return len(
-            list(filter(lambda x: x["state"] == STATE_SUCCESS, self.state.values()))
-        )
+        return len([x for x in self.state.values() if x["state"] == STATE_SUCCESS])
 
     @property
     def idle(self):
@@ -378,7 +376,7 @@ class BoardDetectorDaemon(Thread):
             if loopcount % 100 == 0:
                 self._logger.debug(
                     "Running... %s procs running, stopsignal : %s"
-                    % (len(self.runningProcs), self._stop.is_set())
+                    % (len(self.runningProcs), self._stopper.is_set())
                 )
             if (
                 self.state.lensCalibration["state"] == STATE_PENDING
@@ -452,20 +450,20 @@ class BoardDetectorDaemon(Thread):
                 if self.idle:
                     self.fire_event(MrBeamEvents.LENS_CALIB_IDLE)
 
-            for path, proc in self.runningProcs.items():
+            for path, proc in list(self.runningProcs.items()):
                 if proc.exitcode is not None:
                     if proc.exitcode < 0 and not self._terminate.is_set():
                         self._logger.warning(
-                            "Something went wrong with the process for path\n%s." % path
+                            "Something went wrong with the process for path\n%s.", path
                         )
                     else:
-                        self._logger.debug("Process exited for path %s." % path)
+                        self._logger.debug("Process exited for path %s.", path)
                     self.runningProcs.pop(path)
-            if self._stop.wait(0.1):
+            if self._stopper.wait(0.1):
                 break
         self._logger.warning("Stop signal intercepted")
         resultQueue.close()
-        for path, proc in self.runningProcs.items():
+        for path, proc in list(self.runningProcs.items()):
             self._logger.debug("Joining process %p for path: %s", proc, path)
             proc.join()
             self.runningProcs.pop(path)
@@ -493,7 +491,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
     # logger = logging.getLogger()
     # if self._stop.is_set(): return
     # signal.signal(signal.SIGTERM, signal.SIG_DFL)
-    if isinstance(image, _basestring):
+    if isinstance(image, str):
         # self._logger.info("Detecting board in %s" % image)
         img = cv2.imread(image)
         if img is None:
@@ -756,7 +754,7 @@ class CalibrationState(dict):
         """Check if a pending image was taken and saved by the camera."""
         # self._logger.debug("### REFRESH ###")
         changed = False
-        for path, elm in self.items():
+        for path, elm in list(self.items()):
             with self.lock:
                 if elm["state"] == STATE_PENDING_CAMERA and os.path.exists(path):
                     if self.rawImgLock is not None:
@@ -777,15 +775,16 @@ class CalibrationState(dict):
 
     def getElmInState(self, state):
         with self.lock:
-            return dict(filter(lambda _s: _s[1]["state"] == state, self.items()))
+            return dict([_s for _s in list(self.items()) if _s[1]["state"] == state])
 
     def get_from_timestamp(self, timestamp):
         with self.lock:
             return dict(
-                filter(
-                    lambda _s: _s[1]["timestamp"].strftime(DATE_FORMAT) == timestamp,
-                    self.items(),
-                )
+                [
+                    _s
+                    for _s in self.items()
+                    if _s[1]["timestamp"].strftime(DATE_FORMAT) == timestamp
+                ]
             )
 
     def getSuccesses(self):
@@ -803,7 +802,7 @@ class CalibrationState(dict):
         return self.getElmInState(STATE_QUEUED).keys()
 
     def getProcessing(self):
-        return list(filter(lambda _s: _s["state"] == STATE_PROCESSING, self.values()))
+        return [_s for _s in self.values() if _s["state"] == STATE_PROCESSING]
 
     def setOutpuFileTimestamp(self):
         ts = -1
@@ -856,7 +855,7 @@ class CalibrationState(dict):
         self.onChange()
 
     def rm_unused_images(self):
-        for path, item in self.items():
+        for path, item in list(self.items()):
             with self.lock:
                 is_used = (
                     item["state"] == STATE_SUCCESS
@@ -883,7 +882,7 @@ class CalibrationState(dict):
         "Allows to be pickled"
 
         def _isClean(elm):
-            return type(elm) in [basestring, str, int, float, bool]
+            return type(elm) in [str, int, float, bool]
 
         def make_clean(elm):
             if isinstance(elm, float) or type(elm) in [
@@ -906,9 +905,10 @@ class CalibrationState(dict):
                 maxlen is None or len(elm.flat) < maxlen
             ):
                 if flatten:
-                    return list(elm.flat)
+                    returnlist = list(elm.flat)
                 else:
-                    return elm.tolist()
+                    returnlist = elm.tolist()
+                return _clean(returnlist)
             elif isinstance(elm, datetime.datetime):
                 return elm.strftime(DATE_FORMAT)
             else:
