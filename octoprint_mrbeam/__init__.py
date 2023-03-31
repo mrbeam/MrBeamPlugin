@@ -756,6 +756,7 @@ class MrBeamPlugin(
                 "js/app/view-models/settings/calibration/watterott/calibration-qa.js",
                 "js/app/view-models/settings/calibration/watterott/label-printer.js",
                 "js/app/view-models/modal/hard_refresh_overlay.js",
+                "js/app/view-models/modal/temperature_warning.js",
                 "js/app/view-models/mrbeam-simple-api-commands.js",
                 "js/app/view-models/mrbeam-constants.js",
                 "js/app/helpers/mutation-observer.js",
@@ -1366,6 +1367,19 @@ class MrBeamPlugin(
         except KeyError as e:
             self._logger.error("Key is missing in data: %s", e)
             return make_response(json.dumps(None), 500)
+
+    # simpleApiCommand: dismiss_temperature_warning;
+    def handle_temperature_warning_dismissal(self, data):
+        self.temperature_manager.dismiss_high_temperature_warning()
+        return NO_CONTENT
+
+    # simpleApiCommand: temperature_warning_status;
+    def return_temperature_warning_status(self, data):
+        return jsonify(
+            dict(
+                high_temperature_warning=self.temperature_manager.high_temperature_warning
+            )
+        )
 
     # ~~ helpers
 
@@ -2001,6 +2015,8 @@ class MrBeamPlugin(
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
             compare_pep440_versions=[],
+            dismiss_temperature_warning=[],
+            temperature_warning_status=[],
         )
 
     def on_api_command(self, command, data):
@@ -2130,6 +2146,10 @@ class MrBeamPlugin(
             self.dust_manager.set_user_abort_final_extraction()
         elif command == "compare_pep440_versions":
             return self.handle_pep440_comparison_result(data)
+        elif command == "dismiss_temperature_warning":
+            return self.handle_temperature_warning_dismissal(data)
+        elif command == "temperature_warning_status":
+            return self.return_temperature_warning_status(data)
 
         return NO_CONTENT
 

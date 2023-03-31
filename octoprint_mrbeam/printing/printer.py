@@ -45,6 +45,10 @@ class Laser(Printer):
             },
             current_z=None,
         )
+        self._event_bus = eventManager()
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING, self._on_high_temperature_warning
+        )
 
     # overwrite connect to use comm_acc2
     def connect(self, port=None, baudrate=None, profile=None):
@@ -112,6 +116,20 @@ class Laser(Printer):
         time.sleep(0.5)
         self.home(axes="wtf")
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
+
+    def abort_print(self, event):
+        """Abort the current printjob and do homing. This is a hard abort, the compressor and fan should be immediately turned off.
+
+        Args:
+            event: event that triggered the abort
+
+        Returns:
+            None
+        """
+        self._comm.abort_print(event)
+        time.sleep(0.5)
+        self.home(axes="wtf")
+        self._event_bus.fire(MrBeamEvents.LASER_JOB_ABORTED, {"trigger": event})
 
     def position(self, x, y):
         printer_profile = self._printerProfileManager.get_current_or_default()
@@ -205,6 +223,22 @@ class Laser(Printer):
         )
         if terminalMaxLines is not None and terminalMaxLines > 0:
             self._log = deque(self._log, terminalMaxLines)
+
+    def _on_high_temperature_warning(self, event, payload):
+        """Abort the print on a high temperature warning if the laser is printing or paused.
+
+        Args:
+            event: event that triggered the action
+            payload: payload of the event
+
+        Returns:
+            None
+        """
+        if self.is_printing() or self.is_paused():
+            self._logger.warn(
+                "Firing warning, will abort print e:%s payload: %s", event, payload
+            )
+            self.abort_print(event)
 
     # maybe one day we want to introduce special MrBeam commands....
     # def commands(self, commands):

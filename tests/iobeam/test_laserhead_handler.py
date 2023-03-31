@@ -394,3 +394,35 @@ def test_current_laserhead_lifespan(laserhead, expected_value, mrbeam_plugin):
 
         # Assert
         assert lifespan == expected_value
+
+
+@pytest.mark.parametrize(
+    "laserhead,expected_value",
+    [
+        (LASERHEAD_STOCK_ID, 2.0),
+        (LASERHEAD_S_ID, 2.0),
+        (LASERHEAD_X_ID, 2.0),
+        (None, 2.0),
+        (1000, 2.0),
+    ],
+    ids=[
+        "Laserhead Stock",
+        "Laserhead S",
+        "Laserhead X",
+        "None Laserhead",
+        "unknown Laserhead",
+    ],
+)
+def test_current_laserhead_lifespan(laserhead, expected_value, mrbeam_plugin):
+    # Arrange
+    with patch(
+        "octoprint_mrbeam.iobeam.laserhead_handler.LaserheadHandler.get_current_used_lh_model_id",
+        return_value=laserhead,
+    ):
+        laserhead_handler = LaserheadHandler(mrbeam_plugin)
+
+        # Act
+        lifespan = laserhead_handler.current_laserhead_high_temperature_warn_offset
+
+        # Assert
+        assert lifespan == expected_value

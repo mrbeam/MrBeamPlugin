@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-16 17:11+0100\n"
-"PO-Revision-Date: 2023-03-16 17:15+0100\n"
+"POT-Creation-Date: 2023-03-30 16:00+0200\n"
+"PO-Revision-Date: 2023-03-30 16:25+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -17,63 +17,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.2.2\n"
 
-#: octoprint_mrbeam/__init__.py:960
+#: octoprint_mrbeam/__init__.py:961
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:730
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:741
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:2
 msgid "Files"
 msgstr "Dateien"
 
-#: octoprint_mrbeam/__init__.py:967
+#: octoprint_mrbeam/__init__.py:968
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:4
 msgid "Camera"
 msgstr "Kamera"
 
-#: octoprint_mrbeam/__init__.py:974
+#: octoprint_mrbeam/__init__.py:975
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:2
 msgid "Precision Calibration"
 msgstr "Feinjustierung"
 
-#: octoprint_mrbeam/__init__.py:981
+#: octoprint_mrbeam/__init__.py:982
 #: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:56
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:5
 msgid "Debug"
 msgstr "Debug"
 
-#: octoprint_mrbeam/__init__.py:988
+#: octoprint_mrbeam/__init__.py:989
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
 msgid "About This Mr Beam"
 msgstr "Über diesen Mr Beam"
 
-#: octoprint_mrbeam/__init__.py:995
+#: octoprint_mrbeam/__init__.py:996
 msgid "Better Together"
 msgstr "Gemeinsam Vorankommen"
 
-#: octoprint_mrbeam/__init__.py:1002
+#: octoprint_mrbeam/__init__.py:1003
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
 msgid "Reminders"
 msgstr "Erinnerungen"
 
-#: octoprint_mrbeam/__init__.py:1009
+#: octoprint_mrbeam/__init__.py:1010
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:2
 msgid "Maintenance"
 msgstr "Wartung"
 
-#: octoprint_mrbeam/__init__.py:1016
+#: octoprint_mrbeam/__init__.py:1017
 #: octoprint_mrbeam/templates/settings/leds_settings.jinja2:2
 msgid "Mr Beam Lights"
 msgstr "Mr Beam Lights"
 
-#: octoprint_mrbeam/__init__.py:1023
+#: octoprint_mrbeam/__init__.py:1024
 #: octoprint_mrbeam/templates/settings/custom_material_settings.jinja2:2
 msgid "Custom Material Settings"
 msgstr "Benutzerdefinierte Materialeinstellungen"
 
-#: octoprint_mrbeam/__init__.py:2389
+#: octoprint_mrbeam/__init__.py:2409
 msgid "A new picture is being taken, please wait a little..."
 msgstr "Es wird ein neues Bild gemacht, bitte warte einen Moment..."
 
-#: octoprint_mrbeam/__init__.py:2394
+#: octoprint_mrbeam/__init__.py:2414
 msgid "Either the camera is busy or the lid is not open."
 msgstr ""
 "Entweder ist die Kamera nicht erreichbar oder der Deckel ist nicht geöffnet."
@@ -4940,6 +4940,33 @@ msgstr "4 Markierungen sind innerhalb des grünen Rechtecks"
 msgid "No black pixels are in the green rectangle"
 msgstr "Keine schwarzen Pixel befinden sich im grünen Rechteck"
 
+#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:3
+msgid "Temperature Warning, please check your Mr Beam!"
+msgstr "Temperaturwarnung, kontrolliere deinen Mr Beam!"
+
+#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:8
+msgid ""
+"Attention:<br>The temperature in your Mr Beam is higher than usual."
+"<br><br>This is an indication of a fire. Check the working area to make sure "
+"that everything is alright!"
+msgstr ""
+"Achtung:<br>Die Temperatur in deinem Mr Beam ist höher als gewöhnlich."
+"<br><br>Das ist ein Hinweis auf ein Feuer. Kontrolliere den Arbeitsbereich "
+"um sicher zu gehen, dass alles in Ordnung ist!"
+
+#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:13
+msgid ""
+"Your Mr Beam can only be used again when the temperature drops further. This "
+"may take a few minutes."
+msgstr ""
+"Dein Mr Beam kann erst wieder verwendet werden, wenn die Temperatur weiter "
+"sinkt. Das kann einige Minuten dauern."
+
+# Welcome wizard, final screen headline
+#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:15
+msgid "All good!"
+msgstr "Alles ok!"
+
 # don’t change the link
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:5
 msgid "https://mr-beam.org/en/downloads/"
@@ -6263,6 +6290,20 @@ msgstr ""
 msgid "We hope you enjoy this new experience!"
 msgstr "Wir hoffen, dass Du viel Freude mit diesem Update hast!"
 
+#~ msgid ""
+#~ "Despite that the laser head is making a cooling break, the temperature in "
+#~ "the device is increasing steadily."
+#~ msgstr ""
+#~ "Obwohl der Laserjob für eine Kühlpause angehalten wurde, steigt die "
+#~ "Temperatur im Gehäuse an."
+
+#~ msgid ""
+#~ "Attention: This can be a hint towards a fire. Check on your Mr Bean "
+#~ "immediately and make sure, everything is alright."
+#~ msgstr ""
+#~ "Achtung: Das könnte ein Hinweis auf ein Feuer sein. Kontrolliere umgehend "
+#~ "deinen Mr Beam und vergewissere dich, ob alles in Ordnung ist."
+
 #~ msgid "FAQ"
 #~ msgstr "FAQ"
 
@@ -7327,10 +7368,6 @@ msgstr "Wir hoffen, dass Du viel Freude mit diesem Update hast!"
 
 #~ msgid "Mr Beam II"
 #~ msgstr "Mr Beam II"
-
-# Welcome wizard, final screen headline
-#~ msgid "All Done!"
-#~ msgstr "Alles bereit!"
 
 #~ msgid ""
 #~ "\n"
