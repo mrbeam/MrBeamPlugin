@@ -32,7 +32,7 @@ $(function () {
             err_hardware_malfunction: {
                 title: gettext("Hardware malfunction"),
                 text: gettext(
-                    "A possible hardware malfunction has been detected on this device. "
+                    "A possible hardware malfunction has been detected on this device. You can not start a laser job until the problem is resolved."
                 ),
                 type: "error",
                 hide: false,
@@ -98,6 +98,33 @@ $(function () {
                 type: "success",
                 hide: false,
             },
+            iobeam_error: {
+                title: gettext("Hardware error"),
+                text: gettext(
+                    "The system detected a hardware error. Please contact Mr Beam support."
+                ),
+                type: "error",
+                hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
+            },
+            iobeam_critical_error: {
+                title: gettext("Critical Hardware error"),
+                text: gettext(
+                    "The system detected a critical hardware error. Please contact Mr Beam support."
+                ),
+                type: "error",
+                hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
+            },
+            job_cancelled_due_to_internal_error: {
+                title: gettext("Laser job cancelled"),
+                text: gettext(
+                    "The job was cancelled due to an internal error. Please contact Mr Beam support."
+                ),
+                type: "error",
+                hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
+            },
         };
 
         self.onDataUpdaterPluginMessage = function (plugin, data) {
@@ -127,6 +154,12 @@ $(function () {
                         ? true
                         : notification_conf.hide,
                 delay: notification_conf.delay || 10 * 1000,
+                before_close: function (pnotify) {
+                    console.log("before_close", pnotify, notification_conf);
+                    if (notification_conf.before_close) {
+                        notification_conf.before_close(pnotify);
+                    }
+                },
             };
             if (
                 notification_conf.notification_id in
@@ -143,9 +176,16 @@ $(function () {
             if ("knowledgebase" in pn_obj) {
                 pn_obj.text += self._getKnowledgeBaseLink(pn_obj.knowledgebase);
             }
+
+            // if error code is present show this instead show error message
             if (
+                notification_conf.err_code &&
+                notification_conf.err_code.length
+            ) {
+                pn_obj.text += self._getErrorCode(notification_conf.err_code);
+            } else if (
                 notification_conf.err_msg &&
-                notification_conf.err_msg.length > 0
+                notification_conf.err_msg.length
             ) {
                 pn_obj.text += self._getErrorString(notification_conf.err_msg);
             }
@@ -214,6 +254,33 @@ $(function () {
             } else {
                 return "";
             }
+        };
+
+        self._getErrorCode = function (err) {
+            if (err) {
+                err = Array.isArray(err) ? err.join(",<br />") : err;
+                return (
+                    "<br/><br/><strong>" +
+                    gettext("Error Code:") +
+                    "</strong><br/>" +
+                    err.toString()
+                );
+            } else {
+                return "";
+            }
+        };
+
+        self._dismissNotification = function (pnotify) {
+            console.log("before_close", pnotify);
+            OctoPrint.simpleApiCommand("mrbeam", "dissmiss_notification", {
+                id: pnotify.options.id,
+            })
+                .done(function (response) {})
+                .fail(function () {
+                    console.error(
+                        "Error while trying to request hardware errors."
+                    );
+                });
         };
     }
 

@@ -2001,6 +2001,8 @@ class MrBeamPlugin(
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
             compare_pep440_versions=[],
+            request_hardware_errors=[],
+            dissmiss_notification=[],
         )
 
     def on_api_command(self, command, data):
@@ -2130,7 +2132,10 @@ class MrBeamPlugin(
             self.dust_manager.set_user_abort_final_extraction()
         elif command == "compare_pep440_versions":
             return self.handle_pep440_comparison_result(data)
-
+        elif command == "request_hardware_errors":
+            return self.handle_hardware_error_request(data)
+        elif command == "dissmiss_notification":
+            return self.handle_dissmiss_notification_request(data)
         return NO_CONTENT
 
     def analytics_init(self, data):
@@ -2274,6 +2279,30 @@ class MrBeamPlugin(
                 return make_response("BAD REQUEST - DEV mode only.", 400)
         elif "rtl_cancel" in data and data["rtl_cancel"]:
             self.onebutton_handler.unset_ready_to_laser()
+        return NO_CONTENT
+
+    def handle_hardware_error_request(self, data):
+        """Handle a request to send a hardware error to the iobeam server.
+
+        Args:
+            data: data of request
+
+        Returns:
+            NO_CONTENT
+        """
+        self.iobeam.send_malfunction_request()
+        return NO_CONTENT
+
+    def handle_dissmiss_notification_request(self, data):
+        """Handle a request to dismiss a notification.
+
+        Args:
+            data: request data
+
+        Returns:
+            NO_CONTENT
+        """
+        self.user_notification_system.dismiss_notification(data.get("id", None))
         return NO_CONTENT
 
     def take_undistorted_picture(self, is_initial_calibration):
