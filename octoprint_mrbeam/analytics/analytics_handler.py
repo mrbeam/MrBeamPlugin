@@ -388,7 +388,6 @@ class AnalyticsHandler(object):
             power_calibration = self._laserhead_handler.get_current_used_lh_power()
             settings = self._laserhead_handler.get_correction_settings()
             laserhead_info = {
-                AnalyticsKeys.Device.LaserHead.SERIAL: laser_head["serial"],
                 AnalyticsKeys.Device.LaserHead.POWER_65: power_calibration.get(
                     "power_65", None
                 ),
@@ -401,7 +400,6 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Device.LaserHead.TARGET_POWER: power_calibration.get(
                     "target_power", None
                 ),
-                AnalyticsKeys.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
                 AnalyticsKeys.Device.LaserHead.CORRECTION_FACTOR: laser_head["info"][
                     "correction_factor"
                 ],
@@ -528,11 +526,6 @@ class AnalyticsHandler(object):
 
     def add_engraving_parameters(self, eng_params, header_extension=None):
         try:
-            eng_params.update(
-                {
-                    AnalyticsKeys.Device.LaserHead.HEAD_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id(),
-                }
-            )
             self._add_job_event(
                 AnalyticsKeys.Job.Event.Slicing.CONV_ENGRAVE,
                 payload=eng_params,
@@ -545,9 +538,6 @@ class AnalyticsHandler(object):
 
     def add_cutting_parameters(self, cut_details, header_extension=None):
         try:
-            # fmt: off
-            cut_details[AnalyticsKeys.Device.LaserHead.HEAD_MODEL_ID] = self._laserhead_handler.get_current_used_lh_model_id()
-            # fmt: on
             self._add_job_event(
                 AnalyticsKeys.Job.Event.Slicing.CONV_CUT,
                 payload=cut_details,
@@ -742,10 +732,6 @@ class AnalyticsHandler(object):
         _ = payload
         # Here the MrBeamPlugin is not fully initialized yet, so we have to access this data direct from the plugin
         payload = {
-            AnalyticsKeys.Device.LaserHead.LAST_USED_SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()[
-                "serial"
-            ],
-            AnalyticsKeys.Device.LaserHead.LAST_USED_HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
             AnalyticsKeys.Device.Usage.USERS: len(self._plugin._user_manager._users),
         }
         self._add_device_event(
@@ -1131,6 +1117,8 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Header.DATA: data,
                 AnalyticsKeys.Header.UPTIME: get_uptime(),
                 AnalyticsKeys.Header.MODEL: self._plugin.get_model_id(),
+                AnalyticsKeys.Header.LH_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
+                AnalyticsKeys.Header.LH_SERIAL: self._laserhead_handler.get_current_used_lh_data()["serial"],
                 AnalyticsKeys.Header.FEATURE_ID: header_extension.get(
                     AnalyticsKeys.Header.FEATURE_ID, None
                 ),
@@ -1187,29 +1175,18 @@ class AnalyticsHandler(object):
         self._current_lasertemp_collector = ValueCollector("TempColl")
 
     def _add_collector_details(self):
-        lh_info = {
-            AnalyticsKeys.Device.LaserHead.VERSION: None,
-            AnalyticsKeys.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()[
-                "serial"
-            ],
-            AnalyticsKeys.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
-        }
-
         if self._current_dust_collector:
             dust_summary = self._current_dust_collector.getSummary()
-            dust_summary.update(lh_info)
             self._add_job_event(
                 AnalyticsKeys.Job.Event.Summary.DUST, payload=dust_summary
             )
         if self._current_intensity_collector:
             intensity_summary = self._current_intensity_collector.getSummary()
-            intensity_summary.update(lh_info)
             self._add_job_event(
                 AnalyticsKeys.Job.Event.Summary.INTENSITY, payload=intensity_summary
             )
         if self._current_lasertemp_collector:
             lasertemp_summary = self._current_lasertemp_collector.getSummary()
-            lasertemp_summary.update(lh_info)
             self._add_job_event(
                 AnalyticsKeys.Job.Event.Summary.LASERTEMP, payload=lasertemp_summary
             )
@@ -1229,11 +1206,6 @@ class AnalyticsHandler(object):
     def _init_new_job(self):
         self._cleanup_job()
         self._current_job_id = "j_{}_{}".format(self._snr, time.time())
-        # fmt: off
-        payload = {
-            AnalyticsKeys.Device.LaserHead.HEAD_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
-        }
-        # fmt: on
         self._add_job_event(AnalyticsKeys.Job.Event.LASERJOB_STARTED, payload=payload)
 
     # -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
