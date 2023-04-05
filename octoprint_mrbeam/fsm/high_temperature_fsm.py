@@ -1,0 +1,57 @@
+from statemachine import State
+from statemachine import StateMachine
+
+from octoprint_mrbeam import MrBeamEvents
+
+
+class HighTemperatureFSM(StateMachine):
+    deactivated = State("Deactivated", initial=True)
+    monitoring = State("Monitoring")
+    warning = State("Warning")
+    critical = State("Critical")
+    dismissed = State("Dismissed")
+
+    start_monitoring = deactivated.to(monitoring)
+    warn = monitoring.to(warning)
+    critical = warning.to(critical) | monitoring.to(critical)
+    dismiss = warning.to(dismissed) | critical.to(dismissed)
+    deactivate = dismissed.to(deactivated) | monitoring.to(deactivated)
+
+    def __int__(self, event_bus=None):
+        self._event_bus = event_bus
+        self._subscribe_to_events()
+
+    # def on_enter_<state>.... for handling state enter
+    # def on_exit_<state>.... for handling state exit
+    def on_enter_warning(self):
+        payload = {"trigger": "high_temperature_warning"}
+        self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_SHOW, payload)
+
+    def on_enter_critical(self):
+        payload = {"trigger": "high_temperature_critical"}
+        self._event_bus.fire(
+            MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_SHOW, payload
+        )  # or SHOW_HIGH_TEMPERATURE_WARNING
+        self._event_bus.fire(MrBeamEvents.LASER_JOB_ABORT, payload)
+        self._event_bus.fire(MrBeamEvents.LASER_HOME, payload)
+        self._event_bus.fire(MrBeamEvents.COMPRESSOR_DEACTIVE, payload)
+        self._event_bus.fire(MrBeamEvents.EXHAUST_DEACTIVATE, payload)
+        self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_ERROR_LEDS_ENABLE, payload)
+        self._event_bus.fire(MrBeamEvents.LASER_DEACTIVE, payload)
+        self._event_bus.fire(MrBeamEvents.ALARM_START, payload)
+
+    def on_enter_dismissed(self):
+        payload = {"trigger": "high_temperature_dismissed"}
+        self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_HIDE, payload)
+        self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_HIDE, payload)
+        self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_ERROR_LEDS_DISABLE, payload)
+        self._event_bus.fire(MrBeamEvents.ALARM_STOP, payload)
+
+    def _subscribe_to_events(self):
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED,
+            self.dismiss,
+        )
+        self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_TO_SLOW, self.warn)
+        self._event_bus.subscribe(MrBeamEvents.LASER_HIGH_TEMPERATURE, self.critical)
+        self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self.deactivate)

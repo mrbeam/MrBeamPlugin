@@ -36,6 +36,7 @@ from octoprint.events import Events as OctoPrintEvents
 
 from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
 from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
+from octoprint_mrbeam.fsm.high_temperature_fsm import HighTemperatureFSM
 
 IS_X86 = platform.machine() == "x86_64"
 from ._version import get_versions
@@ -277,6 +278,7 @@ class MrBeamPlugin(
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
         self.temperature_manager = temperatureManager(self)
+        self.high_temp_fsm = HighTemperatureFSM(self._event_bus)
         self.compressor_handler = compressor_handler(self)
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
