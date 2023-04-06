@@ -38,7 +38,7 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     ANALYTICS_LOG_VERSION = (
-        26  # bumped for SW-2465 add laserhead changed event to analytics
+        27  # bumped for SW-3065 add laserhead to header
     )
 
     def __init__(self, plugin):
