@@ -1379,7 +1379,8 @@ class MrBeamPlugin(
     def return_temperature_warning_status(self, data):
         return jsonify(
             dict(
-                high_temperature_warning=self.temperature_manager.high_temperature_warning
+                high_temperature_warning=self.high_temp_fsm.warning.is_active,
+                high_temperature_critical=self.high_temp_fsm.critical.is_active,
             )
         )
 

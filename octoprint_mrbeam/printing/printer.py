@@ -47,7 +47,7 @@ class Laser(Printer):
         )
         self._event_bus = eventManager()
         self._event_bus.subscribe(
-            MrBeamEvents.HIGH_TEMPERATURE_WARNING, self._on_high_temperature_warning
+            MrBeamEvents.LASER_JOB_ABORT, self._on_laser_job_abort
         )
 
     # overwrite connect to use comm_acc2
@@ -224,8 +224,8 @@ class Laser(Printer):
         if terminalMaxLines is not None and terminalMaxLines > 0:
             self._log = deque(self._log, terminalMaxLines)
 
-    def _on_high_temperature_warning(self, event, payload):
-        """Abort the print on a high temperature warning if the laser is printing or paused.
+    def _on_laser_job_abort(self, event, payload):
+        """Abort the job if the laser is lasering or paused.
 
         Args:
             event: event that triggered the action
