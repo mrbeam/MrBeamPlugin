@@ -49,6 +49,9 @@ class Laser(Printer):
         self._event_bus.subscribe(
             MrBeamEvents.LASER_JOB_ABORT, self._on_laser_job_abort
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN, self._on_re_trigger_fan
+        )
 
     # overwrite connect to use comm_acc2
     def connect(self, port=None, baudrate=None, profile=None):
@@ -117,7 +120,7 @@ class Laser(Printer):
         self.home(axes="wtf")
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
-    def abort_print(self, event):
+    def abort_job(self, event):
         """Abort the current printjob and do homing. This is a hard abort, the compressor and fan should be immediately turned off.
 
         Args:
@@ -126,7 +129,7 @@ class Laser(Printer):
         Returns:
             None
         """
-        self._comm.abort_print(event)
+        self._comm.abort_lasering(event)
         time.sleep(0.5)
         self.home(axes="wtf")
         self._event_bus.fire(MrBeamEvents.LASER_JOB_ABORTED, {"trigger": event})
@@ -165,8 +168,18 @@ class Laser(Printer):
 
         self._comm.setPause(True, send_cmd=True, trigger=trigger)
 
+    def resume_print(self, trigger=None):
+        """Resume the current laser job."""
+        if self._comm is None:
+            return
+
+        if not self._comm.isPaused():
+            return
+
+        self._comm.setPause(False, send_cmd=True, trigger=trigger)
+
     def cooling_start(self):
-        """Pasue the laser for cooling."""
+        """Pause the laser for cooling."""
         if self._comm is None:
             return
 
@@ -234,11 +247,30 @@ class Laser(Printer):
         Returns:
             None
         """
-        if self.is_printing() or self.is_paused():
+        if self.is_lasering() or self.is_paused():
             self._logger.warn(
                 "Firing warning, will abort print e:%s payload: %s", event, payload
             )
-            self.abort_print(event)
+            self.abort_job(event)
+
+    def is_lasering(self):
+        return self.is_printing()
+
+    def _on_re_trigger_fan(self, event, payload):
+        """Re trigger the fan if the laser is printing or paused.
+        This can be done by sending atomic command start and pause after each other.
+
+        Args:
+            event: event that triggered the action
+            payload: payload of the event
+
+        Returns:
+            None
+        """
+        if self.is_printing() or self.is_paused():
+            self._logger.info("Re triggering fan e:%s payload: %s", event, payload)
+            self.resume_print(trigger="Re trigger fan")
+            self.pause_print(force=True, trigger="Re trigger fan")
 
     # maybe one day we want to introduce special MrBeam commands....
     # def commands(self, commands):
