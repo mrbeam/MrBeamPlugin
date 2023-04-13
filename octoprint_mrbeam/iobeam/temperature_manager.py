@@ -2,7 +2,7 @@ import threading
 import time
 from octoprint.events import Events as OctoPrintEvents
 
-from octoprint_mrbeam import get_uptime
+from octoprint_mrbeam.util.uptime import get_uptime
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents, IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -305,7 +305,7 @@ class TemperatureManager(object):
             MrBeamEvents.LASER_COOLING_TO_SLOW,
             dict(
                 temp=self.temperature,
-                differnece=self.cooling_difference,
+                cooling_differnece=self.cooling_difference,
                 cooling_time=self.cooling_since,
             ),
         )
@@ -382,7 +382,6 @@ class TemperatureManager(object):
             and self.cooling_since > self.SECOND_COOLING_THRESHOLD_TIME
         ):  # expected cooling effect is met but hysteresis is not reached, re trigger cooling fan to speed up
             self._event_bus.fire(MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN)
-            # TODO re trigger laser head fan with event
         elif (
             self.cooling_difference < self.SECOND_COOLING_THRESHOLD_TEMPERATURE
             and self.cooling_since > self.SECOND_COOLING_THRESHOLD_TIME

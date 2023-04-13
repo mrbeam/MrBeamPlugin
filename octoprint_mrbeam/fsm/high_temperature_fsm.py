@@ -1,20 +1,20 @@
 from statemachine import State
 from statemachine import StateMachine
 
-from octoprint_mrbeam import MrBeamEvents
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 
 class HighTemperatureFSM(StateMachine):
     deactivated = State("Deactivated", initial=True)
     monitoring = State("Monitoring")
     warning = State("Warning")
-    critical = State("Critical")
+    criticaly = State("Criticaly")
     dismissed = State("Dismissed")
 
     start_monitoring = deactivated.to(monitoring)
-    warn = monitoring.to(warning)
-    critical = warning.to(critical) | monitoring.to(critical)
-    dismiss = warning.to(dismissed) | critical.to(dismissed)
+    warn = monitoring.to(warning) | warning.to(criticaly)
+    critical = warning.to(criticaly) | monitoring.to(criticaly)
+    dismiss = warning.to(dismissed) | criticaly.to(dismissed)
     deactivate = dismissed.to(deactivated) | monitoring.to(deactivated)
 
     def __int__(self, event_bus=None):
@@ -27,8 +27,8 @@ class HighTemperatureFSM(StateMachine):
         payload = {"trigger": "high_temperature_warning"}
         self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_SHOW, payload)
 
-    def on_enter_critical(self):
-        payload = {"trigger": "high_temperature_critical"}
+    def on_enter_criticaly(self):
+        payload = {"trigger": "high_temperature_criticaly"}
         self._event_bus.fire(
             MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_SHOW, payload
         )  # or SHOW_HIGH_TEMPERATURE_WARNING
@@ -50,6 +50,10 @@ class HighTemperatureFSM(StateMachine):
     def _subscribe_to_events(self):
         self._event_bus.subscribe(
             MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED,
+            self.dismiss,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_DISMISSED,
             self.dismiss,
         )
         self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_TO_SLOW, self.warn)

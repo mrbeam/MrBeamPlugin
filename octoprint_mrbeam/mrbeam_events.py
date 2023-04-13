@@ -45,6 +45,7 @@ class MrBeamEvents(object):
 
     HIGH_TEMPERATURE_CRITICAL_SHOW = "HighTemperatureCriticalShow"
     HIGH_TEMPERATURE_CRITICAL_HIDE = "HighTemperatureCriticalHide"
+    HIGH_TEMPERATURE_CRITICAL_DISMISSED = "HighTemperatureCriticalDismissed"
     HIGH_TEMPERATURE_WARNING_SHOW = "HighTemperatureWarningShow"
     HIGH_TEMPERATURE_WARNING_HIDE = "HighTemperatureWarningHide"
     HIGH_TEMPERATURE_WARNING_DISMISSED = "HighTemperatureWarningDismissed"
