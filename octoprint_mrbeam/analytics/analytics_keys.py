@@ -214,3 +214,13 @@ class AnalyticsKeys:
             REFERRER = "referrer"
             LANGUAGE = "language"
             USER_AGENT = "user_agent"
+
+    class HighTemperatureWarning:
+        class Event:
+            STATE_TRANSITION = "state_transition"
+
+        class State:
+            STATE_BEFORE = "state_before"
+            STATE_AFTER = "state_after"
+            EVENT = "event"
+            FEATURE_DISABLED = "feature_disabled"

@@ -278,7 +278,11 @@ class MrBeamPlugin(
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
         self.temperature_manager = temperatureManager(self)
-        self.high_temp_fsm = HighTemperatureFSM(self._event_bus)
+        self.high_temp_fsm = HighTemperatureFSM(
+            event_bus=self._event_bus,
+            disabled=self._settings.get(["highTemperatureWarningDisabled"]),
+            analytics_handler=self.analytics_handler,
+        )
         self.compressor_handler = compressor_handler(self)
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
@@ -504,6 +508,7 @@ class MrBeamPlugin(
             grbl_version_lastknown=None,
             tour_auto_launch=True,
             leds=dict(brightness=255, fps=28),
+            highTemperatureWarningDisabled=False,
         )
 
     def on_settings_load(self):

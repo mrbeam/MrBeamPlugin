@@ -679,6 +679,32 @@ class AnalyticsHandler(object):
                 "Exception during add_compressor_static_data: {}".format(e)
             )
 
+    # High Temp Warning
+    def add_high_temp_warning_state_transition(
+        self, event, state_before, state_after, feature_disabled, header_extension=None
+    ):
+        try:
+            header_extension.update(
+                {
+                    AnalyticsKeys.Header.FEATURE_ID: "SW-991",
+                }
+            )
+            payload = {
+                AnalyticsKeys.HighTemperatureWarning.State.STATE_BEFORE: state_before,
+                AnalyticsKeys.HighTemperatureWarning.State.STATE_AFTER: state_after,
+                AnalyticsKeys.HighTemperatureWarning.State.EVENT: event,
+                AnalyticsKeys.HighTemperatureWarning.State.FEATURE_DISABLED: feature_disabled,
+            }
+            self._add_device_event(
+                AnalyticsKeys.HighTemperatureWarning.Event.STATE_TRANSITION,
+                payload=payload,
+                header_extension=header_extension,
+            )
+        except Exception as e:
+            self._logger.exception(
+                "Exception during add_high_temp_warning_state_transition: {}".format(e)
+            )
+
     # -------- OCTOPRINT AND MR BEAM EVENTS ----------------------------------------------------------------------------
     def _subscribe(self):
         self._event_bus.subscribe(
