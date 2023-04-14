@@ -20,11 +20,13 @@ def temperatureManager(plugin):
 
 # This guy manages the temperature of the laser head
 class TemperatureManager(object):
-
     TEMP_TIMER_INTERVAL = 3
     TEMP_MAX_AGE = 10  # seconds
 
     COOLING_THRESHOLD_CHECK_INTERVAL = 20  # seconds, only check every x seconds if the expected threshold for cooling is reached
+    HYTERESIS_TEMPERATURE = (
+        8  # degrees, if the temperature is below this value we can continue the job
+    )
 
     # The laser should cool FIRST_COOLING_THRESHOLD_TEMPERATURE in under FIRST_COOLING_THRESHOLD_TIME seconds
     FIRST_COOLING_THRESHOLD_TEMPERATURE = 4  # degrees
@@ -50,17 +52,11 @@ class TemperatureManager(object):
         self._high_tmp_warn_offset = (
             self._plugin.laserhead_handler.current_laserhead_high_temperature_warn_offset
         )
-        self.hysteresis_temperature = (
-            plugin.laserCutterProfileManager.get_current_or_default()["laser"][
-                "hysteresis_temperature"
-            ]
-        )
         self.cooling_duration = (
             plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "cooling_duration"
             ]
         )
-        self.mode_time_based = self.cooling_duration > 0
         self.temp_timer = None
         self.cooling_tigger_time = None
         self.cooling_tigger_temperature = None
@@ -70,18 +66,15 @@ class TemperatureManager(object):
         self._iobeam = None
         self._analytics_handler = None
         self._one_button_handler = None
+        self._last_cooling_threshold_check_time = 0
 
         self.dev_mode = plugin._settings.get_boolean(["dev", "iobeam_disable_warnings"])
 
         msg = "TemperatureManager: initialized. temperature_max: {max}, high_tmp_warn_threshold: {high_tmp_warn_threshold}, {key}: {value}".format(
             max=self.temperature_max,
             high_tmp_warn_threshold=self.high_tmp_warn_threshold,
-            key="cooling_duration"
-            if self.mode_time_based
-            else "hysteresis_temperature",
-            value=self.cooling_duration
-            if self.mode_time_based
-            else self.hysteresis_temperature,
+            key="cooling_duration",
+            value=self.cooling_duration,
         )
         self._logger.info(msg)
 
@@ -136,29 +129,20 @@ class TemperatureManager(object):
         self._high_tmp_warn_offset = (
             self._plugin.laserhead_handler.current_laserhead_high_temperature_warn_offset
         )
-        self.hysteresis_temperature = (
-            self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
-                "hysteresis_temperature"
-            ]
-        )
         self.cooling_duration = (
             self._plugin.laserCutterProfileManager.get_current_or_default()["laser"][
                 "cooling_duration"
             ]
         )
-        self.mode_time_based = self.cooling_duration > 0
         self.cooling_tigger_time = None
         self.cooling_tigger_temperature = None
+        self._last_cooling_threshold_check_time = 0
 
         msg = "TemperatureManager: Reset Done. temperature_max: {max}, high_tmp_warn_threshold: {high_tmp_warn_threshold}, {key}: {value}".format(
             max=self.temperature_max,
             high_tmp_warn_threshold=self.high_tmp_warn_threshold,
-            key="cooling_duration"
-            if self.mode_time_based
-            else "hysteresis_temperature",
-            value=self.cooling_duration
-            if self.mode_time_based
-            else self.hysteresis_temperature,
+            key="cooling_duration",
+            value=self.cooling_duration,
         )
         self._logger.info(msg)
 
@@ -203,14 +187,14 @@ class TemperatureManager(object):
             self.cooling_tigger_time = get_uptime()
 
             self._one_button_handler.cooling_down_pause()
-            self._plugin.fire_event(
+            self._event_bus.fire(
                 MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature)
             )
 
     def cooling_resume(self):
         """Resume laser once the laser has cooled down enough."""
         self._logger.debug("cooling_resume()")
-        self._plugin.fire_event(
+        self._event_bus.fire(
             MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature)
         )
         self._one_button_handler.cooling_down_end(only_if_behavior_is_cooling=True)
@@ -230,7 +214,7 @@ class TemperatureManager(object):
         Is 0 if cooling is currently not active.
 
         Returns:
-                int: duration of cooling process in seconds
+            int: duration of cooling process in seconds
 
         """
         return get_uptime() - self.cooling_tigger_time if self.is_cooling() else 0
@@ -292,7 +276,7 @@ class TemperatureManager(object):
         Returns the difference between the current temperature and the temperature when the cooling process was started.
 
         Returns:
-                int: difference in degrees Celsius
+            int: difference in degrees Celsius
         """
         return (
             self.cooling_tigger_temperature - self.temperature
@@ -340,28 +324,12 @@ class TemperatureManager(object):
             self.cooling_stop(err_msg=msg)  # trigger a cooling stop
 
         elif self.is_cooling():
-            # only check every COOLING_THRESHOLD_CHECK_INTERVAL seconds for the cooling thresholds
-            if self.cooling_since % self.COOLING_THRESHOLD_CHECK_INTERVAL == 0:
-                self._check_cooling_threshold()
+            self._check_cooling_threshold()
 
-            # resume hysteresis temp based
+            # resume job if temperature is low enough after 25 seconds
             if (
-                not self.mode_time_based
-                and self.temperature <= self.hysteresis_temperature
-            ):
-                self._logger.info(
-                    "Laser temperature passed hysteresis limit. Current temp: %s, hysteresis: %s",
-                    self.temperature,
-                    self.hysteresis_temperature,
-                )
-                self.cooling_resume()
-
-            # resume time based
-            elif (
-                self.mode_time_based
-                and self.cooling_since > self.cooling_duration
-                and self.temperature
-                < self.temperature_max - self.FIRST_COOLING_THRESHOLD_TEMPERATURE
+                self.cooling_since > self.cooling_duration
+                and self.cooling_difference >= self.HYTERESIS_TEMPERATURE
             ):
                 self._logger.warn(
                     "Cooling break duration passed: %ss - Current temp: %s",
@@ -374,20 +342,24 @@ class TemperatureManager(object):
                 pass
 
     def _check_cooling_threshold(self):
+        # only check every COOLING_THRESHOLD_CHECK_INTERVAL seconds for the cooling thresholds
         if (
-            self.cooling_difference >= self.FIRST_COOLING_THRESHOLD_TEMPERATURE
-            and self.cooling_since > self.FIRST_COOLING_THRESHOLD_TIME
-        ) or (
-            self.cooling_difference >= self.SECOND_COOLING_THRESHOLD_TEMPERATURE
-            and self.cooling_since > self.SECOND_COOLING_THRESHOLD_TIME
-        ):  # expected cooling effect is met but hysteresis is not reached, re trigger cooling fan to speed up
-            self._event_bus.fire(MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN)
-        elif (
-            self.cooling_difference < self.SECOND_COOLING_THRESHOLD_TEMPERATURE
-            and self.cooling_since > self.SECOND_COOLING_THRESHOLD_TIME
-        ):  # expected cooling effect is not met something is wrong
-            self._fire_cooling_to_slow_event()
-        elif (
-            self.cooling_since > self.THIRD_COOLING_THRESHOLD_TIME
-        ):  # already cooling for too long
-            self._fire_cooling_to_slow_event()
+            get_uptime() - self._last_cooling_threshold_check_time
+            > self.COOLING_THRESHOLD_CHECK_INTERVAL
+        ):
+            self._last_cooling_threshold_check_time = get_uptime()
+            if (
+                self.cooling_difference >= self.FIRST_COOLING_THRESHOLD_TEMPERATURE
+                and self.cooling_since > self.FIRST_COOLING_THRESHOLD_TIME
+            ) or (
+                self.cooling_difference >= self.SECOND_COOLING_THRESHOLD_TEMPERATURE
+                and self.cooling_since > self.SECOND_COOLING_THRESHOLD_TIME
+            ):
+                # expected cooling effect is met but hysteresis is not reached, re trigger cooling fan to speed up
+                self._event_bus.fire(MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN)
+            elif (
+                self.cooling_difference < self.SECOND_COOLING_THRESHOLD_TEMPERATURE
+                and self.cooling_since > self.SECOND_COOLING_THRESHOLD_TIME
+            ) or self.cooling_since > self.THIRD_COOLING_THRESHOLD_TIME:
+                # expected cooling effect is not met something is wrong
+                self._fire_cooling_to_slow_event()

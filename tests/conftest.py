@@ -37,10 +37,12 @@ def mrbeam_plugin():
     mrbeam_plugin._settings.get = MagicMock(
         return_value="", getBaseFolder=MagicMock(return_value="")
     )
+    mrbeam_plugin._settings.get_boolean = MagicMock()
     mrbeam_plugin._event_bus = MagicMock()
     mrbeam_plugin.get_plugin_version = MagicMock()
     mrbeam_plugin._basefolder = os.path.join(
         os.path.dirname(__package_path__), "octoprint_mrbeam"
     )
+    mrbeam_plugin.laserhead_handler = MagicMock()
 
     yield mrbeam_plugin
