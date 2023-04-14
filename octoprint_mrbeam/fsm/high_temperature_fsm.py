@@ -9,15 +9,15 @@ class HighTemperatureFSM(StateMachine):
     deactivated = State("Deactivated", initial=True)
     monitoring = State("Monitoring")
     warning = State("Warning")
-    criticaly = State("Criticaly")
+    critically = State("Critically")
     dismissed = State("Dismissed")
 
     start_monitoring = deactivated.to(monitoring)
-    warn = monitoring.to(warning) | warning.to(criticaly)
-    critical = warning.to(criticaly) | monitoring.to(criticaly)
-    dismiss = warning.to(dismissed) | criticaly.to(dismissed)
+    warn = monitoring.to(warning) | warning.to(critically)
+    critical = warning.to(critically) | monitoring.to(critically)
+    dismiss = warning.to(dismissed) | critically.to(dismissed)
     deactivate = dismissed.to(deactivated) | monitoring.to(deactivated)
-    silent_dismiss = warning.to(monitoring) | criticaly.to(dismissed)
+    silent_dismiss = warning.to(monitoring) | critically.to(dismissed)
 
     def __init__(self, event_bus=None, disabled=False, analytics_handler=None):
         super(HighTemperatureFSM, self).__init__()
@@ -32,7 +32,7 @@ class HighTemperatureFSM(StateMachine):
     def on_enter_warning(self):
         self._logger.info("on_enter_warning")
         payload = {"trigger": "high_temperature_warning"}
-        if not self._disabled:
+        if self._disabled:
             self._logger.info(
                 "Warning state entered but feature is disabled. Will silent dismiss."
             )
@@ -40,10 +40,10 @@ class HighTemperatureFSM(StateMachine):
         else:
             self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_SHOW, payload)
 
-    def on_enter_criticaly(self):
-        self._logger.info("on_enter_criticaly")
-        payload = {"trigger": "high_temperature_criticaly"}
-        if not self._disabled:
+    def on_enter_critically(self):
+        self._logger.info("on_enter_critically")
+        payload = {"trigger": "high_temperature_critically"}
+        if self._disabled:
             self._logger.info(
                 "Critical state entered but feature is disabled. Will silent dismiss."
             )
@@ -63,10 +63,15 @@ class HighTemperatureFSM(StateMachine):
     def on_enter_dismissed(self):
         self._logger.info("on_enter_dismissed")
         payload = {"trigger": "high_temperature_dismissed"}
-        self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_HIDE, payload)
-        self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_HIDE, payload)
-        self._event_bus.fire(MrBeamEvents.LED_ERROR_EXIT, payload)
-        self._event_bus.fire(MrBeamEvents.ALARM_EXIT, payload)
+        if self._disabled:
+            self._logger.info(
+                "Dismissed state entered but feature is disabled. Will do nothing."
+            )
+        else:
+            self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_HIDE, payload)
+            self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_HIDE, payload)
+            self._event_bus.fire(MrBeamEvents.LED_ERROR_EXIT, payload)
+            self._event_bus.fire(MrBeamEvents.ALARM_EXIT, payload)
 
     def _subscribe_to_events(self):
         self._event_bus.subscribe(
@@ -94,6 +99,9 @@ class HighTemperatureFSM(StateMachine):
         self._add_transistion_analytics_entry(event_data)
 
     def before_deactivate(self, event_data=None):
+        self._add_transistion_analytics_entry(event_data)
+
+    def before_silent_dismiss(self, event_data=None):
         self._add_transistion_analytics_entry(event_data)
 
     def _add_transistion_analytics_entry(self, event_data):
