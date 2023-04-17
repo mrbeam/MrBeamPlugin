@@ -53,6 +53,7 @@ def mrbeam_plugin():
     mrbeam_plugin.compressor_handler = MagicMock()
     mrbeam_plugin.get_plugin_version = MagicMock()
     mrbeam_plugin.analytics_handler = MagicMock()
+    mrbeam_plugin._file_manager = MagicMock()
     mrbeam_plugin._basefolder = os.path.join(
         os.path.dirname(__package_path__), "octoprint_mrbeam"
     )
