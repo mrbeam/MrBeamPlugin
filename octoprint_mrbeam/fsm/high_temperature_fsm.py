@@ -21,11 +21,11 @@ class HighTemperatureFSM(StateMachine):
 
     def __init__(self, event_bus=None, disabled=False, analytics_handler=None):
         super(HighTemperatureFSM, self).__init__()
+        self._logger = mrb_logger("octoprint.plugins.mrbeam.fsm.high_temperature_fsm")
         self._event_bus = event_bus
         self._subscribe_to_events()
         self._disabled = disabled
         self._analytics_handler = analytics_handler
-        self._logger = mrb_logger("octoprint.plugins.mrbeam.fsm.high_temperature_fsm")
 
     # def on_enter_<state>.... for handling state enter
     # def on_exit_<state>.... for handling state exit

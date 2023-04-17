@@ -1,7 +1,27 @@
+import time
+
+import octoprint
+import pytest
 from mock.mock import MagicMock, call
+from octoprint.events import EventManager, Events
+
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 from octoprint_mrbeam.fsm.high_temperature_fsm import HighTemperatureFSM
+
+
+@pytest.fixture
+def high_temp_fsm():
+    plugin_manager_mock = MagicMock(spec=octoprint.plugin.plugin_manager)
+
+    # replace the actual plugin manager with the mock object
+    octoprint.plugin.plugin_manager = plugin_manager_mock
+    event_manager = EventManager()
+    event_manager.fire(Events.STARTUP)
+
+    fsm = HighTemperatureFSM(event_manager, False, MagicMock())
+
+    return fsm
 
 
 def test_transistion_from_deactivated_to_monitoring():
@@ -260,3 +280,70 @@ def test_feature_is_disabled_transition_from_monitoring_to_critical():
     fsm._analytics_handler.add_high_temp_warning_state_transition.assert_has_calls(
         calls, any_order=False
     )
+
+
+def test_event_trigger_HIGH_TEMPERATURE_WARNING_DISMISSED(high_temp_fsm):
+    # Arrange
+
+    high_temp_fsm.start_monitoring()
+    high_temp_fsm.warn()
+    assert high_temp_fsm.warning.is_active
+
+    # Act
+    high_temp_fsm._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED)
+
+    # Assert
+    time.sleep(0.1)
+    assert high_temp_fsm.dismissed.is_active
+
+
+def test_event_trigger_HIGH_TEMPERATURE_CRITICAL_DISMISSED(high_temp_fsm):
+    # Arrange
+
+    high_temp_fsm.start_monitoring()
+    high_temp_fsm.warn()
+    high_temp_fsm.critical()
+    assert high_temp_fsm.critically.is_active
+
+    # Act
+    high_temp_fsm._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_DISMISSED)
+
+    # Assert
+    time.sleep(0.1)
+    assert high_temp_fsm.dismissed.is_active
+
+
+def test_event_trigger_LASER_COOLING_TO_SLOW(high_temp_fsm):
+    high_temp_fsm.start_monitoring()
+    assert high_temp_fsm.monitoring.is_active
+
+    # Act
+    high_temp_fsm._event_bus.fire(MrBeamEvents.LASER_COOLING_TO_SLOW)
+
+    # Assert
+    time.sleep(0.1)
+    assert high_temp_fsm.warning.is_active
+
+
+def test_event_trigger_LASER_HIGH_TEMPERATURE(high_temp_fsm):
+    high_temp_fsm.start_monitoring()
+    assert high_temp_fsm.monitoring.is_active
+
+    # Act
+    high_temp_fsm._event_bus.fire(MrBeamEvents.LASER_HIGH_TEMPERATURE)
+
+    # Assert
+    time.sleep(0.1)
+    assert high_temp_fsm.critically.is_active
+
+
+def test_event_trigger_LASER_COOLING_RESUME(high_temp_fsm):
+    high_temp_fsm.start_monitoring()
+    assert high_temp_fsm.monitoring.is_active
+
+    # Act
+    high_temp_fsm._event_bus.fire(MrBeamEvents.LASER_COOLING_RESUME)
+
+    # Assert
+    time.sleep(0.1)
+    assert high_temp_fsm.deactivated.is_active

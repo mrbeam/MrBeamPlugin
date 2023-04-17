@@ -684,6 +684,9 @@ class AnalyticsHandler(object):
         self, event, state_before, state_after, feature_disabled, header_extension=None
     ):
         try:
+            if header_extension is None:
+                header_extension = dict()
+
             header_extension.update(
                 {
                     AnalyticsKeys.Header.FEATURE_ID: "SW-991",
@@ -1197,19 +1200,23 @@ class AnalyticsHandler(object):
         """
         _ = event
         try:
+            if header_extension is None:
+                header_extension = dict()
+
             header_extension.update(
                 {
                     AnalyticsKeys.Header.FEATURE_ID: "SW-991",
                 }
             )
-            self._add_device_event(
-                AnalyticsKeys.Device.Event.LASER_HIGH_TEMPERATURE,
-                payload=dict(
-                    temperature=payload.get("tmp", 0),
-                    threshold=self._temperature_manager.high_tmp_warn_threshold,
-                ),
-                header_extension=header_extension,
-            )
+            if payload:
+                self._add_device_event(
+                    AnalyticsKeys.Device.Event.LASER_HIGH_TEMPERATURE,
+                    payload=dict(
+                        temperature=payload.get("tmp", 0),
+                        threshold=self._temperature_manager.high_tmp_warn_threshold,
+                    ),
+                    header_extension=header_extension,
+                )
         except Exception as e:
             self._logger.exception(
                 "Exception during _on_event_laser_high_temperature: {}".format(e)
@@ -1228,6 +1235,9 @@ class AnalyticsHandler(object):
             None
         """
         _ = payload
+
+        if header_extension is None:
+            header_extension = dict()
 
         header_extension.update(
             {
@@ -1270,6 +1280,9 @@ class AnalyticsHandler(object):
         """
         _ = payload
 
+        if header_extension is None:
+            header_extension = dict()
+
         header_extension.update(
             {
                 AnalyticsKeys.Header.FEATURE_ID: "SW-991",
@@ -1311,6 +1324,9 @@ class AnalyticsHandler(object):
 
         _ = payload
         _ = event
+
+        if header_extension is None:
+            header_extension = dict()
 
         header_extension.update(
             {

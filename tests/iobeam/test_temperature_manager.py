@@ -148,6 +148,7 @@ def test_handle_temp_stop_cooling_after_hysteresis(mrbeam_plugin):
 def test_handle_temp_fire_cooling_to_slow_event_second_threshold(mrbeam_plugin):
     # Arrange
     temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager._event_bus.fire = MagicMock()
     temperature_manager._analytics_handler = MagicMock()
     temperature_manager.cooling_tigger_time = (
         get_uptime() - 61
@@ -168,6 +169,7 @@ def test_handle_temp_fire_cooling_to_slow_event_second_threshold(mrbeam_plugin):
 def test_handle_temp_fire_cooling_to_slow_event_third_threshold(mrbeam_plugin):
     # Arrange
     temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager._event_bus.fire = MagicMock()
     temperature_manager._analytics_handler = MagicMock()
     temperature_manager.cooling_tigger_time = (
         get_uptime() - 141
@@ -203,6 +205,7 @@ def test_handle_temp_fire_cooling_to_slow_re_trigger_cooling_fan(
 ):
     # Arrange
     temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager._event_bus.fire = MagicMock()
     temperature_manager._analytics_handler = MagicMock()
     temperature_manager.cooling_tigger_time = (
         get_uptime() - time
