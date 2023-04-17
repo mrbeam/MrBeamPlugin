@@ -94,6 +94,15 @@ class TemperatureManager(object):
         self._start_temp_timer()
 
     def _on_event_laser_job_aborted(self, event, payload):
+        """
+        Called when a laser job is aborted. Will reset the temperature manager.
+        Args:
+            event: event name
+            payload: payload of the event
+
+        Returns:
+            None
+        """
         self.reset({"event": event})
 
     def _subscribe(self):
@@ -148,6 +157,7 @@ class TemperatureManager(object):
 
     @property
     def high_tmp_warn_threshold(self):
+        """Returns the temperature at which the user should be warned that the laserhead is too hot."""
         return self.temperature_max + self._high_tmp_warn_offset
 
     def onEvent(self, event, payload):
@@ -192,7 +202,12 @@ class TemperatureManager(object):
             )
 
     def cooling_resume(self):
-        """Resume laser once the laser has cooled down enough."""
+        """
+        Resume laser once the laser has cooled down enough.
+
+        Returns:
+            None
+        """
         self._logger.debug("cooling_resume()")
         self._event_bus.fire(
             MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature)
@@ -285,6 +300,12 @@ class TemperatureManager(object):
         )
 
     def _fire_cooling_to_slow_event(self):
+        """
+        Fires the event that the cooling process is slowing down.
+
+        Returns:
+            None
+        """
         self._event_bus.fire(
             MrBeamEvents.LASER_COOLING_TO_SLOW,
             dict(
@@ -295,6 +316,12 @@ class TemperatureManager(object):
         )
 
     def _check_temp_val(self):
+        """
+        Checks the current temperature value and fires events if necessary.
+
+        Returns:
+            None
+        """
         if self.temperature is None:
             self._logger.error("Laser temperature is None.")
             msg = "Laser temperature not available, assuming high temperature and stop for cooling."
@@ -342,6 +369,12 @@ class TemperatureManager(object):
                 pass
 
     def _check_cooling_threshold(self):
+        """
+        Checks if the cooling thresholds are met and fires the corresponding events.
+
+        Returns:
+            None
+        """
         # only check every COOLING_THRESHOLD_CHECK_INTERVAL seconds for the cooling thresholds
         if (
             get_uptime() - self._last_cooling_threshold_check_time
