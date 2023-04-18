@@ -679,6 +679,47 @@ class AnalyticsHandler(object):
                 "Exception during add_compressor_static_data: {}".format(e)
             )
 
+    # High Temp Warning
+    def add_high_temp_warning_state_transition(
+        self, event, state_before, state_after, feature_disabled, header_extension=None
+    ):
+        """
+        Add a high temp warning state transition event to the analytics queue
+        Args:
+            event: event that triggered the transition
+            state_before: state before the transition
+            state_after: state after the transition
+            feature_disabled: if the feature is disabled
+            header_extension:  additional header information
+
+        Returns:
+            None
+        """
+        try:
+            if header_extension is None:
+                header_extension = dict()
+
+            header_extension.update(
+                {
+                    AnalyticsKeys.Header.FEATURE_ID: "SW-991",
+                }
+            )
+            payload = {
+                AnalyticsKeys.HighTemperatureWarning.State.STATE_BEFORE: state_before,
+                AnalyticsKeys.HighTemperatureWarning.State.STATE_AFTER: state_after,
+                AnalyticsKeys.HighTemperatureWarning.State.EVENT: event,
+                AnalyticsKeys.HighTemperatureWarning.State.FEATURE_DISABLED: feature_disabled,
+            }
+            self._add_device_event(
+                AnalyticsKeys.HighTemperatureWarning.Event.STATE_TRANSITION,
+                payload=payload,
+                header_extension=header_extension,
+            )
+        except Exception as e:
+            self._logger.exception(
+                "Exception during add_high_temp_warning_state_transition: {}".format(e)
+            )
+
     # -------- OCTOPRINT AND MR BEAM EVENTS ----------------------------------------------------------------------------
     def _subscribe(self):
         self._event_bus.subscribe(
@@ -744,12 +785,32 @@ class AnalyticsHandler(object):
             MrBeamEvents.PRINT_ABORTED, self._on_event_print_aborted
         )
         self._event_bus.subscribe(
-            MrBeamEvents.HIGH_TEMPERATURE_WARNING,
-            self._on_event_high_temperature_warning,
+            MrBeamEvents.LASER_COOLING_TO_SLOW,
+            self._on_event_laser_cooling_to_slow,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN,
+            self._on_event_laser_cooling_re_trigger_fan,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_HIGH_TEMPERATURE,
+            self._on_event_laser_high_temperature,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_SHOW,
+            self._on_event_high_temperature_shown,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING_SHOW,
+            self._on_event_high_temperature_shown,
         )
         self._event_bus.subscribe(
             MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED,
-            self._on_event_high_temperature_warning_dismissed,
+            self._on_event_high_temperature_dismissed,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_DISMISSED,
+            self._on_event_high_temperature_dismissed,
         )
 
     def _event_startup(self, event, payload, header_extension=None):
@@ -937,6 +998,46 @@ class AnalyticsHandler(object):
             header_extension=header_extension,
         )
 
+    def _on_event_laser_cooling_to_slow(self, event, payload, header_extension=None):
+        """On Event Laser Cooling to slow add Analytics entry.
+
+        Args:
+            event: event that triggered the call
+            payload: payload of the event
+            header_extension: extension of the header
+
+        Returns:
+            None
+        """
+        _ = event
+        _ = payload
+
+        if header_extension is None:
+            header_extension = {}
+
+        header_extension.update(
+            {
+                AnalyticsKeys.Header.FEATURE_ID: "SW-991",
+            }
+        )
+
+        data = {
+            AnalyticsKeys.Job.LaserHead.TEMP: None,
+            AnalyticsKeys.Job.Event.Cooling.DIFFERENCE: payload.get(
+                "cooling_difference"
+            ),
+            AnalyticsKeys.Job.Event.Cooling.TIME: payload.get("cooling_time"),
+        }
+        if self._current_lasertemp_collector:
+            data[
+                AnalyticsKeys.Job.LaserHead.TEMP
+            ] = self._current_lasertemp_collector.get_latest_value()
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Cooling.DONE,
+            payload=data,
+            header_extension=header_extension,
+        )
+
     def _event_print_done(self, event, payload, header_extension=None):
         _ = event
         duration = {
@@ -1101,8 +1202,8 @@ class AnalyticsHandler(object):
                 "Exception during _add_other_plugin_data: {}".format(e)
             )
 
-    def _on_event_high_temperature_warning(self, event, payload, header_extension=None):
-        """Callback for  high temperature warning event. Will add an event to analytics with the current temperature and the set threshold for triggering the user warning.
+    def _on_event_laser_high_temperature(self, event, payload, header_extension=None):
+        """Callback for laser high temperature event.
 
         Args:
             event: event that triggered this action
@@ -1114,23 +1215,75 @@ class AnalyticsHandler(object):
         """
         _ = event
         try:
+            if header_extension is None:
+                header_extension = dict()
+
+            header_extension.update(
+                {
+                    AnalyticsKeys.Header.FEATURE_ID: "SW-991",
+                }
+            )
+            if payload:
+                self._add_device_event(
+                    AnalyticsKeys.Device.Event.LASER_HIGH_TEMPERATURE,
+                    payload=dict(
+                        temperature=payload.get("tmp", 0),
+                        threshold=self._temperature_manager.high_tmp_warn_threshold,
+                    ),
+                    header_extension=header_extension,
+                )
+        except Exception as e:
+            self._logger.exception(
+                "Exception during _on_event_laser_high_temperature: {}".format(e)
+            )
+
+    def _on_event_high_temperature_shown(self, event, payload, header_extension=None):
+        """Callback for high temperature warning or critical shown event.
+        Will add an event to analytics.
+
+        Args:
+            event: event that triggered this action
+            payload: payload of the event
+            header_extension: extension to the header
+
+        Returns:
+            None
+        """
+        _ = payload
+
+        if header_extension is None:
+            header_extension = dict()
+
+        header_extension.update(
+            {
+                AnalyticsKeys.Header.FEATURE_ID: "SW-991",
+            }
+        )
+
+        if event == MrBeamEvents.HIGH_TEMPERATURE_WARNING_SHOW:
+            analytics_event_key = AnalyticsKeys.Device.HighTemp.WARNING_SHOWN
+        elif event == MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_SHOW:
+            analytics_event_key = AnalyticsKeys.Device.HighTemp.CRITICAL_SHOWN
+        else:
+            self._logger.error(
+                "Unknown event %s for _on_event_high_temperature_shown", event
+            )
+            return
+        try:
             self._add_device_event(
-                AnalyticsKeys.Device.HighTempWarning.TRIGGERED,
-                payload=dict(
-                    temperature=payload.get("tmp", 0),
-                    threshold=self._temperature_manager.high_tmp_warn_threshold,
-                ),
+                analytics_event_key,
                 header_extension=header_extension,
             )
         except Exception as e:
             self._logger.exception(
-                "Exception during on_event_high_temperature_warning: {}".format(e)
+                "Exception during _on_event_high_temperature_shown: {}".format(e)
             )
 
-    def _on_event_high_temperature_warning_dismissed(
+    def _on_event_high_temperature_dismissed(
         self, event, payload, header_extension=None
     ):
-        """Callback for high temperature warning dismissed event. Will add an event to analytics."
+        """Callback for high temperature warning/critical dismissed event. Will add an event to analytics.
+        Will add an event to analytics.
 
         Args:
             event: event that triggered this action
@@ -1140,18 +1293,70 @@ class AnalyticsHandler(object):
         Returns:
             None
         """
-        _ = event
         _ = payload
+
+        if header_extension is None:
+            header_extension = dict()
+
+        header_extension.update(
+            {
+                AnalyticsKeys.Header.FEATURE_ID: "SW-991",
+            }
+        )
+
+        if event == MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED:
+            analytics_event_key = AnalyticsKeys.Device.HighTemp.WARNING_DISMISSED
+        elif event == MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_DISMISSED:
+            analytics_event_key = AnalyticsKeys.Device.HighTemp.CRITICAL_DISMISSED
+        else:
+            self._logger.error(
+                "Unknown event %s for _on_event_high_temperature_dismissed", event
+            )
+            return
         try:
             self._add_device_event(
-                AnalyticsKeys.Device.HighTempWarning.DISMISSED,
+                analytics_event_key,
                 header_extension=header_extension,
             )
         except Exception as e:
             self._logger.exception(
-                "Exception during on_event_high_temperature_warning_dismissed: {}".format(
-                    e
-                )
+                "Exception during _on_event_high_temperature_dismissed: {}".format(e)
+            )
+
+    def _on_event_laser_cooling_re_trigger_fan(
+        self, event, payload, header_extension=None
+    ):
+        """Callback for laser cooling re-trigger fan event to add analytics entry.
+
+        Args:
+            event: event that triggered this action
+            payload: payload of the event
+            header_extension: header extension
+
+        Returns:
+            None
+        """
+
+        _ = payload
+        _ = event
+
+        if header_extension is None:
+            header_extension = dict()
+
+        header_extension.update(
+            {
+                AnalyticsKeys.Header.FEATURE_ID: "SW-991",
+            }
+        )
+
+        try:
+            self._add_device_event(
+                AnalyticsKeys.Job.Event.Cooling.COOLING_FAN_RETRIGGER,
+                header_extension=header_extension,
+            )
+        except Exception as e:
+            self._logger.exception(
+                "Exception during _on_event_laser_cooling_re_trigger_fan: {}".format(e)
             )
 
     # -------- ANALYTICS LOGS QUEUE ------------------------------------------------------------------------------------

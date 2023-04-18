@@ -2554,8 +2554,8 @@ class MachineCom(object):
         else:
             eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
-    def abort_print(self, trigger):
-        """Abort the print.
+    def abort_lasering(self, trigger):
+        """Abort the lasering.
 
         Returns:
 

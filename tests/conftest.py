@@ -1,8 +1,11 @@
 # pytest config file
 import os
 
+import octoprint
 import pytest
 from mock.mock import MagicMock
+from octoprint.events import EventManager, Events
+from octoprint.plugin import PluginManager
 
 from octoprint.settings import settings
 from octoprint_mrbeam import MrBeamPlugin
@@ -32,15 +35,29 @@ def pytest_generate_tests(metafunc):
 
 @pytest.fixture
 def mrbeam_plugin():
+    plugin_manager_mock = MagicMock(spec=octoprint.plugin.plugin_manager)
+
+    # replace the actual plugin manager with the mock object
+    octoprint.plugin.plugin_manager = plugin_manager_mock
+    event_manager = EventManager()
+
     mrbeam_plugin = MrBeamPlugin()
     mrbeam_plugin._settings = sett
     mrbeam_plugin._settings.get = MagicMock(
         return_value="", getBaseFolder=MagicMock(return_value="")
     )
-    mrbeam_plugin._event_bus = MagicMock()
+    mrbeam_plugin._settings.get_boolean = MagicMock()
+    mrbeam_plugin._event_bus = event_manager
+    mrbeam_plugin.dust_manager = MagicMock()
+    mrbeam_plugin.temperature_manager = MagicMock()
+    mrbeam_plugin.compressor_handler = MagicMock()
     mrbeam_plugin.get_plugin_version = MagicMock()
+    mrbeam_plugin.analytics_handler = MagicMock()
+    mrbeam_plugin._file_manager = MagicMock()
     mrbeam_plugin._basefolder = os.path.join(
         os.path.dirname(__package_path__), "octoprint_mrbeam"
     )
+    mrbeam_plugin.laserhead_handler = MagicMock()
+    mrbeam_plugin._event_bus.fire(Events.STARTUP)
 
     yield mrbeam_plugin
