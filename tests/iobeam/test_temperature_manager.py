@@ -213,6 +213,7 @@ def test_handle_temp_fire_cooling_to_slow_re_trigger_cooling_fan(
     temperature_manager.cooling_tigger_temperature = 50.0
     temperature_manager.hysteresis_temperature = 28
     temperature_manager.temperature_max = 50.0
+    temperature_manager._high_tmp_warn_offset = 5.0
 
     # Act
     temperature_manager.handle_temp(kwargs={"temp": temp})
