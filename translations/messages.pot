@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-30 16:00+0200\n"
+"POT-Creation-Date: 2023-04-18 16:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,63 +17,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: octoprint_mrbeam/__init__.py:961
+#: octoprint_mrbeam/__init__.py:960
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:730
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:741
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:2
 msgid "Files"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:968
+#: octoprint_mrbeam/__init__.py:967
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:4
 msgid "Camera"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:975
+#: octoprint_mrbeam/__init__.py:974
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:2
 msgid "Precision Calibration"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:982
+#: octoprint_mrbeam/__init__.py:981
 #: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:56
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:5
 msgid "Debug"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:989
+#: octoprint_mrbeam/__init__.py:988
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
 msgid "About This Mr Beam"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:996
+#: octoprint_mrbeam/__init__.py:995
 msgid "Better Together"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1003
+#: octoprint_mrbeam/__init__.py:1002
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
 msgid "Reminders"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1010
+#: octoprint_mrbeam/__init__.py:1009
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:2
 msgid "Maintenance"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1017
+#: octoprint_mrbeam/__init__.py:1016
 #: octoprint_mrbeam/templates/settings/leds_settings.jinja2:2
 msgid "Mr Beam Lights"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1024
+#: octoprint_mrbeam/__init__.py:1023
 #: octoprint_mrbeam/templates/settings/custom_material_settings.jinja2:2
 msgid "Custom Material Settings"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:2409
+#: octoprint_mrbeam/__init__.py:2389
 msgid "A new picture is being taken, please wait a little..."
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:2414
+#: octoprint_mrbeam/__init__.py:2394
 msgid "Either the camera is busy or the lid is not open."
 msgstr ""
 
@@ -469,7 +469,7 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:586
-msgid "Beta user: Please consider enabling Mr Beam analytics!"
+msgid "Beta user: Please consider enabling Mr Beam Better Together!"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:590
@@ -478,7 +478,7 @@ msgid ""
 "As you are currently in our Beta channel, you would help us tremendously "
 "sharing%(br)sthe laser job insights, so we can improve%(br)san overall "
 "experience working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to "
-"analytics settings%(close)s"
+"Better Together settings%(close)s"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/review.js:236
@@ -4268,27 +4268,6 @@ msgstr ""
 msgid "No black pixels are in the green rectangle"
 msgstr ""
 
-#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:3
-msgid "Temperature Warning, please check your Mr Beam!"
-msgstr ""
-
-#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:8
-msgid ""
-"Attention:<br>The temperature in your Mr Beam is higher than "
-"usual.<br><br>This is an indication of a fire. Check the working area to "
-"make sure that everything is alright!"
-msgstr ""
-
-#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:13
-msgid ""
-"Your Mr Beam can only be used again when the temperature drops further. "
-"This may take a few minutes."
-msgstr ""
-
-#: octoprint_mrbeam/templates/modals/temperature_warning.jinja2:15
-msgid "All good!"
-msgstr ""
-
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:5
 msgid "https://mr-beam.org/en/downloads/"
 msgstr ""
@@ -4422,9 +4401,7 @@ msgstr ""
 msgid ""
 "We understand that your privacy is crucial, and we want to assure you "
 "that none of the data collected includes your personal information such "
-"as your name, login details, designs, or any other private content. You "
-"are in full control, and you can change your mind at any time by going to"
-" <strong>\"Settings > Better together\"</strong>."
+"as your name, login details, designs, or any other private content."
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:22
@@ -5024,6 +5001,12 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:30
 msgid "Confirm Password"
+msgstr ""
+
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:15
+msgid ""
+"You are in full control, and you can change your mind at any time by "
+"going to <strong>\"Settings > Better together\"</strong>."
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:6
