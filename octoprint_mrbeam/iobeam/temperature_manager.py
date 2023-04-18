@@ -157,7 +157,12 @@ class TemperatureManager(object):
 
     @property
     def high_tmp_warn_threshold(self):
-        """Returns the temperature at which the user should be warned that the laserhead is too hot."""
+        """
+        Returns the temperature at which the user should be warned that the laser head is too hot.
+
+        Returns:
+            int: temperature in degrees
+        """
         return self.temperature_max + self._high_tmp_warn_offset
 
     def onEvent(self, event, payload):
@@ -366,9 +371,6 @@ class TemperatureManager(object):
                     self.temperature,
                 )
                 self.cooling_resume()
-            else:
-                # self._logger.debug("Laser temperature nothing. Current temp: %s, self.is_cooling(): %s", self.temperatur, self.is_cooling())
-                pass
 
     def _check_cooling_threshold(self):
         """

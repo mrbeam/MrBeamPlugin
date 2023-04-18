@@ -683,6 +683,18 @@ class AnalyticsHandler(object):
     def add_high_temp_warning_state_transition(
         self, event, state_before, state_after, feature_disabled, header_extension=None
     ):
+        """
+        Add a high temp warning state transition event to the analytics queue
+        Args:
+            event: event that triggered the transition
+            state_before: state before the transition
+            state_after: state after the transition
+            feature_disabled: if the feature is disabled
+            header_extension:  additional header information
+
+        Returns:
+            None
+        """
         try:
             if header_extension is None:
                 header_extension = dict()
