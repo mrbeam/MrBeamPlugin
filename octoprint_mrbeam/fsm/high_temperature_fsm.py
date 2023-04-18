@@ -21,9 +21,7 @@ class HighTemperatureFSM(StateMachine):
 
     start_monitoring = deactivated.to(monitoring)
     warn = monitoring.to(warning) | warning.to(critically)
-    critical = (
-        warning.to(critically) | monitoring.to(critically) | critically.to(critically)
-    )
+    critical = warning.to(critically) | monitoring.to(critically)
     dismiss = warning.to(dismissed) | critically.to(dismissed)
     deactivate = dismissed.to(deactivated) | monitoring.to(deactivated)
     silent_dismiss = warning.to(monitoring) | critically.to(dismissed)
