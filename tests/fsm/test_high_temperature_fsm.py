@@ -347,3 +347,14 @@ def test_event_trigger_LASER_COOLING_RESUME(high_temp_fsm):
     # Assert
     time.sleep(0.1)
     assert high_temp_fsm.deactivated.is_active
+
+
+def test_event_trigger_LASER_COOLING_TEMPERATURE_REACHED(high_temp_fsm):
+    assert high_temp_fsm.deactivated.is_active
+
+    # Act
+    high_temp_fsm._event_bus.fire(MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED)
+
+    # Assert
+    time.sleep(0.1)
+    assert high_temp_fsm.monitoring.is_active

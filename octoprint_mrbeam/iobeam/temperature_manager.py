@@ -327,6 +327,16 @@ class TemperatureManager(object):
             msg = "Laser temperature not available, assuming high temperature and stop for cooling."
             self.cooling_stop(err_msg=msg)
             return
+
+        # cooling break
+        if not self.is_cooling() and self.temperature > self.temperature_max:
+            msg = "Laser temperature exceeded limit. Current temp: %s, max: %s" % (
+                self.temperature,
+                self.temperature_max,
+            )
+            self.cooling_stop(err_msg=msg)  # trigger a cooling stop
+            self._event_bus.fire(MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED)
+
         # critical high temperature
         if self.temperature > self.high_tmp_warn_threshold:
             self._logger.warn(
@@ -341,14 +351,6 @@ class TemperatureManager(object):
                     threshold=self.high_tmp_warn_threshold,
                 ),
             )
-
-        # cooling break
-        if not self.is_cooling() and self.temperature > self.temperature_max:
-            msg = "Laser temperature exceeded limit. Current temp: %s, max: %s" % (
-                self.temperature,
-                self.temperature_max,
-            )
-            self.cooling_stop(err_msg=msg)  # trigger a cooling stop
 
         elif self.is_cooling():
             self._check_cooling_threshold()

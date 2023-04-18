@@ -21,7 +21,9 @@ class HighTemperatureFSM(StateMachine):
 
     start_monitoring = deactivated.to(monitoring)
     warn = monitoring.to(warning) | warning.to(critically)
-    critical = warning.to(critically) | monitoring.to(critically)
+    critical = (
+        warning.to(critically) | monitoring.to(critically) | critically.to(critically)
+    )
     dismiss = warning.to(dismissed) | critically.to(dismissed)
     deactivate = dismissed.to(deactivated) | monitoring.to(deactivated)
     silent_dismiss = warning.to(monitoring) | critically.to(dismissed)
@@ -105,25 +107,6 @@ class HighTemperatureFSM(StateMachine):
             self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_HIDE, payload)
             self._event_bus.fire(MrBeamEvents.LED_ERROR_EXIT, payload)
             self._event_bus.fire(MrBeamEvents.ALARM_EXIT, payload)
-
-    def _subscribe_to_events(self):
-        """
-        Subscribe to the events of the event bus.
-
-        Returns:
-            None
-        """
-        self._event_bus.subscribe(
-            MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED,
-            self.dismiss,
-        )
-        self._event_bus.subscribe(
-            MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_DISMISSED,
-            self.dismiss,
-        )
-        self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_TO_SLOW, self.warn)
-        self._event_bus.subscribe(MrBeamEvents.LASER_HIGH_TEMPERATURE, self.critical)
-        self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self.deactivate)
 
     def before_start_monitoring(self, event_data=None):
         """
@@ -219,3 +202,107 @@ class HighTemperatureFSM(StateMachine):
             event_data.transition.target.id,
             self._disabled,
         )
+
+    def _subscribe_to_events(self):
+        """
+        Subscribe to the events of the event bus.
+
+        Returns:
+            None
+        """
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED,
+            self._on_event_dismissed,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_DISMISSED,
+            self._on_event_dismissed,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_COOLING_TO_SLOW, self._on_event_laser_cooling_to_slow
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_HIGH_TEMPERATURE, self._on_event_laser_high_temperature
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_COOLING_RESUME, self._on_event_laser_cooling_resume
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED,
+            self._on_event_laser_cooling_temperature_reached,
+        )
+
+    def _on_event_laser_cooling_temperature_reached(self, event, payload):
+        """
+        Handle the event laser cooling temperature reached.
+
+        Args:
+            event: event that triggered the handler
+            payload: payload of the event
+
+        Returns:
+            None
+        """
+        self._logger.info("on_event_laser_cooling_temperature_reached")
+        if self.deactivated.is_active:
+            self.start_monitoring()
+
+    def _on_event_laser_cooling_to_slow(self, event, payload):
+        """
+        Handle the event laser cooling to slow.
+
+        Args:
+            event: event that triggered the handler
+            payload: payload of the event
+
+        Returns:
+            None
+        """
+        self._logger.info("on_event_laser_cooling_to_slow")
+        if self.monitoring.is_active or self.warning.is_active:
+            self.warn()
+
+    def _on_event_laser_high_temperature(self, event, payload):
+        """
+        Handle the event laser high temperature.
+
+        Args:
+            event: event that triggered the handler
+            payload: payload of the event
+
+        Returns:
+            None
+        """
+        self._logger.info("on_event_Laser_High_Temperature")
+        if not self.critically.is_active:
+            self.critical()
+
+    def _on_event_laser_cooling_resume(self, event, payload):
+        """
+        Handle the event laser cooling resume.
+
+        Args:
+            event: event that triggered the handler
+            payload: payload of the event
+
+        Returns:
+            None
+        """
+        self._logger.info("on_event_laser_cooling_resume")
+        if self.monitoring.is_active or self.dismissed.is_active:
+            self.deactivate()
+
+    def _on_event_dismissed(self, event, payload):
+        """
+        Handle the event dismissed.
+
+        Args:
+            event: event that triggered the handler
+            payload: payload of the event
+
+        Returns:
+            None
+        """
+        self._logger.info("on_event_dismissed")
+        if not self.dismissed.is_active:
+            self.dismiss()

@@ -1000,6 +1000,9 @@ class AnalyticsHandler(object):
         _ = event
         _ = payload
 
+        if header_extension is None:
+            header_extension = {}
+
         header_extension.update(
             {
                 AnalyticsKeys.Header.FEATURE_ID: "SW-991",

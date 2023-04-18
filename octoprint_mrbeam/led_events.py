@@ -187,12 +187,14 @@ class LedEventListener(CommandTrigger):
 
         if not event in self._subscriptions:
             return
+
         if event == MrBeamEvents.LED_ERROR_ENTER:
             self.block_on_error = True
         elif event == MrBeamEvents.LED_ERROR_EXIT:
             self.block_on_error = False
 
         if self.block_on_error and event not in [
+            MrBeamEvents.LED_ERROR_ENTER,
             MrBeamEvents.LED_ERROR_EXIT,
             MrBeamEvents.SHUTDOWN_PREPARE_START,
             MrBeamEvents.SHUTDOWN_PREPARE_CANCEL,
