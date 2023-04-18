@@ -584,13 +584,13 @@ $(function () {
             ) {
                 new PNotify({
                     title: gettext(
-                        "Beta user: Please consider enabling Mr Beam Better Together!"
+                        "Beta user: Please consider enabling Mr Beam analytics!"
                     ),
                     text: _.sprintf(
                         gettext(
                             "As you are currently in our Beta channel, you would help us " +
                                 "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
-                                "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to Better Together settings%(close)s"
+                                "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"
                         ),
                         {
                             open: '<a href=\'#\' data-toggle="tab" id="beta_notification_analytics_link" class="settings_analytics_link" style="font-weight:bold">',
