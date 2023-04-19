@@ -14,6 +14,9 @@ def temperature_manager(mrbeam_plugin):
     temperature_manager._high_tmp_warn_offset = 5.0
     temperature_manager._event_bus.fire = MagicMock()
     temperature_manager._analytics_handler = MagicMock()
+    temperature_manager._on_mrbeam_plugin_initialized(
+        MrBeamEvents.MRB_PLUGIN_INITIALIZED, None
+    )
 
     return temperature_manager
 
@@ -86,9 +89,8 @@ def test_cooling_since_if_cooling(mrbeam_plugin):
     assert cooling_since == 1000
 
 
-def test_handle_temp_invalid(mrbeam_plugin):
+def test_handle_temp_invalid(temperature_manager):
     # Arrange
-    temperature_manager = TemperatureManager(mrbeam_plugin)
     temperature_manager.cooling_stop = MagicMock()
     temperature_manager._analytics_handler = MagicMock()
 
@@ -222,3 +224,67 @@ def test_cooling_resume(mrbeam_plugin):
     assert temperature_manager.cooling_tigger_time == None
     assert temperature_manager.cooling_tigger_temperature == None
     temperature_manager._one_button_handler.cooling_down_end.assert_called_once()
+
+
+def test_fire_of_LASER_COOLING_RESUME_after_cancel_or_abort(temperature_manager):
+    # Arrange
+    temperature_manager._one_button_handler = MagicMock(cooling_down_end=MagicMock())
+    temperature_manager.high_temp_fsm.start_monitoring()
+    temperature_manager.high_temp_fsm.warn()
+    temperature_manager.high_temp_fsm.dismiss()
+    temperature_manager.handle_temp(kwargs={"temp": 50})
+    temperature_manager._plugin.laserhead_handler.current_laserhead_max_temperature = 50
+    temperature_manager._plugin.laserhead_handler.current_laserhead_high_temperature_warn_offset = (
+        5
+    )
+    temperature_manager.reset({"event": "mock_reset"})
+    temperature_manager._event_bus.fire = MagicMock()
+
+    # Act
+    temperature_manager.handle_temp(kwargs={"temp": 30})
+
+    # Assert
+    temperature_manager._event_bus.fire.assert_called_with(
+        MrBeamEvents.LASER_COOLING_RESUME, dict(temp=30)
+    )
+    assert temperature_manager.cooling_tigger_time == None
+    assert temperature_manager.cooling_tigger_temperature == None
+    temperature_manager._one_button_handler.cooling_down_end.assert_called_once()
+
+
+def test_is_cooling_by_time(temperature_manager):
+    # Arrange
+    temperature_manager.cooling_tigger_time = get_uptime()
+
+    # Act
+    result = temperature_manager.is_cooling()
+
+    # Assert
+    assert result is True
+
+
+def test_is_cooling_by_fsm_state(temperature_manager):
+    # Arrange
+    temperature_manager.high_temp_fsm.start_monitoring()
+    temperature_manager.high_temp_fsm.warn()
+    temperature_manager.high_temp_fsm.dismiss()
+    temperature_manager.cooling_tigger_time = None
+
+    # Act
+    result = temperature_manager.is_cooling()
+
+    # Assert
+    assert result is True
+
+
+def test_is_cooling_is_false_if_no_time_or_state(temperature_manager):
+    # Arrange
+    temperature_manager.high_temp_fsm.start_monitoring()
+    temperature_manager.high_temp_fsm.warn()
+    temperature_manager.cooling_tigger_time = None
+
+    # Act
+    result = temperature_manager.is_cooling()
+
+    # Assert
+    assert result is False

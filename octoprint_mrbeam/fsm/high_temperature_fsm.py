@@ -105,6 +105,7 @@ class HighTemperatureFSM(StateMachine):
             self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_HIDE, payload)
             self._event_bus.fire(MrBeamEvents.LED_ERROR_EXIT, payload)
             self._event_bus.fire(MrBeamEvents.ALARM_EXIT, payload)
+            self._event_bus.fire(MrBeamEvents.LASER_ACTIVATE, payload)
 
     def before_start_monitoring(self, event_data=None):
         """
@@ -272,7 +273,7 @@ class HighTemperatureFSM(StateMachine):
             None
         """
         self._logger.info("on_event_Laser_High_Temperature")
-        if not self.critically.is_active:
+        if self.monitoring.is_active or self.warning.is_active:
             self.critical()
 
     def _on_event_laser_cooling_resume(self, event, payload):
