@@ -1099,7 +1099,6 @@ class IoBeamHandler(object):
 
     def _handle_safecutter_dataset(self, dataset):
         # if dataset.get("communication_errors", None):
-        self._logger.info("handle safecutter dataset called %s",dataset)
 
         if self._printer.is_printing() and not dataset.get("value") == 0 :
             payload = {
