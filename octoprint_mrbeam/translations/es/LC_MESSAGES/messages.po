@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2023-04-18 17:37+0200\n"
-"PO-Revision-Date: 2023-04-20 13:56+0200\n"
+"PO-Revision-Date: 2023-04-20 17:18+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -40,7 +40,7 @@ msgstr "Calibración de Precisión"
 #: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:56
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:5
 msgid "Debug"
-msgstr "Depurar"
+msgstr "Debug"
 
 #: octoprint_mrbeam/__init__.py:989
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
@@ -259,7 +259,7 @@ msgstr "cortado"
 #: octoprint_mrbeam/static/js/app/view-models/convert.js:1854
 #: octoprint_mrbeam/templates/quick_text.jinja2:4
 msgid "Quick Text"
-msgstr "Texto rápido"
+msgstr "Quick Text"
 
 #: octoprint_mrbeam/static/js/app/view-models/convert.js:1856
 msgid "selected design"
@@ -3461,7 +3461,7 @@ msgstr "Siguiente fuente"
 
 #: octoprint_mrbeam/templates/quick_text.jinja2:44
 msgid "Baseline"
-msgstr "Referencia"
+msgstr "Curvatura"
 
 #: octoprint_mrbeam/templates/quick_text.jinja2:61
 msgid "outside"
@@ -4074,8 +4074,8 @@ msgid ""
 "Set the height of the surface above the bottom for the camera preview to be "
 "accurate:"
 msgstr ""
-"Ajuste la altura de la superficie sobre el fondo de la superficie de trabajo "
-"para que la previsualización de la cámara sea precisa:"
+"Ajusta la altura de la superficie sobre el fondo para que la "
+"previsualización de la cámara sea precisa:"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:176
 msgid "Preview"
@@ -5378,10 +5378,12 @@ msgid ""
 "doesn't get too loaded and it can work faster. With this enabled, only the "
 "last 25 GCode files will be stored."
 msgstr ""
-"Cada vez que ejecuta un trabajo láser, se crea automáticamente un archivo "
-"GCode. Recomendamos activar el auto-borrado de archivos GCode para que su Mr "
-"Beam no se cargue demasiado y pueda trabajar más rápido. Con esta opción "
-"activada, sólo se almacenarán los últimos 25 archivos GCode."
+"Cada vez que ejecutes un trabajo láser, se crea automáticamente un archivo "
+"GCode. Recomendamos activar el auto-borrado de archivos GCode para que la "
+"memoria de tu Mr Beam no se llene demasiado y puedas trabajar más rápido. "
+"Con esta opción activada, sólo se almacenarán los últimos 25 archivos GCode."
+"Alternativamente, puedes eliminar los archivos GCode manualmente en la "
+"biblioteca de diseño."
 
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:33
 #: octoprint_mrbeam/templates/wizard/wizard_beta_news_0.jinja2:11
