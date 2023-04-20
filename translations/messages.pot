@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-30 16:00+0200\n"
+"POT-Creation-Date: 2023-04-18 17:37+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -121,7 +121,7 @@ msgid "...and more!"
 msgstr ""
 
 #: octoprint_mrbeam/printing/comm_acc2.py:426
-#: octoprint_mrbeam/printing/comm_acc2.py:482
+#: octoprint_mrbeam/printing/comm_acc2.py:485
 msgid "Please contact Mr Beam support team and attach octoprint.log."
 msgstr ""
 
@@ -469,7 +469,7 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:586
-msgid "Beta user: Please consider enabling Mr Beam analytics!"
+msgid "Beta user: Please consider enabling Mr Beam Better Together!"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:590
@@ -478,7 +478,7 @@ msgid ""
 "As you are currently in our Beta channel, you would help us tremendously "
 "sharing%(br)sthe laser job insights, so we can improve%(br)san overall "
 "experience working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to "
-"analytics settings%(close)s"
+"Better Together settings%(close)s"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/review.js:236
@@ -1653,9 +1653,9 @@ msgid "Couldn't send calibration data."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/settings/calibration/corner-calibration.js:320
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:391
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:397
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:403
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:382
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:388
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:394
 msgid "Please check your connection to the device."
 msgstr ""
 
@@ -1702,39 +1702,35 @@ msgid ""
 "multiple times?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:240
-msgid "Lens Calibration stopped."
-msgstr ""
-
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:289
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:280
 msgid "Reverted to factory settings."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:290
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:281
 msgid "Your previous calibration has been deleted."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:299
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:290
 msgid "Failed to revert to factory settings."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:300
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:291
 msgid "Information :\n"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:390
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:381
 msgid "Failed to save the latest image."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:396
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:387
 msgid "Failed to delete the latest image."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:402
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:393
 msgid "Failed to refresh the list of images."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:410
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:401
 msgid "...and I have no clue why. Sorry."
 msgstr ""
 
@@ -4422,9 +4418,7 @@ msgstr ""
 msgid ""
 "We understand that your privacy is crucial, and we want to assure you "
 "that none of the data collected includes your personal information such "
-"as your name, login details, designs, or any other private content. You "
-"are in full control, and you can change your mind at any time by going to"
-" <strong>\"Settings > Better together\"</strong>."
+"as your name, login details, designs, or any other private content."
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:22
@@ -5024,6 +5018,12 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:30
 msgid "Confirm Password"
+msgstr ""
+
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:15
+msgid ""
+"You are in full control, and you can change your mind at any time by "
+"going to <strong>\"Settings > Better together\"</strong>."
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:6
