@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2023-04-18 17:37+0200\n"
-"PO-Revision-Date: 2023-04-20 10:13+0200\n"
+"PO-Revision-Date: 2023-04-20 13:56+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -108,7 +108,7 @@ msgstr "Design Store"
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:1
 #: octoprint_mrbeam/wizard_config.py:164
 msgid "New Toolset Features"
-msgstr ""
+msgstr "Nuevas Herramientas"
 
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:28
 #: octoprint_mrbeam/templates/wizard/wizard_beta_news_0.jinja2:3
@@ -744,7 +744,7 @@ msgstr "Para este tour queremos utilizar fieltro."
 
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:384
 msgid "However as you can see there are many different options. :)"
-msgstr "De todas formas, como puedes ver hay muchas opciones diferentes. :) "
+msgstr "De todas formas, como puedes ver hay muchas opciones diferentes. :)"
 
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:403
 msgid "Select the color of the material"
@@ -2520,7 +2520,7 @@ msgid ""
 "our Software"
 msgstr ""
 "Esta función se ha desactivado, ya que el problema de las marcas de "
-"quemaduras se ha resuelto en nuestro software."
+"quemaduras se ha resuelto en nuestro software"
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:474
 msgid "Auto"
@@ -2783,11 +2783,11 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:52
 msgid "Our Material Store has the same material available for purchase."
-msgstr "Tenemos el mismo material en venta en nuestra Material Store"
+msgstr "Tenemos el mismo material en venta en nuestra Material Store."
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:53
 msgid "We have similar materials for you in our Material Store."
-msgstr "Tenemos materiales parecidos en nuestra Material Store"
+msgstr "Tenemos materiales parecidos en nuestra Material Store."
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:56
 msgid "You need a working internet connection for this forwarding to work."
@@ -2898,7 +2898,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:36
 msgid " You can now work even faster with this laser head."
-msgstr "Ahora puedes trabajar aún más rápido con este cabezal."
+msgstr " Ahora puedes trabajar aún más rápido con este cabezal."
 
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:37
 msgid ""
@@ -5750,7 +5750,7 @@ msgid ""
 "network."
 msgstr ""
 "Conecta tu Mr Beam por WiFi a tu router y haz que forme parte de tu red "
-"doméstica. "
+"doméstica."
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:45
 msgid "Select C"
@@ -5887,7 +5887,7 @@ msgid ""
 "You can find the device name on the stickers on the back of your Mr Beam."
 msgstr ""
 "Puedes ver el nombre del dispositivo en las pegatinas de la parte trasera de "
-"tu Mr Beam"
+"tu Mr Beam."
 
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:147
 msgid "You're done."
