@@ -362,7 +362,7 @@ $(function () {
                 name: gettext("Slate"),
                 img: "Slate.jpg",
                 description: gettext(
-                    "Slate is greate to engrave and you can create beatiful objects, gifts and signs."
+                    "Slate is greate to engrave and you can create beautiful objects, gifts and signs."
                 ),
                 hints: gettext(
                     "When engraving slate, the engraving becomes brighter than the original material. The images might need theirs colors inverted."
