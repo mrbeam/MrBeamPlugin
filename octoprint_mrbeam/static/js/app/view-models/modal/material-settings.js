@@ -181,7 +181,9 @@ $(function () {
                     "Made out of purely wooden fibres, often used for architectural models."
                 ),
                 hints: "",
-                safety_notes: "",
+                safety_notes: gettext(
+                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite."
+                ),
                 type: null,
                 url: null,
             },
