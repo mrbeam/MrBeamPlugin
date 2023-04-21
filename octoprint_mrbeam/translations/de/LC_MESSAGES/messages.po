@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-30 16:00+0200\n"
-"PO-Revision-Date: 2023-03-30 16:25+0200\n"
+"POT-Creation-Date: 2023-04-21 10:34+0200\n"
+"PO-Revision-Date: 2023-04-21 11:12+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -123,7 +123,7 @@ msgid "...and more!"
 msgstr "...und mehr!"
 
 #: octoprint_mrbeam/printing/comm_acc2.py:426
-#: octoprint_mrbeam/printing/comm_acc2.py:482
+#: octoprint_mrbeam/printing/comm_acc2.py:485
 msgid "Please contact Mr Beam support team and attach octoprint.log."
 msgstr ""
 "Bitte kontaktiere das Mr Beam Support Team und hänge das octoprint.log an."
@@ -595,6 +595,16 @@ msgstr ""
 "Der Laserkopf Deines Mr Beam muss auf die Stärke des Filzes fokussiert sein. "
 "Wie das geht, ist in diesem %(opening_tag)sKnowledge-Base-"
 "Artikel%(closing_tag)s beschrieben."
+
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:98
+msgid ""
+"<a href='https://support.mr-beam.org/en/support/solutions/"
+"articles/43000073345?utm_source=beamos&utm_medium=software' "
+"target='_blank'><i class=\"icon-external-link\"></i>&nbsp;"
+msgstr ""
+"<a href=‘https://support.mr-beam.org/de/support/solutions/"
+"articles/43000073345?utm_source=beamos&utm_medium=software' "
+"target=‘_blank’><i class=“icon-external-link”></i>&nbsp;"
 
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:116
 #: octoprint_mrbeam/templates/wizard/wizard_guided_tour.jinja2:20
@@ -1905,9 +1915,9 @@ msgid "Couldn't send calibration data."
 msgstr "Es konnten keine Kalibrierdaten gesendet werden."
 
 #: octoprint_mrbeam/static/js/app/view-models/settings/calibration/corner-calibration.js:320
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:391
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:397
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:403
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:382
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:388
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:394
 msgid "Please check your connection to the device."
 msgstr "Bitte überprüfe deine Verbindung zu deinem Mr Beam."
 
@@ -1962,39 +1972,35 @@ msgstr ""
 "Bitte überprüfe die Verbindung zu Deinem Mr Beam. Hast du evtl. Mehrfach "
 "versucht, die Kalibrierung abzubrechen?"
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:240
-msgid "Lens Calibration stopped."
-msgstr "Linsenkalibrierung gestoppt."
-
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:289
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:280
 msgid "Reverted to factory settings."
 msgstr "Auf Werkseinstellungen zurückgesetzt."
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:290
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:281
 msgid "Your previous calibration has been deleted."
 msgstr "Deine vorherige Kalibrierung wurde gelöscht."
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:299
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:290
 msgid "Failed to revert to factory settings."
 msgstr "Die Werkseinstellungen konnten nicht wiederhergestellt werden."
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:300
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:291
 msgid "Information :\n"
 msgstr "Informationen :\n"
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:390
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:381
 msgid "Failed to save the latest image."
 msgstr "Das letzte Bild konnte nicht gespeichert werden."
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:396
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:387
 msgid "Failed to delete the latest image."
 msgstr "Das letzte Bild konnte nicht gelöscht werden."
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:402
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:393
 msgid "Failed to refresh the list of images."
 msgstr "Die Liste der Bilder konnte nicht aktualisiert werden."
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:410
+#: octoprint_mrbeam/static/js/app/view-models/settings/calibration/lens-calibration.js:401
 msgid "...and I have no clue why. Sorry."
 msgstr "...und ich habe keine Ahnung, warum. Sorry."
 
@@ -6289,6 +6295,9 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:12
 msgid "We hope you enjoy this new experience!"
 msgstr "Wir hoffen, dass Du viel Freude mit diesem Update hast!"
+
+#~ msgid "Lens Calibration stopped."
+#~ msgstr "Linsenkalibrierung gestoppt."
 
 #~ msgid ""
 #~ "Despite that the laser head is making a cooling break, the temperature in "

@@ -94,8 +94,9 @@ $(function () {
                                     "The laser head of your Mr Beam has to be focused according to the thickness of the felt. You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."
                                 ),
                                 {
-                                    opening_tag:
-                                        "<a href='https://support.mr-beam.org/support/solutions/articles/43000073345?utm_source=beamos&utm_medium=software' target='_blank'><i class=\"icon-external-link\"></i>&nbsp;",
+                                    opening_tag: gettext(
+                                        "<a href='https://support.mr-beam.org/en/support/solutions/articles/43000073345?utm_source=beamos&utm_medium=software' target='_blank'><i class=\"icon-external-link\"></i>&nbsp;"
+                                    ),
                                     closing_tag: "</a>",
                                 }
                             ) +
