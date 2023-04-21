@@ -1874,6 +1874,11 @@ $(function () {
             }
         };
         self.imgManualAdjust = function (data, event) {
+            const el = snap.select(`#${data.previewId}`);
+            if (event.type === "input") {
+                // disables the orange glow of the designs - which is annoying if background removal is used.
+                el.addClass("img_preprocessing_in_progress");
+            }
             if (
                 event.type === "input" ||
                 event.type === "blur" ||
@@ -1882,19 +1887,30 @@ $(function () {
                 event.target.dataset.value = event.target.value; // updates tooltips
 
                 self.abortFreeTransforms();
+                const newBgEraser = $(`#${data.id} .bgeraser`).val(); // 0..10, 0 means no removal, 10 strong removal
                 var newContrast = $("#" + data.id + " .contrast").val(); // 0..2, 1 means no adjustment
                 var newBrightness = $("#" + data.id + " .brightness").val(); // -1..1, 0 means no adjustment
                 var newGamma = $("#" + data.id + " .gamma").val(); // // 0.2..1.8, 1 means no adjustment
+                const bgVal = parseFloat(newBgEraser);
                 var contrastVal = parseFloat(newContrast);
                 var brCorrection = (1 - contrastVal) / 2; // 0.5..-0.5 // TODO investigate if we should take gamma into account as well
                 var brightnessVal = parseFloat(newBrightness) + brCorrection;
                 var gammaVal = parseFloat(newGamma);
                 self.set_img_contrast(
                     data.previewId,
+                    bgVal,
                     contrastVal,
                     brightnessVal,
                     gammaVal
                 );
+            }
+            if (
+                event.type === "blur" ||
+                event.type === "keyUp" ||
+                event.type === "mouseup" ||
+                event.type === "touchend"
+            ) {
+                el.removeClass("img_preprocessing_in_progress");
             }
         };
 
@@ -2209,11 +2225,20 @@ $(function () {
         self._create_img_filter = function (previewId) {
             var id = self._get_img_filter_id(previewId);
             var str =
-                "<feComponentTransfer class='contrast_filter' in='colormatrix' result='contrast_result'>" +
-                "<feFuncR type='gamma' amplitude='1' offset='0' exponent='1'/>" +
-                "<feFuncG type='gamma' amplitude='1' offset='0' exponent='1'/>" +
-                "<feFuncB type='gamma' amplitude='1' offset='0' exponent='1'/>" +
-                "<feFuncA type='identity' />" +
+                "<feColorMatrix class='bgEraserMask' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0' in='SourceGraphic' result='removeWhiteFilterMaskStep1'/>" +
+                "<feComponentTransfer in='removeWhiteFilterMaskStep1' result='removeWhiteFilterMaskStep2'>" +
+                "  <feFuncR type='discrete' tableValues='1 0'/>" +
+                "  <feFuncG type='discrete' tableValues='1 0'/>" +
+                "  <feFuncB type='discrete' tableValues='1 0'/>" +
+                "  <feFuncA type='table' tableValues='0 1'/>" +
+                "</feComponentTransfer>" +
+                "<feColorMatrix type='luminanceToAlpha' in='removeWhiteFilterMaskStep2' result='finalMask'/>" +
+                "<feComposite in='SourceGraphic' in2='finalMask' operator='in' result='withoutWhite'/>" +
+                "<feComponentTransfer class='contrast_filter' in='withoutWhite' result='contrast_result'>" +
+                "  <feFuncR type='gamma' amplitude='1' offset='0' exponent='1'/>" +
+                "  <feFuncG type='gamma' amplitude='1' offset='0' exponent='1'/>" +
+                "  <feFuncB type='gamma' amplitude='1' offset='0' exponent='1'/>" +
+                "  <feFuncA type='identity' />" +
                 "</feComponentTransfer>" +
                 "<feColorMatrix class='gray_scale_filter' type='saturate' values='0' in='contrast_result' result='gray_scale'/>" +
                 "<feConvolveMatrix class='sharpening_filter' order='3 3' kernelMatrix='0 0 0 0 1 0 0 0 0' divisor='1' bias='0' targetX='1' targetY='1' edgeMode='duplicate' preserveAlpha='true' in='gray_scale' result='sharpened'/>";
@@ -2240,11 +2265,13 @@ $(function () {
 
         self.set_img_contrast = function (
             previewId,
+            bgValue,
             contrastValue,
             brightnessValue,
             gammaValue
         ) {
             if (
+                isNaN(bgValue) ||
                 isNaN(contrastValue) ||
                 isNaN(brightnessValue) ||
                 isNaN(gammaValue)
@@ -2252,17 +2279,43 @@ $(function () {
                 return;
             }
             var filter = snap.select("#" + self._get_img_filter_id(previewId));
-            filter.select("feFuncR").attr({
+            const bgMaskVal = 0.35 * bgValue;
+            const bgMaskMatrix = [
+                bgMaskVal,
+                0,
+                0,
+                0,
+                0,
+                bgMaskVal,
+                0,
+                0,
+                0,
+                0,
+                bgMaskVal,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+            ].join(" ");
+            filter
+                .select("feColorMatrix.bgEraserMask ")
+                .attr({ values: bgMaskMatrix });
+            filter.select("feComponentTransfer.contrast_filter feFuncR").attr({
                 amplitude: contrastValue,
                 offset: brightnessValue,
                 exponent: gammaValue,
             });
-            filter.select("feFuncG").attr({
+            filter.select("feComponentTransfer.contrast_filter feFuncG").attr({
                 amplitude: contrastValue,
                 offset: brightnessValue,
                 exponent: gammaValue,
             });
-            filter.select("feFuncB").attr({
+            filter.select("feComponentTransfer.contrast_filter feFuncB").attr({
                 amplitude: contrastValue,
                 offset: brightnessValue,
                 exponent: gammaValue,

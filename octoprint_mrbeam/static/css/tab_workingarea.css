@@ -79,6 +79,10 @@ body.ctrlKey svg#area_preview.mbtransformActive .userText {
   filter: none;
 }
 
+.userIMG.designHighlight.img_preprocessing_in_progress {
+  filter: none;
+}
+
 /* moved to styles.jinja2 since it gets broken*/
 /*.userText.designHighlight text,*/
 /*.userText.designHighlight tspan,*/
@@ -547,6 +551,7 @@ input#quick_shape_heart_lr {
   margin-top: 14px;
 }
 
+input#img-preprocess-bgeraser,
 input#img-preprocess-contrast,
 input#img-preprocess-brightness,
 input#img-preprocess-sharpen,
@@ -558,6 +563,7 @@ input#img-preprocess-gamma {
 }
 
 @media only screen and (max-width: 1248px) {
+  input#img-preprocess-bgeraser,
   input#img-preprocess-contrast,
   input#img-preprocess-brightness,
   input#img-preprocess-sharpen,
@@ -567,6 +573,7 @@ input#img-preprocess-gamma {
 }
 
 @media only screen and (max-width: 900px) {
+  input#img-preprocess-bgeraser,
   input#img-preprocess-contrast,
   input#img-preprocess-brightness,
   input#img-preprocess-sharpen,
@@ -597,7 +604,7 @@ input#img-preprocess-gamma {
 }
 
 .img-preprocess-cont {
-  margin-bottom: 8px;
+  margin-bottom: 2px;
   width: 100%;
   position: relative;
 }

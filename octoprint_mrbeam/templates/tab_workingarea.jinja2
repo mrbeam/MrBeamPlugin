@@ -550,6 +550,22 @@
                                                                 {#                                                                      # We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
                                                                 <div data-bind="visible: !window.mrbeam.browser.is_safari">
                                                                     <div class="img_adjust_ui pull-left">
+
+                                                                        <div class="img-preprocess-cont">
+                                                                            <i class="icon-eraser"
+                                                                               title="{{ _('background eraser') }}"></i>
+                                                                            <input id="img-preprocess-bgeraser"
+                                                                                   class="mrb_slider bgeraser small range_value_tooltip"
+                                                                                   type="range" min="0" max="10" data-value="0"
+																				   data-test="tab-workingarea-img-preprocess-bgeraser"
+                                                                                   value="0" step="0.01" data-bind="event: {
+																							mouseup: function(d, event){ $root.imgManualAdjust($data, event); },
+																							touchend: function(d, event){ $root.imgManualAdjust($data, event); },
+																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
+																							input: function(d, event){ $root.imgManualAdjust($data, event); },
+																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
+                                                                        </div>
+
                                                                         <div class="img-preprocess-cont">
                                                                             <i class="icon-adjust"
                                                                                title="{{ _('contrast') }}"></i>
@@ -558,6 +574,8 @@
                                                                                    type="range" min="1" max="5" data-value="1"
 																				   data-test="tab-workingarea-img-preprocess-contrast"
                                                                                    value="1" step="0.05" data-bind="event: {
+																							mouseup: function(d, event){ $root.imgManualAdjust($data, event); },
+																							touchend: function(d, event){ $root.imgManualAdjust($data, event); },
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
 																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
@@ -570,6 +588,8 @@
                                                                                    type="range" min="-0.8" max="0.8" data-value="0"
 																				   data-test="tab-workingarea-img-preprocess-brightness"
                                                                                    value="0" step="0.05" data-bind="event: {
+																							mouseup: function(d, event){ $root.imgManualAdjust($data, event); },
+																							touchend: function(d, event){ $root.imgManualAdjust($data, event); },
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
 																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
@@ -583,6 +603,8 @@
 																				   data-test="tab-workingarea-img-preprocess-sharpen"
                                                                                    type="range" min="0" max="40" data-value="0"
                                                                                    value="0" step="1" data-bind="event: {
+																							mouseup: function(d, event){ $root.imgManualAdjust($data, event); },
+																							touchend: function(d, event){ $root.imgManualAdjust($data, event); },
 																							keyup: function(d, event){ $root.imgManualSharpen($data, event); },
 																							input: function(d, event){ $root.imgManualSharpen($data, event); },
 																							blur: function(d, event){ $root.imgManualSharpen($data, event); }} "/>
@@ -595,6 +617,8 @@
 																				   data-test="tab-workingarea-img-preprocess-gamma"
                                                                                    type="range" min="0.2" max="1.8" data-value="1"
                                                                                    value="1" step="0.05" data-bind="event: {
+																							mouseup: function(d, event){ $root.imgManualAdjust($data, event); },
+																							touchend: function(d, event){ $root.imgManualAdjust($data, event); },
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
 																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
