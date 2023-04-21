@@ -128,7 +128,7 @@ $(function () {
                     "Dont use your Mr Beam packaging. Please keep it for transportation and storage!"
                 ),
                 safety_notes: gettext(
-                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite. Never run a laser job slower than 180 mm/min!"
+                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite."
                 ),
                 type: null,
                 url: null,
@@ -143,7 +143,7 @@ $(function () {
                     "Dont use your Mr Beam packaging. Please keep it for transportation and storage!"
                 ),
                 safety_notes: gettext(
-                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite. Never run a laser job slower than 180 mm/min!"
+                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite."
                 ),
                 type: null,
                 url: null,
