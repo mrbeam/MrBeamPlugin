@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-04-18 17:37+0200\n"
-"PO-Revision-Date: 2023-04-20 17:18+0200\n"
+"POT-Creation-Date: 2023-04-21 10:34+0200\n"
+"PO-Revision-Date: 2023-04-21 11:27+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.6.0\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Poedit 3.2.2\n"
 
 #: octoprint_mrbeam/__init__.py:961
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:730
@@ -507,8 +507,8 @@ msgstr ""
 "de%(br)s%(open)sGoogle Chrome%(close)s para tu Mr Beam."
 
 #: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:586
-msgid "Beta user: Please consider enabling Mr Beam Better Together!"
-msgstr "Usuario Beta: Por favor, ¡habilita Mr Beam Mejorando Juntos!"
+msgid "Beta user: Please consider enabling Mr Beam analytics!"
+msgstr "Usuario Beta: Por favor, ¡habilita Mr Beam analytics!"
 
 #: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:590
 #, python-format
@@ -516,12 +516,12 @@ msgid ""
 "As you are currently in our Beta channel, you would help us tremendously "
 "sharing%(br)sthe laser job insights, so we can improve%(br)san overall "
 "experience working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to "
-"Better Together settings%(close)s"
+"analytics settings%(close)s"
 msgstr ""
 "Al estar en el canal Beta, nos ayudarías mucho si compartieses algo de "
 "información sobre %(br)stus trabajos para que podamos mejorar%(br)s la "
 "experiencia de usuario de%(br)s Mr Beam. Muchas gracias!%(br)s%(open)sIr a "
-"ajustes de Mejorandos Juntos%(close)s"
+"ajustes de analytics%(close)s"
 
 #: octoprint_mrbeam/static/js/app/view-models/review.js:236
 msgid "Error while saving review!"
@@ -576,6 +576,13 @@ msgstr ""
 "El cabezal láser de tu Mr Beam tiene que estar enfocado teniendo en cuenta "
 "el grosor del fieltro. Aprende cómo hacerlo en este %(opening_tag)sartículo "
 "del Knowledge Base%(closing_tag)s."
+
+#: octoprint_mrbeam/static/js/app/view-models/tour.js:98
+msgid ""
+"<a href='https://support.mr-beam.org/en/support/solutions/"
+"articles/43000073345?utm_source=beamos&utm_medium=software' "
+"target='_blank'><i class=\"icon-external-link\"></i>&nbsp;"
+msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/tour.js:116
 #: octoprint_mrbeam/templates/wizard/wizard_guided_tour.jinja2:20
@@ -4926,11 +4933,15 @@ msgstr ""
 msgid ""
 "We understand that your privacy is crucial, and we want to assure you that "
 "none of the data collected includes your personal information such as your "
-"name, login details, designs, or any other private content."
+"name, login details, designs, or any other private content. You are in full "
+"control, and you can change your mind at any time by going to "
+"<strong>\"Settings > Better together\"</strong>."
 msgstr ""
 "Entendemos que tu privacidad es crucial, y queremos asegurarte que ninguno "
 "de los datos recogidos incluye tu información personal, como tu nombre, "
-"datos de acceso, diseños o cualquier otro contenido privado."
+"datos de acceso, diseños o cualquier otro contenido privado. Tú tienes todo "
+"el control, y puedes cambiar de opinión en cualquier momento yendo a "
+"<strong>“Ajustes > Mejor juntos”</strong>."
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:22
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:21
@@ -5679,14 +5690,6 @@ msgstr ""
 msgid "Confirm Password"
 msgstr "Confirmar Contraseña"
 
-#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:15
-msgid ""
-"You are in full control, and you can change your mind at any time by going "
-"to <strong>\"Settings > Better together\"</strong>."
-msgstr ""
-"Puedes cambiar de parecer en cualquier momento en <strong>\"Ajustes > "
-"Mejorando juntos\"</strong>."
-
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:6
 #: octoprint_mrbeam/templates/wizard/wizard_connection.jinja2:63
 msgid "Used to setup"
@@ -6070,6 +6073,13 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:12
 msgid "We hope you enjoy this new experience!"
 msgstr "¡Esperamos que disfrutes de esta nueva experiencia!"
+
+#~ msgid ""
+#~ "You are in full control, and you can change your mind at any time by "
+#~ "going to <strong>\"Settings > Better together\"</strong>."
+#~ msgstr ""
+#~ "Puedes cambiar de parecer en cualquier momento en <strong>\"Ajustes > "
+#~ "Mejorando juntos\"</strong>."
 
 #~ msgid "Analytics"
 #~ msgstr "Analytics"
