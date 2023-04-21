@@ -4941,7 +4941,7 @@ msgstr ""
 "de los datos recogidos incluye tu información personal, como tu nombre, "
 "datos de acceso, diseños o cualquier otro contenido privado. Tú tienes todo "
 "el control, y puedes cambiar de opinión en cualquier momento yendo a "
-"<strong>“Ajustes > Mejor juntos”</strong>."
+"<strong>“Ajustes > Mejorando juntos”</strong>."
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:22
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:21
