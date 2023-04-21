@@ -14,6 +14,7 @@ def temperature_manager(mrbeam_plugin):
     temperature_manager._high_tmp_warn_offset = 5.0
     temperature_manager._event_bus.fire = MagicMock()
     temperature_manager._analytics_handler = MagicMock()
+    temperature_manager._one_button_handler = MagicMock()
     temperature_manager._on_mrbeam_plugin_initialized(
         MrBeamEvents.MRB_PLUGIN_INITIALIZED, None
     )
@@ -77,9 +78,8 @@ def test_cooling_since_if_not_cooling(mrbeam_plugin):
     assert cooling_since == 0
 
 
-def test_cooling_since_if_cooling(mrbeam_plugin):
+def test_cooling_since_if_cooling(temperature_manager):
     # Arrange
-    temperature_manager = TemperatureManager(mrbeam_plugin)
     temperature_manager.cooling_tigger_time = get_uptime() - 1000
 
     # Act
@@ -255,12 +255,25 @@ def test_fire_of_LASER_COOLING_RESUME_after_cancel_or_abort(temperature_manager)
 def test_is_cooling_by_time(temperature_manager):
     # Arrange
     temperature_manager.cooling_tigger_time = get_uptime()
+    temperature_manager._one_button_handler.is_paused = MagicMock(return_value=True)
 
     # Act
     result = temperature_manager.is_cooling()
 
     # Assert
     assert result is True
+
+
+def test_is_cooling_by_one_button_hander_is_paused(temperature_manager):
+    # Arrange
+    temperature_manager.cooling_tigger_time = get_uptime()
+    temperature_manager._one_button_handler.is_paused = MagicMock(return_value=False)
+
+    # Act
+    result = temperature_manager.is_cooling()
+
+    # Assert
+    assert result is False
 
 
 def test_is_cooling_by_fsm_state(temperature_manager):

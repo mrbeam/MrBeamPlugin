@@ -230,14 +230,15 @@ class TemperatureManager(object):
     def get_temperature(self):
         return self.temperature
 
-    def is_cooling(self):
-        if self.high_temp_fsm:
-            return (
-                self.cooling_tigger_time is not None
-                or self.high_temp_fsm.dismissed.is_active
-            )
+    def is_cooling(self, time_wise_only=False):
+        time_wise_trigger = (
+            self.cooling_tigger_time is not None
+            and self._one_button_handler.is_paused()
+        )
+        if self.high_temp_fsm and not time_wise_only:
+            return time_wise_trigger or self.high_temp_fsm.dismissed.is_active
         else:
-            return self.cooling_tigger_time is not None
+            return time_wise_trigger
 
     @property
     def cooling_since(self):
@@ -316,7 +317,7 @@ class TemperatureManager(object):
         """
         return (
             self.cooling_tigger_temperature - self.temperature
-            if self.is_cooling()
+            if self.is_cooling() and self.cooling_tigger_temperature
             else 0
         )
 
@@ -350,7 +351,10 @@ class TemperatureManager(object):
             return
 
         # cooling break
-        if not self.is_cooling() and self.temperature > self.temperature_max:
+        if (
+            not self.is_cooling(time_wise_only=True)
+            and self.temperature > self.temperature_max
+        ):
             msg = "Laser temperature exceeded limit. Current temp: %s, max: %s" % (
                 self.temperature,
                 self.temperature_max,
