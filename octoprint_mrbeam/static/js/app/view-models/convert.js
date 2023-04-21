@@ -37,7 +37,12 @@ $(function () {
                 lineDistance: 1.0,
             },
             min: {
-                speed: 30,
+                speed:
+                    MRBEAM_LASER_HEAD_MODEL === "x"
+                        ? 100
+                        : MRBEAM_LASER_HEAD_MODEL === "S"
+                        ? 50
+                        : 30,
                 compressor: 0,
                 engPasses: 1,
                 cutPasses: 1,
