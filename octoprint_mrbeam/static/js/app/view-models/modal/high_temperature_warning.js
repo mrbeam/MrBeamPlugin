@@ -13,12 +13,12 @@ $(function () {
 
         self.onEventHighTemperatureCriticalShow = function (payload) {
             self._showTemperatureWarning();
-            self.level(1);
+            self.level(2);
         };
 
         self.onEventHighTemperatureWarningShow = function (payload) {
             self._showTemperatureWarning();
-            self.level(2);
+            self.level(1);
         };
 
         self.onEventAlarmEnter = function (payload) {
@@ -42,11 +42,11 @@ $(function () {
                         data.high_temperature_critical
                     ) {
                         self._showTemperatureWarning();
-                    }
-                    if (data.high_temperature_critical) {
-                        self.level(2);
-                    } else if (data.high_temperature_warning) {
-                        self.level(1);
+                        if (data.high_temperature_critical) {
+                            self.level(2);
+                        } else if (data.high_temperature_warning) {
+                            self.level(1);
+                        }
                     }
                 })
                 .fail(function (response) {
