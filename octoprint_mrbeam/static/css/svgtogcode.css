@@ -636,6 +636,10 @@ li.material_entry.custom.incompatible_material::after {
   margin: 0;
 }
 
+#material_info > p {
+  color: #e25303;
+}
+
 #material_type,
 #material_color,
 #material_thickness,
