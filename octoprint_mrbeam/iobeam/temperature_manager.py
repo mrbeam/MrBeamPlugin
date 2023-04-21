@@ -343,14 +343,6 @@ class TemperatureManager(object):
         Returns:
             None
         """
-        self._logger.debug(
-            "Checking temperature value: %s, is_cooling: %s dismissed: %s cooling_since: %s cooling_difference: %s",
-            self.temperature,
-            self.is_cooling(),
-            self.high_temp_fsm.dismissed.is_active,
-            self.cooling_since,
-            self.cooling_difference,
-        )
         if self.temperature is None:
             self._logger.error("Laser temperature is None.")
             msg = "Laser temperature not available, assuming high temperature and stop for cooling."
@@ -412,12 +404,6 @@ class TemperatureManager(object):
             get_uptime() - self._last_cooling_threshold_check_time
             > self.COOLING_THRESHOLD_CHECK_INTERVAL
         ):
-            self._logger.debug(
-                "Checking cooling threshold: cooling_since: %s cooling_difference: %s last_check_time: %s",
-                self.cooling_since,
-                self.cooling_difference,
-                self._last_cooling_threshold_check_time,
-            )
             self._last_cooling_threshold_check_time = get_uptime()
             if (
                 self.cooling_difference >= self.FIRST_COOLING_THRESHOLD_TEMPERATURE

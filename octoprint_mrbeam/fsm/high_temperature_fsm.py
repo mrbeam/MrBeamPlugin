@@ -84,7 +84,6 @@ class HighTemperatureFSM(StateMachine):
             self._event_bus.fire(MrBeamEvents.COMPRESSOR_DEACTIVATE, payload)
             self._event_bus.fire(MrBeamEvents.EXHAUST_DEACTIVATE, payload)
             self._event_bus.fire(MrBeamEvents.LED_ERROR_ENTER, payload)
-            self._event_bus.fire(MrBeamEvents.LASER_DEACTIVATE, payload)
             self._event_bus.fire(MrBeamEvents.ALARM_ENTER, payload)
 
     def on_enter_dismissed(self):
@@ -105,7 +104,6 @@ class HighTemperatureFSM(StateMachine):
             self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_HIDE, payload)
             self._event_bus.fire(MrBeamEvents.LED_ERROR_EXIT, payload)
             self._event_bus.fire(MrBeamEvents.ALARM_EXIT, payload)
-            self._event_bus.fire(MrBeamEvents.LASER_ACTIVATE, payload)
 
     def before_start_monitoring(self, event_data=None):
         """

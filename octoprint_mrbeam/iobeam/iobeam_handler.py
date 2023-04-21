@@ -420,10 +420,6 @@ class IoBeamHandler(object):
             OctoPrintEvents.PRINT_CANCELLED, self.send_analytics_request
         )
         self._event_bus.subscribe(OctoPrintEvents.ERROR, self.send_analytics_request)
-        self._event_bus.subscribe(
-            MrBeamEvents.LASER_DEACTIVATE, self._on_laser_deactivate
-        )
-        self._event_bus.subscribe(MrBeamEvents.LASER_ACTIVATE, self._on_laser_activate)
 
     def _initWorker(self, socket_file=None):
         self._logger.debug("initializing worker thread")
@@ -1387,47 +1383,3 @@ class IoBeamHandler(object):
             self._logger.debug("request i2c state from iobeam")
             self._send_command(self.get_request_msg([self.DATASET_I2C]))
         self._start_i2c_request_timer()
-
-    def _disable_19v(self):
-        """Disables the 19V power supply.
-
-        Returns:
-            None
-        """
-        self._logger.debug("Disabling 19V power supply")
-        self._send_command(self.get_command_msg("pcf", "disable", "19v"))
-
-    def _enable_19v(self):
-        """Enables the 19V power supply.
-
-        Returns:
-            None
-        """
-        self._logger.debug("Enabling 19V power supply")
-        self._send_command(self.get_command_msg("pcf", "enable", "19v"))
-
-    def _on_laser_deactivate(self, event, payload):
-        """Event handler for laser deactivated event.
-
-        Args:
-            event: event name
-            payload: event payload
-
-        Returns:
-            None
-        """
-        self._logger.debug("Laser deactivated")
-        self._disable_19v()
-
-    def _on_laser_activate(self, event, payload):
-        """Event handler for laser activated event.
-
-        Args:
-            event: event name
-            payload: event payload
-
-        Returns:
-            None
-        """
-        self._logger.debug("Laser activated")
-        self._enable_19v()

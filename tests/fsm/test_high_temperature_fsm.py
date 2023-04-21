@@ -88,7 +88,6 @@ def test_transistion_from_warning_to_critical():
             MrBeamEvents.EXHAUST_DEACTIVATE, {"trigger": "high_temperature_critically"}
         ),
         call(MrBeamEvents.LED_ERROR_ENTER, {"trigger": "high_temperature_critically"}),
-        call(MrBeamEvents.LASER_DEACTIVATE, {"trigger": "high_temperature_critically"}),
         call(MrBeamEvents.ALARM_ENTER, {"trigger": "high_temperature_critically"}),
     ]
     fsm._event_bus.fire.assert_has_calls(calls, any_order=False)
@@ -124,7 +123,6 @@ def test_transistion_from_monitoring_to_critical():
             MrBeamEvents.EXHAUST_DEACTIVATE, {"trigger": "high_temperature_critically"}
         ),
         call(MrBeamEvents.LED_ERROR_ENTER, {"trigger": "high_temperature_critically"}),
-        call(MrBeamEvents.LASER_DEACTIVATE, {"trigger": "high_temperature_critically"}),
         call(MrBeamEvents.ALARM_ENTER, {"trigger": "high_temperature_critically"}),
     ]
     fsm._event_bus.fire.assert_has_calls(calls, any_order=False)
