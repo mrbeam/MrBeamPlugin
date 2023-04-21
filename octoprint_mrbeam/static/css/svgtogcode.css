@@ -640,6 +640,13 @@ li.material_entry.custom.incompatible_material::after {
   color: #e25303;
 }
 
+#settings__span--speed-warning {
+  width: 600px;
+  border: 1px solid #e25303;
+  color: #e25303;
+  padding: 6px;
+}
+
 #material_type,
 #material_color,
 #material_thickness,
