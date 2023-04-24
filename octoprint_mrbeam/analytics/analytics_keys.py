@@ -61,6 +61,7 @@ class AnalyticsKeys:
                 DONE = "cooling_done"
                 DIFFERENCE = "cooling_difference"
                 TIME = "cooling_time"
+                TO_SLOW = "cooling_to_slow"
                 COOLING_FAN_RETRIGGER = "cooling_fan_retrigger"
 
             class Summary:
