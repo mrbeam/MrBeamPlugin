@@ -51,10 +51,14 @@ def test_transistion_from_monitoring_to_warning():
 
     # Assert
     assert fsm.warning.is_active
-    fsm._event_bus.fire.assert_called_with(
-        MrBeamEvents.HIGH_TEMPERATURE_WARNING_SHOW,
-        {"trigger": "high_temperature_warning"},
-    )
+    calls = [
+        call(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING_SHOW,
+            {"trigger": "high_temperature_warning"},
+        ),
+        call(MrBeamEvents.LED_ERROR_ENTER, {"trigger": "high_temperature_warning"}),
+    ]
+    fsm._event_bus.fire.assert_has_calls(calls, any_order=False)
     fsm._analytics_handler.add_high_temp_warning_state_transition.assert_called_with(
         "warn", "monitoring", "warning", False
     )
