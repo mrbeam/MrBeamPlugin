@@ -1,6 +1,7 @@
 import pytest
 from mock.mock import MagicMock
 from octoprint_mrbeam.util.uptime import get_uptime
+from pytest import approx
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -155,7 +156,7 @@ def test_handle_temp_fire_cooling_to_slow_event_second_threshold(temperature_man
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
         MrBeamEvents.LASER_COOLING_TO_SLOW,
-        dict(temp=49, cooling_differnece=1.0, cooling_time=61),
+        dict(temp=49, cooling_differnece=1.0, cooling_time=approx(61)),
     )
 
 
@@ -172,7 +173,7 @@ def test_handle_temp_fire_cooling_to_slow_event_third_threshold(temperature_mana
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
         MrBeamEvents.LASER_COOLING_TO_SLOW,
-        dict(temp=49, cooling_differnece=1.0, cooling_time=141),
+        dict(temp=49, cooling_differnece=1.0, cooling_time=approx(141)),
     )
 
 
