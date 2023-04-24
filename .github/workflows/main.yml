@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
+    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@use_previous_sonarcloud_action_version
     secrets: inherit
     with:
       python_v: 2.7
