@@ -278,11 +278,6 @@ class MrBeamPlugin(
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
         self.temperature_manager = temperatureManager(self)
-        self.high_temp_fsm = HighTemperatureFSM(
-            event_bus=self._event_bus,
-            disabled=self._settings.get(["highTemperatureWarningDisabled"]),
-            analytics_handler=self.analytics_handler,
-        )
         self.compressor_handler = compressor_handler(self)
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
@@ -763,9 +758,10 @@ class MrBeamPlugin(
                 "js/app/view-models/settings/calibration/watterott/calibration-qa.js",
                 "js/app/view-models/settings/calibration/watterott/label-printer.js",
                 "js/app/view-models/modal/hard_refresh_overlay.js",
-                "js/app/view-models/modal/temperature_warning.js",
+                "js/app/view-models/modal/high_temperature_warning.js",
                 "js/app/view-models/mrbeam-simple-api-commands.js",
                 "js/app/view-models/mrbeam-constants.js",
+                "js/app/view-models/mrb_state.js",
                 "js/app/helpers/mutation-observer.js",
             ],
             css=[
@@ -1375,17 +1371,17 @@ class MrBeamPlugin(
             self._logger.error("Key is missing in data: %s", e)
             return make_response(json.dumps(None), 500)
 
-    # simpleApiCommand: dismiss_temperature_warning;
+    # simpleApiCommand: high_temperature_warning_dismiss;
     def handle_temperature_warning_dismissal(self, data):
         self.temperature_manager.dismiss_high_temperature_warning()
         return NO_CONTENT
 
-    # simpleApiCommand: temperature_warning_status;
-    def return_temperature_warning_status(self, data):
+    # simpleApiCommand: high_temperature_warning_status;
+    def return_high_temperature_warning_status(self, data):
         return jsonify(
             dict(
-                high_temperature_warning=self.high_temp_fsm.warning.is_active,
-                high_temperature_critical=self.high_temp_fsm.critical.is_active,
+                high_temperature_warning=self.temperature_manager.high_temp_fsm.warning.is_active,
+                high_temperature_critical=self.temperature_manager.high_temp_fsm.critically.is_active,
             )
         )
 
@@ -2023,8 +2019,8 @@ class MrBeamPlugin(
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
             compare_pep440_versions=[],
-            dismiss_temperature_warning=[],
-            temperature_warning_status=[],
+            high_temperature_warning_dismiss=[],
+            high_temperature_warning_status=[],
         )
 
     def on_api_command(self, command, data):
@@ -2154,10 +2150,10 @@ class MrBeamPlugin(
             self.dust_manager.set_user_abort_final_extraction()
         elif command == "compare_pep440_versions":
             return self.handle_pep440_comparison_result(data)
-        elif command == "dismiss_temperature_warning":
+        elif command == "high_temperature_warning_dismiss":
             return self.handle_temperature_warning_dismissal(data)
-        elif command == "temperature_warning_status":
-            return self.return_temperature_warning_status(data)
+        elif command == "high_temperature_warning_status":
+            return self.return_high_temperature_warning_status(data)
 
         return NO_CONTENT
 

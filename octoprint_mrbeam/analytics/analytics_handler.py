@@ -1033,7 +1033,7 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Job.LaserHead.TEMP
             ] = self._current_lasertemp_collector.get_latest_value()
         self._add_job_event(
-            AnalyticsKeys.Job.Event.Cooling.DONE,
+            AnalyticsKeys.Job.Event.Cooling.TO_SLOW,
             payload=data,
             header_extension=header_extension,
         )

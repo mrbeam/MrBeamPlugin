@@ -35,7 +35,6 @@ class MrBeamEvents(object):
 
     # events for the laser head
     LASER_HOME = "LaserHome"
-    LASER_DEACTIVATE = "LaserDeactivate"
 
     LASER_COOLING_TEMPERATURE_REACHED = "LaserCoolingTemperatureReached"
     LASER_COOLING_PAUSE = "LaserCoolingPause"  # Pause the job for cooling
