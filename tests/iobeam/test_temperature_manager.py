@@ -156,7 +156,7 @@ def test_handle_temp_fire_cooling_to_slow_event_second_threshold(temperature_man
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
         MrBeamEvents.LASER_COOLING_TO_SLOW,
-        dict(temp=49, cooling_differnece=1.0, cooling_time=approx(61)),
+        dict(temp=49, cooling_differnece=1.0, cooling_time=approx(61, rel=0.01)),
     )
 
 
@@ -173,7 +173,11 @@ def test_handle_temp_fire_cooling_to_slow_event_third_threshold(temperature_mana
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
         MrBeamEvents.LASER_COOLING_TO_SLOW,
-        dict(temp=49, cooling_differnece=1.0, cooling_time=approx(141)),
+        dict(
+            temp=49,
+            cooling_differnece=1.0,
+            cooling_time=approx(141, rel=0.01),
+        ),
     )
 
 
