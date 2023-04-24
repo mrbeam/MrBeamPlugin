@@ -4,7 +4,7 @@ $(function () {
          * The view model for the MrBeam plugin.
          * @type {MrbStateViewModel}
          */
-        var self = this;
+        let self = this;
         window.mrbeam.viewModels["mrbStateModel"] = self;
 
         self.isCooling = ko.observable(undefined);
