@@ -1,5 +1,10 @@
 $(function () {
     function HighTemperatureWarningModalViewModel(params) {
+        /**
+         * View model for the high temperature warning modal.
+         * @type {HighTemperatureWarningModalViewModel}
+         */
+
         let self = this;
         window.mrbeam.viewModels["HighTemperatureWarningModalViewModel"] = self;
 
@@ -12,24 +17,39 @@ $(function () {
         );
 
         self.onEventHighTemperatureCriticalShow = function (payload) {
+            /**
+             * Event handler for the event HighTemperatureCriticalShow.
+             */
             self._showTemperatureWarning();
             self.level(2);
         };
 
         self.onEventHighTemperatureWarningShow = function (payload) {
+            /**
+             * Event handler for the event HighTemperatureWarningShow.
+             */
             self._showTemperatureWarning();
             self.level(1);
         };
 
         self.onEventAlarmEnter = function (payload) {
+            /**
+             * Event handler for the event AlarmEnter.
+             */
             self._playAlarmSound();
         };
 
         self.onEventAlarmExit = function (payload) {
+            /**
+             * Event handler for the event AlarmExit.
+             */
             self._stopAlarmSound();
         };
 
         self.onStartupComplete = function (payload) {
+            /**
+             * Event handler for the event StartupComplete.
+             */
             OctoPrint.simpleApiCommand(
                 "mrbeam",
                 "high_temperature_warning_status",
@@ -58,6 +78,9 @@ $(function () {
         };
 
         self.dismissTemperatureWarning = function () {
+            /**
+             * Dismisses the high temperature warning.
+             */
             OctoPrint.simpleApiCommand(
                 "mrbeam",
                 "high_temperature_warning_dismiss",
@@ -73,10 +96,16 @@ $(function () {
         };
 
         self._showTemperatureWarning = function () {
+            /**
+             * Shows the high temperature warning.
+             */
             $("#high_temperature_warning_modal").modal("show");
         };
 
         self._playAlarmSound = function () {
+            /**
+             * Plays the alarm sound.
+             */
             // Play sound only if the last sound is longer than 5 minutes ago
             if (
                 self.warningTriggeredTime + 300000 < Date.now() ||
@@ -88,6 +117,9 @@ $(function () {
         };
 
         self._stopAlarmSound = function () {
+            /**
+             * Stops the alarm sound.
+             */
             self.audio.pause();
             self.audio.currentTime = 0;
         };

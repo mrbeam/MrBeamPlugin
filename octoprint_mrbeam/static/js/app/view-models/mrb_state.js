@@ -1,35 +1,60 @@
 $(function () {
     function MrbStateViewModel(parameters) {
+        /**
+         * The view model for the MrBeam plugin.
+         * @type {MrbStateViewModel}
+         */
         var self = this;
         window.mrbeam.viewModels["mrbStateModel"] = self;
 
         self.isCooling = ko.observable(undefined);
 
         self.onEventReadyToLaserStart = function (payload) {
+            /**
+             * Event handler for the event ReadyToLaserStart.
+             */
             self._getMrbState(payload);
         };
 
         self.onEventReadyToLaserCanceled = function (payload) {
+            /**
+             * Event handler for the event ReadyToLaserCanceled.
+             */
             self._getMrbState(payload);
         };
 
         self.onEventPrintStarted = function (payload) {
+            /**
+             * Event handler for the event PrintStarted.
+             */
             self._getMrbState(payload);
         };
 
         self.onEventPrintPaused = function (payload) {
+            /**
+             * Event handler for the event PrintPaused.
+             */
             self._getMrbState(payload);
         };
 
         self.onEventPrintResumed = function (payload) {
+            /**
+             * Event handler for the event PrintResumed.
+             */
             self._getMrbState(payload);
         };
 
         self.onEventPrintCancelled = function (payload) {
+            /**
+             * Event handler for the event PrintCancelled.
+             */
             self._getMrbState(payload);
         };
 
         self.fromCurrentData = function (data) {
+            /**
+             * Will be called when the current data has been updated.
+             */
             self._getMrbState(data);
         };
 
@@ -43,6 +68,9 @@ $(function () {
         };
 
         self._getMrbState = function (payload) {
+            /**
+             * Gets the mrb_state from the payload and sets it to the window.mrbeam.mrb_state variable.
+             */
             if (
                 !payload ||
                 !(MRBEAM.STATE_KEY in payload) ||
@@ -52,9 +80,6 @@ $(function () {
             }
             let mrb_state = payload[MRBEAM.STATE_KEY];
             if (mrb_state) {
-                // TODO: All the handling of mrb_state data should be moved into a dedicated view model
-                window.mrbeam.mrb_state = mrb_state;
-                window.STATUS = mrb_state;
                 if ("cooling_mode" in mrb_state) {
                     self.isCooling(mrb_state["cooling_mode"]);
                 }
