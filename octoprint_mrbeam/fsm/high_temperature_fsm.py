@@ -60,6 +60,7 @@ class HighTemperatureFSM(StateMachine):
             self.silent_dismiss()
         else:
             self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_SHOW, payload)
+            self._event_bus.fire(MrBeamEvents.LED_ERROR_ENTER, payload)
 
     def on_enter_critically(self):
         """
