@@ -269,7 +269,7 @@ class Laser(Printer):
         """
         if self.is_printing() or self.is_paused():
             self._logger.info("Re triggering fan e:%s payload: %s", event, payload)
-            self._comm.retriggerCoolingFan()
+            self._comm.retrigger_cooling_fan()
 
     # maybe one day we want to introduce special MrBeam commands....
     # def commands(self, commands):

@@ -2651,7 +2651,7 @@ class MachineCom(object):
                 self._pauseWaitTimeLost,
             )
 
-    def retriggerCoolingFan(self):
+    def retrigger_cooling_fan(self):
         if self.isPaused():
             self._sendCommand(self.COMMAND_RESUME)
             self._sendCommand(self.COMMAND_HOLD)
