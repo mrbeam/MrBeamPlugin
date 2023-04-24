@@ -10,6 +10,10 @@ $(function () {
         self.BRIGHTNESS_VALUE_GREEN = 0.587;
         self.BRIGHTNESS_VALUE_BLUE = 0.114;
 
+        self.MINIMUM_SPEED_FOR_X_LASERHEAD = 100;
+        self.MINIMUM_SPEED_FOR_S_LASERHEAD = 50;
+        self.MINIMUM_SPEED_FOR_OHTER_LASERHEAD = 30;
+
         self.JOB_PARAMS = {
             default: {
                 intensityWhite: 0,
@@ -37,18 +41,21 @@ $(function () {
                 lineDistance: 1.0,
             },
             min: {
-                speed:
-                    MRBEAM_LASER_HEAD_MODEL === "x"
-                        ? 100
-                        : MRBEAM_LASER_HEAD_MODEL === "S"
-                        ? 50
-                        : 30,
+                speed: self.get_minSpeed(),
                 compressor: 0,
                 engPasses: 1,
                 cutPasses: 1,
                 pierceTime: 0,
                 lineDistance: 0.1,
             },
+        };
+
+        self.get_minSpeed = function () {
+            return MRBEAM_LASER_HEAD_MODEL === "x"
+                ? self.MINIMUM_SPEED_FOR_X_LASERHEAD
+                : MRBEAM_LASER_HEAD_MODEL === "S"
+                ? self.MINIMUM_SPEED_FOR_S_LASERHEAD
+                : self.MINIMUM_SPEED_FOR_OHTER_LASERHEAD;
         };
 
         self.loginState = params[0];
