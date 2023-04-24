@@ -41,21 +41,13 @@ $(function () {
                 lineDistance: 1.0,
             },
             min: {
-                speed: self.get_minSpeed(),
+                speed: MRBEAM_LASER_HEAD_MIN_SPEED,
                 compressor: 0,
                 engPasses: 1,
                 cutPasses: 1,
                 pierceTime: 0,
                 lineDistance: 0.1,
             },
-        };
-
-        self.get_minSpeed = function () {
-            return MRBEAM_LASER_HEAD_MODEL === "x"
-                ? self.MINIMUM_SPEED_FOR_X_LASERHEAD
-                : MRBEAM_LASER_HEAD_MODEL === "S"
-                ? self.MINIMUM_SPEED_FOR_S_LASERHEAD
-                : self.MINIMUM_SPEED_FOR_OHTER_LASERHEAD;
         };
 
         self.loginState = params[0];
