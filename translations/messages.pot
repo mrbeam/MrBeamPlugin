@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-04-21 16:08+0200\n"
+"POT-Creation-Date: 2023-04-25 10:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,63 +17,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: octoprint_mrbeam/__init__.py:961
+#: octoprint_mrbeam/__init__.py:962
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:730
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:741
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:2
 msgid "Files"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:968
+#: octoprint_mrbeam/__init__.py:969
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:4
 msgid "Camera"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:975
+#: octoprint_mrbeam/__init__.py:976
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:2
 msgid "Precision Calibration"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:982
+#: octoprint_mrbeam/__init__.py:983
 #: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:56
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:5
 msgid "Debug"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:989
+#: octoprint_mrbeam/__init__.py:990
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
 msgid "About This Mr Beam"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:996
+#: octoprint_mrbeam/__init__.py:997
 msgid "Better Together"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1003
+#: octoprint_mrbeam/__init__.py:1004
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
 msgid "Reminders"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1010
+#: octoprint_mrbeam/__init__.py:1011
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:2
 msgid "Maintenance"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1017
+#: octoprint_mrbeam/__init__.py:1018
 #: octoprint_mrbeam/templates/settings/leds_settings.jinja2:2
 msgid "Mr Beam Lights"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1024
+#: octoprint_mrbeam/__init__.py:1025
 #: octoprint_mrbeam/templates/settings/custom_material_settings.jinja2:2
 msgid "Custom Material Settings"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:2409
+#: octoprint_mrbeam/__init__.py:2410
 msgid "A new picture is being taken, please wait a little..."
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:2414
+#: octoprint_mrbeam/__init__.py:2415
 msgid "Either the camera is busy or the lid is not open."
 msgstr ""
 
@@ -151,46 +151,46 @@ msgid ""
 "Calibration."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:274
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:273
 msgid "My"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:416
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:434
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:415
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:433
 msgid "Custom material setting! Use at your own risk."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:507
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:552
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1806
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:506
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:551
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1805
 #: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-analytics.js:79
 #: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-gcode-deletion.js:41
 msgid "Error while saving settings!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:509
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:554
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:508
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:553
 #, python-format
 msgid ""
 "Unable to save your custom material settings at the moment.%(br)sCheck "
 "connection to Mr Beam and try again."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:535
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:534
 msgid "Custom Material Settings restored."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:537
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:536
 #, python-format
 msgid "Successfully restored %(number)d custom materials from file."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:672
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:671
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:164
 msgid "engrave only"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:674
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:673
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:163
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:389
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:131
@@ -202,7 +202,7 @@ msgstr ""
 msgid "mm"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:804
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:803
 msgid ""
 "This is a custom setting you made for another laserhead.\n"
 " We recommend adjusting your saved custom material settings to your "
@@ -212,7 +212,7 @@ msgid ""
 " original ones will stay as they are in case you want to keep them."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:870
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:869
 msgid ""
 "Drag and drop this box in the Skip area if you want to skip cutting this "
 "color. Drop it in Engrave area if you just want to engrave it, or "
@@ -220,46 +220,46 @@ msgid ""
 "dropping it in the bottom section."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1808
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1807
 #, python-format
 msgid ""
 "Unable to save your focus reminder state at the moment.%(br)sCheck "
 "connection to Mr Beam and try again."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1862
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1861
 msgid "There is nothing to laser, all jobs are set to be skipped."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1873
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1872
 msgid "engraved"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1876
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1875
 msgid "cut"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1880
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1879
 #: octoprint_mrbeam/templates/quick_text.jinja2:4
 msgid "Quick Text"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1882
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1881
 msgid "selected design"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1887
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1886
 #, python-format
 msgid ""
 "Sorry but the %(designType)s can only be %(laserJob)s, which is not "
 "supported for this material."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1972
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1971
 msgid "Conversion failed"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1974
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1973
 #, python-format
 msgid ""
 "Unable to start the conversion in the backend. Please try reloading this "
@@ -267,50 +267,50 @@ msgid ""
 "bytes."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1989
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1988
 msgid "Parameter missing"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:1990
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:1989
 msgid "Unable to start conversion because a parameter is missing."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2187
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2186
 msgid ""
 "To free up some disk space you may want to perform one or all of the "
 "following suggestions:"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2193
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2192
 msgid ""
 "Delete GCode files: Go to design library and click 'Only show GCode "
 "files' on the left. Here you can delete files from the according context "
 "menu."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2199
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2198
 msgid ""
 "Delete design files: Go to design library and click 'Only show design "
 "files' on the left. Here you can delete files from the according context "
 "menu."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2205
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2204
 msgid ""
 "Delete log files: Go to Settings -> logs and delete old log files per "
 "click on the trash bin icon."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2211
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2210
 #, python-format
 msgid "Find more details %(open)sonline%(close)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2218
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2217
 msgid "Get more free disk space"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2491
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2490
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:515
 msgid "Cut "
 msgstr ""
@@ -1981,9 +1981,7 @@ msgid "Intensity range"
 msgstr ""
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:298
-msgid ""
-"The movement velocity range used for engraving pixel graphics (50-3000 "
-"mm/min)."
+msgid "The movement velocity range used for engraving pixel graphics"
 msgstr ""
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:299
