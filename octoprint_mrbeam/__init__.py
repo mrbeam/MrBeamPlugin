@@ -898,7 +898,7 @@ class MrBeamPlugin(
                 laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
                     "model"
                 ],
-                laserhead_min_speed=self.laserhead_handler.default_laserhead_min_speed,
+                laserhead_min_speed=self.laserhead_handler.current_laserhead_min_speed,
                 env=self.get_env(),
                 mac_addrs=self._get_mac_addresses(),
                 env_local=self.get_env(self.ENV_LOCAL),
