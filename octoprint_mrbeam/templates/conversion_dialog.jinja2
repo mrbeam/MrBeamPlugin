@@ -194,8 +194,8 @@
                 </div>
 
                 <div id="material_info">
-                    <p>
-                        <i class="icon-warning-sign" style="color:red;"
+                    <p class="safety-note-outer">
+                        <i class="icon-warning-sign"
                            data-bind="visible: material_safety_notes()"></i>
                         <span id="safety_notes" class="" data-bind="text: material_safety_notes, css:{ incompatible_safety_warning: !$root.selected_material_compatibility() }"></span>
                     </p>
@@ -295,7 +295,7 @@
 
 
                                 <div class="range-control-and-label" data-toggle="tooltip" data-placement="right"
-                                     title="<b>{{ _('The movement velocity range used for engraving pixel graphics (50-3000 mm/min).') }}</b>
+                                     title="<b>{{ _('The movement velocity range used for engraving pixel graphics') }} ({{ laserhead_min_speed }}-3000 mm/min).</b>
                                      <ul><li>{{ _('Bright/white pixels use the left (higher) value') }}</li>
                                      <li>{{ _('Dark/black pixels use the right (lower) value.') }}</li></ul>
                                      {{ _('Equal values do not vary the laser velocity related to the pixel brightness.') }}">
@@ -316,6 +316,10 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <span id="settings__span--speed-warning" class="hidden">
+                            {{ _('Please remember, lowering the cutting speed can produce more heat and thus, among other risk factors, can ignite certain easily-flammable materials.') }}
+                            </span>
 
                             <div class="control-group">
                                 <div class="line-control-and-label" data-bind="visible: show_line_color_mappings"

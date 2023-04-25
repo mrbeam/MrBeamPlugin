@@ -37,7 +37,7 @@ $(function () {
                 lineDistance: 1.0,
             },
             min: {
-                speed: 30,
+                speed: MRBEAM_LASER_HEAD_MIN_SPEED,
                 compressor: 0,
                 engPasses: 1,
                 cutPasses: 1,
@@ -128,6 +128,15 @@ $(function () {
         self.save_custom_material_description = ko.observable("");
         self.save_custom_material_thickness = ko.observable(1);
         self.save_custom_material_color = ko.observable("#000000");
+
+        self.imgFeedrate_below_default = ko.observable(false);
+        self.imgFeedrate_below_default.subscribe(function (value) {
+            if (value) {
+                $("#settings__span--speed-warning").slideDown("slow");
+            } else {
+                $("#settings__span--speed-warning").slideUp("slow");
+            }
+        });
 
         self.hasCompressor = ko.observable(false);
 
@@ -282,6 +291,17 @@ $(function () {
                 self.save_custom_material_thickness(tmp);
                 self.customized_material(true);
             }
+
+            if (
+                self.imgFeedrateWhite() <
+                    self.get_closest_color_params()?.engrave.eng_f[0] ||
+                self.imgFeedrateBlack() <
+                    self.get_closest_color_params()?.engrave.eng_f[1]
+            ) {
+                self.imgFeedrate_below_default(true);
+            } else {
+                self.imgFeedrate_below_default(false);
+            }
         };
 
         self.reset_material_settings = function () {
@@ -289,6 +309,7 @@ $(function () {
                 self.apply_engraving_proposal();
                 self.apply_vector_proposal();
                 self.customized_material(false);
+                self.imgFeedrate_below_default(false);
             }
         };
 

@@ -13,6 +13,8 @@ LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
 LASERHEAD_MAX_CORRECTION_FACTOR_FALLBACK = 1
 LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK = 1500
 LASERHEAD_LIFESPAN_FALLBACK = 40
+LASERHEAD_MIN_SPEED_FALLBACK = 100
+
 
 LASERHEAD_STOCK_ID = 0
 LASERHEAD_S_ID = 1
@@ -721,3 +723,35 @@ class LaserheadHandler(object):
             int: Laser head default lifespan
         """
         return LASERHEAD_LIFESPAN_FALLBACK
+
+    @property
+    def current_laserhead_min_speed(self):
+        """Return the current laser head minimum speed.
+
+        Returns:
+            int: Laser head minimum speed
+        """
+        current_laserhead_properties = self._get_laserhead_properties()
+
+        # Handle the exceptions
+        if ((isinstance(current_laserhead_properties, dict) is False) or
+                ("min_speed" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["min_speed"], int) is False)):
+            # Apply fallback
+            self._logger.exception(
+                "Current Laserhead minimum speed couldn't be retrieved, fallback to the factor value of: {}".format(
+                    self.default_laserhead_min_speed))
+            return self.default_laserhead_min_speed
+        # Reaching here means, everything looks good
+        self._logger.debug("Current Laserhead minimum speed:{}".format(current_laserhead_properties["min_speed"]))
+        return current_laserhead_properties["min_speed"]
+
+    @property
+    def default_laserhead_min_speed(self):
+        """Default minimum speed for laser head. to be used by other modules
+        at init time.
+
+        Returns:
+            int: Laser head default minimum speed
+        """
+        return LASERHEAD_MIN_SPEED_FALLBACK
