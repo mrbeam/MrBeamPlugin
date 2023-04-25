@@ -10,7 +10,6 @@ $(function () {
         self.BRIGHTNESS_VALUE_GREEN = 0.587;
         self.BRIGHTNESS_VALUE_BLUE = 0.114;
 
-
         self.JOB_PARAMS = {
             default: {
                 intensityWhite: 0,
