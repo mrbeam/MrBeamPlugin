@@ -10,9 +10,6 @@ $(function () {
         self.BRIGHTNESS_VALUE_GREEN = 0.587;
         self.BRIGHTNESS_VALUE_BLUE = 0.114;
 
-        self.MINIMUM_SPEED_FOR_X_LASERHEAD = 100;
-        self.MINIMUM_SPEED_FOR_S_LASERHEAD = 50;
-        self.MINIMUM_SPEED_FOR_OHTER_LASERHEAD = 30;
 
         self.JOB_PARAMS = {
             default: {
