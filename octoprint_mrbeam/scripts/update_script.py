@@ -179,6 +179,7 @@ def build_wheels(build_queue):
             "--wheel-dir={}".format(
                 tmp_folder
             ),  # Build wheels into <dir>, where the default is the current working directory.
+            "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
             if package.get("archive"):
