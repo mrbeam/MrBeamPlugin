@@ -9,7 +9,7 @@
                                         {% if laserhead_model == 'x' %}<span class="laserhead-model-icon"><img src="/plugin/mrbeam/static/img/laserhead_x.svg"></span>{% endif %}
 										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div>
                                         <span title="{{ _("Mr Beam's current state") }}">
-                                            <i class="icon-inbox"></i> <span data-bind="visible: !mrb_state.isCooling(), text: state.stateString"></span> <span data-bind="visible: mrb_state.isCooling">{{ _("Cooling")}}</span>
+                                            <i class="icon-inbox"></i> <span data-bind="text: state.stateString"></span>
                                         </span>
                                         <span title="{{ _("Your current Internet connection state") }}" style="margin-left: 15px;">
                                             <i class="icon-globe"></i>

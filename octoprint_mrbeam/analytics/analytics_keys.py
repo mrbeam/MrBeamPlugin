@@ -59,10 +59,6 @@ class AnalyticsKeys:
             class Cooling:
                 START = "cooling_start"
                 DONE = "cooling_done"
-                DIFFERENCE = "cooling_difference"
-                TIME = "cooling_time"
-                TO_SLOW = "cooling_to_slow"
-                COOLING_FAN_RETRIGGER = "cooling_fan_retrigger"
 
             class Summary:
                 DUST = "dust_summary"
@@ -122,13 +118,10 @@ class AnalyticsKeys:
             NUM_FILES = "num_files"
             CAMERA_IMAGE = "camera_image"
             LASERHEAD_CHANGED = "laserhead_changed"
-            LASER_HIGH_TEMPERATURE = "laser_high_temperature"
 
-        class HighTemp:
-            WARNING_SHOWN = "high_temp_warning_shown"
-            WARNING_DISMISSED = "high_temp_warning_dismissed"
-            CRITICAL_SHOWN = "high_temp_critical_shown"
-            CRITICAL_DISMISSED = "high_temp_critical_dismissed"
+        class HighTempWarning:
+            TRIGGERED = "high_temp_warning_triggered"
+            DISMISSED = "high_temp_warning_dismissed"
 
         class SoftwareChannel:
             OLD = "old_channel"
@@ -215,13 +208,3 @@ class AnalyticsKeys:
             REFERRER = "referrer"
             LANGUAGE = "language"
             USER_AGENT = "user_agent"
-
-    class HighTemperatureWarning:
-        class Event:
-            STATE_TRANSITION = "state_transition"
-
-        class State:
-            STATE_BEFORE = "state_before"
-            STATE_AFTER = "state_after"
-            EVENT = "event"
-            FEATURE_DISABLED = "feature_disabled"

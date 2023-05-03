@@ -2554,8 +2554,8 @@ class MachineCom(object):
         else:
             eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
-    def abort_lasering(self, trigger):
-        """Abort the lasering.
+    def abort_print(self, trigger):
+        """Abort the print.
 
         Returns:
 
@@ -2650,11 +2650,6 @@ class MachineCom(object):
                 self._pauseWaitStartTime,
                 self._pauseWaitTimeLost,
             )
-
-    def retrigger_cooling_fan(self):
-        if self.isPaused():
-            self._sendCommand(self.COMMAND_RESUME)
-            self._sendCommand(self.COMMAND_HOLD)
 
     def increasePasses(self):
         self._passes += 1

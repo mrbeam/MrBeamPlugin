@@ -138,7 +138,7 @@ class DustManager(object):
         self._event_bus.subscribe(IoBeamEvents.CONNECT, self._onEvent)
         self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._onEvent)
         self._event_bus.subscribe(MrBeamEvents.BUTTON_PRESS_REJECT, self._onEvent)
-        self._event_bus.subscribe(MrBeamEvents.EXHAUST_DEACTIVATE, self._onEvent)
+        self._event_bus.subscribe(MrBeamEvents.HIGH_TEMPERATURE_WARNING, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._onEvent)
@@ -248,10 +248,8 @@ class DustManager(object):
         elif event == IoBeamEvents.LID_OPENED:
             if self.is_final_extraction_mode:
                 self.set_user_abort_final_extraction()
-        elif event == MrBeamEvents.EXHAUST_DEACTIVATE:
-            self._logger.info(
-                "Turning off exhaust - trigger: %s", payload.get("trigger")
-            )
+        elif event == MrBeamEvents.HIGH_TEMPERATURE_WARNING:
+            self._logger.info("High temperature warning triggered, turning off exhaust")
             self._stop_dust_extraction()
 
     def _start_test_fan_rpm(self):
