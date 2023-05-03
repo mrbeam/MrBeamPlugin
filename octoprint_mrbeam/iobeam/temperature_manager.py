@@ -382,7 +382,10 @@ class TemperatureManager(object):
             # resume job if temperature is low enough after 25 seconds
             if (
                 self.cooling_since > self.cooling_duration
-                and self.cooling_difference >= self.HYTERESIS_TEMPERATURE
+                and (
+                    self.cooling_difference >= self.HYTERESIS_TEMPERATURE
+                    or self.cooling_tigger_temperature < self.temperature_max
+                )
             ) or (
                 self.high_temp_fsm.dismissed.is_active
                 and self.temperature < self.temperature_max - self.HYTERESIS_TEMPERATURE

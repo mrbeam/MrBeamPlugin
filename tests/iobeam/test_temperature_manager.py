@@ -306,3 +306,30 @@ def test_is_cooling_is_false_if_no_time_or_state(temperature_manager):
 
     # Assert
     assert result is False
+
+
+def test_job_pauses_when_temperature_was_not_recent(temperature_manager):
+    # Arrange
+    temperature_manager.cooling_stop = MagicMock()
+
+    # Act
+    temperature_manager.handle_temp(kwargs={"temp": None})
+
+    # Assert
+    temperature_manager.cooling_stop.assert_called_once_with(
+        err_msg="Laser temperature not available, assuming high temperature and stop for cooling."
+    )
+
+
+def test_job_resumes_when_temp_was_not_recent(temperature_manager):
+    # Arrange
+    temperature_manager.cooling_tigger_temperature = 40
+    temperature_manager.cooling_tigger_time = get_uptime() - 30
+    temperature_manager._one_button_handler.is_paused = MagicMock(return_value=True)
+    temperature_manager.cooling_resume = MagicMock()
+
+    # Act
+    temperature_manager.handle_temp(kwargs={"temp": 41})
+
+    # Assert
+    temperature_manager.cooling_resume.assert_called_once()
