@@ -1,25 +1,15 @@
 # coding=utf-8
-import subprocess
+import os
 from sys import platform
 from datetime import timedelta
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
-
+# http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
 def get_uptime():
     try:
-        if platform == "darwin":
-            output = (
-                subprocess.check_output(["sysctl", "-n", "kern.boottime"])
-                .decode()
-                .strip()
-            )
-            boot_time = int(output.split()[3].split(",")[0])
-            uptime_seconds = (
-                int(subprocess.check_output(["date", "+%s"]).decode().strip())
-                - boot_time
-            )
-
-            return uptime_seconds
+        if platform == 'darwin':
+            p = os.popen("uptime")
+            return p.read()
         else:
             with open("/proc/uptime", "r") as f:
                 uptime = float(f.readline().split()[0])

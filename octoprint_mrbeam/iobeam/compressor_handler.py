@@ -84,7 +84,7 @@ class CompressorHandler(object):
             OctoPrintEvents.PRINT_RESUMED, self.set_compressor_unpause
         )
         self._event_bus.subscribe(
-            MrBeamEvents.COMPRESSOR_DEACTIVATE, self._on_compressor_deactivate
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING, self._on_high_temperature_warning
         )
 
     def has_compressor(self):
@@ -215,8 +215,6 @@ class CompressorHandler(object):
 
         return data
 
-    def _on_compressor_deactivate(self, event, payload):
-        self._logger.info(
-            "Turning off compressor - trigger: %s", payload.get("trigger")
-        )
+    def _on_high_temperature_warning(self, event, payload):
+        self._logger.info("High temperature Warning triggered, turning off compressor")
         self.set_compressor_off()

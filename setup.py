@@ -48,7 +48,6 @@ plugin_requires = [
     "numpy",
     "pyyaml",
     "enum34",
-    "python-statemachine==1.0.3",
     picamera,
 ]
 

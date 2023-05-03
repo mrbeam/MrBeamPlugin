@@ -32,7 +32,6 @@ $(function () {
         self.readyToLaser = params[6];
         self.tour = params[7];
         self.analytics = params[8];
-        self.mrb_state = params[9];
 
         self.log = [];
         self.gc_meta = {};
@@ -4626,7 +4625,6 @@ $(function () {
             "readyToLaserViewModel",
             "tourViewModel",
             "analyticsViewModel",
-            "mrbStateViewModel",
         ],
         [
             document.getElementById("area_preview"),

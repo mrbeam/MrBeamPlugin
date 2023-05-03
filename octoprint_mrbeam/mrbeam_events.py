@@ -26,39 +26,17 @@ class MrBeamEvents(object):
 
     BUTTON_PRESS_REJECT = "ButtonPressReject"
 
-    # After PrintDone we turn up the exhaust system and maybe other things...
+    # After PrintDone we turn up the exhaus system and maybe other things...
     LASER_JOB_DONE = "LaserJobDone"
     LASER_JOB_CANCELLED = "LaserJobCancelled"
     LASER_JOB_FAILED = "LaserJobFailed"
     LASER_JOB_ABORTED = "LaserJobAborted"
-    LASER_JOB_ABORT = "LaserJobAbort"  # Abort a laser job
 
-    # events for the laser head
-    LASER_HOME = "LaserHome"
+    LASER_COOLING_PAUSE = "LaserCoolingPause"
+    LASER_COOLING_RESUME = "LaserCoolingResume"
 
-    LASER_COOLING_TEMPERATURE_REACHED = "LaserCoolingTemperatureReached"
-    LASER_COOLING_PAUSE = "LaserCoolingPause"  # Pause the job for cooling
-    LASER_COOLING_RESUME = "LaserCoolingResume"  # Resume laser job after cooling
-    LASER_COOLING_TO_SLOW = "LaserCoolingToSlow"
-    LASER_COOLING_RE_TRIGGER_FAN = "LaserCoolingReTriggerFan"
-    LASER_HIGH_TEMPERATURE = "LaserHighTemperature"
-
-    HIGH_TEMPERATURE_CRITICAL_SHOW = "HighTemperatureCriticalShow"
-    HIGH_TEMPERATURE_CRITICAL_HIDE = "HighTemperatureCriticalHide"
-    HIGH_TEMPERATURE_CRITICAL_DISMISSED = "HighTemperatureCriticalDismissed"
-    HIGH_TEMPERATURE_WARNING_SHOW = "HighTemperatureWarningShow"
-    HIGH_TEMPERATURE_WARNING_HIDE = "HighTemperatureWarningHide"
+    HIGH_TEMPERATURE_WARNING = "HighTemperatureWarning"
     HIGH_TEMPERATURE_WARNING_DISMISSED = "HighTemperatureWarningDismissed"
-
-    COMPRESSOR_DEACTIVATE = "CompressorDeactivate"
-
-    EXHAUST_DEACTIVATE = "ExhaustDeactivate"
-
-    LED_ERROR_ENTER = "LedErrorEnter"
-    LED_ERROR_EXIT = "LedErrorExit"
-
-    ALARM_ENTER = "AlarmEnter"
-    ALARM_EXIT = "AlarmExit"
 
     DUSTING_MODE_START = "DustingModeStart"
 
