@@ -214,7 +214,6 @@ def install_wheels(install_queue):
             "install",
             "--disable-pip-version-check",
             "--upgrade",  # Upgrade all specified packages to the newest available version. The handling of dependencies depends on the upgrade-strategy used.
-            "--no-index",  # Ignore package index (only looking at --find-links URLs instead).
             "--find-links={}".format(
                 tmp_folder
             ),  # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
