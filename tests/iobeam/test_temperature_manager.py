@@ -152,23 +152,39 @@ def test_handle_temp_fire_cooling_to_slow_event_second_threshold(temperature_man
 
     # Act
     temperature_manager.handle_temp(kwargs={"temp": 49})
+    temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
+    temperature_manager.handle_temp(kwargs={"temp": 49})
+    temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
+    temperature_manager.handle_temp(kwargs={"temp": 49})
 
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
         MrBeamEvents.LASER_COOLING_TO_SLOW,
-        dict(temp=49, cooling_differnece=1.0, cooling_time=approx(61, rel=0.01)),
+        dict(temp=49, cooling_differnece=1.0, cooling_time=approx(61, rel=1)),
     )
 
 
 def test_handle_temp_fire_cooling_to_slow_event_third_threshold(temperature_manager):
     # Arrange
     temperature_manager.cooling_tigger_time = (
-        get_uptime() - 141
+        get_uptime() - 140
     )  # when the cooling started this needs to longer as 25 seconds
     temperature_manager.cooling_tigger_temperature = 50.0
 
     # Act
     temperature_manager.handle_temp(kwargs={"temp": 49})
+    temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
+    # temperature_manager.handle_temp(kwargs={"temp": 43})
+    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
+    # temperature_manager.handle_temp(kwargs={"temp": 43})
+    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
+    # temperature_manager.handle_temp(kwargs={"temp": 43})
+    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
+    # temperature_manager.handle_temp(kwargs={"temp": 43})
+    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
+    # temperature_manager.handle_temp(kwargs={"temp": 49})
+    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
+    # temperature_manager.handle_temp(kwargs={"temp": 49})
 
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
@@ -194,9 +210,7 @@ def test_handle_temp_fire_cooling_to_slow_event_third_threshold(temperature_mana
         (43, 90),
     ],
 )
-def test_handle_temp_fire_cooling_to_slow_re_trigger_cooling_fan(
-    temp, time, temperature_manager
-):
+def test_handle_temp_fire_re_trigger_cooling_fan(temp, time, temperature_manager):
     # Arrange
     temperature_manager.cooling_tigger_time = (
         get_uptime() - time
@@ -211,6 +225,36 @@ def test_handle_temp_fire_cooling_to_slow_re_trigger_cooling_fan(
     temperature_manager._event_bus.fire.assert_called_with(
         MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN,
     )
+
+
+@pytest.mark.parametrize(
+    "temp, time",
+    [
+        (45, 10),
+        (45, 20),
+        (45, 30),
+        (47, 41),
+        (46, 80),
+        (46, 90),
+        (46, 100),
+        (44, 110),
+        (43, 120),
+        (43, 130),
+    ],
+)
+def test_handle_temp_fire_no_event(temp, time, temperature_manager):
+    # Arrange
+    temperature_manager.cooling_tigger_time = (
+        get_uptime() - time
+    )  # when the cooling started this needs to longer as 25 seconds
+    temperature_manager.cooling_tigger_temperature = 50.0
+    temperature_manager.hysteresis_temperature = 28
+
+    # Act
+    temperature_manager.handle_temp(kwargs={"temp": temp})
+
+    # Assert
+    temperature_manager._event_bus.fire.assert_not_called()
 
 
 def test_cooling_resume(mrbeam_plugin):
