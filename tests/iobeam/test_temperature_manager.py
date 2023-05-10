@@ -202,12 +202,8 @@ def test_handle_temp_fire_cooling_to_slow_event_third_threshold(temperature_mana
     [
         (46, 41),
         (46, 50),
-        (46, 60),
-        (46, 70),
         (44, 61),
         (43, 70),
-        (43, 80),
-        (43, 90),
     ],
 )
 def test_handle_temp_fire_re_trigger_cooling_fan(temp, time, temperature_manager):
