@@ -382,17 +382,24 @@ class TemperatureManager(object):
             # resume job if temperature is low enough after 25 seconds
             if (
                 self.cooling_since > self.cooling_duration
-                and (
-                    self.cooling_difference >= self.HYTERESIS_TEMPERATURE
-                    or self.cooling_tigger_temperature < self.temperature_max
-                )
+                and self.cooling_difference >= self.HYTERESIS_TEMPERATURE
             ) or (
                 self.high_temp_fsm.dismissed.is_active
                 and self.temperature < self.temperature_max - self.HYTERESIS_TEMPERATURE
             ):
                 self._logger.warn(
-                    "Cooling break duration passed: %ss - Current temp: %s",
+                    "Cooling break duration(%ss) passed: %ss - Current temp: %s",
                     self.cooling_duration,
+                    self.cooling_since,
+                    self.temperature,
+                )
+                self.cooling_resume()
+            elif (
+                self.cooling_tigger_temperature
+                and self.cooling_tigger_temperature < self.temperature_max
+            ):
+                self._logger.info(
+                    "Cooling resume as valid temperature received again: %ss - Current temp: %s",
                     self.temperature,
                 )
                 self.cooling_resume()
