@@ -388,8 +388,18 @@ class TemperatureManager(object):
                 and self.temperature < self.temperature_max - self.HYTERESIS_TEMPERATURE
             ):
                 self._logger.warn(
-                    "Cooling break duration passed: %ss - Current temp: %s",
+                    "Cooling break duration(%ss) passed: %ss - Current temp: %s",
                     self.cooling_duration,
+                    self.cooling_since,
+                    self.temperature,
+                )
+                self.cooling_resume()
+            elif (
+                self.cooling_tigger_temperature
+                and self.cooling_tigger_temperature < self.temperature_max
+            ):
+                self._logger.info(
+                    "Cooling resume as valid temperature received again - Current temp: %s",
                     self.temperature,
                 )
                 self.cooling_resume()
