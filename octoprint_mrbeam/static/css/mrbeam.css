@@ -3630,17 +3630,17 @@ button#terminal-send {
 
 /* Hard refresh overlay */
 
-/* Temperature Warning Modal */
-#temperature_warning_modal {
+/* High Temperature Warning Modal */
+#high_temperature_warning_modal {
   width: 700px;
   margin-left: -350px;
 }
-#temperature_warning_modal .warning {
+#high_temperature_warning_modal .warning {
   color: #e25303;
   font-weight: bold;
   display: flex;
 }
-#temperature_warning_modal .warning:before {
+#high_temperature_warning_modal .warning:before {
   content: "\f071";
   font-family: FontAwesome3, serif;
   margin-right: 20px;
@@ -3648,15 +3648,15 @@ button#terminal-send {
   font-size: 30px;
   margin-top: 10px;
 }
-#temperature_warning_modal .temperature_warning_footer_text {
+#high_temperature_warning_modal .high_temperature_warning_footer_text {
   display: flex;
 }
-#temperature_warning_modal .temperature_warning_footer_text span {
+#high_temperature_warning_modal .high_temperature_warning_footer_text span {
   color: #6d6d6d;
   text-align: left;
   margin-right: 70px;
 }
-/* Temperature Warning Modal */
+/* High Temperature Warning Modal */
 
 /* Material Store */
 

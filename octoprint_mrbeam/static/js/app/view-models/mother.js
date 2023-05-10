@@ -21,6 +21,7 @@ $(function () {
         self.loadingOverlay = params[13];
         self.softwareUpdate = params[14];
         self.analytics = params[15];
+        self.mrb_state = params[16];
 
         self.isStartupComplete = false;
         self.storedSocketData = [];
@@ -1013,6 +1014,7 @@ $(function () {
             "loadingOverlayViewModel",
             "softwareUpdateViewModel",
             "analyticsViewModel",
+            "mrbStateViewModel",
         ],
         [
             document.getElementById("mrb_state"),
