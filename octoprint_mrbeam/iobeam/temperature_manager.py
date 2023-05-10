@@ -399,7 +399,7 @@ class TemperatureManager(object):
                 and self.cooling_tigger_temperature < self.temperature_max
             ):
                 self._logger.info(
-                    "Cooling resume as valid temperature received again: %ss - Current temp: %s",
+                    "Cooling resume as valid temperature received again - Current temp: %s",
                     self.temperature,
                 )
                 self.cooling_resume()
