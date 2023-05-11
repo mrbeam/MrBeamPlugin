@@ -1374,7 +1374,11 @@ class MrBeamPlugin(
 
     # simpleApiCommand: high_temperature_warning_dismiss;
     def handle_temperature_warning_dismissal(self, data):
-        self.temperature_manager.dismiss_high_temperature_warning()
+        level = data.get("level", 0)
+        if level == 1:
+            self.temperature_manager.dismiss_high_temperature_warning()
+        elif level == 2:
+            self.temperature_manager.dismiss_high_temperature_critical()
         return NO_CONTENT
 
     # simpleApiCommand: high_temperature_warning_status;

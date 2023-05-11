@@ -307,6 +307,14 @@ class TemperatureManager(object):
         """
         self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED)
 
+    def dismiss_high_temperature_critical(self):
+        """Dismisses the high temperature critical.
+
+        Returns:
+            None
+        """
+        self._event_bus.fire(MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_DISMISSED)
+
     @property
     def cooling_difference(self):
         """

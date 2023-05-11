@@ -84,7 +84,7 @@ $(function () {
             OctoPrint.simpleApiCommand(
                 "mrbeam",
                 "high_temperature_warning_dismiss",
-                {}
+                { level: self.level() }
             )
                 .done(function (data) {
                     $("#high_temperature_warning_modal").modal("hide");
