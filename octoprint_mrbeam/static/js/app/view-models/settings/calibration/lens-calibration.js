@@ -234,15 +234,6 @@ $(function () {
             );
         };
 
-        self.onEventLensCalibExit = function () {
-            // Is called by OctoPrint when this event is fired
-            new PNotify({
-                title: gettext("Lens Calibration stopped."),
-                type: "info",
-                hide: true,
-            });
-        };
-
         self.resetLensCalibration = function () {
             self.lensCalibrationActive(false);
             self.resetHeatmap();

@@ -8,10 +8,13 @@ from octoprint_mrbeam.util.device_info import MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_
     MODEL_MRBEAM_2_DC_R1, MODEL_MRBEAM_2_DC_R2, MODEL_MRBEAM_2
 
 LASERHEAD_MAX_TEMP_FALLBACK = 55.0
+LASERHEAD_HIGH_TMP_WARN_OFFSET_FALLBACK = 2.0
 LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
 LASERHEAD_MAX_CORRECTION_FACTOR_FALLBACK = 1
 LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK = 1500
 LASERHEAD_LIFESPAN_FALLBACK = 40
+LASERHEAD_MIN_SPEED_FALLBACK = 100
+
 
 LASERHEAD_STOCK_ID = 0
 LASERHEAD_S_ID = 1
@@ -496,6 +499,40 @@ class LaserheadHandler(object):
 
         return LASERHEAD_MAX_TEMP_FALLBACK
 
+    @property
+    def current_laserhead_high_temperature_warn_offset(self):
+        """Return the current laser head high temperature warn offset.
+
+		Returns:
+			float: Laser head high tmp warn offset
+		"""
+        current_laserhead_properties = self._get_laserhead_properties()
+
+        # Handle the exceptions
+        if ((isinstance(current_laserhead_properties, dict) is False) or
+                ("high_temperature_offset" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["high_temperature_offset"], float) is False)):
+            # Apply fallback
+            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
+            self._logger.exception(
+                "Current Laserhead high temperature warn offset couldn't be retrieved, fallback to the temperature value of: {}".format(
+                    self.default_laserhead_high_temperature_warn_offset))
+            return self.default_laserhead_high_temperature_warn_offset
+        # Reaching here means, everything looks good
+        self._logger.debug("Current Laserhead high temperature warn offset:{}".format(current_laserhead_properties["high_temperature_offset"]))
+        return current_laserhead_properties["high_temperature_offset"]
+
+    @property
+    def default_laserhead_high_temperature_warn_offset(self):
+        """Default high temperature warning offset for laser head. to be used by other modules
+		at init time.
+
+		Returns:
+			float: Laser head default high tmp warn offset
+		"""
+
+        return LASERHEAD_HIGH_TMP_WARN_OFFSET_FALLBACK
+
     def _load_current_laserhead_properties(self):
         """Loads the current detected laser head related properties from the
         laser head profile files and return them.
@@ -686,3 +723,35 @@ class LaserheadHandler(object):
             int: Laser head default lifespan
         """
         return LASERHEAD_LIFESPAN_FALLBACK
+
+    @property
+    def current_laserhead_min_speed(self):
+        """Return the current laser head minimum speed.
+
+        Returns:
+            int: Laser head minimum speed
+        """
+        current_laserhead_properties = self._get_laserhead_properties()
+
+        # Handle the exceptions
+        if ((isinstance(current_laserhead_properties, dict) is False) or
+                ("min_speed" not in current_laserhead_properties) or
+                (isinstance(current_laserhead_properties["min_speed"], int) is False)):
+            # Apply fallback
+            self._logger.exception(
+                "Current Laserhead minimum speed couldn't be retrieved, fallback to the factor value of: {}".format(
+                    self.default_laserhead_min_speed))
+            return self.default_laserhead_min_speed
+        # Reaching here means, everything looks good
+        self._logger.debug("Current Laserhead minimum speed:{}".format(current_laserhead_properties["min_speed"]))
+        return current_laserhead_properties["min_speed"]
+
+    @property
+    def default_laserhead_min_speed(self):
+        """Default minimum speed for laser head. to be used by other modules
+        at init time.
+
+        Returns:
+            int: Laser head default minimum speed
+        """
+        return LASERHEAD_MIN_SPEED_FALLBACK
