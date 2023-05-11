@@ -42,8 +42,13 @@ class UserNotificationSystem(object):
         self._analytics_handler = self._plugin.analytics_handler
 
     @staticmethod
-    def get_notification(notification_id, err_msg=[], replay=False):
-        return dict(notification_id=notification_id, err_msg=err_msg, replay=replay)
+    def get_notification(notification_id, err_msg=[], err_code=[], replay=False):
+        return dict(
+            notification_id=notification_id,
+            err_msg=err_msg,
+            err_code=err_code,
+            replay=replay,
+        )
 
     @staticmethod
     def get_legacy_notification(title, text, err_msg=[], replay=False, is_err=False):
@@ -84,3 +89,15 @@ class UserNotificationSystem(object):
                 )
             ),
         )
+
+    def dismiss_notification(self, notification_id):
+        """Dismisses a notification.
+
+        Args:
+            notification_id: id of the notification to dimiss
+
+        Returns:
+            None
+        """
+        self._logger.debug("dismiss_notification: %s", notification_id)
+        self._stored_notifications.pop(notification_id, None)

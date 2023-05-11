@@ -139,7 +139,7 @@ class MrBeamPlugin(
     ENV_LASER_SAFETY = "laser_safety"
     ENV_ANALYTICS = "analytics"
 
-    LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.4"
+    LASERSAFETY_CONFIRMATION_DIALOG_VERSION = "0.5"
 
     LASERSAFETY_CONFIRMATION_STORAGE_URL = "https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec"
     USER_SETTINGS_KEY_MRBEAM = "mrbeam"
@@ -272,7 +272,7 @@ class MrBeamPlugin(
         )
         self.led_event_listener.set_fps(self._settings.get(["leds", "fps"]))
         # start iobeam socket only once other handlers are already initialized so that we can handle info message
-        self.iobeam = ioBeamHandler(self)
+        self.iobeam = ioBeamHandler(self, self._printer)
         self.dust_manager = dustManager(self)
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
@@ -569,6 +569,7 @@ class MrBeamPlugin(
                 carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
                 laserHeadUsage=self.usage_handler.get_laser_head_usage(),
                 gantryUsage=self.usage_handler.get_gantry_usage(),
+                laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
             ),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
@@ -760,6 +761,9 @@ class MrBeamPlugin(
                 "js/app/helpers/mutation-observer.js",
             ],
             css=[
+                "css/fontawesome_v6/css/fontawesome.min.css",
+                "css/fontawesome_v6/css/brands.min.css",
+                "css/fontawesome_v6/css/v4-font-face.min.css",
                 "css/mrbeam.css",
                 "css/backlash_settings.css",
                 "css/tab_designlib.css",
@@ -988,10 +992,10 @@ class MrBeamPlugin(
             ),
             dict(
                 type="settings",
-                name=gettext("Analytics"),
+                name=gettext("Better Together"),
                 template="settings/analytics_settings.jinja2",
                 suffix="_analytics",
-                custom_bindings=False,
+                custom_bindings=True,
             ),
             dict(
                 type="settings",
@@ -1997,6 +2001,8 @@ class MrBeamPlugin(
             generate_calibration_markers_svg=[],
             cancel_final_extraction=[],
             compare_pep440_versions=[],
+            request_hardware_errors=[],
+            dissmiss_notification=[],
         )
 
     def on_api_command(self, command, data):
@@ -2126,7 +2132,10 @@ class MrBeamPlugin(
             self.dust_manager.set_user_abort_final_extraction()
         elif command == "compare_pep440_versions":
             return self.handle_pep440_comparison_result(data)
-
+        elif command == "request_hardware_errors":
+            return self.handle_hardware_error_request(data)
+        elif command == "dissmiss_notification":
+            return self.handle_dissmiss_notification_request(data)
         return NO_CONTENT
 
     def analytics_init(self, data):
@@ -2270,6 +2279,30 @@ class MrBeamPlugin(
                 return make_response("BAD REQUEST - DEV mode only.", 400)
         elif "rtl_cancel" in data and data["rtl_cancel"]:
             self.onebutton_handler.unset_ready_to_laser()
+        return NO_CONTENT
+
+    def handle_hardware_error_request(self, data):
+        """Handle a request to send a hardware error to the iobeam server.
+
+        Args:
+            data: data of request
+
+        Returns:
+            NO_CONTENT
+        """
+        self.iobeam.send_malfunction_request()
+        return NO_CONTENT
+
+    def handle_dissmiss_notification_request(self, data):
+        """Handle a request to dismiss a notification.
+
+        Args:
+            data: request data
+
+        Returns:
+            NO_CONTENT
+        """
+        self.user_notification_system.dismiss_notification(data.get("id", None))
         return NO_CONTENT
 
     def take_undistorted_picture(self, is_initial_calibration):

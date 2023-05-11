@@ -4,10 +4,11 @@ $(function () {
         window.mrbeam.viewModels["wizardWhatsnewViewModel"] = self;
 
         self.START_TAB = "wizard_firstrun_start_link";
-        self.WIFI_TAB = "wizard_plugin_corewizard_wifi_netconnectd_link";
+        self.WIFI_TAB = "wizard_plugin_corewizard_connection_link";
         self.ACL_TAB = "wizard_plugin_corewizard_acl_link";
         self.LASER_SAFETY_TAB = "wizard_plugin_corewizard_lasersafety_link";
         self.ANALYTICS_TAB = "wizard_plugin_corewizard_analytics_link";
+        self.GUIDED_TOUR_TAB = "wizard_plugin_corewizard_guided_tour_link";
         self.END_TAB = "";
 
         self.WELCOME_TABS_IN_ORDER = [
@@ -33,6 +34,7 @@ $(function () {
         self.isWhatsnew = MRBEAM_WIZARD_TO_SHOW === "WHATSNEW";
         self.isBetaNews = MRBEAM_WIZARD_TO_SHOW === "BETA_NEWS";
         self.aboutToStart = true;
+        self.startGuidedTourEventListner = false;
 
         self.onAfterBinding = function () {
             $("#wizard_dialog div.modal-footer button.button-finish").text(
@@ -42,7 +44,7 @@ $(function () {
 
             if (self.isWelcome) {
                 $("#wizard_dialog div.modal-header h3").text(
-                    gettext("Welcome dialog")
+                    gettext("Welcome to the #madewithmrbeam community")
                 );
             } else if (self.isWhatsnew) {
                 $("#wizard_dialog div.modal-header h3").text(
@@ -103,6 +105,46 @@ $(function () {
         self.onAfterWizardTabChange = function (current) {
             self._changeNavDesignActiveTab(current);
             $("#wizard_dialog > .modal-body").scrollTop(0);
+            self._showGuidedTourButton(current);
+        };
+        self._startGuidedTour = function () {
+            $("#wizard_dialog").modal("hide");
+            self.tour.startTourFromStep(1);
+        };
+        self._showGuidedTourButton = function (current) {
+            if (current === self.GUIDED_TOUR_TAB) {
+                $(
+                    "#wizard_dialog div.modal-footer button.button-finish"
+                ).show();
+                $("#wizard_dialog div.modal-footer button.button-finish").text(
+                    gettext("Start guided Tour")
+                );
+                $("#wizard_dialog div.modal-footer button.button-next").text(
+                    gettext("Skip tour")
+                );
+                document
+                    .querySelector(
+                        "#wizard_dialog div.modal-footer button.button-finish"
+                    )
+                    .addEventListener("click", self._startGuidedTour);
+                self.startGuidedTourEventListner = true;
+            } else {
+                if (self.startGuidedTourEventListner) {
+                    document
+                        .querySelector(
+                            "#wizard_dialog div.modal-footer button.button-finish"
+                        )
+                        .removeEventListener("click", self._startGuidedTour);
+                    self.startGuidedTourEventListner = false;
+                }
+                $("#wizard_dialog div.modal-footer button.button-finish").text(
+                    gettext("Let's go!")
+                );
+                $("#wizard_dialog div.modal-footer button.button-next").text(
+                    gettext("Next")
+                );
+                self.onStartupComplete();
+            }
         };
 
         self.onWizardFinish = function () {

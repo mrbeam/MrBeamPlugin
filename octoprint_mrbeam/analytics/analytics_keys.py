@@ -13,6 +13,8 @@ class AnalyticsKeys:
         VERSION_MRBEAM_PLUGIN = "version_mrbeam_plugin"
         UPTIME = "uptime"
         MODEL = "model"
+        LH_MODEL_ID = "lh_model_id"
+        LH_SERIAL = "lh_serial"
         FEATURE_ID = "feature_id"
 
     class EventType:

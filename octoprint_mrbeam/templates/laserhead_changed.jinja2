@@ -5,7 +5,7 @@
     {# Not supported laserhead  - START #}
     <div class="modal-body" data-bind="visible: !laserheadModelSupported()">
         <div>
-            <img loading="lazy" src="/plugin/mrbeam/static/img/Welcome.png">
+            <img src="/plugin/mrbeam/static/img/Welcome.png">
             <h4> {{ _("We are very sorry but the installed laser head will not work with your device.") }}</h4>
             <p> {{ _("Every device older than the dreamcut row will not support the new and advanced laser head properly. There are just too many improvements that are missing in the earlier states of our model rows like Mr Beam and Mr Beam II. Please contact our support tor further steps.") }}</p>
         </div>
@@ -16,7 +16,7 @@
     {# Steps for laserhead S  - START #}
     <div class="modal-body" data-bind="visible: showStepForLaserheadS(1)">
         <div>
-            <img loading="lazy" src="/plugin/mrbeam/static/img/Welcome.png">
+            <img src="/plugin/mrbeam/static/img/Welcome.png">
             <h4> {{ _("Your Mr Beam dreamcut [S] laser head has been successfully installed.") }}</h4>
             <p> {{ _("With this laser head you can work now even faster.") }}</p>
             <p> {{ _("This means that we also update the default material settings to the new laser head as long it is installed to provide you the best possible support. However, we do not update your custom materials, this will need your personal testing and fine tuning.") }}</p>
@@ -31,10 +31,11 @@
     {# Steps for laserhead x  - START #}
     <div class="modal-body" data-bind="visible: showStepForLaserheadX(1)">
         <div>
-            <img loading="lazy" src="/plugin/mrbeam/static/img/Welcome.png">
+            <img src="/plugin/mrbeam/static/img/Welcome.png">
             <h4> {{ _("Your Mr Beam II dreamcut [X] laser head has been successfully connected.") }}</h4>
             <p> {{ _(" You can now work even faster with this laser head.") }}</p>
-            <p> {{ _("We have adapted the standard material settings to the new laser head so that you can start directly. Your personal material settings remain unchanged. To adjust them to the increased performance of the laser head, you must perform tests yourself and save the results.") }}</p>
+            <p> {{ _("We have adapted the standard material settings to the new laser head so that you can start directly. Attention: Using your personal material settings without adjustment increases the risk of material ignition!") }}</p>
+            <p> {{ _("Heads Up! Your new laser head is so powerful that using the Mr Beam cutting mat is not recommended anymore. Read why and know about alternatives in the <a target='_blank' href='https://www.mr-beam.org/en/products/mr-beam-zwei-dreamcut-x-laserkopf'>FAQ</a>.") }} </p>
             <p> {{ _("All the new features that await you with the dreamcut [X] laser head can be found in this Knowledgebase article:") }} <a
                     target="_blank"
                     href="{{ _("https://support.mr-beam.org/en") }}/support/solutions/articles/43000693865">
@@ -44,7 +45,7 @@
 
     <div class="modal-body" data-bind="visible: showStepForLaserheadX(2)">
         <div>
-            <p><img loading="lazy" src="/plugin/mrbeam/static/img/speed_improvement.png"></p>
+            <p><img src="/plugin/mrbeam/static/img/speed_improvement.png"></p>
             <h4> {{ _("Your Mr Beam is even faster now!") }}</h4>
             <ul>
                 <li> {{ _("If you had a Mr Beam II dreamcut before, you can now cut up to four times as fast.") }}</li>
@@ -56,7 +57,7 @@
 
     <div class="modal-body" data-bind="visible: showStepForLaserheadX(3)">
         <div>
-            <p><img loading="lazy" src="/plugin/mrbeam/static/img/Powersupply.png"></p>
+            <p><img src="/plugin/mrbeam/static/img/Powersupply.png"></p>
             <h4> {{ _("The new laser head needs a larger power supply!") }}</h4>
             {% set link_for_for_support_page = _('https://support.mr-beam.org/en') %}
             <p> {{ (_("Due to its slightly increased power requirements, you will need a 90W power supply for the laser head. If you are not sure which power supply you are currently using, you can learn more about it in this knowledge base article: %(open)sLearn more%(close)s." , open='<a href="%s/support/solutions/articles/43000693872" target="_blank">' % link_for_for_support_page, close='</a>')|safe) }}</p>
@@ -67,9 +68,9 @@
 
     <div class="modal-body" data-bind="visible: showStepForLaserheadX(4)">
         <div>
-            <p><img loading="lazy" src="/plugin/mrbeam/static/img/10W_sticker.png"></p>
+            <p><img src="/plugin/mrbeam/static/img/10W_sticker.png"></p>
             <h4> {{ _("Please place the included sticker on your Mr Beam!") }}</h4>
-            <p> {{ _('Please cover the 5W safety label on the back of your Mr Beam with the new 10W label.') }}</p>
+            <p> {{ _('To maintain legal requirements, it is mandatory to update the safety labels on your Mr Beam laser cutter. Put the sticker with updated power and wavelength on top of the existing label like shown in the example.') }}</p>
         </div>
     </div>
     {# Steps for laserhead x  - END #}

@@ -1103,8 +1103,10 @@ $(function () {
                 "flowRoot",
                 "switch",
                 "#adobe_illustrator_pgf",
+                "pattern",
             ];
 
+            let unsupportedElemsDetected = [];
             for (var i = 0; i < unsupportedElems.length; i++) {
                 var myElem = fragment.selectAll(unsupportedElems[i]);
                 if (myElem.length !== 0) {
@@ -1116,11 +1118,16 @@ $(function () {
                             unsupportedElems[i] +
                             "' element in SVG"
                     );
-                    self.svg_contains_unsupported_element_warning(
-                        unsupportedElems[i]
-                    );
+                    unsupportedElemsDetected.push(unsupportedElems[i]);
                     myElem.remove();
                 }
+            }
+
+            // inform user about unsupported elements
+            if (unsupportedElemsDetected.length > 0) {
+                self.svg_contains_unsupported_element_warning(
+                    unsupportedElemsDetected
+                );
             }
 
             // remove other unnecessary or invisible ("display=none") elements
@@ -1963,21 +1970,27 @@ $(function () {
             };
         };
 
-        self.svg_contains_unsupported_element_warning = function (elemName) {
-            elemName = elemName.replace("\\:", ":");
+        self.svg_contains_unsupported_element_warning = function (
+            unsupportedElemsDetected
+        ) {
+            unsupportedElemsDetected = unsupportedElemsDetected
+                .join(", ")
+                .replace("\\:", ":");
             var error =
                 "<p>" +
                 _.sprintf(
                     gettext(
-                        "The SVG file contains unsupported elements: '%(elemName)s' These elements got removed."
+                        "The SVG file contains unsupported elements: '%(unsupportedElemsDetected)s'. These elements got removed."
                     ),
-                    { elemName: elemName }
+                    { unsupportedElemsDetected: unsupportedElemsDetected }
                 ) +
                 "</p>";
             new PNotify({
                 title: _.sprintf(
-                    gettext("Unsupported elements in SVG: '%(elemName)s'"),
-                    { elemName: elemName }
+                    gettext(
+                        "Unsupported elements in SVG: '%(unsupportedElemsDetected)s'"
+                    ),
+                    { unsupportedElemsDetected: unsupportedElemsDetected }
                 ),
                 text: error,
                 type: "warn",

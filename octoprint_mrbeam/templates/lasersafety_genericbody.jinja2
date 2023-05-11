@@ -1,132 +1,137 @@
 {# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
 <!-- LASERSAFETY_CONFIRMATION_DIALOG_VERSION: {{ lasersafety_confirmation_dialog_version }}, LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE: {{ lasersafety_confirmation_dialog_language }} -->
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-{# hey there! It's important to keep the version and language data of this dialog up to date!!!! #}
-
-
-
-
-{% set safety_img = _('img/MrBeam_Sicherheitshinweise_EN.png') %}
-{% set laser_safety_de = _('/plugin/mrbeam/static/docs/LaserSafetyOriginalText.pdf') %}
-
-<p>
-    <strong>{{ _('Heads up! Read the following, it is very important for your and other\'s health!') }}</strong>
-</p>
-<h3>
-   {{ _('Laser Classification:') }}
-</h3>
-<p>
-    {{ _('Your "Mr Beam II", "Mr Beam II dreamcut ready" or "Mr Beam II dreamcut" lasercutter is a class 1 laser device according to IEC60825. ') }}
-    {{ _('This means that no harmful laser light can leak out from the device during an intended purpose operation. ') }}
-    {{ _('This is ensured by a redundant security system. ') }}
-    {{ _('This security system must not be manipulated or circumvented at any time.') }}
-
-</p>
-
-<img loading="lazy" src="{{ url_for('plugin.mrbeam.static', filename=safety_img) }}" alt="safety labels"/>
-
-<h3>{{ _('Safety Advisory:') }}</h3>
-<p>
-    {{ _('Keep the safety housing and the safety lid <strong>always</strong> in excellent condition.') }}<br/>
-    {{ _('<strong>Never</strong> modify, disable or circumvent the safety housing, safety lid, safety switches or any other safety related device on your lasercutter.') }}<br/>
-    {{ _('Damaged or modified devices are not allowed to use. Ask a certified service engineer to repair them immediately.') }}<br/>
-    {{ _('Be <strong>always</strong> responsible regarding yourself and others.') }}<br/>
-    {{ _('<strong>Never</strong> leave the device unattended during operation. ') }}<br/>
-    {{ _('<strong>Never</strong> run the device without proper exhaust system.') }} <br/>
-    {{ _('<strong>Always</strong> vent unfiltered fumes during operation to the outside.') }} <br/>
-    {{ _('In closed rooms it is <strong>always</strong> necessary to filter the exhausted air.') }} <br/>
-    {{ _('<strong>Never</strong> put reflecting or mirroring or flammable materials under the laser.') }}<br/>
-    {{ _('<strong>Never</strong> put the machine on a flammable surface.') }} <br/>
-    {{ _('It must be operated <strong>only</strong> by persons who are aware of the risks and dangers of the operation.') }}<br/>
-    {{ _('If not operated by yourself, introduce the operating person carefully and responsibly.') }}<br/>
-    {{ _('If you are connecting the lasercutter to a network ensure that you properly set up the network access as well as the machine\'s access control. ') }}
-    {{ _('Do NOT underestimate the risk of an unsecured access from the internet to your lasercutter.') }}
-</p>
-
-<small class="muted">
-    {{ _('Disclaimer: Versions in other languages are a translation of the %(open)soriginal German%(close)s for information purposes only. In case of discrepancy, the German original will prevail.', open='<a href="%s" target="_blank">' % laser_safety_de, close='</a>')}}
-</small><br>
-
-<p style="margin-top: 25px;">
-    {{ _('By proceeding you are agreeing, that') }}
-</p>
-<ul>
-    <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox1(), error: !checkbox1()}">
+<div id="laser-safety-conditions">
+    <img loading="lazy" src="{{ url_for('plugin.mrbeam.static', filename='img/laser_savety.jpg') }}">
+    <h4>{{ _('Laser safety') }}</h4>
+    <p>{{ _('Attention! To protect both your own health and the health of others when operating the Mr Beam, read the following instructions carefully and attentively!') }}</p>
+    <br>
+    <h4>{{ _('Laser Classification:') }}</h4>
+    <p>{{ _('Your Mr Beam laser cutter is a Class 1 laser product according to IEC 60825-1, which means that no harmful laser light can escape from the device when operated as intended. This is guaranteed by redundant safety systems. This safety system must not be tampered with or bypassed under any circumstances.') }}</p>
+    <br>
+    <h4>{{ _('Safety instructions:') }}</h4>
+    <ul class="laser-safety-conditions__ul--safety-instructions">
+        <li>
+            <p>
+                {{ _('Always keep the safety housing and safety lid of your Mr Beam laser cutter in good working order.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Never modify, disable, or bypass the safety housing, safety lid, safety switches, or other safety-related devices on your laser cutter.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Damaged or modified laser cutters must not be used. Ask a certified service technician to repair it immediately.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Always act responsibly towards yourself and others.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Never leave your laser cutter unattended during operation.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Never operate your laser cutter without proper exhaust filtration or exhaust system.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('At no time during operation should people or animals be exposed to unfiltered fumes.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Use a suitable filter for this purpose or discharge the exhaust air safely into the open air (taking local legislation into account).') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Never place reflective, mirror-like, highly flammable or explosive materials in your laser cutter.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Never place the machine on a highly flammable or explosive surface.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Your laser cutter may only be operated by persons who are aware of the risks and dangers of operation.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('If you allow third parties access to your laser cutter, ensure that they receive careful and responsible instruction, including all the instructions listed here.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('If the laser cutter is connected to a network, make sure that access to the laser cutter itself as well as to the network is sufficiently protected against misuse by third parties. Do not underestimate the risk of unsecured access. For this purpose, use the key switch to switch off the power to your laser cutter when it is not in use.') }}
+            </p>
+        </li>
+        <li>
+            <p>
+                {{ _('Note: Versions in other languages are a translation of the German original and for information purposes only. In case of any discrepancy, the German original shall prevail.') }}
+            </p>
+        </li>
+    </ul>
+    <div class="laser-safety-conditions__div--agreement">
+        <h5>{{ _('To continue, please agree to the following items.') }}</h5>
+        <div class="control-group" data-bind="css: {success: checkbox1(), error: !checkbox1()}">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: checkbox1">
+                {{ _('I understand that laser light is potentially dangerous. I understand that I am legally responsible for both the proper and improper use of my laser cutter.') }}
+            </label>
+        </div>
+        <div class="control-group" data-bind="css: {success: checkbox2(), error: !checkbox2()}">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: checkbox2">
+                {{ _('This laser cutter protects health with a safety enclosure, safety lid, safety electronics, exhaust system, and other safety features. I understand that modifying, bypassing, or disabling safety-related devices will result in inadequate protection.') }}
+            </label>
+        </div>
+        <div class="control-group" data-bind="css: {success: checkbox3(), error: !checkbox3()}">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: checkbox3">
+                {{ _('I understand that I am responsible for keeping my laser cutter and all attached safety devices in good working order. I will take care of regular inspections and maintenance. If necessary, I will initiate immediate repairs.') }}
+            </label>
+        </div>
+        <div class="control-group" data-bind="css: {success: checkbox4(), error: !checkbox4()}">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: checkbox4">
+                {{ _('I will never leave my laser cutter unattended during operation.') }}
+            </label>
+        </div>
+        <div class="control-group" data-bind="css: {success: checkbox5(), error: !checkbox5()}">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: checkbox5">
+                {{ _('I am responsible for allowing access to my laser cutter only to instructed and authorized personnel.') }}
+            </label>
+        </div>
+        <div class="control-group" data-bind="css: {success: checkbox6(), error: !checkbox6()}">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: checkbox6">
+                {{ _('I have connected the laser cutter to a trusted network and ensured that only instructed and authorized persons can access it. When I am not using the laser cutter, I will always turn off the power and remove the key.') }}
+            </label>
+        </div>
+    </div>
+    <ul class="laser-safety-conditions__ul--last-note">
+        <li>
+            <p>
+                {{ _('If you have any concerns about laser safety or do not agree with the above conditions, do not use this software.') }}
+                <br><br><strong>{{ _('Thank you for your attention.') }}</strong>
+            </p>
+        </li>
+    </ul>
+    <div class="control-group wizard_safety_agreement">
         <label class="checkbox">
-            <input type="checkbox" data-bind="checked: checkbox1">
-            {{ _('I understand that laser light is potentially dangerous. ') }}
-            {{ _('I know that I am legally responsible for the use and also the improper use of my laser cutter.') }}
+            <input type="checkbox" data-bind="checked: showAgain">
+            {{ _('Show this information again next time. <br> Otherwise you can also find it here: Settings / Laser safety') }}
         </label>
     </div>
-
-    <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox2(), error: !checkbox2()}">
-        <label class="checkbox">
-            <input type="checkbox" data-bind="checked: checkbox2">
-            {{ _('This lasercutter is protecting you from laser light with a safety housing, a safety lid, safety electronic circuits, exhaust system and other safety devices. ') }}
-            {{ _('I understand that modifying, circumventing or disabling any safety related device will result in insufficient protection.') }}
-        </label>
-    </div>
-
-    <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox3(), error: !checkbox3()}">
-        <label class="checkbox">
-            <input type="checkbox" data-bind="checked: checkbox3">
-            {{ _('I understand that I am are responsible to keep this lasercutter and all attached safety devices in excellent condition.') }}<br/>
-            {{ _('This may require regular inspections and immediate repairs if necessary.') }}
-        </label>
-    </div>
-
-    <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox4(), error: !checkbox4()}">
-        <label class="checkbox">
-            <input type="checkbox" data-bind="checked: checkbox4">
-            {{ _('I will never leave my lasercutter unattended during operation.') }}
-        </label>
-    </div>
-
-    <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox5(), error: !checkbox5()}">
-        <label class="checkbox">
-            <input type="checkbox" data-bind="checked: checkbox5">
-            {{ _('I am legally responsible to grant access to my laser cutter only to introduced and authorized personnel.') }}
-        </label>
-    </div>
-
-    <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox6(), error: !checkbox6()}">
-        <label class="checkbox">
-            <input type="checkbox" data-bind="checked: checkbox6">
-            {{ _('I have connected the lasercutter to a trustful network and ensured that only authorized and introduced personnel can access it.') }}
-            {{ _('When not using the lasercutter, I will always turn off the power and pull off the key.') }}
-        </label>
-    </div>
-</ul>
-
-<p>
-    {{ _('If you have any concerns about laser safety or if you do not agree with the conditions above don\'t use this software to operate any machine emitting laser light.') }}
-</p>
-
-
-<p>{{ _('Thank you for reading.') }} </p>
-
-<br/>
-<div class="control-group wizard_safety_agreement">
-    <label class="checkbox">
-        <input type="checkbox" data-bind="checked: showAgain">
-        <div>{{ _('Remind me on every login.') }}</div>
-        <ul style="color:grey">
-            <li><small>{{ _('Internet connection required to take effect.') }}</small></li>
-            <li><small>
-                {{ _('If you decide to not be reminded on every login, we need to store your agreement on our servers.') }}
-                {{ _('This includes your login email address and technical device data.') }}<br />
-                {# Check our <a href="http://shop.mr-beam.org/privacy" target="_blank" style="color:grey; text-decoration: underline;">privacy statement</a> for details. #}
-                {{ _("Check our %(open)sprivacy statement%(close)s for details.", open='<a href="https://mr-beam.org/privacy-policy" target="_blank" style="color:grey; text-decoration: underline;">', close='</a>')|safe }}
-            </small></li>
-        </ul>
-    </label>
 </div>
-<br/>

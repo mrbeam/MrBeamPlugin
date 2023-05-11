@@ -41,6 +41,25 @@ $(function () {
             self._analytics_tour_start();
         };
 
+        self.startTourFromStep = function (stepId) {
+            self._setPreConditions();
+            self._registerListeners();
+
+            if (
+                mrbeam.viewModels.workingAreaViewModel &&
+                !mrbeam.viewModels.workingAreaViewModel.working_area_empty()
+            ) {
+                self.tourDef = self._getPreTourDefinitions();
+            } else {
+                self.tourDef = self._getTourDefinitions();
+            }
+
+            console.log("TourViewModel tour START: ", self.tourDef);
+            hopscotch.configure({ skipIfNoElement: true });
+            hopscotch.startTour(self.tourDef, stepId);
+            self._analytics_tour_start();
+        };
+
         self._getTourDefinitions = function () {
             let tour = [];
 
@@ -50,7 +69,7 @@ $(function () {
                     id: "start_screen",
                     title: [
                         gettext(
-                            "Step-by-Step Tour Guide To Your First Laser Job"
+                            "Step-by-Step Guided Tour To Your First Laser Job"
                         ),
                     ],
                     text: [
@@ -76,7 +95,7 @@ $(function () {
                                 ),
                                 {
                                     opening_tag:
-                                        "<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'><i class=\"icon-external-link\"></i>&nbsp;",
+                                        "<a href='https://support.mr-beam.org/support/solutions/articles/43000073345?utm_source=beamos&utm_medium=software' target='_blank'><i class=\"icon-external-link\"></i>&nbsp;",
                                     closing_tag: "</a>",
                                 }
                             ) +
@@ -229,6 +248,9 @@ $(function () {
                     target:
                         $(
                             '.file_list_entry[mrb_name="Schluesselanhaenger.svg"]'
+                        )[0] ||
+                        $(
+                            '.file_list_entry[mrb_name="Schlusselanhanger.svg"]'
                         )[0] ||
                         $(
                             ".gcode_files .entry.files_template_model_svg .file_list_entry "

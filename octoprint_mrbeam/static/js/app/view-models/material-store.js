@@ -5,9 +5,22 @@ $(function () {
         const MATERIAL_STORE_EVENT_TYPE = {
             MR_BEAM_LOAD: "loadedFromMrBeamDevice",
             DISPLAY_PRODUCT: "displayProduct",
+            SELECT_FILTER: "selectFilter",
+        };
+
+        const MATERIAL_STORE_LASERHEAD_FILTER_VALUE = {
+            LASERHEAD_X: "laserheadX",
+        };
+
+        const MATERIAL_STORE_FILTER_TYPE = {
+            LASERHEAD: MATERIAL_STORE_LASERHEAD_FILTER_VALUE,
         };
 
         window.mrbeam.viewModels["materialStoreViewModel"] = self;
+
+        self.mrBeamVM = params[0];
+        self.laserheadChangedVM = params[1];
+
         self.material_store_iframe_src = "";
         self.healthcheck_url = "";
 
@@ -36,12 +49,23 @@ $(function () {
             } else {
                 self.showConnectionError();
             }
+            self.mrBeamVM.removeNotifyIcon($("#materialstore_tab_btn"));
         };
 
         self.sendInitDetailsToMaterialStoreIframe = function () {
             self.sendMessageToMaterialStoreIframe(
                 MATERIAL_STORE_EVENT_TYPE.MR_BEAM_LOAD
             );
+
+            // send new laserhead model ID if changed
+            if (self.laserheadChangedVM.laserheadXDetected()) {
+                self.sendMessageToMaterialStoreIframe(
+                    MATERIAL_STORE_EVENT_TYPE.SELECT_FILTER,
+                    {
+                        value: MATERIAL_STORE_FILTER_TYPE.LASERHEAD.LASERHEAD_X,
+                    }
+                );
+            }
         };
 
         self.onLoadMaterialStore = function () {
@@ -108,7 +132,7 @@ $(function () {
 
     OCTOPRINT_VIEWMODELS.push({
         construct: MaterialStoreViewModel,
-        dependencies: [],
+        dependencies: ["mrbeamViewModel", "laserheadChangedViewModel"],
         elements: ["#material_store_content"],
     });
 });

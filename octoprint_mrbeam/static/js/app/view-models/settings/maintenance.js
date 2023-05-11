@@ -24,12 +24,12 @@ $(function () {
         );
         self.LASER_HEAD = gettext("laser head");
         self.GANTRY = gettext("mechanics");
-        self.PREFILTER_LIFESPAN = 40;
-        self.CARBON_FILTER_LIFESPAN = 280;
-        self.LASER_HEAD_LIFESPAN = 40;
-        self.GANTRY_LIFESPAN = 100;
         self.WARN_IF_CRITICAL_PERCENT = 70;
         self.WARN_IF_USED_PERCENT = 100;
+        self.PREFILTER_LIFESPAN = 40;
+        self.CARBON_FILTER_LIFESPAN = 280;
+        self.GANTRY_LIFESPAN = 100;
+        self.laserHeadLifespan = ko.observable(0);
 
         self.totalUsage = ko.observable(0);
         self.prefilterUsage = ko.observable(0);
@@ -49,7 +49,7 @@ $(function () {
             { lifespan: self.CARBON_FILTER_LIFESPAN }
         );
         self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.LASER_HEAD_LIFESPAN,
+            lifespan: self.laserHeadLifespan(),
         });
         self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
             lifespan: self.GANTRY_LIFESPAN,
@@ -87,7 +87,7 @@ $(function () {
         });
         self.laserHeadPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-                (self.laserHeadUsageHours() / self.LASER_HEAD_LIFESPAN) * 100
+                (self.laserHeadUsageHours() / self.laserHeadLifespan()) * 100
             );
         });
         self.gantryPercent = ko.computed(function () {
@@ -355,6 +355,9 @@ $(function () {
             );
             self.laserHeadSerial(
                 self.settings.settings.plugins.mrbeam.laserhead.serial()
+            );
+            self.laserHeadLifespan(
+                self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()
             );
         };
 

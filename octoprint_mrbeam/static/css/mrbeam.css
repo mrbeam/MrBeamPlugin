@@ -2806,42 +2806,54 @@ hides the force update buttons
 .modal--laser-job-done
   .modal-body
   .modal__modal-body--social-media-section
-  div
-  a
-  i {
-  font-size: 2.4em;
-  padding: 0 3px;
+  p.modal__p--hashtag
+  a {
+  color: #ffffff;
 }
 
 .modal--laser-job-done
   .modal-body
   .modal__modal-body--social-media-section
-  p.modal__p--hashtag
-  a,
-.modal--laser-job-done
-  .modal-body
-  .modal__modal-body--social-media-section
   div
   a
   i {
-  color: #ffffff;
+  background-color: #ffffff;
+  color: #e25303;
   text-decoration: none;
 }
 
 .modal--laser-job-done
   .modal-body
   .modal__modal-body--social-media-section
+  .social_media_square_icons {
+  font-size: 1.5em;
+}
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
+  .social_media_square_icons
+  a {
+  margin-left: 5px;
+}
+
+.modal--laser-job-done
+  .modal-body
+  .modal__modal-body--social-media-section
   p.modal__p--hashtag
-  a:hover,
+  a:hover {
+  color: #e25303;
+  text-decoration: none;
+  background-color: #ffffff;
+}
 .modal--laser-job-done
   .modal-body
   .modal__modal-body--social-media-section
   div
   a
   i:hover {
-  color: #e25303;
+  color: #ffffff;
   text-decoration: none;
-  background-color: #ffffff;
+  background-color: #e25303;
 }
 
 .modal--laser-job-done .modal-body .modal__modal-body--material-section {
@@ -3618,6 +3630,15 @@ button#terminal-send {
 
 /* Material Store */
 
+#materialstore_tab_btn .notify-icon {
+  height: 5px;
+  width: 5px;
+  background-color: #e25303;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0 0 7px 2px;
+}
+
 #material_store_content #loading_spinner_wrapper {
   position: absolute;
   top: 0px;
@@ -3705,4 +3726,197 @@ div.hopscotch-bubble .hopscotch-bubble-number {
   border-radius: 20px !important;
   padding: 0 0 0 0 !important;
 }
+
+#congratulations .social_media_square_icons {
+  font-size: 2.4em;
+  padding: 0 3px;
+}
+
+#congratulations.modal {
+  width: 700px;
+  left: 45%;
+}
+
+#congratulations div a:hover {
+  text-decoration: none;
+}
+
+#congratulations p {
+  margin-bottom: 1.5em;
+}
 /* Guided Tour */
+
+/* Sozial Media Icons */
+.social_media_square_icons a i {
+  color: #ffffff;
+  background-color: #e25303;
+  border-radius: 0.3em;
+  padding: 0.1em;
+  width: 1.2em;
+  height: 1.2em;
+  text-align: center;
+  vertical-align: middle;
+  top: 50%;
+  position: static;
+  line-height: 1.2em;
+}
+
+.social_media_square_icons a:hover {
+  filter: brightness(0.8);
+}
+/* Sozial Media Icons */
+
+/* Font Awesome v4 backward compatibility for version v6 */
+.fa {
+  font-family: "FontAwesome", serif;
+}
+/* Font Awesome v4 backward compatibility for version v6 */
+
+/* Laser safety conditions - start */
+#laser-safety-conditions ul li:first-child {
+  margin-top: 15px;
+}
+#laser-safety-conditions ul li::before {
+  content: "!";
+  display: inline-block;
+  margin-right: 20px;
+  color: #e25303;
+  width: 15px !important;
+  height: 15px;
+  border: 2px solid;
+  border-radius: 50%;
+  text-align: center;
+  font-weight: bold;
+  font-size: 11px;
+  vertical-align: middle;
+}
+#laser-safety-conditions
+  ul.laser-safety-conditions__ul--safety-instructions
+  li:last-child::before {
+  color: transparent;
+}
+#laser-safety-conditions ul li {
+  list-style: none;
+  display: -webkit-box;
+  width: 90%;
+}
+#laser-safety-conditions
+  ul.laser-safety-conditions__ul--safety-instructions
+  li:last-child {
+  color: #777777;
+}
+.laser-safety-conditions__div--agreement {
+  background-color: #f8d5c1;
+  border: 1px solid #e25303;
+  border-radius: 8px;
+  margin: 14px 0 0 0 !important;
+  padding: 10px;
+}
+.laser-safety-conditions__div--agreement .checkbox {
+  color: inherit !important;
+}
+#laser-safety-conditions input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  border: 1px solid #ffffff;
+  outline: none;
+}
+#laser-safety-conditions input[type="checkbox"]:checked {
+  background-color: #ffffff;
+}
+#laser-safety-conditions input[type="checkbox"]:checked::before {
+  content: "\2713";
+  color: #000000;
+  font-size: 14px;
+  line-height: 16px;
+  text-align: center;
+  background-color: #ffffff;
+  display: block;
+}
+#laser-safety-conditions ul.laser-safety-conditions__ul--last-note li p {
+  color: #e25303;
+}
+#laser-safety-conditions ul.laser-safety-conditions__ul--last-note li p strong {
+  color: #333333;
+}
+#laser-safety-conditions h5 {
+  margin-left: 25px;
+}
+.wizard_safety_agreement {
+  margin-top: 40px;
+  margin-left: 25px;
+}
+.wizard_safety_agreement label {
+  font-size: 12px;
+  line-height: 14px;
+}
+.wizard_safety_agreement input {
+  margin-right: 20px;
+}
+/* Laser safety conditions - end */
+
+/* Better together - start */
+.get-better-together h4 {
+  margin-left: 25px;
+  margin-bottom: 15px;
+}
+.get-better-together ul li {
+  list-style: none;
+  display: -webkit-box;
+  width: 90%;
+}
+.get-better-together ul li::before {
+  display: inline-block;
+  margin-right: 20px;
+  color: #e25303;
+  width: 15px !important;
+  height: 15px;
+  border: 2px solid;
+  border-radius: 50%;
+  text-align: center;
+  font-weight: bold;
+  font-size: 11px;
+  vertical-align: middle;
+}
+.get-better-together ul li:first-child::before {
+  content: "i";
+}
+.get-better-together ul li:nth-child(2)::before {
+  content: none;
+}
+.get-better-together ul li:nth-child(2) i {
+  margin-right: 20px;
+  color: #e25303;
+  font-size: 16px;
+  vertical-align: middle;
+}
+.get-better-together ul li p strong {
+  color: #638ba0;
+}
+.get-better-together ul li:last-child {
+  margin-left: 36px;
+}
+.get-better-together input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid #9c9c9c;
+  outline: none;
+  margin-right: 10px;
+}
+.get-better-together input[type="radio"]:checked {
+  background-color: #707070;
+}
+.get-better-together #analytics_initial_consent_radio,
+.get-better-together .privacy-policy {
+  padding: 12px 0;
+}
+.get-better-together .privacy-policy {
+  float: right;
+}
+.get-better-together .privacy-policy a {
+  color: #638ba0;
+}
+/* Better together - end */

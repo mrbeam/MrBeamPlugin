@@ -32,6 +32,8 @@ from octoprint.util import (
     sanitize_ascii,
 )
 
+from octoprint_mrbeam.error_codes import ErrorCodes
+from octoprint_mrbeam.notifications import NotificationIds
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
@@ -39,6 +41,7 @@ from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -1640,10 +1643,48 @@ class MachineCom(object):
 
         return gcode.group(1)
 
+    def _on_exit_state(self, current_state, new_state):
+        """
+        Called when the state machine is exiting a state.
+
+        Args:
+            current_state: current state
+            new_state: new state
+
+        Returns:
+            None
+        """
+        # if we're unexpected exiting the printing or paused state to locked show the job cancelled  error notification
+        if (
+            current_state == self.STATE_PRINTING or current_state == self.STATE_PAUSED
+        ) and new_state == self.STATE_LOCKED:
+            self._fire_print_failed()
+            self._show_job_cancelled_due_to_internal_error()
+
+    def _show_job_cancelled_due_to_internal_error(self):
+        """
+        Shows the job cancelled due to internal error notification.
+
+        Returns:
+            None
+        """
+        notification = (
+            _mrbeam_plugin_implementation.user_notification_system.get_notification(
+                notification_id=NotificationIds.JOB_CANCELLED_DUE_TO_INTERNAL_ERROR,
+                err_code=ErrorCodes.LASERJOB_CANCELED_DUE_ERROR,
+                replay=True,
+            )
+        )
+        _mrbeam_plugin_implementation.user_notification_system.show_notifications(
+            notification
+        )
+
     # internal state management
     def _changeState(self, newState):
         if self._state == newState:
             return
+
+        self._on_exit_state(self._state, newState)
 
         self._set_status_polling_interval_for_state(state=newState)
 

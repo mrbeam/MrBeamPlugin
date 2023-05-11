@@ -1,0 +1,22 @@
+<h3>{{ _('Step-by-Step Guided Tour To Your First Laser Job') }}</h3>
+<p>{{ _('Do you want us to guide you through your first laser job with this step-by-step tour?') }}</p>
+<h4>{{ _('What do you need for this tour:') }}</h4>
+<ul>
+    <li>{{ _('Have a piece of felt on hand. Best to use the one that came with your Mr Beam.') }}
+    </li>
+    {% trans %}
+    <li class='show_only_online'>
+        The laser head of your Mr Beam has to be focused according to the thickness of the felt. You can find how to do
+        that in this <a href='https://support.mr-beam.org/en/support/solutions/articles/43000073345?utm_source=beamos&utm_medium=software' target='_blank'><i
+            class="icon-external-link2"></i>Knowledge base article</a>.
+    </li>
+    <li class='show_only_offline'>
+        The laser head of your Mr Beam has to be focused according to the thickness of the felt. You can find how to do
+        that in this <a href='#' onclick="mrbeam.openOfflineKbUrl('43000073345_Focusing_the_laser_head.pdf');"><i
+            class='icon-file-text'></i>Knowledge base article</a>.
+    </li>
+    {% endtrans %}
+    <li>
+        {{ _('About 5-10 minutes of your time.') }}
+    </li>
+</ul>
