@@ -174,17 +174,6 @@ def test_handle_temp_fire_cooling_to_slow_event_third_threshold(temperature_mana
     # Act
     temperature_manager.handle_temp(kwargs={"temp": 49})
     temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
-    # temperature_manager.handle_temp(kwargs={"temp": 43})
-    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
-    # temperature_manager.handle_temp(kwargs={"temp": 43})
-    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
-    # temperature_manager.handle_temp(kwargs={"temp": 43})
-    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
-    # temperature_manager.handle_temp(kwargs={"temp": 43})
-    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
-    # temperature_manager.handle_temp(kwargs={"temp": 49})
-    # temperature_manager._last_cooling_threshold_check_time = get_uptime() - 21
-    # temperature_manager.handle_temp(kwargs={"temp": 49})
 
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
