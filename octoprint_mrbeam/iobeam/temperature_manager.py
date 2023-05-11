@@ -337,7 +337,7 @@ class TemperatureManager(object):
             MrBeamEvents.LASER_COOLING_TO_SLOW,
             dict(
                 temp=self.temperature,
-                cooling_differnece=self.cooling_difference,
+                cooling_difference=self.cooling_difference,
                 cooling_time=self.cooling_since,
             ),
         )
