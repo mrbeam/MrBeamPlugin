@@ -199,7 +199,7 @@ class TemperatureManager(object):
         """Stop the laser for cooling purpose."""
         if self._one_button_handler and self._one_button_handler.is_printing():
             self._logger.info(
-                "cooling_stop() %s - _msg_is_temperature_recent: %s",
+                "pause job for cooling %s - _msg_is_temperature_recent: %s",
                 err_msg,
                 self._msg_is_temperature_recent,
                 analytics=self._id_is_temperature_recent,
@@ -219,7 +219,7 @@ class TemperatureManager(object):
         Returns:
             None
         """
-        self._logger.debug("cooling_resume()")
+        self._logger.info("resume job after cooling")
         self._event_bus.fire(
             MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature)
         )
@@ -328,6 +328,11 @@ class TemperatureManager(object):
         Returns:
             None
         """
+        self._logger.warn(
+            "Cooling to slow. cooled in %s s %s degrees",
+            self.cooling_since,
+            self.cooling_difference,
+        )
         self._event_bus.fire(
             MrBeamEvents.LASER_COOLING_TO_SLOW,
             dict(
@@ -345,7 +350,7 @@ class TemperatureManager(object):
             None
         """
         if self.temperature is None:
-            self._logger.error("Laser temperature is None.")
+            self._logger.warn("Laser temperature is None.")
             msg = "Laser temperature not available, assuming high temperature and stop for cooling."
             self.cooling_stop(err_msg=msg)
             return
@@ -387,7 +392,7 @@ class TemperatureManager(object):
                 self.high_temp_fsm.dismissed.is_active
                 and self.temperature < self.temperature_max - self.HYTERESIS_TEMPERATURE
             ):
-                self._logger.warn(
+                self._logger.info(
                     "Cooling break duration(%ss) passed: %ss - Current temp: %s",
                     self.cooling_duration,
                     self.cooling_since,
@@ -418,20 +423,39 @@ class TemperatureManager(object):
             get_uptime() - self._last_cooling_threshold_check_time
             > self.COOLING_THRESHOLD_CHECK_INTERVAL
         ):
+            self._logger.info(
+                "cooling since: %ss cooling difference: %s",
+                self.cooling_since,
+                self.cooling_difference,
+            )
             self._last_cooling_threshold_check_time = get_uptime()
-            if (
-                self.cooling_difference >= self.FIRST_COOLING_THRESHOLD_TEMPERATURE
-                and self.cooling_since > self.FIRST_COOLING_THRESHOLD_TIME
-            ) or (
-                self.cooling_difference >= self.SECOND_COOLING_THRESHOLD_TEMPERATURE
-                and self.cooling_since > self.SECOND_COOLING_THRESHOLD_TIME
-            ):
-                # expected cooling effect is met but hysteresis is not reached, re trigger cooling fan to speed up
-                self._logger.debug("Re-triggering cooling fan.")
-                self._event_bus.fire(MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN)
-            elif (
-                self.cooling_difference < self.SECOND_COOLING_THRESHOLD_TEMPERATURE
-                and self.cooling_since > self.SECOND_COOLING_THRESHOLD_TIME
-            ) or self.cooling_since > self.THIRD_COOLING_THRESHOLD_TIME:
-                # expected cooling effect is not met something is wrong
+
+            stage1 = (
+                self.FIRST_COOLING_THRESHOLD_TIME
+                <= self.cooling_since
+                < self.FIRST_COOLING_THRESHOLD_TIME
+                + self.COOLING_THRESHOLD_CHECK_INTERVAL
+            )
+            stage2 = (
+                self.SECOND_COOLING_THRESHOLD_TIME
+                <= self.cooling_since
+                < self.SECOND_COOLING_THRESHOLD_TIME
+                + self.COOLING_THRESHOLD_CHECK_INTERVAL
+            )
+            stage3 = self.cooling_since >= self.THIRD_COOLING_THRESHOLD_TIME
+
+            if stage1:
+                if self.cooling_difference >= self.FIRST_COOLING_THRESHOLD_TEMPERATURE:
+                    # expected cooling effect is met but hysteresis is not reached, re trigger cooling fan to speed up
+                    self._logger.info("Re-triggering cooling fan.")
+                    self._event_bus.fire(MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN)
+            elif stage2:
+                if self.cooling_difference >= self.SECOND_COOLING_THRESHOLD_TEMPERATURE:
+                    # expected cooling effect is met but hysteresis is not reached, re trigger cooling fan to speed up
+                    self._logger.info("Re-triggering cooling fan.")
+                    self._event_bus.fire(MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN)
+                else:
+                    # expected cooling effect is not met something is wrong
+                    self._fire_cooling_to_slow_event()
+            elif stage3:
                 self._fire_cooling_to_slow_event()
