@@ -68,6 +68,19 @@ def test_dismiss_high_temperature_warning(mrbeam_plugin):
     )
 
 
+def test_dismiss_high_temperature_critical(mrbeam_plugin):
+    # Arrange
+    temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager._event_bus.fire = MagicMock()
+    # Act
+    temperature_manager.dismiss_high_temperature_critical()
+
+    # Assert
+    temperature_manager._event_bus.fire.assert_called_with(
+        MrBeamEvents.HIGH_TEMPERATURE_CRITICAL_DISMISSED
+    )
+
+
 def test_cooling_since_if_not_cooling(mrbeam_plugin):
     # Arrange
     temperature_manager = TemperatureManager(mrbeam_plugin)

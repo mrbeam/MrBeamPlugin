@@ -1,3 +1,4 @@
+import pytest
 from mock.mock import MagicMock
 
 
@@ -32,3 +33,42 @@ def test_get_navbar_label_combined(mrbeam_plugin, mocker):
 
     mocker.patch("octoprint_mrbeam.MrBeamPlugin.is_alpha_channel", return_value=True)
     assert mrbeam_plugin.get_navbar_label() == initial_label + " | ALPHA"
+
+
+def test_handle_temperature_warning_dismissal_warning(mrbeam_plugin):
+    # Arrange
+    data = {"level": 1}
+    mrbeam_plugin.temperature_manager.dismiss_high_temperature_warning = MagicMock()
+
+    # Act
+    mrbeam_plugin.handle_temperature_warning_dismissal(data)
+
+    # Assert
+    mrbeam_plugin.temperature_manager.dismiss_high_temperature_warning.assert_called_once_with()
+
+
+def test_handle_temperature_warning_dismissal_critical(mrbeam_plugin):
+    # Arrange
+    data = {"level": 2}
+    mrbeam_plugin.temperature_manager.dismiss_high_temperature_critical = MagicMock()
+
+    # Act
+    mrbeam_plugin.handle_temperature_warning_dismissal(data)
+
+    # Assert
+    mrbeam_plugin.temperature_manager.dismiss_high_temperature_critical.assert_called_once_with()
+
+
+@pytest.mark.parametrize("level", [0, None])
+def test_handle_temperature_warning_dismissal_critical(level, mrbeam_plugin):
+    # Arrange
+    data = {"level": level}
+    mrbeam_plugin.temperature_manager.dismiss_high_temperature_critical = MagicMock()
+    mrbeam_plugin.temperature_manager.dismiss_high_temperature_warning = MagicMock()
+
+    # Act
+    mrbeam_plugin.handle_temperature_warning_dismissal(data)
+
+    # Assert
+    mrbeam_plugin.temperature_manager.dismiss_high_temperature_critical.assert_not_called()
+    mrbeam_plugin.temperature_manager.dismiss_high_temperature_warning.assert_not_called()
