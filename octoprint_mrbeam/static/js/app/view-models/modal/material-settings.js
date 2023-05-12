@@ -128,7 +128,7 @@ $(function () {
                     "Dont use your Mr Beam packaging. Please keep it for transportation and storage!"
                 ),
                 safety_notes: gettext(
-                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite. Never run a laser job slower than 180 mm/min!"
+                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite."
                 ),
                 type: null,
                 url: null,
@@ -143,7 +143,7 @@ $(function () {
                     "Dont use your Mr Beam packaging. Please keep it for transportation and storage!"
                 ),
                 safety_notes: gettext(
-                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite. Never run a laser job slower than 180 mm/min!"
+                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite."
                 ),
                 type: null,
                 url: null,
@@ -181,7 +181,9 @@ $(function () {
                     "Made out of purely wooden fibres, often used for architectural models."
                 ),
                 hints: "",
-                safety_notes: "",
+                safety_notes: gettext(
+                    "Caution sensitive material. If laser speed is too slow, cardboard may ignite."
+                ),
                 type: null,
                 url: null,
             },
@@ -360,7 +362,7 @@ $(function () {
                 name: gettext("Slate"),
                 img: "Slate.jpg",
                 description: gettext(
-                    "Slate is greate to engrave and you can create beatiful objects, gifts and signs."
+                    "Slate is greate to engrave and you can create beautiful objects, gifts and signs."
                 ),
                 hints: gettext(
                     "When engraving slate, the engraving becomes brighter than the original material. The images might need theirs colors inverted."

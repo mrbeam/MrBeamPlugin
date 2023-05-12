@@ -20,6 +20,7 @@ class MrBeamEvents(object):
     LASER_PAUSE_SAFETY_TIMEOUT_BLOCK = "LaserPauseSafetyTimeoutBlock"
 
     PRINT_CANCELING_DONE = "PrintCancelingDone"
+    PRINT_ABORTED = "PrintAborted"
 
     PRINT_DONE_PAYLOAD = "PrintDonePayload"
 
@@ -29,9 +30,13 @@ class MrBeamEvents(object):
     LASER_JOB_DONE = "LaserJobDone"
     LASER_JOB_CANCELLED = "LaserJobCancelled"
     LASER_JOB_FAILED = "LaserJobFailed"
+    LASER_JOB_ABORTED = "LaserJobAborted"
 
     LASER_COOLING_PAUSE = "LaserCoolingPause"
     LASER_COOLING_RESUME = "LaserCoolingResume"
+
+    HIGH_TEMPERATURE_WARNING = "HighTemperatureWarning"
+    HIGH_TEMPERATURE_WARNING_DISMISSED = "HighTemperatureWarningDismissed"
 
     DUSTING_MODE_START = "DustingModeStart"
 
