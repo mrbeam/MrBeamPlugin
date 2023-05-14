@@ -244,8 +244,8 @@ Cypress.Commands.add("designSettings", () => {
         .invoke("attr", "transform")
         .then((transformTranslate) => {
             cy.get('[id="translateHandle"]').move({
-                deltaX: -433.9689,
-                deltaY: -220.1241,
+                deltaX: -430,
+                deltaY: -220,
                 force: true,
             });
             cy.get('[id="mbtransformTranslateGroup"]').should(
@@ -257,8 +257,8 @@ Cypress.Commands.add("designSettings", () => {
         .invoke("attr", "transform")
         .then((transformSize) => {
             cy.get('[id="scaleHandleNW"]').move({
-                deltaX: 34.9689,
-                deltaY: 20.1241,
+                deltaX: 35,
+                deltaY: 20,
                 force: true,
             });
             cy.get('[id="mbtransformScaleGroup"]').should(
@@ -270,8 +270,8 @@ Cypress.Commands.add("designSettings", () => {
         .invoke("attr", "transform")
         .then((transformRotate) => {
             cy.get('[id="rotHandle"]').move({
-                deltaX: 53.9689,
-                deltaY: 70.1241,
+                deltaX: 54,
+                deltaY: 70,
                 force: true,
             });
             cy.get('[d="mbtransformRotateGroup"]').should(
