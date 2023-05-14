@@ -38,7 +38,7 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     ANALYTICS_LOG_VERSION = (
-        27  # bumped for SW-3065 add laserhead to header
+        28  # bumped for SW-3065 add laserhead to header
     )
 
     def __init__(self, plugin):
@@ -114,6 +114,7 @@ class AnalyticsHandler(object):
         _ = payload
         self._laserhead_handler = self._plugin.laserhead_handler
         self._dust_manager = self._plugin.dust_manager
+        self._temperature_manager = self._plugin.temperature_manager
         self._compressor_handler = self._plugin.compressor_handler
 
         self._subscribe()
@@ -719,12 +720,26 @@ class AnalyticsHandler(object):
         self._event_bus.subscribe(
             MrBeamEvents.LASER_JOB_FAILED, self._event_laser_job_finished
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_JOB_ABORTED, self._event_laser_job_finished
+        )
         self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
         self._event_bus.subscribe(
             MrBeamEvents.ANALYTICS_DATA, self._add_other_plugin_data
         )
         self._event_bus.subscribe(
             MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.PRINT_ABORTED, self._on_event_print_aborted
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING,
+            self._on_event_high_temperature_warning,
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED,
+            self._on_event_high_temperature_warning_dismissed,
         )
 
     def _event_startup(self, event, payload, header_extension=None):
@@ -765,11 +780,11 @@ class AnalyticsHandler(object):
         _ = event
         if self._current_cpu_data:
             self._current_cpu_data.record_cpu_data()
-            self._add_cpu_data(dur=payload["time"])
+            self._add_cpu_data(dur=payload.get("time", 0.0))
         self._current_job_final_status = "Sliced"
 
         payload = {
-            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"])),
+            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0))),
         }
         self._add_job_event(
             AnalyticsKeys.Job.Event.Slicing.DONE,
@@ -864,7 +879,9 @@ class AnalyticsHandler(object):
         _ = event
         self._add_job_event(
             AnalyticsKeys.Job.Event.Print.PAUSED,
-            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))},
+            payload={
+                AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0)))
+            },
             header_extension=header_extension,
         )
 
@@ -872,7 +889,9 @@ class AnalyticsHandler(object):
         _ = event
         self._add_job_event(
             AnalyticsKeys.Job.Event.Print.RESUMED,
-            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))},
+            payload={
+                AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0)))
+            },
             header_extension=header_extension,
         )
 
@@ -907,7 +926,7 @@ class AnalyticsHandler(object):
     def _event_print_done(self, event, payload, header_extension=None):
         _ = event
         duration = {
-            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"])),
+            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0))),
             AnalyticsKeys.Job.Duration.ESTIMATION: int(
                 round(self._current_job_time_estimation_v1)
             ),
@@ -922,13 +941,14 @@ class AnalyticsHandler(object):
             header_extension=header_extension,
         )
         self._add_collector_details()
-        self._add_cpu_data(dur=payload["time"], header_extension=header_extension)
+        self._add_cpu_data(
+            dur=payload.get("time", 0.0), header_extension=header_extension
+        )
 
     def _event_print_failed(self, event, payload, header_extension=None):
-        _ = event
         details = {
-            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"])),
-            AnalyticsKeys.Job.ERROR: payload["error_msg"],
+            AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0))),
+            AnalyticsKeys.Job.ERROR: payload.get("error_msg", "unknown"),
         }
         self._current_job_final_status = "Failed"
         self._add_job_event(
@@ -937,18 +957,45 @@ class AnalyticsHandler(object):
             header_extension=header_extension,
         )
         self._add_collector_details()
-        self._add_cpu_data(dur=payload["time"])
+        self._add_cpu_data(dur=payload.get("time", 0.0))
 
     def _event_print_cancelled(self, event, payload, header_extension=None):
         _ = event
         self._current_job_final_status = "Cancelled"
         self._add_job_event(
             AnalyticsKeys.Job.Event.Print.CANCELLED,
-            payload={AnalyticsKeys.Job.Duration.CURRENT: int(round(payload["time"]))},
+            payload={
+                AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0)))
+            },
             header_extension=header_extension,
         )
         self._add_collector_details()
-        self._add_cpu_data(dur=payload["time"])
+        self._add_cpu_data(dur=payload.get("time", 0.0))
+
+    def _on_event_print_aborted(self, event, payload, header_extension=None):
+        """Callback for aborted print event . Will add an event to analytics.
+
+        Args:
+            event: event that triggered the action
+            payload: payload of the event
+            header_extension: extension for the header
+
+        Returns:
+            None
+        """
+        _ = event
+        trigger = payload.get("trigger", None)
+
+        self._current_job_final_status = "Aborted"
+        self._add_job_event(
+            AnalyticsKeys.Job.Event.Print.ABORTED,
+            payload={
+                AnalyticsKeys.Job.TRIGGER: trigger,
+            },
+            header_extension=header_extension,
+        )
+        self._add_collector_details()
+        self._add_cpu_data(dur=payload.get("time"))
 
     def _event_laser_job_finished(self, event, payload, header_extension=None):
         _ = event
@@ -1038,6 +1085,59 @@ class AnalyticsHandler(object):
         except Exception as e:
             self._logger.exception(
                 "Exception during _add_other_plugin_data: {}".format(e)
+            )
+
+    def _on_event_high_temperature_warning(self, event, payload, header_extension=None):
+        """Callback for  high temperature warning event. Will add an event to analytics with the current temperature and the set threshold for triggering the user warning.
+
+        Args:
+            event: event that triggered this action
+            payload: payload of the event
+            header_extension: extension to the header
+
+        Returns:
+            None
+        """
+        _ = event
+        try:
+            self._add_device_event(
+                AnalyticsKeys.Device.HighTempWarning.TRIGGERED,
+                payload=dict(
+                    temperature=payload.get("tmp", 0),
+                    threshold=self._temperature_manager.high_tmp_warn_threshold,
+                ),
+                header_extension=header_extension,
+            )
+        except Exception as e:
+            self._logger.exception(
+                "Exception during on_event_high_temperature_warning: {}".format(e)
+            )
+
+    def _on_event_high_temperature_warning_dismissed(
+        self, event, payload, header_extension=None
+    ):
+        """Callback for high temperature warning dismissed event. Will add an event to analytics."
+
+        Args:
+            event: event that triggered this action
+            payload: payload of the event
+            header_extension: extension to the header
+
+        Returns:
+            None
+        """
+        _ = event
+        _ = payload
+        try:
+            self._add_device_event(
+                AnalyticsKeys.Device.HighTempWarning.DISMISSED,
+                header_extension=header_extension,
+            )
+        except Exception as e:
+            self._logger.exception(
+                "Exception during on_event_high_temperature_warning_dismissed: {}".format(
+                    e
+                )
             )
 
     # -------- ANALYTICS LOGS QUEUE ------------------------------------------------------------------------------------

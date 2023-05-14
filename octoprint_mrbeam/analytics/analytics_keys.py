@@ -28,6 +28,7 @@ class AnalyticsKeys:
         ID = "job_id"
         ERROR = "err"
         STATUS = "status"
+        TRIGGER = "trigger"
 
         class Event:
             LASERJOB_STARTED = "laserjob_started"
@@ -54,6 +55,7 @@ class AnalyticsKeys:
                 RESUMED = "p_resumed"
                 CANCELLED = "p_cancelled"
                 FAILED = "p_failed"
+                ABORTED = "p_aborted"
                 DONE = "p_done"
 
             class Cooling:
@@ -118,6 +120,10 @@ class AnalyticsKeys:
             NUM_FILES = "num_files"
             CAMERA_IMAGE = "camera_image"
             LASERHEAD_CHANGED = "laserhead_changed"
+
+        class HighTempWarning:
+            TRIGGERED = "high_temp_warning_triggered"
+            DISMISSED = "high_temp_warning_dismissed"
 
         class SoftwareChannel:
             OLD = "old_channel"

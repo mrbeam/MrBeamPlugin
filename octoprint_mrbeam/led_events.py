@@ -64,6 +64,12 @@ class LedEventListener(CommandTrigger):
         MrBeamEvents.PRINT_PROGRESS
     ] = "mrbeam_ledstrips_cli progress:{__progress}"
 
+    # Fire warning
+    LED_EVENTS[MrBeamEvents.HIGH_TEMPERATURE_WARNING] = "mrbeam_ledstrips_cli Error"
+    LED_EVENTS[
+        MrBeamEvents.HIGH_TEMPERATURE_WARNING_DISMISSED
+    ] = "mrbeam_ledstrips_cli ClientOpened"
+
     # Camera Calibration Screen Events
     LED_EVENTS[
         MrBeamEvents.RAW_IMAGE_TAKING_START
@@ -182,6 +188,18 @@ class LedEventListener(CommandTrigger):
         GenericEventListener.eventCallback(self, event, payload)
 
         if not event in self._subscriptions:
+            return
+
+        if self._plugin.temperature_manager.high_temperature_warning and event not in [
+            MrBeamEvents.HIGH_TEMPERATURE_WARNING,
+            MrBeamEvents.SHUTDOWN_PREPARE_START,
+            MrBeamEvents.SHUTDOWN_PREPARE_CANCEL,
+            MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS,
+            Events.SHUTDOWN,
+        ]:
+            self._logger.debug(
+                "LED_EVENT %s: Ignoring because of high temperature warning", event
+            )
             return
 
         for command, commandType, debug in self._subscriptions[event]:
