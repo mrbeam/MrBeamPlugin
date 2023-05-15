@@ -6,13 +6,13 @@ describe.skip("Laser Job", function () {
     });
 
     beforeEach(function () {
-        cy.visit(this.testData.url_laser);
+        cy.visit(this.testData.url);
         cy.get('[id="loading_overlay"]', { timeout: 20000 }).should(
             "not.be.visible"
         );
         cy.loginLaser(this.testData.email, this.testData.password);
-        cy.visit(this.testData.url_laser);
-        cy.wait(5000);
+        cy.deleteDownloadsFolder();
+        cy.deleteGcoFile();
     });
 
     it("Add svg file", function () {
@@ -59,77 +59,11 @@ describe.skip("Laser Job", function () {
         cy.get('[data-test="tab-workingarea-by-stroke-color"]').click();
         cy.laserButtonClick();
         cy.selectMaterial();
-        cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.wait(2000);
-        cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.get(".modal-scrollable").click({ force: true });
-        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.wait(3000);
-        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-            .first()
-            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
-            .click({ force: true })
-            .invoke("prop", "innerText")
-            .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
-                cy.window()
-                    .document()
-                    .then(function (doc) {
-                        doc.addEventListener("click", () => {
-                            setTimeout(function () {
-                                doc.location.reload();
-                            }, 5000);
-                        });
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-card"]'
-                        )
-                            .filter(`:contains(${downloadFile})`)
-                            .find(
-                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
-                            );
-                        cy.wait(1000);
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-download"]'
-                        )
-                            .filter(":visible")
-                            .click();
-                    });
-                cy.wait(7000);
-                cy.readFile(
-                    "cypress/fixtures/Focus_Tool_Mr_Beam_Laser_1.svg.5x.gco",
-                    {
-                        timeout: 40000,
-                    }
-                ).then((contentTestFile) => {
-                    cy.get(
-                        '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
-                    cy.get(
-                        '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
-                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-                        .first()
-                        .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            let bodyNoComments = $body
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            let contentTestFileNoComments = contentTestFile
-                                .replace(/^;.*$/gm, "")
-                                .trimEnd();
-                            expect(bodyNoComments).to.equal(
-                                contentTestFileNoComments
-                            );
-                        });
-                });
-            });
+        cy.downloadGcoFile();
+        cy.compareFiles(
+            "cypress/fixtures/Focus_Tool_Mr_Beam_Laser_1.svg.5x.gco",
+            "cypress/downloads/Focus_Tool_Mr_Beam_Laser_1.svg.5x.gco"
+        );
         cy.logout();
     });
 
