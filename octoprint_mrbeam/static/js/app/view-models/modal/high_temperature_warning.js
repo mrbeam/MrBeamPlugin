@@ -112,7 +112,9 @@ $(function () {
                 self.warningTriggeredTime === null
             ) {
                 self.warningTriggeredTime = Date.now();
-                self.audio.play();
+                self.audio.play().catch((e) => {
+                    console.log("Failed to play audio: " + e);
+                });
             }
         };
 
