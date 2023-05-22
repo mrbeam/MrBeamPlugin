@@ -84,7 +84,7 @@ class IoBeamHandler(object):
     PROCESSING_TIME_WARNING_THRESHOLD = 0.7
 
     I2C_STATE_REQUEST_INTERVAL = 10 * 60  # 10 minutes if no job is running
-    SAFECUTTER_REQUEST_INTERVAL = 10 # poll request for data every 10 seconds
+    SAFECUTTER_REQUEST_INTERVAL = 10  # poll request for data every 10 seconds
 
     MESSAGE_LENGTH_MAX = 4096
     MESSAGE_NEWLINE = "\n"
@@ -160,6 +160,7 @@ class IoBeamHandler(object):
     DATASET_REED_SWITCH = "reed_switch"
     DATASET_ANALYTICS = "analytics"
     DATASET_SAFECUTTER = "safecutter"
+
     def __init__(self, plugin, printer):
         self._plugin = plugin
         self._printer = printer
@@ -284,7 +285,7 @@ class IoBeamHandler(object):
     #     return self._send_command(self.get_request_msg([self.DATASET_SAFECUTTER]))
 
     def onEventPause(self, event, payload):
-        self._logger.info("Paused %s %s",event,payload)
+        self._logger.info("Paused %s %s", event, payload)
         # self.send_safecutter_request()
         self.send_safecutter_command(1)
 
@@ -1100,33 +1101,35 @@ class IoBeamHandler(object):
     def _handle_safecutter_dataset(self, dataset):
         # if dataset.get("communication_errors", None):
 
-        if self._printer.is_printing() and not dataset.get("value") == 0 :
+        if self._printer.is_printing() and not dataset.get("value") == 0:
             payload = {
                 "file": "",
                 "filename": "",
                 "origin": "",
-                "time":0,
+                "time": 0,
                 "mrb_state": "",
-                "file_lines_total":"",
-                "file_lines_read":0,
+                "file_lines_total": "",
+                "file_lines_read": 0,
                 "file_lines_remaining": 0,
                 "lines_recovered": 0,
             }
             self._event_bus.fire(OctoPrintEvents.PRINT_PAUSED, payload)
 
-        if(int(dataset.get("value")) & 1 == 1):
-            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE,{"value": 1})
+        if int(dataset.get("value")) & 16 == 16:  # ozon
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE, {"value": 16})
 
-        elif(int(dataset.get("value")) & 2 == 2):
-            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE,{"value": 2})
+        elif int(dataset.get("value")) & 1 == 1:  # co
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE, {"value": 1})
 
-        elif (int(dataset.get("value")) & 4 == 4):
-            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE,{"value": 4})
+        elif int(dataset.get("value")) & 2 == 2:  # hcl
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE, {"value": 2})
 
-        elif (int(dataset.get("value")) & 8 == 8):
-            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE,{"value": 8})
+        elif int(dataset.get("value")) & 4 == 4:  # ch20
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE, {"value": 4})
 
-           # return dataset.get("value")
+        elif int(dataset.get("value")) & 8 == 8:  # dust
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE, {"value": 8})
+
         return 0
 
     def _handle_debug(self, dataset):
@@ -1455,7 +1458,6 @@ class IoBeamHandler(object):
             self._logger.debug("request i2c state from iobeam")
             self._send_command(self.get_request_msg([self.DATASET_I2C]))
         self._start_i2c_request_timer()
-
 
     def _start_safecutter_request_timer(self):
         """Starts a timer to request the safecutter data from iobeam.
