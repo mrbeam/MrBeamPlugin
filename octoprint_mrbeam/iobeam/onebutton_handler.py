@@ -441,6 +441,7 @@ class OneButtonHandler(object):
         return self.intended_pause or self.behave_cooling_state
 
     def _check_if_still_ready_to_laser(self):
+        self._iobeam.send_malfunction_request()  # check if malfunctions are present
         if self.is_ready_to_laser():
             self._start_ready_to_laser_timer()
         else:

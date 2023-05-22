@@ -11,6 +11,7 @@ from octoprint_mrbeam import IS_X86
 
 from octoprint.events import Events as OctoPrintEvents
 
+from octoprint_mrbeam.iobeam.hw_malfunction_handler import HwMalfunction
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
@@ -262,6 +263,18 @@ class IoBeamHandler(object):
         :return: True if the command was sent successful (does not mean it was successfully executed)
         """
         return self._send_command(self.get_request_msg([self.DATASET_ANALYTICS]))
+
+    def request_available_malfunctions(self, *args, **kwargs):
+        """Requests if malfunctions are present.
+
+        Args:
+            *args:
+            **kwargs:
+
+        Returns:
+            bool: True if the command was sent successful (does not mean it was successfully executed)
+        """
+        return self._send_command(self.get_request_msg([self.DATASET_HW_MALFUNCTION]))
 
     def _send_command(self, command):
         """Sends a command to iobeam.
@@ -597,6 +610,7 @@ class IoBeamHandler(object):
                                             data_id, dataset
                                         )
                             else:
+                                self._logger.warn("Received error in data '%s'", _data)
                                 self._logger.debug(
                                     "Received error in data '%s'",
                                     _data[self.MESSAGE_ERROR],
@@ -604,6 +618,17 @@ class IoBeamHandler(object):
                                 error_count += 1
                         elif "response" in json_dict:
                             error_count += self._handle_response(json_dict)
+                        elif "error" in json_dict:
+                            self._logger.warn(
+                                "Received error from iobeam: %s", json_dict.get("error")
+                            )
+                            error_count += self._handle_error_message(
+                                json_dict.get("error")
+                            )
+                        else:
+                            self._logger.warn(
+                                "Received invalid message from iobeam: %s", json_dict
+                            )
 
                     except ValueError as ve:
                         # Check if we communicate with an older version of iobeam, iobeam:version:0.6.0
@@ -636,11 +661,11 @@ class IoBeamHandler(object):
                             )
                     except Exception as e2:
                         self._logger.debug("Some error with data '%s'", json_data)
-                        self._logger.error(e2)
+                        self._logger.exception("exception - %s", e2)
                         error_count += 1
 
         except Exception as e:
-            self._logger.exception(e)
+            self._logger.exception("exception - %s", e)
 
         return error_count, message_count
 
@@ -703,6 +728,7 @@ class IoBeamHandler(object):
                 elif name == self.MESSAGE_DEVICE_UNUSED:
                     pass
                 elif name == self.MESSAGE_ERROR:
+                    self._logger.warn("Received error message: %s", dataset)
                     err = self._handle_error_message(dataset)
                 else:
                     err = self._handle_unknown_dataset(name, dataset)
@@ -1128,11 +1154,21 @@ class IoBeamHandler(object):
         :param message:
         :return:
         """
-        # TODO: A better way to extract?
-        action = message.values()[0]
-        if action == "reconnect":
-            raise Exception("ioBeam requested to reconnect. Now doing so...")
-        return 1
+        self._logger.warn("Received error message: '%s'", message)
+        malfunction = HwMalfunction(
+            message.get("device", "unknown"),
+            message.get("msg", message.get("device", "unknown")),
+            data=message or {},
+            error_code=message.get("code", None),
+            priority=message.get("priority", 0),
+        )
+        notification = self._user_notification_system.get_notification(
+            notification_id="iobeam_critical_error",
+            err_code=malfunction.error_code,
+            replay=True,
+        )
+        self._user_notification_system.show_notifications(notification)
+        return 0
 
     def _handle_response(self, message):
         """Handle response, which is typically a response to a command sent
