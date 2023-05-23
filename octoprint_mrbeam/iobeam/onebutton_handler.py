@@ -368,6 +368,9 @@ class OneButtonHandler(object):
     def is_printing(self):
         return self._printer.get_state_id() == self.PRINTER_STATE_PRINTING
 
+    def is_paused(self):
+        return self._printer.is_paused()
+
     def cooling_down_pause(self):
         self.start_cooling_behavior()
         self._printer.cooling_start()

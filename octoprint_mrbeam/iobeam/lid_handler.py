@@ -283,7 +283,7 @@ class LidHandler(object):
     def shutdown(self):
         self._logger.info("Shutting down")
         self.boardDetectorDaemon.stopAsap()
-        if self.boardDetectorDaemon.started:
+        if self.boardDetectorDaemon.starter:
             self._logger.info("shutdown() stopping board detector daemon")
             self.boardDetectorDaemon.join()
         if self._photo_creator is not None:
