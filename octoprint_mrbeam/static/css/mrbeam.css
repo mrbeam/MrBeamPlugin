@@ -3402,7 +3402,16 @@ h4.ui-pnotify-title {
 }
 
 .alert.alert-error.ui-pnotify-container.ui-pnotify-shadow {
-  background-color: #ff8686;
+  background-color: #ffffff;
+  border: 5px solid #e25303;
+}
+
+.alert.alert-error.ui-pnotify-container.ui-pnotify-shadow .ui-pnotify-icon {
+  color: #e25303;
+}
+
+.alert.alert-error.ui-pnotify-container.ui-pnotify-shadow .ui-pnotify-title {
+  color: #e25303;
 }
 
 /* Pnotify styling */
