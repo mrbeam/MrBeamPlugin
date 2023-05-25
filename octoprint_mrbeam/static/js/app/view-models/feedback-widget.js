@@ -62,6 +62,13 @@ $(function () {
             } else {
                 channel = "Stable";
             }
+            if (MRBEAM_LASER_HEAD_MODEL === "x") {
+                laserhead_model = "[x]";
+            } else if (MRBEAM_LASER_HEAD_MODEL === "S") {
+                laserhead_model = "[S]";
+            } else if (MRBEAM_LASER_HEAD_MODEL === "0") {
+                laserhead_model = "dreamcut";
+            }
 
             try {
                 window.FreshworksWidget("prefill", "ticketForm", {
@@ -69,6 +76,8 @@ $(function () {
                     custom_fields: {
                         cf_serial: MRBEAM_SERIAL,
                         cf_software_version: MRBEAM_PLUGIN_VERSION,
+                        cf_typ_of_device: MRBEAM_PRODUCT_NAME,
+                        cf_shead: laserhead_model,
                         cf_software_channel: channel,
                     },
                 });
@@ -100,7 +109,7 @@ $(function () {
 
                 $("#freshwidget-button").click(function () {
                     if ($("#freshworks-frame-wrapper")[0]) {
-                        FreshworksWidget("close");
+                        self.openWidget();
                     } else {
                         FreshworksWidget("open");
                     }
@@ -109,6 +118,14 @@ $(function () {
             } catch (e) {
                 console.log("FreshWidget: Could not be initialized");
             }
+        };
+
+        self.openWidget = function () {
+            FreshworksWidget("open");
+        };
+
+        self.openWidgetFromError = function () {
+            FreshworksWidget("open");
         };
 
         self.removeFeedbackWidget = function () {
