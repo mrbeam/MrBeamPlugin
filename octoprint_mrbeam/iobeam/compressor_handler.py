@@ -144,11 +144,10 @@ class CompressorHandler(object):
                     dataset,
                 )
         else:
-            # If the dataset is empty but we know there is a compressor, something is wrong
-            if self.has_compressor():
-                self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
-                    malfunction_id="compressor", msg="no_compressor_static_data"
-                )
+            self._logger.warn(
+                "Received empty compressor_static dataset. compressor_static: %s",
+                dataset,
+            )
 
     def _handle_dynamic_data(self, payload):
         dataset = payload.get("message", {})
@@ -175,7 +174,9 @@ class CompressorHandler(object):
                         # avoid overheating an potential further damage
                         self.set_compressor_off()
                         self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
-                            malfunction_id="compressor", msg="compressor_rpm_0"
+                            malfunction_id="err_compressor_malfunction",
+                            msg="compressor_rpm_0",
+                            err_code="E-00FF-1015",
                         )
                     else:
                         self.resend_compressor()
@@ -188,11 +189,10 @@ class CompressorHandler(object):
                 else:
                     self._num_rpm_0 = 0
         else:
-            # If the dataset is empty but we know there is a compressor, something is wrong
-            if self.has_compressor():
-                self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
-                    malfunction_id="compressor", msg="no_compressor_dynamic_data"
-                )
+            self._logger.warn(
+                "Received empty compressor_dynamic_data dataset. compressor_dynamic_data: %s",
+                dataset,
+            )
 
     def _add_static_data_analytics(self, data):
         data = dict(
