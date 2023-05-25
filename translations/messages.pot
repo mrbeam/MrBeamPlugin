@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-05-24 14:33+0200\n"
+"POT-Creation-Date: 2023-05-25 11:33+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -425,42 +425,42 @@ msgstr ""
 msgid "Please confirm to proceed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:219
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:232
 #: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-acl.js:178
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:23
 msgid "Invalid e-mail address"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:281
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:294
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:20
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:22
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:21
 msgid "E-mail address"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:480
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:494
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:505
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:493
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:507
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:518
 msgid "Session expired"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:481
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:494
 msgid "Trying to do a re-login..."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:495
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:508
 msgid "Re-login successful.<br/>Please repeat the last action."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:506
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:519
 msgid "Please login again."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:563
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:576
 msgid "Browser not supported."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:565
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:578
 #, python-format
 msgid ""
 "Mr Beam makes use of latest web technologies which might not be fully "
@@ -468,11 +468,11 @@ msgid ""
 "of%(br)s%(open)sGoogle Chrome%(close)s for Mr Beam."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:586
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:599
 msgid "Beta user: Please consider enabling Mr Beam Better Together!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:590
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:603
 #, python-format
 msgid ""
 "As you are currently in our Beta channel, you would help us tremendously "
@@ -793,11 +793,25 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:33
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:18
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:58
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:76
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:94
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:112
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:145
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:195
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:345
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:25
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:41
+#: octoprint_mrbeam/templates/laserhead_changed.jinja2:62
+msgid "https://support.mr-beam.org/en"
+msgstr ""
+
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:46
 msgid "Laserhead unit missing"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:34
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:48
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -808,18 +822,15 @@ msgid ""
 "Please shutdown the device and check the connection to the laserhead "
 "following this %(opening_tag)sKnowledgebase article%(closing_tag)s.\n"
 "\n"
-"If this doesn’t solve the problem, please open a support ticket."
+"If this doesn’t solve the problem, please %(opening_tag_support)sopen a "
+"support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:43
-msgid "https://mr-beam.freshdesk.com/en/"
-msgstr ""
-
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:49
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:66
 msgid "Bottom plate not detected"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:50
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:68
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -827,16 +838,17 @@ msgid ""
 "Please make sure that the bottom is correctly mounted as described in the"
 " %(opening_tag)sKnowledgebase article%(closing_tag)s.\n"
 "\n"
-"If this doesn’t solve the problem, please open a support ticket."
+"If this doesn’t solve the problem, please %(opening_tag_support)sopen a "
+"support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:66
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:200
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:210
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:84
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:219
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:234
 msgid "Hardware malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:67
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:86
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -844,14 +856,15 @@ msgid ""
 "Please shutdown the device and check the ribbon cable following the "
 "%(opening_tag)sKnowledgebase article%(closing_tag)s.\n"
 "\n"
-"If this doesn’t solve the problem, please open a support ticket."
+"If this doesn’t solve the problem, please %(opening_tag_support)sopen a "
+"support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:83
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:102
 msgid "Compressor malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:84
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:104
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -860,27 +873,30 @@ msgid ""
 "%(opening_tag)sKnowledgebase article%(closing_tag)s. And restart the "
 "device.\n"
 "\n"
-"If this doesn’t solve the problem, please open a support ticket."
+"If this doesn’t solve the problem, please %(opening_tag_support)sopen a "
+"support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:100
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:120
 msgid "One Button malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:101
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:122
+#, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
 "\n"
 "You can still shut down the device via the Mr Beam Software.\n"
 "\n"
-"Please open a support ticket."
+"Please %(opening_tag_support)sopen a support "
+"ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:112
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:135
 msgid "Interlock malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:113
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:137
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -888,47 +904,48 @@ msgid ""
 "Please check the lid switch following the %(opening_tag)sKnowledgebase "
 "article%(closing_tag)s.\n"
 "\n"
-"If this doesn’t solve the problem, please open a support ticket."
+"If this doesn’t solve the problem, please %(opening_tag_support)sopen a "
+"support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:129
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:153
 msgid "Camera busy"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:130
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:154
 msgid "The camera was stopped recently, it will take a few seconds to restart."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:137
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:161
 msgid "No update information"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:138
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:162
 msgid ""
 "No information about available updates could be retrieved, please try "
 "again later. Errorcode: E-1000"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:145
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:153
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:169
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:177
 msgid "Error during fetching update information"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:146
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:170
 msgid "There was a error during fetching the update information Errorcode: E-1001"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:154
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:178
 msgid ""
 "There was a error during fetching the update information, please try "
 "again later."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:161
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:185
 msgid "Camera malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:162
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:187
 #, python-format
 msgid ""
 "You can still use the device by aligning manually without camera support."
@@ -936,86 +953,83 @@ msgid ""
 "\n"
 "Please try to restart the device. \n"
 "\n"
-"If this doesn’t solve the problem, you may open a support ticket."
+"If this doesn’t solve the problem, you may %(opening_tag_support)sopen a "
+"support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:178
-msgid "Critical Hardware error"
-msgstr ""
-
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:179
-msgid ""
-"The system detected a critical hardware error. Please contact Mr Beam "
-"support."
-msgstr ""
-
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:187
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:203
 msgid "Laser job canceled"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:188
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:205
+#, python-format
 msgid ""
 "The job was canceled due to an error - we apologize for any "
 "inconvenience.\n"
 "\n"
 "Please try to restart the device.\n"
 "\n"
-"If this doesn’t solve the problem, please open a support ticket."
+"If this doesn’t solve the problem, please %(opening_tag_support)sopen a "
+"support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:201
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:221
+#, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
 "\n"
 "Please try to restart the device.\n"
 "\n"
-"If this doesn’t solve the problem, please open a support ticket."
+"If this doesn’t solve the problem, please %(opening_tag_support)sopen a "
+"support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:211
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:236
+#, python-format
 msgid ""
 "Your Air Filter or single Fan is not spinning properly.\n"
 "\n"
 "The device is currently not able to start any laser job.\n"
 "\n"
-"Please open a support ticket."
+"Please %(opening_tag_support)sopen a support "
+"ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:220
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:249
 msgid "Thank you"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:221
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:250
 msgid ""
 "The last image from your camera was submitted to Mr Beam and is going to "
 "be uploaded silently in the background."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:227
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:256
 msgid "Lens Calibration Over"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:228
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:257
 msgid "A new lens calibration file has been created and is now being used."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:321
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:360
 #, python-format
 msgid ""
 "For more information check out this %(opening_tag)sKnowledge Base "
 "article%(closing_tag)s"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:338
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:377
 #, python-format
 msgid "Browse our %(opening_tag)sKnowledge Base%(closing_tag)s"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:358
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:397
 msgid "Error:"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:372
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:411
 msgid "Error Code:"
 msgstr ""
 
@@ -2704,12 +2718,6 @@ msgstr ""
 msgid ""
 "Read about the changes you can expect with the MrBeam II dreamcut [S] "
 "laser head."
-msgstr ""
-
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:25
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:41
-#: octoprint_mrbeam/templates/laserhead_changed.jinja2:62
-msgid "https://support.mr-beam.org/en"
 msgstr ""
 
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:26
