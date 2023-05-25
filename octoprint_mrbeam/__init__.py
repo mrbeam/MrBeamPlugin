@@ -2319,7 +2319,7 @@ class MrBeamPlugin(
         Returns:
             NO_CONTENT
         """
-        self.iobeam.send_malfunction_request()
+        self.iobeam.request_available_malfunctions()
         return NO_CONTENT
 
     def handle_dissmiss_notification_request(self, data):
