@@ -93,6 +93,19 @@ mrbeam.updatePNotify = function (pn_obj) {
         }
     }
     if (existing_notification) {
+        if (pn_obj.err_code) {
+            pn_obj.text = "";
+            pn_obj.err_code.forEach((error_code) => {
+                if (
+                    !existing_notification.options.err_code.includes(error_code)
+                ) {
+                    existing_notification.options.err_code.push(error_code);
+                    pn_obj.text += "\n" + error_code;
+                }
+            });
+            pn_obj.text = existing_notification.options.text + pn_obj.text;
+            pn_obj.err_code = existing_notification.options.err_code;
+        }
         existing_notification.update(pn_obj);
     } else {
         new PNotify(pn_obj);
