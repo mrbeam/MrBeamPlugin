@@ -1163,7 +1163,7 @@ class IoBeamHandler(object):
             priority=message.get("priority", 0),
         )
         notification = self._user_notification_system.get_notification(
-            notification_id="iobeam_critical_error",
+            notification_id="err_hardware_malfunction_non_i2c",
             err_code=malfunction.error_code,
             replay=True,
         )

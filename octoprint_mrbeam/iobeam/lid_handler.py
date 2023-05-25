@@ -786,7 +786,9 @@ class PhotoCreator(object):
                 )
                 self._plugin.user_notification_system.show_notifications(
                     self._plugin.user_notification_system.get_notification(
-                        notification_id="err_cam_conn_err", replay=True
+                        notification_id="err_cam_conn_err",
+                        replay=True,
+                        err_code="E-01FF-1028",
                     )
                 )
             return
@@ -800,6 +802,7 @@ class PhotoCreator(object):
                 self._plugin.user_notification_system.get_notification(
                     "err_cam_conn_err",
                     err_msg=[str(e)],
+                    err_code="E-01FF-1006",
                 )
             )
         except Exception as e:
