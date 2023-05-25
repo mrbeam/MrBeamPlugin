@@ -32,7 +32,6 @@ $(function () {
                 closing_tag: "</strong></a>",
                 line_break: "<br />",
                 opening_tag_support:
-                    link +
                     '<a href="javascript:void(0)" onclick="openFreshWidget(\'##err_code##\', self)"><strong>',
                 closing_tag_support: "</strong></a>",
             };

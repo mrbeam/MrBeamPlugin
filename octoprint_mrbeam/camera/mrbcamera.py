@@ -13,7 +13,7 @@ from . import exc
 
 try:
     import picamera
-    from picamera import PiCamera, PiCameraValueError
+    from picamera import PiCamera
 
     PICAMERA_AVAILABLE = True
 except (ImportError, OSError) as e:
@@ -107,10 +107,6 @@ class MrbCamera(CameraClass, BaseCamera):
             self._logger.warning(
                 "Caught Picamera internal error - self._camera is None"
             )
-        except PiCameraValueError as e:
-            self._logger.error(
-                "Caught Picamera internal error - camera is closed or not opened"
-            )  # appears when camera stopps working while device is running
         finally:
             if PICAMERA_AVAILABLE:
                 self._busy.release()
