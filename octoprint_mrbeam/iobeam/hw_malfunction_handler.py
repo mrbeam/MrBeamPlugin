@@ -209,7 +209,7 @@ class HwMalfunctionHandler(object):
                         replay=True,
                     )
                 )
-            elif malfunction_id.startswith(self.I2C_DEVICE_MISSING):
+            elif malfunction_id and malfunction_id.startswith(self.I2C_DEVICE_MISSING):
                 notifications.append(
                     self._user_notification_system.get_notification(
                         notification_id="err_hardware_malfunction_i2c",
