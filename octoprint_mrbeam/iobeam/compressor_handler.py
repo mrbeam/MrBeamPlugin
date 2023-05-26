@@ -3,10 +3,12 @@
 import threading
 import time
 from octoprint.events import Events as OctoPrintEvents
+from octoprint_mrbeam.iobeam.hw_malfunction_handler import HwMalfunctionHandler
+
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents, IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-
+from octoprint_mrbeam.util.errors import ErrorCodes
 
 # singleton
 _instance = None
@@ -144,11 +146,10 @@ class CompressorHandler(object):
                     dataset,
                 )
         else:
-            # If the dataset is empty but we know there is a compressor, something is wrong
-            if self.has_compressor():
-                self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
-                    malfunction_id="compressor", msg="no_compressor_static_data"
-                )
+            self._logger.warn(
+                "Received empty compressor_static dataset. compressor_static: %s",
+                dataset,
+            )
 
     def _handle_dynamic_data(self, payload):
         dataset = payload.get("message", {})
@@ -175,7 +176,9 @@ class CompressorHandler(object):
                         # avoid overheating an potential further damage
                         self.set_compressor_off()
                         self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
-                            malfunction_id="compressor", msg="compressor_rpm_0"
+                            malfunction_id=HwMalfunctionHandler.COMPRESSOR_MALFUNCTION,
+                            msg="compressor_rpm_0",
+                            error_code=ErrorCodes.E_1015,
                         )
                     else:
                         self.resend_compressor()
@@ -188,11 +191,10 @@ class CompressorHandler(object):
                 else:
                     self._num_rpm_0 = 0
         else:
-            # If the dataset is empty but we know there is a compressor, something is wrong
-            if self.has_compressor():
-                self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
-                    malfunction_id="compressor", msg="no_compressor_dynamic_data"
-                )
+            self._logger.warn(
+                "Received empty compressor_dynamic_data dataset. compressor_dynamic_data: %s",
+                dataset,
+            )
 
     def _add_static_data_analytics(self, data):
         data = dict(

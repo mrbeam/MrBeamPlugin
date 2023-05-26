@@ -500,6 +500,10 @@ class DustManager(object):
             self._pause_laser(
                 trigger=msg, analytics="invalid-old-fan-data", log_message=msg
             )
+            if self._one_button_handler.is_printing():
+                self._plugin.hw_malfunction_handler.report_hw_malfunction(
+                    {"err_fan_not_spinning": {"code": "E-00FF-1027"}},
+                )
 
         elif self._connected == False:
             result = False
