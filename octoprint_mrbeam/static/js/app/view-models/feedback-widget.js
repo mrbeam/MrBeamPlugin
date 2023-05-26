@@ -62,11 +62,15 @@ $(function () {
             } else {
                 channel = "Stable";
             }
-            if (MRBEAM_LASER_HEAD_MODEL === "x") {
+            if (MRBEAM_LASER_HEAD_MODEL === mrbeam.laserheadModelString.X) {
                 laserhead_model = "[x]";
-            } else if (MRBEAM_LASER_HEAD_MODEL === "S") {
+            } else if (
+                MRBEAM_LASER_HEAD_MODEL === mrbeam.laserheadModelString.S
+            ) {
                 laserhead_model = "[S]";
-            } else if (MRBEAM_LASER_HEAD_MODEL === "0") {
+            } else if (
+                MRBEAM_LASER_HEAD_MODEL === mrbeam.laserheadModelString.DC
+            ) {
                 laserhead_model = "dreamcut";
             }
 

@@ -13,9 +13,10 @@ $(function () {
             }
             self.freshdeskWidget.openWidgetFromError();
         };
-        self._getKowledgebaseArticleLinkSprintf = function (url, err_code) {
+        self._getPlaceHolderParameters = function (knowledgebase_url = null) {
             let kb_url =
-                url || gettext("https://support.mr-beam.org/en") + "/support";
+                knowledgebase_url ||
+                gettext("https://support.mr-beam.org/en") + "/support";
             let default_params = {
                 utm_medium: "beamos",
                 utm_source: "beamos",
@@ -53,9 +54,9 @@ $(function () {
                             "\n" +
                             "If this doesn’t solve the problem, please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf(
+                    self._getPlaceHolderParameters(
                         gettext("https://support.mr-beam.org/en") +
-                            "/support/solutions/articles/43000560435-laserkopf-erneut-anschlie%C3%9Fen"
+                            "/support/solutions/articles/43000560435"
                     )
                 ),
                 type: "error",
@@ -71,9 +72,9 @@ $(function () {
                             "\n" +
                             "If this doesn’t solve the problem, please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf(
+                    self._getPlaceHolderParameters(
                         gettext("https://support.mr-beam.org/en") +
-                            "/support/solutions/articles/43000703004-bottom-plate-not-detected-how-to-check-montage"
+                            "/support/solutions/articles/43000703004"
                     )
                 ),
                 type: "error",
@@ -89,10 +90,23 @@ $(function () {
                             "\n" +
                             "If this doesn’t solve the problem, please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf(
+                    self._getPlaceHolderParameters(
                         gettext("https://support.mr-beam.org/en") +
-                            "/support/solutions/articles/43000703001-hardware-malfunction-how-to-check-the-ribbon-cable"
+                            "/support/solutions/articles/43000703001"
                     )
+                ),
+                type: "error",
+                hide: false,
+            },
+            err_unknown_malfunction: {
+                title: gettext("Unknown malfunction"),
+                text: _.sprintf(
+                    gettext(
+                        "The device is properly currently not able to start any laser job.\n" +
+                            "\n" +
+                            "Please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
+                    ),
+                    self._getPlaceHolderParameters()
                 ),
                 type: "error",
                 hide: false,
@@ -107,9 +121,9 @@ $(function () {
                             "\n" +
                             "If this doesn’t solve the problem, please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf(
+                    self._getPlaceHolderParameters(
                         gettext("https://support.mr-beam.org/en") +
-                            "/support/solutions/articles/43000702996-compressor-malfunction-how-to-check-the-piping"
+                            "/support/solutions/articles/43000702996"
                     )
                 ),
                 type: "error",
@@ -125,7 +139,7 @@ $(function () {
                             "\n" +
                             "Please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf(self.err)
+                    self._getPlaceHolderParameters()
                 ),
                 type: "error",
                 hide: false,
@@ -140,9 +154,9 @@ $(function () {
                             "\n" +
                             "If this doesn’t solve the problem, please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf(
+                    self._getPlaceHolderParameters(
                         gettext("https://support.mr-beam.org/en") +
-                            "/support/solutions/articles/43000703002-interlock-malfunction-check-the-lid-switch"
+                            "/support/solutions/articles/43000703002"
                     )
                 ),
                 type: "error",
@@ -190,9 +204,9 @@ $(function () {
                             "\n" +
                             "If this doesn’t solve the problem, you may %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf(
+                    self._getPlaceHolderParameters(
                         gettext("https://support.mr-beam.org/en") +
-                            "/support/solutions/articles/43000557281-system-messages#cameraerror"
+                            "/support/solutions/articles/43000557281"
                     )
                 ),
                 type: "error",
@@ -208,7 +222,7 @@ $(function () {
                             "\n" +
                             "If this doesn’t solve the problem, please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf()
+                    self._getPlaceHolderParameters()
                 ),
                 type: "error",
                 hide: false,
@@ -224,7 +238,7 @@ $(function () {
                             "\n" +
                             "If this doesn’t solve the problem, please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf()
+                    self._getPlaceHolderParameters()
                 ),
                 type: "error",
                 hide: false,
@@ -239,7 +253,7 @@ $(function () {
                             "\n" +
                             "Please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
-                    self._getKowledgebaseArticleLinkSprintf()
+                    self._getPlaceHolderParameters()
                 ),
                 type: "error",
                 hide: false,

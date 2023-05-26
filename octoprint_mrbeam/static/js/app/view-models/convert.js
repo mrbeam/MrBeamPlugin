@@ -787,9 +787,11 @@ $(function () {
                     if (materialCompatibilityDisplay) {
                         m.compatible =
                             m.laser_model === MRBEAM_LASER_HEAD_MODEL;
-                        if (m.laser_model === "S") {
+                        if (m.laser_model === mrbeam.laserheadModelString.S) {
                             m.customBeforeElementContent = "[S]";
-                        } else if (m.laser_model === "x") {
+                        } else if (
+                            m.laser_model === mrbeam.laserheadModelString.X
+                        ) {
                             m.customBeforeElementContent = "[x]";
                         }
                         if (!m.compatible) {

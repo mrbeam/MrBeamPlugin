@@ -72,6 +72,12 @@ mrbeam.laserheadModel = {
     X: 3,
 };
 
+mrbeam.laserheadModelString = {
+    S: "S",
+    X: "x",
+    DC: "0",
+};
+
 /**
  * Push a new PNotify notification.
  * If pn_obj contains attribute 'id',
