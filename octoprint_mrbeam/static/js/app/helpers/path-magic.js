@@ -39,9 +39,9 @@ var mrbeam = mrbeam || {};
             return NaN;
         }
 
-        var h = b - a;
-        var f1 = f(a + h * 0.25);
-        var f2 = f(b - h * 0.25);
+        let h = b - a;
+        let f1 = f(a + h * 0.25);
+        let f2 = f(b - h * 0.25);
 
         // Simple check for NaN:
         if (Number.isNaN(f1)) {
@@ -55,10 +55,10 @@ var mrbeam = mrbeam || {};
             return;
         }
 
-        var sl = (h * (fa + 4 * f1 + fm)) / 12;
-        var sr = (h * (fm + 4 * f2 + fb)) / 12;
-        var s2 = sl + sr;
-        var err = (s2 - V0) / 15;
+        let sl = (h * (fa + 4 * f1 + fm)) / 12;
+        let sr = (h * (fm + 4 * f2 + fb)) / 12;
+        let s2 = sl + sr;
+        let err = (s2 - V0) / 15;
 
         if (depth > maxdepth) {
             state.maxDepthCount += 1;
@@ -66,9 +66,9 @@ var mrbeam = mrbeam || {};
         } else if (Math.abs(err) < tol) {
             return s2 + err;
         } else {
-            var m = a + h * 0.5;
+            let m = a + h * 0.5;
 
-            var V1 = adsimp(
+            let V1 = adsimp(
                 f,
                 a,
                 m,
@@ -87,7 +87,7 @@ var mrbeam = mrbeam || {};
                 return NaN;
             }
 
-            var V2 = adsimp(
+            let V2 = adsimp(
                 f,
                 m,
                 b,
@@ -114,7 +114,7 @@ var mrbeam = mrbeam || {};
     // https://github.com/scijs/integrate-adaptive-simpson
     // (c) 2015 Scijs Authors. MIT License.
     function integrate(f, a, b, tol, maxdepth) {
-        var state = {
+        let state = {
             maxDepthCount: 0,
             nanEncountered: false,
         };
@@ -126,13 +126,13 @@ var mrbeam = mrbeam || {};
             maxdepth = 20;
         }
 
-        var fa = f(a);
-        var fm = f(0.5 * (a + b));
-        var fb = f(b);
+        let fa = f(a);
+        let fm = f(0.5 * (a + b));
+        let fb = f(b);
 
-        var V0 = ((fa + 4 * fm + fb) * (b - a)) / 6;
+        let V0 = ((fa + 4 * fm + fb) * (b - a)) / 6;
 
-        var result = adsimp(f, a, b, fa, fm, fb, V0, tol, maxdepth, 1, state);
+        let result = adsimp(f, a, b, fa, fm, fb, V0, tol, maxdepth, 1, state);
 
         if (state.maxDepthCount > 0 && console && console.warn) {
             console.warn(
@@ -156,8 +156,8 @@ var mrbeam = mrbeam || {};
     // --- rectangle
 
     module.rectangle = function (x, y, width, height) {
-        var r = x + width;
-        var b = y + height;
+        const r = x + width;
+        const b = y + height;
 
         return [
             { X: x, Y: y },
@@ -172,20 +172,20 @@ var mrbeam = mrbeam || {};
 
     module.circle = function (cx, cy, r, delta) {
         // circumference
-        var length = 2.0 * r * Math.PI;
+        const length = 2.0 * r * Math.PI;
 
         // number of segments
-        var n = Math.ceil(length / delta) | 0;
+        const n = Math.ceil(length / delta) | 0;
 
         // allocate memory
-        var pts = [];
+        const pts = [];
         pts.length = n + 1;
 
         pts[0] = point(cx + r, cy);
         pts[n] = point(cx + r, cy);
 
         for (let i = 1; i < n; ++i) {
-            var t = (i * 2.0 * Math.PI) / n;
+            const t = (i * 2.0 * Math.PI) / n;
 
             pts[i] = point(cx + r * Math.cos(t), cy + r * Math.sin(t));
         }
@@ -197,20 +197,20 @@ var mrbeam = mrbeam || {};
 
     module.ellipse = function (cx, cy, rx, ry, delta) {
         // approximate circumference
-        var length = 2.0 * Math.PI * Math.sqrt((rx ** 2 + ry ** 2) / 2.0);
+        const length = 2.0 * Math.PI * Math.sqrt((rx ** 2 + ry ** 2) / 2.0);
 
         // number of segments
-        var n = Math.ceil(length / delta) | 0;
+        const n = Math.ceil(length / delta) | 0;
 
         // allocate memory
-        var pts = [];
+        const pts = [];
         pts.length = n + 1;
 
         pts[0] = point(cx + rx, cy);
         pts[n] = point(cx + rx, cy);
 
         for (let i = 1; i < n; ++i) {
-            var t = (i * 2.0 * Math.PI) / n;
+            const t = (i * 2.0 * Math.PI) / n;
 
             pts[i] = point(cx + rx * Math.cos(t), cy + ry * Math.sin(t));
         }
@@ -243,13 +243,13 @@ var mrbeam = mrbeam || {};
         //   with t = 0..1
 
         // calculate coefficients for x- and y-direction
-        var adt = quadraticDerivativeCoefficients(p1.X, p2.X, p3.X);
-        var bdt = quadraticDerivativeCoefficients(p1.Y, p2.Y, p3.Y);
+        const adt = quadraticDerivativeCoefficients(p1.X, p2.X, p3.X);
+        const bdt = quadraticDerivativeCoefficients(p1.Y, p2.Y, p3.Y);
 
-        var length = integrate(
+        const length = integrate(
             function (t) {
-                var dx = adt[0] + adt[1] * t;
-                var dy = bdt[0] + bdt[1] * t;
+                const dx = adt[0] + adt[1] * t;
+                const dy = bdt[0] + bdt[1] * t;
 
                 return Math.sqrt(dx * dx + dy * dy);
             },
@@ -270,21 +270,21 @@ var mrbeam = mrbeam || {};
         //   with t = 0..1
 
         // calculate coefficients for x- and y-direction
-        var a = quadraticCoefficients(p1.X, p2.X, p3.X);
-        var b = quadraticCoefficients(p1.Y, p2.Y, p3.Y);
+        const a = quadraticCoefficients(p1.X, p2.X, p3.X);
+        const b = quadraticCoefficients(p1.Y, p2.Y, p3.Y);
 
         // calculate real curve length
         // ALTERNATIVE: direct distance P1->P2->P3
-        var length = quadraticLength(p1, p2, p3, delta);
+        const length = quadraticLength(p1, p2, p3, delta);
 
         // required number of segment
-        var n = Math.ceil(length / delta) | 0;
+        const n = Math.ceil(length / delta) | 0;
 
         // divide parameter space
-        var dt = 1.0 / n;
+        const dt = 1.0 / n;
 
         // allocate memory for points
-        var pts = [];
+        const pts = [];
         pts.length = n + 1;
 
         // set first and last point explicit to avoid rounding errors
@@ -293,8 +293,8 @@ var mrbeam = mrbeam || {};
 
         // interpolate points
         for (let i = 1; i < n; ++i) {
-            var t = i * dt;
-            var t2 = t * t;
+            const t = i * dt;
+            const t2 = t * t;
 
             pts[i] = {
                 X: a[0] + a[1] * t + a[2] * t2,
@@ -333,15 +333,15 @@ var mrbeam = mrbeam || {};
         //   with t = 0..1
 
         // calculate coefficients for x- and y-direction
-        var adt = cubicDerivativeCoefficients(p1.X, p2.X, p3.X, p4.X);
-        var bdt = cubicDerivativeCoefficients(p1.Y, p2.Y, p3.Y, p4.Y);
+        const adt = cubicDerivativeCoefficients(p1.X, p2.X, p3.X, p4.X);
+        const bdt = cubicDerivativeCoefficients(p1.Y, p2.Y, p3.Y, p4.Y);
 
         length = integrate(
             function (t) {
-                var t2 = t * t;
+                const t2 = t * t;
 
-                var dx = adt[0] + adt[1] * t + adt[2] * t2;
-                var dy = bdt[0] + bdt[1] * t + bdt[2] * t2;
+                const dx = adt[0] + adt[1] * t + adt[2] * t2;
+                const dy = bdt[0] + bdt[1] * t + bdt[2] * t2;
 
                 return Math.sqrt(dx * dx + dy * dy);
             },
@@ -362,21 +362,21 @@ var mrbeam = mrbeam || {};
         //   with t = 0..1
 
         // calculate coefficients for x- and y-direction
-        var a = cubicCoefficients(p1.X, p2.X, p3.X, p4.X);
-        var b = cubicCoefficients(p1.Y, p2.Y, p3.Y, p4.Y);
+        const a = cubicCoefficients(p1.X, p2.X, p3.X, p4.X);
+        const b = cubicCoefficients(p1.Y, p2.Y, p3.Y, p4.Y);
 
         // calculate real curve length
         // ALTERNATIVE: direct distance P1->P2->P3->P4
-        var length = cubicLength(p1, p2, p3, p4, delta);
+        const length = cubicLength(p1, p2, p3, p4, delta);
 
         // required number of segment
-        var n = Math.ceil(length / delta) | 0;
+        const n = Math.ceil(length / delta) | 0;
 
         // divide parameter space
-        var dt = 1.0 / n;
+        const dt = 1.0 / n;
 
         // allocate memory for points
-        var pts = [];
+        const pts = [];
         pts.length = n + 1;
 
         // set first and last point explicit to avoid rounding errors
@@ -385,9 +385,9 @@ var mrbeam = mrbeam || {};
 
         // interpolate points
         for (let i = 1; i < n; ++i) {
-            var t = i * dt;
-            var t2 = t * t;
-            var t3 = t2 * t;
+            const t = i * dt;
+            const t2 = t * t;
+            const t3 = t2 * t;
 
             pts[i] = {
                 X: a[0] + a[1] * t + a[2] * t2 + a[3] * t3,
@@ -418,23 +418,23 @@ var mrbeam = mrbeam || {};
     function arc(p1, p2, rx, ry, phi, fa, fs, delta) {
         // https://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
 
-        var cosPhi = Math.cos(phi);
-        var sinPhi = Math.sin(phi);
+        const cosPhi = Math.cos(phi);
+        const sinPhi = Math.sin(phi);
 
-        var x1_ =
+        const x1_ =
             (cosPhi * (p1.X - p2.X)) / 2.0 + (sinPhi * (p1.Y - p2.Y)) / 2.0;
-        var y1_ =
+        const y1_ =
             (-sinPhi * (p1.X - p2.X)) / 2.0 + (cosPhi * (p1.Y - p2.Y)) / 2.0;
 
-        var Delta = x1_ ** 2 / rx ** 2 + y1_ ** 2 / ry ** 2;
+        const Delta = x1_ ** 2 / rx ** 2 + y1_ ** 2 / ry ** 2;
 
         if (Delta > 1.0) {
-            var f = Math.sqrt(Delta);
+            const f = Math.sqrt(Delta);
             rx *= f;
             ry *= f;
         }
 
-        var s =
+        const s =
             Math.sqrt(
                 (rx ** 2 * ry ** 2 - rx ** 2 * y1_ ** 2 - ry ** 2 * x1_ ** 2) /
                     (rx ** 2 * y1_ ** 2 + ry ** 2 * x1_ ** 2)
@@ -447,13 +447,13 @@ var mrbeam = mrbeam || {};
         // Otherwise the code does not fail - but returning only a straight line from start to end point.
         if (isNaN(s)) s = 0; // HACK
 
-        var cx_ = (s * rx * y1_) / ry;
-        var cy_ = (-s * ry * x1_) / rx;
+        const cx_ = (s * rx * y1_) / ry;
+        const cy_ = (-s * ry * x1_) / rx;
 
-        var cx = cosPhi * cx_ - sinPhi * cy_ + (p1.X + p2.X) / 2.0;
-        var cy = sinPhi * cx_ + cosPhi * cy_ + (p1.Y + p2.Y) / 2.0;
+        const cx = cosPhi * cx_ - sinPhi * cy_ + (p1.X + p2.X) / 2.0;
+        const cy = sinPhi * cx_ + cosPhi * cy_ + (p1.Y + p2.Y) / 2.0;
 
-        var theta1 = angle(
+        const theta1 = angle(
             {
                 X: 1.0,
                 Y: 0.0,
@@ -464,7 +464,7 @@ var mrbeam = mrbeam || {};
             }
         );
 
-        var deltaTheta =
+        let deltaTheta =
             angle(
                 {
                     X: (x1_ - cx_) / rx,
@@ -485,16 +485,16 @@ var mrbeam = mrbeam || {};
         }
 
         // approximate real curve length with circle arc R=max(rx, ry)
-        var length = Math.max(rx, ry) * Math.abs(deltaTheta);
+        const length = Math.max(rx, ry) * Math.abs(deltaTheta);
 
         // required number of segment
-        var n = Math.ceil(length / delta) | 0;
+        const n = Math.ceil(length / delta) | 0;
 
         // divide parameter space
-        var dt = deltaTheta / n;
+        const dt = deltaTheta / n;
 
         // allocate memory for points
-        var pts = [];
+        const pts = [];
         pts.length = n + 1;
 
         // set first and last point explicit to avoid rounding errors
@@ -503,10 +503,10 @@ var mrbeam = mrbeam || {};
 
         // interpolate points
         for (let i = 1; i < n; ++i) {
-            var t = theta1 + i * dt;
+            const t = theta1 + i * dt;
 
-            var a = rx * Math.cos(t);
-            var b = ry * Math.sin(t);
+            const a = rx * Math.cos(t);
+            const b = ry * Math.sin(t);
 
             pts[i] = {
                 X: a * cosPhi - b * sinPhi + cx,
@@ -537,12 +537,12 @@ var mrbeam = mrbeam || {};
     // --- path methods
 
     module.parse = function (segments, delta) {
-        var polylines = [];
+        const polylines = [];
 
         for (let i = 0; i < segments.length; ++i) {
-            var segment = segments[i];
+            const segment = segments[i];
 
-            var command = segment[0];
+            const command = segment[0];
 
             switch (command) {
                 case "M": // move
@@ -557,7 +557,7 @@ var mrbeam = mrbeam || {};
                 case "z":
                     if (polylines.length > 0) {
                         // more robust against d="MZ" (=> polylines=[]), sometimes crashed here.
-                        var polyline = peek(polylines);
+                        const polyline = peek(polylines);
                         polyline.push({
                             X: polyline[0].X,
                             Y: polyline[0].Y,
@@ -569,47 +569,47 @@ var mrbeam = mrbeam || {};
                     }
                     break;
                 case "L": // line
-                    var polyline = peek(polylines);
+                    const polyline = peek(polylines);
                     polyline.push({
                         X: segment[1],
                         Y: segment[2],
                     });
                     break;
                 case "H": // horizontal line
-                    var polyline = peek(polylines);
+                    const polyline = peek(polylines);
                     polyline.push({
                         X: segment[1],
                         Y: peek(polyline).Y,
                     });
                     break;
                 case "V": // vertical line
-                    var polyline = peek(polylines);
+                    const polyline = peek(polylines);
                     polyline.push({
                         X: peek(polyline).X,
                         Y: segment[1],
                     });
                     break;
                 case "C": // cubic bezier
-                    var polyline = peek(polylines);
+                    const polyline = peek(polylines);
 
-                    var p1 = peek(polyline);
-                    var p2 = { X: segment[1], Y: segment[2] };
-                    var p3 = { X: segment[3], Y: segment[4] };
-                    var p4 = { X: segment[5], Y: segment[6] };
+                    const p1 = peek(polyline);
+                    const p2 = { X: segment[1], Y: segment[2] };
+                    const p3 = { X: segment[3], Y: segment[4] };
+                    const p4 = { X: segment[5], Y: segment[6] };
 
                     // approximate cubic bezier with polyline
-                    var pts = module.cubicBezier(p1, p2, p3, p4, delta);
+                    const pts = module.cubicBezier(p1, p2, p3, p4, delta);
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
                 case "S": // "Smooth" cubic bezier
-                    var polyline = peek(polylines);
-                    var prev = segments[i - 1];
+                    const polyline = peek(polylines);
+                    const prev = segments[i - 1];
 
-                    var p1 = peek(polyline);
-                    var p2;
+                    const p1 = peek(polyline);
+                    let p2;
                     if (prev[0] === "C" || prev[0] === "S") {
-                        var [prevX, prevY] = prev.slice(-4, -2);
+                        const [prevX, prevY] = prev.slice(-4, -2);
                         p2 = {
                             X: 2 * p1.X - prevX,
                             Y: 2 * p1.Y - prevY,
@@ -617,55 +617,55 @@ var mrbeam = mrbeam || {};
                     } else {
                         p2 = p1;
                     }
-                    var p3 = { X: segment[1], Y: segment[2] };
-                    var p4 = { X: segment[3], Y: segment[4] };
+                    const p3 = { X: segment[1], Y: segment[2] };
+                    const p4 = { X: segment[3], Y: segment[4] };
 
                     // approximate cubic bezier with polyline
-                    var pts = module.cubicBezier(p1, p2, p3, p4, delta);
+                    const pts = module.cubicBezier(p1, p2, p3, p4, delta);
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
                 case "Q": // quadratic bezier
-                    var polyline = peek(polylines);
+                    const polyline = peek(polylines);
 
-                    var p1 = peek(polyline);
-                    var p2 = { X: segment[1], Y: segment[2] };
-                    var p3 = { X: segment[3], Y: segment[4] };
+                    const p1 = peek(polyline);
+                    const p2 = { X: segment[1], Y: segment[2] };
+                    const p3 = { X: segment[3], Y: segment[4] };
 
                     // approximate quadratic bezier with polyline
-                    var pts = module.quadraticBezier(p1, p2, p3, delta);
+                    const pts = module.quadraticBezier(p1, p2, p3, delta);
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
                 case "T": // "Smooth" quadratic bezier
-                    var polyline = peek(polylines);
+                    const polyline = peek(polylines);
 
-                    var [prevX, prevY] = segments[i - 1].slice(-4, -2);
+                    const [prevX, prevY] = segments[i - 1].slice(-4, -2);
 
-                    var p1 = peek(polyline);
-                    var p2 = {
+                    const p1 = peek(polyline);
+                    const p2 = {
                         X: 2 * p1.X - prevX,
                         Y: 2 * p1.Y - prevY,
                     };
-                    var p3 = { X: segment[1], Y: segment[2] };
+                    const p3 = { X: segment[1], Y: segment[2] };
 
                     // approximate quadratic bezier with polyline
-                    var pts = module.quadraticBezier(p1, p2, p3, delta);
+                    const pts = module.quadraticBezier(p1, p2, p3, delta);
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
                 case "A": // Arc
-                    var polyline = peek(polylines);
+                    const polyline = peek(polylines);
 
-                    var p1 = peek(polyline);
-                    var p2 = { X: segment[6], Y: segment[7] };
-                    var rx = segment[1];
-                    var ry = segment[2];
-                    var phi = (segment[3] / 180.0) * Math.PI;
-                    var fa = segment[4];
-                    var fs = segment[5];
+                    const p1 = peek(polyline);
+                    const p2 = { X: segment[6], Y: segment[7] };
+                    const rx = segment[1];
+                    const ry = segment[2];
+                    const phi = (segment[3] / 180.0) * Math.PI;
+                    const fa = segment[4];
+                    const fs = segment[5];
 
-                    var pts = arc(p1, p2, rx, ry, phi, fa, fs, delta);
+                    const pts = arc(p1, p2, rx, ry, phi, fa, fs, delta);
 
                     Array.prototype.push.apply(polyline, pts);
 
@@ -680,12 +680,12 @@ var mrbeam = mrbeam || {};
 
     module.parsePoints = function (pointsString, closed) {
         // TODO: ATTENTION: Maybe not so safe (Minus as delimiter,…)
-        var xy = pointsString
+        const xy = pointsString
             .split(/,|\s/g)
             .filter((s) => s.length > 0)
             .map(Number);
 
-        var pts = [];
+        const pts = [];
 
         for (let i = 0; i < xy.length; i += 2) {
             pts.push(point(xy[i], xy[i + 1]));
@@ -699,7 +699,7 @@ var mrbeam = mrbeam || {};
     };
 
     module.transform = function (paths, matrix) {
-        var [m11, m12, m21, m22, tx, ty] = matrix;
+        const [m11, m12, m21, m22, tx, ty] = matrix;
 
         return paths.map((path) =>
             path.map((pt) =>
@@ -720,13 +720,13 @@ var mrbeam = mrbeam || {};
     };
 
     module.toSvgPathString = function (paths) {
-        var pathStrings = [];
+        const pathStrings = [];
 
         // helper for number formatting
-        var fmt = (number) => number.toFixed(2);
+        const fmt = (number) => number.toFixed(2);
 
         paths.forEach(function (path) {
-            var pt = path[0];
+            let pt = path[0];
 
             pathStrings.push(`M ${fmt(pt.X)},${fmt(pt.Y)}`);
 
@@ -736,7 +736,7 @@ var mrbeam = mrbeam || {};
             }
         });
 
-        var pathString = pathStrings.join(" ");
+        const pathString = pathStrings.join(" ");
 
         return pathString;
     };
@@ -746,14 +746,14 @@ var mrbeam = mrbeam || {};
             console.warn("No paths to generate gcode!");
             //            return null;
         }
-        var commands = [];
+        const commands = [];
         let first_point = null;
         let last_point = {};
 
         mb_meta = mb_meta || {};
-        var meta_str = "";
-        for (var key in mb_meta) {
-            var val =
+        let meta_str = "";
+        for (let key in mb_meta) {
+            let val =
                 mb_meta[key].replace === "function"
                     ? mb_meta[key].replace(" ", "_")
                     : mb_meta[key];
@@ -763,14 +763,14 @@ var mrbeam = mrbeam || {};
         commands.push(";_gc_nextgen_svg_id:" + my_id + meta_str);
 
         // helper for number formatting
-        var fmt = (number) => number.toFixed(2);
+        const fmt = (number) => number.toFixed(2);
 
         let length = 0;
         let areas = [];
         paths.forEach(function (path) {
             const area = ClipperLib.Clipper.Area(path);
             areas.push(area);
-            var pt = path[0];
+            let pt = path[0];
             first_point = first_point || pt;
             last_point = first_point;
             commands.push(`G0X${fmt(pt.X)}Y${fmt(pt.Y)}`);
@@ -790,7 +790,7 @@ var mrbeam = mrbeam || {};
             commands.push(";_laseroff_");
         });
 
-        var gcode = commands.join(" ");
+        const gcode = commands.join(" ");
 
         return {
             gcode: gcode,
@@ -805,19 +805,19 @@ var mrbeam = mrbeam || {};
         ClipperLib.use_lines = true;
         const pathCountBeforeClip = paths.length;
 
-        var subj = toIntPaths(paths, tolerance);
-        var clip = toIntPaths(clip, tolerance);
+        const subj = toIntPaths(paths, tolerance);
+        const clip = toIntPaths(clip, tolerance);
 
-        var solution = new ClipperLib.PolyTree();
-        var c = new ClipperLib.Clipper();
+        const solution = new ClipperLib.PolyTree();
+        const c = new ClipperLib.Clipper();
 
         subj.forEach((path) => {
             if (path.length === 0) return;
 
-            var startPoint = path[0];
-            var endPoint = path[path.length - 1];
+            const startPoint = path[0];
+            const endPoint = path[path.length - 1];
 
-            var isClosed =
+            const isClosed =
                 startPoint.X == endPoint.X && startPoint.Y == endPoint.Y;
 
             c.AddPath(path, ClipperLib.PolyType.ptSubject, isClosed);
@@ -831,11 +831,11 @@ var mrbeam = mrbeam || {};
             ClipperLib.PolyFillType.pftNonZero
         );
 
-        var clipped = [];
-        var polynode = solution.GetFirst();
+        const clipped = [];
+        let polynode = solution.GetFirst();
 
         while (polynode) {
-            var path = fromIntPaths([polynode.Contour()], tolerance)[0];
+            let path = fromIntPaths([polynode.Contour()], tolerance)[0];
 
             if (!polynode.IsOpen) {
                 path.push(path[0]);
@@ -861,16 +861,16 @@ var mrbeam = mrbeam || {};
     module.optimize = function (paths, tolerance) {
         ClipperLib.use_lines = true;
 
-        var subj = toIntPaths(paths, tolerance);
+        const subj = toIntPaths(paths, tolerance);
 
-        var solution = new ClipperLib.PolyTree();
-        var c = new ClipperLib.Clipper();
+        const solution = new ClipperLib.PolyTree();
+        const c = new ClipperLib.Clipper();
 
         subj.forEach(function (sub) {
-            var a = sub[0];
-            var b = sub.slice(-1)[0];
+            const a = sub[0];
+            const b = sub.slice(-1)[0];
 
-            var isClosed = a.X === b.X && a.Y === b.Y;
+            const isClosed = a.X === b.X && a.Y === b.Y;
 
             if (isClosed) {
                 c.AddPath(sub, ClipperLib.PolyType.ptSubject, true);
@@ -881,12 +881,12 @@ var mrbeam = mrbeam || {};
 
         c.Execute(ClipperLib.ClipType.ctDifference, solution);
 
-        var optimized = [];
+        const optimized = [];
 
-        var polynode = solution.GetFirst();
+        let polynode = solution.GetFirst();
 
         while (polynode) {
-            var path = fromIntPaths([polynode.Contour()], tolerance)[0];
+            const path = fromIntPaths([polynode.Contour()], tolerance)[0];
 
             if (!polynode.IsOpen) {
                 path.push(path[0]);
@@ -901,22 +901,16 @@ var mrbeam = mrbeam || {};
     };
 
     module.pp_paths = function (paths) {
-        var ps = [];
-        for (var i = 0; i < paths.length; i++) {
-            ps.push(module.pp_path(paths[i]));
-        }
-        return "[" + ps.join(", ") + "]";
+        const ppaths = paths.map((p) => module.pp_path(p)).join(", ");
+        return `[${ppaths}]`;
     };
 
     module.pp_path = function (path) {
-        var ps = [];
-        for (var i = 0; i < path.length; i++) {
-            ps.push(module.pp_point(path[i]));
-        }
-        return "[" + ps.join(",") + "]";
+        const points = path.map((p) => module.pp_point(p)).join(",");
+        return `[${points}]`;
     };
 
     module.pp_point = function (point) {
-        return "(x" + point.X + ",y" + point.Y + ")";
+        return `(x${point.X},y${point.Y})`;
     };
 })();
