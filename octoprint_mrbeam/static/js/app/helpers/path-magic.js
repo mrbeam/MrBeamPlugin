@@ -6,10 +6,16 @@ var mrbeam = mrbeam || {};
     ////////////////////////////
     // gcode_nextgen
     // version:
-    var VERSION = "0.1";
+    var VERSION = "0.2";
     //
     //
     ////////////////////////////
+
+    // NICE TO HAVE REWORK
+    // * remove duplicate code in snap_jsclipper_plugin.js and path_magic.js (e.g. toIntPaths(), fromIntPaths(), toSvgPathString(), ...)
+    // * move gcode generation stuff to snap_gc_plugin.js
+    // * use clipping from app/snap-plugins/jsclipper.js
+    // * equalize naming in snap_jsclipper_plugin.js, path_magic.js, snap_gc_plugin.js (path = svgpath, poly = jsclipper array, ... )
 
     var mrbeam = window.mrbeam;
     mrbeam.path = {};
@@ -18,7 +24,7 @@ var mrbeam = mrbeam || {};
     module.version = VERSION;
 
     function point(x, y) {
-        return { x: x, y: y };
+        return { X: x, Y: y };
     }
 
     function peek(array) {
@@ -154,11 +160,11 @@ var mrbeam = mrbeam || {};
         var b = y + height;
 
         return [
-            { x: x, y: y },
-            { x: x, y: b },
-            { x: r, y: b },
-            { x: r, y: y },
-            { x: x, y: y },
+            { X: x, Y: y },
+            { X: x, Y: b },
+            { X: r, Y: b },
+            { X: r, Y: y },
+            { X: x, Y: y },
         ];
     };
 
@@ -237,8 +243,8 @@ var mrbeam = mrbeam || {};
         //   with t = 0..1
 
         // calculate coefficients for x- and y-direction
-        var adt = quadraticDerivativeCoefficients(p1.x, p2.x, p3.x);
-        var bdt = quadraticDerivativeCoefficients(p1.y, p2.y, p3.y);
+        var adt = quadraticDerivativeCoefficients(p1.X, p2.X, p3.X);
+        var bdt = quadraticDerivativeCoefficients(p1.Y, p2.Y, p3.Y);
 
         var length = integrate(
             function (t) {
@@ -264,8 +270,8 @@ var mrbeam = mrbeam || {};
         //   with t = 0..1
 
         // calculate coefficients for x- and y-direction
-        var a = quadraticCoefficients(p1.x, p2.x, p3.x);
-        var b = quadraticCoefficients(p1.y, p2.y, p3.y);
+        var a = quadraticCoefficients(p1.X, p2.X, p3.X);
+        var b = quadraticCoefficients(p1.Y, p2.Y, p3.Y);
 
         // calculate real curve length
         // ALTERNATIVE: direct distance P1->P2->P3
@@ -291,8 +297,8 @@ var mrbeam = mrbeam || {};
             var t2 = t * t;
 
             pts[i] = {
-                x: a[0] + a[1] * t + a[2] * t2,
-                y: b[0] + b[1] * t + b[2] * t2,
+                X: a[0] + a[1] * t + a[2] * t2,
+                Y: b[0] + b[1] * t + b[2] * t2,
             };
         }
 
@@ -327,8 +333,8 @@ var mrbeam = mrbeam || {};
         //   with t = 0..1
 
         // calculate coefficients for x- and y-direction
-        var adt = cubicDerivativeCoefficients(p1.x, p2.x, p3.x, p4.x);
-        var bdt = cubicDerivativeCoefficients(p1.y, p2.y, p3.y, p4.y);
+        var adt = cubicDerivativeCoefficients(p1.X, p2.X, p3.X, p4.X);
+        var bdt = cubicDerivativeCoefficients(p1.Y, p2.Y, p3.Y, p4.Y);
 
         length = integrate(
             function (t) {
@@ -356,8 +362,8 @@ var mrbeam = mrbeam || {};
         //   with t = 0..1
 
         // calculate coefficients for x- and y-direction
-        var a = cubicCoefficients(p1.x, p2.x, p3.x, p4.x);
-        var b = cubicCoefficients(p1.y, p2.y, p3.y, p4.y);
+        var a = cubicCoefficients(p1.X, p2.X, p3.X, p4.X);
+        var b = cubicCoefficients(p1.Y, p2.Y, p3.Y, p4.Y);
 
         // calculate real curve length
         // ALTERNATIVE: direct distance P1->P2->P3->P4
@@ -384,8 +390,8 @@ var mrbeam = mrbeam || {};
             var t3 = t2 * t;
 
             pts[i] = {
-                x: a[0] + a[1] * t + a[2] * t2 + a[3] * t3,
-                y: b[0] + b[1] * t + b[2] * t2 + b[3] * t3,
+                X: a[0] + a[1] * t + a[2] * t2 + a[3] * t3,
+                Y: b[0] + b[1] * t + b[2] * t2 + b[3] * t3,
             };
         }
 
@@ -395,17 +401,17 @@ var mrbeam = mrbeam || {};
     // --- arc
 
     function dot(u, v) {
-        return u.x * v.x + u.y * v.y;
+        return u.X * v.X + u.Y * v.Y;
     }
 
     function norm(u) {
-        return Math.sqrt(u.x ** 2 + u.y ** 2);
+        return Math.sqrt(u.X ** 2 + u.Y ** 2);
     }
 
     function angle(u, v) {
         return (
             Math.acos((dot(u, v) / (norm(u) * norm(v))).toFixed(8)) *
-            (u.x * v.y - u.y * v.x < 0 ? -1.0 : 1.0)
+            (u.X * v.Y - u.Y * v.X < 0 ? -1.0 : 1.0)
         );
     }
 
@@ -416,9 +422,9 @@ var mrbeam = mrbeam || {};
         var sinPhi = Math.sin(phi);
 
         var x1_ =
-            (cosPhi * (p1.x - p2.x)) / 2.0 + (sinPhi * (p1.y - p2.y)) / 2.0;
+            (cosPhi * (p1.X - p2.X)) / 2.0 + (sinPhi * (p1.Y - p2.Y)) / 2.0;
         var y1_ =
-            (-sinPhi * (p1.x - p2.x)) / 2.0 + (cosPhi * (p1.y - p2.y)) / 2.0;
+            (-sinPhi * (p1.X - p2.X)) / 2.0 + (cosPhi * (p1.Y - p2.Y)) / 2.0;
 
         var Delta = x1_ ** 2 / rx ** 2 + y1_ ** 2 / ry ** 2;
 
@@ -444,29 +450,29 @@ var mrbeam = mrbeam || {};
         var cx_ = (s * rx * y1_) / ry;
         var cy_ = (-s * ry * x1_) / rx;
 
-        var cx = cosPhi * cx_ - sinPhi * cy_ + (p1.x + p2.x) / 2.0;
-        var cy = sinPhi * cx_ + cosPhi * cy_ + (p1.y + p2.y) / 2.0;
+        var cx = cosPhi * cx_ - sinPhi * cy_ + (p1.X + p2.X) / 2.0;
+        var cy = sinPhi * cx_ + cosPhi * cy_ + (p1.Y + p2.Y) / 2.0;
 
         var theta1 = angle(
             {
-                x: 1.0,
-                y: 0.0,
+                X: 1.0,
+                Y: 0.0,
             },
             {
-                x: (x1_ - cx_) / rx,
-                y: (y1_ - cy_) / ry,
+                X: (x1_ - cx_) / rx,
+                Y: (y1_ - cy_) / ry,
             }
         );
 
         var deltaTheta =
             angle(
                 {
-                    x: (x1_ - cx_) / rx,
-                    y: (y1_ - cy_) / ry,
+                    X: (x1_ - cx_) / rx,
+                    Y: (y1_ - cy_) / ry,
                 },
                 {
-                    x: (-x1_ - cx_) / rx,
-                    y: (-y1_ - cy_) / ry,
+                    X: (-x1_ - cx_) / rx,
+                    Y: (-y1_ - cy_) / ry,
                 }
             ) %
             (2.0 * Math.PI);
@@ -503,8 +509,8 @@ var mrbeam = mrbeam || {};
             var b = ry * Math.sin(t);
 
             pts[i] = {
-                x: a * cosPhi - b * sinPhi + cx,
-                y: a * sinPhi + b * cosPhi + cy,
+                X: a * cosPhi - b * sinPhi + cx,
+                Y: a * sinPhi + b * cosPhi + cy,
             };
         }
 
@@ -517,7 +523,7 @@ var mrbeam = mrbeam || {};
         return paths.map((path) =>
             path.map(
                 (pt) =>
-                    new ClipperLib.IntPoint(pt.x / tolerance, pt.y / tolerance)
+                    new ClipperLib.IntPoint(pt.X / tolerance, pt.Y / tolerance)
             )
         );
     }
@@ -542,18 +548,19 @@ var mrbeam = mrbeam || {};
                 case "M": // move
                     polylines.push([
                         {
-                            x: segment[1],
-                            y: segment[2],
+                            X: segment[1],
+                            Y: segment[2],
                         },
                     ]);
                     break;
                 case "Z": // close path
+                case "z":
                     if (polylines.length > 0) {
                         // more robust against d="MZ" (=> polylines=[]), sometimes crashed here.
                         var polyline = peek(polylines);
                         polyline.push({
-                            x: polyline[0].x,
-                            y: polyline[0].y,
+                            X: polyline[0].X,
+                            Y: polyline[0].Y,
                         });
                     } else {
                         console.warn(
@@ -564,31 +571,31 @@ var mrbeam = mrbeam || {};
                 case "L": // line
                     var polyline = peek(polylines);
                     polyline.push({
-                        x: segment[1],
-                        y: segment[2],
+                        X: segment[1],
+                        Y: segment[2],
                     });
                     break;
                 case "H": // horizontal line
                     var polyline = peek(polylines);
                     polyline.push({
-                        x: segment[1],
-                        y: peek(polyline).y,
+                        X: segment[1],
+                        Y: peek(polyline).Y,
                     });
                     break;
                 case "V": // vertical line
                     var polyline = peek(polylines);
                     polyline.push({
-                        x: peek(polyline).x,
-                        y: segment[1],
+                        X: peek(polyline).X,
+                        Y: segment[1],
                     });
                     break;
                 case "C": // cubic bezier
                     var polyline = peek(polylines);
 
                     var p1 = peek(polyline);
-                    var p2 = { x: segment[1], y: segment[2] };
-                    var p3 = { x: segment[3], y: segment[4] };
-                    var p4 = { x: segment[5], y: segment[6] };
+                    var p2 = { X: segment[1], Y: segment[2] };
+                    var p3 = { X: segment[3], Y: segment[4] };
+                    var p4 = { X: segment[5], Y: segment[6] };
 
                     // approximate cubic bezier with polyline
                     var pts = module.cubicBezier(p1, p2, p3, p4, delta);
@@ -604,14 +611,14 @@ var mrbeam = mrbeam || {};
                     if (prev[0] === "C" || prev[0] === "S") {
                         var [prevX, prevY] = prev.slice(-4, -2);
                         p2 = {
-                            x: 2 * p1.x - prevX,
-                            y: 2 * p1.y - prevY,
+                            X: 2 * p1.X - prevX,
+                            Y: 2 * p1.Y - prevY,
                         };
                     } else {
                         p2 = p1;
                     }
-                    var p3 = { x: segment[1], y: segment[2] };
-                    var p4 = { x: segment[3], y: segment[4] };
+                    var p3 = { X: segment[1], Y: segment[2] };
+                    var p4 = { X: segment[3], Y: segment[4] };
 
                     // approximate cubic bezier with polyline
                     var pts = module.cubicBezier(p1, p2, p3, p4, delta);
@@ -622,8 +629,8 @@ var mrbeam = mrbeam || {};
                     var polyline = peek(polylines);
 
                     var p1 = peek(polyline);
-                    var p2 = { x: segment[1], y: segment[2] };
-                    var p3 = { x: segment[3], y: segment[4] };
+                    var p2 = { X: segment[1], Y: segment[2] };
+                    var p3 = { X: segment[3], Y: segment[4] };
 
                     // approximate quadratic bezier with polyline
                     var pts = module.quadraticBezier(p1, p2, p3, delta);
@@ -637,10 +644,10 @@ var mrbeam = mrbeam || {};
 
                     var p1 = peek(polyline);
                     var p2 = {
-                        x: 2 * p1.x - prevX,
-                        y: 2 * p1.y - prevY,
+                        X: 2 * p1.X - prevX,
+                        Y: 2 * p1.Y - prevY,
                     };
-                    var p3 = { x: segment[1], y: segment[2] };
+                    var p3 = { X: segment[1], Y: segment[2] };
 
                     // approximate quadratic bezier with polyline
                     var pts = module.quadraticBezier(p1, p2, p3, delta);
@@ -651,7 +658,7 @@ var mrbeam = mrbeam || {};
                     var polyline = peek(polylines);
 
                     var p1 = peek(polyline);
-                    var p2 = { x: segment[6], y: segment[7] };
+                    var p2 = { X: segment[6], Y: segment[7] };
                     var rx = segment[1];
                     var ry = segment[2];
                     var phi = (segment[3] / 180.0) * Math.PI;
@@ -672,7 +679,7 @@ var mrbeam = mrbeam || {};
     };
 
     module.parsePoints = function (pointsString, closed) {
-        // ATTENTION: Maybe not so safe (Minus as delimiter,…)
+        // TODO: ATTENTION: Maybe not so safe (Minus as delimiter,…)
         var xy = pointsString
             .split(/,|\s/g)
             .filter((s) => s.length > 0)
@@ -697,8 +704,8 @@ var mrbeam = mrbeam || {};
         return paths.map((path) =>
             path.map((pt) =>
                 point(
-                    pt.x * m11 + pt.y * m21 + tx,
-                    pt.x * m12 + pt.y * m22 + ty
+                    pt.X * m11 + pt.Y * m21 + tx,
+                    pt.X * m12 + pt.Y * m22 + ty
                 )
             )
         );
@@ -721,11 +728,11 @@ var mrbeam = mrbeam || {};
         paths.forEach(function (path) {
             var pt = path[0];
 
-            pathStrings.push(`M ${fmt(pt.x)},${fmt(pt.y)}`);
+            pathStrings.push(`M ${fmt(pt.X)},${fmt(pt.Y)}`);
 
             for (let i = 1; i < path.length; i += 1) {
                 pt = path[i];
-                pathStrings.push(`L ${fmt(pt.x)},${fmt(pt.y)}`);
+                pathStrings.push(`L ${fmt(pt.X)},${fmt(pt.Y)}`);
             }
         });
 
@@ -759,20 +766,23 @@ var mrbeam = mrbeam || {};
         var fmt = (number) => number.toFixed(2);
 
         let length = 0;
+        let areas = [];
         paths.forEach(function (path) {
+            const area = ClipperLib.Clipper.Area(path);
+            areas.push(area);
             var pt = path[0];
             first_point = first_point || pt;
             last_point = first_point;
-            commands.push(`G0X${fmt(pt.x)}Y${fmt(pt.y)}`);
+            commands.push(`G0X${fmt(pt.X)}Y${fmt(pt.Y)}`);
             commands.push(";_laseron_");
 
             for (let i = 1; i < path.length; i += 1) {
                 pt = path[i];
                 const dist = Math.sqrt(
-                    Math.pow(pt.x - last_point.x, 2) +
-                        Math.pow(pt.y - last_point.y, 2)
+                    Math.pow(pt.X - last_point.X, 2) +
+                        Math.pow(pt.Y - last_point.Y, 2)
                 );
-                commands.push(`G1X${fmt(pt.x)}Y${fmt(pt.y)}`);
+                commands.push(`G1X${fmt(pt.X)}Y${fmt(pt.Y)}`);
                 last_point = pt;
                 length += dist;
             }
@@ -786,6 +796,7 @@ var mrbeam = mrbeam || {};
             gcode: gcode,
             begin: first_point,
             end: last_point,
+            areas: areas.join("|"),
             gc_length: length,
         };
     };
@@ -906,6 +917,6 @@ var mrbeam = mrbeam || {};
     };
 
     module.pp_point = function (point) {
-        return "(x" + point.x + ",y" + point.y + ")";
+        return "(x" + point.X + ",y" + point.Y + ")";
     };
 })();

@@ -721,6 +721,7 @@ class MrBeamPlugin(
                 "js/app/view-models/wizard/netconnectd-wrapper.js",
                 "js/app/view-models/modal/lasersaftey.js",
                 "js/app/view-models/modal/ready-to-laser.js",
+                "js/app/snap-plugins/jsclipper.js",
                 "js/lib/screenfull.min.js",
                 "js/app/view-models/settings/camera.js",
                 "js/app/view-models/settings/backlash.js",

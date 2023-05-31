@@ -124,10 +124,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 element.attr({
                     "mb:gc": gcodeObj.gcode || " ",
                     // start and end of path for easier sorting / way optimization
-                    "mb:start_x": gcodeObj.begin.x || "",
-                    "mb:start_y": gcodeObj.begin.y || "",
-                    "mb:end_x": gcodeObj.end.x || "",
-                    "mb:end_y": gcodeObj.end.y || "",
+                    "mb:start_x": gcodeObj.begin.X || "",
+                    "mb:start_y": gcodeObj.begin.Y || "",
+                    "mb:end_x": gcodeObj.end.X || "",
+                    "mb:end_y": gcodeObj.end.Y || "",
+                    "mb:gc_areas": gcodeObj.areas || "",
                     "mb:gc_length": gcodeObj.gc_length || "",
                 });
                 console.info(`embed_gc done for ${id}`);
@@ -138,6 +139,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     "mb:start_y": "",
                     "mb:end_x": "",
                     "mb:end_y": "",
+                    "mb:gc_areas": "",
                     "mb:gc_length": "",
                 });
                 console.error(
