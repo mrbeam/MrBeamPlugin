@@ -434,7 +434,7 @@ var mrbeam = mrbeam || {};
             ry *= f;
         }
 
-        const s =
+        let s =
             Math.sqrt(
                 (rx ** 2 * ry ** 2 - rx ** 2 * y1_ ** 2 - ry ** 2 * x1_ ** 2) /
                     (rx ** 2 * y1_ ** 2 + ry ** 2 * x1_ ** 2)
@@ -557,7 +557,7 @@ var mrbeam = mrbeam || {};
                 case "z":
                     if (polylines.length > 0) {
                         // more robust against d="MZ" (=> polylines=[]), sometimes crashed here.
-                        const polyline = peek(polylines);
+                        let polyline = peek(polylines);
                         polyline.push({
                             X: polyline[0].X,
                             Y: polyline[0].Y,
@@ -569,47 +569,47 @@ var mrbeam = mrbeam || {};
                     }
                     break;
                 case "L": // line
-                    const polyline = peek(polylines);
+                    let polyline = peek(polylines);
                     polyline.push({
                         X: segment[1],
                         Y: segment[2],
                     });
                     break;
                 case "H": // horizontal line
-                    const polyline = peek(polylines);
+                    let polyline = peek(polylines);
                     polyline.push({
                         X: segment[1],
                         Y: peek(polyline).Y,
                     });
                     break;
                 case "V": // vertical line
-                    const polyline = peek(polylines);
+                    let polyline = peek(polylines);
                     polyline.push({
                         X: peek(polyline).X,
                         Y: segment[1],
                     });
                     break;
                 case "C": // cubic bezier
-                    const polyline = peek(polylines);
+                    let polyline = peek(polylines);
 
-                    const p1 = peek(polyline);
-                    const p2 = { X: segment[1], Y: segment[2] };
-                    const p3 = { X: segment[3], Y: segment[4] };
-                    const p4 = { X: segment[5], Y: segment[6] };
+                    let p1 = peek(polyline);
+                    let p2 = { X: segment[1], Y: segment[2] };
+                    let p3 = { X: segment[3], Y: segment[4] };
+                    let p4 = { X: segment[5], Y: segment[6] };
 
                     // approximate cubic bezier with polyline
-                    const pts = module.cubicBezier(p1, p2, p3, p4, delta);
+                    let pts = module.cubicBezier(p1, p2, p3, p4, delta);
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
                 case "S": // "Smooth" cubic bezier
-                    const polyline = peek(polylines);
-                    const prev = segments[i - 1];
+                    let polyline = peek(polylines);
+                    let prev = segments[i - 1];
 
-                    const p1 = peek(polyline);
+                    let p1 = peek(polyline);
                     let p2;
                     if (prev[0] === "C" || prev[0] === "S") {
-                        const [prevX, prevY] = prev.slice(-4, -2);
+                        let [prevX, prevY] = prev.slice(-4, -2);
                         p2 = {
                             X: 2 * p1.X - prevX,
                             Y: 2 * p1.Y - prevY,
@@ -617,55 +617,55 @@ var mrbeam = mrbeam || {};
                     } else {
                         p2 = p1;
                     }
-                    const p3 = { X: segment[1], Y: segment[2] };
-                    const p4 = { X: segment[3], Y: segment[4] };
+                    let p3 = { X: segment[1], Y: segment[2] };
+                    let p4 = { X: segment[3], Y: segment[4] };
 
                     // approximate cubic bezier with polyline
-                    const pts = module.cubicBezier(p1, p2, p3, p4, delta);
+                    let pts = module.cubicBezier(p1, p2, p3, p4, delta);
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
                 case "Q": // quadratic bezier
-                    const polyline = peek(polylines);
+                    let polyline = peek(polylines);
 
-                    const p1 = peek(polyline);
-                    const p2 = { X: segment[1], Y: segment[2] };
-                    const p3 = { X: segment[3], Y: segment[4] };
+                    let p1 = peek(polyline);
+                    let p2 = { X: segment[1], Y: segment[2] };
+                    let p3 = { X: segment[3], Y: segment[4] };
 
                     // approximate quadratic bezier with polyline
-                    const pts = module.quadraticBezier(p1, p2, p3, delta);
+                    let pts = module.quadraticBezier(p1, p2, p3, delta);
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
                 case "T": // "Smooth" quadratic bezier
-                    const polyline = peek(polylines);
+                    let polyline = peek(polylines);
 
-                    const [prevX, prevY] = segments[i - 1].slice(-4, -2);
+                    let [prevX, prevY] = segments[i - 1].slice(-4, -2);
 
-                    const p1 = peek(polyline);
-                    const p2 = {
+                    let p1 = peek(polyline);
+                    let p2 = {
                         X: 2 * p1.X - prevX,
                         Y: 2 * p1.Y - prevY,
                     };
-                    const p3 = { X: segment[1], Y: segment[2] };
+                    let p3 = { X: segment[1], Y: segment[2] };
 
                     // approximate quadratic bezier with polyline
-                    const pts = module.quadraticBezier(p1, p2, p3, delta);
+                    let pts = module.quadraticBezier(p1, p2, p3, delta);
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
                 case "A": // Arc
-                    const polyline = peek(polylines);
+                    let polyline = peek(polylines);
 
-                    const p1 = peek(polyline);
-                    const p2 = { X: segment[6], Y: segment[7] };
-                    const rx = segment[1];
-                    const ry = segment[2];
-                    const phi = (segment[3] / 180.0) * Math.PI;
-                    const fa = segment[4];
-                    const fs = segment[5];
+                    let p1 = peek(polyline);
+                    let p2 = { X: segment[6], Y: segment[7] };
+                    let rx = segment[1];
+                    let ry = segment[2];
+                    let phi = (segment[3] / 180.0) * Math.PI;
+                    let fa = segment[4];
+                    let fs = segment[5];
 
-                    const pts = arc(p1, p2, rx, ry, phi, fa, fs, delta);
+                    let pts = arc(p1, p2, rx, ry, phi, fa, fs, delta);
 
                     Array.prototype.push.apply(polyline, pts);
 
