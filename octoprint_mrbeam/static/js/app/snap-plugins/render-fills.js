@@ -25,9 +25,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
      */
 
     Element.prototype.markFilled = function (className, fillPaths) {
-        var elem = this;
-        var selection = [];
-        var children = elem.children();
+        const elem = this;
+        let selection = [];
+        const children = elem.children();
         if (
             elem.type === "desc" ||
             elem.type === "title" ||
@@ -52,8 +52,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         ].includes(elem.type);
 
         if (children.length > 0 && goRecursive) {
-            for (var i = 0; i < children.length; i++) {
-                var child = children[i];
+            for (const child of children) {
                 selection = selection.concat(
                     child.markFilled(className, fillPaths)
                 );
@@ -64,7 +63,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 className,
                 fillPaths
             );
-            if (Array.isArray(processedElem) && processedElem.length === 0) {
+            if (processedElem === null) {
                 return [];
             } else {
                 selection.push(processedElem);
@@ -80,8 +79,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         // cluster overlapping
         let clusterCount = 0;
         let clusters = [];
-        for (let i = 0; i < marked.length; i++) {
-            let rasterEl = marked[i];
+        for (let rasterEl of marked) {
             let bbox;
             try {
                 bbox = rasterEl.get_total_bbox();
@@ -97,8 +95,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             }
             // find overlaps
             let lastOverlap = -1;
-            for (var j = 0; j < clusters.length; j++) {
-                var cluster = clusters[j];
+            for (let j = 0; j < clusters.length; j++) {
+                const cluster = clusters[j];
                 if (Snap.path.isBBoxIntersect(cluster.bbox, bbox)) {
                     // TODO refined overlap method
                     if (lastOverlap === -1) {
@@ -141,38 +139,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     };
 
     Element.prototype.is_filled = function () {
-        var elem = this;
+        const elem = this;
 
+        let isFilled = false;
         if (elem.type === "text") {
-            const bb = elem.getBBox();
-            if (bb.w === 0 || bb.h === 0) {
-                return false;
-            }
-            const fill = window.getComputedStyle(elem.node)["fill"];
-            const opacity = parseFloat(
-                window.getComputedStyle(elem.node)["fill-opacity"]
-            );
-            if (fill === "none" || opacity === 0) {
-                return false;
-            }
-            return true;
-        }
-
-        if (elem.type === "image") {
-            const bb = elem.getBBox();
-            if (bb.w === 0 || bb.h === 0) {
-                return false;
-            }
-            const opacity = parseFloat(
-                window.getComputedStyle(elem.node)["opacity"]
-            );
-            if (opacity === 0) {
-                return false;
-            }
-            return true;
-        }
-
-        if (
+            isFilled = _is_filled_text(elem);
+        } else if (elem.type === "image") {
+            isFilled = _is_filled_image(elem);
+        } else if (
             elem.type === "circle" ||
             elem.type === "rect" ||
             elem.type === "ellipse" ||
@@ -181,25 +155,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             elem.type === "polyline" ||
             elem.type === "path"
         ) {
-            const bb = elem.getBBox();
-            if (bb.w === 0 || bb.h === 0) {
-                return false;
-            }
-            const opacity = parseFloat(
-                window.getComputedStyle(elem.node)["fill-opacity"]
-            );
-            const fill = window.getComputedStyle(elem.node)["fill"];
-            if (fill === "none" || opacity === 0) {
-                return false;
-            }
-            return true;
+            isFilled = _is_filled_vector(elem);
         }
 
-        return false;
+        return isFilled;
     };
 
     Element.prototype.is_stroked = function () {
-        var elem = this;
+        const elem = this;
 
         if (
             elem.type === "circle" ||
@@ -237,7 +200,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
      * @returns {Promise} Promise with the element or null in case of non-image element.
      */
     Element.prototype.embedImage = function () {
-        let elem = this;
+        const elem = this;
         if (elem.type !== "image") {
             console.warn(
                 `embedImage only supports <image> elements. Got ${elem}`
@@ -473,7 +436,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             const result = await rasterElem.trace(margin);
             rasterElem.remove(); // original is still with stroke? should be removed
 
-            if (result && result.paths) {
+            if (result?.paths) {
                 const d = result.paths.join(" ");
                 const dx = result.bbox.x;
                 const dy = result.bbox.y;
@@ -552,13 +515,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         wMM,
         hMM
     ) {
-        var elem = this;
+        const elem = this;
         console.debug(
             `renderPNG: SVG ${wPT} * ${hPT} (pt) with viewBox ${wMM} * ${hMM} (mm), rendering @ ${pxPerMM} px/mm, cropping to bbox (mm): ${renderBBoxMM.w} * ${renderBBoxMM.h} @ ${renderBBoxMM.x}, ${renderBBoxMM.y}`
         );
 
         // get svg as dataUrl
-        var svgDataUri = elem.toDataURL(); // TODO fix style="font-family:\"Allerta Stencil\"" quoting bug... needs to be 'Allerta Stencil'
+        const svgDataUri = elem.toDataURL(); // TODO fix style="font-family:\"Allerta Stencil\"" quoting bug... needs to be 'Allerta Stencil'
         // TODO fix href and src references. not copied from defs...
         let bbox = elem.getBBox();
         const pxPerMM = 1;
@@ -652,8 +615,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     Element.prototype.fixIds = function (selector, srcIdAttr) {
         const root = this;
         let elemsToFix = root.selectAll(selector);
-        for (let i = 0; i < elemsToFix.length; i++) {
-            const e = elemsToFix[i];
+        for (const e of elemsToFix) {
             const originalId = e.attr(srcIdAttr);
             if (originalId !== null && originalId !== "") {
                 e.attr({ id: originalId });
@@ -664,7 +626,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
     function getDataUriSize(datauri, unit) {
         if (!datauri) return -1;
-        var bytes = datauri.length;
+        const bytes = datauri.length;
         switch (unit) {
             case "B":
                 return bytes;
@@ -680,9 +642,20 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         }
     }
 
+    /**
+     * Helper of Element.mark_filled(): Adds a class className in case the element (is_filled() && fillPaths)
+     *
+     * @param {Snap Element} elem
+     * @param {String} className
+     * @param {boolean} fillPaths
+     * @returns {Snap Element|null}
+     */
     function processElementByType(elem, className, fillPaths) {
-        if (elem.type === "g") return []; // means empty group
-        if (elem.type === "defs") return []; // means empty defs
+        if (elem.type === "g") return null; // means empty group
+        if (elem.type === "defs") return null; // means empty defs
+
+        let markedElement = null;
+
         // TODO: SW-1446
         if (elem.type === "#text") {
             if (elem.node.nodeValue.trim() !== "") {
@@ -691,36 +664,81 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     parent = parent.parent();
                 }
                 parent.addClass(className);
-                return parent;
+                markedElement = parent;
             }
         } else if (elem.type === "text") {
             // check if <tspan> elements exist in <text> and if they contain any text
             const nonEmptyTspan = (child) =>
                 child.nodeName === "tspan" && child.textContent !== null;
-            // use node.textContent instead of node.nodeValue as nodeValue returns null regardless of valid fillings
+            // using node.textContent instead of node.nodeValue as nodeValue returns null regardless of valid fillings
             if (
                 elem.node.textContent !== null ||
                 Object.values(elem.node.childNodes).some(nonEmptyTspan)
             ) {
                 elem.addClass(className);
-                return elem;
+                markedElement = elem;
             }
         } else if (elem.type === "image") {
             elem.addClass(className);
-            return elem;
+            markedElement = elem;
         } else {
             // check for non-dimensional elements and out of working area elements
-            const bb = elem.getBBox();
-            if (bb.w === 0 || bb.h === 0) {
+            if (_is_void(elem)) {
                 console.warn(`Element did not have expanse: ${elem.type}`);
-                return [];
+                return null;
             }
 
             if (fillPaths && elem.is_filled()) {
                 elem.addClass(className);
-                return elem;
+                markedElement = elem;
             }
         }
-        return [];
+        return markedElement;
+    }
+
+    function _is_filled_text(elem) {
+        if (_is_void(elem)) {
+            return false;
+        }
+        const fill = window.getComputedStyle(elem.node)["fill"];
+        const opacity = parseFloat(
+            window.getComputedStyle(elem.node)["fill-opacity"]
+        );
+        if (fill === "none" || opacity === 0) {
+            return false;
+        }
+        return true;
+    }
+
+    function _is_filled_image(elem) {
+        if (_is_void(elem)) {
+            return false;
+        }
+        const opacity = parseFloat(
+            window.getComputedStyle(elem.node)["opacity"]
+        );
+        if (opacity === 0) {
+            return false;
+        }
+        return true;
+    }
+
+    function _is_filled_vector(elem) {
+        if (_is_void(elem)) {
+            return false;
+        }
+        const opacity = parseFloat(
+            window.getComputedStyle(elem.node)["fill-opacity"]
+        );
+        const fill = window.getComputedStyle(elem.node)["fill"];
+        if (fill === "none" || opacity === 0) {
+            return false;
+        }
+        return true;
+    }
+
+    function _is_void(elem) {
+        const bb = elem.getBBox();
+        return bb.w === 0 || bb.h === 0;
     }
 });
