@@ -26,7 +26,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         ClipperLib.JS.ScaleUpPaths(clippingPath, scale);
 
         const clipper = new ClipperLib.Clipper();
-        const output = new ClipperLib.Paths();
+        let output = new ClipperLib.Paths();
         const subj = { fillType: ClipperLib.PolyFillType.pftNonZero }; // ClipperLib.PolyFillType = {pftEvenOdd: 0, pftNonZero: 1, pftPositive: 2, pftNegative: 3};
         const clip = { fillType: ClipperLib.PolyFillType.pftNonZero };
         const delta = null;
@@ -44,22 +44,22 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             ClipperLib.PolyType.ptClip,
             _isClosed(clippingPath)
         );
+        // Actual offset operation
         clipper.Execute(clipType, output, subj.fillType, clip.fillType);
 
-        // TODO figure out what this block was meant for or remove it.
-        // Actual offset operation
-        if (delta) {
-            clipper.Clear();
-            const paramDelta = _.round(delta, 3);
-            const paramMiterLimit = _.round(miterLimit, 3);
-            output = clipper.OffsetPaths(
-                output,
-                paramDelta,
-                joinType,
-                paramMiterLimit,
-                autoFix
-            ); // autoFix?
-        }
+        //        // TODO figure out what this block was meant for or remove it.
+        //        if (delta) {
+        //            clipper.Clear();
+        //            const paramDelta = _.round(delta, 3);
+        //            const paramMiterLimit = _.round(miterLimit, 3);
+        //            output = clipper.OffsetPaths(
+        //                output,
+        //                paramDelta,
+        //                joinType,
+        //                paramMiterLimit,
+        //                autoFix
+        //            ); // autoFix?
+        //        }
 
         // scale down to original coordinates
         ClipperLib.JS.ScaleDownPaths(output, scale);
