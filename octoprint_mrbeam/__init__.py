@@ -292,6 +292,7 @@ class MrBeamPlugin(
         self._connectivity_checker = ConnectivityChecker(self)
 
         self._do_initial_log()
+        self._printer.register_user_notification_system(self.user_notification_system)
 
     def _on_iobeam_connect(self, *args, **kwargs):
         """Called when the iobeam socket is connected.
