@@ -13,12 +13,7 @@ from octoprint_mrbeam.util.errors import ErrorCodes
 class Laser(Printer):
     HOMING_POSITION = [-1.0, -1.0, 0]
 
-    def __init__(
-        self,
-        fileManager,
-        analysisQueue,
-        printerProfileManager,
-    ):
+    def __init__(self, fileManager, analysisQueue, printerProfileManager):
         # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS -- start --
         # TODO OP v1.4 : Remove the followingline - see octoprint_mrbeam.__plugin_load__
         # The necessary lines for this to keep working are already written as a hook.

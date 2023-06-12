@@ -32,7 +32,6 @@ from octoprint.util import (
     sanitize_ascii,
 )
 
-from octoprint_mrbeam.error_codes import ErrorCodes
 from octoprint_mrbeam.notifications import NotificationIds
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
