@@ -125,4 +125,16 @@ class MrbCamera(CameraClass, BaseCamera):
             finally:
                 self._busy.release()
         else:
-            DummyCamera.capture(self, output, format=format, *args, **kwargs)
+            try:
+                CameraClass.capture(self, output, format=format, *args, **kwargs)
+            except AttributeError as e:
+                self._logger.warning(
+                    "Caught camera internal error - self._camera is None"
+                )
+                raise exc.CameraException(e)
+            except MrbCameraError as e:
+                self._logger.error("Caught camera internal error - %s", e)
+                raise exc.CameraException(e)
+            except Exception as e:
+                self._logger.error("Unknown camera error - %s", e)
+                raise exc.CameraException(e)
