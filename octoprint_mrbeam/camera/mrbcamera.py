@@ -124,3 +124,5 @@ class MrbCamera(CameraClass, BaseCamera):
                 raise exc.CameraException(e)
             finally:
                 self._busy.release()
+        else:
+            DummyCamera.capture(self, output, format=format, *args, **kwargs)
