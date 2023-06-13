@@ -30,7 +30,9 @@ def logExceptions(f):
         try:
             return f(*args, **kw)
         except Exception as e:
-            debug_logger(f).exception("%s, %s" % (e.__class__.__name__, e))
+            debug_logger(f).exception(
+                "Log exception: %s, %s" % (e.__class__.__name__, e)
+            )
             raise
 
     return wrap

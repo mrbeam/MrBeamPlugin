@@ -794,7 +794,7 @@ class PhotoCreator(object):
             return
         except exc.CameraException as e:
             self._logger.exception(
-                "%s_%s",
+                "Camera Exception %s_%s",
                 e.__class__.__name__,
                 e,
             )
