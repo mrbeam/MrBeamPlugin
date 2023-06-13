@@ -2,10 +2,12 @@ import time
 from octoprint.printer.standard import Printer, StateMonitor
 from octoprint.events import eventManager, Events
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.notifications import NotificationIds
 from octoprint_mrbeam.printing import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
 from octoprint_mrbeam.util import dict_merge
+from octoprint_mrbeam.util.errors import ErrorCodes
 
 
 class Laser(Printer):
@@ -45,6 +47,8 @@ class Laser(Printer):
             },
             current_z=None,
         )
+        self._user_notification_system = None
+
         self._event_bus = eventManager()
         self._event_bus.subscribe(
             MrBeamEvents.LASER_JOB_ABORT, self._on_laser_job_abort
@@ -52,6 +56,9 @@ class Laser(Printer):
         self._event_bus.subscribe(
             MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN, self._on_re_trigger_fan
         )
+
+    def register_user_notification_system(self, user_notification_system):
+        self._user_notification_system = user_notification_system
 
     # overwrite connect to use comm_acc2
     def connect(self, port=None, baudrate=None, profile=None):
@@ -118,6 +125,7 @@ class Laser(Printer):
 
         time.sleep(0.5)
         self.home(axes="wtf")
+        self._show_job_cancelled_due_to_internal_error()
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
     def abort_job(self, event):
@@ -289,6 +297,20 @@ class Laser(Printer):
     # 			sendCommandToPrinter = _mrbeam_plugin_implementation.execute_command(command)
     # 		if sendCommandToPrinter:
     # 			self._comm.sendCommand(command)
+
+    def _show_job_cancelled_due_to_internal_error(self):
+        """
+        Shows the job cancelled due to internal error notification.
+
+        Returns:
+            None
+        """
+        notification = self._user_notification_system.get_notification(
+            notification_id=NotificationIds.JOB_CANCELLED_DUE_TO_INTERNAL_ERROR,
+            err_code=ErrorCodes.E_1005,
+            replay=True,
+        )
+        self._user_notification_system.show_notifications(notification)
 
 
 class LaserStateMonitor(StateMonitor):

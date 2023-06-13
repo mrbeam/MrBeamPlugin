@@ -359,7 +359,7 @@ class OneButtonHandler(object):
                 self.PRINTER_STATE_PRINTING,
                 self.PRINTER_STATE_PAUSED,
             ):
-                self._logger.info("Hardware Malfunction: cancelling laser job!")
+                self._logger.warn("Hardware Malfunction: cancelling laser job!")
                 self._printer.fail_print(error_msg="HW malfunction during job")
 
     def is_cooling(self):
