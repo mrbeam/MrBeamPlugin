@@ -908,7 +908,7 @@ class PhotoCreator(object):
             if self._plugin.lid_handler.lensCalibrationStarted:
                 # Do not try to do anything fancy during the lens calibration (computationaly lighter)
                 self._logger.debug(
-                    "Lens calibraton - wait for the next picture to take"
+                    "Lens calibration - wait for the next picture to take"
                 )
                 while self._plugin.lid_handler.lensCalibrationStarted:
                     if self.forceNewPic.wait(0.05):
@@ -921,6 +921,18 @@ class PhotoCreator(object):
                 saveNext = True
                 latest = cam.lastPic()
             else:
+                if cam.camera_error:
+                    self.stopEvent.set()
+                    self._logger.error(
+                        "Camera error: %s, disabling camera", cam.camera_error
+                    )
+                    self._plugin.user_notification_system.show_notifications(
+                        self._plugin.user_notification_system.get_notification(
+                            "err_cam_conn_err",
+                            err_msg=[str("camera error")],
+                            err_code="E-01FF-1006",
+                        )
+                    )
                 cam.async_capture()  # starts capture with new settings
 
             if latest is None:

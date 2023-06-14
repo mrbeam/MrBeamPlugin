@@ -75,6 +75,8 @@ class MrbCamera(CameraClass, BaseCamera):
         else:
             DummyCamera.__init__(self, worker, *args, **kwargs)
 
+        self.camera_error = False
+
         # self.exposure_mode = ''
         self.stopEvent = stopEvent or Event()  # creates an unset event if not given
 
@@ -110,31 +112,23 @@ class MrbCamera(CameraClass, BaseCamera):
                 self._logger.warning(
                     "Caught Picamera internal error - self._camera is None"
                 )
+                PICAMERA_AVAILABLE = False
+                self.camera_error = True
                 raise exc.CameraException(e)
             except (
                 picamera.PiCameraValueError,
                 picamera.PiCameraRuntimeError,
             ) as e:
-                self._logger.error("Caught Picamera internal error - %s", e)
+                self._logger.error(
+                    "Caught Picamera internal error - %s, deactivate PiCamera", e
+                )
                 PICAMERA_AVAILABLE = False
+                self.camera_error = True
                 raise exc.CameraException(e)
             except Exception as e:
-                self._logger.error("Unknown camera error - %s", e)
+                self._logger.error("Unknown camera error - %s, deactivate PiCamera", e)
                 PICAMERA_AVAILABLE = False
+                self.camera_error = True
                 raise exc.CameraException(e)
             finally:
                 self._busy.release()
-        else:
-            try:
-                CameraClass.capture(self, output, format=format, *args, **kwargs)
-            except AttributeError as e:
-                self._logger.warning(
-                    "Caught camera internal error - self._camera is None"
-                )
-                raise exc.CameraException(e)
-            except MrbCameraError as e:
-                self._logger.error("Caught camera internal error - %s", e)
-                raise exc.CameraException(e)
-            except Exception as e:
-                self._logger.error("Unknown camera error - %s", e)
-                raise exc.CameraException(e)
