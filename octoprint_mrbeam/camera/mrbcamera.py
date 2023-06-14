@@ -7,7 +7,7 @@ from threading import Thread, Event
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.camera.camera import BaseCamera, DummyCamera, __camera__
-from exc import MrbCameraError
+from exc import MrbCameraError, CameraValueException, CameraRuntimeException
 from . import exc
 
 
@@ -102,33 +102,30 @@ class MrbCamera(CameraClass, BaseCamera):
         global PICAMERA_AVAILABLE
         if output is None:
             output = self.worker
+
         if PICAMERA_AVAILABLE:
-            # if self._busy.locked():
-            #     raise MrbCameraError("Camera already busy taking a picture")
             self._busy.acquire()
-            try:
-                CameraClass.capture(self, output, format=format, *args, **kwargs)
-            except AttributeError as e:
-                self._logger.warning(
-                    "Caught Picamera internal error - self._camera is None"
-                )
-                PICAMERA_AVAILABLE = False
-                self.camera_error = True
-                raise exc.CameraException(e)
-            except (
-                picamera.PiCameraValueError,
-                picamera.PiCameraRuntimeError,
-            ) as e:
-                self._logger.error(
-                    "Caught Picamera internal error - %s, deactivate PiCamera", e
-                )
-                PICAMERA_AVAILABLE = False
-                self.camera_error = True
-                raise exc.CameraException(e)
-            except Exception as e:
-                self._logger.error("Unknown camera error - %s, deactivate PiCamera", e)
-                PICAMERA_AVAILABLE = False
-                self.camera_error = True
-                raise exc.CameraException(e)
-            finally:
+        try:
+            CameraClass.capture(self, output, format=format, *args, **kwargs)
+        except AttributeError as e:
+            self._logger.warning(
+                "Caught Picamera internal error - self._camera is None"
+            )
+            self.camera_error = True
+            raise exc.CameraException(e)
+        except (
+            CameraValueException,
+            CameraRuntimeException,
+        ) as e:
+            self._logger.error(
+                "Caught Picamera internal error - %s, deactivate PiCamera", e
+            )
+            self.camera_error = True
+            raise exc.CameraException(e)
+        except Exception as e:
+            self._logger.error("Unknown camera error - %s, deactivate PiCamera", e)
+            self.camera_error = True
+            raise exc.CameraException(e)
+        finally:
+            if PICAMERA_AVAILABLE:
                 self._busy.release()
