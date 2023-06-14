@@ -545,7 +545,8 @@ var mrbeam = mrbeam || {};
             const command = segment[0];
 
             switch (command) {
-                case "M": // move
+                case "M": {
+                    // move
                     polylines.push([
                         {
                             X: segment[1],
@@ -553,8 +554,9 @@ var mrbeam = mrbeam || {};
                         },
                     ]);
                     break;
+                }
                 case "Z": // close path
-                case "z":
+                case "z": {
                     if (polylines.length > 0) {
                         // more robust against d="MZ" (=> polylines=[]), sometimes crashed here.
                         let polyline = peek(polylines);
@@ -568,28 +570,36 @@ var mrbeam = mrbeam || {};
                         );
                     }
                     break;
-                case "L": // line
+                }
+                case "L": {
+                    // line
                     let polyline = peek(polylines);
                     polyline.push({
                         X: segment[1],
                         Y: segment[2],
                     });
                     break;
-                case "H": // horizontal line
+                }
+                case "H": {
+                    // horizontal line
                     let polyline = peek(polylines);
                     polyline.push({
                         X: segment[1],
                         Y: peek(polyline).Y,
                     });
                     break;
-                case "V": // vertical line
+                }
+                case "V": {
+                    // vertical line
                     let polyline = peek(polylines);
                     polyline.push({
                         X: peek(polyline).X,
                         Y: segment[1],
                     });
                     break;
-                case "C": // cubic bezier
+                }
+                case "C": {
+                    // cubic bezier
                     let polyline = peek(polylines);
 
                     let p1 = peek(polyline);
@@ -602,7 +612,9 @@ var mrbeam = mrbeam || {};
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
-                case "S": // "Smooth" cubic bezier
+                }
+                case "S": {
+                    // "Smooth" cubic bezier
                     let polyline = peek(polylines);
                     let prev = segments[i - 1];
 
@@ -625,7 +637,9 @@ var mrbeam = mrbeam || {};
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
-                case "Q": // quadratic bezier
+                }
+                case "Q": {
+                    // quadratic bezier
                     let polyline = peek(polylines);
 
                     let p1 = peek(polyline);
@@ -637,7 +651,9 @@ var mrbeam = mrbeam || {};
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
-                case "T": // "Smooth" quadratic bezier
+                }
+                case "T": {
+                    // "Smooth" quadratic bezier
                     let polyline = peek(polylines);
 
                     let [prevX, prevY] = segments[i - 1].slice(-4, -2);
@@ -654,7 +670,9 @@ var mrbeam = mrbeam || {};
 
                     Array.prototype.push.apply(polyline, pts);
                     break;
-                case "A": // Arc
+                }
+                case "A": {
+                    // Arc
                     let polyline = peek(polylines);
 
                     let p1 = peek(polyline);
@@ -670,6 +688,7 @@ var mrbeam = mrbeam || {};
                     Array.prototype.push.apply(polyline, pts);
 
                     break;
+                }
                 default:
                     console.error(`Unsupported SVG path command: ${command}`);
             }
@@ -749,6 +768,7 @@ var mrbeam = mrbeam || {};
         const commands = [];
         let first_point = null;
         let last_point = {};
+        const segmentData = [];
 
         mb_meta = mb_meta || {};
         let meta_str = "";
@@ -766,15 +786,15 @@ var mrbeam = mrbeam || {};
         const fmt = (number) => number.toFixed(2);
 
         let length = 0;
-        let areas = [];
-        paths.forEach(function (path) {
-            const area = ClipperLib.Clipper.Area(path);
-            areas.push(area);
+        paths.forEach((path, idx) => {
+            const segmentGcode = [];
+            const segmentArea = ClipperLib.Clipper.Area(path);
+            let segmentLength = 0;
             let pt = path[0];
             first_point = first_point || pt;
             last_point = first_point;
-            commands.push(`G0X${fmt(pt.X)}Y${fmt(pt.Y)}`);
-            commands.push(";_laseron_");
+            segmentGcode.push(`G0X${fmt(pt.X)}Y${fmt(pt.Y)}`);
+            segmentGcode.push(";_laseron_");
 
             for (let i = 1; i < path.length; i += 1) {
                 pt = path[i];
@@ -782,21 +802,34 @@ var mrbeam = mrbeam || {};
                     Math.pow(pt.X - last_point.X, 2) +
                         Math.pow(pt.Y - last_point.Y, 2)
                 );
-                commands.push(`G1X${fmt(pt.X)}Y${fmt(pt.Y)}`);
+                segmentGcode.push(`G1X${fmt(pt.X)}Y${fmt(pt.Y)}`);
                 last_point = pt;
                 length += dist;
+                segmentLength += dist;
             }
 
-            commands.push(";_laseroff_");
+            segmentGcode.push(";_laseroff_");
+            const isClosed =
+                first_point.X === last_point.X &&
+                first_point.Y === last_point.Y;
+
+            segmentData[idx] = {
+                area: segmentArea,
+                begin: first_point,
+                end: last_point,
+                length: segmentLength,
+                segmentGcode: segmentGcode.join(" "),
+                closed: isClosed,
+            };
         });
 
-        const gcode = commands.join(" ");
+        const gcode = segmentData.map((d) => d.segmentGcode).join(" ");
 
         return {
             gcode: gcode,
             begin: first_point,
             end: last_point,
-            areas: areas.join("|"),
+            segments: JSON.stringify(segmentData),
             gc_length: length,
         };
     };
@@ -806,7 +839,7 @@ var mrbeam = mrbeam || {};
         const pathCountBeforeClip = paths.length;
 
         const subj = toIntPaths(paths, tolerance);
-        const clip = toIntPaths(clip, tolerance);
+        clip = toIntPaths(clip, tolerance);
 
         const solution = new ClipperLib.PolyTree();
         const c = new ClipperLib.Clipper();

@@ -25,6 +25,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         if (!gc_options || !gc_options.enabled) {
             return;
         }
+
+        // 0.05mm default precision value.
+        if (!gc_options.precision || gc_options.precision <= 0) {
+            console.warn("No conversion precision set. Using fallback 0.1");
+            gc_options.precision = 0.05;
+        }
+
         mb_meta = mb_meta || {};
 
         var mrbeam = window.mrbeam;
@@ -32,8 +39,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         // settings
         var bounds = gc_options.clipRect;
 
-        // TODO The selector only selects children elements of 'this'. It should work on the element itself as well.
-        this.selectAll("path").forEach(function (element) {
+        let elems;
+        if (this.type === "path") {
+            elems = [this];
+        } else {
+            elems = this.selectAll("path");
+        }
+        elems.forEach(function (element) {
             try {
                 var id = element.attr("id");
 
@@ -128,7 +140,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     "mb:start_y": gcodeObj.begin.Y || "",
                     "mb:end_x": gcodeObj.end.X || "",
                     "mb:end_y": gcodeObj.end.Y || "",
-                    "mb:gc_areas": gcodeObj.areas || "",
+                    "mb:segments": gcodeObj.segments || "",
                     "mb:gc_length": gcodeObj.gc_length || "",
                 });
                 console.info(`embed_gc done for ${id}`);
