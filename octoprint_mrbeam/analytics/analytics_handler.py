@@ -37,9 +37,8 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
-    ANALYTICS_LOG_VERSION = (
-        28  # bumped for SW-3065 add laserhead to header
-    )
+    UNKNOWN_VALUE = "unknown"
+    ANALYTICS_LOG_VERSION = 28  # bumped for SW-3065 add laserhead to header
 
     def __init__(self, plugin):
         self._plugin = plugin
@@ -1049,7 +1048,7 @@ class AnalyticsHandler(object):
     def _event_print_failed(self, event, payload, header_extension=None):
         details = {
             AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0))),
-            AnalyticsKeys.Job.ERROR: payload.get("error_msg", "unknown"),
+            AnalyticsKeys.Job.ERROR: payload.get("error_msg", self.UNKNOWN_VALUE),
         }
         self._current_job_final_status = "Failed"
         self._add_job_event(
@@ -1422,8 +1421,14 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Header.DATA: data,
                 AnalyticsKeys.Header.UPTIME: get_uptime(),
                 AnalyticsKeys.Header.MODEL: self._plugin.get_model_id(),
-                AnalyticsKeys.Header.LH_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
-                AnalyticsKeys.Header.LH_SERIAL: self._laserhead_handler.get_current_used_lh_data()["serial"],
+                AnalyticsKeys.Header.LH_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id()
+                if self._laserhead_handler is not None
+                else self.UNKNOWN_VALUE,
+                AnalyticsKeys.Header.LH_SERIAL: self._laserhead_handler.get_current_used_lh_data()[
+                    "serial"
+                ]
+                if self._laserhead_handler is not None
+                else self.UNKNOWN_VALUE,
                 AnalyticsKeys.Header.FEATURE_ID: header_extension.get(
                     AnalyticsKeys.Header.FEATURE_ID, None
                 ),
