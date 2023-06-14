@@ -53,6 +53,7 @@ from octoprint_mrbeam.camera.lens import (
     USER,
 )
 from octoprint_mrbeam.util import dict_merge, dict_map, get_thread, makedirs
+from octoprint_mrbeam.util.errors import ErrorCodes
 from octoprint_mrbeam.util.log import json_serialisor, logme
 
 SIMILAR_PICS_BEFORE_UPSCALE = 1
@@ -788,7 +789,7 @@ class PhotoCreator(object):
                     self._plugin.user_notification_system.get_notification(
                         notification_id="err_cam_conn_err",
                         replay=True,
-                        err_code="E-01FF-1028",
+                        err_code=ErrorCodes.E_1028,
                     )
                 )
             return
@@ -802,7 +803,7 @@ class PhotoCreator(object):
                 self._plugin.user_notification_system.get_notification(
                     "err_cam_conn_err",
                     err_msg=[str(e)],
-                    err_code="E-01FF-1006",
+                    err_code=ErrorCodes.E_1006,
                 )
             )
         except Exception as e:
@@ -929,8 +930,7 @@ class PhotoCreator(object):
                     self._plugin.user_notification_system.show_notifications(
                         self._plugin.user_notification_system.get_notification(
                             "err_cam_conn_err",
-                            err_msg=[str("camera error")],
-                            err_code="E-01FF-1006",
+                            error_code=ErrorCodes.E_1006,
                         )
                     )
                 cam.async_capture()  # starts capture with new settings
