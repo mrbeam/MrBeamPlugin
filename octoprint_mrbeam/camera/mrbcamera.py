@@ -62,7 +62,7 @@ class MrbCamera(CameraClass, BaseCamera):
         BaseCamera.__init__(self, worker, shutter_speed=shutter_speed)
         # PiCamera constructor does not take a worker or shutter_speed
         # https://picamera.readthedocs.io/en/release-1.13/api_camera.html#picamera.PiCamera
-
+        global PICAMERA_AVAILABLE
         if PICAMERA_AVAILABLE:
             PiCamera.__init__(self, *args, **kwargs)
             self.sensor_mode = 2
@@ -82,6 +82,7 @@ class MrbCamera(CameraClass, BaseCamera):
 
     def __enter__(self):
         BaseCamera.__enter__(self)
+        global PICAMERA_AVAILABLE
         if PICAMERA_AVAILABLE:
             PiCamera.__enter__(self)
         # Cannot set shutter speed before opening the camera (picamera)
@@ -90,23 +91,50 @@ class MrbCamera(CameraClass, BaseCamera):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        global PICAMERA_AVAILABLE
         if PICAMERA_AVAILABLE:
             PiCamera.__exit__(self, exc_type, exc_value, traceback)
         BaseCamera.__exit__(self, exc_type, exc_value, traceback)
 
     def capture(self, output=None, format="jpeg", *args, **kwargs):
+        global PICAMERA_AVAILABLE
         if output is None:
             output = self.worker
         if PICAMERA_AVAILABLE:
             # if self._busy.locked():
             #     raise MrbCameraError("Camera already busy taking a picture")
             self._busy.acquire()
-        try:
-            CameraClass.capture(self, output, format=format, *args, **kwargs)
-        except AttributeError as e:
-            self._logger.warning(
-                "Caught Picamera internal error - self._camera is None"
-            )
-        finally:
-            if PICAMERA_AVAILABLE:
+            try:
+                CameraClass.capture(self, output, format=format, *args, **kwargs)
+            except AttributeError as e:
+                self._logger.warning(
+                    "Caught Picamera internal error - self._camera is None"
+                )
+                raise exc.CameraException(e)
+            except (
+                picamera.PiCameraValueError,
+                picamera.PiCameraRuntimeError,
+            ) as e:
+                self._logger.error("Caught Picamera internal error - %s", e)
+                PICAMERA_AVAILABLE = False
+                raise exc.CameraException(e)
+            except Exception as e:
+                self._logger.error("Unknown camera error - %s", e)
+                PICAMERA_AVAILABLE = False
+                raise exc.CameraException(e)
+            finally:
                 self._busy.release()
+        else:
+            try:
+                CameraClass.capture(self, output, format=format, *args, **kwargs)
+            except AttributeError as e:
+                self._logger.warning(
+                    "Caught camera internal error - self._camera is None"
+                )
+                raise exc.CameraException(e)
+            except MrbCameraError as e:
+                self._logger.error("Caught camera internal error - %s", e)
+                raise exc.CameraException(e)
+            except Exception as e:
+                self._logger.error("Unknown camera error - %s", e)
+                raise exc.CameraException(e)
