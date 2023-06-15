@@ -220,8 +220,8 @@ def install_wheels(install_queue):
         ]
         for package in packages:
             pip_args.append(
-                "{package}".format(
-                    package=package["name"]
+                "{package}=={target}".format(
+                    package=package["name"], target=package["target"]
                 )
             )
 
@@ -234,13 +234,14 @@ def install_wheels(install_queue):
             )
 
 
-def build_queue(update_info, dependencies, plugin_archive):
+def build_queue(update_info, dependencies, plugin_archive, plugin_target):
     """build the queue of packages to install.
 
     Args:
         update_info: a dict of informations how to update the packages
         dependencies: a list dicts of dependencies [{"name", "version"}]
         plugin_archive: path to archive of the plugin
+        plugin_target: target commit hash or tag of the plugin
 
     Returns:
         install_queue: dict of venvs with a list of package dicts {"<venv path>": [{"name", "archive", "target"}]
@@ -253,7 +254,7 @@ def build_queue(update_info, dependencies, plugin_archive):
         {
             "name": PLUGIN_NAME,
             "archive": plugin_archive,
-            "target": '',
+            "target": plugin_target,
         }
     )
     print("dependencies - {}".format(dependencies))
@@ -316,13 +317,12 @@ def run_update():
 
     # get dependencies
     dependencies = get_dependencies(args.folder)
+    target = args.target
 
     # get update config of dependencies
     update_info = get_update_info()
 
-    install_queue = build_queue(
-        update_info, dependencies, args.archive
-    )
+    install_queue = build_queue(update_info, dependencies, args.archive, target)
 
     print("install_queue", install_queue)
     if install_queue is not None:
