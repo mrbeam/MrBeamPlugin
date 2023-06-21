@@ -253,7 +253,7 @@ class TimerHandler:
                     "src_path": "/usr/lib/python3.10/site-packages/octoprint/",
                 },
                 "_dist-packages": {
-                    "src_path": "/var/lib/mrbeam/dist-packages/",
+                    "src_path": "/home/pi/dist-packages/",
                 },
                 "_site-packages": {
                     "src_path": "/usr/lib/python3.10/site-packages/",

@@ -766,7 +766,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
     def delete_uploaded_stl_files(self):
         self._logger.info("delete_uploaded_stl_files() ")
-        exec_cmd("rm -f /var/lib/mrbeam/.octoprint/uploads/*.stl")
+        exec_cmd("rm -f /home/pi/.octoprint/uploads/*.stl")
 
     def disable_wifi_power_management(self):
         self._logger.info("disable_wifi_power_management() ")

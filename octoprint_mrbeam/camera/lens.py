@@ -51,7 +51,7 @@ import yaml
 from octoprint_mrbeam.support import check_calibration_tool_mode
 
 # Remote connection for calibration
-# SSH_FILE = "/var/lib/mrbeam/.ssh/pi_id_rsa"
+# SSH_FILE = "/home/pi/.ssh/pi_id_rsa"
 # REMOTE_CALIBRATION_FOLDER = "/home/calibrationfiles/"
 # REMOTE_CALIBRATE_EXEC = path.join(REMOTE_CALIBRATION_FOLDER, "calibrate2.py")
 # MY_HOSTNAME = "MrBeam-8ae9"

@@ -91,7 +91,7 @@ $(function () {
                 let _d = data["chessboardCalibrationState"];
 
                 self.calibration.calibrationState(_d);
-                // { '/var/lib/mrbeam/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
+                // { '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
                 //      state: "processing",
                 //      tm_proc: 1590151819.735044,
                 //      tm_added: 1590151819.674166,
@@ -118,7 +118,7 @@ $(function () {
                 for (const [path, value] of Object.entries(_d.pictures)) {
                     value.path = path;
                     value.url = path.replace(
-                        "var/lib/mrbeam/.octoprint/uploads",
+                        "home/pi/.octoprint/uploads",
                         "downloads/files/local"
                     );
                     value.processing_duration =

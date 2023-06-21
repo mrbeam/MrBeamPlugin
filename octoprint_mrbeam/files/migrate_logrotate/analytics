@@ -1,7 +1,7 @@
 # rotated files won't get uploaded. But rotation is a kind of safetynet to avoid analysis file from growing indefinitely
 # in case the upload never happens
 
-/var/lib/mrbeam/.octoprint/analytics/analytics_log.json {
+/home/pi/.octoprint/analytics/analytics_log.json {
     size 100M
     rotate 3
     compress

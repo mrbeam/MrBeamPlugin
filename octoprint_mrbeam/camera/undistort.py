@@ -543,7 +543,7 @@ if __name__ == "__main__":
         "--config",
         metavar="PIC_CONFIG.yaml",
         required=False,
-        default=None,  # "/var/lib/mrbeam/.octoprint/cam/pic_settings.yaml",
+        default=None,  # "/home/pi/.octoprint/cam/pic_settings.yaml",
         help="?",
     )
     parser.add_argument(

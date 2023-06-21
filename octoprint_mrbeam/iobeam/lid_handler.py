@@ -64,8 +64,8 @@ DEFAULT_MM_TO_PX = 1  # How many pixels / mm is used for the output image
 
 SIMILAR_PICS_BEFORE_REFRESH = 20
 MAX_PIC_THREAD_RETRIES = 2
-CAMERA_SETTINGS_LAST_SESSION_YAML = "/var/lib/mrbeam/.octoprint/cam/last_session.yaml"
-CAMERA_SETTINGS_FALLBACK_JSON = "/var/lib/mrbeam/.octoprint/cam/last_markers.json"
+CAMERA_SETTINGS_LAST_SESSION_YAML = "/home/pi/.octoprint/cam/last_session.yaml"
+CAMERA_SETTINGS_FALLBACK_JSON = "/home/pi/.octoprint/cam/last_markers.json"
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
