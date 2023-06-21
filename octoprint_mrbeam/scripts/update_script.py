@@ -318,7 +318,7 @@ def run_update():
     # make sure the ssh key of bitbucket is correct
     code = exec_cmd("sudo truncate -s 0 /root/.ssh/known_hosts")
     code += exec_cmd(
-        "sudo ssh-keygen -R bitbucket.org && sudo curl https://bitbucket.org/site/ssh >> ~/.ssh/known_hosts"
+        "sudo ssh-keygen -R bitbucket.org && sudo sh -c 'curl https://bitbucket.org/site/ssh >> /root/.ssh/known_hosts'"
     )
     if code != 0:
         print("error while updating ssh key of bitbucket")
