@@ -33,9 +33,24 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("rsc_folder", [rsc_folder])
 
 
+def settings_get_mock(*args, **kwargs):
+    print("settings_get_mock: {}".format(args))
+    if args == (["serial", "timeout"],) or args == (
+        ["serial", "maxCommunicationTimeouts"],
+    ):
+        return {}
+    elif (
+        args == (["serial", "terminalLogSize"],)
+        or args == (["serial", "resendRatioStart"],)
+        or args == (["serial", "resendRatioThreshold"],)
+    ):
+        return 100
+    return ""
+
+
 @pytest.fixture
 def mrbeam_plugin():
-    plugin_manager_mock = MagicMock(spec=octoprint.plugin.plugin_manager)
+    plugin_manager_mock = MagicMock()
 
     # replace the actual plugin manager with the mock object
     octoprint.plugin.plugin_manager = plugin_manager_mock
@@ -44,7 +59,7 @@ def mrbeam_plugin():
     mrbeam_plugin = MrBeamPlugin()
     mrbeam_plugin._settings = sett
     mrbeam_plugin._settings.get = MagicMock(
-        return_value="", getBaseFolder=MagicMock(return_value="")
+        getBaseFolder=MagicMock(return_value=""), side_effect=settings_get_mock
     )
     mrbeam_plugin._settings.get_boolean = MagicMock()
     mrbeam_plugin._event_bus = event_manager

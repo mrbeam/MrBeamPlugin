@@ -55,9 +55,13 @@ class DocumentService:
         )
         title_translated = gettext(title_key)
         if title_translated:
-            self._log_error_on_missing_translation(title_key, title_translated.encode('utf-8', 'ignore'))
+            self._log_error_on_missing_translation(
+                title_key, title_translated.encode("utf-8", "ignore")
+            )
         else:
-            self._logger.error('title_translated is None. This should never be the case. Please check me.')
+            self._logger.error(
+                "title_translated is None. This should never be the case. Please check me."
+            )
         return title_translated
 
     @staticmethod

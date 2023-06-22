@@ -1,21 +1,23 @@
 import __builtin__
+import builtins
 
 import pytest
 from mock.mock import MagicMock, patch
 from octoprint.events import EventManager
+from octoprint.printer.standard import Printer
 
 from octoprint_mrbeam.printing.printer import Laser
 
 
 @pytest.fixture
 def laser(mocker):
-    def mock_parent_init(self, fileManager, analysisQueue, printerProfileManager):
+    def mock_parent_init(self, *args, **kwargs):
         self._logger = MagicMock()
 
-        self._analysisQueue = analysisQueue
-        self._fileManager = fileManager
-        self._printerProfileManager = printerProfileManager
-
+        self._analysisQueue = args[0]
+        self._fileManager = args[1]
+        self._printerProfileManager = args[2]
+        self._dict = dict
         self._temp = None
         self._bedTemp = None
         self._targetTemp = None
@@ -63,10 +65,6 @@ def laser(mocker):
         self._stateMonitor = MagicMock()
 
     mocker.patch(
-        "octoprint.printer.standard.Printer.__init__",
-        side_effect=mock_parent_init,
-    )
-    mocker.patch(
         "octoprint.printer.standard.Printer._getStateFlags",
         retuirn_value=MagicMock(),
     )
@@ -75,12 +73,13 @@ def laser(mocker):
         retuirn_value=MagicMock(),
     )
     event_manager = EventManager()
-    printer = Laser(MagicMock(), MagicMock(), MagicMock())
-    printer._event_bus = event_manager
-    printer.refresh = MagicMock()
-    printer.RESET_WAIT_TIME = 0
-    __builtin__._mrbeam_plugin_implementation = MagicMock()
-    return printer
+    with patch.object(Printer, "__init__", mock_parent_init):
+        printer = Laser(MagicMock(), MagicMock(), MagicMock())
+        printer._event_bus = event_manager
+        printer.refresh = MagicMock()
+        printer.RESET_WAIT_TIME = 0
+        builtins._mrbeam_plugin_implementation = MagicMock()
+        return printer
 
 
 def test_register_user_notification_system(laser, mrbeam_plugin):

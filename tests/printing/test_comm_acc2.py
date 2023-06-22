@@ -20,11 +20,12 @@ from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 def test_send_command_correct_limit_intensity_input(
     intensity_input, expected, mrbeam_plugin
 ):
-    """
-    The intensity input value should be limited to 1300 [profile.laser.intensity_limit]
+    """The intensity input value should be limited to 1300.
+
+    [profile.laser.intensity_limit]
     """
     with patch(
-        "__builtin__._mrbeam_plugin_implementation", return_value=mrbeam_plugin
+        "builtins._mrbeam_plugin_implementation", return_value=mrbeam_plugin
     ) as mrbeam_plugin_mock:
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1400,
@@ -41,18 +42,18 @@ def test_send_command_correct_limit_intensity_input(
             machineCom._serial = MagicMock()
 
             # Act
-            machineCom._sendCommand("G1 X1 F5000 S{}".format(intensity_input))
+            machineCom._sendCommand("G1 X1 F5000 S{}".format(intensity_input).encode())
 
             # Assert
             machineCom._serial.write.assert_called_with(
-                "G1 X1 F5000 S{}".format(expected)
+                "G1 X1 F5000 S{}".format(expected).encode()
             )
 
 
 def test_send_command_limit_correction_factor(mrbeam_plugin):
     # Arrange
     with patch(
-        "__builtin__._mrbeam_plugin_implementation", return_value=mrbeam_plugin
+        "builtins._mrbeam_plugin_implementation", return_value=mrbeam_plugin
     ) as mrbeam_plugin_mock:
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1500,
@@ -72,16 +73,16 @@ def test_send_command_limit_correction_factor(mrbeam_plugin):
             machineCom._serial = MagicMock()
 
             # Act
-            machineCom._sendCommand("G1 X1 F5000 S1300")
+            machineCom._sendCommand(b"G1 X1 F5000 S1300")
 
             # Assert
-            machineCom._serial.write.assert_called_with("G1 X1 F5000 S1495")
+            machineCom._serial.write.assert_called_with(b"G1 X1 F5000 S1495")
 
 
 def test_send_command_correct_intensity_under_max_intenstity(mrbeam_plugin):
     # Arrange
     with patch(
-        "__builtin__._mrbeam_plugin_implementation", return_value=mrbeam_plugin
+        "builtins._mrbeam_plugin_implementation", return_value=mrbeam_plugin
     ) as mrbeam_plugin_mock:
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1500,
@@ -101,16 +102,16 @@ def test_send_command_correct_intensity_under_max_intenstity(mrbeam_plugin):
             machineCom._serial = MagicMock()
 
             # Act
-            machineCom._sendCommand("G1 X1 F5000 S1300")
+            machineCom._sendCommand(b"G1 X1 F5000 S1300")
 
             # Assert
-            machineCom._serial.write.assert_called_with("G1 X1 F5000 S1500")
+            machineCom._serial.write.assert_called_with(b"G1 X1 F5000 S1500")
 
 
 def test_send_command_correct_intensity_correction_under_1(mrbeam_plugin):
     # Arrange
     with patch(
-        "__builtin__._mrbeam_plugin_implementation", return_value=mrbeam_plugin
+        "builtins._mrbeam_plugin_implementation", return_value=mrbeam_plugin
     ) as mrbeam_plugin_mock:
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1500,
@@ -134,16 +135,16 @@ def test_send_command_correct_intensity_correction_under_1(mrbeam_plugin):
             machineCom._serial = MagicMock()
 
             # Act
-            machineCom._sendCommand("G1 X1 F5000 S1300")
+            machineCom._sendCommand(b"G1 X1 F5000 S1300")
 
             # Assert
-            machineCom._serial.write.assert_called_with("G1 X1 F5000 S1300")
+            machineCom._serial.write.assert_called_with(b"G1 X1 F5000 S1300")
 
 
 def test_send_command_correction_factor_override(mrbeam_plugin):
     # Arrange
     with patch(
-        "__builtin__._mrbeam_plugin_implementation", return_value=mrbeam_plugin
+        "builtins._mrbeam_plugin_implementation", return_value=mrbeam_plugin
     ) as mrbeam_plugin_mock:
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1800,
@@ -167,16 +168,16 @@ def test_send_command_correction_factor_override(mrbeam_plugin):
             machineCom._serial = MagicMock()
 
             # Act
-            machineCom._sendCommand("G1 X1 F5000 S1300")
+            machineCom._sendCommand(b"G1 X1 F5000 S1300")
 
             # Assert
-            machineCom._serial.write.assert_called_with("G1 X1 F5000 S1690")
+            machineCom._serial.write.assert_called_with(b"G1 X1 F5000 S1690")
 
 
 def test_send_command_correction_disabled_factor_override(mrbeam_plugin):
     # Arrange
     with patch(
-        "__builtin__._mrbeam_plugin_implementation", return_value=mrbeam_plugin
+        "builtins._mrbeam_plugin_implementation", return_value=mrbeam_plugin
     ) as mrbeam_plugin_mock:
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1800,
@@ -193,16 +194,16 @@ def test_send_command_correction_disabled_factor_override(mrbeam_plugin):
             machineCom._serial = MagicMock()
 
             # Act
-            machineCom._sendCommand("G1 X1 F5000 S1300")
+            machineCom._sendCommand(b"G1 X1 F5000 S1300")
 
             # Assert
-            machineCom._serial.write.assert_called_with("G1 X1 F5000 S1300")
+            machineCom._serial.write.assert_called_with(b"G1 X1 F5000 S1300")
 
 
 def test_send_command_correction_disabled_factor_override(mrbeam_plugin):
     # Arrange
     with patch(
-        "__builtin__._mrbeam_plugin_implementation", return_value=mrbeam_plugin
+        "builtins._mrbeam_plugin_implementation", return_value=mrbeam_plugin
     ) as mrbeam_plugin_mock:
         mrbeam_plugin_mock.laserhead_handler = MagicMock(
             current_laserhead_max_intensity_including_correction=1800,
@@ -226,7 +227,7 @@ def test_send_command_correction_disabled_factor_override(mrbeam_plugin):
             machineCom._serial = MagicMock()
 
             # Act
-            machineCom._sendCommand("G1 X1 F5000 S1300")
+            machineCom._sendCommand(b"G1 X1 F5000 S1300")
 
             # Assert
-            machineCom._serial.write.assert_called_with("G1 X1 F5000 S1300")
+            machineCom._serial.write.assert_called_with(b"G1 X1 F5000 S1300")

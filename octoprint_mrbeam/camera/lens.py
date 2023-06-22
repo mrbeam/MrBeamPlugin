@@ -314,9 +314,7 @@ class BoardDetectorDaemon(Thread):
 
     @property
     def detectedBoards(self):
-        # return len(list(filter(lambda x: x.ready() and x.get()[1] is not None, self.tasks)))
         return len([x for x in self.state.values() if x["state"] == STATE_SUCCESS])
-
         # Suggestion to change to: sum(x["state"] == STATE_SUCCESS for x in self.state.values())
 
     @property

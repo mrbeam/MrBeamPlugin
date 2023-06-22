@@ -13,7 +13,11 @@ class Laser(Printer):
     HOMING_POSITION = [-1.0, -1.0, 0]
 
     def __init__(self, fileManager, analysisQueue, printerProfileManager):
-        super(Laser, self).__init__(fileManager, analysisQueue, printerProfileManager)
+        super().__init__(
+            fileManager,
+            analysisQueue,
+            printerProfileManager,
+        )
         self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.printer")
         self._stateMonitor = LaserStateMonitor(
             interval=0.5,
@@ -302,8 +306,7 @@ class Laser(Printer):
     # 			self._comm.sendCommand(command)
 
     def _show_job_cancelled_due_to_internal_error(self):
-        """
-        Shows the job cancelled due to internal error notification.
+        """Shows the job cancelled due to internal error notification.
 
         Returns:
             None

@@ -86,13 +86,14 @@ class MrbLogger(object):
 
         try:
             if isinstance(msg, str):
-                # If it's already Unicode, no decoding is needed
+                # If it's already str, no decoding is needed
                 pass
             else:
-                msg = unicode(msg, "utf-8")
+                # If it's a byte string, convert it to Unicode using "utf-8" encoding
+                msg = str(msg, "utf-8")
         except TypeError:
-            # If it's a byte string, convert it to Unicode using "utf-8" encoding
-            msg = unicode(msg, "utf-8")
+            # If it's already unicode we get this TypeError
+            msg = str(msg, "utf-8")
         except Exception as exc:
             self.log(logging.ERROR, "Error in MrbLogger.log: %s - %s", msg, exc)
         if kwargs.pop("terminal", True if level >= logging.WARN else False):

@@ -1,6 +1,10 @@
 """This script takes a gcode file as an input and calculates an estimated job
 duration time.
 
+This was the first job time estimation, in the code will be referred
+as "v1". Later another v2 estimation was introduced, calculated in the
+frontend, that is referred as "v2"
+
 It reads the gcode line by line extracting the coordinates and feed
 rates, and with those values calculates the duration of each of the
 ways. Finally it sums up all the durations to get the total duration.

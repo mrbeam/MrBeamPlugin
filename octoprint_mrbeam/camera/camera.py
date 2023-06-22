@@ -138,6 +138,8 @@ class BaseCamera(object):
         if self._shutter_speed in [0, None]:
             self._shutter_speed = DEFAULT_SHUTTER_SPEED
         self._shutter_speed = int(self._shutter_speed * compensate)
+        if self._shutter_speed in [0, None]:
+            self._shutter_speed = DEFAULT_SHUTTER_SPEED
 
 
 from octoprint_mrbeam.camera.worker import MrbPicWorker

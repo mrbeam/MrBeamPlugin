@@ -7,7 +7,10 @@ class SettingsModel:
         self.about = None
 
     def __repr__(self):
-        return "SettingsModel(about=%s)" % (repr(self.about))
+        return "SettingsModel(material_store=%s, about=%s)" % (
+            repr(self.material_store),
+            repr(self.about),
+        )
 
 
 class AboutModel:
@@ -24,9 +27,8 @@ class AboutModel:
 
 
 class MaterialStoreModel:
-    """
-    Data object containing information corresponding to the material store section to be used on the jinja2 templates
-    """
+    """Data object containing information corresponding to the material store
+    section to be used on the jinja2 templates."""
 
     def __init__(self, enabled=False, url="", healthcheck_url=""):
         self.enabled = enabled
@@ -42,9 +44,8 @@ class MaterialStoreModel:
 
 
 class MaterialStoreModel:
-    """
-    Data object containing information corresponding to the material store section to be used on the jinja2 templates
-    """
+    """Data object containing information corresponding to the material store
+    section to be used on the jinja2 templates."""
 
     def __init__(self, enabled=False, url="", healthcheck_url=""):
         self.enabled = enabled

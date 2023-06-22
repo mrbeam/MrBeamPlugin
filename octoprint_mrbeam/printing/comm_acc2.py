@@ -166,9 +166,7 @@ class MachineCom(oprintMachineCom):
     def __init__(
         self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None
     ):
-        super(MachineCom, self).__init__(
-            port, baudrate, callbackObject, printerProfileManager
-        )
+        super().__init__(port, baudrate, callbackObject, printerProfileManager)
         self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
 
         if port is None:
@@ -2309,7 +2307,9 @@ class MachineCom(oprintMachineCom):
         return cmd
 
     def _gcode_Resume_sent(self, cmd: str, cmd_type=None) -> str:
-        self._changeState(self.STATE_PRINTING)
+        if self.isPaused():
+            # only change state to printing if it was in pause state before
+            self._changeState(self.STATE_PRINTING)
         return cmd
 
     def _gcode_F_sending(self, cmd: str, cmd_type=None) -> str:
