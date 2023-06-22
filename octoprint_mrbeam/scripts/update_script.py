@@ -15,6 +15,8 @@ import argparse
 from octoprint.plugins.softwareupdate import exceptions
 
 from octoprint.settings import _default_basedir
+
+from octoprint_mrbeam import exec_cmd
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 from octoprint_mrbeam.util.pip_util import get_version_of_pip_module, get_pip_caller
