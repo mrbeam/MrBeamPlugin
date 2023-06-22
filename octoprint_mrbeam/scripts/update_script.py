@@ -15,6 +15,8 @@ import argparse
 from octoprint.plugins.softwareupdate import exceptions
 
 from octoprint.settings import _default_basedir
+
+from octoprint_mrbeam import exec_cmd
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 from octoprint_mrbeam.util.pip_util import get_version_of_pip_module, get_pip_caller
@@ -312,6 +314,14 @@ def run_update():
     installs them in the correct venv."""
 
     args = _parse_arguments()
+
+    # make sure the ssh key of bitbucket is correct
+    code = exec_cmd("sudo truncate -s 0 /root/.ssh/known_hosts")
+    code += exec_cmd(
+        "sudo ssh-keygen -R bitbucket.org && sudo sh -c 'curl https://bitbucket.org/site/ssh >> /root/.ssh/known_hosts'"
+    )
+    if code != 0:
+        print("error while updating ssh key of bitbucket")
 
     # get dependencies
     dependencies = get_dependencies(args.folder)
