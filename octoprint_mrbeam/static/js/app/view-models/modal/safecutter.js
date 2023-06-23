@@ -10,37 +10,37 @@ $(function () {
 
         self.onEventSafecutterResponse = function (payload) {
             console.log(payload);
-            if ([1, 2, 4, 8].includes(payload["value"])) {
+            if ([1, 2, 4, 8, 16].includes(payload["value"])) {
                 let imageElement = $("#safecutter_image");
                 switch (payload["value"]) {
                     case 1:
                         imageElement.attr(
                             "src",
-                            "/plugin/mrbeam/static/img/CO.jpg"
+                            "/plugin/mrbeam/static/img/CO.png"
                         );
                         break;
                     case 2:
                         imageElement.attr(
                             "src",
-                            "/plugin/mrbeam/static/img/pvc.jpg"
+                            "/plugin/mrbeam/static/img/pvc.png"
                         );
                         break;
                     case 4:
                         imageElement.attr(
                             "src",
-                            "/plugin/mrbeam/static/img/formaldehyde.jpg"
+                            "/plugin/mrbeam/static/img/formaldehyde.png"
                         );
                         break;
                     case 8:
                         imageElement.attr(
                             "src",
-                            "/plugin/mrbeam/static/img/dust.jpg"
+                            "/plugin/mrbeam/static/img/dust.png"
                         );
                         break;
                     case 16:
                         imageElement.attr(
                             "src",
-                            "/plugin/mrbeam/static/img/ozon.jpg"
+                            "/plugin/mrbeam/static/img/ozone.png"
                         );
                         break;
                 }

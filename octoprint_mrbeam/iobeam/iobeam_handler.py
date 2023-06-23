@@ -1130,6 +1130,10 @@ class IoBeamHandler(object):
         elif int(dataset.get("value")) & 8 == 8:  # dust
             self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE, {"value": 8})
 
+        elif (int(dataset.get("value")) & 16 == 16):
+            self._event_bus.fire(MrBeamEvents.SAFECUTTER_RESPONSE,{"value": 16})
+
+           # return dataset.get("value")
         return 0
 
     def _handle_debug(self, dataset):
