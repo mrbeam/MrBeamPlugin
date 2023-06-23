@@ -142,14 +142,14 @@ class MrBeamPlugin(
     USER_SETTINGS_KEY_MRBEAM = "mrbeam"
     USER_SETTINGS_KEY_TIMESTAMP = "ts"
     USER_SETTINGS_KEY_VERSION = "version"
-    USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD = [
+    USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD = (
         "lasersafety",
         "sent_to_cloud",
-    ]
-    USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN = [
+    )
+    USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN = (
         "lasersafety",
         "show_again",
-    ]
+    )
 
     CUSTOM_MATERIAL_STORAGE_URL = (
         "https://script.google.com/a/macros/mr-beam.org/s..."  # TODO
@@ -607,26 +607,27 @@ class MrBeamPlugin(
                 )
             if (
                 "gcode_nextgen" in data
-                and isinstance(data["gcode_nextgen"], collections.Iterable)
+                and isinstance(data["gcode_nextgen"], collections.abc.Iterable)
                 and "clip_working_area" in data["gcode_nextgen"]
             ):
                 self._settings.set_boolean(
                     ["gcode_nextgen", "clip_working_area"],
                     data["gcode_nextgen"]["clip_working_area"],
                 )
-            if "machine" in data and isinstance(data["machine"], collections.Iterable):
-                if "backlash_compensation_x" in data["machine"]:
-                    min_mal = -1.0
-                    max_val = 1.0
-                    val = 0.0
-                    try:
-                        val = float(data["machine"]["backlash_compensation_x"])
-                    except:
-                        pass
-                    val = max(min(max_val, val), min_mal)
-                    self._settings.set_float(
-                        ["machine", "backlash_compensation_x"], val
-                    )
+            if (
+                "machine" in data
+                and isinstance(data["machine"], collections.abc.Iterable)
+                and "backlash_compensation_x" in data["machine"]
+            ):
+                min_mal = -1.0
+                max_val = 1.0
+                val = 0.0
+                try:
+                    val = float(data["machine"]["backlash_compensation_x"])
+                except:
+                    pass
+                val = max(min(max_val, val), min_mal)
+                self._settings.set_float(["machine", "backlash_compensation_x"], val)
             if "analyticsEnabled" in data:
                 self.analytics_handler.analytics_user_permission_change(
                     analytics_enabled=data["analyticsEnabled"]
@@ -1393,28 +1394,31 @@ class MrBeamPlugin(
     # helper method to write data to user settings
     # this makes sure it's always written into a mrbeam folder and
     # a last updated timestamp as well as the mrbeam plugin version are added
-    def setUserSetting(self, username, key, value):
-        if not isinstance(key, list):
-            key = [key]
+    def setUserSetting(self, username, key: tuple, value):
+        if isinstance(key, str):
+            key = (key,)
+        elif not isinstance(key, tuple):
+            key = tuple(key)
+
         self._user_manager.change_user_settings(
-            username, {[self.USER_SETTINGS_KEY_MRBEAM] + key: value}
+            username, {(self.USER_SETTINGS_KEY_MRBEAM,) + tuple(key): value}
         )
         self._user_manager.change_user_settings(
             username,
             {
-                [
+                (
                     self.USER_SETTINGS_KEY_MRBEAM,
                     self.USER_SETTINGS_KEY_TIMESTAMP,
-                ]: time.time()
+                ): time.time()
             },
         )
         self._user_manager.change_user_settings(
             username,
             {
-                [
+                (
                     self.USER_SETTINGS_KEY_MRBEAM,
                     self.USER_SETTINGS_KEY_VERSION,
-                ]: self._plugin_version
+                ): self._plugin_version
             },
         )
 
@@ -1425,7 +1429,7 @@ class MrBeamPlugin(
             if not isinstance(key, list):
                 key = [key]
             result = self._user_manager.get_user_setting(
-                username, [self.USER_SETTINGS_KEY_MRBEAM] + key
+                username, tuple(self.USER_SETTINGS_KEY_MRBEAM) + tuple(key)
             )
 
         if result is None:
@@ -2236,7 +2240,7 @@ class MrBeamPlugin(
             except:
                 pass
             msg = payload.get("msg", "")
-            if func and func is not "null":
+            if func and func != "null":
                 msg = "{} ({})".format(msg, func)
             else:
                 msg = "{}".format(msg)

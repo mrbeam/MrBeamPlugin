@@ -61,6 +61,7 @@ def mrbeam_plugin():
     mrbeam_plugin._settings.get = MagicMock(
         getBaseFolder=MagicMock(return_value=""), side_effect=settings_get_mock
     )
+    mrbeam_plugin._settings.global_set = MagicMock()
     mrbeam_plugin._settings.get_boolean = MagicMock()
     mrbeam_plugin._event_bus = event_manager
     mrbeam_plugin.dust_manager = MagicMock()
@@ -78,5 +79,7 @@ def mrbeam_plugin():
     mrbeam_plugin._event_bus.fire(Events.STARTUP)
     mrbeam_plugin.user_notification_system = MagicMock()
     mrbeam_plugin._printer = MagicMock()
+    mrbeam_plugin._user_manager = MagicMock()
+    mrbeam_plugin._plugin_version = "2.0.0dev0"
 
     yield mrbeam_plugin
