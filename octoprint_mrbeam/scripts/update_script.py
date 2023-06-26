@@ -324,14 +324,6 @@ def run_update():
 
     args = _parse_arguments()
 
-    # make sure the ssh key of bitbucket is correct
-    code = exec_cmd("sudo truncate -s 0 /root/.ssh/known_hosts")
-    code += exec_cmd(
-        "sudo ssh-keygen -R bitbucket.org && sudo sh -c 'curl https://bitbucket.org/site/ssh >> /root/.ssh/known_hosts'"
-    )
-    if code != 0:
-        print("error while updating ssh key of bitbucket")
-
     # get dependencies
     dependencies = get_dependencies(args.folder)
     target = args.target
