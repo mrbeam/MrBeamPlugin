@@ -4,3 +4,4 @@ max_dust_factor: 3.0
 max_correction_factor: 1.15
 max_intensity_including_correction: 1500
 lifespan: 40
+min_speed: 50
