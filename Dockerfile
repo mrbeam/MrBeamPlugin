@@ -23,36 +23,34 @@ WORKDIR /home/mrbeam
 
 RUN sudo apt-get upgrade -y \
     && sudo apt-get install build-essential -y \
-    && sudo apt-get install libncursesw5-dev libssl-dev tk-dev libgdbm-dev libc6-dev libbz2-dev -y \
+    && sudo apt-get install libncursesw5-dev libssl-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev -y \
     && sudo apt-get install wget git -y \
     && cd ~/ \
-    && wget -O ~/Python-2.7.18.tgz https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz \
-    && tar xzf Python-2.7.18.tgz \
-    && rm Python-2.7.18.tgz \
-    && cd ~/Python-2.7.18 \
+    && wget -O ~/Python-3.10.9.tgz https://www.python.org/ftp/python/3.10.9/Python-3.10.9.tgz \
+    && tar xzf Python-3.10.9.tgz \
+    && rm Python-3.10.9.tgz \
+    && cd ~/Python-3.10.9 \
     && sudo ./configure --enable-optimizations --prefix=/home/mrbeam/ \
     && sudo make install \
     && cd ~/ \
-    && wget -O ~/get-pip.py https://bootstrap.pypa.io/pip/2.7/get-pip.py \
-    && sudo env "PATH=$PATH" python get-pip.py \
-    && sudo env "PATH=$PATH" python -m pip install --upgrade pip \
-    && pip install virtualenv \
-    && virtualenv --python=python venv2
+    && pip3 install virtualenv \
+    && virtualenv --python=python venv3 \
+    && sudo apt-get install libffi-dev python3-dev -y
 
-RUN source ./venv2/bin/activate \
+RUN source ./venv3/bin/activate \
     && git clone https://github.com/mrbeam/OctoPrint.git \
     && cd OctoPrint \
     && git checkout feature/SW-1030-octoprint-upgrade-to-latest-v-1-x \
-    && pip install .
+    && pip3 install .
 
-RUN source ./venv2/bin/activate \
+RUN source ./venv3/bin/activate \
     && git clone https://github.com/mrbeam/MrBeamDoc.git \
     && cd MrBeamDoc \
     && git checkout stable \
-    && pip install .
+    && pip3 install .
 
-RUN source ./venv2/bin/activate \
-    && pip install opencv-python==3.2.0.7
+RUN source ./venv3/bin/activate \
+    && pip3 install opencv-python
 
 COPY --chown=mrbeam docker_config/docker-octoprint-config.yaml /home/mrbeam/.octoprint/config.yaml
 
@@ -64,10 +62,10 @@ COPY --chown=mrbeam docker_config/docker-beamos_version /etc/beamos_version
 
 COPY --chown=mrbeam . /home/mrbeam/MrBeamPlugin/
 
-RUN source ./venv2/bin/activate \
-    && pip install ./MrBeamPlugin
+RUN source ./venv3/bin/activate \
+    && pip3 install ./MrBeamPlugin
 
-CMD [ "./venv2/bin/python", "-m", "octoprint", "serve", "--port", "5000" ]
+CMD [ "./venv3/bin/python", "-m", "octoprint", "serve", "--port", "5000" ]
 
 HEALTHCHECK  --interval=30s --timeout=3s \
     CMD wget --no-verbose --tries=3 --spider http://localhost:5000 || exit 1

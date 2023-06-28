@@ -2,6 +2,7 @@
 git+https://${PERSONAL_ACCESS_TOKEN}@github.com/mrbeam/mrb3-doc.git@alpha#egg=MrBeamDoc
 git+https://github.com/mrbeam/OctoPrint.git@feature/SW-1030-octoprint-upgrade-to-latest-v-1-x#egg=OctoPrint
 
+wheel
 mock
 numpy
 opencv-python

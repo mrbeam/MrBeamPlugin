@@ -23,23 +23,36 @@
         {% include 'loading_overlay.jinja2' %}
         <script>document.body.classList.add("loading_step1");</script>
 
+        {% include 'javascripts-preload.jinja2' %}
+        {% include 'stylesheets-preload.jinja2' %}
 
-        {% include 'stylesheets.jinja2' %}
-        {% include 'styles.jinja2' %}
         {% include 'initscript.jinja2' %}
         {% include 'mrbeam_initscript.jinja2' %}
-        {% include 'lasersafety_standalone.jinja2' %}
-        {% include 'support_standalone.jinja2' %}
-        {% include 'ready_to_laser.jinja2' %}
-        {% include 'review.jinja2' %}
-        {% include 'laser_job_done.jinja2' %}
-        {% include 'loginscreen_viewmodel.jinja2' %}
-        {% include 'software_channel_selector.jinja2' %}
 
     </head>
     <body style="overflow: hidden;" class="env_prod online">
-		<div class="container-fluid octoprint-container">
-		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar" style="min-width:730px;">
+        <noscript>
+            <style type="text/css">
+                #page-container-main,
+                #page-container-loading {
+                    display:none;
+                }
+            </style>
+            <div id="page-container-noscript">
+                <div class="wrapper">
+                    <div class="outer">
+                        <div class="inner">
+                            <div class="content">
+                                <h1 class="text-error">{{ _('You don\'t seem to have JavaScript enabled') }}</h1>
+                                {{ _('Mr Beam\'s UI requires JavaScript to work. Please enable JavaScript and reload.') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </noscript>
+        <div class="page-container" id="page-container-main-mrbeam">
+        <nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar" style="min-width:730px;">
 			<div class="">
 				<div class="navbar-header brand">
 					<a id="mrbeam_logo_link" class="navbar-brand" href="#"><img loading="lazy" id="logo_wide" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo_x120.png') }}"><img loading="lazy" id="logo_compact" alt="{{ _('Mr Beam Logo') }}" src="{{ url_for('plugin.mrbeam.static', filename='img/mr_x120.png') }}"></a>
@@ -117,10 +130,11 @@
 				</ul>
 			</div>
 		</nav>
+		<div class="container-fluid octoprint-container">
 
 		<div class="row-fluid">
 			<div class="span12 tabbable" id="mrbeam-tabs">
-				<div class="tab-content">
+				<div id="tabs_content" class="tab-content">
 
 					{% include 'tab_workingarea.jinja2' %}
 					{% if terminalEnabled %}
@@ -151,38 +165,13 @@
 				</div>
 			</div>
 		</div>
-
-		<footer class="footer" style="display:none">
-			<ul class="pull-left muted">
-				<li><small>{{ _('Version') }}: <span class="version">{{ display_version }}</span></small></li>
-			</ul>
-			<ul class="pull-right">
-				<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('Homepage') }}</a></li>
-				<li><a href="https://github.com/mrbeam/OctoPrint/" target="_blank"><i class="icon-download"></i> {{ _('Sourcecode') }}</a></li>
-				<li><a href="https://wiki.mr-beam.org" target="_blank"><i class="icon-book"></i> {{ _('Documentation') }}</a></li>
-				<li><a href="https://github.com/mrbeam/OctoPrint/issues" target="_blank"><i class="icon-flag"></i> {{ _('Bugs and Requests') }}</a></li>
-			</ul>
-		</footer>
 	</div>
 
-
-
-		<!-- Plugin template files -->
-		{%  if templatePlugins %}
-		{% for plugin_name in templatePlugins %}
-		{% include plugin_name+".jinja2" ignore missing %}
-		{% endfor %}
-		{% endif %}
-		<!-- End plugin template files -->
-
-
-		<!-- Dialogs -->
-        {#% include 'dialogs/settings.jinja2' %#}
-        {% include 'dialogs/slicing.jinja2' %}
-        {% include 'dialogs/files.jinja2' %}
-        {% include 'dialogs/wizard.jinja2' %}
-		{% include 'dialogs/usersettings.jinja2' %}
-        {% include 'take_photo.jinja2' %}
+        {% include 'lasersafety_standalone.jinja2' %}
+        {% include 'support_standalone.jinja2' %}
+        {% include 'ready_to_laser.jinja2' %}
+        {% include 'review.jinja2' %}
+        {% include 'laser_job_done.jinja2' %}
         {% include 'quick_text.jinja2' %}
         {% include 'quick_shape.jinja2' %}
         {% include 'conversion_dialog.jinja2' %}
@@ -190,6 +179,14 @@
         {% include 'hard_refresh_overlay.jinja2' %}
         {% include 'modals/high_temperature_warning.jinja2' %}
         {% include 'congratulations.jinja2' %}
+
+		<!-- Dialogs -->
+        {% include 'dialogs/settings.jinja2' %}
+        {% include 'dialogs/slicing.jinja2' %}
+        {% include 'dialogs/files.jinja2' %}
+        {% include 'dialogs/wizard.jinja2' %}
+		{% include 'dialogs/usersettings.jinja2' %}
+
         <!-- End of dialogs -->
 
         <!-- Overlays -->
@@ -198,16 +195,18 @@
         {% include 'activity_spinner_overlay.jinja2' %}
         <!-- End of overlays -->
 
+        <script>document.body.classList.add("loading_step2");</script>
+        {% include 'stylesheets.jinja2' %}
+        {% include 'styles.jinja2' %}
+        {% include 'javascripts.jinja2' %}
+        <script>document.body.classList.add("loading_step3");</script>
+
 		 <!-- Generic plugin template files -->
 		{% for key in templates.generic.order %}
 			{% set data = templates.generic.entries[key] %}
 			{% include data.template ignore missing %}
 		{% endfor %}
 		<!-- End of generic plugin template files -->
-
-
-        <script>document.body.classList.add("loading_step2");</script>
-        {% include 'javascripts.jinja2' %}
-        <script>document.body.classList.add("loading_step3");</script>
+        </div>
     </body>
 </html>

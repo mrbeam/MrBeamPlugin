@@ -818,6 +818,7 @@ class MrBeamPlugin(
         # if will_handle_ui returned True, we will now render our custom index
         # template, using the render_kwargs as provided by OctoPrint
         from flask import make_response, render_template, g
+        from octoprint.server import connectivityChecker
 
         sockjs_connect_timeout = settings().getInt(["devel", "sockJsConnectTimeout"])
 
@@ -837,7 +838,13 @@ class MrBeamPlugin(
         selectedProfile = self.laserCutterProfileManager.get_current_or_default()
         enable_focus = selectedProfile["focus"]
         safety_glasses = selectedProfile["glasses"]
-        # render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
+
+        render_kwargs["templates"]["navbar"]["order"].remove(
+            "offlineindicator"
+        )  # remove octoprint navbar item
+        render_kwargs["templates"]["navbar"]["order"].remove(
+            "settings"
+        )  # remove octoprint navbar item
 
         wizard = render_kwargs["templates"] is not None and bool(
             render_kwargs["templates"]["wizard"]["order"]
@@ -868,19 +875,24 @@ class MrBeamPlugin(
 
         render_kwargs.update(
             dict(
+                # vanilla octoprint kwargs - START -
+                enableWebcam=False,
+                enableTemperatureGraph=False,
+                enableAccessControl=True,
+                accessControlActive=accesscontrol_active,
+                enableLoadingAnimation=False,
+                enableSdSupport=False,
+                sockJsConnectTimeout=sockjs_connect_timeout * 1000,
+                wizard=wizard,
+                online=connectivityChecker.online,
+                now=now,
+                # vanilla octoprint kwargs - END -
                 webcamStream=self._settings.get(["cam", "frontendUrl"]),
                 enableFocus=enable_focus,
                 safetyGlasses=safety_glasses,
-                enableTemperatureGraph=False,
-                enableAccessControl=True,
-                sockJsConnectTimeout=sockjs_connect_timeout * 1000,
-                accessControlActive=accesscontrol_active,
-                enableSdSupport=False,
                 gcodeMobileThreshold=0,
                 gcodeThreshold=0,
-                wizard=wizard,
                 wizard_to_show=self.wizard_config.get_wizard_name(),
-                now=now,
                 init_ts_ms=time.time() * 1000,
                 language=language,
                 mrBeamPluginVersionNumber=self._plugin_version,

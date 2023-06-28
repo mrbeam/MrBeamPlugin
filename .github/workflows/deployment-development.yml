@@ -19,6 +19,7 @@ jobs:
     # IMPORTANT: the workflow must have write access to deployments, otherwise the action will fail.
     permissions:
       deployments: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

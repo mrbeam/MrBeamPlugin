@@ -314,6 +314,9 @@ $(function () {
         };
 
         self.onAllBound = function () {
+            PNotify.prototype.options.stack.context = $(
+                "#page-container-main-mrbeam"
+            ); // we explicitly override the octoprint main.js to bin the Pnotifys to out id so the uistate will not be loaded
             self.set_settings_analytics_links();
         };
 

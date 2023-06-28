@@ -609,7 +609,7 @@ $(function () {
             $(document).on("mouseover", ".material_entry", function () {
                 let material_entry_element = $(this);
                 let material_name_DOMelement =
-                    material_entry_element.context.getElementsByClassName(
+                    material_entry_element[0].getElementsByClassName(
                         "material_name"
                     )[0];
                 let material_name_element = $(material_name_DOMelement);

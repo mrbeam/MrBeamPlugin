@@ -344,9 +344,7 @@ class ImageSeparator:
                 + cv2.__version__
                 + " : filtering top level contours with img size cropped by one px on each side"
             )
-            _, contours, hierarchy = cv2.findContours(
-                img, method, cv2.CHAIN_APPROX_SIMPLE
-            )
+            contours, hierarchy = cv2.findContours(img, method, cv2.CHAIN_APPROX_SIMPLE)
         return (img, contours, hierarchy)
 
     def _is_only_whitespace(self, img):
