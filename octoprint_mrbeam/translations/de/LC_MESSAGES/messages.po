@@ -1907,7 +1907,7 @@ msgid ""
 "line distance 0,1mm for the best result."
 msgstr ""
 "Gravuren auf Edelstahl funktionieren nur mit unserm “Mark Solid” Laser "
-"Markierungsspray. Verwende einen Linienabstand von 0,1mm für ein optimales "
+"Markierspray. Verwende einen Linienabstand von 0,1mm für ein optimales "
 "Ergebnis."
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/material-settings.js:477
@@ -1915,8 +1915,8 @@ msgid ""
 "Do not engrave stainless steel without the application of laser marking "
 "color."
 msgstr ""
-"Edelstahl nicht blank gravieren, sonder immer in Verbindung mit unserem "
-"Markierugsspay."
+"Edelstahl nicht blank gravieren, sondern immer in Verbindung mit unserem "
+"Markierspray."
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/ready-to-laser.js:246
 msgid "minute"
@@ -4727,7 +4727,7 @@ msgstr "duplizieren"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:430
 msgid "split"
-msgstr "zerteilten"
+msgstr "zerteilen"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:433
 msgid "by stroke color"
