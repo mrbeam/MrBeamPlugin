@@ -346,6 +346,19 @@ $(function () {
                     },
                 },
             },
+            "Plywood Beech": {
+                name: gettext("Plywood Beech"),
+                img: "Plywood-Beech.jpg",
+                description:
+                    "Plywood is greate fo all kinds of model making and decoration.",
+                hints: gettext(
+                    "Watch out for dedicated laser plywood - it has better surface quality and better glue."
+                ),
+                type: "product",
+                url: gettext(
+                    "https://www.mr-beam.org/en/products/mr-beam-sperrholz-buche-4mm-5er-pack-a3"
+                ),
+            },
             Polypropylene: {
                 name: gettext("Polypropylene"),
                 img: "Polypropylene.jpg",
