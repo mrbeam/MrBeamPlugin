@@ -316,7 +316,7 @@ $(function () {
                 name: gettext("Plywood Birch"),
                 img: "Plywood-Birch.jpg",
                 description: gettext(
-                    "Plywood is greate fo all kinds of model making and decoration."
+                    "Plywood is great for all kinds of model making and decoration."
                 ),
                 hints: gettext(
                     "Watch out for dedicated laser plywood - it has better surface quality and better glue."
@@ -330,7 +330,7 @@ $(function () {
                 name: gettext("Plywood Poplar"),
                 img: "Plywood-Poplar.jpg",
                 description: gettext(
-                    "Plywood is greate fo all kinds of model making and decoration."
+                    "Plywood is great for all kinds of model making and decoration."
                 ),
                 hints: gettext(
                     "Watch out for dedicated laser plywood - it has better surface quality and better glue."
@@ -350,7 +350,7 @@ $(function () {
                 name: gettext("Plywood Beech"),
                 img: "Plywood-Beech.jpg",
                 description:
-                    "Plywood is greate fo all kinds of model making and decoration.",
+                    "Plywood is great for all kinds of model making and decoration.",
                 hints: gettext(
                     "Watch out for dedicated laser plywood - it has better surface quality and better glue."
                 ),
