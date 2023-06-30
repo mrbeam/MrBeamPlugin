@@ -178,7 +178,9 @@ def build_wheels(build_queue):
         pip_args = [
             "wheel",
             "--disable-pip-version-check",
-            "--wheel-dir={}".format(tmp_folder),  # Build wheels into <dir>, where the default is the current working directory.
+            "--wheel-dir={}".format(
+                tmp_folder
+            ),  # Build wheels into <dir>, where the default is the current working directory.
             "--no-dependencies",  # Don't install package dependencies.
         ]
         for package in packages:
@@ -213,16 +215,14 @@ def install_wheels(install_queue):
         pip_args = [
             "install",
             "--disable-pip-version-check",
-            "--upgrade",  # Upgrade all specified packages to the newest available version. The handling of dependencies depends on the upgrade-strategy used.
-            "--force-reinstall",  # Reinstall all packages even if they are already up-to-date.
-            "--no-index",  # Ignore package index (only looking at --find-links URLs instead).
-            "--find-links={}".format(tmp_folder),  # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
-            "--no-dependencies",  # Don't install package dependencies.
+            "--find-links={}".format(
+                tmp_folder
+            ),  # If a URL or path to an html file, then parse for links to archives such as sdist (.tar.gz) or wheel (.whl) files. If a local path or file:// URL that's a directory, then look for archives in the directory listing. Links to VCS project URLs are not supported.
         ]
         for package in packages:
             pip_args.append(
-                "{package}".format(
-                    package=package["name"]
+                "{package}=={target}".format(
+                    package=package["name"], target=package["target"]
                 )
             )
 
@@ -235,13 +235,14 @@ def install_wheels(install_queue):
             )
 
 
-def build_queue(update_info, dependencies, plugin_archive):
+def build_queue(update_info, dependencies, plugin_archive, plugin_target):
     """build the queue of packages to install.
 
     Args:
         update_info: a dict of informations how to update the packages
         dependencies: a list dicts of dependencies [{"name", "version"}]
         plugin_archive: path to archive of the plugin
+        plugin_target: target commit hash or tag of the plugin
 
     Returns:
         install_queue: dict of venvs with a list of package dicts {"<venv path>": [{"name", "archive", "target"}]
@@ -254,7 +255,7 @@ def build_queue(update_info, dependencies, plugin_archive):
         {
             "name": PLUGIN_NAME,
             "archive": plugin_archive,
-            "target": '',
+            "target": plugin_target,
         }
     )
     print("dependencies - {}".format(dependencies))
@@ -313,6 +314,14 @@ def run_update():
     """collects the dependencies and the update info, builds the wheels and
     installs them in the correct venv."""
 
+    # make sure the ssh key of bitbucket is correct
+    code = exec_cmd("sudo truncate -s 0 /root/.ssh/known_hosts")
+    code += exec_cmd(
+        "sudo ssh-keygen -R bitbucket.org && sudo sh -c 'curl https://bitbucket.org/site/ssh >> /root/.ssh/known_hosts'"
+    )
+    if code != 0:
+        print("error while updating ssh key of bitbucket")
+
     args = _parse_arguments()
 
     # make sure the ssh key of bitbucket is correct
@@ -325,13 +334,12 @@ def run_update():
 
     # get dependencies
     dependencies = get_dependencies(args.folder)
+    target = args.target
 
     # get update config of dependencies
     update_info = get_update_info()
 
-    install_queue = build_queue(
-        update_info, dependencies, args.archive
-    )
+    install_queue = build_queue(update_info, dependencies, args.archive, target)
 
     print("install_queue", install_queue)
     if install_queue is not None:

@@ -13,6 +13,8 @@ class AnalyticsKeys:
         VERSION_MRBEAM_PLUGIN = "version_mrbeam_plugin"
         UPTIME = "uptime"
         MODEL = "model"
+        LH_MODEL_ID = "lh_model_id"
+        LH_SERIAL = "lh_serial"
         FEATURE_ID = "feature_id"
 
     class EventType:
@@ -59,6 +61,10 @@ class AnalyticsKeys:
             class Cooling:
                 START = "cooling_start"
                 DONE = "cooling_done"
+                DIFFERENCE = "cooling_difference"
+                TIME = "cooling_time"
+                TO_SLOW = "cooling_to_slow"
+                COOLING_FAN_RETRIGGER = "cooling_fan_retrigger"
 
             class Summary:
                 DUST = "dust_summary"
@@ -118,10 +124,13 @@ class AnalyticsKeys:
             NUM_FILES = "num_files"
             CAMERA_IMAGE = "camera_image"
             LASERHEAD_CHANGED = "laserhead_changed"
+            LASER_HIGH_TEMPERATURE = "laser_high_temperature"
 
-        class HighTempWarning:
-            TRIGGERED = "high_temp_warning_triggered"
-            DISMISSED = "high_temp_warning_dismissed"
+        class HighTemp:
+            WARNING_SHOWN = "high_temp_warning_shown"
+            WARNING_DISMISSED = "high_temp_warning_dismissed"
+            CRITICAL_SHOWN = "high_temp_critical_shown"
+            CRITICAL_DISMISSED = "high_temp_critical_dismissed"
 
         class SoftwareChannel:
             OLD = "old_channel"
@@ -208,3 +217,13 @@ class AnalyticsKeys:
             REFERRER = "referrer"
             LANGUAGE = "language"
             USER_AGENT = "user_agent"
+
+    class HighTemperatureWarning:
+        class Event:
+            STATE_TRANSITION = "state_transition"
+
+        class State:
+            STATE_BEFORE = "state_before"
+            STATE_AFTER = "state_after"
+            EVENT = "event"
+            FEATURE_DISABLED = "feature_disabled"

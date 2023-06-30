@@ -240,21 +240,70 @@ Cypress.Commands.add("deleteGcoFile", () => {
 });
 
 Cypress.Commands.add("designSettings", () => {
-    cy.get('[data-test="tab-workingarea-rotation"]')
-        .filter(":visible")
-        .last()
-        .clear({ force: true })
-        .type("-50.5");
-    cy.get('[data-test="tab-workingarea-horizontal"]')
-        .filter(":visible")
-        .last()
-        .clear({ force: true })
-        .type("116.3 mm");
-    cy.get('[data-test="tab-workingarea-vertical"]')
-        .filter(":visible")
-        .last()
-        .clear({ force: true })
-        .type("132.3 mm");
+    cy.get('[id="mbtransformTranslateGroup"]')
+        .invoke("attr", "transform")
+        .then((transformTranslate) => {
+            cy.get('[id="translateHandle"]').move({
+                deltaX: -430,
+                deltaY: -220,
+                force: true,
+            });
+            cy.get('[id="mbtransformTranslateGroup"]').should(
+                "not.eq",
+                `${transformTranslate}`
+            );
+        });
+    cy.get('[id="mbtransformScaleGroup"]')
+        .invoke("attr", "transform")
+        .then((transformSize) => {
+            cy.get('[id="scaleHandleNW"]').move({
+                deltaX: 35,
+                deltaY: 20,
+                force: true,
+            });
+            cy.get('[id="mbtransformScaleGroup"]').should(
+                "not.eq",
+                `${transformSize}`
+            );
+        });
+    cy.get('[id="mbtransformRotateGroup"]')
+        .invoke("attr", "transform")
+        .then((transformRotate) => {
+            cy.get('[id="rotHandle"]').move({
+                deltaX: 54,
+                deltaY: 70,
+                force: true,
+            });
+            cy.get('[d="mbtransformRotateGroup"]').should(
+                "not.eq",
+                `${transformRotate}`
+            );
+        });
+});
+
+Cypress.Commands.add("fillAndStroke", () => {
+    cy.get('input[id="quick_shape_color"]').invoke("removeAttr", "hidden");
+    cy.wait(2000);
+    cy.get(
+        '[data-test="quick-shape-color-picker-stroke"] > .tcp_color > .colorInner'
+    )
+        .invoke("attr", "style", "background-image: rgb(13, 126, 174);")
+        .trigger("change");
+    cy.get('[data-test="quick-shape-fill-input"]').click();
+    cy.wait(2000);
+    cy.get('[data-test="quick-shape-color-picker-fill"]').click();
+    cy.get('input[id="quick_shape_fill_brightness"]').invoke(
+        "removeAttr",
+        "hidden"
+    );
+    cy.wait(2000);
+    cy.get(
+        '[data-test="quick-shape-color-picker-fill"] > .tcp_color > .colorInner'
+    )
+        .invoke("attr", "style", "background-image: rgb(50, 50, 50);")
+        .trigger("change");
+    cy.wait(2000);
+    cy.get('[data-test="quick-shape-done-button"]').click();
 });
 
 Cypress.Commands.add("laserButtonClick", () => {
@@ -289,6 +338,64 @@ Cypress.Commands.add("selectMaterial", () => {
         .first()
         .if("exist")
         .click();
+});
+
+Cypress.Commands.add("downloadGcoFile", () => {
+    cy.get('[data-test="laser-job-start-button"]').dblclick();
+    cy.get(".modal-scrollable").click({ force: true });
+    cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
+    cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
+    cy.wait(3000);
+    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+        .first()
+        .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
+        .click({ force: true })
+        .invoke("prop", "innerText")
+        .then((downloadFile) => {
+            cy.window()
+                .document()
+                .then(function (doc) {
+                    doc.addEventListener("click", () => {
+                        setTimeout(function () {
+                            doc.location.reload();
+                        }, 5000);
+                    });
+                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
+                        .filter(`:contains(${downloadFile})`)
+                        .find(
+                            '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
+                        );
+                    cy.wait(1000);
+                    cy.get(
+                        '[data-test="tab-designlib-mechinecode-file-download"]'
+                    )
+                        .filter(":visible")
+                        .click();
+                });
+        });
+    cy.wait(5000);
+});
+
+Cypress.Commands.add("compareFiles", (fixturesFile, downloadedFile) => {
+    cy.wait(5000);
+    cy.readFile(fixturesFile, {
+        timeout: 40000,
+    }).then((contentTestFile) => {
+        cy.wait(5000);
+        cy.readFile(downloadedFile, {
+            timeout: 40000,
+        }).then((contentDownloadFile) => {
+            let contentTestDownloadNoComments = contentDownloadFile
+                .replace(/(^[\s]*\n|^\s*;.*\n)/gm, "")
+                .trimEnd();
+            let contentTestFileNoComments = contentTestFile
+                .replace(/(^[\s]*\n|^\s*;.*\n)/gm, "")
+                .trimEnd();
+            expect(contentTestDownloadNoComments).to.equal(
+                contentTestFileNoComments
+            );
+        });
+    });
 });
 
 Cypress.Commands.add("downloadMrbFile", () => {

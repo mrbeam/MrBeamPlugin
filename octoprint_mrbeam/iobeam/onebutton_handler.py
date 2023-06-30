@@ -359,7 +359,7 @@ class OneButtonHandler(object):
                 self.PRINTER_STATE_PRINTING,
                 self.PRINTER_STATE_PAUSED,
             ):
-                self._logger.info("Hardware Malfunction: cancelling laser job!")
+                self._logger.warn("Hardware Malfunction: cancelling laser job!")
                 self._printer.fail_print(error_msg="HW malfunction during job")
 
     def is_cooling(self):
@@ -367,6 +367,9 @@ class OneButtonHandler(object):
 
     def is_printing(self):
         return self._printer.get_state_id() == self.PRINTER_STATE_PRINTING
+
+    def is_paused(self):
+        return self._printer.is_paused()
 
     def cooling_down_pause(self):
         self.start_cooling_behavior()
@@ -438,6 +441,7 @@ class OneButtonHandler(object):
         return self.intended_pause or self.behave_cooling_state
 
     def _check_if_still_ready_to_laser(self):
+        self._iobeam.request_available_malfunctions()  # check if malfunctions are present
         if self.is_ready_to_laser():
             self._start_ready_to_laser_timer()
         else:

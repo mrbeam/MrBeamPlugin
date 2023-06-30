@@ -787,9 +787,11 @@ $(function () {
                     if (materialCompatibilityDisplay) {
                         m.compatible =
                             m.laser_model === MRBEAM_LASER_HEAD_MODEL;
-                        if (m.laser_model === "S") {
+                        if (m.laser_model === mrbeam.laserheadModelString.S) {
                             m.customBeforeElementContent = "[S]";
-                        } else if (m.laser_model === "x") {
+                        } else if (
+                            m.laser_model === mrbeam.laserheadModelString.X
+                        ) {
                             m.customBeforeElementContent = "[x]";
                         }
                         if (!m.compatible) {
@@ -1151,7 +1153,15 @@ $(function () {
                 (rasters_present && !assigned_images)
             );
         };
-
+        self._requestHardwareErrors = function () {
+            OctoPrint.simpleApiCommand("mrbeam", "request_hardware_errors", {})
+                .done(function (response) {})
+                .fail(function () {
+                    console.error(
+                        "Error while trying to request hardware errors."
+                    );
+                });
+        };
         // shows conversion dialog and extracts svg first
         self.show_conversion_dialog = function () {
             if (self.showFocusReminder() && self.remindFirstTime()) {
@@ -1159,6 +1169,7 @@ $(function () {
                 self.remindFirstTime(false);
                 return;
             }
+            self._requestHardwareErrors();
             self.remindFirstTime(true);
 
             self.workingArea.abortFreeTransforms();

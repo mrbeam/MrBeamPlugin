@@ -7,7 +7,7 @@ from threading import Thread, Event
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.camera.camera import BaseCamera, DummyCamera, __camera__
-from exc import MrbCameraError
+from exc import MrbCameraError, CameraValueException, CameraRuntimeException
 from . import exc
 
 
@@ -62,7 +62,7 @@ class MrbCamera(CameraClass, BaseCamera):
         BaseCamera.__init__(self, worker, shutter_speed=shutter_speed)
         # PiCamera constructor does not take a worker or shutter_speed
         # https://picamera.readthedocs.io/en/release-1.13/api_camera.html#picamera.PiCamera
-
+        global PICAMERA_AVAILABLE
         if PICAMERA_AVAILABLE:
             PiCamera.__init__(self, *args, **kwargs)
             self.sensor_mode = 2
@@ -75,6 +75,8 @@ class MrbCamera(CameraClass, BaseCamera):
         else:
             DummyCamera.__init__(self, worker, *args, **kwargs)
 
+        self.camera_error = False
+
         # self.exposure_mode = ''
         self.stopEvent = stopEvent or Event()  # creates an unset event if not given
 
@@ -82,6 +84,7 @@ class MrbCamera(CameraClass, BaseCamera):
 
     def __enter__(self):
         BaseCamera.__enter__(self)
+        global PICAMERA_AVAILABLE
         if PICAMERA_AVAILABLE:
             PiCamera.__enter__(self)
         # Cannot set shutter speed before opening the camera (picamera)
@@ -90,16 +93,17 @@ class MrbCamera(CameraClass, BaseCamera):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        global PICAMERA_AVAILABLE
         if PICAMERA_AVAILABLE:
             PiCamera.__exit__(self, exc_type, exc_value, traceback)
         BaseCamera.__exit__(self, exc_type, exc_value, traceback)
 
     def capture(self, output=None, format="jpeg", *args, **kwargs):
+        global PICAMERA_AVAILABLE
         if output is None:
             output = self.worker
+
         if PICAMERA_AVAILABLE:
-            # if self._busy.locked():
-            #     raise MrbCameraError("Camera already busy taking a picture")
             self._busy.acquire()
         try:
             CameraClass.capture(self, output, format=format, *args, **kwargs)
@@ -107,6 +111,21 @@ class MrbCamera(CameraClass, BaseCamera):
             self._logger.warning(
                 "Caught Picamera internal error - self._camera is None"
             )
+            self.camera_error = True
+            raise exc.CameraException(e)
+        except (
+            CameraValueException,
+            CameraRuntimeException,
+        ) as e:
+            self._logger.error(
+                "Caught Picamera internal error - %s, deactivate PiCamera", e
+            )
+            self.camera_error = True
+            raise exc.CameraException(e)
+        except Exception as e:
+            self._logger.error("Unknown camera error - %s, deactivate PiCamera", e)
+            self.camera_error = True
+            raise exc.CameraException(e)
         finally:
             if PICAMERA_AVAILABLE:
                 self._busy.release()

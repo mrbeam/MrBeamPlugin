@@ -2,10 +2,12 @@ import time
 from octoprint.printer.standard import Printer, StateMonitor
 from octoprint.events import eventManager, Events
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.notifications import NotificationIds
 from octoprint_mrbeam.printing import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.filemanager.analysis import beam_analysis_queue_factory
 from octoprint_mrbeam.util import dict_merge
+from octoprint_mrbeam.util.errors import ErrorCodes
 
 
 class Laser(Printer):
@@ -45,10 +47,18 @@ class Laser(Printer):
             },
             current_z=None,
         )
+        self._user_notification_system = None
+
         self._event_bus = eventManager()
         self._event_bus.subscribe(
-            MrBeamEvents.HIGH_TEMPERATURE_WARNING, self._on_high_temperature_warning
+            MrBeamEvents.LASER_JOB_ABORT, self._on_laser_job_abort
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.LASER_COOLING_RE_TRIGGER_FAN, self._on_re_trigger_fan
+        )
+
+    def register_user_notification_system(self, user_notification_system):
+        self._user_notification_system = user_notification_system
 
     # overwrite connect to use comm_acc2
     def connect(self, port=None, baudrate=None, profile=None):
@@ -115,9 +125,10 @@ class Laser(Printer):
 
         time.sleep(0.5)
         self.home(axes="wtf")
+        self._show_job_cancelled_due_to_internal_error()
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
-    def abort_print(self, event):
+    def abort_job(self, event):
         """Abort the current printjob and do homing. This is a hard abort, the compressor and fan should be immediately turned off.
 
         Args:
@@ -126,7 +137,7 @@ class Laser(Printer):
         Returns:
             None
         """
-        self._comm.abort_print(event)
+        self._comm.abort_lasering(event)
         time.sleep(0.5)
         self.home(axes="wtf")
         self._event_bus.fire(MrBeamEvents.LASER_JOB_ABORTED, {"trigger": event})
@@ -165,8 +176,18 @@ class Laser(Printer):
 
         self._comm.setPause(True, send_cmd=True, trigger=trigger)
 
+    def resume_print(self, trigger=None):
+        """Resume the current laser job."""
+        if self._comm is None:
+            return
+
+        if not self._comm.isPaused():
+            return
+
+        self._comm.setPause(False, send_cmd=True, trigger=trigger)
+
     def cooling_start(self):
-        """Pasue the laser for cooling."""
+        """Pause the laser for cooling."""
         if self._comm is None:
             return
 
@@ -224,8 +245,28 @@ class Laser(Printer):
         if terminalMaxLines is not None and terminalMaxLines > 0:
             self._log = deque(self._log, terminalMaxLines)
 
-    def _on_high_temperature_warning(self, event, payload):
-        """Abort the print on a high temperature warning if the laser is printing or paused.
+    def _on_laser_job_abort(self, event, payload):
+        """Abort the job if the laser is lasering or paused.
+
+        Args:
+            event: event that triggered the action
+            payload: payload of the event
+
+        Returns:
+            None
+        """
+        if self.is_lasering() or self.is_paused():
+            self._logger.warn(
+                "Firing warning, will abort print e:%s payload: %s", event, payload
+            )
+            self.abort_job(event)
+
+    def is_lasering(self):
+        return self.is_printing()
+
+    def _on_re_trigger_fan(self, event, payload):
+        """Re trigger the fan if the laser is printing or paused.
+        This can be done by sending atomic command start and pause after each other.
 
         Args:
             event: event that triggered the action
@@ -235,10 +276,8 @@ class Laser(Printer):
             None
         """
         if self.is_printing() or self.is_paused():
-            self._logger.warn(
-                "Firing warning, will abort print e:%s payload: %s", event, payload
-            )
-            self.abort_print(event)
+            self._logger.info("Re triggering fan e:%s payload: %s", event, payload)
+            self._comm.retrigger_cooling_fan()
 
     # maybe one day we want to introduce special MrBeam commands....
     # def commands(self, commands):
@@ -258,6 +297,20 @@ class Laser(Printer):
     # 			sendCommandToPrinter = _mrbeam_plugin_implementation.execute_command(command)
     # 		if sendCommandToPrinter:
     # 			self._comm.sendCommand(command)
+
+    def _show_job_cancelled_due_to_internal_error(self):
+        """
+        Shows the job cancelled due to internal error notification.
+
+        Returns:
+            None
+        """
+        notification = self._user_notification_system.get_notification(
+            notification_id=NotificationIds.JOB_CANCELLED_DUE_TO_INTERNAL_ERROR,
+            err_code=ErrorCodes.E_1005,
+            replay=True,
+        )
+        self._user_notification_system.show_notifications(notification)
 
 
 class LaserStateMonitor(StateMonitor):

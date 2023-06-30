@@ -19,3 +19,4 @@ selenium==3.141.0
 webdriver-manager==2.4.0
 pytest-cov==2.12.1
 pytest-html==1.22.1
+python-statemachine==1.0.3

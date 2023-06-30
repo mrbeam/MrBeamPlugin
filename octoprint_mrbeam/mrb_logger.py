@@ -7,7 +7,6 @@ import threading
 import traceback
 from inspect import getframeinfo, stack
 
-
 _printer = None
 
 
@@ -86,10 +85,17 @@ class MrbLogger(object):
         """
 
         try:
-            msg = unicode(msg, "utf-8")
+            if isinstance(msg, unicode):
+                # If it's already Unicode, no decoding is needed
+                pass
+            else:
+                # If it's a byte string, convert it to Unicode using "utf-8" encoding
+                msg = unicode(msg, "utf-8")
         except TypeError:
             # If it's already unicode we get this TypeError
             pass
+        except Exception as exc:
+            self.log(logging.ERROR, "Error in MrbLogger.log: %s - %s", msg, exc)
         if kwargs.pop("terminal", True if level >= logging.WARN else False):
             self._terminal(level, msg, *args, **kwargs)
         if kwargs.pop("terminal_as_comm", False) or level == self.LEVEL_COMM:
@@ -138,7 +144,7 @@ class MrbLogger(object):
             exception = " (Exception: {type} - {value})".format(
                 type=(exctype.__name__ if exctype else None), value=value
             )
-        output = u"{date} {level}{space}{id}: {msg}{exception}".format(
+        output = "{date} {level}{space}{id}: {msg}{exception}".format(
             date=date,
             space=(" " if id else ""),
             id=id,

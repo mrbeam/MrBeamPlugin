@@ -32,6 +32,7 @@ from octoprint.util import (
     sanitize_ascii,
 )
 
+from octoprint_mrbeam.notifications import NotificationIds
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
@@ -39,6 +40,7 @@ from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.util import dict_get
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -2554,8 +2556,8 @@ class MachineCom(object):
         else:
             eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
-    def abort_print(self, trigger):
-        """Abort the print.
+    def abort_lasering(self, trigger):
+        """Abort the lasering.
 
         Returns:
 
@@ -2650,6 +2652,11 @@ class MachineCom(object):
                 self._pauseWaitStartTime,
                 self._pauseWaitTimeLost,
             )
+
+    def retrigger_cooling_fan(self):
+        if self.isPaused():
+            self._sendCommand(self.COMMAND_RESUME)
+            self._sendCommand(self.COMMAND_HOLD)
 
     def increasePasses(self):
         self._passes += 1

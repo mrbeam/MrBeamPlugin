@@ -108,64 +108,11 @@ describe.skip("Cut and engrave", function () {
             .last()
             .clear()
             .type("10");
-        cy.get('[data-test="laser-job-start-button"]').dblclick();
-        cy.wait(3000);
-        cy.get(".alert-success").should("to.exist", "Preparation done");
-        cy.get(".modal-scrollable").click({ force: true });
-        cy.get('[data-test="mrbeam-ui-index-design-library"]').click();
-        cy.get('[data-test="tab-designlib-filter-gcode-radio"]').click();
-        cy.wait(3000);
-        cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-            .first()
-            .find('[data-test="tab-designlib-mechinecode-file-icon-reorder"]')
-            .click({ force: true })
-            .invoke("prop", "innerText")
-            .then((downloadFile) => {
-                cy.intercept(
-                    "GET",
-                    `http://localhost:5002/downloads/files/local/${downloadFile}*`
-                ).as("file");
-                cy.window()
-                    .document()
-                    .then(function (doc) {
-                        doc.addEventListener("click", () => {
-                            setTimeout(function () {
-                                doc.location.reload();
-                            }, 5000);
-                        });
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-card"]'
-                        )
-                            .filter(`:contains(${downloadFile})`)
-                            .find(
-                                '[data-test="tab-designlib-mechinecode-file-icon-reorder"]'
-                            );
-                        cy.wait(1000);
-                        cy.get(
-                            '[data-test="tab-designlib-mechinecode-file-download"]'
-                        )
-                            .filter(":visible")
-                            .click();
-                    });
-                cy.readFile("cypress/downloads/Star_1more.gco", {
-                    timeout: 40000,
-                }).then((contentTestFile) => {
-                    cy.get(
-                        '[data-test="mrbeam-ui-index-design-library"]'
-                    ).click();
-                    cy.get(
-                        '[data-test="tab-designlib-filter-gcode-radio"]'
-                    ).click();
-                    cy.get('[data-test="tab-designlib-mechinecode-file-card"]')
-                        .first()
-                        .click({ force: true });
-                    cy.wait("@file")
-                        .its("response.body")
-                        .should(($body) => {
-                            expect($body).to.equal(contentTestFile);
-                        });
-                });
-            });
+        cy.downloadGcoFile();
+        cy.compareFiles(
+            "cypress/fixtures/Star_1more.gco",
+            "cypress/downloads/Star_1more.gco"
+        );
         cy.logout();
     });
 

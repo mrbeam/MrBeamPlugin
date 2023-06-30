@@ -72,6 +72,12 @@ mrbeam.laserheadModel = {
     X: 3,
 };
 
+mrbeam.laserheadModelString = {
+    S: "S",
+    X: "x",
+    DC: "0",
+};
+
 /**
  * Push a new PNotify notification.
  * If pn_obj contains attribute 'id',
@@ -93,6 +99,19 @@ mrbeam.updatePNotify = function (pn_obj) {
         }
     }
     if (existing_notification) {
+        if (pn_obj.err_code) {
+            pn_obj.text = "";
+            pn_obj.err_code.forEach((error_code) => {
+                if (
+                    !existing_notification.options.err_code.includes(error_code)
+                ) {
+                    existing_notification.options.err_code.push(error_code);
+                    pn_obj.text += "\n" + error_code;
+                }
+            });
+            pn_obj.text = existing_notification.options.text + pn_obj.text;
+            pn_obj.err_code = existing_notification.options.err_code;
+        }
         existing_notification.update(pn_obj);
     } else {
         new PNotify(pn_obj);
@@ -584,13 +603,13 @@ $(function () {
             ) {
                 new PNotify({
                     title: gettext(
-                        "Beta user: Please consider enabling Mr Beam analytics!"
+                        "Beta user: Please consider enabling Mr Beam Better Together!"
                     ),
                     text: _.sprintf(
                         gettext(
                             "As you are currently in our Beta channel, you would help us " +
                                 "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
-                                "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"
+                                "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to Better Together settings%(close)s"
                         ),
                         {
                             open: '<a href=\'#\' data-toggle="tab" id="beta_notification_analytics_link" class="settings_analytics_link" style="font-weight:bold">',

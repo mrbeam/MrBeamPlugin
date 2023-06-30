@@ -193,7 +193,7 @@ def get_update_information(plugin):
         ).implementation
         _clear_version_cache(sw_update_plugin)
     except Exception as e:
-        _logger.exception(e)
+        _logger.exception("unhandled exception %s", e)
 
     return _set_info_from_cloud_config(
         plugin,
