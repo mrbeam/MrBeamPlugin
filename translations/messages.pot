@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-06-29 18:30+0200\n"
+"POT-Creation-Date: 2023-06-30 13:49+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -800,7 +800,7 @@ msgstr ""
 #: octoprint_mrbeam/static/js/app/view-models/user-notification.js:125
 #: octoprint_mrbeam/static/js/app/view-models/user-notification.js:158
 #: octoprint_mrbeam/static/js/app/view-models/user-notification.js:208
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:358
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:352
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:25
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:41
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:62
@@ -1026,23 +1026,23 @@ msgstr ""
 msgid "A new lens calibration file has been created and is now being used."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:373
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:367
 #, python-format
 msgid ""
 "For more information check out this %(opening_tag)sKnowledge Base "
 "article%(closing_tag)s"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:390
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:384
 #, python-format
 msgid "Browse our %(opening_tag)sKnowledge Base%(closing_tag)s"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:410
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:404
 msgid "Error:"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:424
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:418
 msgid "Error Code:"
 msgstr ""
 
@@ -1480,7 +1480,7 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/material-settings.js:318
 #: octoprint_mrbeam/static/js/app/view-models/modal/material-settings.js:332
-msgid "Plywood is greate fo all kinds of model making and decoration."
+msgid "Plywood is great for all kinds of model making and decoration."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/material-settings.js:321
