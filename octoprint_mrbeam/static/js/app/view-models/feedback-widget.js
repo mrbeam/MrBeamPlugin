@@ -56,7 +56,7 @@ $(function () {
         self.showWidget = function () {
             let user = self.loginStateViewModel.username();
 
-            let channel;
+            let channel, laserhead_model;
             if (MRBEAM_SW_TIER === "BETA") {
                 channel = "Beta";
             } else {

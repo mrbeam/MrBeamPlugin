@@ -5,7 +5,7 @@ $(function () {
 
         self.freshdeskWidget = params[0];
 
-        openFreshWidget = function (prefilled_description, test) {
+        openFreshWidget = function (prefilled_description) {
             if (prefilled_description) {
                 window.FreshworksWidget("prefill", "ticketForm", {
                     subject: prefilled_description,
@@ -33,7 +33,7 @@ $(function () {
                 closing_tag: "</strong></a>",
                 line_break: "<br />",
                 opening_tag_support:
-                    '<a href="javascript:void(0)" onclick="openFreshWidget(\'##err_code##\', self)"><strong>',
+                    '<a href="javascript:void(0)" onclick="openFreshWidget(\'##err_code##\')"><strong>',
                 closing_tag_support: "</strong></a>",
             };
         };
@@ -335,16 +335,10 @@ $(function () {
             }
 
             // if error code is present show this instead show error message
-            if (
-                notification_conf.err_code &&
-                notification_conf.err_code.length
-            ) {
+            if (notification_conf.err_code?.length) {
                 pn_obj.text += self._getErrorCode(notification_conf.err_code);
                 pn_obj.err_code = [notification_conf.err_code];
-            } else if (
-                notification_conf.err_msg &&
-                notification_conf.err_msg.length
-            ) {
+            } else if (notification_conf.err_msg?.length) {
                 pn_obj.text += self._getErrorString(notification_conf.err_msg);
             }
 
@@ -441,9 +435,6 @@ $(function () {
                         "Error while trying to request hardware errors."
                     );
                 });
-        };
-        self._openFreshWidget = function (pnotify) {
-            openFreshWidget(pnotify.error_code);
         };
     }
 
