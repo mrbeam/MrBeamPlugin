@@ -117,14 +117,22 @@ def test_handle_temp_invalid(temperature_manager):
 
 def test_handle_temp_critical_high_temperature(temperature_manager):
     # Arrange
-    temperature_manager.cooling_stop = MagicMock()
 
     # Act
     temperature_manager.handle_temp(kwargs={"temp": 55.1})
 
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
-        MrBeamEvents.LASER_HIGH_TEMPERATURE, {"threshold": 55.0, "tmp": 55.1}
+        MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED,
+    )
+    temperature_manager.cooling_tigger_time = get_uptime() - 3
+
+    # Act
+    temperature_manager.handle_temp(kwargs={"temp": 55.2})
+
+    # Assert
+    temperature_manager._event_bus.fire.assert_called_with(
+        MrBeamEvents.LASER_HIGH_TEMPERATURE, {"threshold": 55.0, "tmp": 55.2}
     )
 
 

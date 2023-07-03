@@ -376,7 +376,11 @@ class TemperatureManager(object):
             self._event_bus.fire(MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED)
 
         # critical high temperature
-        if self.temperature > self.high_tmp_warn_threshold:
+        elif (
+            self.temperature > self.high_tmp_warn_threshold
+            and self.cooling_since
+            >= self.TEMP_TIMER_INTERVAL  # wait at least one cooling pause cycle before firing the event
+        ):
             self._logger.warn(
                 "High temperature warning triggered: tmp:%s threshold: %s",
                 self.temperature,
