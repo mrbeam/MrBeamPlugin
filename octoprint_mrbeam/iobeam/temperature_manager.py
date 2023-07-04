@@ -12,10 +12,10 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 _instance = None
 
 
-def temperatureManager(plugin):
+def temperatureManager(plugin, laser):
     global _instance
     if _instance is None:
-        _instance = TemperatureManager(plugin)
+        _instance = TemperatureManager(plugin, laser)
     return _instance
 
 
@@ -41,10 +41,11 @@ class TemperatureManager(object):
     THIRD_COOLING_THRESHOLD_TEMPERATURE = 6  # degrees
     THIRD_COOLING_THRESHOLD_TIME = 140  # seconds
 
-    def __init__(self, plugin):
+    def __init__(self, plugin, laser):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.temperaturemanager")
         self._plugin = plugin
         self._event_bus = plugin._event_bus
+        self._laser = laser
         self.temperature = None
         self.temperature_ts = 0
         self.temperature_max = (
@@ -362,12 +363,11 @@ class TemperatureManager(object):
             msg = "Laser temperature not available, assuming high temperature and stop for cooling."
             self.cooling_stop(err_msg=msg)
             return
-
         # cooling break
         if (
             not self.is_cooling(time_wise_only=True)
             and self.temperature > self.temperature_max
-            and self._one_button_handler.is_laser_busy()
+            and self._laser.is_busy()
         ):
             msg = "Laser temperature exceeded limit. Current temp: %s, max: %s" % (
                 self.temperature,
@@ -378,8 +378,7 @@ class TemperatureManager(object):
 
         # critical high temperature
         elif self.temperature > self.high_tmp_warn_threshold and (
-            not self._one_button_handler.is_laser_busy()
-            or self.cooling_since >= self.TEMP_TIMER_INTERVAL
+            not self._laser.is_busy() or self.cooling_since >= self.TEMP_TIMER_INTERVAL
         ):  # if the laser is doing a job wait at least one cooling pause cycle before firing the event
             self._logger.warn(
                 "High temperature warning triggered: tmp:%s threshold: %s",

@@ -277,7 +277,7 @@ class MrBeamPlugin(
         self.dust_manager = dustManager(self)
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
-        self.temperature_manager = temperatureManager(self)
+        self.temperature_manager = temperatureManager(self, self._printer)
         self.compressor_handler = compressor_handler(self)
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)

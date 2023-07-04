@@ -368,15 +368,6 @@ class OneButtonHandler(object):
     def is_printing(self):
         return self._printer.get_state_id() == self.PRINTER_STATE_PRINTING
 
-    def is_laser_busy(self):
-        """
-        Returns true if the printer is busy with a print job or paused during a job.
-
-        Returns:
-            bool: True if the printer is busy with a print job or paused during a job.
-        """
-        return self._printer.is_busy()
-
     def is_paused(self):
         return self._printer.is_paused()
 
