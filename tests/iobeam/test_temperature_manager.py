@@ -1,5 +1,5 @@
 import pytest
-from mock.mock import MagicMock
+from mock.mock import MagicMock, patch
 from octoprint_mrbeam.util.uptime import get_uptime
 from pytest import approx
 
@@ -16,6 +16,7 @@ def temperature_manager(mrbeam_plugin):
     temperature_manager._event_bus.fire = MagicMock()
     temperature_manager._analytics_handler = MagicMock()
     temperature_manager._one_button_handler = MagicMock()
+    temperature_manager._temp_timer_callback = MagicMock()
     temperature_manager._on_mrbeam_plugin_initialized(
         MrBeamEvents.MRB_PLUGIN_INITIALIZED, None
     )
@@ -115,17 +116,45 @@ def test_handle_temp_invalid(temperature_manager):
     temperature_manager.cooling_stop.assert_called_once()
 
 
-def test_handle_temp_critical_high_temperature(temperature_manager):
+def test_handle_temp_critical_high_temperature_while_printing(temperature_manager):
     # Arrange
+    temperature_manager._one_button_handler.is_printing = MagicMock(return_value=True)
+    temperature_manager._one_button_handler.is_laser_busy = MagicMock(return_value=True)
 
     # Act
-    temperature_manager.handle_temp(kwargs={"temp": 55.1})
+    with patch(
+        "octoprint_mrbeam.iobeam.temperature_manager.get_uptime",
+        return_value=get_uptime() - 3,
+    ):  # simulate a temperature received 3 seconds ago
+        temperature_manager.handle_temp(kwargs={"temp": 55.1})
 
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
         MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED,
     )
-    temperature_manager.cooling_tigger_time = get_uptime() - 3
+
+    # Act
+    temperature_manager.handle_temp(kwargs={"temp": 55.2})
+
+    # Assert
+    temperature_manager._event_bus.fire.assert_called_with(
+        MrBeamEvents.LASER_HIGH_TEMPERATURE, {"threshold": 55.0, "tmp": 55.2}
+    )
+
+
+def test_handle_temp_critical_high_temperature_while_not_lasering(temperature_manager):
+    # Arrange
+    temperature_manager._one_button_handler.is_printing = MagicMock(return_value=False)
+    temperature_manager._one_button_handler.is_laser_busy = MagicMock(
+        return_value=False
+    )
+
+    # Act
+    with patch(
+        "octoprint_mrbeam.iobeam.temperature_manager.get_uptime",
+        return_value=get_uptime() - 3,
+    ):  # simulate a temperature received 3 seconds ago
+        temperature_manager.handle_temp(kwargs={"temp": 55.1})
 
     # Act
     temperature_manager.handle_temp(kwargs={"temp": 55.2})

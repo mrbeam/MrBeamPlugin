@@ -191,7 +191,7 @@ class TemperatureManager(object):
             self._logger.info(
                 "laser_temp - first temperature from laserhead: %s", self.temperature
             )
-        self.temperature_ts = time.time()
+        self.temperature_ts = get_uptime()
         self._check_temp_val()
         self._analytics_handler.collect_laser_temp_value(self.temperature)
 
@@ -261,7 +261,7 @@ class TemperatureManager(object):
             self._msg_is_temperature_recent = "is_temperature_recent(): Laser temperature is None. never received a temperature value."
             self._id_is_temperature_recent = "laser-temperature-none"
             return False
-        age = time.time() - self.temperature_ts
+        age = get_uptime() - self.temperature_ts
         if age > self.TEMP_MAX_AGE:
             self._msg_is_temperature_recent = (
                 "is_temperature_recent(): Laser temperature too old: must be more recent than %s s but actual age is %s s"
@@ -367,6 +367,7 @@ class TemperatureManager(object):
         if (
             not self.is_cooling(time_wise_only=True)
             and self.temperature > self.temperature_max
+            and self._one_button_handler.is_laser_busy()
         ):
             msg = "Laser temperature exceeded limit. Current temp: %s, max: %s" % (
                 self.temperature,
@@ -376,11 +377,10 @@ class TemperatureManager(object):
             self._event_bus.fire(MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED)
 
         # critical high temperature
-        elif (
-            self.temperature > self.high_tmp_warn_threshold
-            and self.cooling_since
-            >= self.TEMP_TIMER_INTERVAL  # wait at least one cooling pause cycle before firing the event
-        ):
+        elif self.temperature > self.high_tmp_warn_threshold and (
+            not self._one_button_handler.is_laser_busy()
+            or self.cooling_since >= self.TEMP_TIMER_INTERVAL
+        ):  # if the laser is doing a job wait at least one cooling pause cycle before firing the event
             self._logger.warn(
                 "High temperature warning triggered: tmp:%s threshold: %s",
                 self.temperature,
