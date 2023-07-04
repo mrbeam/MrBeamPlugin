@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@main
+    uses: mrbeam/mrb-workflows/.github/workflows/build.yml@python2.7
     secrets: inherit
     with:
       python_v: 2.7
