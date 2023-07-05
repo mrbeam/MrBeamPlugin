@@ -264,6 +264,9 @@ class Laser(Printer):
     def is_lasering(self):
         return self.is_printing()
 
+    def is_busy(self):
+        return self.is_printing() or self.is_paused()
+
     def _on_re_trigger_fan(self, event, payload):
         """Re trigger the fan if the laser is printing or paused.
         This can be done by sending atomic command start and pause after each other.
