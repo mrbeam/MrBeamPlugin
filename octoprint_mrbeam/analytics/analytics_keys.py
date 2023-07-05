@@ -71,6 +71,10 @@ class AnalyticsKeys:
                 INTENSITY = "intensity_summary"
                 LASERTEMP = "lasertemp_summary"
 
+                class Laserhead:
+                    COOLING_TEMPERATURE = "lh_cooling_temp"
+                    SUMMER_MONTH_TEMPERATURE_OFFSET = "lh_summer_month_temp_offset"
+
         class Dust:
             START = "d_start"
             END = "d_end"
@@ -101,6 +105,8 @@ class AnalyticsKeys:
 
         class LaserHead:
             TEMP = "lasertemp"
+            MAX_TEMPERATURE = "max_lasertemp"
+            SUMMER_MONTH_OFFSET = "summer_month_offset"
 
     class Device:
         HOSTNAME = "hostname"
