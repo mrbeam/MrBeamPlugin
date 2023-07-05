@@ -322,6 +322,7 @@ class DustManager(object):
             self._send_fan_command(self.FAN_COMMAND_ON, int(value))
 
     def _stop_dust_extraction(self):
+        self._cancel_all_fan_timers()
         self._send_fan_command(self.FAN_COMMAND_OFF)
 
     def _cancel_all_fan_timers(self):
