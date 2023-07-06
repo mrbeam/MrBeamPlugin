@@ -367,7 +367,7 @@ class TemperatureManager(object):
         if (
             not self.is_cooling(time_wise_only=True)
             and self.temperature > self.temperature_max
-            and self._laser.is_busy()
+            and (self._laser.is_busy() or self.high_temp_fsm.deactivated.is_active)
         ):
             msg = "Laser temperature exceeded limit. Current temp: %s, max: %s" % (
                 self.temperature,
