@@ -106,7 +106,7 @@ class AnalyticsKeys:
         class LaserHead:
             TEMP = "lasertemp"
             COOLING_TEMPERATURE = "cooling_temperature"
-            SUMMER_MONTH_OFFSET = "summer_month_offset"
+            SUMMER_MONTH_TEMPERATURE_OFFSET = "summer_month_offset"
 
     class Device:
         HOSTNAME = "hostname"
