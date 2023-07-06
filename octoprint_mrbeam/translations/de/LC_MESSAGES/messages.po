@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-06-30 13:49+0200\n"
-"PO-Revision-Date: 2023-06-30 13:50+0200\n"
+"POT-Creation-Date: 2023-07-06 17:06+0200\n"
+"PO-Revision-Date: 2023-07-06 17:13+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -1847,7 +1847,7 @@ msgstr "https://www.mr-beam.org/collections/laser-leder"
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/material-settings.js:409
 msgid "Sign Material"
-msgstr "Schildmaterial"
+msgstr "Schildermaterial"
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/material-settings.js:412
 msgid ""
@@ -1877,11 +1877,11 @@ msgstr "https://www.mr-beam.org/products/stempelgummi"
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/material-settings.js:442
 msgid "Swiss stone pine"
-msgstr "Zirbelkiefer"
+msgstr "Vollholz Zirbe"
 
 #: octoprint_mrbeam/static/js/app/view-models/modal/material-settings.js:451
 msgid "Wood Sticker"
-msgstr "Edelholzsticker"
+msgstr "(Edel)holz Sticker"
 
 # don’t change the link
 #: octoprint_mrbeam/static/js/app/view-models/modal/material-settings.js:457
@@ -6520,7 +6520,7 @@ msgid ""
 "Swiss stone pine and more."
 msgstr ""
 "Neue Materialeinstellungen: Wir haben Einstellungen für Schildermaterial, "
-"Stempelgummi, Zirbenholz und mehr hinzugefügt."
+"Stempelgummi, Vollholz Zirbe und mehr hinzugefügt."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7
 msgid ""
