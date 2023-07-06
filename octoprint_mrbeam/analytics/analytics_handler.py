@@ -962,7 +962,7 @@ class AnalyticsHandler(object):
         _ = payload
         data = {
             AnalyticsKeys.Job.LaserHead.TEMP: None,
-            AnalyticsKeys.Job.LaserHead.MAX_TEMPERATURE: self._laserhead_handler.current_laserhead_max_temperature,
+            AnalyticsKeys.Job.LaserHead.COOLING_TEMPERATURE: self._laserhead_handler.current_laserhead_max_temperature,
             AnalyticsKeys.Job.LaserHead.SUMMER_MONTH_OFFSET: self._laserhead_handler.get_summermonth_temperature_offset(),
         }
         if self._current_lasertemp_collector:
