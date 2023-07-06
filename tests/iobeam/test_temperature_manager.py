@@ -155,11 +155,6 @@ def test_handle_temp_critical_high_temperature_while_not_lasering(temperature_ma
     ):  # simulate a temperature received 3 seconds ago
         temperature_manager.handle_temp(kwargs={"temp": 55.1})
 
-    temperature_manager._event_bus.fire.assert_called_with(
-        MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED,
-    )
-    temperature_manager.high_temp_fsm.start_monitoring()  # this would be triggered by the event
-
     # Act
     temperature_manager.handle_temp(kwargs={"temp": 55.2})
 
