@@ -25,6 +25,7 @@ from octoprint_mrbeam.migration.Mig001 import Mig001NetconnectdDisableLogDebugLe
 from octoprint_mrbeam.migration.Mig002 import Mig002EnableOnlineCheck
 from octoprint_mrbeam.migration.Mig003 import Mig003EnableLogrotateBuster
 from octoprint_mrbeam.migration.Mig004 import Mig004DisableDebugLogging
+from octoprint_mrbeam.migration.Mig005 import Mig005InstallNTP
 
 # To add migrations they have to be added to this list till we automate it
 list_of_migrations = [
@@ -32,4 +33,5 @@ list_of_migrations = [
     Mig002EnableOnlineCheck,
     Mig003EnableLogrotateBuster,
     Mig004DisableDebugLogging,
+    Mig005InstallNTP,
 ]

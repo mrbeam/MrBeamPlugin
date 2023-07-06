@@ -38,7 +38,9 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     UNKNOWN_VALUE = "unknown"
-    ANALYTICS_LOG_VERSION = 28  # bumped for SW-3065 add laserhead to header
+    ANALYTICS_LOG_VERSION = (
+        29  # bumped for SW-1157 add laser head max temperature and summer month offset
+    )
 
     def __init__(self, plugin):
         self._plugin = plugin
@@ -958,7 +960,11 @@ class AnalyticsHandler(object):
     def _event_laser_cooling_pause(self, event, payload, header_extension=None):
         _ = event
         _ = payload
-        data = {AnalyticsKeys.Job.LaserHead.TEMP: None}
+        data = {
+            AnalyticsKeys.Job.LaserHead.TEMP: None,
+            AnalyticsKeys.Job.LaserHead.COOLING_TEMPERATURE: self._laserhead_handler.current_laserhead_max_temperature,
+            AnalyticsKeys.Job.LaserHead.SUMMER_MONTH_TEMPERATURE_OFFSET: self._laserhead_handler.get_summermonth_temperature_offset(),
+        }
         if self._current_lasertemp_collector:
             data[
                 AnalyticsKeys.Job.LaserHead.TEMP
@@ -1497,6 +1503,12 @@ class AnalyticsHandler(object):
             )
         if self._current_lasertemp_collector:
             lasertemp_summary = self._current_lasertemp_collector.getSummary()
+            lasertemp_summary[
+                AnalyticsKeys.Job.Event.Summary.Laserhead.COOLING_TEMPERATURE
+            ] = self._laserhead_handler.current_laserhead_max_temperature
+            lasertemp_summary[
+                AnalyticsKeys.Job.Event.Summary.Laserhead.SUMMER_MONTH_TEMPERATURE_OFFSET
+            ] = self._laserhead_handler.get_summermonth_temperature_offset()
             self._add_job_event(
                 AnalyticsKeys.Job.Event.Summary.LASERTEMP, payload=lasertemp_summary
             )

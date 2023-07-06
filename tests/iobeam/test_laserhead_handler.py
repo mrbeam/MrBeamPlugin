@@ -1,5 +1,5 @@
 import pytest
-from mock.mock import patch
+from mock.mock import patch, MagicMock
 
 from octoprint_mrbeam.iobeam.laserhead_handler import (
     LaserheadHandler,
@@ -460,3 +460,140 @@ def test_current_laserhead_min_speed(laserhead, expected_value, mrbeam_plugin):
 
         # Assert
         assert min_speed == expected_value
+
+
+@pytest.mark.parametrize(
+    "month,expected_offset",
+    [
+        (1, 0.0),
+        (2, 0.0),
+        (3, 0.0),
+        (4, 0.0),
+        (5, 0.0),
+        (6, 1.0),
+        (7, 2.0),
+        (8, 2.0),
+        (9, 1.0),
+        (10, 0.0),
+        (11, 0.0),
+        (12, 0.0),
+    ],
+)
+@patch("time.localtime")
+def test_get_summermont_temperature_offset_ntp_synced(
+    mock_localtime, month, expected_offset, mrbeam_plugin
+):
+    # Arrange
+    laserhead_handler = LaserheadHandler(mrbeam_plugin)
+    laserhead_handler._plugin.is_time_ntp_synced = MagicMock(return_value=True)
+
+    mock_localtime.return_value.tm_mon = month
+    offset = laserhead_handler.get_summermonth_temperature_offset()
+
+    # Assert
+    assert offset == expected_offset
+
+
+@pytest.mark.parametrize(
+    "month,expected_offset",
+    [
+        (1, 0.0),
+        (2, 0.0),
+        (3, 0.0),
+        (4, 0.0),
+        (5, 0.0),
+        (6, 0.0),
+        (7, 0.0),
+        (8, 0.0),
+        (9, 0.0),
+        (10, 0.0),
+        (11, 0.0),
+        (12, 0.0),
+    ],
+)
+@patch("time.localtime")
+def test_get_summermont_temperature_offset_ntp_not_synced(
+    mock_localtime, month, expected_offset, mrbeam_plugin
+):
+    # Arrange
+    laserhead_handler = LaserheadHandler(mrbeam_plugin)
+    laserhead_handler._plugin.is_time_ntp_synced = MagicMock(return_value=False)
+
+    mock_localtime.return_value.tm_mon = month
+    offset = laserhead_handler.get_summermonth_temperature_offset()
+
+    # Assert
+    assert offset == expected_offset
+
+
+@pytest.mark.parametrize(
+    "laserhead,expected_value",
+    [
+        (LASERHEAD_STOCK_ID, 55),
+        (LASERHEAD_S_ID, 59),
+        (LASERHEAD_X_ID, 60),
+        (None, 55),
+        (1000, 55),
+    ],
+    ids=[
+        "Laserhead Stock",
+        "Laserhead S",
+        "Laserhead X",
+        "None Laserhead",
+        "unknown Laserhead",
+    ],
+)
+def test_current_laserhead_max_temperature_without_summer_month_offset(
+    laserhead, expected_value, mrbeam_plugin
+):
+    # Arrange
+    with patch(
+        "octoprint_mrbeam.iobeam.laserhead_handler.LaserheadHandler.get_current_used_lh_model_id",
+        return_value=laserhead,
+    ):
+        laserhead_handler = LaserheadHandler(mrbeam_plugin)
+
+        # Act
+        current_laserhead_max_temperature = (
+            laserhead_handler.current_laserhead_max_temperature
+        )
+
+        # Assert
+        assert current_laserhead_max_temperature == expected_value
+
+
+@pytest.mark.parametrize(
+    "laserhead,expected_value",
+    [
+        (LASERHEAD_STOCK_ID, 55),
+        (LASERHEAD_S_ID, 59),
+        (LASERHEAD_X_ID, 60),
+        (None, 55),
+        (1000, 55),
+    ],
+    ids=[
+        "Laserhead Stock",
+        "Laserhead S",
+        "Laserhead X",
+        "None Laserhead",
+        "unknown Laserhead",
+    ],
+)
+def test_current_laserhead_max_temperature_with_summer_month_offset(
+    laserhead, expected_value, mrbeam_plugin
+):
+    # Arrange
+    with patch(
+        "octoprint_mrbeam.iobeam.laserhead_handler.LaserheadHandler.get_current_used_lh_model_id",
+        return_value=laserhead,
+    ):
+        laserhead_handler = LaserheadHandler(mrbeam_plugin)
+        laserhead_handler.get_summermonth_temperature_offset = MagicMock(
+            return_value=2.0
+        )
+
+        # Act
+        max_temp = laserhead_handler.current_laserhead_max_temperature
+
+        # Assert
+        assert max_temp == expected_value + 2.0
