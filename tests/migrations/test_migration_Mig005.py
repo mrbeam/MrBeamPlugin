@@ -38,17 +38,17 @@ def test_migration_commands_executed(migration005, mocker):
     mocker.patch.object(migration005, "exec_cmd", autospec=True)
     migration005.run()
     migration005.exec_cmd.assert_any_call(
-        "sudo apt install {}/files/migrate/Mig005/libopts25_1_5.18.12-4_armhf.deb -y".format(
+        "sudo apt install {}/files/Mig005/libopts25_1_5.18.12-4_armhf.deb -y".format(
             __package_path__
         )
     )
     migration005.exec_cmd.assert_any_call(
-        "sudo apt install {}/files/migrate/Mig005/ntp_1_4.2.8p12+dfsg-4_armhf.deb -y".format(
+        "sudo apt install {}/files/Mig005/ntp_1_4.2.8p12+dfsg-4_armhf.deb -y".format(
             __package_path__
         )
     )
     migration005.exec_cmd.assert_any_call(
-        "sudo apt install {}/files/migrate/Mig005/sntp_1_4.2.8p12+dfsg-4_armhf.deb -y".format(
+        "sudo apt install {}/files/Mig005/sntp_1_4.2.8p12+dfsg-4_armhf.deb -y".format(
             __package_path__
         )
     )
