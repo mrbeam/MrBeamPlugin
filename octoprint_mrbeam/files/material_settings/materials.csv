@@ -558,7 +558,7 @@ MrB II Dreamcut x,Sign Material,#f3de8d,"1,5",100,500,1,3,0,no,
 MrB II Dreamcut x,Sign Material,#d2a477,Engrave,0-50,2000-1400,1,3,0,no,
 MrB II Dreamcut x,Sign Material,#d2a477,"1,5",100,500,1,3,0,no,
 MrB II Dreamcut x,Swiss stone pine,#bc955a,Engrave,0-20,2000-2000,1,3,0,no,tested
-MrB II Dreamcut x,Swiss stone pine,#bc955a,3,100,500,2,3,0,no,
+MrB II Dreamcut x,,#bc955a,3,100,600,3,3,0,no,tested by ellen (4.7.23)
 MrB II Dreamcut x,Wood Sticker,#783f04,Engrave,0-30,2000-2000,1,3,1,no,
 MrB II Dreamcut x,Wood Sticker,#783f04,1,100,1100,2,3,1,no,
 MrB II Dreamcut x,Wood Sticker,#bc955a,Engrave,0-30,2000-2000,1,3,1,no,
