@@ -82,7 +82,7 @@ additional_setup_parameters = {
             "profiles/laserhead/*.yaml",
             "files/grbl/*.hex",
             "files/migrate/*",
-            "files/migrate/Mig005/*",
+            "files/Mig005/*",
             "files/migrate_logrotate/*",
             "files/material_settings/*",
             "files/camera/*",
