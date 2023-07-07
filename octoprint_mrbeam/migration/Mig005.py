@@ -11,7 +11,7 @@ class Mig005InstallNTP(MigrationBaseClass):
     This migration installs NTP on the system for the buster system
     """
 
-    MIGRATE_LOGROTATE_FOLDER = "files/migrate/Mig005/"
+    MIGRATE_LOGROTATE_FOLDER = "files/Mig005/"
     BEAMOS_VERSION_LOW = "0.18.0"
     BEAMOS_VERSION_HIGH = "0.20.1"
 
