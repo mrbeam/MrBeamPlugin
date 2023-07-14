@@ -83,7 +83,9 @@ class Converter:
         self._log.info("Converter Initialized: %s", self.options)
         # todo need material,bounding_box_area here
         self._add_conversion_details_analytics()
-        self._save_job_time_estimation_v2_analytics(params.get("job_time_estimation_v2", -1))
+        self._save_job_time_estimation_v2_analytics(
+            params.get("job_time_estimation_v2", -1)
+        )
 
     def setoptions(self, opts):
         # set default values if option is missing

@@ -1228,8 +1228,8 @@ class AnalyticsHandler(object):
             )
 
     def _on_event_high_temperature_shown(self, event, payload, header_extension=None):
-        """Callback for high temperature warning or critical shown event.
-        Will add an event to analytics.
+        """Callback for high temperature warning or critical shown event. Will
+        add an event to analytics.
 
         Args:
             event: event that triggered this action
@@ -1272,8 +1272,8 @@ class AnalyticsHandler(object):
     def _on_event_high_temperature_dismissed(
         self, event, payload, header_extension=None
     ):
-        """Callback for high temperature warning/critical dismissed event. Will add an event to analytics.
-        Will add an event to analytics.
+        """Callback for high temperature warning/critical dismissed event. Will
+        add an event to analytics. Will add an event to analytics.
 
         Args:
             event: event that triggered this action
@@ -1316,7 +1316,8 @@ class AnalyticsHandler(object):
     def _on_event_laser_cooling_re_trigger_fan(
         self, event, payload, header_extension=None
     ):
-        """Callback for laser cooling re-trigger fan event to add analytics entry.
+        """Callback for laser cooling re-trigger fan event to add analytics
+        entry.
 
         Args:
             event: event that triggered this action

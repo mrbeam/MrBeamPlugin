@@ -164,8 +164,8 @@ class TemperatureManager(object):
 
     @property
     def high_tmp_warn_threshold(self):
-        """
-        Returns the temperature at which the user should be warned that the laser head is too hot.
+        """Returns the temperature at which the user should be warned that the
+        laser head is too hot.
 
         Returns:
             int: temperature in degrees
@@ -214,8 +214,7 @@ class TemperatureManager(object):
             )
 
     def cooling_resume(self):
-        """
-        Resume laser once the laser has cooled down enough.
+        """Resume laser once the laser has cooled down enough.
 
         Returns:
             None
@@ -243,13 +242,11 @@ class TemperatureManager(object):
 
     @property
     def cooling_since(self):
-        """
-        Returns the duration of the cooling process in seconds.
-        Is 0 if cooling is currently not active.
+        """Returns the duration of the cooling process in seconds. Is 0 if
+        cooling is currently not active.
 
         Returns:
             int: duration of cooling process in seconds
-
         """
         return (
             get_uptime() - self.cooling_tigger_time
@@ -318,8 +315,8 @@ class TemperatureManager(object):
 
     @property
     def cooling_difference(self):
-        """
-        Returns the difference between the current temperature and the temperature when the cooling process was started.
+        """Returns the difference between the current temperature and the
+        temperature when the cooling process was started.
 
         Returns:
             int: difference in degrees Celsius
@@ -331,8 +328,7 @@ class TemperatureManager(object):
         )
 
     def _fire_cooling_to_slow_event(self):
-        """
-        Fires the event that the cooling process is slowing down.
+        """Fires the event that the cooling process is slowing down.
 
         Returns:
             None
@@ -352,8 +348,7 @@ class TemperatureManager(object):
         )
 
     def _check_temp_val(self):
-        """
-        Checks the current temperature value and fires events if necessary.
+        """Checks the current temperature value and fires events if necessary.
 
         Returns:
             None
@@ -423,8 +418,8 @@ class TemperatureManager(object):
             self._check_cooling_threshold()
 
     def _check_cooling_threshold(self):
-        """
-        Checks if the cooling thresholds are met and fires the corresponding events.
+        """Checks if the cooling thresholds are met and fires the corresponding
+        events.
 
         Returns:
             None

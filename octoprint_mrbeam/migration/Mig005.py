@@ -7,9 +7,7 @@ from octoprint_mrbeam.migration.migration_base import (
 
 
 class Mig005InstallNTP(MigrationBaseClass):
-    """
-    This migration installs NTP on the system for the buster system
-    """
+    """This migration installs NTP on the system for the buster system."""
 
     MIGRATE_LOGROTATE_FOLDER = "files/Mig005/"
     BEAMOS_VERSION_LOW = "0.18.0"

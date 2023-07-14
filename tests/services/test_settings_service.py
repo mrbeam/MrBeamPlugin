@@ -47,140 +47,242 @@ class TestSettingsService(TestCase):
         )
         self._validate_settings_model(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get',
-           side_effect=requests.exceptions.RequestException())
+    @patch(
+        "octoprint_mrbeam.services.settings_service.requests.get",
+        side_effect=requests.exceptions.RequestException(),
+    )
     def test_get_template_settings_model_with_no_internet__then_return_settings_with_empty_material_store_settings(
-            self, requests_mock):
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+        self, requests_mock
+    ):
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load', side_effect=yaml.YAMLError())
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch(
+        "octoprint_mrbeam.services.settings_service.yaml.load",
+        side_effect=yaml.YAMLError(),
+    )
     def test_get_template_settings_model_with_yaml_issue_in_material_store__then_empty_material_store_settings(
-            self, yaml_mock, requests_mock):
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+        self, yaml_mock, requests_mock
+    ):
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
-    def test_get_template_settings_model_with_none_material_store_settings__then_empty_material_store_settings(self,
-                                                                                                               yaml_mock, requests_mock):
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch("octoprint_mrbeam.services.settings_service.yaml.load")
+    def test_get_template_settings_model_with_none_material_store_settings__then_empty_material_store_settings(
+        self, yaml_mock, requests_mock
+    ):
         yaml_mock.return_value = None
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
-    def test_get_template_settings_model_with_empty_material_store_settings__then_empty_material_store_settings(self,
-                                                                                                                yaml_mock, requests_mock):
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch("octoprint_mrbeam.services.settings_service.yaml.load")
+    def test_get_template_settings_model_with_empty_material_store_settings__then_empty_material_store_settings(
+        self, yaml_mock, requests_mock
+    ):
         yaml_mock.return_value = {}
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
-    def test_get_template_settings_model_with_no_material_store_settings__then_empty_material_store_settings(self,
-                                                                                                             yaml_mock, requests_mock):
-        yaml_mock.return_value = {'material-store': {}}
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch("octoprint_mrbeam.services.settings_service.yaml.load")
+    def test_get_template_settings_model_with_no_material_store_settings__then_empty_material_store_settings(
+        self, yaml_mock, requests_mock
+    ):
+        yaml_mock.return_value = {"material-store": {}}
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch("octoprint_mrbeam.services.settings_service.yaml.load")
     def test_get_template_settings_model_with_no_environment_material_store_settings__then_empty_material_store_settings(
-            self, yaml_mock, requests_mock):
-        yaml_mock.return_value = {'material-store': {'environment': {}}}
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+        self, yaml_mock, requests_mock
+    ):
+        yaml_mock.return_value = {"material-store": {"environment": {}}}
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch("octoprint_mrbeam.services.settings_service.yaml.load")
     def test_get_template_settings_model_with_no_matching_environment_material_store_settings__then_empty_material_store_settings(
-            self, yaml_mock, requests_mock):
-        yaml_mock.return_value = {'material-store': {
-            'environment': {'doesnotexist': {'url': 'https://test.material.store.mr-beam.org', 'enabled': True, 'healthcheck_url': 'https://test.material.store.mr-beam.org/api/healthcheck'}}}}
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+        self, yaml_mock, requests_mock
+    ):
+        yaml_mock.return_value = {
+            "material-store": {
+                "environment": {
+                    "doesnotexist": {
+                        "url": "https://test.material.store.mr-beam.org",
+                        "enabled": True,
+                        "healthcheck_url": "https://test.material.store.mr-beam.org/api/healthcheck",
+                    }
+                }
+            }
+        }
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
-    def test_get_template_settings_model_with_no_url_material_store_settings__then_empty_material_store_settings(self,
-                                                                                                                 yaml_mock, requests_mock):
-        yaml_mock.return_value = {'material-store': {
-            'environment': {'prod': {'enabled': True, 'healthcheck_url': 'https://test.material.store.mr-beam.org/api/healthcheck'}}}}
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch("octoprint_mrbeam.services.settings_service.yaml.load")
+    def test_get_template_settings_model_with_no_url_material_store_settings__then_empty_material_store_settings(
+        self, yaml_mock, requests_mock
+    ):
+        yaml_mock.return_value = {
+            "material-store": {
+                "environment": {
+                    "prod": {
+                        "enabled": True,
+                        "healthcheck_url": "https://test.material.store.mr-beam.org/api/healthcheck",
+                    }
+                }
+            }
+        }
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch("octoprint_mrbeam.services.settings_service.yaml.load")
     def test_get_template_settings_model_with_no_enabled_material_store_settings__then_empty_material_store_settings(
-            self, yaml_mock, requests_mock):
-        yaml_mock.return_value = {'material-store': {
-            'environment': {'prod': {'url': 'https://test.material.store.mr-beam.org', 'healthcheck_url': 'https://test.material.store.mr-beam.org/api/healthcheck'}}}}
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+        self, yaml_mock, requests_mock
+    ):
+        yaml_mock.return_value = {
+            "material-store": {
+                "environment": {
+                    "prod": {
+                        "url": "https://test.material.store.mr-beam.org",
+                        "healthcheck_url": "https://test.material.store.mr-beam.org/api/healthcheck",
+                    }
+                }
+            }
+        }
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch("octoprint_mrbeam.services.settings_service.yaml.load")
     def test_get_template_settings_model_with_no_healthcheck_url_material_store_settings__then_empty_material_store_settings(
-            self, yaml_mock, requests_mock):
-        yaml_mock.return_value = {'material-store': {
-            'environment': {'prod': {'enabled': True, 'url': 'https://test.material.store.mr-beam.org'}}}}
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+        self, yaml_mock, requests_mock
+    ):
+        yaml_mock.return_value = {
+            "material-store": {
+                "environment": {
+                    "prod": {
+                        "enabled": True,
+                        "url": "https://test.material.store.mr-beam.org",
+                    }
+                }
+            }
+        }
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
         self._validate_empty_material_store_settings(settings_model)
 
-    @patch('octoprint_mrbeam.services.settings_service.requests.get')
-    @patch('octoprint_mrbeam.services.settings_service.yaml.load')
-    def test_get_template_settings_model_with_correct_material_store_settings__then_valid_settings(self, yaml_mock, requests_mock):
-        yaml_mock.return_value = {'material-store': {
-            'environment': {'prod': {'url': 'https://test.material.store.mr-beam.org', 'enabled': True, 'healthcheck_url': 'https://test.material.store.mr-beam.org/api/healthcheck'}}}}
-        settings_model = self._settings_service.get_template_settings_model(MrBeamModel.DREAMCUT_S.value)
+    @patch("octoprint_mrbeam.services.settings_service.requests.get")
+    @patch("octoprint_mrbeam.services.settings_service.yaml.load")
+    def test_get_template_settings_model_with_correct_material_store_settings__then_valid_settings(
+        self, yaml_mock, requests_mock
+    ):
+        yaml_mock.return_value = {
+            "material-store": {
+                "environment": {
+                    "prod": {
+                        "url": "https://test.material.store.mr-beam.org",
+                        "enabled": True,
+                        "healthcheck_url": "https://test.material.store.mr-beam.org/api/healthcheck",
+                    }
+                }
+            }
+        }
+        settings_model = self._settings_service.get_template_settings_model(
+            MrBeamModel.DREAMCUT_S.value
+        )
         self._validate_settings_model(settings_model)
-        self.assertEquals(settings_model.material_store.url, 'https://test.material.store.mr-beam.org')
+        self.assertEquals(
+            settings_model.material_store.url, "https://test.material.store.mr-beam.org"
+        )
         self.assertEquals(settings_model.material_store.enabled, True)
-        self.assertEquals(settings_model.material_store.healthcheck_url, 'https://test.material.store.mr-beam.org/api/healthcheck')
+        self.assertEquals(
+            settings_model.material_store.healthcheck_url,
+            "https://test.material.store.mr-beam.org/api/healthcheck",
+        )
 
     def test_get_environment_from_settings_with_none__then_stable(self):
         environment = settings_service.get_environment_enum_from_plugin_settings(None)
         self.assertEquals(environment, SWUpdateTier.STABLE)
 
-    def test_get_environment_from_settings_with_empty_plugin_settings__then_stable(self):
-        settings = PluginSettings(Settings(), 'mrbeam-test-plugin')
-        environment = settings_service.get_environment_enum_from_plugin_settings(settings)
+    def test_get_environment_from_settings_with_empty_plugin_settings__then_stable(
+        self,
+    ):
+        settings = PluginSettings(Settings(), "mrbeam-test-plugin")
+        environment = settings_service.get_environment_enum_from_plugin_settings(
+            settings
+        )
         self.assertEquals(environment, SWUpdateTier.STABLE)
 
     def test_get_environment_from_settings_with_none_dev__then_stable(self):
-        plugin_settings = PluginSettings(Settings(), 'mrbeam-test-plugin')
-        plugin_settings.set(['dev'], None, force=True)
-        environment = settings_service.get_environment_enum_from_plugin_settings(plugin_settings)
+        plugin_settings = PluginSettings(Settings(), "mrbeam-test-plugin")
+        plugin_settings.set(["dev"], None, force=True)
+        environment = settings_service.get_environment_enum_from_plugin_settings(
+            plugin_settings
+        )
         self.assertEquals(environment, SWUpdateTier.STABLE)
 
     def test_get_environment_from_settings_with_none_software_tier__then_stable(self):
-        plugin_settings = PluginSettings(Settings(), 'mrbeam-test-plugin')
-        plugin_settings.set(['dev', 'software_tier'], None, force=True)
-        environment = settings_service.get_environment_enum_from_plugin_settings(plugin_settings)
+        plugin_settings = PluginSettings(Settings(), "mrbeam-test-plugin")
+        plugin_settings.set(["dev", "software_tier"], None, force=True)
+        environment = settings_service.get_environment_enum_from_plugin_settings(
+            plugin_settings
+        )
         self.assertEquals(environment, SWUpdateTier.STABLE)
 
-    def test_get_environment_from_settings_with_beta_lower_software_tier__then_beta(self):
-        plugin_settings = PluginSettings(Settings(), 'mrbeam-test-plugin')
-        plugin_settings.set(['dev', 'software_tier'], 'beta', force=True)
-        environment = settings_service.get_environment_enum_from_plugin_settings(plugin_settings)
+    def test_get_environment_from_settings_with_beta_lower_software_tier__then_beta(
+        self,
+    ):
+        plugin_settings = PluginSettings(Settings(), "mrbeam-test-plugin")
+        plugin_settings.set(["dev", "software_tier"], "beta", force=True)
+        environment = settings_service.get_environment_enum_from_plugin_settings(
+            plugin_settings
+        )
         self.assertEquals(environment, SWUpdateTier.BETA)
 
-    def test_get_environment_from_settings_with_alpha_upper_software_tier__then_beta(self):
-        plugin_settings = PluginSettings(Settings(), 'mrbeam-test-plugin')
-        plugin_settings.set(['dev', 'software_tier'], 'ALPHA', force=True)
-        environment = settings_service.get_environment_enum_from_plugin_settings(plugin_settings)
+    def test_get_environment_from_settings_with_alpha_upper_software_tier__then_beta(
+        self,
+    ):
+        plugin_settings = PluginSettings(Settings(), "mrbeam-test-plugin")
+        plugin_settings.set(["dev", "software_tier"], "ALPHA", force=True)
+        environment = settings_service.get_environment_enum_from_plugin_settings(
+            plugin_settings
+        )
         self.assertEquals(environment, SWUpdateTier.ALPHA)
 
     def _validate_empty_settings_model(self, settings_model):

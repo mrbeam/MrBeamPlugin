@@ -1,6 +1,4 @@
-"""
-See octoprint_mrbeam/static/js/app/view-models/user-notification.js
-"""
+"""See octoprint_mrbeam/static/js/app/view-models/user-notification.js."""
 
 
 class NotificationIds(object):

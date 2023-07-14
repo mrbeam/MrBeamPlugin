@@ -2613,7 +2613,6 @@ class MachineCom(oprintMachineCom):
         """Abort the lasering.
 
         Returns:
-
         """
         self._cancel_print()
         eventManager().fire(MrBeamEvents.PRINT_ABORTED, dict(trigger=trigger))

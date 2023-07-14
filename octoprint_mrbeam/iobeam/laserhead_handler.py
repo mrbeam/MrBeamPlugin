@@ -6,12 +6,18 @@ import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
-from octoprint_mrbeam.util.device_info import MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_X, \
-    MODEL_MRBEAM_2_DC_R1, MODEL_MRBEAM_2_DC_R2, MODEL_MRBEAM_2
+from octoprint_mrbeam.util.device_info import (
+    MODEL_MRBEAM_2_DC_S,
+    MODEL_MRBEAM_2_DC,
+    MODEL_MRBEAM_2_DC_X,
+    MODEL_MRBEAM_2_DC_R1,
+    MODEL_MRBEAM_2_DC_R2,
+    MODEL_MRBEAM_2,
+)
 
 LASERHEAD_MAX_TEMP_FALLBACK = 55.0
 LASERHEAD_HIGH_TMP_WARN_OFFSET_FALLBACK = 3.0
-LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
+LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0  # selected the highest factor
 LASERHEAD_MAX_CORRECTION_FACTOR_FALLBACK = 1
 LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK = 1500
 LASERHEAD_LIFESPAN_FALLBACK = 40
@@ -23,7 +29,14 @@ LASERHEAD_S_ID = 1
 LASERHEAD_X_ID = 3
 
 SUPPORTED_LASERHEADS = {
-    LASERHEAD_STOCK_ID: [MODEL_MRBEAM_2, MODEL_MRBEAM_2_DC_R1, MODEL_MRBEAM_2_DC_R2, MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X],
+    LASERHEAD_STOCK_ID: [
+        MODEL_MRBEAM_2,
+        MODEL_MRBEAM_2_DC_R1,
+        MODEL_MRBEAM_2_DC_R2,
+        MODEL_MRBEAM_2_DC,
+        MODEL_MRBEAM_2_DC_S,
+        MODEL_MRBEAM_2_DC_X,
+    ],
     LASERHEAD_S_ID: [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X],
     LASERHEAD_X_ID: [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X],
 }
@@ -44,12 +57,11 @@ class LaserheadHandler(object):
     LASER_POWER_GOAL_MAX = 1300
     LASERHEAD_SERIAL_REGEXP = re.compile("^[0-9a-f-]{36}$")
     _LASERHEAD_MODEL_STRING_MAP = {
-        str(LASERHEAD_STOCK_ID): '0',  # dreamcut, mrbeam2 and mrbeam laserheads
-        str(LASERHEAD_S_ID): 'S',  # dreamcut[S] laserhead
-        str(LASERHEAD_X_ID): 'x',  # dreamcut[x] laserhead
+        str(LASERHEAD_STOCK_ID): "0",  # dreamcut, mrbeam2 and mrbeam laserheads
+        str(LASERHEAD_S_ID): "S",  # dreamcut[S] laserhead
+        str(LASERHEAD_X_ID): "x",  # dreamcut[x] laserhead
     }
     LASERHEAD_SUMMER_MONTH_OFFEST = {6: 1, 7: 2, 8: 2, 9: 1}  # month: offset
-
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.laserhead")
@@ -147,9 +159,14 @@ class LaserheadHandler(object):
                 ) and self._current_used_lh_model_id is not None:
                     laser_head_model_changed = True
 
-                if (self._current_used_lh_serial != self._last_used_lh_serial) and self._last_used_lh_model_id is not None:
+                if (
+                    self._current_used_lh_serial != self._last_used_lh_serial
+                ) and self._last_used_lh_model_id is not None:
                     # fmt: on
-                    if self._current_used_lh_model_id in [LASERHEAD_S_ID, LASERHEAD_X_ID]:
+                    if self._current_used_lh_model_id in [
+                        LASERHEAD_S_ID,
+                        LASERHEAD_X_ID,
+                    ]:
                         self._settings.set_boolean(["laserheadChanged"], True)
                         self._settings.save()
                     self._logger.info(
@@ -159,8 +176,12 @@ class LaserheadHandler(object):
                         self._current_used_lh_serial,
                         self._current_used_lh_model_id,
                     )
-                    self._analytics_handler.add_laserhead_changed(last_used_serial=self._last_used_lh_serial, last_used_model_id=self._last_used_lh_model_id, new_serial=self._current_used_lh_serial,
-                        new_model_id=self._current_used_lh_model_id)
+                    self._analytics_handler.add_laserhead_changed(
+                        last_used_serial=self._last_used_lh_serial,
+                        last_used_model_id=self._last_used_lh_model_id,
+                        new_serial=self._current_used_lh_serial,
+                        new_model_id=self._current_used_lh_model_id,
+                    )
                 self._write_lh_data_to_cache(lh_data)
 
                 self._calculate_and_write_correction_factor()
@@ -336,9 +357,15 @@ class LaserheadHandler(object):
         Returns:
             boolean: True if the current used laser head model is supported, False otherwise
         """
-        supported = self._plugin.get_model_id() in SUPPORTED_LASERHEADS.get(self.get_current_used_lh_model_id(), [])
+        supported = self._plugin.get_model_id() in SUPPORTED_LASERHEADS.get(
+            self.get_current_used_lh_model_id(), []
+        )
         if not supported:
-            self._logger.error("Current used laser head model (%s) is not supported by this device model.(%s) ", self.get_current_used_lh_model_id() , self._plugin.get_model_id())
+            self._logger.error(
+                "Current used laser head model (%s) is not supported by this device model.(%s) ",
+                self.get_current_used_lh_model_id(),
+                self._plugin.get_model_id(),
+            )
         return supported
 
     def _validate_lh_serial(self, serial):
@@ -510,8 +537,9 @@ class LaserheadHandler(object):
         """
         current_laserhead_properties = self._get_laserhead_properties()
         summer_month_temperature_offset = self.get_summermonth_temperature_offset()
-        max_temperature = self.default_laserhead_max_temperature + summer_month_temperature_offset
-
+        max_temperature = (
+            self.default_laserhead_max_temperature + summer_month_temperature_offset
+        )
 
         # Handle the exceptions
         if (
@@ -528,11 +556,20 @@ class LaserheadHandler(object):
             )
             self._logger.exception(
                 "Current laser head max temp:{} laser head temperature couldn't be retrieved, fallback to the default temperature value, includes summer month offset: {}".format(
-                    max_temperature, summer_month_temperature_offset))
+                    max_temperature, summer_month_temperature_offset
+                )
+            )
         else:
             # Reaching here means, everything looks good
-            max_temperature = current_laserhead_properties["max_temperature"] + summer_month_temperature_offset
-            self._logger.debug("Current laser head max temp:{} includes summer month offset: {}".format(max_temperature, summer_month_temperature_offset))
+            max_temperature = (
+                current_laserhead_properties["max_temperature"]
+                + summer_month_temperature_offset
+            )
+            self._logger.debug(
+                "Current laser head max temp:{} includes summer month offset: {}".format(
+                    max_temperature, summer_month_temperature_offset
+                )
+            )
 
         return max_temperature
 
@@ -551,39 +588,53 @@ class LaserheadHandler(object):
     def current_laserhead_high_temperature_warn_offset(self):
         """Return the current laser head high temperature warn offset.
 
-		Returns:
-			float: Laser head high tmp warn offset
-		"""
+        Returns:
+                float: Laser head high tmp warn offset
+        """
         current_laserhead_properties = self._get_laserhead_properties()
 
         # Handle the exceptions
-        if ((isinstance(current_laserhead_properties, dict) is False) or
-                ("high_temperature_offset" not in current_laserhead_properties) or
-                (isinstance(current_laserhead_properties["high_temperature_offset"], float) is False)):
+        if (
+            (isinstance(current_laserhead_properties, dict) is False)
+            or ("high_temperature_offset" not in current_laserhead_properties)
+            or (
+                isinstance(
+                    current_laserhead_properties["high_temperature_offset"], float
+                )
+                is False
+            )
+        ):
             # Apply fallback
-            self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
+            self._logger.debug(
+                "Current laserhead properties: {}".format(current_laserhead_properties)
+            )
             self._logger.exception(
                 "Current Laserhead high temperature warn offset couldn't be retrieved, fallback to the temperature value of: {}".format(
-                    self.default_laserhead_high_temperature_warn_offset))
+                    self.default_laserhead_high_temperature_warn_offset
+                )
+            )
             return self.default_laserhead_high_temperature_warn_offset
         # Reaching here means, everything looks good
-        self._logger.debug("Current Laserhead high temperature warn offset:{}".format(current_laserhead_properties["high_temperature_offset"]))
+        self._logger.debug(
+            "Current Laserhead high temperature warn offset:{}".format(
+                current_laserhead_properties["high_temperature_offset"]
+            )
+        )
         return current_laserhead_properties["high_temperature_offset"]
 
     @property
     def default_laserhead_high_temperature_warn_offset(self):
-        """Default high temperature warning offset for laser head. to be used by other modules
-		at init time.
+        """Default high temperature warning offset for laser head. to be used
+        by other modules at init time.
 
-		Returns:
-			float: Laser head default high tmp warn offset
-		"""
+        Returns:
+                float: Laser head default high tmp warn offset
+        """
 
         return LASERHEAD_HIGH_TMP_WARN_OFFSET_FALLBACK
 
     def get_summermonth_temperature_offset(self):
-        """
-        Return the summer month temperature offset
+        """Return the summer month temperature offset.
 
         Returns:
             int: temperature offset in degree if it is summer month, otherwise 0
@@ -658,8 +709,10 @@ class LaserheadHandler(object):
             # 2. Load the corresponding yaml file and return it's content
             self._laserhead_properties = self._load_current_laserhead_properties()
             if self._laserhead_properties is not None:
-                self._laserhead_properties.update({'laserhead_id': laserhead_id})
-            self._logger.debug("_laserhead_properties - {}".format(self._laserhead_properties))
+                self._laserhead_properties.update({"laserhead_id": laserhead_id})
+            self._logger.debug(
+                "_laserhead_properties - {}".format(self._laserhead_properties)
+            )
         else:
             self._logger.debug(
                 "no new laserhead_id -> return current laserhead_properties"
@@ -722,22 +775,33 @@ class LaserheadHandler(object):
         current_laserhead_properties = self._get_laserhead_properties()
 
         # Handle the exceptions
-        if ((isinstance(current_laserhead_properties, dict) is False) or
-                ("max_correction_factor" not in current_laserhead_properties) or
-                (isinstance(current_laserhead_properties["max_correction_factor"], float) is False)):
+        if (
+            (isinstance(current_laserhead_properties, dict) is False)
+            or ("max_correction_factor" not in current_laserhead_properties)
+            or (
+                isinstance(current_laserhead_properties["max_correction_factor"], float)
+                is False
+            )
+        ):
             # Apply fallback
             self._logger.exception(
                 "Current Laserhead max correction factor couldn't be retrieved, fallback to the factor value of: {}".format(
-                    self.default_laserhead_max_correction_factor))
+                    self.default_laserhead_max_correction_factor
+                )
+            )
             return self.default_laserhead_max_correction_factor
         # Reaching here means, everything looks good
         self._logger.debug(
-            "Current Laserhead max correction factor:{}".format(current_laserhead_properties["max_correction_factor"]))
+            "Current Laserhead max correction factor:{}".format(
+                current_laserhead_properties["max_correction_factor"]
+            )
+        )
         return current_laserhead_properties["max_correction_factor"]
 
     @property
     def default_laserhead_max_correction_factor(self):
-        """Default max correction factor for laser head. To be used by other modules at init time.
+        """Default max correction factor for laser head. To be used by other
+        modules at init time.
 
         Returns:
             float: Laser head default max correction factor
@@ -746,8 +810,8 @@ class LaserheadHandler(object):
 
     @property
     def current_laserhead_max_intensity_including_correction(self):
-        """
-        Returns the current laser head max intensity after the power correction for laser head was calculated on top.
+        """Returns the current laser head max intensity after the power
+        correction for laser head was calculated on top.
 
         Returns:
             int: Laser head max intensity including the correction factor
@@ -756,23 +820,38 @@ class LaserheadHandler(object):
         current_laserhead_properties = self._get_laserhead_properties()
 
         # Handle the exceptions
-        if ((isinstance(current_laserhead_properties, dict) is False) or
-                ("max_intensity_including_correction" not in current_laserhead_properties) or
-                (isinstance(current_laserhead_properties["max_intensity_including_correction"], int) is False)):
+        if (
+            (isinstance(current_laserhead_properties, dict) is False)
+            or (
+                "max_intensity_including_correction" not in current_laserhead_properties
+            )
+            or (
+                isinstance(
+                    current_laserhead_properties["max_intensity_including_correction"],
+                    int,
+                )
+                is False
+            )
+        ):
             # Apply fallback
             self._logger.exception(
                 "Current Laserhead max intensity including correction couldn't be retrieved, fallback to the factor value of: {}".format(
-                    self.default_laserhead_max_intensity_including_correction))
+                    self.default_laserhead_max_intensity_including_correction
+                )
+            )
             return self.default_laserhead_max_intensity_including_correction
         # Reaching here means, everything looks good
         self._logger.debug(
-            "Current Laserhead max intensity including correction:{}".format(current_laserhead_properties["max_intensity_including_correction"]))
+            "Current Laserhead max intensity including correction:{}".format(
+                current_laserhead_properties["max_intensity_including_correction"]
+            )
+        )
         return current_laserhead_properties["max_intensity_including_correction"]
 
     @property
     def default_laserhead_max_intensity_including_correction(self):
-        """
-        Default max intensity after the power correction for laser head was calculated on top. To be used by other modules at any time.
+        """Default max intensity after the power correction for laser head was
+        calculated on top. To be used by other modules at any time.
 
         Returns:
             int: Laser head default max intensity including the correction factor
@@ -791,22 +870,30 @@ class LaserheadHandler(object):
         current_laserhead_properties = self._get_laserhead_properties()
 
         # Handle the exceptions
-        if ((isinstance(current_laserhead_properties, dict) is False) or
-                ("lifespan" not in current_laserhead_properties) or
-                (isinstance(current_laserhead_properties["lifespan"], int) is False)):
+        if (
+            (isinstance(current_laserhead_properties, dict) is False)
+            or ("lifespan" not in current_laserhead_properties)
+            or (isinstance(current_laserhead_properties["lifespan"], int) is False)
+        ):
             # Apply fallback
             self._logger.exception(
                 "Current Laserhead lifespan couldn't be retrieved, fallback to the factor value of: {}".format(
-                    self.default_laserhead_lifespan))
+                    self.default_laserhead_lifespan
+                )
+            )
             return self.default_laserhead_lifespan
         # Reaching here means, everything looks good
         self._logger.debug(
-            "Current Laserhead lifespan:{}".format(current_laserhead_properties["lifespan"]))
+            "Current Laserhead lifespan:{}".format(
+                current_laserhead_properties["lifespan"]
+            )
+        )
         return current_laserhead_properties["lifespan"]
 
     @property
     def default_laserhead_lifespan(self):
-        """Default lifespan for laser head. To be used by other modules at init time.
+        """Default lifespan for laser head. To be used by other modules at init
+        time.
 
         Returns:
             int: Laser head default lifespan
@@ -823,22 +910,30 @@ class LaserheadHandler(object):
         current_laserhead_properties = self._get_laserhead_properties()
 
         # Handle the exceptions
-        if ((isinstance(current_laserhead_properties, dict) is False) or
-                ("min_speed" not in current_laserhead_properties) or
-                (isinstance(current_laserhead_properties["min_speed"], int) is False)):
+        if (
+            (isinstance(current_laserhead_properties, dict) is False)
+            or ("min_speed" not in current_laserhead_properties)
+            or (isinstance(current_laserhead_properties["min_speed"], int) is False)
+        ):
             # Apply fallback
             self._logger.exception(
                 "Current Laserhead minimum speed couldn't be retrieved, fallback to the factor value of: {}".format(
-                    self.default_laserhead_min_speed))
+                    self.default_laserhead_min_speed
+                )
+            )
             return self.default_laserhead_min_speed
         # Reaching here means, everything looks good
-        self._logger.debug("Current Laserhead minimum speed:{}".format(current_laserhead_properties["min_speed"]))
+        self._logger.debug(
+            "Current Laserhead minimum speed:{}".format(
+                current_laserhead_properties["min_speed"]
+            )
+        )
         return current_laserhead_properties["min_speed"]
 
     @property
     def default_laserhead_min_speed(self):
-        """Default minimum speed for laser head. to be used by other modules
-        at init time.
+        """Default minimum speed for laser head. to be used by other modules at
+        init time.
 
         Returns:
             int: Laser head default minimum speed

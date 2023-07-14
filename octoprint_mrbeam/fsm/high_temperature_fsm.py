@@ -1,5 +1,6 @@
-"""
-FSM of the high temperature warning feature. See SW-1158 and the epic SW-991
+"""FSM of the high temperature warning feature.
+
+See SW-1158 and the epic SW-991
 """
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from statemachine import State
@@ -9,9 +10,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 
 class HighTemperatureFSM(StateMachine):
-    """
-    FSM of the high temperature warning feature.
-    """
+    """FSM of the high temperature warning feature."""
 
     deactivated = State("Deactivated", initial=True)
     monitoring = State("Monitoring")
@@ -27,8 +26,7 @@ class HighTemperatureFSM(StateMachine):
     silent_dismiss = warning.to(monitoring) | critically.to(dismissed)
 
     def __init__(self, event_bus=None, disabled=False, analytics_handler=None):
-        """
-        Initialize the FSM.
+        """Initialize the FSM.
 
         Args:
             event_bus: event bus of octoprint
@@ -45,8 +43,7 @@ class HighTemperatureFSM(StateMachine):
     # def on_enter_<state>.... for handling state enter
     # def on_exit_<state>.... for handling state exit
     def on_enter_warning(self):
-        """
-        Handle the state enter of the warning state.
+        """Handle the state enter of the warning state.
 
         Returns:
             None
@@ -63,8 +60,7 @@ class HighTemperatureFSM(StateMachine):
             self._event_bus.fire(MrBeamEvents.LED_ERROR_ENTER, payload)
 
     def on_enter_critically(self):
-        """
-        Handle the state enter of the critically state.
+        """Handle the state enter of the critically state.
 
         Returns:
             None
@@ -88,8 +84,7 @@ class HighTemperatureFSM(StateMachine):
             self._event_bus.fire(MrBeamEvents.ALARM_ENTER, payload)
 
     def on_enter_dismissed(self):
-        """
-        Handle the state enter of the dismissed state.
+        """Handle the state enter of the dismissed state.
 
         Returns:
             None
@@ -107,8 +102,7 @@ class HighTemperatureFSM(StateMachine):
             self._event_bus.fire(MrBeamEvents.ALARM_EXIT, payload)
 
     def before_start_monitoring(self, event_data=None):
-        """
-        Handle the before state enter of the monitoring state.
+        """Handle the before state enter of the monitoring state.
 
         Args:
             event_data: event data of the event that triggered the transition
@@ -119,8 +113,7 @@ class HighTemperatureFSM(StateMachine):
         self._add_transistion_analytics_entry(event_data)
 
     def before_warn(self, event_data=None):
-        """
-        Handle the before state enter of the warning state.
+        """Handle the before state enter of the warning state.
 
         Args:
             event_data: event data of the event that triggered the transition
@@ -131,8 +124,7 @@ class HighTemperatureFSM(StateMachine):
         self._add_transistion_analytics_entry(event_data)
 
     def before_critical(self, event_data=None):
-        """
-        Handle the before state enter of the critical state.
+        """Handle the before state enter of the critical state.
 
         Args:
             event_data: event data of the event that triggered the transition
@@ -143,8 +135,7 @@ class HighTemperatureFSM(StateMachine):
         self._add_transistion_analytics_entry(event_data)
 
     def before_dismiss(self, event_data=None):
-        """
-        Handle the before state enter of the dismissed state.
+        """Handle the before state enter of the dismissed state.
 
         Args:
             event_data: event data of the event that triggered the transition
@@ -155,8 +146,7 @@ class HighTemperatureFSM(StateMachine):
         self._add_transistion_analytics_entry(event_data)
 
     def before_deactivate(self, event_data=None):
-        """
-        Handle the before state enter of the deactivated state.
+        """Handle the before state enter of the deactivated state.
 
         Args:
             event_data: event data of the event that triggered the transition
@@ -167,8 +157,7 @@ class HighTemperatureFSM(StateMachine):
         self._add_transistion_analytics_entry(event_data)
 
     def before_silent_dismiss(self, event_data=None):
-        """
-        Handle the before state enter of the silent dismissed state.
+        """Handle the before state enter of the silent dismissed state.
 
         Args:
             event_data: event data of the event that triggered the transition
@@ -179,8 +168,7 @@ class HighTemperatureFSM(StateMachine):
         self._add_transistion_analytics_entry(event_data)
 
     def _add_transistion_analytics_entry(self, event_data):
-        """
-        Add an analytics entry for the state transition.
+        """Add an analytics entry for the state transition.
 
         Args:
             event_data: event data of the event that triggered the transition
@@ -202,8 +190,7 @@ class HighTemperatureFSM(StateMachine):
         )
 
     def _subscribe_to_events(self):
-        """
-        Subscribe to the events of the event bus.
+        """Subscribe to the events of the event bus.
 
         Returns:
             None
@@ -231,8 +218,7 @@ class HighTemperatureFSM(StateMachine):
         )
 
     def _on_event_laser_cooling_temperature_reached(self, event, payload):
-        """
-        Handle the event laser cooling temperature reached.
+        """Handle the event laser cooling temperature reached.
 
         Args:
             event: event that triggered the handler
@@ -246,8 +232,7 @@ class HighTemperatureFSM(StateMachine):
             self.start_monitoring()
 
     def _on_event_laser_cooling_to_slow(self, event, payload):
-        """
-        Handle the event laser cooling to slow.
+        """Handle the event laser cooling to slow.
 
         Args:
             event: event that triggered the handler
@@ -261,8 +246,7 @@ class HighTemperatureFSM(StateMachine):
             self.warn()
 
     def _on_event_laser_high_temperature(self, event, payload):
-        """
-        Handle the event laser high temperature.
+        """Handle the event laser high temperature.
 
         Args:
             event: event that triggered the handler
@@ -276,8 +260,7 @@ class HighTemperatureFSM(StateMachine):
             self.critical()
 
     def _on_event_laser_cooling_resume(self, event, payload):
-        """
-        Handle the event laser cooling resume.
+        """Handle the event laser cooling resume.
 
         Args:
             event: event that triggered the handler
@@ -291,8 +274,7 @@ class HighTemperatureFSM(StateMachine):
             self.deactivate()
 
     def _on_event_dismissed(self, event, payload):
-        """
-        Handle the event dismissed.
+        """Handle the event dismissed.
 
         Args:
             event: event that triggered the handler

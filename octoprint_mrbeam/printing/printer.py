@@ -127,7 +127,8 @@ class Laser(Printer):
         eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
 
     def abort_job(self, event):
-        """Abort the current printjob and do homing. This is a hard abort, the compressor and fan should be immediately turned off.
+        """Abort the current printjob and do homing. This is a hard abort, the
+        compressor and fan should be immediately turned off.
 
         Args:
             event: event that triggered the abort
@@ -272,8 +273,8 @@ class Laser(Printer):
         return self.is_printing() or self.is_paused()
 
     def _on_re_trigger_fan(self, event, payload):
-        """Re trigger the fan if the laser is printing or paused.
-        This can be done by sending atomic command start and pause after each other.
+        """Re trigger the fan if the laser is printing or paused. This can be
+        done by sending atomic command start and pause after each other.
 
         Args:
             event: event that triggered the action

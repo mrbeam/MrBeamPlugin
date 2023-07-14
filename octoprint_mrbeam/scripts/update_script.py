@@ -163,15 +163,22 @@ def build_wheels(build_queue):
         if not os.path.isdir(PIP_WHEEL_TEMP_FOLDER):
             os.mkdir(PIP_WHEEL_TEMP_FOLDER)
     except OSError as e:
-        raise RuntimeError("can't create wheel tmp folder {} - {}".format(PIP_WHEEL_TEMP_FOLDER, e))
+        raise RuntimeError(
+            "can't create wheel tmp folder {} - {}".format(PIP_WHEEL_TEMP_FOLDER, e)
+        )
 
     for venv, packages in build_queue.items():
-        tmp_folder = os.path.join(PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
+        tmp_folder = os.path.join(
+            PIP_WHEEL_TEMP_FOLDER,
+            re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0),
+        )
         if os.path.isdir(tmp_folder):
             try:
                 os.system("sudo rm -r {}".format(tmp_folder))
             except Exception as e:
-                raise RuntimeError("can't delete pip wheel temp folder {} - {}".format(tmp_folder, e))
+                raise RuntimeError(
+                    "can't delete pip wheel temp folder {} - {}".format(tmp_folder, e)
+                )
 
         pip_args = [
             "wheel",
@@ -209,7 +216,10 @@ def install_wheels(install_queue):
         raise RuntimeError("install queue is not a dict")
 
     for venv, packages in install_queue.items():
-        tmp_folder = os.path.join(PIP_WHEEL_TEMP_FOLDER, re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0))
+        tmp_folder = os.path.join(
+            PIP_WHEEL_TEMP_FOLDER,
+            re.search(r"\w+((?=\/venv)|(?=\/bin))", venv).group(0),
+        )
         pip_args = [
             "install",
             "--disable-pip-version-check",
@@ -449,9 +459,7 @@ def main():
     args = _parse_arguments()
     if args.call:
         if args.archive is None:
-            raise RuntimeError(
-                "Could not run update archive is missing"
-            )
+            raise RuntimeError("Could not run update archive is missing")
         run_update()
     else:
 
@@ -471,10 +479,7 @@ def main():
         )
 
         # call new update script with args
-        sys.argv = [
-            "--call=true",
-            "--archive={}".format(archive)
-        ] + sys.argv[1:]
+        sys.argv = ["--call=true", "--archive={}".format(archive)] + sys.argv[1:]
         try:
             result = subprocess.call(
                 [sys.executable, os.path.join(folder, "update_script.py")] + sys.argv,
