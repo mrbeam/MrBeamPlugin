@@ -41,6 +41,19 @@ $(function () {
         self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
+        self.heavyDutyPrefilter = ko.observable(false);
+
+        self.heavyDutyPrefilterValue = ko.computed({
+            read: function () {
+                console.log("heavyDutyPrefilterValue read");
+                return self.heavyDutyPrefilter().toString();
+            },
+            write: function (newValue) {
+                console.log("heavyDutyPrefilterValue write", newValue);
+                self.heavyDutyPrefilter(newValue === "true");
+            },
+            owner: self,
+        });
 
         self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
             lifespan: self.prefilterLifespan(),
@@ -143,9 +156,8 @@ $(function () {
             }
         });
 
-        self.heavyDutyPrefilter = ko.observable(false);
-
         self.heavyDutyPrefilter.subscribe(function (newValue) {
+            console.log("heavyDutyPrefilter changed to: " + newValue);
             OctoPrint.settings
                 .savePluginSettings("mrbeam", { heavyDutyPrefilter: newValue })
                 .done(function (response) {
@@ -216,6 +228,42 @@ $(function () {
                 });
             });
             self.updateSettingsAbout();
+
+            const clickableContainers = document.querySelectorAll(
+                ".prefilter-clickable"
+            );
+            // Add click event listeners to each container
+            clickableContainers.forEach((container) => {
+                container.addEventListener("click", () => {
+                    // Find the radio input element within the container
+                    const radioInput = container.querySelector(
+                        'input[type="radio"]'
+                    );
+                    const clickedElement = event.target;
+
+                    // Check if the clicked element is the "Buy now" link
+                    if (clickedElement.id === "prefilter_shop_link") {
+                        // Prevent the click event from propagating further
+                        event.stopPropagation();
+                    } else {
+                        self.heavyDutyPrefilter(
+                            radioInput.getAttribute("value")
+                        );
+                    }
+                });
+            });
+
+            // Add mouseover event listeners to each prefilter title to add a tooltip with the grafik of the prefilter types
+            $(document).on("mouseover", ".prefilter_title", function () {
+                let material_entry_element = $(this);
+                const image = this.getAttribute("data-tooltip-image");
+                material_entry_element.tooltip({
+                    title: "<img src='" + image + "' width='300px'>",
+                    placement: "right",
+                    html: true,
+                });
+                material_entry_element.tooltip("show");
+            });
         };
 
         self.resetPrefilterUsage = function () {
@@ -341,6 +389,7 @@ $(function () {
         };
 
         self.onSettingsShown = function () {
+            console.log("heavyduty onSettingsShown() called");
             self.settings.requestData().done(function () {
                 self.loadUsageValues();
                 self.updateSettingsAbout();
@@ -381,6 +430,9 @@ $(function () {
             );
             self.heavyDutyPrefilter(
                 self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
+            );
+            console.log(
+                "heavyDutyPrefilter loadusage: " + self.heavyDutyPrefilter()
             );
             self.laserHeadLifespan(
                 self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()

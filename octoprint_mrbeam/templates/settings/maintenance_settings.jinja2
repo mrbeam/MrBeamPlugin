@@ -10,18 +10,47 @@
                 <td class="maintenance-description-column">
                     <h4>{{ _('Air Filter: Pre-filter') }}</h4>
                     <small class="maintenance-description">
-                        {{ _('The pre filter filters all coarse particles from the exhaust air. Regular changing improves the air flow and preserves the main filter.*') }}
+                        {{ _('Please choose which pre-filter you are using, so the maintenance counter can be adjusted accordingly.') }}
                     </small>
-                    <div class="maintenance-links">
-                        <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: heavyDutyPrefilter" data-test="maintenance-heavy-duty-prefilter-enable-checkbox">
-                            {{ _('Heavy-duty pre-filter in use') }}
-                        </label>
-                        <a href="{{ _('https://www.mr-beam.org/en') + '/products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'}}"
-                           target="_blank" id="prefilter_shop_link" data-test="maintenance-links-buy-now-pre-filter" class="maintenance-link-shop">
-                            <i class="icon-shopping-cart"></i>
-                            {{ _('Buy now') }}
-                        </a>
+                    <br>
+                    <div>
+                        <div class="prefilter-clickable">
+                            <div class="span1">
+                                <input type="radio" name="heavyDutyPrefilter" data-bind="checked: heavyDutyPrefilterValue" value="false" data-test="maintenance-heavy-duty-prefilter-disable-checkbox">
+                            </div>
+                            <div class="span11">
+                                <h4 class="prefilter_title" data-tooltip-image="/plugin/mrbeam/static/img/prefilter_mat.png">{{ _('Pre-filter mat (pink)') }}</h4>
+                                <small class="maintenance-description">
+                                    {{ _('The pink pre-filter mat is suitable for all those who use materials that cause little material abrasion (acrylic felt, slate, concrete, foam rubber, acrylic, etc.).') }}
+                                </small>
+                                <div class="maintenance-links">
+                                    <a href="{{ _('https://www.mr-beam.org/en') + '/products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'}}"
+                                       target="_blank" id="prefilter_shop_link" data-test="maintenance-links-buy-now-pre-filter" class="maintenance-link-shop">
+                                        <i class="icon-shopping-cart"></i>
+                                        {{ _('Buy now') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="prefilter-clickable">
+                            <div class="span1">
+                                <input type="radio" name="heavyDutyPrefilter" data-bind="checked: heavyDutyPrefilterValue" value="true" data-test="maintenance-heavy-duty-prefilter-enable-checkbox">
+                            </div>
+                            <div class="span11">
+                                <h4 class="prefilter_title" data-tooltip-image="/plugin/mrbeam/static/img/prefilter_cartridge.png">{{ _('Pre-filter (cartridge)') }}</h4>
+                                <small class="maintenance-description">
+                                    {{ _('The pre-filter cartridge is best suited for power users who process a lot of wood, cardboard, Kraftplex or also stamp rubber.') }}
+                                </small>
+                                <div class="maintenance-links">
+                                    <a href="{{ _('https://www.mr-beam.org/en') + '/search?q=\'Vorfilter\'&options%5Bprefix%5D=last&utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'}}"
+                                       target="_blank" id="prefilter_shop_link" data-test="maintenance-links-buy-now-pre-filter" class="maintenance-link-shop">
+                                        <i class="icon-shopping-cart"></i>
+                                        {{ _('Buy now') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </td>
                 <td class="maintenance-warning-column">
