@@ -45,11 +45,9 @@ $(function () {
 
         self.heavyDutyPrefilterValue = ko.computed({
             read: function () {
-                console.log("heavyDutyPrefilterValue read");
                 return self.heavyDutyPrefilter().toString();
             },
             write: function (newValue) {
-                console.log("heavyDutyPrefilterValue write", newValue);
                 self.heavyDutyPrefilter(newValue === "true");
             },
             owner: self,
@@ -157,21 +155,18 @@ $(function () {
         });
 
         self.heavyDutyPrefilter.subscribe(function (newValue) {
-            console.log("heavyDutyPrefilter changed to: " + newValue);
-            OctoPrint.settings
-                .savePluginSettings("mrbeam", { heavyDutyPrefilter: newValue })
-                .done(function (response) {
-                    OctoPrint.settings
-                        .get("mrbeam", "heavyDutyPrefilter")
-                        .done(function (response) {
-                            self.prefilterLifespan(
-                                response.plugins.mrbeam.usage.prefilterLifespan
-                            );
-                        });
-                })
-                .fail(function () {
-                    console.error("Error saving settings.");
-                });
+            self.settings.settings.plugins.mrbeam.heavyDutyPrefilter(newValue);
+            self.settings.saveData(undefined, function (newSettings) {
+                self.prefilterLifespan(
+                    newSettings.plugins.mrbeam.usage.prefilterLifespan
+                );
+                console.log(
+                    "Prefilter lifespan changed to:",
+                    newSettings.plugins.mrbeam.heavyDutyPrefilter,
+                    newSettings.plugins.mrbeam.usage.prefilterLifespan
+                );
+            });
+            self.settings.saveall(); //trigger saveinprogress class
         });
 
         // The settings are already loaded here, Gina confirmed.
@@ -389,7 +384,6 @@ $(function () {
         };
 
         self.onSettingsShown = function () {
-            console.log("heavyduty onSettingsShown() called");
             self.settings.requestData().done(function () {
                 self.loadUsageValues();
                 self.updateSettingsAbout();
@@ -430,9 +424,6 @@ $(function () {
             );
             self.heavyDutyPrefilter(
                 self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
-            );
-            console.log(
-                "heavyDutyPrefilter loadusage: " + self.heavyDutyPrefilter()
             );
             self.laserHeadLifespan(
                 self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()
