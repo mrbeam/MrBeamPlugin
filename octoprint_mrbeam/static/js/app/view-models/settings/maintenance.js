@@ -229,7 +229,7 @@ $(function () {
             );
             // Add click event listeners to each container
             clickableContainers.forEach((container) => {
-                container.addEventListener("click", () => {
+                container.addEventListener("click", (event) => {
                     // Find the radio input element within the container
                     const radioInput = container.querySelector(
                         'input[type="radio"]'
