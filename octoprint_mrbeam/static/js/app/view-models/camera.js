@@ -39,14 +39,14 @@ $(function () {
             SE: ko.observable(),
             NE: ko.observable(),
         };
-        self.maxObjectHeight = 38; // in mm
-        self.defaultMargin = self.maxObjectHeight / 582;
+        self.maxWorkingHeight = 38; // in mm
+        self.defaultMargin = self.maxWorkingHeight / 582;
         self.objectZ = ko.observable(0); // in mm
         self.cornerMargin = ko.observable(self.defaultMargin / 2);
         self.imgHeightScale = ko.computed(function () {
             return (
                 self.cornerMargin() *
-                (1 - self.objectZ() / self.maxObjectHeight)
+                (1 - self.objectZ() / self.maxWorkingHeight)
             );
         });
 

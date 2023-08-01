@@ -30,7 +30,7 @@ def warpImgByCorners(image, corners, zoomed_out=False):
 
     :param image: takes an opencv image
     :param corners: as qd-dict
-    :param zoomed_out: whether to zoom out the pic to account for object height
+    :param zoomed_out: whether to zoom out the pic to account for working height
     :return: image with corners warped
     """
 

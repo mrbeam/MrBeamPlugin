@@ -13,27 +13,29 @@ describe("Functionalities", function () {
         cy.loginLaser(this.testData.email, this.testData.password);
     });
 
-    it("Object height - slidebar", function () {
-        cy.get('[data-test="tab-workingarea-object-height-input"]')
+    it("Working height - slidebar", function () {
+        cy.get('[data-test="tab-workingarea-working-height-input"]')
             .invoke("prop", "value")
             .should("eq", "0");
-        cy.get('[data-test="tab-workingarea-object-height-input"]').type(
+        cy.get('[data-test="tab-workingarea-working-height-input"]').type(
             "30{enter}"
         );
-        cy.get('[data-test="tab-workingarea-object-height-input"]')
+        cy.get('[data-test="tab-workingarea-working-height-input"]')
             .invoke("prop", "value")
             .should("not.eq", "0");
         cy.logout();
     });
 
-    it("Object height - input", function () {
-        cy.get('[data-test="tab-workingarea-object-height-input"]')
+    it("Working height - input", function () {
+        cy.get('[data-test="tab-workingarea-working-height-input"]')
             .invoke("prop", "value")
             .should("eq", "0");
-        cy.get('[data-test="tab-workingarea-object-height-slider"]').realClick({
-            position: "right",
-        });
-        cy.get('[data-test="tab-workingarea-object-height-input"]')
+        cy.get('[data-test="tab-workingarea-working-height-slider"]').realClick(
+            {
+                position: "right",
+            }
+        );
+        cy.get('[data-test="tab-workingarea-working-height-input"]')
             .invoke("prop", "value")
             .should("not.eq", "0");
         cy.logout();
