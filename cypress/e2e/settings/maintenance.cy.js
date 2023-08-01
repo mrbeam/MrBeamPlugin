@@ -109,7 +109,6 @@ describe("Maintenance", function () {
 
     it("When checkbox is clicked then setting is saved.", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
-        // cy.request('/settings').its('body').should('include', '<h1>Admin</h1>')
 
         cy.get(
             '[data-test="maintenance-heavy-duty-prefilter-enable-checkbox"]'

@@ -227,6 +227,38 @@ $(function () {
             const clickableContainers = document.querySelectorAll(
                 ".prefilter-clickable"
             );
+
+            self._make_prefilter_elements_clickable();
+            self._add_tooltip_for_prefilter_title();
+
+            // Add mouseover event listeners to each prefilter title to add a tooltip with the grafik of the prefilter types
+            $(document).on("mouseover", ".prefilter_title", function () {
+                let material_entry_element = $(this);
+                const image = this.getAttribute("data-tooltip-image");
+                material_entry_element.tooltip({
+                    title: "<img src='" + image + "' width='300px'>",
+                    placement: "right",
+                    html: true,
+                });
+                material_entry_element.tooltip("show");
+            });
+        };
+
+        self._add_tooltip_for_prefilter_title = function (element) {
+            // Add mouseover event listeners to each prefilter title to add a tooltip with the grafik of the prefilter types
+            $(document).on("mouseover", ".prefilter_title", function () {
+                let material_entry_element = $(this);
+                const image = this.getAttribute("data-tooltip-image");
+                material_entry_element.tooltip({
+                    title: "<img src='" + image + "' width='300px'>",
+                    placement: "right",
+                    html: true,
+                });
+                material_entry_element.tooltip("show");
+            });
+        };
+
+        self._make_prefilter_elements_clickable = function () {
             // Add click event listeners to each container
             clickableContainers.forEach((container) => {
                 container.addEventListener("click", (event) => {
@@ -246,18 +278,6 @@ $(function () {
                         );
                     }
                 });
-            });
-
-            // Add mouseover event listeners to each prefilter title to add a tooltip with the grafik of the prefilter types
-            $(document).on("mouseover", ".prefilter_title", function () {
-                let material_entry_element = $(this);
-                const image = this.getAttribute("data-tooltip-image");
-                material_entry_element.tooltip({
-                    title: "<img src='" + image + "' width='300px'>",
-                    placement: "right",
-                    html: true,
-                });
-                material_entry_element.tooltip("show");
             });
         };
 
