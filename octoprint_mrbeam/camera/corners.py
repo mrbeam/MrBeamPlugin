@@ -25,7 +25,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 _logger = mrb_logger("octoprint.plugins.mrbeam.camera.corners")
 
 # @logtime()
-def warpImgByCorners(image, corners, zoomed_out=False):
+def warp_image_by_corners(image, corners, zoomed_out=False):
     """Warps the region delimited by the corners in order to straighten it.
 
     :param image: takes an opencv image
@@ -39,23 +39,23 @@ def warpImgByCorners(image, corners, zoomed_out=False):
     # calculate maximum width and height for destination points
     width1 = norm(se - sw)
     width2 = norm(ne - nw)
-    maxWidth = max(int(width1), int(width2))
+    max_width = max(int(width1), int(width2))
 
     height1 = norm(ne - se)
     height2 = norm(nw - sw)
-    maxHeight = max(int(height1), int(height2))
+    max_height = max(int(height1), int(height2))
 
     if zoomed_out:
         factor = float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2
-        min_dst_x = factor * maxWidth
-        max_dst_x = (1 + factor) * maxWidth
-        min_dst_y = factor * maxHeight
-        max_dst_y = (1 + factor) * maxHeight
-        dst_size = (int((1 + 2 * factor) * maxWidth), int((1 + 2 * factor) * maxHeight))
+        min_dst_x = factor * max_width
+        max_dst_x = (1 + factor) * max_width
+        min_dst_y = factor * max_height
+        max_dst_y = (1 + factor) * max_height
+        dst_size = (int((1 + 2 * factor) * max_width), int((1 + 2 * factor) * max_height))
     else:
-        min_dst_x, max_dst_x = 0, maxWidth - 1
-        min_dst_y, max_dst_y = 0, maxHeight - 1
-        dst_size = (maxWidth, maxHeight)
+        min_dst_x, max_dst_x = 0, max_width - 1
+        min_dst_y, max_dst_y = 0, max_height - 1
+        dst_size = (max_width, max_height)
 
     # source points for matrix calculation
     src = np.array((nw, ne, se, sw), dtype="float32")
@@ -72,20 +72,20 @@ def warpImgByCorners(image, corners, zoomed_out=False):
     )
 
     # get the perspective transform matrix
-    transMatrix = cv2.getPerspectiveTransform(src, dst)
+    trans_matrix = cv2.getPerspectiveTransform(src, dst)
 
     # compute warped image
-    warpedImg = cv2.warpPerspective(image, transMatrix, dst_size)
-    return warpedImg
+    warped_img = cv2.warpPerspective(image, trans_matrix, dst_size)
+    return warped_img
 
 
 def save_corner_calibration(
-    path, newCorners, newMarkers, hostname=None, plugin_version=None, from_factory=False
+    path, new_corners, new_markers, hostname=None, plugin_version=None, from_factory=False
 ):
     """Save the settings onto a calibration file."""
 
     # transform dict
-    for new_ in [newCorners, newMarkers]:
+    for new_ in [new_corners, new_markers]:
         assert isinstance(new_, Mapping)
         assert all(qd in new_.keys() for qd in QD_KEYS)
     try:
@@ -107,8 +107,8 @@ def save_corner_calibration(
             RAW_CALIB_MARKERS_KEY as __MARKERS_KEY,
         )
 
-    pic_settings[__CORNERS_KEY] = newCorners
-    pic_settings[__MARKERS_KEY] = newMarkers
+    pic_settings[__CORNERS_KEY] = new_corners
+    pic_settings[__MARKERS_KEY] = new_markers
     if hostname:
         pic_settings["hostname"] = hostname
     if plugin_version:
@@ -137,7 +137,7 @@ def get_corner_calibration(pic_settings):
     try:
         with open(pic_settings) as yaml_file:
             return yaml.safe_load(yaml_file)
-    except:
+    except yaml.YAMLError:
         _logger.info(
             "Exception while loading '%s' > pic_settings file not readable",
             pic_settings,
@@ -150,7 +150,6 @@ def get_deltas_and_refs(
     undistorted=False,
     mtx=None,
     dist=None,
-    new_mtx=None,
     from_factory=False,
 ):
     """Returns the relative positions (delta) of the markers and corners
@@ -173,17 +172,17 @@ def get_deltas_and_refs(
 
     # Values taken from the calibration file. Used as a reference to warp the image correctly.
     # Legacy devices only have the values for the lensCorrected position.
-    calibrationReferences = dict_map(
+    calibration_references = dict_map(
         lambda key: pic_settings.get(key, None), CALIB_REFS
     )
-    for k in calibrationReferences.keys():
-        calibrationReferences[k]["result"] = None
+    for k in calibration_references.keys():
+        calibration_references[k]["result"] = None
 
-    priorityList = ["user", "factory"] if not from_factory else ["factory"]
-    for types, ref in calibrationReferences.items():
+    priority_list = ["user", "factory"] if not from_factory else ["factory"]
+    for types, ref in calibration_references.items():
         # Find the correct reference position for both the markers and the corners
         if undistorted:
-            for k in priorityList:
+            for k in priority_list:
                 # Prioritize converting positions from the raw values we have saved.
                 # (It is calibration-agnostic)
                 if ref[k]["raw"] is not None and mtx is not None and dist is not None:
@@ -194,7 +193,7 @@ def get_deltas_and_refs(
                     ref["result"] = dict_map(np.array, ref[k]["undistorted"])
                     break  # no need to go further in the priority list
         else:
-            for k in priorityList:
+            for k in priority_list:
                 # Prioritize converting positions from the raw values we have saved.
                 # (It is calibration-agnostic)
                 if ref[k]["raw"] is not None:
@@ -205,16 +204,15 @@ def get_deltas_and_refs(
                     # Could not find how to undistort,
                     # will ask to redo calibration.
                     ref["result"] = None
-                    # break # no need to go further in the priority list
-    refMarkers, refCorners = (
-        calibrationReferences[k]["result"] for k in ["markers", "corners"]
+    ref_markers, ref_corners = (
+        calibration_references[k]["result"] for k in ["markers", "corners"]
     )
-    if any(r is None for r in (refMarkers, refCorners)):
+    if any(r is None for r in (ref_markers, ref_corners)):
         # Not enough refenrences to continue,
         # cannot apply warp perspective
         return None, None, None
-    delta = {qd: refCorners[qd] - refMarkers[qd] for qd in QD_KEYS}
-    return delta, refMarkers, refCorners
+    delta = {qd: ref_corners[qd] - ref_markers[qd] for qd in QD_KEYS}
+    return delta, ref_markers, ref_corners
 
 
 def get_deltas(*args, **kwargs):
@@ -241,9 +239,4 @@ def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
         _markers = lens.undist_dict(markers, *args, **kwargs)
         return {qd: _markers[qd] + deltas[qd] for qd in QD_KEYS}
     else:
-        if deltas is None:
-            return None
-        else:
-            # logging.warning(markers)
-            # logging.warning(deltas)
-            return dict({qd: markers[qd] + deltas[qd] for qd in QD_KEYS})
+        return dict({qd: markers[qd] + deltas[qd] for qd in QD_KEYS})

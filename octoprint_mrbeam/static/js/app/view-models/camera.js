@@ -275,7 +275,7 @@ $(function () {
         };
 
         self.getTimestampedImageUrl = function (url) {
-            var result = undefined;
+            let result;
             if (url) {
                 result = url;
             } else if (self.croppedUrl) {

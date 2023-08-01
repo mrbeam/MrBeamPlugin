@@ -626,7 +626,7 @@ $(function () {
                     duration_processing: Date.now() - start_ts,
                     gco_generator_info: {
                         generator: beamos_vers ? "beamOS" : null,
-                        version: beamos_vers ? beamos_vers : null,
+                        version: beamos_vers,
                     },
                 };
                 self._analyticsPlaceGco(analyticsData);
