@@ -150,6 +150,7 @@ def get_deltas_and_refs(
     undistorted=False,
     mtx=None,
     dist=None,
+	new_mtx=None,
     from_factory=False,
 ):
     """Returns the relative positions (delta) of the markers and corners
