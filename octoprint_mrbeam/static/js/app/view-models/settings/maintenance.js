@@ -228,7 +228,7 @@ $(function () {
             self._addTooltipForPrefilterTitle();
         };
 
-        self. _addTooltipForPrefilterTitle = function (element) {
+        self._addTooltipForPrefilterTitle = function (element) {
             // Add mouseover event listeners to each prefilter title to add a tooltip with the grafik of the prefilter types
             $(document).on("mouseover", ".prefilter_title", function () {
                 let material_entry_element = $(this);
@@ -242,7 +242,7 @@ $(function () {
             });
         };
 
-        self. _makePrefilterElementsClickable = function () {
+        self._makePrefilterElementsClickable = function () {
             const clickableContainers = document.querySelectorAll(
                 ".prefilter-clickable"
             );
