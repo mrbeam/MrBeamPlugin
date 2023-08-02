@@ -224,11 +224,11 @@ $(function () {
             });
             self.updateSettingsAbout();
 
-            self._make_prefilter_elements_clickable();
-            self._add_tooltip_for_prefilter_title();
+            self._makePrefilterElementsClickable();
+            self._addTooltipForPrefilterTitle();
         };
 
-        self._add_tooltip_for_prefilter_title = function (element) {
+        self. _addTooltipForPrefilterTitle = function (element) {
             // Add mouseover event listeners to each prefilter title to add a tooltip with the grafik of the prefilter types
             $(document).on("mouseover", ".prefilter_title", function () {
                 let material_entry_element = $(this);
@@ -242,7 +242,7 @@ $(function () {
             });
         };
 
-        self._make_prefilter_elements_clickable = function () {
+        self. _makePrefilterElementsClickable = function () {
             const clickableContainers = document.querySelectorAll(
                 ".prefilter-clickable"
             );
