@@ -6,7 +6,14 @@ describe("Maintenance", function () {
     });
 
     beforeEach(function () {
+        cy.intercept("POST", "/api/login").as("login");
+        cy.intercept("POST", "/api/logout").as("logout");
+        cy.intercept("GET", "/api/slicing").as("slicing");
+        cy.intercept("GET", "/api/settings").as("settings");
+        cy.intercept("POST", "/api/settings").as("setSettings");
         cy.visit(this.testData.url_laser);
+        cy.wait(["@login", "@slicing", "@settings", "@setSettings"]);
+
         cy.get('[id="loading_overlay"]', { timeout: 20000 }).should(
             "not.be.visible"
         );
@@ -63,6 +70,7 @@ describe("Maintenance", function () {
                 });
             });
     });
+
     it("Reset Air Filter: Pre-filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-reset-button-pre-filter"]').click();
@@ -74,6 +82,7 @@ describe("Maintenance", function () {
             "not.visible"
         );
     });
+
     it("Reset Air Filter: Main filter", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-reset-button-carbon-filter"]').click();
@@ -85,6 +94,7 @@ describe("Maintenance", function () {
             "not.visible"
         );
     });
+
     it("Reset Laser head cleaning", function () {
         cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
         cy.get('[data-test="maintenance-reset-button-laser-head"]').click();
@@ -95,5 +105,50 @@ describe("Maintenance", function () {
         cy.get("#reset_counter_are_you_sure > .modal-header").should(
             "not.visible"
         );
+    });
+
+    it("When checkbox is clicked then setting is saved.", function () {
+        cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').click();
+
+        cy.get(
+            '[data-test="maintenance-heavy-duty-prefilter-enable-checkbox"]'
+        ).click();
+
+        cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').should(
+            "not.have.class",
+            "saveInProgress"
+        ); //wait till it is saved
+
+        cy.request({
+            method: "GET",
+            url: "/api/settings",
+            headers: {
+                "X-Api-Key": this.testData.api_token, //Api key from docker-users.yaml
+            },
+        }).then((response) => {
+            expect(response.body.plugins.mrbeam.heavyDutyPrefilter).to.equal(
+                true
+            );
+        });
+        cy.get(
+            '[data-test="maintenance-heavy-duty-prefilter-disable-checkbox"]'
+        ).click();
+
+        cy.get('[id="settings_plugin_mrbeam_maintenance_link"]').should(
+            "not.have.class",
+            "saveInProgress"
+        ); //wait till it is saved
+
+        cy.request({
+            method: "GET",
+            url: "/api/settings",
+            headers: {
+                "X-Api-Key": this.testData.api_token, //Api key from docker-users.yaml
+            },
+        }).then((response) => {
+            expect(response.body.plugins.mrbeam.heavyDutyPrefilter).to.equal(
+                false
+            );
+        });
     });
 });

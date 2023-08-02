@@ -3,5 +3,6 @@
   "verify_code": "7fd76efb-9ac4-4627-b0b3-3de6a01d07fb",
   "url": "http://localhost:5002/",
   "url_laser": "http://localhost:5002/?enableLaserButton#",
-  "password": "a"
+  "password": "a",
+  "api_token": "A00FB757C1634A6A9AE8654E90BFB1AD"
 }

@@ -3,5 +3,6 @@
   "verify_code": "${CYPRESS_TEST_DESIGN_STORE_TOKEN}",
   "url": "${MRBEAM_PLUGIN_URL}",
   "url_laser": "${MRBEAM_PLUGIN_URL}/?enableLaserButton#",
-  "password": "${CYPRESS_TEST_USER_PASSWORD}"
+  "password": "${CYPRESS_TEST_USER_PASSWORD}",
+  "api_token": "43AA581D71CF4C3F97BC36934A641F95"
 }

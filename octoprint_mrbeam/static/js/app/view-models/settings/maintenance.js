@@ -36,13 +36,25 @@ $(function () {
         self.carbonFilterUsage = ko.observable(0);
         self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
+        self.prefilterLifespan = ko.observable(0);
 
         self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
+        self.heavyDutyPrefilter = ko.observable(false);
+
+        self.heavyDutyPrefilterValue = ko.computed({
+            read: function () {
+                return self.heavyDutyPrefilter().toString();
+            },
+            write: function (newValue) {
+                self.heavyDutyPrefilter(newValue === "true");
+            },
+            owner: self,
+        });
 
         self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.PREFILTER_LIFESPAN,
+            lifespan: self.prefilterLifespan(),
         });
         self.carbonFilterLifespanHours = _.sprintf(
             gettext("/%(lifespan)s hrs"),
@@ -76,7 +88,7 @@ $(function () {
         };
         self.prefilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-                (self.prefilterUsageHours() / self.PREFILTER_LIFESPAN) * 100
+                (self.prefilterUsageHours() / self.prefilterLifespan()) * 100
             );
         });
         self.carbonFilterPercent = ko.computed(function () {
@@ -142,6 +154,21 @@ $(function () {
             }
         });
 
+        self.heavyDutyPrefilter.subscribe(function (newValue) {
+            self.settings.settings.plugins.mrbeam.heavyDutyPrefilter(newValue);
+            self.settings.saveData(undefined, function (newSettings) {
+                self.prefilterLifespan(
+                    newSettings.plugins.mrbeam.usage.prefilterLifespan
+                );
+                console.log(
+                    "Prefilter lifespan changed to:",
+                    newSettings.plugins.mrbeam.heavyDutyPrefilter,
+                    newSettings.plugins.mrbeam.usage.prefilterLifespan
+                );
+            });
+            self.settings.saveall(); //trigger saveinprogress class
+        });
+
         // The settings are already loaded here, Gina confirmed.
         self.onBeforeBinding = function () {
             self.loadUsageValues();
@@ -196,6 +223,49 @@ $(function () {
                 });
             });
             self.updateSettingsAbout();
+
+            self._makePrefilterElementsClickable();
+            self._addTooltipForPrefilterTitle();
+        };
+
+        self._addTooltipForPrefilterTitle = function (element) {
+            // Add mouseover event listeners to each prefilter title to add a tooltip with the grafik of the prefilter types
+            $(document).on("mouseover", ".prefilter_title", function () {
+                let material_entry_element = $(this);
+                const image = this.getAttribute("data-tooltip-image");
+                material_entry_element.tooltip({
+                    title: "<img src='" + image + "' width='300px'>",
+                    placement: "right",
+                    html: true,
+                });
+                material_entry_element.tooltip("show");
+            });
+        };
+
+        self._makePrefilterElementsClickable = function () {
+            const clickableContainers = document.querySelectorAll(
+                ".prefilter-clickable"
+            );
+            // Add click event listeners to each container
+            clickableContainers.forEach((container) => {
+                container.addEventListener("click", (event) => {
+                    // Find the radio input element within the container
+                    const radioInput = container.querySelector(
+                        'input[type="radio"]'
+                    );
+                    const clickedElement = event.target;
+
+                    // Check if the clicked element is the "Buy now" link
+                    if (clickedElement.id === "prefilter_shop_link") {
+                        // Prevent the click event from propagating further
+                        event.stopPropagation();
+                    } else {
+                        self.heavyDutyPrefilter(
+                            radioInput.getAttribute("value")
+                        );
+                    }
+                });
+            });
         };
 
         self.resetPrefilterUsage = function () {
@@ -355,6 +425,12 @@ $(function () {
             );
             self.laserHeadSerial(
                 self.settings.settings.plugins.mrbeam.laserhead.serial()
+            );
+            self.prefilterLifespan(
+                self.settings.settings.plugins.mrbeam.usage.prefilterLifespan()
+            );
+            self.heavyDutyPrefilter(
+                self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
             );
             self.laserHeadLifespan(
                 self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()

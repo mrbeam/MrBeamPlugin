@@ -504,6 +504,7 @@ class MrBeamPlugin(
             grbl_version_lastknown=None,
             tour_auto_launch=True,
             leds=dict(brightness=255, fps=28),
+            heavyDutyPrefilter=False,
             highTemperatureWarningDisabled=False,
         )
 
@@ -572,8 +573,10 @@ class MrBeamPlugin(
                 carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
                 laserHeadUsage=self.usage_handler.get_laser_head_usage(),
                 gantryUsage=self.usage_handler.get_gantry_usage(),
+                prefilterLifespan=self.usage_handler.get_prefilter_lifespan(),
                 laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
             ),
+            heavyDutyPrefilter=self._settings.get(["heavyDutyPrefilter"]),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
                 has_compressor=self.compressor_handler.has_compressor(),
@@ -655,6 +658,10 @@ class MrBeamPlugin(
                 )
             if "leds" in data and "fps" in data["leds"]:
                 self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
+            if "heavyDutyPrefilter" in data:
+                self._settings.set_boolean(
+                    ["heavyDutyPrefilter"], data["heavyDutyPrefilter"]
+                )
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
