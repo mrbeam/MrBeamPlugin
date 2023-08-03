@@ -10,12 +10,17 @@
     <p>{{ _('The corner calibration uses the pink markers to calibrate the camera. Use this in case one of the markers has been changed or if there is a large deviation between the screen position and the laser result.') }}</p>
     <h4>{{ _('Steps') }}</h4>
     <ol class="camera-calibration-steps">
-        <li>{{ _('Put some pieces of flat material like cardboard in each corner of your Mr Beam work area:') }}<br>
+        <li>{{ _('Place a few pieces of flat material such as cardboard in each corner of the Mr Beam workspace.') }} <br>
+            <strong>{{ _('Note: ') }}</strong>{{ _('If you have installed the Mr Beam Height Extension, you will need to use a solid piece of paper instead (for example, business cards). Insert them in all four corners between the housing and the Height Extension. For more information, see ') }}<a
+                target="_blank"
+                href="{{ _("https://support.mr-beam.org/en") }}/support/solutions/articles/43000065908-camera-calibration-corner-calibration?utm_source=beamos&utm_medium=software">
+                {{ _("this Knowledge Base article") }}</a>.<br>
             <div class='calibration_manual img'
                  style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_material_size.svg)'></div>
         </li>
 
-        <li>{{ _('Focus the laserhead onto the material.') }}<br>
+        <li>{{ _('Focus the laser head on the material.') }}<br>
+            <strong>{{ _('Note: ') }}</strong>{{ _('Even with the Height Extension installed, you must focus the laser head on the paper in the corners.') }}<br>
         <img class="focus_reminder" src="/plugin/mrbeam/static/img/focus_reminder.png"></li>
         <li>{{ _('Home the laserhead.') }}<br>
             <button class="btn btn-primary" data-bind="click: function() { workingArea.performHomingCycle('corner_calibration') }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button></li>
