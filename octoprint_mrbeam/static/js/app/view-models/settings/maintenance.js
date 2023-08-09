@@ -230,15 +230,17 @@ $(function () {
 
         self._addTooltipForPrefilterTitle = function (element) {
             // Add mouseover event listeners to each prefilter title to add a tooltip with the grafik of the prefilter types
-            $(document).on("mouseover", ".prefilter_title", function () {
-                let material_entry_element = $(this);
-                const image = this.getAttribute("data-tooltip-image");
-                material_entry_element.tooltip({
+            const elementsWithAttribute = document.querySelectorAll(
+                "[data-tooltip-image]"
+            );
+            elementsWithAttribute.forEach((element) => {
+                const image = element.getAttribute("data-tooltip-image");
+                $(element).tooltip({
                     title: "<img src='" + image + "' width='300px'>",
                     placement: "right",
                     html: true,
+                    delay: { show: 300 },
                 });
-                material_entry_element.tooltip("show");
             });
         };
 
