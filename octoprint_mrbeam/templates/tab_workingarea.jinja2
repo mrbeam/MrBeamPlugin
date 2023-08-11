@@ -136,7 +136,7 @@
 
 
                                         <div id="mrb_working_height" class="accordion-inner">
-                                            <div class="accordion-heading ">
+                                            <div class="accordion-heading mrb-tooltip working-height-tooltip">
                                                 <a id="wa_pane_object_height_toggle" href="#wa_pane_object_height_body"
                                                    class="dropdown" data-toggle="collapse" aria-expanded="false">
                                                     <svg class="mrb_icon" viewBox="0 0 20 20">
@@ -145,12 +145,13 @@
                                                     {{ _('Working Height') }}:
                                                 </a>
                                                 <span class="caret" style="vertical-align: middle"></span>
+                                                <div class="mrb-tooltip-details"><img src="/plugin/mrbeam/static/img/working-height-diagram.png" alt=""></div>
                                             </div>
 
                                             <div class="accordion-body collapse in" id="wa_pane_object_height_body">
                                                 <div class="accordion-inner">
                                                     <div>
-														<span class="muted">{{ _('Set the height at which you want to laser so that the camera preview is accurate (including cutting aids or the Mr Beam Height Extension). For more information on the working-height, see ') }}<a
+														<span class="muted">{{ _('Set the height at which you want to laser so that the camera preview is accurate (including the cutting aids or after the deduction of the Mr Beam Height Extension). For more information on the working-height, see ') }}<a
                                                                 target="_blank"
                                                                 href="{{ _("https://support.mr-beam.org/en") }}/support/solutions/articles/43000708214-how-to-adjusting-the-working-height-correctly?utm_source=beamos&utm_medium=software">
                                                                 {{ _("this Knowledge Base article") }}</a>.</span>

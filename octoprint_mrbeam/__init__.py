@@ -789,6 +789,7 @@ class MrBeamPlugin(
                 "css/wizard.css",
                 "css/tab_messages.css",
                 "css/software_update.css",
+                "css/tooltip.css",
             ],
             less=["less/mrbeam.less"],
         )
