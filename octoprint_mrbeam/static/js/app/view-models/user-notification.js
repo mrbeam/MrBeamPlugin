@@ -156,7 +156,7 @@ $(function () {
                     ),
                     self._getPlaceHolderParameters(
                         gettext("https://support.mr-beam.org/en") +
-                            "/support/solutions/articles/43000703002"
+                            "/support/solutions/articles/43000708776-interlock-malfunction-check-the-lid-switch"
                     )
                 ),
                 type: "error",
