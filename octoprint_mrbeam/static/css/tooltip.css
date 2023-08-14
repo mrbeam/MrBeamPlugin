@@ -24,6 +24,7 @@
   z-index: 1;
   opacity: 0;
   transition: opacity 0.3s, visibility 0.3s;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   /* Positioning customizable options - Start */
   width: 160px;
   bottom: calc(100% + 4px); /* 10px is space for the for the pointer */
