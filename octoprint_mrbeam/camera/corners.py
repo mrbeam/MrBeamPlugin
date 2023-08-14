@@ -25,6 +25,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 _logger = mrb_logger("octoprint.plugins.mrbeam.camera.corners")
 
 # @logtime()
+# DO NOT CHANGE - This is used by the camera plugin
 def warpImgByCorners(image, corners, zoomed_out=False):
     """Warps the region delimited by the corners in order to straighten it.
 
