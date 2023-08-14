@@ -230,7 +230,7 @@ def prepareImage(
     if debug_out:
         save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners_undist")
 
-    img = corners.warp_image_by_corners(img, workspaceCorners, zoomed_out)
+    img = corners.warpImgByCorners(img, workspaceCorners, zoomed_out)
     if debug_out:
         save_debug_img(img, "warped")
     # get corners of working area
