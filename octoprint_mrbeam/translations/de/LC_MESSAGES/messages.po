@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2023-08-16 11:15+0200\n"
-"PO-Revision-Date: 2023-08-16 11:41+0200\n"
+"PO-Revision-Date: 2023-08-16 15:14+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -914,7 +914,7 @@ msgstr "Schließen"
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:62
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:156
 msgid "https://support.mr-beam.org/en"
-msgstr "https://support.mr-beam.org"
+msgstr "https://support.mr-beam.org/de"
 
 # Settings > About Screen
 #: octoprint_mrbeam/static/js/app/view-models/user-notification.js:46
@@ -4474,12 +4474,12 @@ msgid ""
 msgstr ""
 "Stelle hier die Höhe ein, auf der gelasert werden soll, damit die "
 "Kameravorschau genau ist. Genauere Informationen, auch bezüglich "
-"Schneidhilfen und der Mr Beam Height Extension, findest du "
+"Schneidhilfen und der Mr Beam Height Extension, findest du in "
 
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:17
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:157
 msgid "this Knowledge Base article"
-msgstr "In diesem Wissensdatenbank-Artikel"
+msgstr "diesem Wissensdatenbank-Artikel"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:158
 msgid " regarding the working height."
