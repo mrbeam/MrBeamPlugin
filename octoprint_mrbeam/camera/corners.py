@@ -81,12 +81,12 @@ def warpImgByCorners(image, corners, zoomed_out=False):
 
 
 def save_corner_calibration(
-    path, new_corners, new_markers, hostname=None, plugin_version=None, from_factory=False
+    path, newCorners, newMarkers, hostname=None, plugin_version=None, from_factory=False
 ):
     """Save the settings onto a calibration file."""
 
     # transform dict
-    for new_ in [new_corners, new_markers]:
+    for new_ in [newCorners, newMarkers]:
         assert isinstance(new_, Mapping)
         assert all(qd in new_.keys() for qd in QD_KEYS)
     try:
@@ -108,8 +108,8 @@ def save_corner_calibration(
             RAW_CALIB_MARKERS_KEY as __MARKERS_KEY,
         )
 
-    pic_settings[__CORNERS_KEY] = new_corners
-    pic_settings[__MARKERS_KEY] = new_markers
+    pic_settings[__CORNERS_KEY] = newCorners
+    pic_settings[__MARKERS_KEY] = newMarkers
     if hostname:
         pic_settings["hostname"] = hostname
     if plugin_version:
