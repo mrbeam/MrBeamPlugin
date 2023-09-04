@@ -24,8 +24,9 @@ except (ImportError, OSError) as e:
         e,
     )
 
-
+# NOTICE: This is used by the camera plugin
 def mrbCamera(*args, **kwargs):
+
     global __camera__
     if not isinstance(__camera__, MrbCamera):
         if isinstance(__camera__, BaseCamera):

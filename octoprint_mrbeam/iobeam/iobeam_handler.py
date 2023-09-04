@@ -63,6 +63,7 @@ class IoBeamValueEvents(object):
     LASERHEAD_CHANGED = "iobeam.laserhead.changed"
 
 
+# NOTICE: This is used by the camera plugin
 class IoBeamHandler(object):
 
     # How to test and debug:

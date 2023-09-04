@@ -18,11 +18,13 @@ else:
     _basestring = basestring
 
 
+# NOTICE: This is used by the camera plugin
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
     """Recursive dictionnary update.
 
     Can associate an operation for superposing leaves.
     """
+
     if isinstance(d1, dict) and isinstance(d2, dict):
         out = copy(d1)
         for k in set(chain(d1.keys(), d2.keys())):
@@ -58,19 +60,23 @@ def nested_items(my_dict):
             yield k, v, my_dict
 
 
+# NOTICE: This is used by the camera plugin
 def dict_map(func, my_dict):
     """Immutable map function for dictionnaries."""
+
     __my_dict = deepcopy(my_dict)
     for k, v, parent in nested_items(__my_dict):
         parent[k] = func(v)
     return __my_dict
 
 
+# NOTICE: This is used by the camera plugin
 def dict_get(mapping, path, default=None):
     """Use a path to get an item from a deep map.
 
     ``path`` has to be Iterable.
     """
+
     if mapping is None or path is None:
         return None
     assert isinstance(mapping, Mapping)
@@ -91,6 +97,7 @@ def dict_get(mapping, path, default=None):
     return result
 
 
+# NOTICE: This is used by the camera plugin
 def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
     """returns a function that threads an other function and running a callback
     if provided.
@@ -135,6 +142,7 @@ def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
     return wrapper
 
 
+# NOTICE: This is used by the camera plugin
 def makedirs(path, parent=False, exist_ok=True, *a, **kw):
     """Same as os.makedirs but doesn't throw exception if dir exists.
 
@@ -143,6 +151,7 @@ def makedirs(path, parent=False, exist_ok=True, *a, **kw):
     Python >= 3.5 see mkdir(parents=True, exist_ok=True)
     See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
     """
+
     from os.path import dirname, isdir
     from os import makedirs
     import errno

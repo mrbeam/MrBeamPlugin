@@ -16,6 +16,7 @@ RESOLUTIONS = {
     "2592x1952": (2592, 1952),
 }
 
+# NOTICE: This is used by the camera plugin
 LEGACY_STILL_RES = RESOLUTIONS[
     "2048x1536"
 ]  # from octoprint_mrbeam __init___ : get_settings_defaults
@@ -27,6 +28,8 @@ MAX_SHUTTER_SPEED = 400000  # limits the shutter speed to this value
 
 N, W, S, E = "N", "W", "S", "E"
 NW, NE, SW, SE = N + W, N + E, S + W, S + E
+
+# NOTICE: This is used by the camera plugin
 QD_KEYS = [NW, NE, SW, SE]
 
 # threshold; 2 consecutive pictures need to have a minimum difference
@@ -45,6 +48,7 @@ CAMERA_HEIGHT = 582
 # Height (mm) - max height at which the Mr Beam II can laser an object.
 MAX_OBJ_HEIGHT = 38
 
+# NOTICE: This is used by the camera plugin
 SUCCESS_WRITE_RETVAL = 1  # successful retval for cv2.imwrite
 
 ########################
@@ -121,12 +125,16 @@ CB_COLS = 6
 CB_SQUARE_SIZE = 30  # mm
 # Chessboard size in mm
 BOARD_SIZE_MM = np.array([220, 190])
+
+# NOTICE: This is used by the camera plugin
 MIN_BOARDS_DETECTED = 9
+
 MAX_PROCS = 4
 
 # Frequency to check presence of a file
 REFRESH_RATE_WAIT_CHECK = 0.2  # TODO: use OctoPrint.mrbeam/venv/lib/python2.7/site-packages/watchdog-0.8.3-py2.7.egg/watchdog/observers/fsevents.py
 
+# NOTICE: This is used by the camera plugin (All the below states)
 # Progress of the lens calibration and the pictures taken.
 STATE_PENDING_CAMERA = "camera_processing"
 STATE_QUEUED = "queued"
@@ -145,6 +153,7 @@ STATES = [
     STATE_PENDING_CAMERA,
 ]
 
+# NOTICE: This is used by the camera plugin
 # Lens calibration files
 LENS_CALIBRATION = {
     "path": "cam",  # extra path after the base folder (usually ~/.octoprint/)

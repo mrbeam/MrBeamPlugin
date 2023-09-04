@@ -19,6 +19,7 @@ def mrb_logger(id, lvl=None):
     return MrbLogger(id, lvl=lvl)
 
 
+# NOTICE: This is used by the camera plugin
 class MrbLogger(object):
 
     LEVEL_COMM = "_COMM_"

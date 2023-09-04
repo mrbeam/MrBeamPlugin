@@ -5,6 +5,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
+# NOTICE: This is used by the camera plugin
 class LedEventListener(CommandTrigger):
 
     WIFI_CHECK_INTERVAL = 1.0

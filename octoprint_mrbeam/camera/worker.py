@@ -10,6 +10,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 import numpy as np
 
 
+# NOTICE: This is used by the camera plugin
 class MrbPicWorker(deque):
     """Circular raw I/O buffer designed for storing pictures.
 
