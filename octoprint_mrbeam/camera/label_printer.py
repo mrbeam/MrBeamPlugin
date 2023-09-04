@@ -20,9 +20,8 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 _instance = None
 
 
+# NOTICE: This is used by the camera plugin
 def labelPrinter(plugin, use_dummy_values=False):
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     global _instance
     if _instance is None:

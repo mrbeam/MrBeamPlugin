@@ -24,8 +24,8 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.camera.corners")
 
-# @logtime()
-# DO NOT CHANGE - This is used by the camera plugin
+
+# NOTICE: This is used by the camera plugin
 def warpImgByCorners(image, corners, zoomed_out=False):
     """Warps the region delimited by the corners in order to straighten it.
 
@@ -34,8 +34,6 @@ def warpImgByCorners(image, corners, zoomed_out=False):
     :param zoomed_out: whether to zoom out the pic to account for working height
     :return: image with corners warped
     """
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     nw, ne, sw, se = [np.array(corners[qd]) for qd in QD_KEYS]
 
@@ -82,12 +80,11 @@ def warpImgByCorners(image, corners, zoomed_out=False):
     return warped_img
 
 
+# NOTICE: This is used by the camera plugin
 def save_corner_calibration(
     path, newCorners, newMarkers, hostname=None, plugin_version=None, from_factory=False
 ):
     """Save the settings onto a calibration file."""
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     # transform dict
     for new_ in [newCorners, newMarkers]:
@@ -132,11 +129,10 @@ def write_corner_calibration(pic_settings, path):
     _logger.info("New corner calibration has been saved")
 
 
+# NOTICE: This is used by the camera plugin
 def get_corner_calibration(pic_settings):
     """Returns the corner calibration written to pic_settings If given a dict,
     assumes this is already the pic_setings."""
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     if isinstance(pic_settings, Mapping):
         return pic_settings
@@ -224,23 +220,20 @@ def get_deltas_and_refs(
     return delta, ref_markers, ref_corners
 
 
+# NOTICE: This is used by the camera plugin
 def get_deltas(*args, **kwargs):
     """Wrapper for get_deltas_and_refs that only returns the deltas."""
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     deltas, _, _ = get_deltas_and_refs(*args, **kwargs)
     return deltas
 
 
+# NOTICE: This is used by the camera plugin
 def add_deltas(markers, pic_settings, undistorted, *args, **kwargs):
     # NOTE: There is _bad_ duplication w/ regards to get_deltas_and_refs which
     # already applies the correct delta for plain pictures.
     # See ``OctoPrint-Camera.corners.add_deltas``
     # _logger.warning(markers)
-
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     from_factory = kwargs.pop("from_factory", False)
     deltas = get_deltas(

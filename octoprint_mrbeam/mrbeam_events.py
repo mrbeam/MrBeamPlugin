@@ -1,9 +1,8 @@
 from octoprint.events import Events as OctoPrintEvents
 
 
+# NOTICE: This is used by the camera plugin
 class MrBeamEvents(object):
-    # This class is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     MRB_PLUGIN_INITIALIZED = "MrbPluginInitialized"
     BOOT_GRACE_PERIOD_END = "BootGracePeriodEnd"

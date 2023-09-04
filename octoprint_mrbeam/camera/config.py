@@ -45,19 +45,16 @@ def is_corner_calibration_map(_map):
 
     return is_qd_map(_map["corners"]) and is_qd_map(_map["markers"])
 
-
+# NOTICE: This is used by the camera plugin
 def get_corner_calibration(settings):
     # Values taken from the settings map. Used as a reference to warp the image correctly.
     # Legacy devices only have the values for the lensCorrected position.
 
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
     return dict_map(lambda key: settings.get(key, None), CALIB_REFS)
 
 
+# NOTICE: This is used by the camera plugin
 def is_corner_calibration(conf_map, config_type="factory", origin_picture="raw"):
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     _conf = {
         edge_type: dict_get(conf_map, [edge_type, config_type, origin_picture], None)

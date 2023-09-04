@@ -7,12 +7,10 @@ from .log import logtime
 
 SUCCESS_WRITE_RETVAL = 1
 
-# @logtime()
+# NOTICE: This is used by the camera plugin
 def differed_imwrite(filename, *a, **kw):
     """Writes to a temporary file before overwriting any file at the given
     path."""
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     _path = filename
     while isfile(_path):

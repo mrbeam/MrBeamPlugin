@@ -43,7 +43,7 @@ class MbPicPrepError(Exception):
     pass
 
 
-# @logExceptions # useful if running in thread
+# NOTICE: This is used by the camera plugin
 @logtime()
 def prepareImage(
     input_image,  #: Union[str, np.ndarray],
@@ -84,8 +84,6 @@ def prepareImage(
     :param stopEvent: used to exit gracefully
     :param threads: number of threads to use for the marker detection. Set -1, 1, 2, 3 or 4. (recommended : 4, default: -1)
     """
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     # debug_out = True
     if debug_out:
@@ -251,8 +249,7 @@ def prepareImage(
     return workspaceCorners, markers, missed, err, outputPoints, savedPics
 
 
-# @logtime()
-# @logme(False, True)
+# NOTICE: This is used by the camera plugin
 def _getColoredMarkerPositions(
     img, debug_out_path=None, blur=5, threads=-1, min_pix=MIN_MARKER_PIX
 ):
@@ -260,8 +257,6 @@ def _getColoredMarkerPositions(
 
     Up to 4 processes needed.
     """
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     outputPoints = {}
     # check all 4 corners
@@ -449,10 +444,9 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
         yield bool_connected_spot, center[::-1], start[::-1], stop[::-1], count
 
 
+# NOTICE: This is used by the camera plugin
 def _debug_drawMarkers(raw_img, markers):
     """Draw the markers onto an image."""
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     img = raw_img.copy()
     if len(img.shape) == 2:
@@ -475,10 +469,9 @@ def _debug_drawMarkers(raw_img, markers):
     return img
 
 
+# NOTICE: This is used by the camera plugin
 def _debug_drawCorners(raw_img, corners):
     """Draw the corners onto an image."""
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     img = raw_img.copy()
     for qd in corners:
@@ -502,13 +495,12 @@ def _mkdir(folder):
         os.makedirs(folder)
 
 
+# NOTICE: This is used by the camera plugin
 def _getCamParams(path_to_params_file):
     """
     :param path_to_params_file: Give Path to cam_params file as .npz
     :returns cam_params as dict
     """
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     if not isfile(path_to_params_file) or os.stat(path_to_params_file).st_size == 0:
         logging.warning("Camera lens calibration file not found.")

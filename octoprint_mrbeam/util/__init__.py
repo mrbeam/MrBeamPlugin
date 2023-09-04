@@ -18,13 +18,12 @@ else:
     _basestring = basestring
 
 
+# NOTICE: This is used by the camera plugin
 def dict_merge(d1, d2, leaf_operation=None):  # (d1: dict, d2: dict):
     """Recursive dictionnary update.
 
     Can associate an operation for superposing leaves.
     """
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     if isinstance(d1, dict) and isinstance(d2, dict):
         out = copy(d1)
@@ -61,10 +60,9 @@ def nested_items(my_dict):
             yield k, v, my_dict
 
 
+# NOTICE: This is used by the camera plugin
 def dict_map(func, my_dict):
     """Immutable map function for dictionnaries."""
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     __my_dict = deepcopy(my_dict)
     for k, v, parent in nested_items(__my_dict):
@@ -72,13 +70,12 @@ def dict_map(func, my_dict):
     return __my_dict
 
 
+# NOTICE: This is used by the camera plugin
 def dict_get(mapping, path, default=None):
     """Use a path to get an item from a deep map.
 
     ``path`` has to be Iterable.
     """
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     if mapping is None or path is None:
         return None
@@ -100,6 +97,7 @@ def dict_get(mapping, path, default=None):
     return result
 
 
+# NOTICE: This is used by the camera plugin
 def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
     """returns a function that threads an other function and running a callback
     if provided.
@@ -109,8 +107,6 @@ def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
     see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
     See https://stackoverflow.com/questions/14234547/threads-with-decorators
     """
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     def wrapper(f):
         # if logname:
@@ -146,6 +142,7 @@ def get_thread(callback=None, logname=None, daemon=False, *th_a, **th_kw):
     return wrapper
 
 
+# NOTICE: This is used by the camera plugin
 def makedirs(path, parent=False, exist_ok=True, *a, **kw):
     """Same as os.makedirs but doesn't throw exception if dir exists.
 
@@ -154,8 +151,6 @@ def makedirs(path, parent=False, exist_ok=True, *a, **kw):
     Python >= 3.5 see mkdir(parents=True, exist_ok=True)
     See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
     """
-    # This method is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     from os.path import dirname, isdir
     from os import makedirs

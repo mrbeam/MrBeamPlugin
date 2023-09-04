@@ -10,6 +10,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 import numpy as np
 
 
+# NOTICE: This is used by the camera plugin
 class MrbPicWorker(deque):
     """Circular raw I/O buffer designed for storing pictures.
 
@@ -18,8 +19,6 @@ class MrbPicWorker(deque):
     See "Advanced Recipies" in the PiCamera tutorials:
     https://picamera.readthedocs.io/en/release-1.13/recipes2.html
     """
-    # This class is being used by the camera plugin
-    # Do not modify without checking the usage in the camera plugin
 
     def __init__(self, debug=False, maxlen=2, *args, **kwargs):
         deque.__init__(self, maxlen=maxlen, *args, **kwargs)
