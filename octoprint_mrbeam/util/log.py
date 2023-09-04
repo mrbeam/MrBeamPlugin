@@ -11,6 +11,9 @@ from functools import wraps
 
 
 def logtime(logger=None):
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     def _logtime(f):
         @wraps(f)
         def timed_f(*args, **kw):
@@ -25,6 +28,9 @@ def logtime(logger=None):
 
 
 def logExceptions(f):
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     @wraps(f)
     def wrap(*args, **kw):
         try:
@@ -40,6 +46,9 @@ def logExceptions(f):
 
 def json_serialisor(elm):
     """Attempts to return a serialisable element if the given one is not."""
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     if elm is None or isinstance(elm, (bool, int, float, str, list, tuple, dict)):
         # These types are already supported
         return elm

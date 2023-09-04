@@ -21,6 +21,9 @@ _instance = None
 
 
 def labelPrinter(plugin, use_dummy_values=False):
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     global _instance
     if _instance is None:
         _instance = LabelPrinter(plugin, use_dummy_values=use_dummy_values)

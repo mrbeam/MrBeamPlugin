@@ -20,6 +20,8 @@ def mrb_logger(id, lvl=None):
 
 
 class MrbLogger(object):
+    # This class is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
 
     LEVEL_COMM = "_COMM_"
 

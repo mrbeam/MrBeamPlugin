@@ -84,6 +84,9 @@ def prepareImage(
     :param stopEvent: used to exit gracefully
     :param threads: number of threads to use for the marker detection. Set -1, 1, 2, 3 or 4. (recommended : 4, default: -1)
     """
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     # debug_out = True
     if debug_out:
         logger.setLevel(logging.DEBUG)
@@ -257,6 +260,9 @@ def _getColoredMarkerPositions(
 
     Up to 4 processes needed.
     """
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     outputPoints = {}
     # check all 4 corners
     if threads > 0:
@@ -445,6 +451,9 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
 
 def _debug_drawMarkers(raw_img, markers):
     """Draw the markers onto an image."""
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     img = raw_img.copy()
     if len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -468,6 +477,9 @@ def _debug_drawMarkers(raw_img, markers):
 
 def _debug_drawCorners(raw_img, corners):
     """Draw the corners onto an image."""
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     img = raw_img.copy()
     for qd in corners:
         (cx, cy) = map(int, corners[qd])
@@ -495,6 +507,9 @@ def _getCamParams(path_to_params_file):
     :param path_to_params_file: Give Path to cam_params file as .npz
     :returns cam_params as dict
     """
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     if not isfile(path_to_params_file) or os.stat(path_to_params_file).st_size == 0:
         logging.warning("Camera lens calibration file not found.")
         return None

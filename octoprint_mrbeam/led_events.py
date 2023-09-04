@@ -6,6 +6,8 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 class LedEventListener(CommandTrigger):
+    # This class is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
 
     WIFI_CHECK_INTERVAL = 1.0
     VERSION_MIN_FINDMRBEAM = LooseVersion("0.2.0")

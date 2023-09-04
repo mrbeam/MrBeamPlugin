@@ -74,6 +74,9 @@ def undistort(img, mtx, dist, calibration_img_size=None, output_img_size=None):
     assumed the same as the input.
     It is faster to upscale/downscale here than to do it in a 2nd step seperately
     """
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     # The camera matrix need to be rescaled if the image size changed
     # in_mtx = adjust_mtx_to_pic(img, mtx, dist, calibration_img_size)
     h, w = img.shape[:2]
@@ -106,6 +109,9 @@ def undist_points(inPts, mtx, dist, new_mtx=None, reverse=False):
 
 
 def undist_dict(dict_pts, *a, **kw):
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     keys = list(dict_pts.keys())
     inPts = [
         dict_pts[k] for k in keys
@@ -133,6 +139,8 @@ def clean_unexpected_files(tmp_path):
 class BoardDetectorDaemon(Thread):
     """Processes images of chessboards to calibrate the lens used to take the
     pictures."""
+    # This class is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
 
     def __init__(
         self,
@@ -491,6 +499,10 @@ def handleBoardPicture(image, count, board_size, q_out=None):
     # logger = logging.getLogger()
     # if self._stop.is_set(): return
     # signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     if isinstance(image, str):
         # self._logger.info("Detecting board in %s" % image)
         img = cv2.imread(image)
@@ -614,6 +626,9 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 
 
 class CalibrationState(dict):
+    # This class is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     def __init__(
         self,
         imageSize=LEGACY_STILL_RES,

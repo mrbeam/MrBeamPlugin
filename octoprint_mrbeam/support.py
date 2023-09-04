@@ -4,6 +4,8 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 SUPPORT_STICK_FILE_PATH = "/home/pi/usb_mount/support"
+# CALIBRATION_STICK_FILE_PATH is being used by the camera plugin
+# Do not modify without checking the usage in the camera plugin
 CALIBRATION_STICK_FILE_PATH = "/home/pi/usb_mount/calibration_tool"
 
 

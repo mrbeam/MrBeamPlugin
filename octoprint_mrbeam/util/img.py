@@ -11,6 +11,9 @@ SUCCESS_WRITE_RETVAL = 1
 def differed_imwrite(filename, *a, **kw):
     """Writes to a temporary file before overwriting any file at the given
     path."""
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     _path = filename
     while isfile(_path):
         __dir, __f = split(_path)

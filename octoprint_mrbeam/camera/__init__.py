@@ -160,6 +160,9 @@ def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize=1):
 # @logme(True)
 def save_debug_img(img, path, folder=None):
     """Saves the image in a folder along the given path."""
+    # This method is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     if not folder:
         folder = os.path.dirname(path)
     else:

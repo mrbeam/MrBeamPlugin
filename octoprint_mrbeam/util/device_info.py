@@ -39,6 +39,8 @@ DC_SERIES = [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X]
 
 
 class DeviceInfo(object):
+    # This class is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
 
     DEVICE_INFO_FILE = "/etc/mrbeam"
 

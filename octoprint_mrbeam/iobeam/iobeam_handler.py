@@ -74,6 +74,9 @@ class IoBeamHandler(object):
     # How to get debug info:
     #       echo "info" |  nc -U -w1 /var/run/mrbeam_iobeam.sock
 
+    # This class is being used by the camera plugin
+    # Do not modify without checking the usage in the camera plugin
+
     SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
     MAX_ERRORS = 50
 
