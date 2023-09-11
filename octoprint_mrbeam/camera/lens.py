@@ -607,17 +607,12 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
     # if callback: callback()
     if q_out:
         q_out.put(dict(ret=ret, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs))
-    if ret == 0:
-        # TODO save to file here?
 
-        return ret, mtx, dist, rvecs, tvecs
-    else:
-        return ret, mtx, dist, rvecs, tvecs
+    return ret, mtx, dist, rvecs, tvecs
 
 
 # NOTICE: This is used by the camera plugin
 class CalibrationState(dict):
-
     def __init__(
         self,
         imageSize=LEGACY_STILL_RES,
