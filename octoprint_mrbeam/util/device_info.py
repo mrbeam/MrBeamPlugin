@@ -38,6 +38,7 @@ MODEL_DEFAULT = MODEL_MRBEAM_2
 DC_SERIES = [MODEL_MRBEAM_2_DC, MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_2_DC_X]
 
 
+# NOTICE: This is used by the camera plugin
 class DeviceInfo(object):
 
     DEVICE_INFO_FILE = "/etc/mrbeam"

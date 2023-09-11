@@ -63,6 +63,7 @@ class IoBeamValueEvents(object):
     LASERHEAD_CHANGED = "iobeam.laserhead.changed"
 
 
+# NOTICE: This is used by the camera plugin
 class IoBeamHandler(object):
 
     # How to test and debug:
@@ -1162,8 +1163,13 @@ class IoBeamHandler(object):
             error_code=message.get("code", None),
             priority=message.get("priority", 0),
         )
+        if message.get("stop_laser"):
+            self._plugin.fire_event(
+                MrBeamEvents.HARDWARE_MALFUNCTION,
+                dict(data=message),
+            )
         notification = self._user_notification_system.get_notification(
-            notification_id="iobeam_critical_error",
+            notification_id="err_hardware_malfunction_non_i2c",
             err_code=malfunction.error_code,
             replay=True,
         )

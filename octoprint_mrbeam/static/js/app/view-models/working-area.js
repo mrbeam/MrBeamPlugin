@@ -626,7 +626,7 @@ $(function () {
                     duration_processing: Date.now() - start_ts,
                     gco_generator_info: {
                         generator: beamos_vers ? "beamOS" : null,
-                        version: beamos_vers ? beamos_vers : null,
+                        version: beamos_vers,
                     },
                 };
                 self._analyticsPlaceGco(analyticsData);
@@ -4635,7 +4635,7 @@ $(function () {
             document.getElementById("quick_text_dialog"),
             document.getElementById("quick_shape_dialog"),
             document.getElementById("wa_view_settings"),
-            document.getElementById("mrb_object_height"),
+            document.getElementById("mrb_working_height"),
             document.getElementById("zoomFactor"),
         ],
     ]);

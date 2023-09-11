@@ -7,7 +7,6 @@ import threading
 import traceback
 from inspect import getframeinfo, stack
 
-
 _printer = None
 
 
@@ -20,6 +19,7 @@ def mrb_logger(id, lvl=None):
     return MrbLogger(id, lvl=lvl)
 
 
+# NOTICE: This is used by the camera plugin
 class MrbLogger(object):
 
     LEVEL_COMM = "_COMM_"
@@ -86,7 +86,12 @@ class MrbLogger(object):
         """
 
         try:
-            msg = unicode(msg, "utf-8")
+            if isinstance(msg, unicode):
+                # If it's already Unicode, no decoding is needed
+                pass
+            else:
+                # If it's a byte string, convert it to Unicode using "utf-8" encoding
+                msg = unicode(msg, "utf-8")
         except TypeError:
             # If it's already unicode we get this TypeError
             pass

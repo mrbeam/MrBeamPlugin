@@ -1763,7 +1763,7 @@ ul.dropdown-menu li a {
 
 .ui-pnotify .alert-error a,
 .ui-pnotify .alert-danger a {
-  color: #b94a48;
+  color: #e25303;
 }
 
 .ui-pnotify .alert-success a {
@@ -2759,6 +2759,29 @@ hides the force update buttons
   margin-left: 30px;
 }
 
+.prefilter-clickable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.prefilter-clickable:hover {
+  background-color: #eee;
+}
+
+.prefilter-clickable:not(:first-child) {
+  border-top: 1px solid #ddd;
+}
+
+.prefilter-clickable .span1 {
+  text-align: center;
+}
+
+#settings_maintenance .tooltip {
+  opacity: 1;
+}
+
 /*
 * === LASER JOB DONE #madewithmrbeam ===
 */
@@ -3402,7 +3425,16 @@ h4.ui-pnotify-title {
 }
 
 .alert.alert-error.ui-pnotify-container.ui-pnotify-shadow {
-  background-color: #ff8686;
+  background-color: #ffffff;
+  border: 5px solid #e25303;
+}
+
+.alert.alert-error.ui-pnotify-container.ui-pnotify-shadow .ui-pnotify-icon {
+  color: #e25303;
+}
+
+.alert.alert-error.ui-pnotify-container.ui-pnotify-shadow .ui-pnotify-title {
+  color: #e25303;
 }
 
 /* Pnotify styling */

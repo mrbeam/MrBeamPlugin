@@ -10,7 +10,9 @@ import sys
 from functools import wraps
 
 
+# NOTICE: This is used by the camera plugin
 def logtime(logger=None):
+
     def _logtime(f):
         @wraps(f)
         def timed_f(*args, **kw):
@@ -24,20 +26,26 @@ def logtime(logger=None):
     return _logtime
 
 
+# NOTICE: This is used by the camera plugin
 def logExceptions(f):
+
     @wraps(f)
     def wrap(*args, **kw):
         try:
             return f(*args, **kw)
         except Exception as e:
-            debug_logger(f).exception("%s, %s" % (e.__class__.__name__, e))
+            debug_logger(f).exception(
+                "Log exception: %s, %s" % (e.__class__.__name__, e)
+            )
             raise
 
     return wrap
 
 
+# NOTICE: This is used by the camera plugin
 def json_serialisor(elm):
     """Attempts to return a serialisable element if the given one is not."""
+
     if elm is None or isinstance(elm, (bool, int, float, str, list, tuple, dict)):
         # These types are already supported
         return elm

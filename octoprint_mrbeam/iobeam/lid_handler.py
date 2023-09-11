@@ -53,6 +53,7 @@ from octoprint_mrbeam.camera.lens import (
     USER,
 )
 from octoprint_mrbeam.util import dict_merge, dict_map, get_thread, makedirs
+from octoprint_mrbeam.util.errors import ErrorCodes
 from octoprint_mrbeam.util.log import json_serialisor, logme
 
 SIMILAR_PICS_BEFORE_UPSCALE = 1
@@ -786,13 +787,15 @@ class PhotoCreator(object):
                 )
                 self._plugin.user_notification_system.show_notifications(
                     self._plugin.user_notification_system.get_notification(
-                        notification_id="err_cam_conn_err", replay=True
+                        notification_id="err_cam_conn_err",
+                        replay=True,
+                        err_code=ErrorCodes.E_1028,
                     )
                 )
             return
         except exc.CameraException as e:
             self._logger.exception(
-                "%s_%s",
+                "Camera Exception %s_%s",
                 e.__class__.__name__,
                 e,
             )
@@ -800,6 +803,7 @@ class PhotoCreator(object):
                 self._plugin.user_notification_system.get_notification(
                     "err_cam_conn_err",
                     err_msg=[str(e)],
+                    err_code=ErrorCodes.E_1006,
                 )
             )
         except Exception as e:
@@ -905,7 +909,7 @@ class PhotoCreator(object):
             if self._plugin.lid_handler.lensCalibrationStarted:
                 # Do not try to do anything fancy during the lens calibration (computationaly lighter)
                 self._logger.debug(
-                    "Lens calibraton - wait for the next picture to take"
+                    "Lens calibration - wait for the next picture to take"
                 )
                 while self._plugin.lid_handler.lensCalibrationStarted:
                     if self.forceNewPic.wait(0.05):
@@ -918,6 +922,17 @@ class PhotoCreator(object):
                 saveNext = True
                 latest = cam.lastPic()
             else:
+                if cam.camera_error:
+                    self.stopEvent.set()
+                    self._logger.error(
+                        "Camera error: %s, disabling camera", cam.camera_error
+                    )
+                    self._plugin.user_notification_system.show_notifications(
+                        self._plugin.user_notification_system.get_notification(
+                            "err_cam_conn_err",
+                            error_code=ErrorCodes.E_1006,
+                        )
+                    )
                 cam.async_capture()  # starts capture with new settings
 
             if latest is None:

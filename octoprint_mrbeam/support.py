@@ -2,8 +2,9 @@ import time
 import os.path
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
-
+# NOTICE: This is used by the camera plugin
 SUPPORT_STICK_FILE_PATH = "/home/pi/usb_mount/support"
+
 CALIBRATION_STICK_FILE_PATH = "/home/pi/usb_mount/calibration_tool"
 
 

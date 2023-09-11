@@ -1,4 +1,6 @@
 import os
+import time
+
 import yaml
 import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -8,7 +10,7 @@ from octoprint_mrbeam.util.device_info import MODEL_MRBEAM_2_DC_S, MODEL_MRBEAM_
     MODEL_MRBEAM_2_DC_R1, MODEL_MRBEAM_2_DC_R2, MODEL_MRBEAM_2
 
 LASERHEAD_MAX_TEMP_FALLBACK = 55.0
-LASERHEAD_HIGH_TMP_WARN_OFFSET_FALLBACK = 2.0
+LASERHEAD_HIGH_TMP_WARN_OFFSET_FALLBACK = 3.0
 LASERHEAD_MAX_DUST_FACTOR_FALLBACK = 3.0 # selected the highest factor
 LASERHEAD_MAX_CORRECTION_FACTOR_FALLBACK = 1
 LASERHEAD_MAX_INSTENSITY_INCLUDING_CORRECTION_FALLBACK = 1500
@@ -46,6 +48,7 @@ class LaserheadHandler(object):
         str(LASERHEAD_S_ID): 'S',  # dreamcut[S] laserhead
         str(LASERHEAD_X_ID): 'x',  # dreamcut[x] laserhead
     }
+    LASERHEAD_SUMMER_MONTH_OFFEST = {6: 1, 7: 2, 8: 2, 9: 1}  # month: offset
 
 
     def __init__(self, plugin):
@@ -473,6 +476,9 @@ class LaserheadHandler(object):
             float: Laser head max temp
         """
         current_laserhead_properties = self._get_laserhead_properties()
+        summer_month_temperature_offset = self.get_summermonth_temperature_offset()
+        max_temperature = self.default_laserhead_max_temperature + summer_month_temperature_offset
+
 
         # Handle the exceptions
         if((isinstance(current_laserhead_properties, dict) is False) or
@@ -481,12 +487,14 @@ class LaserheadHandler(object):
             # Apply fallback
             self._logger.debug("Current laserhead properties: {}".format(current_laserhead_properties))
             self._logger.exception(
-                "Current Laserhead Max temp couldn't be retrieved, fallback to the temperature value of: {}".format(
-                    self.default_laserhead_max_temperature))
-            return self.default_laserhead_max_temperature
-        # Reaching here means, everything looks good
-        self._logger.debug("Current Laserhead Max temp:{}".format(current_laserhead_properties["max_temperature"]))
-        return current_laserhead_properties["max_temperature"]
+                "Current laser head max temp:{} laser head temperature couldn't be retrieved, fallback to the default temperature value, includes summer month offset: {}".format(
+                    max_temperature, summer_month_temperature_offset))
+        else:
+            # Reaching here means, everything looks good
+            max_temperature = current_laserhead_properties["max_temperature"] + summer_month_temperature_offset
+            self._logger.debug("Current laser head max temp:{} includes summer month offset: {}".format(max_temperature, summer_month_temperature_offset))
+
+        return max_temperature
 
     @property
     def default_laserhead_max_temperature(self):
@@ -532,6 +540,18 @@ class LaserheadHandler(object):
 		"""
 
         return LASERHEAD_HIGH_TMP_WARN_OFFSET_FALLBACK
+
+    def get_summermonth_temperature_offset(self):
+        """
+        Return the summer month temperature offset
+
+        Returns:
+            int: temperature offset in degree if it is summer month, otherwise 0
+        """
+        ntp_synced = self._plugin.is_time_ntp_synced()
+        if ntp_synced and time.localtime().tm_mon in self.LASERHEAD_SUMMER_MONTH_OFFEST:
+            return self.LASERHEAD_SUMMER_MONTH_OFFEST[time.localtime().tm_mon]
+        return 0
 
     def _load_current_laserhead_properties(self):
         """Loads the current detected laser head related properties from the

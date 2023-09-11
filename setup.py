@@ -49,6 +49,7 @@ plugin_requires = [
     "pyyaml",
     "enum34",
     "python-statemachine==1.0.3",
+    "typing",  # dependency of python-statemachine
     picamera,
 ]
 
@@ -81,6 +82,7 @@ additional_setup_parameters = {
             "profiles/laserhead/*.yaml",
             "files/grbl/*.hex",
             "files/migrate/*",
+            "files/Mig005/*",
             "files/migrate_logrotate/*",
             "files/material_settings/*",
             "files/camera/*",

@@ -4,6 +4,7 @@ import time
 from os.path import dirname, join, realpath
 
 from mock.mock import MagicMock, patch
+from octoprint_mrbeam.camera import exc
 
 from octoprint_mrbeam.camera.exc import MrbCameraError
 from octoprint_mrbeam.camera.mrbcamera import MrbCamera
@@ -59,6 +60,6 @@ def test_concurrent_captures():
             time.sleep(0.2)
             try:
                 cam1.capture()
-            except MrbCameraError:
+            except exc.CameraException:
                 return
             raise Exception("Should not be able to take 2 pictures at the same time")

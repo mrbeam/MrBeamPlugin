@@ -1,0 +1,79 @@
+/* This tooltip css library shows a tooltip on hover on top of the element with a pointer on the bottom. */
+
+/* Implementation Example: Start */
+/* <div class="mrb-tooltip --custom-tooltip--"> */
+/* Replace --custom-tooltip-- with a custom tooltip identifier class */
+/*      <div class="mrb-tooltip-details"> */
+/*      </div> */
+/* </div> */
+/* Style the positioning customizable css options using --custom-tooltip-- class */
+/* Implementation Example: End */
+
+/* General tooltip styling - Start ------------------------------- */
+.mrb-tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+.mrb-tooltip-details {
+  visibility: hidden;
+  border: 2px solid #e25303;
+  text-align: center;
+  border-radius: 4px;
+  position: absolute;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  /* Positioning customizable options - Start */
+  width: 160px;
+  bottom: calc(100% + 4px); /* 10px is space for the for the pointer */
+  left: 50%;
+  transform: translateX(-50%);
+  /* Positioning customizable options - End */
+}
+.mrb-tooltip-details::before {
+  content: "";
+  position: absolute;
+  border-style: solid;
+  border-width: 4px;
+  border-color: transparent transparent #e25303 transparent;
+  /* Positioning customizable options - Start */
+  top: calc(100% + 2px); /* 2px is offset for the border */
+  left: 50%;
+  transform: translateX(-50%) rotate(180deg);
+  /* Positioning customizable options - End */
+}
+.mrb-tooltip:hover .mrb-tooltip-details {
+  visibility: visible;
+  opacity: 1;
+}
+/* General tooltip styling - End ------------------------------- */
+
+/* Working Height tooltip styling - Start */
+.working-height-tooltip .mrb-tooltip-details {
+  width: 20vw;
+  bottom: 50%;
+  transform: translateY(50%);
+  left: calc(100% + -5px); /* 4px is space for the for the pointer */
+}
+.working-height-tooltip .mrb-tooltip-details:before {
+  left: calc(0% - 10px);
+  bottom: unset;
+  top: 50%;
+  transform: translateY(-50%) rotate(270deg);
+}
+
+/* Responsive settings - Start */
+@media (max-width: 1440px) {
+  .working-height-tooltip .mrb-tooltip-details {
+    width: 16vw;
+  }
+}
+@media (max-width: 1024px) {
+  .working-height-tooltip .mrb-tooltip-details {
+    width: 10vw;
+  }
+}
+/* Responsive settings - End */
+/* Working Height tooltip styling - End */

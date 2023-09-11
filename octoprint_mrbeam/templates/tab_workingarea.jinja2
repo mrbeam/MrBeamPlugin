@@ -129,51 +129,60 @@
 															   data-bind="value: control.distance, valueUpdate: 'input'"
 															   style="width:3.5em; display: inline; margin: 0; padding-right:0;"
 														/> {{ _('mm') }}
-													</div>
-												</div>
-											</div>
-										</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
 
-
-
-                                        <div id="mrb_object_height" class="accordion-inner">
-											<div class="accordion-heading ">
-												<a id="wa_pane_object_height_toggle" href="#wa_pane_object_height_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
+                                        <div id="mrb_working_height" class="accordion-inner">
+                                            <div class="accordion-heading mrb-tooltip working-height-tooltip">
+                                                <a id="wa_pane_object_height_toggle" href="#wa_pane_object_height_body"
+                                                   class="dropdown" data-toggle="collapse" aria-expanded="false">
                                                     <svg class="mrb_icon" viewBox="0 0 20 20">
                                                         <path d="M 9.365 8.72 L 21.481 8.72 C 21.696 8.72 21.871 8.895 21.871 9.11 L 21.871 10.891 C 21.871 11.106 21.696 11.281 21.481 11.281 L 9.365 11.281 C 9.15 11.281 8.975 11.106 8.975 10.891 L 8.975 9.11 C 8.975 8.895 9.15 8.72 9.365 8.72 Z M 9.365 14.048 L 21.481 14.048 C 21.696 14.048 21.871 14.223 21.871 14.438 L 21.871 16.219 C 21.871 16.434 21.696 16.609 21.481 16.609 L 9.365 16.609 C 9.15 16.609 8.975 16.434 8.975 16.219 L 8.975 14.438 C 8.975 14.223 9.15 14.048 9.365 14.048 Z M 9.365 3.391 L 21.481 3.391 C 21.696 3.391 21.871 3.566 21.871 3.7809999999999997 L 21.871 5.562 C 21.871 5.777 21.696 5.952 21.481 5.952 L 9.365 5.952 C 9.15 5.952 8.975 5.777 8.975 5.562 L 8.975 3.7809999999999997 C 8.975 3.566 9.15 3.391 9.365 3.391 Z M 2.2 14.4 L 2.2 5.6 L 0 5.617 L 3.566 0.08600000000000001 L 6.981 5.617 L 4.8 5.6 L 4.8 14.4 L 7 14.4 L 3.559 20.027 L 0 14.4 L 2.2 14.4 Z"></path>
                                                     </svg>
-                                                    {{ _('Object Height') }}:
-												</a>
-												<span class="caret" style="vertical-align: middle"></span>
-											</div>
+                                                    {{ _('Working Height') }}:
+                                                </a>
+                                                <span class="caret" style="vertical-align: middle"></span>
+                                                <div class="mrb-tooltip-details"><img src="/plugin/mrbeam/static/img/working-height-diagram.png" alt=""></div>
+                                            </div>
 
                                             <div class="accordion-body collapse in" id="wa_pane_object_height_body">
-												<div class="accordion-inner">
+                                                <div class="accordion-inner">
                                                     <div>
-														<span class="muted">{{ _('Set the height of the surface above the bottom for the camera preview to be accurate:') }}</span>
+														<span class="muted">{{ _('Set the height at which you want to laser so that the camera preview is accurate. For more detailed information, including cutting aids and the Mr Beam Height Extension, see ') }}<a
+                                                                target="_blank"
+                                                                href="{{ _("https://support.mr-beam.org/en") }}/support/solutions/articles/43000708214-how-to-adjusting-the-working-height-correctly?utm_source=beamos&utm_medium=software">
+                                                                {{ _("this Knowledge Base article") }}</a>
+                                                                {{ _(" regarding the working height.") }}</span>
                                                         <div>
-                                                            <input class="mrb_slider" type="range" min="0" max="38" step="1" id="objectZ_input_slider" value="0"
-																   data-test="tab-workingarea-object-height-slider"
+                                                            <input class="mrb_slider" type="range" min="0" max="38"
+                                                                   step="1" id="objectZ_input_slider" value="0"
+                                                                   data-test="tab-workingarea-working-height-slider"
                                                                    data-bind="value: camera.objectZ, valueUpdate: 'input'"
                                                                    style="width:60%; display: inline; margin: 1em 0 1em 5px;"
                                                             />
-                                                            <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input_number" value="0"
-															   data-test="tab-workingarea-object-height-input"
-														       data-bind="value: camera.objectZ, valueUpdate: 'input'"
-														       style="width:3.5em; display: inline; margin: 0; padding-right:0;"
-														/>&nbsp;{{ _('mm') }}
+                                                            <input class="decent_input" type="number" min="0" max="38"
+                                                                   step="1" id="objectZ_input_number" value="0"
+                                                                   data-test="tab-workingarea-working-height-input"
+                                                                   data-bind="value: camera.objectZ, valueUpdate: 'input'"
+                                                                   style="width:3.5em; display: inline; margin: 0; padding-right:0;"
+                                                            />&nbsp;{{ _('mm') }}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-										</div>
+                                        </div>
 
 
                                         <div id="wa_view_settings" class="accordion-inner">
-											<div class="accordion-heading ">
-												<a id="wa_view_settings_toggle" data-test="tab-workingarea-preview-settings" href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
-													<i class="icon-camera"></i> {{ _('Preview') }}:
+                                            <div class="accordion-heading ">
+                                                <a id="wa_view_settings_toggle"
+                                                   data-test="tab-workingarea-preview-settings"
+                                                   href="#wa_view_settings_body" class="dropdown" data-toggle="collapse"
+                                                   aria-expanded="false">
+                                                    <i class="icon-camera"></i> {{ _('Preview') }}:
 												</a>
 												<span class="caret" style="vertical-align: middle"></span>
 											</div>

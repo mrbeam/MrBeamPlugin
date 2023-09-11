@@ -3,13 +3,15 @@
 <h3>{{ _('Get creative with your Mr Beam laser cutter!') }}</h3>
 
 {%  include 'modules/social_media_channels.jinja2' %}
-{% trans %}
-<h4>Show your creation and use our hashtag <a href="https://mr-beam.org/madewithmrbeam?utm_source=beamos&utm_medium=software" target="_blank">#madewithmrbeam</a></h4>
-<p>Become part of the Mr Beam community. Get inspired or connect with other creatives.</p>
-<h4>Find support in our <a href="https://support.mr-beam.org/?utm_source=beamos&utm_medium=software" target="_blank">knowledge base</a></h4>
-<p>Our knowledge base is your first choice for help articles and videos on all Mr Beam topics like setup,
-    troubleshooting, and more.</p>
-<h4>Get help when you need it</h4>
-<p>If you get stuck with the knowledge base, we recommend you create a support ticket directly from the software. This
-    is the fastest way to contact us and we will get information about your Mr Beam directly.</p>
-{% endtrans %}
+
+{% set knowledge_base_link = _('https://support.mr-beam.org/?utm_source=beamos&utm_medium=software') %}
+
+<h4>{{ _('Show your creation and use our hashtag') }} <a href="https://mr-beam.org/madewithmrbeam?utm_source=beamos&utm_medium=software" target="_blank">#madewithmrbeam</a></h4>
+<p>{{ _('Become part of the Mr Beam community. Get inspired or connect with other creatives.') }}</p>
+<h4>{{ _('Find support in our %(a_open)sknowledge base%(a_close)s',
+a_open='<a href=' + knowledge_base_link + ' target="_blank">', a_close='</a>') }}</h4>
+<p>{{ _('Our knowledge base is your first choice for help articles and videos on all Mr Beam topics like setup,
+    troubleshooting, and more.') }}</p>
+<h4>{{ _('Get help when you need it') }}</h4>
+<p>{{ _('If you get stuck with the knowledge base, we recommend you create a support ticket directly from the software. This
+    is the fastest way to contact us and we will get information about your Mr Beam directly.') }}</p>

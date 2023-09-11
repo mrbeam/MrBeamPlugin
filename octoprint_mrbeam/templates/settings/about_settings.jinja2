@@ -67,15 +67,17 @@
             <h5>{{ _('Documentation, Support and Privacy') }}</h5>
             <div class="controls">
                 <ul>
-                    {% for document in settings_model.about.support_documents %}
-                        <div>
-                            <strong>{{ document.title }}</strong>
-                            {% for link in document.document_links | sort_enum(attribute='language') %}
-                                <a href="{{ link.url }}" target="_blank" data-test="about-settings-link-quickstart"> {{ link.language.value }} </a> |
-                            {% endfor %}
-                            {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank" data-test="about-settings-link-quickstart-online">{{ _('online') }}</a>
-                        </div>
-                    {% endfor %}
+                    {% if settings_model %}
+                        {% for document in settings_model.about.support_documents %}
+                            <div>
+                                <strong>{{ document.title }}</strong>
+                                {% for link in document.document_links | sort_enum(attribute='language') %}
+                                    <a href="{{ link.url }}" target="_blank" data-test="about-settings-link-quickstart"> {{ link.language.value }} </a> |
+                                {% endfor %}
+                                {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank" data-test="about-settings-link-quickstart-online">{{ _('online') }}</a>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
 
                     <div><strong>{{ _('Online Support Portal') }}:</strong> <a href="https://www.mr-beam.org/support" target="_blank" data-test="about-settings-link-support">mr-beam.org/support</a></div>
                     <div><strong>{{ _('Privacy Policies') }}:</strong>

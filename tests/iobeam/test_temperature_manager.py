@@ -1,5 +1,5 @@
 import pytest
-from mock.mock import MagicMock
+from mock.mock import MagicMock, patch
 from octoprint_mrbeam.util.uptime import get_uptime
 from pytest import approx
 
@@ -10,12 +10,14 @@ from octoprint_mrbeam.iobeam.temperature_manager import TemperatureManager
 
 @pytest.fixture()
 def temperature_manager(mrbeam_plugin):
-    temperature_manager = TemperatureManager(mrbeam_plugin)
+    laser = MagicMock()
+    temperature_manager = TemperatureManager(mrbeam_plugin, laser)
     temperature_manager.temperature_max = 50.0
     temperature_manager._high_tmp_warn_offset = 5.0
     temperature_manager._event_bus.fire = MagicMock()
     temperature_manager._analytics_handler = MagicMock()
     temperature_manager._one_button_handler = MagicMock()
+    temperature_manager._temp_timer_callback = MagicMock()
     temperature_manager._on_mrbeam_plugin_initialized(
         MrBeamEvents.MRB_PLUGIN_INITIALIZED, None
     )
@@ -25,7 +27,7 @@ def temperature_manager(mrbeam_plugin):
 
 def test_cooling_difference_if_not_cooling(mrbeam_plugin):
     # Arrange
-    temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager = TemperatureManager(mrbeam_plugin, MagicMock())
 
     # Act
     cooling_difference = temperature_manager.cooling_difference
@@ -43,7 +45,7 @@ def test_cooling_difference_if_not_cooling(mrbeam_plugin):
 )
 def test_cooling_difference_if_cooling(temperature, expected_result, mrbeam_plugin):
     # Arrange
-    temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager = TemperatureManager(mrbeam_plugin, MagicMock())
     temperature_manager.cooling_tigger_temperature = 50.0
     temperature_manager.temperature = temperature
     temperature_manager.is_cooling = MagicMock(return_value=True)
@@ -57,7 +59,7 @@ def test_cooling_difference_if_cooling(temperature, expected_result, mrbeam_plug
 
 def test_dismiss_high_temperature_warning(mrbeam_plugin):
     # Arrange
-    temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager = TemperatureManager(mrbeam_plugin, MagicMock())
     temperature_manager._event_bus.fire = MagicMock()
     # Act
     temperature_manager.dismiss_high_temperature_warning()
@@ -70,7 +72,7 @@ def test_dismiss_high_temperature_warning(mrbeam_plugin):
 
 def test_dismiss_high_temperature_critical(mrbeam_plugin):
     # Arrange
-    temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager = TemperatureManager(mrbeam_plugin, MagicMock())
     temperature_manager._event_bus.fire = MagicMock()
     # Act
     temperature_manager.dismiss_high_temperature_critical()
@@ -83,7 +85,7 @@ def test_dismiss_high_temperature_critical(mrbeam_plugin):
 
 def test_cooling_since_if_not_cooling(mrbeam_plugin):
     # Arrange
-    temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager = TemperatureManager(mrbeam_plugin, MagicMock())
 
     # Act
     cooling_since = temperature_manager.cooling_since
@@ -115,16 +117,55 @@ def test_handle_temp_invalid(temperature_manager):
     temperature_manager.cooling_stop.assert_called_once()
 
 
-def test_handle_temp_critical_high_temperature(temperature_manager):
+def test_handle_temp_critical_high_temperature_while_printing(temperature_manager):
     # Arrange
-    temperature_manager.cooling_stop = MagicMock()
+    temperature_manager._one_button_handler.is_printing = MagicMock(return_value=True)
+    temperature_manager._laser.is_busy = MagicMock(return_value=True)
 
     # Act
-    temperature_manager.handle_temp(kwargs={"temp": 55.1})
+    with patch(
+        "octoprint_mrbeam.iobeam.temperature_manager.get_uptime",
+        return_value=get_uptime() - 3,
+    ):  # simulate a temperature received 3 seconds ago
+        temperature_manager.handle_temp(kwargs={"temp": 55.1})
 
     # Assert
     temperature_manager._event_bus.fire.assert_called_with(
-        MrBeamEvents.LASER_HIGH_TEMPERATURE, {"threshold": 55.0, "tmp": 55.1}
+        MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED,
+    )
+
+    # Act
+    temperature_manager.handle_temp(kwargs={"temp": 55.2})
+
+    # Assert
+    temperature_manager._event_bus.fire.assert_called_with(
+        MrBeamEvents.LASER_HIGH_TEMPERATURE, {"threshold": 55.0, "tmp": 55.2}
+    )
+
+
+def test_handle_temp_critical_high_temperature_while_not_lasering(temperature_manager):
+    # Arrange
+    temperature_manager._one_button_handler.is_printing = MagicMock(return_value=False)
+    temperature_manager._laser.is_busy = MagicMock(return_value=False)
+
+    # Act
+    with patch(
+        "octoprint_mrbeam.iobeam.temperature_manager.get_uptime",
+        return_value=get_uptime() - 3,
+    ):  # simulate a temperature received 3 seconds ago
+        temperature_manager.handle_temp(kwargs={"temp": 55.1})
+
+    temperature_manager._event_bus.fire.assert_called_with(
+        MrBeamEvents.LASER_COOLING_TEMPERATURE_REACHED,
+    )
+    temperature_manager.high_temp_fsm.start_monitoring()  # this would be triggered by the event
+
+    # Act
+    temperature_manager.handle_temp(kwargs={"temp": 55.2})
+
+    # Assert
+    temperature_manager._event_bus.fire.assert_called_with(
+        MrBeamEvents.LASER_HIGH_TEMPERATURE, {"threshold": 55.0, "tmp": 55.2}
     )
 
 
@@ -257,7 +298,7 @@ def test_handle_temp_fire_no_event(temp, time, temperature_manager):
 
 def test_cooling_resume(mrbeam_plugin):
     # Arrange
-    temperature_manager = TemperatureManager(mrbeam_plugin)
+    temperature_manager = TemperatureManager(mrbeam_plugin, MagicMock())
     temperature_manager._event_bus.fire = MagicMock()
     temperature_manager._one_button_handler = MagicMock(cooling_down_end=MagicMock())
 

@@ -33,8 +33,10 @@ class HwMalfunction:
     def msg(self):
         """Returns the message to be shown to the user."""
         # if error_code is set, only show the code else show the message
+        if isinstance(self.error_code, list):
+            return ("{} ".format(code) for code in self.error_code)
         if self.error_code:
-            return "Error Code: {}".format(self.error_code)
+            return "{}".format(self.error_code)
 
         return self._msg
 
@@ -50,7 +52,14 @@ class HwMalfunction:
 class HwMalfunctionHandler(object):
     MALFUNCTION_ID_BOTTOM_OPEN = "bottom_open"
     MALFUNCTION_ID_LASERHEADUNIT_MISSING = "laserheadunit_missing"
-    MALFUNCTION_ID_GENERAL = "hw_malfunction"
+    HW_MANIPULATION = "hw_mnpltn"
+    PCF_ANOMALY = "pcf_anomaly"
+    MALFUNCTION_ID_GENERAL = "err_unknown_malfunction"
+    FAN_NOT_SPINNING = "err_fan_not_spinning"
+    COMPRESSOR_MALFUNCTION = "compressor_malfunction"
+    ONEBUTTON_NOT_INITIALIZED = "onebtn_not_initialized"
+    I2C_BUS_MALFUNCTION = "i2c_bus_malfunction"
+    I2C_DEVICE_MISSING = "i2c_missing_"
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.hw_malfunction")
@@ -70,12 +79,15 @@ class HwMalfunctionHandler(object):
     def _on_mrbeam_plugin_initialized(self, event, payload):
         self._iobeam_handler = self._plugin.iobeam
 
-    def report_hw_malfunction_from_plugin(self, malfunction_id, msg, payload=None):
+    def report_hw_malfunction_from_plugin(
+        self, malfunction_id, msg, payload=None, error_code=None
+    ):
         if not isinstance(payload, dict):
             payload = {}
         data = dict(
             msg=msg,
             payload=payload,
+            code=error_code,
         )
         dataset = {malfunction_id: data}
         if not self.error_already_reported(malfunction_id):
@@ -136,14 +148,71 @@ class HwMalfunctionHandler(object):
             if malfunction_id == self.MALFUNCTION_ID_BOTTOM_OPEN:
                 notifications.append(
                     self._user_notification_system.get_notification(
-                        notification_id="err_bottom_open", replay=True
+                        notification_id="err_bottom_open",
+                        replay=True,
+                        err_code=malfunction.error_code,
                     )
                 )
             elif malfunction_id == self.MALFUNCTION_ID_LASERHEADUNIT_MISSING:
                 notifications.append(
                     self._user_notification_system.get_notification(
                         notification_id="err_leaserheadunit_missing",
-                        err_msg=malfunction.msg,
+                        err_code=malfunction.error_code,
+                        replay=True,
+                    )
+                )
+            elif malfunction_id == self.HW_MANIPULATION:
+                notifications.append(
+                    self._user_notification_system.get_notification(
+                        notification_id="err_interlock_malfunction",
+                        err_code=malfunction.error_code,
+                        replay=True,
+                    )
+                )
+            elif malfunction_id == self.FAN_NOT_SPINNING:
+                notifications.append(
+                    self._user_notification_system.get_notification(
+                        notification_id="err_fan_not_spinning",
+                        err_code=malfunction.error_code,
+                        replay=True,
+                    )
+                )
+            elif malfunction_id == self.COMPRESSOR_MALFUNCTION:
+                notifications.append(
+                    self._user_notification_system.get_notification(
+                        notification_id="err_compressor_malfunction",
+                        err_code=malfunction.error_code,
+                        replay=True,
+                    )
+                )
+            elif malfunction_id == self.ONEBUTTON_NOT_INITIALIZED:
+                notifications.append(
+                    self._user_notification_system.get_notification(
+                        notification_id="err_one_button_malfunction",
+                        err_code=malfunction.error_code,
+                        replay=True,
+                    )
+                )
+            elif malfunction_id == self.PCF_ANOMALY:
+                notifications.append(
+                    self._user_notification_system.get_notification(
+                        notification_id="err_hardware_malfunction_non_i2c",
+                        err_code=malfunction.error_code,
+                        replay=True,
+                    )
+                )
+            elif malfunction_id == self.I2C_BUS_MALFUNCTION:
+                notifications.append(
+                    self._user_notification_system.get_notification(
+                        notification_id="err_hardware_malfunction_i2c",
+                        err_code=malfunction.error_code,
+                        replay=True,
+                    )
+                )
+            elif malfunction_id and malfunction_id.startswith(self.I2C_DEVICE_MISSING):
+                notifications.append(
+                    self._user_notification_system.get_notification(
+                        notification_id="err_hardware_malfunction_i2c",
                         err_code=malfunction.error_code,
                         replay=True,
                     )
@@ -155,7 +224,7 @@ class HwMalfunctionHandler(object):
         if general_malfunctions:
             notifications.append(
                 self._user_notification_system.get_notification(
-                    notification_id="err_hardware_malfunction",
+                    notification_id=self.MALFUNCTION_ID_GENERAL,
                     replay=True,
                     err_msg=general_malfunctions,
                 )

@@ -37,8 +37,9 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
+    UNKNOWN_VALUE = "unknown"
     ANALYTICS_LOG_VERSION = (
-        28  # bumped for SW-3065 add laserhead to header
+        29  # bumped for SW-1157 add laser head max temperature and summer month offset
     )
 
     def __init__(self, plugin):
@@ -959,7 +960,11 @@ class AnalyticsHandler(object):
     def _event_laser_cooling_pause(self, event, payload, header_extension=None):
         _ = event
         _ = payload
-        data = {AnalyticsKeys.Job.LaserHead.TEMP: None}
+        data = {
+            AnalyticsKeys.Job.LaserHead.TEMP: None,
+            AnalyticsKeys.Job.LaserHead.COOLING_TEMPERATURE: self._laserhead_handler.current_laserhead_max_temperature,
+            AnalyticsKeys.Job.LaserHead.SUMMER_MONTH_TEMPERATURE_OFFSET: self._laserhead_handler.get_summermonth_temperature_offset(),
+        }
         if self._current_lasertemp_collector:
             data[
                 AnalyticsKeys.Job.LaserHead.TEMP
@@ -1049,7 +1054,7 @@ class AnalyticsHandler(object):
     def _event_print_failed(self, event, payload, header_extension=None):
         details = {
             AnalyticsKeys.Job.Duration.CURRENT: int(round(payload.get("time", 0.0))),
-            AnalyticsKeys.Job.ERROR: payload.get("error_msg", "unknown"),
+            AnalyticsKeys.Job.ERROR: payload.get("error_msg", self.UNKNOWN_VALUE),
         }
         self._current_job_final_status = "Failed"
         self._add_job_event(
@@ -1422,8 +1427,14 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Header.DATA: data,
                 AnalyticsKeys.Header.UPTIME: get_uptime(),
                 AnalyticsKeys.Header.MODEL: self._plugin.get_model_id(),
-                AnalyticsKeys.Header.LH_MODEL_ID: self._plugin.laserhead_handler.get_current_used_lh_model_id(),
-                AnalyticsKeys.Header.LH_SERIAL: self._laserhead_handler.get_current_used_lh_data()["serial"],
+                AnalyticsKeys.Header.LH_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id()
+                if self._laserhead_handler is not None
+                else self.UNKNOWN_VALUE,
+                AnalyticsKeys.Header.LH_SERIAL: self._laserhead_handler.get_current_used_lh_data()[
+                    "serial"
+                ]
+                if self._laserhead_handler is not None
+                else self.UNKNOWN_VALUE,
                 AnalyticsKeys.Header.FEATURE_ID: header_extension.get(
                     AnalyticsKeys.Header.FEATURE_ID, None
                 ),
@@ -1492,6 +1503,12 @@ class AnalyticsHandler(object):
             )
         if self._current_lasertemp_collector:
             lasertemp_summary = self._current_lasertemp_collector.getSummary()
+            lasertemp_summary[
+                AnalyticsKeys.Job.Event.Summary.Laserhead.COOLING_TEMPERATURE
+            ] = self._laserhead_handler.current_laserhead_max_temperature
+            lasertemp_summary[
+                AnalyticsKeys.Job.Event.Summary.Laserhead.SUMMER_MONTH_TEMPERATURE_OFFSET
+            ] = self._laserhead_handler.get_summermonth_temperature_offset()
             self._add_job_event(
                 AnalyticsKeys.Job.Event.Summary.LASERTEMP, payload=lasertemp_summary
             )

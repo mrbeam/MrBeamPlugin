@@ -47,6 +47,7 @@ def mrbeam_plugin():
         return_value="", getBaseFolder=MagicMock(return_value="")
     )
     mrbeam_plugin._settings.get_boolean = MagicMock()
+    mrbeam_plugin._settings.global_get = MagicMock()
     mrbeam_plugin._event_bus = event_manager
     mrbeam_plugin.dust_manager = MagicMock()
     mrbeam_plugin.temperature_manager = MagicMock()
@@ -61,5 +62,7 @@ def mrbeam_plugin():
     )
     mrbeam_plugin.laserhead_handler = MagicMock()
     mrbeam_plugin._event_bus.fire(Events.STARTUP)
+    mrbeam_plugin.user_notification_system = MagicMock()
+    mrbeam_plugin._printer = MagicMock()
 
     yield mrbeam_plugin

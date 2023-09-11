@@ -22,6 +22,7 @@ USER mrbeam
 WORKDIR /home/mrbeam
 
 RUN sudo apt-get upgrade -y \
+    && sudo apt-get update \
     && sudo apt-get install build-essential -y \
     && sudo apt-get install libncursesw5-dev libssl-dev tk-dev libgdbm-dev libc6-dev libbz2-dev -y \
     && sudo apt-get install wget git -y \
@@ -52,7 +53,7 @@ RUN source ./venv2/bin/activate \
     && pip install .
 
 RUN source ./venv2/bin/activate \
-    && pip install opencv-python==3.2.0.7
+    && pip install opencv-python==3.2.0.8
 
 COPY --chown=mrbeam docker_config/docker-octoprint-config.yaml /home/mrbeam/.octoprint/config.yaml
 

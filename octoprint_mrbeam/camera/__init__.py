@@ -156,10 +156,10 @@ def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize=1):
     return np.max(np.abs(np.diff(images, axis=0))) > thresh
 
 
-# @logtime()
-# @logme(True)
+# NOTICE: This is used by the camera plugin
 def save_debug_img(img, path, folder=None):
     """Saves the image in a folder along the given path."""
+
     if not folder:
         folder = os.path.dirname(path)
     else:

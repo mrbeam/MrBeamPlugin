@@ -1,5 +1,5 @@
 max_temperature: 60.0
-high_temperature_offset: 2.0
+high_temperature_offset: 3.0
 max_dust_factor: 3.0
 max_correction_factor: 1.23
 max_intensity_including_correction: 1600

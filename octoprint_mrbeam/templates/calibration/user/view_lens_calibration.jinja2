@@ -25,7 +25,10 @@
             opening_tag='<a href="/plugin/mrbeam/static/docs/calibration_chessboard_pattern.pdf" target="_blank">',
             closing_tag='</a>') }}
         </li>
-        <li>{{ _('Place it somewhere inside the working area of your Mr Beam, aligned horizontally.') }}</li>
+        <li>
+            {{ _('Place it somewhere inside the working area of your Mr Beam, aligned horizontally.') }}<br>
+            <strong>{{ _('Note: ') }}</strong>{{ _('If you have installed a Mr Beam Height Extension, it is important that the camera can capture the chessboard completely (If you move it too close to one of the edges of the workspace, the protective housing will cover parts of the chessboard). Check this with the help of the camera preview image.') }}
+        </li>
         <li>
             <div id="lens_calibration_steps_and_heatmap">
                 <div>
@@ -33,7 +36,10 @@
                     <ul>
                         <li>{{ _('Keep the lid open and press the button on your Mr Beam shortly to take a picture of the chessboard: the Status Lights will flash in blue.') }}</li>
                         <li>{{ _('Wait for the blue flashing to stop.') }}</li>
-                        <li>{{ _('Move the chessboard to a new position and take another picture.') }}</li>
+                        <li>
+                            {{ _('Move the chessboard to a new position and take another picture.') }}<br>
+                            <strong>{{ _('Note: ') }}</strong>{{ _('If the Height Extension is installed, make sure again that the camera can capture the entire chessboard.') }}
+                        </li>
                         <li>{{ _('Meanwhile, you can check if the previous pictures have a green check on them. If they show a red cross or takes too long, delete it and take a new picture. 3 minutes should be more than enough for the system to detect the chessboard.') }}</li>
                         <li>{{ _('Proceed by taking 9 to 20 pictures, trying to cover up most of the working area. Successfully covered areas will appear green on the working area icon.') }}</li>
                     </ul>

@@ -277,7 +277,7 @@ class MrBeamPlugin(
         self.dust_manager = dustManager(self)
         self.hw_malfunction_handler = hwMalfunctionHandler(self)
         self.laserhead_handler = laserheadHandler(self)
-        self.temperature_manager = temperatureManager(self)
+        self.temperature_manager = temperatureManager(self, self._printer)
         self.compressor_handler = compressor_handler(self)
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
@@ -292,6 +292,7 @@ class MrBeamPlugin(
         self._connectivity_checker = ConnectivityChecker(self)
 
         self._do_initial_log()
+        self._printer.register_user_notification_system(self.user_notification_system)
 
     def _on_iobeam_connect(self, *args, **kwargs):
         """Called when the iobeam socket is connected.
@@ -503,6 +504,7 @@ class MrBeamPlugin(
             grbl_version_lastknown=None,
             tour_auto_launch=True,
             leds=dict(brightness=255, fps=28),
+            heavyDutyPrefilter=False,
             highTemperatureWarningDisabled=False,
         )
 
@@ -571,8 +573,10 @@ class MrBeamPlugin(
                 carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
                 laserHeadUsage=self.usage_handler.get_laser_head_usage(),
                 gantryUsage=self.usage_handler.get_gantry_usage(),
+                prefilterLifespan=self.usage_handler.get_prefilter_lifespan(),
                 laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
             ),
+            heavyDutyPrefilter=self._settings.get(["heavyDutyPrefilter"]),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
                 has_compressor=self.compressor_handler.has_compressor(),
@@ -654,6 +658,10 @@ class MrBeamPlugin(
                 )
             if "leds" in data and "fps" in data["leds"]:
                 self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
+            if "heavyDutyPrefilter" in data:
+                self._settings.set_boolean(
+                    ["heavyDutyPrefilter"], data["heavyDutyPrefilter"]
+                )
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
@@ -781,6 +789,7 @@ class MrBeamPlugin(
                 "css/wizard.css",
                 "css/tab_messages.css",
                 "css/software_update.css",
+                "css/tooltip.css",
             ],
             less=["less/mrbeam.less"],
         )
@@ -1155,13 +1164,6 @@ class MrBeamPlugin(
     # simpleApiCommand: lasersafety_confirmation; simpleApiCommand: lasersafety_confirmation;
     def lasersafety_wizard_api(self, data):
         from flask.ext.login import current_user
-
-        # get JSON from request data, or send user back home
-        data = request.values
-        if hasattr(request, "json") and request.json:
-            data = request.json
-        else:
-            return make_response("Unable to interpret request", 400)
 
         # check if username is ok
         username = data.get("username", "")
@@ -2319,7 +2321,7 @@ class MrBeamPlugin(
         Returns:
             NO_CONTENT
         """
-        self.iobeam.send_malfunction_request()
+        self.iobeam.request_available_malfunctions()
         return NO_CONTENT
 
     def handle_dissmiss_notification_request(self, data):

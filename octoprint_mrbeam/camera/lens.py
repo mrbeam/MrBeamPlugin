@@ -61,9 +61,9 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 FACTORY = "factory"
 USER = "user"
 
-### LENS UNDISTORTION FUNCTIONS
 
-# @logtime()
+# NOTICE: This is used by the camera plugin
+### LENS UNDISTORTION FUNCTIONS
 def undistort(img, mtx, dist, calibration_img_size=None, output_img_size=None):
     """Apply the camera calibration matrices to distort the picture back
     straight.
@@ -74,6 +74,7 @@ def undistort(img, mtx, dist, calibration_img_size=None, output_img_size=None):
     assumed the same as the input.
     It is faster to upscale/downscale here than to do it in a 2nd step seperately
     """
+
     # The camera matrix need to be rescaled if the image size changed
     # in_mtx = adjust_mtx_to_pic(img, mtx, dist, calibration_img_size)
     h, w = img.shape[:2]
@@ -105,7 +106,9 @@ def undist_points(inPts, mtx, dist, new_mtx=None, reverse=False):
         yield x, y
 
 
+# NOTICE: This is used by the camera plugin
 def undist_dict(dict_pts, *a, **kw):
+
     keys = list(dict_pts.keys())
     inPts = [
         dict_pts[k] for k in keys
@@ -128,8 +131,7 @@ def clean_unexpected_files(tmp_path):
 
 
 ### CAMERA LENS CALIBRATION
-
-
+# NOTICE: This is used by the camera plugin
 class BoardDetectorDaemon(Thread):
     """Processes images of chessboards to calibrate the lens used to take the
     pictures."""
@@ -484,13 +486,13 @@ def get_object_points(rows, cols):
     return objp
 
 
-# @logtime
-# @logme(True)
+# NOTICE: This is used by the camera plugin
 @logExceptions
 def handleBoardPicture(image, count, board_size, q_out=None):
     # logger = logging.getLogger()
     # if self._stop.is_set(): return
     # signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
     if isinstance(image, str):
         # self._logger.info("Detecting board in %s" % image)
         img = cv2.imread(image)
@@ -605,14 +607,11 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
     # if callback: callback()
     if q_out:
         q_out.put(dict(ret=ret, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs))
-    if ret == 0:
-        # TODO save to file here?
 
-        return ret, mtx, dist, rvecs, tvecs
-    else:
-        return ret, mtx, dist, rvecs, tvecs
+    return ret, mtx, dist, rvecs, tvecs
 
 
+# NOTICE: This is used by the camera plugin
 class CalibrationState(dict):
     def __init__(
         self,
