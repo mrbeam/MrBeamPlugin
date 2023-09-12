@@ -77,6 +77,9 @@ class DustManager(object):
         self._just_initialized = False
         self._fan_not_spinning_ts = None
         self._fan_data_missing_ts = None
+        self._fan_data_missing_reported = None
+        self._fan_data_to_old_reported = None
+        self._fan_data_spinning_reported = None
 
         self._last_rpm_values = deque(maxlen=5)
         self._last_pressure_values = deque(maxlen=5)
@@ -475,6 +478,7 @@ class DustManager(object):
             result = False
             if self._fan_data_missing_ts is None:
                 self._fan_data_missing_ts = monotonic_time()
+                self._fan_data_missing_reported = False
 
             if self._state is None:
                 errs.append("fan state:{}".format(self._state))
@@ -494,11 +498,14 @@ class DustManager(object):
             errs.append(
                 "data too old. age:{:.2f}".format(monotonic_time() - self._data_ts)
             )
+        else:
+            self._fan_data_to_old_reported = False
 
         # check if fan is not spinning
         if self._rpm <= 0 and self._one_button_handler.is_printing():
             if self._fan_not_spinning_ts is None:
                 self._fan_not_spinning_ts = monotonic_time()
+                self._fan_not_spinning_reported = False
             self._logger.warn(
                 "fan not spinning. rpm:{} since {:.2f}".format(
                     self._rpm, monotonic_time() - self._fan_not_spinning_ts
@@ -547,16 +554,19 @@ class DustManager(object):
             self._fan_not_spinning_ts is not None
             and monotonic_time() - self._fan_not_spinning_ts
             > self.FAN_NOT_SPINNING_TIMEOUT
+            and not self._fan_not_spinning_reported
         ):
             self._logger.error("Fan is not spinning. Raising error to user.")
             self._plugin.hw_malfunction_handler.report_hw_malfunction(
                 {HwMalfunctionHandler.FAN_NOT_SPINNING: {"code": ErrorCodes.E_1027}},
             )
+            self._fan_not_spinning_reported = True
 
         if (
             self._fan_data_missing_ts is not None
             and monotonic_time() - self._fan_data_missing_ts
             > self.FAN_DATA_MISSING_TIMEOUT
+            and not self._fan_data_missing_reported
         ):
             self._logger.warn("Fan data is missing. Raising error to user.")
             self._plugin.hw_malfunction_handler.report_hw_malfunction(
@@ -567,8 +577,12 @@ class DustManager(object):
                     }
                 },
             )
+            self._fan_data_missing_reported = True
 
-        if monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE:
+        if (
+            monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE
+            and not self._fan_data_to_old_reported
+        ):
             self._logger.warn("Fan data is to old. Raising error to user.")
             self._plugin.hw_malfunction_handler.report_hw_malfunction(
                 {
@@ -578,6 +592,7 @@ class DustManager(object):
                     }
                 },
             )
+            self._fan_data_to_old_reported = True
 
     def _validation_timer_callback(self):
         try:
