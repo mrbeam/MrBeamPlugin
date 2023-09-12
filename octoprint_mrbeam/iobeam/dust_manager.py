@@ -1,9 +1,13 @@
 import time
 import threading
 from octoprint.events import Events as OctoPrintEvents
+from octoprint.util import monotonic_time
+
+from octoprint_mrbeam.iobeam.hw_malfunction_handler import HwMalfunctionHandler
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents, IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util.errors import ErrorCodes
 from collections import deque
 
 # singleton
@@ -42,6 +46,8 @@ class DustManager(object):
 
     FAN_TEST_RPM_PERCENTAGE = 50
     FAN_TEST_DURATION = 35  # seconds
+    FAN_NOT_SPINNING_TIMEOUT = 10  # time in seconds before reporting the error
+    FAN_DATA_MISSING_TIMEOUT = 10  # time in seconds before reporting the error
 
     def __init__(self, plugin):
         self._plugin = plugin
@@ -58,7 +64,6 @@ class DustManager(object):
         self._connected = None
         self._data_ts = 0
 
-        self._init_ts = time.time()
         self._last_event = None
         self._shutting_down = False
         self._final_extraction_thread = None
@@ -70,6 +75,8 @@ class DustManager(object):
         self._fan_timers = []
         self._last_command = dict(action=None, value=None)
         self._just_initialized = False
+        self._fan_not_spinning_ts = None
+        self._fan_data_missing_ts = None
 
         self._last_rpm_values = deque(maxlen=5)
         self._last_pressure_values = deque(maxlen=5)
@@ -167,29 +174,23 @@ class DustManager(object):
 
     def _handle_fan_data(self, args):
         err = False
-        if args["state"] is not None:
-            self._state = args["state"]
-        else:
-            err = True
-        if args["dust"] is not None:
-            self._dust = args["dust"]
+        self._state = args.get("state")
+        self._dust = args.get("dust")
+        self._rpm = args.get("rpm")
+        self._connected = args.get("connected")
 
+        if self._rpm is None or self._state is None or self._dust is None:
+            err = True
+
+        if self._dust is not None:
             if self._printer.is_printing():
                 self._job_dust_values.append(self._dust)
-        else:
-            err = True
-        if args["rpm"] is not None:
-            self._rpm = args["rpm"]
-        else:
-            err = True
-
-        self._connected = args["connected"]
 
         if self._connected is not None:
             self._unboost_timer_interval()
 
         if not err:
-            self._data_ts = time.time()
+            self._data_ts = monotonic_time()
 
         self._validate_values()
         self._send_dust_to_analytics(self._dust)
@@ -382,7 +383,7 @@ class DustManager(object):
                     self.is_final_extraction_mode = False
                     self._logger.debug(
                         "Final extraction: DUSTING_MODE_START end. duration was: %s",
-                        time.time() - dust_start_ts,
+                        monotonic_time() - dust_start_ts,
                     )
                 if self._continue_final_extraction:
                     self._start_final_extraction_phase2(
@@ -468,19 +469,43 @@ class DustManager(object):
     def _validate_values(self):
         result = True
         errs = []
-        if time.time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE:
-            result = False
-            errs.append("data too old. age:{:.2f}".format(time.time() - self._data_ts))
 
-        if self._state is None:
+        # check if one of the values is None
+        if self._state is None or self._rpm is None or self._dust is None:
             result = False
-            errs.append("fan state:{}".format(self._state))
-        if self._rpm is None or self._rpm <= 0:
+            if self._fan_data_missing_ts is None:
+                self._fan_data_missing_ts = monotonic_time()
+
+            if self._state is None:
+                errs.append("fan state:{}".format(self._state))
+
+            if self._dust is None:
+                errs.append("dust:{}".format(self._dust))
+
+            if self._rpm is None:
+                errs.append("rpm:{}".format(self._rpm))
+        else:
+            # reset counter or timer
+            self._fan_data_missing_ts = None
+
+        # check if received data is too old
+        if monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE:
             result = False
-            errs.append("rpm:{}".format(self._rpm))
-        if self._dust is None:
-            result = False
-            errs.append("dust:{}".format(self._dust))
+            errs.append(
+                "data too old. age:{:.2f}".format(monotonic_time() - self._data_ts)
+            )
+
+        # check if fan is not spinning
+        if self._rpm <= 0 and self._one_button_handler.is_printing():
+            if self._fan_not_spinning_ts is None:
+                self._fan_not_spinning_ts = monotonic_time()
+            self._logger.warn(
+                "fan not spinning. rpm:{} since {:.2f}".format(
+                    self._rpm, monotonic_time() - self._fan_not_spinning_ts
+                )
+            )
+        else:
+            self._fan_not_spinning_ts = None
 
         if self._one_button_handler.is_printing() and self._state == 0:
             self._logger.warn("Restarting fan since _state was 0 in printing state.")
@@ -495,16 +520,12 @@ class DustManager(object):
                     rpm=self._rpm,
                     dust=self._dust,
                     connected=self._connected,
-                    age=(time.time() - self._data_ts),
+                    age=(monotonic_time() - self._data_ts),
                 )
             )
             self._pause_laser(
-                trigger=msg, analytics="invalid-old-fan-data", log_message=msg
+                trigger=msg, analytics="invalid-old-fan-data", log_message=log_message
             )
-            if self._one_button_handler.is_printing():
-                self._plugin.hw_malfunction_handler.report_hw_malfunction(
-                    {"err_fan_not_spinning": {"code": "E-00FF-1027"}},
-                )
 
         elif self._connected == False:
             result = False
@@ -513,12 +534,50 @@ class DustManager(object):
                 rpm=self._rpm,
                 dust=self._dust,
                 connected=self._connected,
-                age=(time.time() - self._data_ts),
+                age=(monotonic_time() - self._data_ts),
             )
             self._pause_laser(trigger="Air filter not connected.", log_message=msg)
 
         # TODO: check for error case in connected val (currently, connected == True/False/None)
+        self._check_and_report_error()
         return result
+
+    def _check_and_report_error(self):
+        if (
+            self._fan_not_spinning_ts is not None
+            and monotonic_time() - self._fan_not_spinning_ts
+            > self.FAN_NOT_SPINNING_TIMEOUT
+        ):
+            self._logger.error("Fan is not spinning. Raising error to user.")
+            self._plugin.hw_malfunction_handler.report_hw_malfunction(
+                {HwMalfunctionHandler.FAN_NOT_SPINNING: {"code": ErrorCodes.E_1027}},
+            )
+
+        if (
+            self._fan_data_missing_ts is not None
+            and monotonic_time() - self._fan_data_missing_ts
+            > self.FAN_DATA_MISSING_TIMEOUT
+        ):
+            self._logger.warn("Fan data is missing. Raising error to user.")
+            self._plugin.hw_malfunction_handler.report_hw_malfunction(
+                {
+                    HwMalfunctionHandler.I2C_BUS_MALFUNCTION: {
+                        "code": ErrorCodes.E_1030,
+                        "stop_laser": False,  # don't cancel the laser job
+                    }
+                },
+            )
+
+        if monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE:
+            self._logger.warn("Fan data is to old. Raising error to user.")
+            self._plugin.hw_malfunction_handler.report_hw_malfunction(
+                {
+                    HwMalfunctionHandler.I2C_BUS_MALFUNCTION: {
+                        "code": ErrorCodes.E_1014,
+                        "stop_laser": False,  # don't cancel the laser job
+                    }
+                },
+            )
 
     def _validation_timer_callback(self):
         try:
