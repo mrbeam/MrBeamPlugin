@@ -185,9 +185,8 @@ class DustManager(object):
         if self._rpm is None or self._state is None or self._dust is None:
             err = True
 
-        if self._dust is not None:
-            if self._printer.is_printing():
-                self._job_dust_values.append(self._dust)
+        if self._dust is not None and self._printer.is_printing():
+            self._job_dust_values.append(self._dust)
 
         if self._connected is not None:
             self._unboost_timer_interval()
@@ -474,23 +473,10 @@ class DustManager(object):
         errs = []
 
         # check if one of the values is None
-        if self._state is None or self._rpm is None or self._dust is None:
+        value_is_none_result, value_is_none_errs = self._check_if_one_value_is_none()
+        if not value_is_none_result:
             result = False
-            if self._fan_data_missing_ts is None:
-                self._fan_data_missing_ts = monotonic_time()
-                self._fan_data_missing_reported = False
-
-            if self._state is None:
-                errs.append("fan state:{}".format(self._state))
-
-            if self._dust is None:
-                errs.append("dust:{}".format(self._dust))
-
-            if self._rpm is None:
-                errs.append("rpm:{}".format(self._rpm))
-        else:
-            # reset counter or timer
-            self._fan_data_missing_ts = None
+            errs.extend(value_is_none_errs)
 
         # check if received data is too old
         if monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE:
@@ -502,17 +488,7 @@ class DustManager(object):
             self._fan_data_to_old_reported = False
 
         # check if fan is not spinning
-        if self._rpm <= 0 and self._one_button_handler.is_printing():
-            if self._fan_not_spinning_ts is None:
-                self._fan_not_spinning_ts = monotonic_time()
-                self._fan_not_spinning_reported = False
-            self._logger.warn(
-                "fan not spinning. rpm:{} since {:.2f}".format(
-                    self._rpm, monotonic_time() - self._fan_not_spinning_ts
-                )
-            )
-        else:
-            self._fan_not_spinning_ts = None
+        self._check_if_fan_is_spinning_during_a_running_job()
 
         if self._one_button_handler.is_printing() and self._state == 0:
             self._logger.warn("Restarting fan since _state was 0 in printing state.")
@@ -548,6 +524,52 @@ class DustManager(object):
         # TODO: check for error case in connected val (currently, connected == True/False/None)
         self._check_and_report_error()
         return result
+
+    def _check_if_one_value_is_none(self):
+        """
+        Checks if one of the values is None and sets the _fan_data_missing_ts flag.
+
+        Returns: (bool, list): True if one of the values is None, False otherwise. And List of error messages.
+        """
+        errs = []
+        result = False
+        if self._state is None or self._rpm is None or self._dust is None:
+            result = True
+            if self._fan_data_missing_ts is None:
+                self._fan_data_missing_ts = monotonic_time()
+                self._fan_data_missing_reported = False
+
+            if self._state is None:
+                errs.append("fan state:{}".format(self._state))
+
+            if self._dust is None:
+                errs.append("dust:{}".format(self._dust))
+
+            if self._rpm is None:
+                errs.append("rpm:{}".format(self._rpm))
+        else:
+            # reset counter or timer
+            self._fan_data_missing_ts = None
+        return result, errs
+
+    def _check_if_fan_is_spinning_during_a_running_job(self):
+        """
+        Checks if the fan is not spinning during a running job and sets the _fan_not_spinning_ts flag.
+
+        Returns:
+            None
+        """
+        if self._rpm <= 0 and self._one_button_handler.is_printing():
+            if self._fan_not_spinning_ts is None:
+                self._fan_not_spinning_ts = monotonic_time()
+                self._fan_not_spinning_reported = False
+            self._logger.warn(
+                "fan not spinning. rpm:{} since {:.2f}".format(
+                    self._rpm, monotonic_time() - self._fan_not_spinning_ts
+                )
+            )
+        else:
+            self._fan_not_spinning_ts = None
 
     def _check_and_report_error(self):
         if not self._plugin.is_boot_grace_period():
