@@ -550,49 +550,60 @@ class DustManager(object):
         return result
 
     def _check_and_report_error(self):
-        if (
-            self._fan_not_spinning_ts is not None
-            and monotonic_time() - self._fan_not_spinning_ts
-            > self.FAN_NOT_SPINNING_TIMEOUT
-            and not self._fan_not_spinning_reported
-        ):
-            self._logger.error("Fan is not spinning. Raising error to user.")
-            self._plugin.hw_malfunction_handler.report_hw_malfunction(
-                {HwMalfunctionHandler.FAN_NOT_SPINNING: {"code": ErrorCodes.E_1027}},
-            )
-            self._fan_not_spinning_reported = True
+        if not self._plugin.is_boot_grace_period():
+            if (
+                self._fan_not_spinning_ts is not None
+                and monotonic_time() - self._fan_not_spinning_ts
+                > self.FAN_NOT_SPINNING_TIMEOUT
+                and not self._fan_not_spinning_reported
+            ):
+                self._logger.error("Fan is not spinning. Raising error to user.")
+                self._plugin.hw_malfunction_handler.report_hw_malfunction(
+                    {
+                        HwMalfunctionHandler.FAN_NOT_SPINNING: {
+                            "code": ErrorCodes.E_1027,
+                            "stop_laser": False,  # don't cancel the laser job
+                        }
+                    },
+                )
+                self._fan_not_spinning_reported = True
+                self._pause_laser(
+                    trigger="fan-not-spinning",
+                    analytics="fan-not-spinning",
+                    log_message="Fan is not spinning.",
+                )
 
-        if (
-            self._fan_data_missing_ts is not None
-            and monotonic_time() - self._fan_data_missing_ts
-            > self.FAN_DATA_MISSING_TIMEOUT
-            and not self._fan_data_missing_reported
-        ):
-            self._logger.warn("Fan data is missing. Raising error to user.")
-            self._plugin.hw_malfunction_handler.report_hw_malfunction(
-                {
-                    HwMalfunctionHandler.I2C_BUS_MALFUNCTION: {
-                        "code": ErrorCodes.E_1030,
-                        "stop_laser": False,  # don't cancel the laser job
-                    }
-                },
-            )
-            self._fan_data_missing_reported = True
+            if (
+                self._fan_data_missing_ts is not None
+                and monotonic_time() - self._fan_data_missing_ts
+                > self.FAN_DATA_MISSING_TIMEOUT
+                and not self._fan_data_missing_reported
+            ):
+                self._logger.warn("Fan data is missing. Raising error to user.")
+                self._plugin.hw_malfunction_handler.report_hw_malfunction(
+                    {
+                        HwMalfunctionHandler.I2C_BUS_MALFUNCTION: {
+                            "code": ErrorCodes.E_1030,
+                            "stop_laser": False,  # don't cancel the laser job
+                        }
+                    },
+                )
+                self._fan_data_missing_reported = True
 
-        if (
-            monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE
-            and not self._fan_data_to_old_reported
-        ):
-            self._logger.warn("Fan data is to old. Raising error to user.")
-            self._plugin.hw_malfunction_handler.report_hw_malfunction(
-                {
-                    HwMalfunctionHandler.I2C_BUS_MALFUNCTION: {
-                        "code": ErrorCodes.E_1014,
-                        "stop_laser": False,  # don't cancel the laser job
-                    }
-                },
-            )
-            self._fan_data_to_old_reported = True
+            if (
+                monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE
+                and not self._fan_data_to_old_reported
+            ):
+                self._logger.warn("Fan data is to old. Raising error to user.")
+                self._plugin.hw_malfunction_handler.report_hw_malfunction(
+                    {
+                        HwMalfunctionHandler.I2C_BUS_MALFUNCTION: {
+                            "code": ErrorCodes.E_1014,
+                            "stop_laser": False,  # don't cancel the laser job
+                        }
+                    },
+                )
+                self._fan_data_to_old_reported = True
 
     def _validation_timer_callback(self):
         try:

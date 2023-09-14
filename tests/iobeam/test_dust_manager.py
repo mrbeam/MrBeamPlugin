@@ -73,11 +73,10 @@ def test_handle_fan_data_when_rpm_is_zero_and_job_ios_running_then_malfunction(
     with patch.object(
         dust_manager._plugin.hw_malfunction_handler, "report_hw_malfunction"
     ) as mock_report_hw_malfunction:
-        # with patch("octoprint.util.monotonic_time") as mock_monotonic_time:
         mock_monotonic_time.return_value = 10000
         dust_manager._handle_fan_data(data)
 
         # Assert
         mock_report_hw_malfunction.assert_called_with(
-            {"err_fan_not_spinning": {"code": "E-00FF-1027"}}
+            {"err_fan_not_spinning": {"code": "E-00FF-1027", "stop_laser": False}}
         )
