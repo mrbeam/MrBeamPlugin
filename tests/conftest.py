@@ -60,6 +60,7 @@ def mrbeam_plugin():
     mrbeam_plugin._basefolder = os.path.join(
         os.path.dirname(__package_path__), "octoprint_mrbeam"
     )
+    mrbeam_plugin._plugin_manager = MagicMock()
     mrbeam_plugin.laserhead_handler = MagicMock()
     mrbeam_plugin._event_bus.fire(Events.STARTUP)
     mrbeam_plugin.user_notification_system = MagicMock()
