@@ -38,7 +38,7 @@ class AirFilter(object):
     CARBONFILTER = "carbonfilter"
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
 
-    class PROFILE_PARAMETERS(Enum):
+    class ProfileParameters(Enum):
         SHOPIFY_LINK = "shopify_link"
         LIFESPAN = "lifespan"
 
@@ -330,7 +330,7 @@ class AirFilter(object):
             or (
                 isinstance(
                     current_airfilter_profile[filter_stage][stage_id][
-                        self.PROFILE_PARAMETERS.LIFESPAN.value
+                        self.ProfileParameters.LIFESPAN.value
                     ],
                     int,
                 )
@@ -346,7 +346,7 @@ class AirFilter(object):
             return fallbackvalue
         # Reaching here means, everything looks good
         return current_airfilter_profile[filter_stage][stage_id][
-            self.PROFILE_PARAMETERS.LIFESPAN.value
+            self.ProfileParameters.LIFESPAN.value
         ]
 
     def get_lifespans(self, filter_stage):
@@ -392,7 +392,7 @@ class AirFilter(object):
                     shopify_links.append(
                         gettext("https://www.mr-beam.org/en/")
                         + current_airfilter_profile[filter_stage][i][
-                            self.PROFILE_PARAMETERS.SHOPIFY_LINK.value
+                            self.ProfileParameters.SHOPIFY_LINK.value
                         ]
                     )
                 return shopify_links
