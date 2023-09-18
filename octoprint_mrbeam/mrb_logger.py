@@ -34,6 +34,8 @@ class MrbLogger(object):
         self.id = id
         self.id_short = self._shorten_id(id)
         self.my_buffer = []
+        self.messages_to_log = []  # list of messages to log, to prevent recursive logs
+        self.recursive_depth = 0
         # TODO: this line overrides logging.yaml!!!
         if lvl is not None:
             self.logger.setLevel(lvl)
@@ -84,6 +86,17 @@ class MrbLogger(object):
         :param terminal_dump: Collect and log a terminal dump. Terminal dumps are also sent to analytics if analytics is not explicitly set to False.
         :type kwargs:
         """
+        if "Recursive call for log: %s" % msg in self.messages_to_log:
+            # we already logged this message, don't log it again
+            return
+
+        if msg in self.messages_to_log:
+            # change the log message that this is a recursive call
+            level = logging.ERROR
+            msg = "Recursive call for log: %s" % (msg)
+            kwargs["analytics"] = True
+
+        self.messages_to_log.append(msg)  # to prevent recursive calls
 
         try:
             if isinstance(msg, unicode):
@@ -96,7 +109,10 @@ class MrbLogger(object):
             # If it's already unicode we get this TypeError
             pass
         except Exception as exc:
-            self.log(logging.ERROR, "Error in MrbLogger.log: %s - %s", msg, exc)
+            # self.log(logging.ERROR, "Error in MrbLogger.log: %s - %s", msg, exc)
+            level = logging.ERROR
+            msg = "Error in MrbLogger.log: %s - %s", msg, exc
+            kwargs["analytics"] = True
         if kwargs.pop("terminal", True if level >= logging.WARN else False):
             self._terminal(level, msg, *args, **kwargs)
         if kwargs.pop("terminal_as_comm", False) or level == self.LEVEL_COMM:
@@ -129,6 +145,10 @@ class MrbLogger(object):
             self.logger.log(level, msg, *args, **kwargs)
         except IOError:
             print(">>", msg)
+
+        # remove the message from the list
+        index_to_remove = self.messages_to_log.index(msg)
+        self.messages_to_log.pop(index_to_remove)
 
     def _terminal(self, level, msg, *args, **kwargs):
         global _printer
