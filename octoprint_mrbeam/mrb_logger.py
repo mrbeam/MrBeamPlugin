@@ -35,7 +35,7 @@ class MrbLogger(object):
         self.id = id
         self.id_short = self._shorten_id(id)
         self.my_buffer = []
-        self.messages_to_log = []  # list of messages to log, to prevent recursive logs
+        self.messages_to_log = {}  # dict of messages to log, to prevent recursive logs
         self.recursive_depth = 0
         # TODO: this line overrides logging.yaml!!!
         if lvl is not None:
@@ -87,17 +87,20 @@ class MrbLogger(object):
         :param terminal_dump: Collect and log a terminal dump. Terminal dumps are also sent to analytics if analytics is not explicitly set to False.
         :type kwargs:
         """
-        if "{} {}".format(self.RECURSIVE_LOG_MESSAGE, msg) in self.messages_to_log:
-            # we already logged this message, don't log it again
-            return
+        msg_hash = self._hash_log(level, msg, args, kwargs)
 
-        if msg in self.messages_to_log:
+        if msg_hash in self.messages_to_log:
             # change the log message that this is a recursive call
             level = logging.ERROR
             msg = "{} {}".format(self.RECURSIVE_LOG_MESSAGE, msg)
             kwargs["analytics"] = True
+            msg_hash = self._hash_log(level, msg, args, kwargs)
 
-        self.messages_to_log.append(msg)  # to prevent recursive calls
+            if msg_hash in self.messages_to_log:
+                # we already logged this message, don't log it again
+                return
+
+        self.messages_to_log[msg_hash] = msg  # to prevent recursive calls
 
         try:
             if isinstance(msg, unicode):
@@ -147,8 +150,12 @@ class MrbLogger(object):
             print(">>", msg)
 
         # remove the message from the list
-        index_to_remove = self.messages_to_log.index(msg)
-        self.messages_to_log.pop(index_to_remove)
+        if msg_hash in self.messages_to_log:
+            self.messages_to_log.pop(msg_hash)
+
+    def _hash_log(self, *args, **kwargs):
+        args_tuple = (args, kwargs)
+        return hash(str(args_tuple))
 
     def _terminal(self, level, msg, *args, **kwargs):
         global _printer
