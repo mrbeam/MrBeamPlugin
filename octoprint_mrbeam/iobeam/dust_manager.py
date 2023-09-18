@@ -78,8 +78,7 @@ class DustManager(object):
         self._fan_not_spinning_ts = None
         self._fan_data_missing_ts = None
         self._fan_data_missing_reported = None
-        self._fan_data_to_old_reported = None
-        self._fan_data_spinning_reported = None
+        self._fan_data_too_old_reported = None
 
         self._last_rpm_values = deque(maxlen=5)
         self._last_pressure_values = deque(maxlen=5)
@@ -485,7 +484,7 @@ class DustManager(object):
                 "data too old. age:{:.2f}".format(monotonic_time() - self._data_ts)
             )
         else:
-            self._fan_data_to_old_reported = False
+            self._fan_data_too_old_reported = False
 
         # check if fan is not spinning
         self._check_if_fan_is_spinning_during_a_running_job()
@@ -614,7 +613,7 @@ class DustManager(object):
 
             if (
                 monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE
-                and not self._fan_data_to_old_reported
+                and not self._fan_data_too_old_reported
             ):
                 self._logger.warn("Fan data is to old. Raising error to user.")
                 self._plugin.hw_malfunction_handler.report_hw_malfunction(
@@ -625,7 +624,7 @@ class DustManager(object):
                         }
                     },
                 )
-                self._fan_data_to_old_reported = True
+                self._fan_data_too_old_reported = True
 
     def _validation_timer_callback(self):
         try:
