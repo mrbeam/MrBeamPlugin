@@ -79,6 +79,7 @@ class DustManager(object):
         self._fan_data_missing_ts = None
         self._fan_data_missing_reported = None
         self._fan_data_too_old_reported = None
+        self._fan_not_spinning_reported = None
 
         self._last_rpm_values = deque(maxlen=5)
         self._last_pressure_values = deque(maxlen=5)
