@@ -40,35 +40,20 @@ $(function () {
         self.carbonfilterLifespans = ko.observable(0);
         self.prefilterShopify = ko.observable(0);
         self.carbonfilterShopify = ko.observable(0);
-        self.prefilterLifespan = ko.observable(0);
 
         self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
-        self.heavyDutyPrefilter = ko.observable(false);
+        self.heavyDutyPrefilterEnabled = ko.observable(false);
 
         self.heavyDutyPrefilterValue = ko.computed({
             read: function () {
-                return self.heavyDutyPrefilter().toString();
+                return self.heavyDutyPrefilterEnabled().toString();
             },
             write: function (newValue) {
-                self.heavyDutyPrefilter(newValue === "true");
+                self.heavyDutyPrefilterEnabled(newValue === "true");
             },
             owner: self,
-        });
-
-        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.prefilterLifespan(),
-        });
-        self.carbonFilterLifespanHours = _.sprintf(
-            gettext("/%(lifespan)s hrs"),
-            { lifespan: self.CARBON_FILTER_LIFESPAN }
-        );
-        self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.laserHeadLifespan(),
-        });
-        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.GANTRY_LIFESPAN,
         });
 
         self.totalUsageHours = ko.computed(function () {
@@ -167,16 +152,15 @@ $(function () {
             }
         });
 
-        self.heavyDutyPrefilter.subscribe(function (newValue) {
+        self.heavyDutyPrefilterEnabled.subscribe(function (newValue) {
             self.settings.settings.plugins.mrbeam.heavyDutyPrefilter(newValue);
             self.settings.saveData(undefined, function (newSettings) {
-                self.prefilterLifespan(
-                    newSettings.plugins.mrbeam.usage.prefilterLifespan
-                );
+                self._loadFilterSettings();
+                new_lifespan = self.prefilterLifespan(0);
                 console.log(
                     "Prefilter lifespan changed to:",
                     newSettings.plugins.mrbeam.heavyDutyPrefilter,
-                    newSettings.plugins.mrbeam.usage.prefilterLifespan
+                    new_lifespan
                 );
             });
             self.settings.saveall(); //trigger saveinprogress class
@@ -252,7 +236,7 @@ $(function () {
                     title: "<img src='" + image + "' width='300px'>",
                     placement: "right",
                     html: true,
-                    delay: { show: 300 },
+                    delay: { show: 400 },
                 });
             });
         };
@@ -275,7 +259,7 @@ $(function () {
                         // Prevent the click event from propagating further
                         event.stopPropagation();
                     } else {
-                        self.heavyDutyPrefilter(
+                        self.heavyDutyPrefilterEnabled(
                             radioInput.getAttribute("value")
                         );
                     }
@@ -441,15 +425,16 @@ $(function () {
             self.laserHeadSerial(
                 self.settings.settings.plugins.mrbeam.laserhead.serial()
             );
-            self.prefilterLifespan(
-                self.settings.settings.plugins.mrbeam.usage.prefilterLifespan()
-            );
-            self.heavyDutyPrefilter(
+            self.heavyDutyPrefilterEnabled(
                 self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
             );
             self.laserHeadLifespan(
                 self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()
             );
+            self._loadFilterSettings();
+        };
+
+        self._loadFilterSettings = function () {
             self.prefilterLifespans(
                 self.settings.settings.plugins.mrbeam.usage.prefilterLifespans()
             );

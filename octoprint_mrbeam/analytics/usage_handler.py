@@ -359,7 +359,7 @@ class UsageHandler(object):
             return 0
 
     def get_prefilter_lifespan(self):
-        if self._settings.get(["heavyDutyPrefilter"]):
+        if self._plugin.heavy_duty_prefilter_enabled():
             return self.HEAVY_DUTY_PREFILTER_LIFESPAN
         else:
             return self.DEFAULT_PREFILTER_LIFESPAN
