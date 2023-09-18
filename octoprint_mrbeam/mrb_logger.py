@@ -23,6 +23,7 @@ def mrb_logger(id, lvl=None):
 class MrbLogger(object):
 
     LEVEL_COMM = "_COMM_"
+    RECURSIVE_LOG_MESSAGE = "Recursive call for log:"
 
     TERMINAL_BUFFER_DELAY = 2.0
 
@@ -86,14 +87,14 @@ class MrbLogger(object):
         :param terminal_dump: Collect and log a terminal dump. Terminal dumps are also sent to analytics if analytics is not explicitly set to False.
         :type kwargs:
         """
-        if "Recursive call for log: %s" % msg in self.messages_to_log:
+        if "{} {}".format(self.RECURSIVE_LOG_MESSAGE, msg) in self.messages_to_log:
             # we already logged this message, don't log it again
             return
 
         if msg in self.messages_to_log:
             # change the log message that this is a recursive call
             level = logging.ERROR
-            msg = "Recursive call for log: %s" % (msg)
+            msg = "{} {}".format(self.RECURSIVE_LOG_MESSAGE, msg)
             kwargs["analytics"] = True
 
         self.messages_to_log.append(msg)  # to prevent recursive calls
@@ -109,7 +110,6 @@ class MrbLogger(object):
             # If it's already unicode we get this TypeError
             pass
         except Exception as exc:
-            # self.log(logging.ERROR, "Error in MrbLogger.log: %s - %s", msg, exc)
             level = logging.ERROR
             msg = "Error in MrbLogger.log: %s - %s", msg, exc
             kwargs["analytics"] = True

@@ -52,3 +52,25 @@ def test_recursive_log(mrb_logger):
             call(logging.ERROR, "test"),
         ]
     )
+
+
+def test_log_when_logging_unicode(mrb_logger):
+    # Arrange
+    mrb_logger.logger.log = MagicMock()
+
+    # Act
+    mrb_logger.log(logging.ERROR, unicode("test"))
+
+    # Assert
+    mrb_logger.logger.log.assert_called_once_with(logging.ERROR, "test")
+
+
+def test_log_when_logging_bytestring(mrb_logger):
+    # Arrange
+    mrb_logger.logger.log = MagicMock()
+
+    # Act
+    mrb_logger.log(logging.ERROR, b"test")
+
+    # Assert
+    mrb_logger.logger.log.assert_called_once_with(logging.ERROR, "test")
