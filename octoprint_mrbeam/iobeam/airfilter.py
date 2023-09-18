@@ -32,6 +32,9 @@ class AirFilter(object):
 
     AIRFILTER2_MODELS = [1, 2, 3, 4, 5, 6, 7]
     AIRFILTER3_MODELS = [8]
+    AIRFILTER_OR_SINGLE_MODEL_ID = "Air Filter System | Fan"
+    AIRFILTER2_MODEL_ID = "Air Filter II System"
+    AIRFILTER3_MODEL_ID = "Air Filter 3 System"
     PREFILTER_LIFESPAN_FALLBACK = 40
     CARBON_LIFESPAN_FALLBACK = 280
     PREFILTER = "prefilter"
@@ -92,11 +95,12 @@ class AirFilter(object):
             str: Model name of the air filter
         """
         if self._model_id == 0:
-            return "Air Filter System | Fan"
+            return self.AIRFILTER_OR_SINGLE_MODEL_ID
         elif self._model_id in self.AIRFILTER2_MODELS:
-            return "Air Filter II System"
+            return self.AIRFILTER2_MODEL_ID
         elif self._model_id in self.AIRFILTER3_MODELS:
-            return "Air Filter 3 System"
+            return self.AIRFILTER3_MODEL_ID
+
         else:
             return "Unknown"
 

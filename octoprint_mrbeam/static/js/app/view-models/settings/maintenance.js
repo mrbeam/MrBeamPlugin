@@ -7,6 +7,7 @@ $(function () {
         self.analytics = params[1];
         self.userSettings = params[2];
         self.loginState = params[3];
+        self.mrb_state = params[4];
 
         self.PREFILTER = gettext("pre-filter");
         self.PREFILTER_WARNING_TITLE = gettext(
@@ -45,6 +46,7 @@ $(function () {
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
         self.heavyDutyPrefilterEnabled = ko.observable(false);
+        self.airfilter3Used = ko.observable(false);
 
         self.heavyDutyPrefilterValue = ko.computed({
             read: function () {
@@ -166,6 +168,19 @@ $(function () {
             self.settings.saveall(); //trigger saveinprogress class
         });
 
+        self.mrb_state.airfilter_model_id.subscribe(function (model_id) {
+            self._check_airfilter_model_id();
+        });
+
+        self._check_airfilter_model_id = function () {
+            modelId = self.mrb_state.airfilter_model_id();
+            if (modelId === mrbeam.airfilter_model.AF3) {
+                self.airfilter3Used(true);
+            } else {
+                self.airfilter3Used(false);
+            }
+        };
+
         // The settings are already loaded here, Gina confirmed.
         self.onBeforeBinding = function () {
             self.loadUsageValues();
@@ -223,6 +238,7 @@ $(function () {
 
             self._makePrefilterElementsClickable();
             self._addTooltipForPrefilterTitle();
+            self._check_airfilter_model_id();
         };
 
         self._addTooltipForPrefilterTitle = function (element) {
@@ -548,6 +564,7 @@ $(function () {
             "analyticsViewModel",
             "userSettingsViewModel",
             "loginStateViewModel",
+            "mrbStateViewModel",
         ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...

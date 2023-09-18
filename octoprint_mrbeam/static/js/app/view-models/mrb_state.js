@@ -8,6 +8,7 @@ $(function () {
         window.mrbeam.viewModels["mrbStateModel"] = self;
 
         self.isCooling = ko.observable(undefined);
+        self.airfilter_model_id = ko.observable(undefined);
 
         self.onEventReadyToLaserStart = function (payload) {
             /**
@@ -82,6 +83,9 @@ $(function () {
             if (mrb_state) {
                 if ("cooling_mode" in mrb_state) {
                     self.isCooling(mrb_state["cooling_mode"]);
+                }
+                if ("airfilter_model_id" in mrb_state) {
+                    self.airfilter_model_id(mrb_state["airfilter_model_id"]);
                 }
             }
         };
