@@ -41,6 +41,7 @@ $(function () {
         self.carbonfilterLifespans = ko.observable(0);
         self.prefilterShopify = ko.observable(0);
         self.carbonfilterShopify = ko.observable(0);
+        self.prefilterHeavyDutyShopify = ko.observable(0);
 
         self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
@@ -168,13 +169,13 @@ $(function () {
             self.settings.saveall(); //trigger saveinprogress class
         });
 
-        self.mrb_state.airfilter_model_id.subscribe(function (model_id) {
-            self._check_airfilter_model_id();
+        self.mrb_state.airfilter_model.subscribe(function (model_id) {
+            self._check_airfilter_model();
         });
 
-        self._check_airfilter_model_id = function () {
-            modelId = self.mrb_state.airfilter_model_id();
-            if (modelId === mrbeam.airfilter_model.AF3) {
+        self._check_airfilter_model = function () {
+            airfilter_model = self.mrb_state.airfilter_model();
+            if (airfilter_model === mrbeam.airfilter_model.AF3) {
                 self.airfilter3Used(true);
             } else {
                 self.airfilter3Used(false);
@@ -238,7 +239,7 @@ $(function () {
 
             self._makePrefilterElementsClickable();
             self._addTooltipForPrefilterTitle();
-            self._check_airfilter_model_id();
+            self._check_airfilter_model();
         };
 
         self._addTooltipForPrefilterTitle = function (element) {
@@ -249,7 +250,7 @@ $(function () {
             elementsWithAttribute.forEach((element) => {
                 const image = element.getAttribute("data-tooltip-image");
                 $(element).tooltip({
-                    title: "<img src='" + image + "' width='300px'>",
+                    title: "<img src='" + image + "' height='220px'>",
                     placement: "right",
                     html: true,
                     delay: { show: 400 },
@@ -463,6 +464,9 @@ $(function () {
             self.prefilterShopify(
                 self.settings.settings.plugins.mrbeam.usage.prefilterShopify()
             );
+            self.prefilterHeavyDutyShopify(
+                self.settings.settings.plugins.mrbeam.usage.prefilterHeavyDutyShopify()
+            );
         };
 
         self.shopifyLink = function (stagename, stageid) {
@@ -471,6 +475,8 @@ $(function () {
                 link = self.prefilterShopify()[stageid];
             } else if (stagename === "carbonfilter") {
                 link = self.carbonfilterShopify()[stageid];
+            } else if (stagename === "prefilter_heavy_duty") {
+                link = self.prefilterHeavyDutyShopify()[stageid];
             } else {
                 link = null;
             }

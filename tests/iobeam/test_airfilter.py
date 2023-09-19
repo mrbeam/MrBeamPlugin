@@ -1,8 +1,32 @@
-import os
-
+import pytest
 from mock.mock import MagicMock
 
 from octoprint_mrbeam.iobeam.airfilter import AirFilter, airfilter
+
+
+DEFAULT_PROFILE = {
+    "carbonfilter": [
+        {
+            "lifespan": 280,
+            "shopify_link": "products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+        }
+    ],
+    "carbonfilter_stages": 1,
+    "prefilter": [
+        {
+            "lifespan": 40,
+            "shopify_link": "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+        }
+    ],
+    "prefilter_heavy_duty": [
+        {
+            "lifespan": 40,
+            "shopify_link": "products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+        }
+    ],
+    "prefilter_heavy_duty_stages": 1,
+    "prefilter_stages": 1,
+}
 
 
 def test_singelton(mrbeam_plugin):
@@ -215,6 +239,13 @@ def test_profile_for_airfilter_1(mrbeam_plugin):
             }
         ],
         "prefilter_stages": 1,
+        "prefilter_heavy_duty": [
+            {
+                "lifespan": 80,
+                "shopify_link": "products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+            }
+        ],
+        "prefilter_heavy_duty_stages": 1,
     }
 
 
@@ -231,21 +262,17 @@ def test_profile_for_airfilter_8(mrbeam_plugin):
         "carbonfilter": [
             {
                 "lifespan": 400,
-                "shopify_link": "products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+                "shopify_link": "maintenance/af3/mf",
             }
         ],
         "carbonfilter_stages": 1,
         "prefilter": [
             {
                 "lifespan": 80,
-                "shopify_link": "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
-            },
-            {
-                "lifespan": 100,
-                "shopify_link": "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+                "shopify_link": "maintenance/af3/pf1",
             },
         ],
-        "prefilter_stages": 2,
+        "prefilter_stages": 1,
     }
 
 
@@ -258,7 +285,7 @@ def test_get_profile_invalid_id(mrbeam_plugin):
     profile = air_filter.profile
 
     # Assert
-    assert profile is None
+    assert profile == DEFAULT_PROFILE
 
 
 def test_get_profile_none_existing_id(mrbeam_plugin):
@@ -270,7 +297,7 @@ def test_get_profile_none_existing_id(mrbeam_plugin):
     profile = air_filter.profile
 
     # Assert
-    assert profile is None
+    assert profile == DEFAULT_PROFILE
 
 
 def test_get_profile_for_none_id(mrbeam_plugin):
@@ -283,7 +310,7 @@ def test_get_profile_for_none_id(mrbeam_plugin):
     profile = air_filter.profile
 
     # Assert
-    assert profile is None
+    assert profile == DEFAULT_PROFILE
 
 
 def test_get_lifespan_for_airfilter_1_carbonfilter(mrbeam_plugin):
@@ -298,28 +325,55 @@ def test_get_lifespan_for_airfilter_1_carbonfilter(mrbeam_plugin):
     assert lifespan == 280
 
 
-def test_get_lifespan_for_airfilter_1_prefilter(mrbeam_plugin):
+@pytest.mark.parametrize(
+    "model_id, expected_lifespan",
+    [
+        (1, 40),
+        (2, 40),
+        (3, 40),
+        (4, 40),
+        (5, 40),
+        (8, 80),
+        (None, 40),
+    ],
+)
+def test_get_lifespan_for_prefilter(model_id, expected_lifespan, mrbeam_plugin):
     # Arrange
     air_filter = AirFilter(mrbeam_plugin)
-    air_filter.model_id = 1
+    air_filter.model_id = model_id
 
     # Act
     lifespan = air_filter.get_lifespan("prefilter")
 
     # Assert
-    assert lifespan == 40
+    assert lifespan == expected_lifespan
 
 
-def test_get_lifespan_for_airfilter_3_prefilter(mrbeam_plugin):
+@pytest.mark.parametrize(
+    "model_id, expected_lifespan",
+    [
+        (1, [80]),
+        (2, [80]),
+        (3, [80]),
+        (4, [80]),
+        (5, [40]),
+        (8, None),
+        (None, [40]),
+    ],
+)
+def test_get_lifespans_when_filterstage_is_prefilter_and_heavy_duty_prefilter_is_enabled(
+    model_id, expected_lifespan, mrbeam_plugin
+):
     # Arrange
     air_filter = AirFilter(mrbeam_plugin)
-    air_filter.model_id = 8
+    air_filter.model_id = model_id
+    air_filter.heavy_duty_prefilter_enabled = MagicMock(return_value=True)
 
     # Act
-    lifespan = air_filter.get_lifespan("prefilter")
+    lifespan = air_filter.get_lifespans(air_filter.PREFILTER)
 
     # Assert
-    assert lifespan == 80
+    assert lifespan == expected_lifespan
 
 
 def test_get_lifespan_for_invalid_filter(mrbeam_plugin):
@@ -389,7 +443,7 @@ def test_get_list_of_lifespans_for_prefilter(mrbeam_plugin):
     lifespan = air_filter.get_lifespans("prefilter")
 
     # Assert
-    assert lifespan == [80, 100]
+    assert lifespan == [80]
 
 
 def test_get_list_of_lifespans_for_carbonfilter(mrbeam_plugin):
@@ -420,10 +474,10 @@ def test_get_list_of_lifespans_profile_none(mrbeam_plugin):
     air_filter.model_id = None
 
     # Act
-    shopify_link = air_filter.get_lifespans("prefilter")
+    lifespan = air_filter.get_lifespans("prefilter")
 
     # Assert
-    assert shopify_link is None
+    assert lifespan == [40]
 
 
 def test_get_shopify_links_AF1_prefilter(mrbeam_plugin):
@@ -449,4 +503,41 @@ def test_get_shopify_links_profile_none(mrbeam_plugin):
     shopify_link = air_filter.get_shopify_links("prefilter")
 
     # Assert
-    assert shopify_link is None
+    assert shopify_link == [
+        "https://www.mr-beam.org/en/products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page"
+    ]
+
+
+def test_get_shopify_links_when_no_link_is_set_in_profile_then_return_empty_list(
+    mrbeam_plugin,
+):
+    # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 8
+    air_filter._profile = {"prefilter_stages": 1}
+
+    # Act
+    shopify_link = air_filter.get_shopify_links("prefilter")
+
+    # Assert
+    assert shopify_link == []
+
+
+@pytest.mark.parametrize(
+    "enabled",
+    [
+        (True),
+        (False),
+    ],
+)
+def test_heavy_duty_prefilter_enabled_when_enabled_then_true(enabled, mrbeam_plugin):
+    # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
+    mrbeam_plugin.heavy_duty_prefilter_enabled = MagicMock(return_value=enabled)
+    air_filter.model_id = 8
+
+    # Act
+    heavy_duty_prefilter_enabled = air_filter.heavy_duty_prefilter_enabled()
+
+    # Assert
+    assert heavy_duty_prefilter_enabled is enabled

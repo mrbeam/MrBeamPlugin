@@ -583,6 +583,9 @@ class MrBeamPlugin(
                     AirFilter.CARBONFILTER
                 ),
                 prefilterShopify=self.airfilter.get_shopify_links(AirFilter.PREFILTER),
+                prefilterHeavyDutyShopify=self.airfilter.get_shopify_links(
+                    AirFilter.PREFILTER_HEAVY_DUTY
+                ),
                 laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
             ),
             heavyDutyPrefilter=self.heavy_duty_prefilter_enabled(),

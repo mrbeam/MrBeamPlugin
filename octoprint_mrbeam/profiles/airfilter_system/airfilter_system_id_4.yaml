@@ -6,7 +6,7 @@ prefilter:
   - lifespan: 40
     shopify_link: 'products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'
 prefilter_heavy_duty:
-    lifespan: 80
+  - lifespan: 80
     shopify_link: 'products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'
 carbonfilter:
   - lifespan: 280
