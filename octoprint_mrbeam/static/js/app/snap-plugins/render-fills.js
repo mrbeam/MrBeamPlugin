@@ -344,7 +344,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 h,
                 fontDeclarations
             );
-            generatePNGFromURL(svgDataUrl, pxPerMM, bboxMM, true).then(
+            // includesQuickText is always true here as this method is only used on QuickText elements
+            generatePNGFromURL(svgDataUrl, pxPerMM, bboxMM, true, true).then(
                 (result) => {
                     const size = getDataUriSize(result.dataUrl);
 
