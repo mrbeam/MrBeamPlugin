@@ -147,7 +147,7 @@ $(function () {
         return new Promise((resolve) => {
             if (includesQuickText) {
                 setTimeout(() => {
-                    // Log image dimensions
+                    // Clear canvas
                     console.info(
                         `Clear canvas: x=${x}, y=${y}, canvas.width=${updatedCanvas.canvas.width}, canvas.height=${updatedCanvas.canvas.height}`
                     );
@@ -192,10 +192,8 @@ $(function () {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Log image dimensions
-        console.info(`Draw image: x=${x}, y=${y}, w=${w}, h=${h}`);
-
         // Draw image on canvas
+        console.info(`Draw image: x=${x}, y=${y}, w=${w}, h=${h}`);
         ctx.drawImage(image, x, y, w, h, 0, 0, canvas.width, canvas.height);
 
         // Return canvas
