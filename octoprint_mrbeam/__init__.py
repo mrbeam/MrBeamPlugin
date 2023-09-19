@@ -1165,13 +1165,6 @@ class MrBeamPlugin(
     def lasersafety_wizard_api(self, data):
         from flask.ext.login import current_user
 
-        # get JSON from request data, or send user back home
-        data = request.values
-        if hasattr(request, "json") and request.json:
-            data = request.json
-        else:
-            return make_response("Unable to interpret request", 400)
-
         # check if username is ok
         username = data.get("username", "")
         if (
