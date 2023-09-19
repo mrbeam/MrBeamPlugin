@@ -274,7 +274,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             return Promise.resolve(elem);
         }
 
-        let prom = url2png(url).then((result) => {
+        let prom = generatePNGFromURL(url).then((result) => {
             elem.attr("href", result.dataUrl);
             return elem;
         });
@@ -344,8 +344,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 h,
                 fontDeclarations
             );
-            url2png(svgDataUrl, pxPerMM, bboxMM, true).then((result) => {
-                const size = getDataUriSize(result.dataUrl);
+            generatePNGFromURL(svgDataUrl, pxPerMM, bboxMM, true).then(
+                (result) => {
+                    const size = getDataUriSize(result.dataUrl);
 
                 if (MRBEAM_DEBUG_RENDERING) {
                     console.info(
@@ -549,7 +550,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     //        return promise;
     //    };
 
-    // TODO use url2png, simplify, check if necessary
+    // TODO use generatePNGFromURL, simplify, check if necessary
     Element.prototype.renderJobTimeEstimationPNG = function (
         wPT,
         hPT,
