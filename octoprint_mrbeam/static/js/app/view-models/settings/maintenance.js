@@ -159,7 +159,7 @@ $(function () {
             self.settings.settings.plugins.mrbeam.heavyDutyPrefilter(newValue);
             self.settings.saveData(undefined, function (newSettings) {
                 self._loadFilterSettings();
-                new_lifespan = self.prefilterLifespan(0);
+                const new_lifespan = self.prefilterLifespan(0);
                 console.log(
                     "Prefilter lifespan changed to:",
                     newSettings.plugins.mrbeam.heavyDutyPrefilter,
@@ -174,7 +174,7 @@ $(function () {
         });
 
         self._check_airfilter_model = function () {
-            airfilter_model = self.mrb_state.airfilter_model();
+            const airfilter_model = self.mrb_state.airfilter_model();
             if (airfilter_model === mrbeam.airfilter_model.AF3) {
                 self.airfilter3Used(true);
             } else {
