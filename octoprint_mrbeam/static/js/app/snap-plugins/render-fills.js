@@ -119,7 +119,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                         lastOverlap = j;
                     }
                 }
+
+                // Update cluster if it includes QuickText elements
+                updateClusterIfItContainsQuickText(cluster);
             }
+
             clusters = clusters.filter((c) => c !== null);
             if (lastOverlap === -1) {
                 // create new cluster
@@ -722,5 +726,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             }
         }
         return [];
+    }
+
+    function updateClusterIfItContainsQuickText(cluster) {
+        cluster.elements.forEach((element) => {
+            let classListArray = Array.from(element.node.classList);
+            if (
+                classListArray.includes("straightText") ||
+                classListArray.includes("curvedText")
+            ) {
+                cluster.includesQuickText = true;
+            }
+        });
     }
 });
