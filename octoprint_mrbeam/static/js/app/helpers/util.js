@@ -107,7 +107,7 @@ $(function () {
 
     let _checkDimensionsAndThrowError = function (w, h, errorMessage) {
         if (w === 0 || h === 0) {
-            console.error(errorMessage, image);
+            console.error(errorMessage);
             throw new Error(errorMessage);
         }
     };
