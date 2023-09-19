@@ -348,38 +348,39 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 (result) => {
                     const size = getDataUriSize(result.dataUrl);
 
-                if (MRBEAM_DEBUG_RENDERING) {
-                    console.info(
-                        "MRBEAM_DEBUG_RENDERING",
-                        result.dataUrl,
-                        result.bbox
-                    );
-                    const img = elem.paper.image(
-                        result.dataUrl,
-                        result.bbox.x,
-                        result.bbox.y,
-                        result.bbox.w,
-                        result.bbox.h
-                    );
-                    img.attr("opacity", 0.6);
-                    img.click(function () {
-                        img.remove();
-                    });
-                    const r = elem.paper.rect(result.bbox).attr({
-                        fill: "none",
-                        stroke: "#aa00aa",
-                        strokeWidth: 2,
-                    });
-                    setTimeout(() => r.remove(), 5000);
-                }
+                    if (MRBEAM_DEBUG_RENDERING) {
+                        console.info(
+                            "MRBEAM_DEBUG_RENDERING",
+                            result.dataUrl,
+                            result.bbox
+                        );
+                        const img = elem.paper.image(
+                            result.dataUrl,
+                            result.bbox.x,
+                            result.bbox.y,
+                            result.bbox.w,
+                            result.bbox.h
+                        );
+                        img.attr("opacity", 0.6);
+                        img.click(function () {
+                            img.remove();
+                        });
+                        const r = elem.paper.rect(result.bbox).attr({
+                            fill: "none",
+                            stroke: "#aa00aa",
+                            strokeWidth: 2,
+                        });
+                        setTimeout(() => r.remove(), 5000);
+                    }
 
-                resolve({
-                    dataUrl: result.dataUrl,
-                    size: size,
-                    bbox: bboxMM,
-                    analysis: result.analysis,
-                });
-            });
+                    resolve({
+                        dataUrl: result.dataUrl,
+                        size: size,
+                        bbox: bboxMM,
+                        analysis: result.analysis,
+                    });
+                }
+            );
         });
         return prom;
     };
