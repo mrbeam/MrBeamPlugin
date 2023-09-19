@@ -40,7 +40,9 @@ $(function () {
         includesQuickText = false
     ) {
         // Load an image and wait for it to be loaded
-        const image = await loadImagePromise(url);
+        const image = await loadImagePromise(url).catch((error) => {
+            console.error("Error caught in loadImagePromise:", error);
+        });
 
         // Get the image dimensions
         let x = 0;
@@ -80,7 +82,12 @@ $(function () {
             h,
             pxPerMM,
             includesQuickText
-        );
+        ).catch((error) => {
+            console.error(
+                "Error caught in _handleAndDrawImageOnCanvas:",
+                error
+            );
+        });
 
         // Get PNG from canvas
         const png = canvas.toDataURL("image/png");
