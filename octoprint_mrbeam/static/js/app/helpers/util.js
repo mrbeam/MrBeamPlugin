@@ -2,6 +2,10 @@ $(function () {
     /**
      * https://stackoverflow.com/a/7616484
      */
+
+    // Even in slow 3g throttling mode, the font is loaded within 40ms
+    const QUICK_TEXT_FONT_LOAD_TIMEOUT = 50; // ms
+
     String.prototype.hashCode = function () {
         let hash = 0,
             i,
@@ -161,7 +165,7 @@ $(function () {
                             h
                         );
                     resolve(quickTextUpdatedCanvasAfterDelay.canvas);
-                }, 100);
+                }, QUICK_TEXT_FONT_LOAD_TIMEOUT);
             } else {
                 resolve(updatedCanvas.canvas);
             }
