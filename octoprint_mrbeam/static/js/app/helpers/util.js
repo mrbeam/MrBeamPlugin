@@ -157,6 +157,8 @@ $(function () {
                         updatedCanvas.canvas.width,
                         updatedCanvas.canvas.height
                     );
+
+                    // Redraw canvas after delay
                     let quickTextUpdatedCanvasAfterDelay =
                         _checkWhiteBgAndDrawImage(
                             updatedCanvas.canvas,
@@ -168,9 +170,12 @@ $(function () {
                             w,
                             h
                         );
+
+                    // resolve promise
                     resolve(quickTextUpdatedCanvasAfterDelay.canvas);
                 }, QUICK_TEXT_FONT_LOAD_TIMEOUT);
             } else {
+                // resolve promise
                 resolve(updatedCanvas.canvas);
             }
         });
