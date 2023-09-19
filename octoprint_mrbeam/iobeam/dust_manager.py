@@ -474,7 +474,7 @@ class DustManager(object):
 
         # check if one of the values is None
         value_is_none_result, value_is_none_errs = self._check_if_one_value_is_none()
-        if not value_is_none_result:
+        if value_is_none_result:
             result = False
             errs.extend(value_is_none_errs)
 
