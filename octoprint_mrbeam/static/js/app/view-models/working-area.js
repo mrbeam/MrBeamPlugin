@@ -3292,9 +3292,13 @@ $(function () {
             if (fillAreas) {
                 let pngs = await Promise.all(
                     clusters.map((c) =>
-                        url2png(c.svgDataUrl, pxPerMM, c.bbox).then(function (
-                            rasterResult
-                        ) {
+                        generatePNGFromURL(
+                            c.svgDataUrl,
+                            pxPerMM,
+                            c.bbox,
+                            false,
+                            c?.includesQuickText
+                        ).then(function (rasterResult) {
                             const fillImage = svg.image(
                                 rasterResult.dataUrl,
                                 c.bbox.x,

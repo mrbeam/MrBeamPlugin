@@ -32,50 +32,159 @@ $(function () {
         });
     };
 
-    url2png = async function (url, pxPerMM = 1, bbox = null, whiteBG = false) {
-        let prom = loadImagePromise(url).then(function (image) {
-            let x = 0;
-            let y = 0;
-            let w = image.naturalWidth; // or 'width' if you want a special/scaled size
-            let h = image.naturalHeight; // or 'height' if you want a special/scaled size
-            if (w === 0 || h === 0) {
-                const msg = `url2png: Image has no dimension!`;
-                console.error(msg, image);
-                throw new Error(msg);
-            }
-            if (bbox !== null) {
-                x = bbox.x;
-                y = bbox.y;
-                w = bbox.w;
-                h = bbox.h;
-            }
-            if (w === 0 || h === 0) {
-                const msg = `url2png: Source bbox has no dimension!`;
-                console.error(msg, image);
-                throw new Error(msg);
-            }
-            let canvas = document.createElement("canvas");
-            canvas.id = "RasterCanvas_url2png";
-            canvas.width = w * pxPerMM;
-            canvas.height = h * pxPerMM;
-            const ctx = canvas.getContext("2d");
-            if (whiteBG) {
-                ctx.fillStyle = "white";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
+    generatePNGFromURL = async function (
+        url,
+        pxPerMM = 1,
+        bbox = null,
+        whiteBG = false,
+        includesQuickText = false
+    ) {
+        // Load an image and wait for it to be loaded
+        const image = await loadImagePromise(url);
 
-            console.info(`c.drawImage ${x}, ${y}, ${w}, ${h}`);
+        // Get the image dimensions
+        let x = 0;
+        let y = 0;
+        let w = image.naturalWidth; // or 'width' if you want a special/scaled size
+        let h = image.naturalHeight; // or 'height' if you want a special/scaled size
 
-            ctx.drawImage(image, x, y, w, h, 0, 0, canvas.width, canvas.height);
-            const png = canvas.toDataURL("image/png");
-            const analysis = getCanvasAnalysis(canvas);
-            canvas.remove();
-            return { dataUrl: png, bbox: bbox, analysis: analysis };
+        // Check if image has dimension
+        _checkDimensionsAndThrowError(
+            w,
+            h,
+            `generatePNGFromURL: Image has no dimension!`
+        );
+
+        // Check if bbox has dimension
+        if (bbox !== null) {
+            x = bbox.x;
+            y = bbox.y;
+            w = bbox.w;
+            h = bbox.h;
+        }
+
+        // Check if bbox has dimension
+        _checkDimensionsAndThrowError(
+            w,
+            h,
+            `generatePNGFromURL: Bbox has no dimension!`
+        );
+
+        // Handle and draw image on canvas
+        let canvas = await _handleAndDrawImageOnCanvas(
+            whiteBG,
+            image,
+            x,
+            y,
+            w,
+            h,
+            pxPerMM,
+            includesQuickText
+        );
+
+        // Get PNG from canvas
+        const png = canvas.toDataURL("image/png");
+
+        // Get analysis from canvas
+        const analysis = getCanvasAnalysis(canvas);
+
+        // Remove canvas
+        canvas.remove();
+
+        return { dataUrl: png, bbox: bbox, analysis: analysis };
+    };
+
+    let _checkDimensionsAndThrowError = function (w, h, errorMessage) {
+        if (w === 0 || h === 0) {
+            console.error(errorMessage, image);
+            throw new Error(errorMessage);
+        }
+    };
+
+    let _handleAndDrawImageOnCanvas = async function (
+        whiteBG,
+        image,
+        x,
+        y,
+        w,
+        h,
+        pxPerMM,
+        includesQuickText
+    ) {
+        // Create canvas
+        let canvas = document.createElement("canvas");
+        canvas.id = "RasterCanvas_generatePNGFromURL";
+        canvas.width = w * pxPerMM;
+        canvas.height = h * pxPerMM;
+        const ctx = canvas.getContext("2d");
+
+        // Draw image on canvas
+        let updatedCanvas = _checkWhiteBgAndDrawImage(
+            canvas,
+            ctx,
+            whiteBG,
+            image,
+            x,
+            y,
+            w,
+            h
+        );
+
+        // Check if quickText is included and wait for it to be redrawn
+        // The reason behind this is that quickText fonts might not be loaded yet
+        // So we wait a bit and redraw the image on the canvas to make sure the font is loaded
+        return new Promise((resolve) => {
+            if (includesQuickText) {
+                setTimeout(() => {
+                    updatedCanvas.ctx.clearRect(
+                        0,
+                        0,
+                        updatedCanvas.canvas.width,
+                        updatedCanvas.canvas.height
+                    );
+                    let quickTextUpdatedCanvasAfterDelay =
+                        _checkWhiteBgAndDrawImage(
+                            updatedCanvas.canvas,
+                            updatedCanvas.ctx,
+                            whiteBG,
+                            image,
+                            x,
+                            y,
+                            w,
+                            h
+                        );
+                    resolve(quickTextUpdatedCanvasAfterDelay.canvas);
+                }, 100);
+            } else {
+                resolve(updatedCanvas.canvas);
+            }
         });
-        //            .catch(function (error) {
-        //                console.error(`url2png: error loading image: ${error}`);
-        //            });
-        return prom;
+    };
+
+    let _checkWhiteBgAndDrawImage = function (
+        canvas,
+        ctx,
+        whiteBG,
+        image,
+        x,
+        y,
+        w,
+        h
+    ) {
+        // Draw white background if needed
+        if (whiteBG) {
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Log image dimensions
+        console.info(`c.drawImage ${x}, ${y}, ${w}, ${h}`);
+
+        // Draw image on canvas
+        ctx.drawImage(image, x, y, w, h, 0, 0, canvas.width, canvas.height);
+
+        // Return canvas
+        return { canvas, ctx };
     };
 
     getCanvasAnalysis = function (canvas) {
