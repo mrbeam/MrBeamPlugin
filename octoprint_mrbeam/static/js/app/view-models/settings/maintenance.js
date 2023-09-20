@@ -7,6 +7,7 @@ $(function () {
         self.analytics = params[1];
         self.userSettings = params[2];
         self.loginState = params[3];
+        self.mrb_state = params[4];
 
         self.PREFILTER = gettext("pre-filter");
         self.PREFILTER_WARNING_TITLE = gettext(
@@ -40,35 +41,22 @@ $(function () {
         self.carbonfilterLifespans = ko.observable(0);
         self.prefilterShopify = ko.observable(0);
         self.carbonfilterShopify = ko.observable(0);
-        self.prefilterLifespan = ko.observable(0);
+        self.prefilterHeavyDutyShopify = ko.observable(0);
 
         self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
-        self.heavyDutyPrefilter = ko.observable(false);
+        self.heavyDutyPrefilterEnabled = ko.observable(false);
+        self.airfilter3Used = ko.observable(false);
 
         self.heavyDutyPrefilterValue = ko.computed({
             read: function () {
-                return self.heavyDutyPrefilter().toString();
+                return self.heavyDutyPrefilterEnabled().toString();
             },
             write: function (newValue) {
-                self.heavyDutyPrefilter(newValue === "true");
+                self.heavyDutyPrefilterEnabled(newValue === "true");
             },
             owner: self,
-        });
-
-        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.prefilterLifespan(),
-        });
-        self.carbonFilterLifespanHours = _.sprintf(
-            gettext("/%(lifespan)s hrs"),
-            { lifespan: self.CARBON_FILTER_LIFESPAN }
-        );
-        self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.laserHeadLifespan(),
-        });
-        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.GANTRY_LIFESPAN,
         });
 
         self.totalUsageHours = ko.computed(function () {
@@ -167,20 +155,32 @@ $(function () {
             }
         });
 
-        self.heavyDutyPrefilter.subscribe(function (newValue) {
+        self.heavyDutyPrefilterEnabled.subscribe(function (newValue) {
             self.settings.settings.plugins.mrbeam.heavyDutyPrefilter(newValue);
             self.settings.saveData(undefined, function (newSettings) {
-                self.prefilterLifespan(
-                    newSettings.plugins.mrbeam.usage.prefilterLifespan
-                );
+                self._loadFilterSettings();
+                const new_lifespan = self.prefilterLifespan(0);
                 console.log(
                     "Prefilter lifespan changed to:",
                     newSettings.plugins.mrbeam.heavyDutyPrefilter,
-                    newSettings.plugins.mrbeam.usage.prefilterLifespan
+                    new_lifespan
                 );
             });
             self.settings.saveall(); //trigger saveinprogress class
         });
+
+        self.mrb_state.airfilter_model.subscribe(function (model_id) {
+            self._check_airfilter_model();
+        });
+
+        self._check_airfilter_model = function () {
+            const airfilter_model = self.mrb_state.airfilter_model();
+            if (airfilter_model === mrbeam.airfilter_model.AF3) {
+                self.airfilter3Used(true);
+            } else {
+                self.airfilter3Used(false);
+            }
+        };
 
         // The settings are already loaded here, Gina confirmed.
         self.onBeforeBinding = function () {
@@ -239,6 +239,7 @@ $(function () {
 
             self._makePrefilterElementsClickable();
             self._addTooltipForPrefilterTitle();
+            self._check_airfilter_model();
         };
 
         self._addTooltipForPrefilterTitle = function (element) {
@@ -249,10 +250,10 @@ $(function () {
             elementsWithAttribute.forEach((element) => {
                 const image = element.getAttribute("data-tooltip-image");
                 $(element).tooltip({
-                    title: "<img src='" + image + "' width='300px'>",
+                    title: "<img src='" + image + "' height='220px'>",
                     placement: "right",
                     html: true,
-                    delay: { show: 300 },
+                    delay: { show: 400 },
                 });
             });
         };
@@ -275,7 +276,7 @@ $(function () {
                         // Prevent the click event from propagating further
                         event.stopPropagation();
                     } else {
-                        self.heavyDutyPrefilter(
+                        self.heavyDutyPrefilterEnabled(
                             radioInput.getAttribute("value")
                         );
                     }
@@ -441,15 +442,16 @@ $(function () {
             self.laserHeadSerial(
                 self.settings.settings.plugins.mrbeam.laserhead.serial()
             );
-            self.prefilterLifespan(
-                self.settings.settings.plugins.mrbeam.usage.prefilterLifespan()
-            );
-            self.heavyDutyPrefilter(
+            self.heavyDutyPrefilterEnabled(
                 self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
             );
             self.laserHeadLifespan(
                 self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()
             );
+            self._loadFilterSettings();
+        };
+
+        self._loadFilterSettings = function () {
             self.prefilterLifespans(
                 self.settings.settings.plugins.mrbeam.usage.prefilterLifespans()
             );
@@ -462,6 +464,9 @@ $(function () {
             self.prefilterShopify(
                 self.settings.settings.plugins.mrbeam.usage.prefilterShopify()
             );
+            self.prefilterHeavyDutyShopify(
+                self.settings.settings.plugins.mrbeam.usage.prefilterHeavyDutyShopify()
+            );
         };
 
         self.shopifyLink = function (stagename, stageid) {
@@ -470,6 +475,8 @@ $(function () {
                 link = self.prefilterShopify()[stageid];
             } else if (stagename === "carbonfilter") {
                 link = self.carbonfilterShopify()[stageid];
+            } else if (stagename === "prefilter_heavy_duty") {
+                link = self.prefilterHeavyDutyShopify()[stageid];
             } else {
                 link = null;
             }
@@ -563,6 +570,7 @@ $(function () {
             "analyticsViewModel",
             "userSettingsViewModel",
             "loginStateViewModel",
+            "mrbStateViewModel",
         ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
