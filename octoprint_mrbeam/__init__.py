@@ -583,10 +583,12 @@ class MrBeamPlugin(
                     AirFilter.CARBONFILTER
                 ),
                 prefilterShopify=self.airfilter.get_shopify_links(AirFilter.PREFILTER),
-                prefilterLifespan=self.usage_handler.get_prefilter_lifespan(),
+                prefilterHeavyDutyShopify=self.airfilter.get_shopify_links(
+                    AirFilter.PREFILTER_HEAVY_DUTY
+                ),
                 laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
             ),
-            heavyDutyPrefilter=self._settings.get(["heavyDutyPrefilter"]),
+            heavyDutyPrefilter=self.is_heavy_duty_prefilter_enabled(),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
                 has_compressor=self.compressor_handler.has_compressor(),
@@ -669,9 +671,7 @@ class MrBeamPlugin(
             if "leds" in data and "fps" in data["leds"]:
                 self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
             if "heavyDutyPrefilter" in data:
-                self._settings.set_boolean(
-                    ["heavyDutyPrefilter"], data["heavyDutyPrefilter"]
-                )
+                self.set_heavy_duty_prefilter(data["heavyDutyPrefilter"])
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
@@ -681,6 +681,12 @@ class MrBeamPlugin(
             # However this specific branching doesn't occur with other
             # saved settings simpultaneously.
             octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+
+    def set_heavy_duty_prefilter(self, value):
+        self._settings.set_boolean(["heavyDutyPrefilter"], value)
+
+    def is_heavy_duty_prefilter_enabled(self):
+        return self._settings.get(["heavyDutyPrefilter"])
 
     def on_shutdown(self):
         self._shutting_down = True
