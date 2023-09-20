@@ -533,7 +533,7 @@ def test_get_shopify_links_when_no_link_is_set_in_profile_then_return_empty_list
 def test_heavy_duty_prefilter_enabled_when_enabled_then_true(enabled, mrbeam_plugin):
     # Arrange
     air_filter = AirFilter(mrbeam_plugin)
-    mrbeam_plugin.heavy_duty_prefilter_enabled = MagicMock(return_value=enabled)
+    mrbeam_plugin.is_heavy_duty_prefilter_enabled = MagicMock(return_value=enabled)
     air_filter.model_id = 8
 
     # Act

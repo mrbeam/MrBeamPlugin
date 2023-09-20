@@ -588,7 +588,7 @@ class MrBeamPlugin(
                 ),
                 laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
             ),
-            heavyDutyPrefilter=self.heavy_duty_prefilter_enabled(),
+            heavyDutyPrefilter=self.is_heavy_duty_prefilter_enabled(),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
                 has_compressor=self.compressor_handler.has_compressor(),
@@ -685,7 +685,7 @@ class MrBeamPlugin(
     def set_heavy_duty_prefilter(self, value):
         self._settings.set_boolean(["heavyDutyPrefilter"], value)
 
-    def heavy_duty_prefilter_enabled(self):
+    def is_heavy_duty_prefilter_enabled(self):
         return self._settings.get(["heavyDutyPrefilter"])
 
     def on_shutdown(self):

@@ -455,4 +455,4 @@ class AirFilter(object):
         return None
 
     def heavy_duty_prefilter_enabled(self):
-        return self._plugin.heavy_duty_prefilter_enabled()
+        return self._plugin.is_heavy_duty_prefilter_enabled()
