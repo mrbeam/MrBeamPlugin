@@ -66,6 +66,12 @@ mrbeam.model = {
     },
 };
 
+mrbeam.airfilter_model = {
+    AF1_OR_SINGLE: "Air Filter System | Fan",
+    AF2: "Air Filter II System",
+    AF3: "Air Filter 3 System",
+};
+
 // Mr Beam laserhead models
 mrbeam.laserheadModel = {
     S: 1,

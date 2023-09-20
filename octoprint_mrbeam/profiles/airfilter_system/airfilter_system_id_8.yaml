@@ -1,11 +1,9 @@
 #airfilter 3 system
-prefilter_stages: 2
+prefilter_stages: 1
 carbonfilter_stages: 1
 prefilter:
   - lifespan: 80 # TODO replace with correct value SW-2320
-    shopify_link: 'products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' # TODO replace with correct value SW-2320
-  - lifespan: 100 # TODO replace with correct value SW-2320
-    shopify_link: 'products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' # TODO replace with correct value SW-2320
+    shopify_link: 'maintenance/af3/pf1' # no utm parameters needed, as the redirect already use these
 carbonfilter:
   - lifespan: 400 # TODO replace with correct value SW-2320
-    shopify_link: 'products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page' # TODO replace with correct value SW-2320
+    shopify_link: 'maintenance/af3/mf' # no utm parameters needed, as the redirect already use these
