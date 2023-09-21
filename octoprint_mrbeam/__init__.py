@@ -68,10 +68,12 @@ from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.rest_handler.docs_handler import DocsRestHandlerMixin
+from octoprint_mrbeam.model.laser_cutter_mode import LaserCutterModeModel
 from octoprint_mrbeam.services import settings_service
 from octoprint_mrbeam.services.settings_service import SettingsService
 from octoprint_mrbeam.services.burger_menu_service import BurgerMenuService
 from octoprint_mrbeam.services.document_service import DocumentService
+from octoprint_mrbeam.services.laser_cutter_mode import laser_cutter_mode_service
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import (
     laserCutterProfileManager,
@@ -213,6 +215,9 @@ class MrBeamPlugin(
         # Jinja custom filters need to be loaded already on instance creation
         FilterLoader.load_custom_jinja_filters()
 
+        # Initialize the laser cutter mode service attribute
+        self._laser_cutter_mode_service = None
+
     # inside initialize() OctoPrint is already loaded, not assured during __init__()!
     def initialize(self):
         self._plugin_version = __version__
@@ -293,6 +298,12 @@ class MrBeamPlugin(
 
         self._do_initial_log()
         self._printer.register_user_notification_system(self.user_notification_system)
+
+        # Initialize the laser cutter mode service
+        self._laser_cutter_mode_service = laser_cutter_mode_service(self)
+
+    def get_settings(self):
+        return self._settings
 
     def _on_iobeam_connect(self, *args, **kwargs):
         """Called when the iobeam socket is connected.
@@ -506,6 +517,10 @@ class MrBeamPlugin(
             leds=dict(brightness=255, fps=28),
             heavyDutyPrefilter=False,
             highTemperatureWarningDisabled=False,
+            laser_cutter_mode=dict(
+                id=LaserCutterModeModel.FALLBACK_MODE,
+                name=LaserCutterModeModel.MODES[LaserCutterModeModel.FALLBACK_MODE],
+            )
         )
 
     def on_settings_load(self):
@@ -586,6 +601,10 @@ class MrBeamPlugin(
                 fps=self._settings.get(["leds", "fps"]),
             ),
             isFirstRun=self.isFirstRun(),
+            laser_cutter_mode= dict (
+                id=self._settings.get(["laser_cutter_mode", "id"]),
+                name=self._settings.get(["laser_cutter_mode", "name"]),
+            )
         )
 
     def on_settings_save(self, data):
@@ -662,6 +681,9 @@ class MrBeamPlugin(
                 self._settings.set_boolean(
                     ["heavyDutyPrefilter"], data["heavyDutyPrefilter"]
                 )
+            if "laser_cutter_mode" in data:
+                self._settings.set(["laser_cutter_mode", "id"], data["laser_cutter_mode"]["id"])
+                self._settings.set(["laser_cutter_mode", "name"], data["laser_cutter_mode"]["name"])
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
