@@ -77,7 +77,7 @@ $(function () {
         );
 
         // Handle and draw image on canvas
-        let canvas = await _handleAndDrawImageOnCanvas(
+        let canvasDrawingOutcome = await _handleAndDrawImageOnCanvas(
             whiteBG,
             image,
             x,
@@ -94,15 +94,21 @@ $(function () {
         });
 
         // Get PNG from canvas
-        const png = canvas.toDataURL("image/png");
+        const png = canvasDrawingOutcome.canvas.toDataURL("image/png");
 
         // Get analysis from canvas
-        const analysis = getCanvasAnalysis(canvas);
+        const analysis = getCanvasAnalysis(canvasDrawingOutcome.canvas);
 
         // Remove canvas
-        canvas.remove();
+        canvasDrawingOutcome.canvas.remove();
 
-        return { dataUrl: png, bbox: bbox, analysis: analysis };
+        return {
+            dataUrl: png,
+            bbox: bbox,
+            analysis: analysis,
+            isFontLoadingIntoCanvasIssueDetected:
+                canvasDrawingOutcome.isFontLoadingIntoCanvasIssueDetected,
+        };
     };
 
     let _checkDimensionsAndThrowError = function (w, h, errorMessage) {
@@ -171,12 +177,31 @@ $(function () {
                             h
                         );
 
+                    // Check if the font loading into canvas issue is present
+                    const isFontLoadingIntoCanvasIssueDetected =
+                        _isFontLoadingIntoCanvasIssueDetected(
+                            updatedCanvas.canvas,
+                            quickTextUpdatedCanvasAfterDelay.canvas
+                        );
+
                     // resolve promise
-                    resolve(quickTextUpdatedCanvasAfterDelay.canvas);
+                    resolve({
+                        canvas: quickTextUpdatedCanvasAfterDelay.canvas,
+                        isFontLoadingIntoCanvasIssueDetected:
+                            isFontLoadingIntoCanvasIssueDetected,
+                    });
                 }, QUICK_TEXT_FONT_LOAD_TIMEOUT);
             } else {
+                const isFontLoadingIntoCanvasIssueDetected = {
+                    result: false,
+                    payload: null,
+                };
                 // resolve promise
-                resolve(updatedCanvas.canvas);
+                resolve({
+                    canvas: updatedCanvas.canvas,
+                    isFontLoadingIntoCanvasIssueDetected:
+                        isFontLoadingIntoCanvasIssueDetected,
+                });
             }
         });
     };
@@ -203,6 +228,35 @@ $(function () {
 
         // Return canvas
         return { canvas, ctx };
+    };
+
+    let _isFontLoadingIntoCanvasIssueDetected = function (
+        firstCanvas,
+        secondCanvas
+    ) {
+        // Get PNG data URLs from the canvases
+        const dataURL1 = firstCanvas.toDataURL("image/png");
+        const dataURL2 = secondCanvas.toDataURL("image/png");
+
+        // Compare the data URLs
+        if (dataURL1 !== dataURL2) {
+            console.error(
+                "Font loading into canvas issue detected! The data URLs are not the same!"
+            );
+            const payload = {
+                drawCanvasResult: dataURL1,
+                redrawCanvasResult: dataURL2,
+            };
+            return {
+                result: true,
+                payload: payload,
+            };
+        } else {
+            return {
+                result: false,
+                payload: null,
+            };
+        }
     };
 
     getCanvasAnalysis = function (canvas) {
