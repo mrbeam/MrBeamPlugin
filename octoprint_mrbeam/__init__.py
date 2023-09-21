@@ -957,6 +957,8 @@ class MrBeamPlugin(
                     self._logger, DocumentService(self._logger)
                 ).get_burger_menu_model(self.get_model_id()),
                 isDevelop=self.is_dev_env(),
+                laser_cutter_mode_id=self._laser_cutter_mode_service.get_mode_id(),
+                laser_cutter_mode_name=self._laser_cutter_mode_service.get_mode_name(),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
