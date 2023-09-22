@@ -103,8 +103,8 @@ class LaserCutterModeModel:
           default.
         """
         if mode_name in self.MODES.values():
-            self._name = mode_name
             self._id = _get_mode_key(mode_name)
+            self._name = self.MODES[self._id]
         else:
             self._logger.error("Invalid laser cutter mode name.")
             self._logger.warn("Falling back to default.")
