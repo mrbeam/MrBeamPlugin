@@ -144,6 +144,7 @@ $(function () {
         // Check if quickText is included and wait for it to be redrawn
         // The reason behind this is that quickText fonts might not be loaded yet
         // So we wait a bit and redraw the image on the canvas to make sure the font is loaded
+        // ToDo: Add the bug detection into analytics (SW-3919)
         return new Promise((resolve) => {
             if (includesQuickText) {
                 setTimeout(() => {
