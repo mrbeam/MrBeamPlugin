@@ -8,6 +8,7 @@ class LaserCutterModeModel:
         1: "rotary",
     }
     FALLBACK_MODE_ID = 0
+    FALLBACK_WARNING = "Falling back to default."
 
     def __init__(self, mode_id=FALLBACK_MODE_ID):
         """
@@ -33,7 +34,7 @@ class LaserCutterModeModel:
             self._name = self.MODES[mode_id]
         else:
             self._logger.error("Invalid laser cutter mode id during init.")
-            self._logger.warn("Falling back to default.")
+            self._logger.warn(self.FALLBACK_WARNING)
             self._id = self.FALLBACK_MODE_ID
             self._name = self.MODES[self.FALLBACK_MODE_ID]
 
@@ -83,7 +84,7 @@ class LaserCutterModeModel:
             self._name = self.MODES[mode_id]
         else:
             self._logger.error("Invalid laser cutter mode id during init.")
-            self._logger.warn("Falling back to default.")
+            self._logger.warn(self.FALLBACK_WARNING)
             self._id = self.FALLBACK_MODE_ID
             self._name = self.MODES[self.FALLBACK_MODE_ID]
 
@@ -107,7 +108,7 @@ class LaserCutterModeModel:
             self._name = self.MODES[self._id]
         else:
             self._logger.error("Invalid laser cutter mode name.")
-            self._logger.warn("Falling back to default.")
+            self._logger.warn(self.FALLBACK_WARNING)
             self._id = self.FALLBACK_MODE_ID
             self._name = self.MODES[self.FALLBACK_MODE_ID]
 
@@ -129,5 +130,5 @@ class LaserCutterModeModel:
             return list(self.MODES.values()).index(mode_name)
         except KeyError as e:
             self._logger.error("Invalid laser cutter mode name: %s", e)
-            self._logger.warn("Falling back to default.")
+            self._logger.warn(self.FALLBACK_WARNING)
             return self.FALLBACK_MODE_ID
