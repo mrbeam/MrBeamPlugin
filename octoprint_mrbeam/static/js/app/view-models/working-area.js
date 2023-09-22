@@ -4635,7 +4635,7 @@ $(function () {
                         .fail(function () {
                             console.log("Laser cutter mode change failed!");
                             new PNotify({
-                                title: gettext("Could not change laser cutter mode"),
+                                title: gettext("Changing the laser cutter mode failed"),
                                 text: gettext(`Could not change the laser cutter mode to ${selectObject.value}.`),
                                 type: "error",
                                 hide: true,
