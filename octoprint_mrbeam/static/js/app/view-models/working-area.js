@@ -4621,7 +4621,7 @@ $(function () {
             showConfirmationDialog({
                 title: gettext("Change the laser cutter mode"),
                 message: gettext(
-                    "Keep in mind that the device will restart after switching the laser cutter mode."
+                    "Keep in mind that the device will restart and the webpage will refresh after switching the laser cutter mode."
                 ),
                 question: gettext(`Do you want to switch to ${selectObject.value} mode?`),
                 proceed: gettext("Continue"),
