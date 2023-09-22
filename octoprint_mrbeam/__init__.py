@@ -518,8 +518,8 @@ class MrBeamPlugin(
             heavyDutyPrefilter=False,
             highTemperatureWarningDisabled=False,
             laser_cutter_mode=dict(
-                id=LaserCutterModeModel.FALLBACK_MODE,
-                name=LaserCutterModeModel.MODES[LaserCutterModeModel.FALLBACK_MODE],
+                id=LaserCutterModeModel.FALLBACK_MODE_ID,
+                name=LaserCutterModeModel.MODES[LaserCutterModeModel.FALLBACK_MODE_ID],
             )
         )
 

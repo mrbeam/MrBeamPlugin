@@ -7,15 +7,35 @@ class LaserCutterModeModel:
         0: "default",
         1: "rotary",
     }
-    FALLBACK_MODE = 0
+    FALLBACK_MODE_ID = 0
 
-    def __init__(self, id= FALLBACK_MODE):
+    def __init__(self, mode_id=FALLBACK_MODE_ID):
+        """
+        Initialize laser cutter mode.
+
+        Parameters:
+        - id (int): The id of the laser cutter mode.
+
+        Returns:
+        - None
+
+        Notes:
+        - If the mode id is not found in the defined MODES, it will fall back
+          to default.
+        """
         self._logger = mrb_logger("octoprint.plugins.mrbeam.model.laser_cutter_mode")
-        if id not in self.MODES:
-            self._logger.error("Invalid laser cutter mode id during init. Falling back to default.")
-            id = self.FALLBACK_MODE
-        self._id = id
-        self._name = self.MODES[id]
+
+        # Set mode id and name based on the given mode id
+        # If the mode id is not found in the defined MODES, it will fall back
+        # to default.
+        if mode_id in self.MODES:
+            self._id = mode_id
+            self._name = self.MODES[mode_id]
+        else:
+            self._logger.error("Invalid laser cutter mode id during init.")
+            self._logger.warn("Falling back to default.")
+            self._id = self.FALLBACK_MODE_ID
+            self._name = self.MODES[self.FALLBACK_MODE_ID]
 
     @property
     def id(self):
@@ -26,7 +46,7 @@ class LaserCutterModeModel:
         - None
 
         Returns:
-        - id (int): The id of the laser cutting mode.
+        - id (int): The id of the laser cutter mode.
         """
         return self._id
 
@@ -39,46 +59,75 @@ class LaserCutterModeModel:
         - None
 
         Returns:
-        - name (str): The name of the laser cutting mode.
+        - name (str): The name of the laser cutter mode.
         """
         return self._name
 
     @id.setter
-    def id(self, id):
+    def id(self, mode_id):
         """
         Set laser cutter mode id.
 
         Parameters:
-        - id (int): The id of the laser cutting mode.
+        - mode_id (int): The id of the laser cutter mode.
 
         Returns:
         - None
 
         Notes:
-        - If the mode id is not found in the settings, it will fall back to default.
+        - If the mode id is not found in the defined MODES, it will fall back to
+          default.
         """
-        if id not in self.MODES:
-            self._logger.error("Invalid laser cutter mode id. Falling back to default.")
-            id = self.FALLBACK_MODE
-        self._id = id
-        self._name = self.MODES[id]
+        if mode_id in self.MODES:
+            self._id = mode_id
+            self._name = self.MODES[mode_id]
+        else:
+            self._logger.error("Invalid laser cutter mode id during init.")
+            self._logger.warn("Falling back to default.")
+            self._id = self.FALLBACK_MODE_ID
+            self._name = self.MODES[self.FALLBACK_MODE_ID]
 
     @name.setter
-    def name(self, name):
+    def name(self, mode_name):
         """
         Set laser cutter mode name.
 
         Parameters:
-        - name (str): The name of the laser cutting mode.
+        - mode_name (str): The name of the laser cutter mode.
 
         Returns:
         - None
 
         Notes:
-        - If the mode name is not found in the settings, it will fall back to default.
+        - If the mode name is not in the defined MODES, it will fall back to
+          default.
         """
-        if name not in self.MODES.values():
-            self._logger.error("Invalid laser cutter mode name. Falling back to default.")
-            name = self.MODES[self.FALLBACK_MODE]
-        self._name = name
-        self._id = list(self.MODES.keys())[list(self.MODES.values()).index(name)]
+        if mode_name in self.MODES.values():
+            self._name = mode_name
+            self._id = _get_mode_key(mode_name)
+        else:
+            self._logger.error("Invalid laser cutter mode name.")
+            self._logger.warn("Falling back to default.")
+            self._id = self.FALLBACK_MODE_ID
+            self._name = self.MODES[self.FALLBACK_MODE_ID]
+
+    def _get_mode_key(self, mode_name):
+        """
+        Get laser cutter mode key.
+
+        Parameters:
+        - mode_name (str): The name of the laser cutter mode.
+
+        Returns:
+        - mode_key (int): The key of the laser cutter mode.
+
+        Notes:
+        - If the mode name is not found in the defined MODES, it will fall back to
+          default.
+        """
+        try:
+            return list(self.MODES.values()).index(mode_name)
+        except KeyError as e:
+            self._logger.error("Invalid laser cutter mode name: %s", e)
+            self._logger.warn("Falling back to default.")
+            return self.FALLBACK_MODE_ID

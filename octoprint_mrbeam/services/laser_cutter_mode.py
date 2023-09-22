@@ -40,6 +40,16 @@ class LaserCutterModeService:
     """ Service class for laser cutter mode. """
 
     def __init__(self, plugin):
+        """
+        Initialize laser cutter mode service.
+
+        Parameters:
+        - plugin (object): An object representing the plugin that requires the
+          LaserCutterModeService. This is typically an instance of the plugin class.
+
+        Returns:
+        - None
+        """
         self._logger = mrb_logger("octoprint.plugins.mrbeam.services.laser_cutter_mode")
         self._settings = plugin.get_settings()
         self._mode = LaserCutterModeModel(self._load_laser_cutter_mode_id())
