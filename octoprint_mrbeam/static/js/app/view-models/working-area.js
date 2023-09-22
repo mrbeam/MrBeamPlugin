@@ -3299,19 +3299,6 @@ $(function () {
                             false,
                             c?.includesQuickText
                         ).then(function (rasterResult) {
-                            // send analytics if font loading into canvas issue is detected
-                            if (
-                                rasterResult
-                                    .isFontLoadingIntoCanvasIssueDetected.result
-                            ) {
-                                self._sendAnalytics(
-                                    "font_loading_into_canvas_issue_detected__",
-                                    rasterResult
-                                        .isFontLoadingIntoCanvasIssueDetected
-                                        .payload
-                                );
-                            }
-
                             const fillImage = svg.image(
                                 rasterResult.dataUrl,
                                 c.bbox.x,
