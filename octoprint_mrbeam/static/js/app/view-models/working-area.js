@@ -3105,7 +3105,7 @@ $(function () {
             );
 
             // TODO: change to using LASER_CUTTER_MODE_NAME
-            $("laser_cutter_mode_select").val("default");
+            $("#laser_cutter_mode_select").val("default");
         };
 
         self.onAllBound = function (allViewModels) {
