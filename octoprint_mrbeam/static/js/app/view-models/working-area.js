@@ -4628,7 +4628,7 @@ $(function () {
                 proceedClass: "primary",
                 cancel: gettext("Cancel"),
                 onproceed: function () {
-                    OctoPrint.simpleApiCommand("mrbeam", "lasercutter_mode_change", {"mode": selectObject.value})
+                    OctoPrint.simpleApiCommand("mrbeam", "laser_cutter_mode_change", {"mode": selectObject.value})
                         .done(function (response) {
                             console.log("Laser cutter mode changed ", response);
                         })
