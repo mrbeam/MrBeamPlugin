@@ -44,6 +44,10 @@
                     {% if navbar_label %}
                         <span style="margin: 6px; vertical-align: -5px; font-size: 14px; font-weight: 400; color: #e25303; text-decoration: none;">{{ navbar_label }}</span>
                     {% endif %}
+                    <select id="laser_cutter_mode_select" data-test="laser-cutter-mode-select" onchange="window.mrbeam.viewModels.workingAreaViewModel.changeLaserCutterMode(this)">
+                        <option value="default">{{ _('Default') }}</option>
+                        <option value="rotary">{{ _('Rotary') }}</option>
+                    </select>
 				</div>
 				<!-- Navbar -->
 				<ul id="mrbeam-main-tabs" class="nav nav-pills pull-right">

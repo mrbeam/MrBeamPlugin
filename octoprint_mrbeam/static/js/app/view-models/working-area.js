@@ -3103,6 +3103,9 @@ $(function () {
                 "change",
                 throttle((event) => self._qt_currentQuickTextUpdate(event), 200)
             );
+
+            // todo change to using LASER_CUTTER_MODE_NAME
+            $("laser_cutter_mode_select").val("default");
         };
 
         self.onAllBound = function (allViewModels) {
@@ -4610,6 +4613,37 @@ $(function () {
 
         self._sendAnalytics = function (event, payload) {
             self.analytics.send_frontend_event(event, payload);
+        };
+
+        self.changeLaserCutterMode = function (selectObject) {
+            console.log('Changing laser cutter mode to', selectObject.value)
+
+            showConfirmationDialog({
+                title: gettext("Do you want to switch the mode?"),
+                message: gettext(
+                    "Keep in mind that the device will restart after switching the laser cutter mode."
+                ),
+                question: gettext(`Do you want to switch to ${selectObject.value} mode?`),
+                proceed: gettext("Continue"),
+                proceedClass: "primary",
+                cancel: gettext("Cancel"),
+                onproceed: function () {
+                    OctoPrint.simpleApiCommand("mrbeam", "lasercutter_mode_change", {"mode": selectObject.value})
+                        .done(function (response) {
+                            console.log("Laser cutter mode changed ", response);
+                        })
+                        .fail(function () {
+                            console.log("Laser cutter mode change failed!");
+                            new PNotify({
+                                title: gettext("Could not change laser cutter mode"),
+                                text: gettext(`Could not change the laser cutter mode to ${selectObject.value}.`),
+                                type: "error",
+                                hide: true,
+                            });
+
+                        });
+                },
+            });
         };
     }
 
