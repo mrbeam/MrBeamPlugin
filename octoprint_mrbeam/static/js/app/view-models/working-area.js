@@ -4623,7 +4623,7 @@ $(function () {
                 message: gettext(
                     "Keep in mind that the device will restart and the webpage will refresh after switching the laser cutter mode."
                 ),
-                question: gettext(`Do you want to switch to ${selectObject.value} mode?`),
+                question: gettext(`Are you sure you want to switch the laser cutter mode into ${selectObject.value}?`),
                 proceed: gettext("Confirm"),
                 proceedClass: "primary",
                 cancel: gettext("Cancel"),
