@@ -4624,7 +4624,7 @@ $(function () {
                     "Keep in mind that the device will restart and the webpage will refresh after switching the laser cutter mode."
                 ),
                 question: gettext(`Do you want to switch to ${selectObject.value} mode?`),
-                proceed: gettext("Continue"),
+                proceed: gettext("Confirm"),
                 proceedClass: "primary",
                 cancel: gettext("Cancel"),
                 onproceed: function () {
