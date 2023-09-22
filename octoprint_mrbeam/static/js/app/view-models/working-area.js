@@ -4636,7 +4636,7 @@ $(function () {
                             console.log("Laser cutter mode change failed!");
                             new PNotify({
                                 title: gettext("Changing the laser cutter mode failed"),
-                                text: gettext(`Could not change the laser cutter mode to ${selectObject.value}.`),
+                                text: gettext(`Changing the laser cutter mode to ${selectObject.value} failed. Please contact customer support.`),
                                 type: "error",
                                 hide: false,
                             });
