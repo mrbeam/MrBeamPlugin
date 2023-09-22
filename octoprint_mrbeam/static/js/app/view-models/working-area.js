@@ -4619,7 +4619,7 @@ $(function () {
             console.log('Changing laser cutter mode to', selectObject.value)
 
             showConfirmationDialog({
-                title: gettext("Do you want to switch the mode?"),
+                title: gettext("Change the laser cutter mode"),
                 message: gettext(
                     "Keep in mind that the device will restart after switching the laser cutter mode."
                 ),
