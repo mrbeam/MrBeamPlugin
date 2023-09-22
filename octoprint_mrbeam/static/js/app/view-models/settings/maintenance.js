@@ -80,11 +80,15 @@ $(function () {
         };
 
         self.prefilterLifespan = function (stage) {
-            return self.prefilterLifespans()[stage];
+            return self.prefilterLifespans() != null
+                ? self.prefilterLifespans()[stage]
+                : null;
         };
 
         self.carbonfilterLifespan = function (stage) {
-            return self.carbonfilterLifespans()[stage];
+            return self.carbonfilterLifespans() != null
+                ? self.carbonfilterLifespans()[stage]
+                : null;
         };
 
         self.prefilterPercent = ko.computed(function () {
@@ -158,7 +162,6 @@ $(function () {
         self.heavyDutyPrefilterEnabled.subscribe(function (newValue) {
             self.settings.settings.plugins.mrbeam.heavyDutyPrefilter(newValue);
             self.settings.saveData(undefined, function (newSettings) {
-                self._loadFilterSettings();
                 const new_lifespan = self.prefilterLifespan(0);
                 console.log(
                     "Prefilter lifespan changed to:",
@@ -180,11 +183,6 @@ $(function () {
             } else {
                 self.airfilter3Used(false);
             }
-        };
-
-        // The settings are already loaded here, Gina confirmed.
-        self.onBeforeBinding = function () {
-            self.loadUsageValues();
         };
 
         self.onUserLoggedIn = function (user) {
@@ -408,75 +406,34 @@ $(function () {
 
         self.onSettingsShown = function () {
             self.settings.requestData().done(function () {
-                self.loadUsageValues();
-                self.updateSettingsAbout();
-            });
-        };
-
-        self.loadUsageValues = function () {
-            self.needsGantryMaintenance(
-                window.mrbeam.model.is_mrbeam2() ||
-                    window.mrbeam.model.is_mrbeam2_dreamcut_ready1()
-            );
-
-            if (self.needsGantryMaintenance()) {
-                self.gantryUsage(
-                    self.settings.settings.plugins.mrbeam.usage.gantryUsage()
+                self.needsGantryMaintenance(
+                    window.mrbeam.model.is_mrbeam2() ||
+                        window.mrbeam.model.is_mrbeam2_dreamcut_ready1()
                 );
-            } else {
-                self.gantryUsage(0);
-            }
-
-            self.totalUsage(
-                self.settings.settings.plugins.mrbeam.usage.totalUsage()
-            );
-            self.prefilterUsage(
-                self.settings.settings.plugins.mrbeam.usage.prefilterUsage()
-            );
-            self.carbonFilterUsage(
-                self.settings.settings.plugins.mrbeam.usage.carbonFilterUsage()
-            );
-            self.laserHeadUsage(
-                self.settings.settings.plugins.mrbeam.usage.laserHeadUsage()
-            );
-            self.laserHeadSerial(
-                self.settings.settings.plugins.mrbeam.laserhead.serial()
-            );
-            self.heavyDutyPrefilterEnabled(
-                self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
-            );
-            self.laserHeadLifespan(
-                self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()
-            );
-            self._loadFilterSettings();
-        };
-
-        self._loadFilterSettings = function () {
-            self.prefilterLifespans(
-                self.settings.settings.plugins.mrbeam.usage.prefilterLifespans()
-            );
-            self.carbonfilterLifespans(
-                self.settings.settings.plugins.mrbeam.usage.carbonfilterLifespans()
-            );
-            self.carbonfilterShopify(
-                self.settings.settings.plugins.mrbeam.usage.carbonfilterShopify()
-            );
-            self.prefilterShopify(
-                self.settings.settings.plugins.mrbeam.usage.prefilterShopify()
-            );
-            self.prefilterHeavyDutyShopify(
-                self.settings.settings.plugins.mrbeam.usage.prefilterHeavyDutyShopify()
-            );
+                self.updateSettingsAbout();
+                self.heavyDutyPrefilterEnabled(
+                    self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
+                );
+            });
         };
 
         self.shopifyLink = function (stagename, stageid) {
             let link;
             if (stagename === "prefilter") {
-                link = self.prefilterShopify()[stageid];
+                link =
+                    self.prefilterShopify() != null
+                        ? self.prefilterShopify()[stageid]
+                        : null;
             } else if (stagename === "carbonfilter") {
-                link = self.carbonfilterShopify()[stageid];
+                link =
+                    self.carbonfilterShopify() != null
+                        ? self.carbonfilterShopify()[stageid]
+                        : null;
             } else if (stagename === "prefilter_heavy_duty") {
-                link = self.prefilterHeavyDutyShopify()[stageid];
+                link =
+                    self.prefilterHeavyDutyShopify() != null
+                        ? self.prefilterHeavyDutyShopify()[stageid]
+                        : null;
             } else {
                 link = null;
             }
@@ -530,6 +487,49 @@ $(function () {
                 type: "warn",
                 hide: false,
             });
+        };
+
+        self.onDataUpdaterPluginMessage = function (plugin, data) {
+            if (plugin !== "mrbeam") {
+                return;
+            }
+            if ("maintenance_information" in data) {
+                maintenanceInformation = data.maintenance_information;
+                console.log(
+                    "Maintenance information received",
+                    maintenanceInformation
+                );
+                if (self.needsGantryMaintenance()) {
+                    self.gantryUsage(maintenanceInformation.gantryUsage);
+                } else {
+                    self.gantryUsage(0);
+                }
+
+                self.totalUsage(maintenanceInformation.totalUsage);
+                self.prefilterUsage(maintenanceInformation.prefilterUsage);
+                self.carbonFilterUsage(
+                    maintenanceInformation.carbonFilterUsage
+                );
+                self.laserHeadUsage(maintenanceInformation.laserHeadUsage);
+                self.laserHeadSerial(maintenanceInformation.laserHeadSerial);
+                self.laserHeadLifespan(
+                    maintenanceInformation.laserHeadLifespan
+                );
+
+                self.prefilterLifespans(
+                    maintenanceInformation.prefilterLifespans
+                );
+                self.carbonfilterLifespans(
+                    maintenanceInformation.carbonfilterLifespans
+                );
+                self.carbonfilterShopify(
+                    maintenanceInformation.carbonfilterShopify
+                );
+                self.prefilterShopify(maintenanceInformation.prefilterShopify);
+                self.prefilterHeavyDutyShopify(
+                    maintenanceInformation.prefilterHeavyDutyShopify
+                );
+            }
         };
 
         self.saveUserSettings = function (earlyWarningShown) {

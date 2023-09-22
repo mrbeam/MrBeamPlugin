@@ -87,6 +87,9 @@ class MrBeamEvents(object):
     BLINK_PRINT_LABELS = "BlinkPrintLabels"
     INITIAL_CALIBRATION = "initial_calibration"
 
+    # Airfilter
+    AIRFILTER_CHANGED = "AirfilterChanged"
+
     @classmethod
     def register_with_octoprint(cls):
         """this has to be called during plugin's Constructor."""
