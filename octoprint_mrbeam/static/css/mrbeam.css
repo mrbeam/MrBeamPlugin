@@ -3985,9 +3985,9 @@ div.hopscotch-bubble .hopscotch-bubble-number {
 
 /* Laser cutter mode - start */
 #laser_cutter_mode_select {
-    width: auto;
-    max-width: 100%;
-    margin-bottom: 0;
-    margin-left: 20px;
+  width: auto;
+  max-width: 100%;
+  margin-bottom: 0;
+  margin-left: 20px;
 }
 /* Laser cutter mode - end */
