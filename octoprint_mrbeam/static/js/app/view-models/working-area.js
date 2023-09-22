@@ -3104,7 +3104,7 @@ $(function () {
                 throttle((event) => self._qt_currentQuickTextUpdate(event), 200)
             );
 
-            // todo change to using LASER_CUTTER_MODE_NAME
+            // TODO: change to using LASER_CUTTER_MODE_NAME
             $("laser_cutter_mode_select").val("default");
         };
 
