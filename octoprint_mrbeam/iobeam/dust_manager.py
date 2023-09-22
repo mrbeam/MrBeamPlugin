@@ -429,7 +429,7 @@ class DustManager(object):
             )
 
     def __continue_dust_extraction(self, value, started):
-        if time.time() - started > self.FINAL_DUSTING_PHASE1_DURATION:
+        if monotonic_time() - started > self.FINAL_DUSTING_PHASE1_DURATION:
             return False
         if self._dust is not None and self._dust < value:
             return False
@@ -641,7 +641,7 @@ class DustManager(object):
             self._validation_timer.cancel()
         if (
             self._timer_boost_ts > 0
-            and time.time() - self._timer_boost_ts > self.MAX_TIMER_BOOST_DURATION
+            and monotonic_time() - self._timer_boost_ts > self.MAX_TIMER_BOOST_DURATION
         ):
             self._unboost_timer_interval()
         if not self._shutting_down:
@@ -658,7 +658,7 @@ class DustManager(object):
             self._logger.debug("Shutting down.")
 
     def _boost_timer_interval(self):
-        self._timer_boost_ts = time.time()
+        self._timer_boost_ts = monotonic_time()
         self._validation_timer_interval = self.BOOST_TIMER_INTERVAL
         # want the boost immediately, se reset current timer
         self._start_validation_timer()
