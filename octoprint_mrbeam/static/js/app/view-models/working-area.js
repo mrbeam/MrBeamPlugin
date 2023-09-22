@@ -4638,7 +4638,7 @@ $(function () {
                                 title: gettext("Changing the laser cutter mode failed"),
                                 text: gettext(`Could not change the laser cutter mode to ${selectObject.value}.`),
                                 type: "error",
-                                hide: true,
+                                hide: false,
                             });
 
                         });
