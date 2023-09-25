@@ -16,20 +16,17 @@ DEFAULT_PROFILE = {
         {
             "lifespan": 40,
             "shopify_link": "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
-            "heavy_duty_lifespan": 40,
-            "heavy_duty_shopify_link": "products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
         }
     ],
+    "prefilter_heavy_duty": [
+        {
+            "lifespan": 40,
+            "shopify_link": "products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+        }
+    ],
+    "prefilter_heavy_duty_stages": 1,
     "prefilter_stages": 1,
 }
-
-
-@pytest.fixture
-def air_filter(mrbeam_plugin):
-    air_filter = AirFilter(mrbeam_plugin)
-    air_filter._plugin.send_mrb_state = MagicMock()
-    air_filter._plugin._event_bus.fire = MagicMock()
-    return air_filter
 
 
 def test_singelton(mrbeam_plugin):
@@ -43,80 +40,77 @@ def test_singelton(mrbeam_plugin):
     assert air_filter == air_filter2
 
 
-def test_set_airfilter(air_filter):
+def test_model_name_AF1_or_fan(mrbeam_plugin):
     # Arrange
-
-    # Act
-    air_filter.set_airfilter(8, "123456")
-    # Assert
-    assert air_filter.model_id == 8
-    assert air_filter.serial == "123456"
-
-
-def test_model_name_AF1_or_fan(air_filter):
-    # Arrange
-    air_filter.set_airfilter(0, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 0
     # Act
     model_name = air_filter.model
     # Assert
     assert model_name == "Air Filter System | Fan"
 
 
-def test_model_name_AF2(air_filter):
+def test_model_name_AF2(mrbeam_plugin):
     # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
     for i in range(1, 8):
-        air_filter.set_airfilter(i, "serial")
+        air_filter.model_id = i
         # Act
         model_name = air_filter.model
         # Assert
         assert model_name == "Air Filter II System"
 
 
-def test_model_name_AF3(air_filter):
+def test_model_name_AF3(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(8, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 8
     # Act
     model_name = air_filter.model
     # Assert
     assert model_name == "Air Filter 3 System"
 
 
-def test_model_name_invalid_model_id(air_filter):
+def test_model_name_invalid_model_id(mrbeam_plugin):
     # Arrange
-    air_filter._model_id = None
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = None
     # Act
     model_name = air_filter.model
     # Assert
     assert model_name == "Unknown"
 
     # Arrange
-    air_filter.set_airfilter(100, "serial")
+    air_filter.model_id = 100
     # Act
     model_name = air_filter.model
     # Assert
     assert model_name == "Unknown"
 
 
-@pytest.mark.parametrize(
-    "model_id, serial",
-    [
-        (0, None),
-        (None, "123456"),
-        (None, None),
-    ],
-)
-def test_set_airfilter_when_information_is_missing(model_id, serial, air_filter):
+def test_model_id(mrbeam_plugin):
     # Arrange
-
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 0
     # Act
-    air_filter.set_airfilter(model_id, serial)
+    model_id = air_filter.model_id
     # Assert
-    assert air_filter.model_id is None
-    assert air_filter.serial is None
+    assert model_id == 0
 
 
-def test_pressure_set_only_one(air_filter):
+def test_serial(mrbeam_plugin):
     # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.serial = "123456"
+    # Act
+    serial = air_filter.serial
+    # Assert
+    assert serial == "123456"
+
+
+def test_pressure_set_only_one(mrbeam_plugin):
+    # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
     air_filter.set_pressure(pressure=1)
     # Act
     pressure = air_filter.pressure
@@ -124,8 +118,9 @@ def test_pressure_set_only_one(air_filter):
     assert pressure == 1
 
 
-def test_pressure_set_multiple(air_filter):
+def test_pressure_set_multiple(mrbeam_plugin):
     # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
     air_filter.set_pressure(pressure1=1, pressure2=2, pressure3=3, pressure4=4)
     # Act
     pressure = air_filter.pressure
@@ -138,8 +133,9 @@ def test_pressure_set_multiple(air_filter):
     }
 
 
-def test_pressure_set_invalid_data(air_filter):
+def test_pressure_set_invalid_data(mrbeam_plugin):
     # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
     air_filter.set_pressure(pressure2=None)
     # Act
     pressure = air_filter.pressure
@@ -147,8 +143,9 @@ def test_pressure_set_invalid_data(air_filter):
     assert pressure is None
 
 
-def test_temperatures_only_first(air_filter):
+def test_temperatures_only_first(mrbeam_plugin):
     # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
     air_filter.set_temperatures(temperature1=1.0)
     # Act
     temperatures = air_filter.temperatures
@@ -161,8 +158,9 @@ def test_temperatures_only_first(air_filter):
     }
 
 
-def test_temperatures_all_values_at_once(air_filter):
+def test_temperatures_all_values_at_once(mrbeam_plugin):
     # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
     air_filter.set_temperatures(
         temperature1=1.0, temperature2=2.0, temperature3=3.0, temperature4=4.0
     )
@@ -177,8 +175,9 @@ def test_temperatures_all_values_at_once(air_filter):
     }
 
 
-def test_temperatures_with_none_value(air_filter):
+def test_temperatures_with_none_value(mrbeam_plugin):
     # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
     air_filter.set_temperatures(temperature2=None)  # temperature2 is not set
     # Act
     temperatures = air_filter.temperatures
@@ -186,8 +185,9 @@ def test_temperatures_with_none_value(air_filter):
     assert temperatures is None
 
 
-def test_temperatures_int_value(air_filter):
+def test_temperatures_int_value(mrbeam_plugin):
     # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
     air_filter.set_temperatures(temperature2=2)  # temperature2 is set
     # Act
     temperatures = air_filter.temperatures
@@ -200,8 +200,9 @@ def test_temperatures_int_value(air_filter):
     }
 
 
-def test_temperatures_string_value(air_filter):
+def test_temperatures_string_value(mrbeam_plugin):
     # Arrange
+    air_filter = AirFilter(mrbeam_plugin)
     air_filter.set_temperatures(temperature2="error")
     # Act
     temperatures = air_filter.temperatures
@@ -214,9 +215,10 @@ def test_temperatures_string_value(air_filter):
     }
 
 
-def test_profile_for_airfilter_1(air_filter):
+def test_profile_for_airfilter_1(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 1
 
     # Act
     profile = air_filter.profile
@@ -234,17 +236,23 @@ def test_profile_for_airfilter_1(air_filter):
             {
                 "lifespan": 40,
                 "shopify_link": "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
-                "heavy_duty_lifespan": 80,
-                "heavy_duty_shopify_link": "products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
             }
         ],
         "prefilter_stages": 1,
+        "prefilter_heavy_duty": [
+            {
+                "lifespan": 80,
+                "shopify_link": "products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+            }
+        ],
+        "prefilter_heavy_duty_stages": 1,
     }
 
 
-def test_profile_for_airfilter_8(air_filter):
+def test_profile_for_airfilter_8(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(8, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 8
 
     # Act
     profile = air_filter.profile
@@ -268,9 +276,10 @@ def test_profile_for_airfilter_8(air_filter):
     }
 
 
-def test_get_profile_invalid_id(air_filter):
+def test_get_profile_invalid_id(mrbeam_plugin):
     # Arrange
-    air_filter._model_id = None
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = None
 
     # Act
     profile = air_filter.profile
@@ -279,9 +288,10 @@ def test_get_profile_invalid_id(air_filter):
     assert profile == DEFAULT_PROFILE
 
 
-def test_get_profile_none_existing_id(air_filter):
+def test_get_profile_none_existing_id(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(100, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 100
 
     # Act
     profile = air_filter.profile
@@ -290,9 +300,11 @@ def test_get_profile_none_existing_id(air_filter):
     assert profile == DEFAULT_PROFILE
 
 
-def test_get_profile_for_none_id(air_filter):
+def test_get_profile_for_none_id(mrbeam_plugin):
     # Arrange
-    air_filter._model_id = None
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 1
+    air_filter.model_id = None
 
     # Act
     profile = air_filter.profile
@@ -301,9 +313,10 @@ def test_get_profile_for_none_id(air_filter):
     assert profile == DEFAULT_PROFILE
 
 
-def test_get_lifespan_for_airfilter_1_carbonfilter(air_filter):
+def test_get_lifespan_for_airfilter_1_carbonfilter(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 1
 
     # Act
     lifespan = air_filter.get_lifespan("carbonfilter")
@@ -324,9 +337,10 @@ def test_get_lifespan_for_airfilter_1_carbonfilter(air_filter):
         (None, 40),
     ],
 )
-def test_get_lifespan_for_prefilter(model_id, expected_lifespan, air_filter):
+def test_get_lifespan_for_prefilter(model_id, expected_lifespan, mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(model_id, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = model_id
 
     # Act
     lifespan = air_filter.get_lifespan("prefilter")
@@ -343,15 +357,16 @@ def test_get_lifespan_for_prefilter(model_id, expected_lifespan, air_filter):
         (3, [80]),
         (4, [80]),
         (5, [40]),
-        (8, [80]),
+        (8, None),
         (None, [40]),
     ],
 )
 def test_get_lifespans_when_filterstage_is_prefilter_and_heavy_duty_prefilter_is_enabled(
-    model_id, expected_lifespan, air_filter
+    model_id, expected_lifespan, mrbeam_plugin
 ):
     # Arrange
-    air_filter.set_airfilter(model_id, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = model_id
     air_filter.heavy_duty_prefilter_enabled = MagicMock(return_value=True)
 
     # Act
@@ -361,9 +376,10 @@ def test_get_lifespans_when_filterstage_is_prefilter_and_heavy_duty_prefilter_is
     assert lifespan == expected_lifespan
 
 
-def test_get_lifespan_for_invalid_filter(air_filter):
+def test_get_lifespan_for_invalid_filter(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 1
 
     # Act
     lifespan = air_filter.get_lifespan("invalidfilter")
@@ -372,9 +388,10 @@ def test_get_lifespan_for_invalid_filter(air_filter):
     assert lifespan is None
 
 
-def test_get_lifespan_for_invalid_model(air_filter):
+def test_get_lifespan_for_invalid_model(mrbeam_plugin):
     # Arrange
-    air_filter._model_id = None
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = None
 
     # Act
     lifespan = air_filter.get_lifespan("carbonfilter")
@@ -383,9 +400,10 @@ def test_get_lifespan_for_invalid_model(air_filter):
     assert lifespan == 280  # should be fallback value
 
 
-def test_get_lifespan_for_invalid_filter_stage_id(air_filter):
+def test_get_lifespan_for_invalid_filter_stage_id(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 1
 
     # Act
     lifespan = air_filter.get_lifespan("prefilter", 20)
@@ -394,9 +412,10 @@ def test_get_lifespan_for_invalid_filter_stage_id(air_filter):
     assert lifespan == 40
 
 
-def test_get_lifespan_for_invalid_filter_stage_id_input(air_filter):
+def test_get_lifespan_for_invalid_filter_stage_id_input(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 1
 
     # Act
     lifespan = air_filter.get_lifespan("prefilter", "invalid")
@@ -405,9 +424,10 @@ def test_get_lifespan_for_invalid_filter_stage_id_input(air_filter):
     assert lifespan == 40
 
 
-def test_get_list_of_lifespans_for_prefilter(air_filter, mrbeam_plugin):
+def test_get_list_of_lifespans_for_prefilter(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 1
 
     # Act
     lifespan = air_filter.get_lifespans("prefilter")
@@ -417,7 +437,7 @@ def test_get_list_of_lifespans_for_prefilter(air_filter, mrbeam_plugin):
 
     # Arrange
     air_filter = AirFilter(mrbeam_plugin)
-    air_filter.set_airfilter(8, "serial")
+    air_filter.model_id = 8
 
     # Act
     lifespan = air_filter.get_lifespans("prefilter")
@@ -426,9 +446,10 @@ def test_get_list_of_lifespans_for_prefilter(air_filter, mrbeam_plugin):
     assert lifespan == [80]
 
 
-def test_get_list_of_lifespans_for_carbonfilter(air_filter, mrbeam_plugin):
+def test_get_list_of_lifespans_for_carbonfilter(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 1
 
     # Act
     lifespan = air_filter.get_lifespans("carbonfilter")
@@ -438,7 +459,7 @@ def test_get_list_of_lifespans_for_carbonfilter(air_filter, mrbeam_plugin):
 
     # Arrange
     air_filter = AirFilter(mrbeam_plugin)
-    air_filter.set_airfilter(8, "serial")
+    air_filter.model_id = 8
 
     # Act
     lifespan = air_filter.get_lifespans("carbonfilter")
@@ -447,9 +468,10 @@ def test_get_list_of_lifespans_for_carbonfilter(air_filter, mrbeam_plugin):
     assert lifespan == [400]
 
 
-def test_get_list_of_lifespans_profile_none(air_filter):
+def test_get_list_of_lifespans_profile_none(mrbeam_plugin):
     # Arrange
-    air_filter._model_id = None
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = None
 
     # Act
     lifespan = air_filter.get_lifespans("prefilter")
@@ -458,9 +480,10 @@ def test_get_list_of_lifespans_profile_none(air_filter):
     assert lifespan == [40]
 
 
-def test_get_shopify_links_AF1_prefilter(air_filter):
+def test_get_shopify_links_AF1_prefilter(mrbeam_plugin):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 1
 
     # Act
     shopify_link = air_filter.get_shopify_links("prefilter")
@@ -471,9 +494,10 @@ def test_get_shopify_links_AF1_prefilter(air_filter):
     ]
 
 
-def test_get_shopify_links_profile_none(air_filter):
+def test_get_shopify_links_profile_none(mrbeam_plugin):
     # Arrange
-    air_filter._model_id = None
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = None
 
     # Act
     shopify_link = air_filter.get_shopify_links("prefilter")
@@ -485,10 +509,11 @@ def test_get_shopify_links_profile_none(air_filter):
 
 
 def test_get_shopify_links_when_no_link_is_set_in_profile_then_return_empty_list(
-    air_filter,
+    mrbeam_plugin,
 ):
     # Arrange
-    air_filter.set_airfilter(8, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter.model_id = 8
     air_filter._profile = {"prefilter_stages": 1}
 
     # Act
@@ -505,10 +530,11 @@ def test_get_shopify_links_when_no_link_is_set_in_profile_then_return_empty_list
         (False),
     ],
 )
-def test_heavy_duty_prefilter_enabled_when_enabled_then_true(enabled, air_filter):
+def test_heavy_duty_prefilter_enabled_when_enabled_then_true(enabled, mrbeam_plugin):
     # Arrange
-    air_filter._plugin.is_heavy_duty_prefilter_enabled = MagicMock(return_value=enabled)
-    air_filter.set_airfilter(8, "serial")
+    air_filter = AirFilter(mrbeam_plugin)
+    mrbeam_plugin.is_heavy_duty_prefilter_enabled = MagicMock(return_value=enabled)
+    air_filter.model_id = 8
 
     # Act
     heavy_duty_prefilter_enabled = air_filter.heavy_duty_prefilter_enabled()

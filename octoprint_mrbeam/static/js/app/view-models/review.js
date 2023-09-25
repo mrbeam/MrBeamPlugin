@@ -22,13 +22,14 @@ $(function () {
         self.rating = ko.observable(0);
         self.dontShowAgain = ko.observable(false);
         self.justGaveReview = ko.observable(false);
-        self.totalUsage = ko.observable(null);
 
         self.shouldAskForReview = ko.computed(function () {
             if (
                 self.loginState.currentUser() &&
                 self.loginState.currentUser().active
             ) {
+                let totalUsage =
+                    self.settings.settings.plugins.mrbeam.usage.totalUsage();
                 let shouldAsk =
                     self.settings.settings.plugins.mrbeam.review.ask();
                 let doNotAskAgain =
@@ -37,7 +38,7 @@ $(function () {
                     self.settings.settings.plugins.mrbeam.review.given();
 
                 return (
-                    self.totalUsage >= self.SHOW_AFTER_USAGE_H &&
+                    totalUsage >= self.SHOW_AFTER_USAGE_H &&
                     shouldAsk &&
                     !doNotAskAgain &&
                     !reviewGiven &&
@@ -47,16 +48,6 @@ $(function () {
                 return false;
             }
         });
-
-        self.onDataUpdaterPluginMessage = function (plugin, data) {
-            if (plugin !== "mrbeam") {
-                return;
-            }
-            if ("maintenance_information" in data) {
-                const maintenanceInformation = data.maintenance_information;
-                self.totalUsage(maintenanceInformation.totalUsage);
-            }
-        };
 
         self.onAllBound = function () {
             self.reviewDialog = $("#review_dialog");

@@ -5,7 +5,6 @@ from enum import Enum
 import yaml
 from flask_babel import gettext
 
-from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 _instance = None
@@ -40,32 +39,36 @@ class AirFilter(object):
     CARBON_LIFESPAN_FALLBACK = 280
     PREFILTER = "prefilter"
     CARBONFILTER = "carbonfilter"
-    FILTERSTAGES = [PREFILTER, CARBONFILTER]
-
-    class ProfileParameters(Enum):
-        SHOPIFY_LINK = "shopify_link"
-        LIFESPAN = "lifespan"
-        HEAVY_DUTY_LIFESPAN = "heavy_duty_lifespan"
-        HEAVY_DUTY_SHOPIFY_LINK = "heavy_duty_shopify_link"
+    PREFILTER_HEAVY_DUTY = "prefilter_heavy_duty"
+    FILTERSTAGES = [PREFILTER, CARBONFILTER, PREFILTER_HEAVY_DUTY]
 
     DEFAULT_PROFILE = {
         CARBONFILTER: [
             {
-                ProfileParameters.LIFESPAN.value: CARBON_LIFESPAN_FALLBACK,
-                ProfileParameters.SHOPIFY_LINK.value: "products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+                "lifespan": CARBON_LIFESPAN_FALLBACK,
+                "shopify_link": "products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
             }
         ],
         PREFILTER: [
             {
-                ProfileParameters.LIFESPAN.value: PREFILTER_LIFESPAN_FALLBACK,
-                ProfileParameters.SHOPIFY_LINK.value: "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
-                ProfileParameters.HEAVY_DUTY_LIFESPAN.value: PREFILTER_LIFESPAN_FALLBACK,
-                ProfileParameters.HEAVY_DUTY_SHOPIFY_LINK.value: "products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+                "lifespan": PREFILTER_LIFESPAN_FALLBACK,
+                "shopify_link": "products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
+            }
+        ],
+        PREFILTER_HEAVY_DUTY: [
+            {
+                "lifespan": PREFILTER_LIFESPAN_FALLBACK,
+                "shopify_link": "products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page",
             }
         ],
         "prefilter_stages": 1,
         "carbonfilter_stages": 1,
+        "prefilter_heavy_duty_stages": 1,
     }
+
+    class ProfileParameters(Enum):
+        SHOPIFY_LINK = "shopify_link"
+        LIFESPAN = "lifespan"
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.airfilter")
@@ -156,27 +159,30 @@ class AirFilter(object):
             }
         return None
 
-    def set_airfilter(self, model_id, serial):
-        """Sets the air filter.
+    @serial.setter
+    def serial(self, serial):
+        """Sets the serial of the air filter.
+
+        Args:
+            serial (str): Serial of the air filter
+        """
+        if serial != self._serial:
+            self._serial = serial
+            self._plugin.send_mrb_state()
+
+    @model_id.setter
+    def model_id(self, model_id):
+        """Sets the model id of the air filter.
 
         Args:
             model_id (int): Model id of the air filter
-            serial (str): Serial of the air filter
         """
-        if (
-            serial is not None
-            and model_id is not None
-            and (serial != self._serial or model_id != self._model_id)
-        ):
+        # if model id is not the same as before, reset data
+        if self._model_id != model_id:
             self.reset_data()
-            self._serial = serial
             self._model_id = model_id
+            self._plugin.send_mrb_state()
             self._load_current_profile()
-            self._airfilter_changed()
-
-    def _airfilter_changed(self):
-        self._plugin.send_mrb_state()
-        self._plugin._event_bus.fire(MrBeamEvents.AIRFILTER_CHANGED)
 
     def set_pressure(
         self,
@@ -333,7 +339,7 @@ class AirFilter(object):
             self._logger.error("filter_stage {} is not known".format(filter_stage))
             return None
 
-        if filter_stage == self.PREFILTER:
+        if filter_stage in {self.PREFILTER, self.PREFILTER_HEAVY_DUTY}:
             fallbackvalue = self.PREFILTER_LIFESPAN_FALLBACK
         elif filter_stage == self.CARBONFILTER:
             fallbackvalue = self.CARBON_LIFESPAN_FALLBACK
@@ -342,22 +348,25 @@ class AirFilter(object):
             self._logger.warn(
                 "The selected filter stage does not have a fallback value, we will use 0 instead"
             )
-
-        lifespan_key = self.ProfileParameters.LIFESPAN.value
-        if (
-            self.heavy_duty_prefilter_enabled()
-            and not self._is_lifespan_value_not_present(
-                current_airfilter_profile,
-                filter_stage,
-                stage_id,
-                self.ProfileParameters.HEAVY_DUTY_LIFESPAN.value,
-            )
-        ):
-            self._logger.debug("use heavy duty lifespan")
-            lifespan_key = self.ProfileParameters.HEAVY_DUTY_LIFESPAN.value
         # Handle the exceptions
-        if self._is_lifespan_value_not_present(
-            current_airfilter_profile, filter_stage, stage_id, lifespan_key
+        if (
+            (isinstance(current_airfilter_profile, dict) is False)
+            or (filter_stage not in current_airfilter_profile)
+            or (isinstance(current_airfilter_profile[filter_stage], list) is False)
+            or (len(current_airfilter_profile[filter_stage]) < stage_id + 1)
+            or (
+                isinstance(current_airfilter_profile[filter_stage][stage_id], dict)
+                is False
+            )
+            or (
+                isinstance(
+                    current_airfilter_profile[filter_stage][stage_id][
+                        self.ProfileParameters.LIFESPAN.value
+                    ],
+                    int,
+                )
+                is False
+            )
         ):
             # Apply fallback
             self._logger.error(
@@ -367,29 +376,9 @@ class AirFilter(object):
             )
             return fallbackvalue
         # Reaching here means, everything looks good
-        return current_airfilter_profile[filter_stage][stage_id][lifespan_key]
-
-    def _is_lifespan_value_not_present(
-        self, current_airfilter_profile, filter_stage, stage_id, lifespan_key
-    ):
-        return (
-            (isinstance(current_airfilter_profile, dict) is False)
-            or (filter_stage not in current_airfilter_profile)
-            or (isinstance(current_airfilter_profile[filter_stage], list) is False)
-            or (len(current_airfilter_profile[filter_stage]) < stage_id + 1)
-            or (
-                isinstance(current_airfilter_profile[filter_stage][stage_id], dict)
-                is False
-            )
-            or (lifespan_key not in current_airfilter_profile[filter_stage][stage_id])
-            or (
-                isinstance(
-                    current_airfilter_profile[filter_stage][stage_id][lifespan_key],
-                    int,
-                )
-                is False
-            )
-        )
+        return current_airfilter_profile[filter_stage][stage_id][
+            self.ProfileParameters.LIFESPAN.value
+        ]
 
     def get_lifespans(self, filter_stage):
         """Returns the lifespan of the given filter stage and sub stages.
@@ -402,6 +391,12 @@ class AirFilter(object):
         """
         self._logger.debug("get lifespans of filter_stage: {}".format(filter_stage))
         current_airfilter_profile = self.profile
+        if filter_stage == self.PREFILTER and self.heavy_duty_prefilter_enabled():
+            self._logger.debug("heavy duty prefilter is enabled")
+            filter_stage = self.PREFILTER_HEAVY_DUTY
+        else:
+            if filter_stage == self.PREFILTER:
+                self._logger.debug("heavy duty prefilter is disabled")
         if current_airfilter_profile is not None:
             stages = current_airfilter_profile.get(filter_stage + "_stages")
             if stages is not None:
@@ -422,20 +417,16 @@ class AirFilter(object):
         )
         return None
 
-    def get_shopify_links(self, filter_stage, heavy_duty=False):
+    def get_shopify_links(self, filter_stage):
         """Returns the shopify links of the given filter stage and sub stages.
 
         Args:
             filter_stage (str): name of the filter stage [FILTERSTAGES]
-            heavy_duty (bool): True if heavy duty prefilter is enabled
 
         Returns:
             list: list of shopify links of the given filter stage or None if the profile is None
         """
         current_airfilter_profile = self.profile
-        shopify_link_key = self.ProfileParameters.SHOPIFY_LINK.value
-        if heavy_duty:
-            shopify_link_key = self.ProfileParameters.HEAVY_DUTY_SHOPIFY_LINK.value
         if current_airfilter_profile is not None:
             stages = current_airfilter_profile.get(filter_stage + "_stages")
             if stages is not None:
@@ -445,7 +436,7 @@ class AirFilter(object):
                         shopify_links.append(
                             gettext("https://www.mr-beam.org/en/")
                             + current_airfilter_profile[filter_stage][i][
-                                shopify_link_key
+                                self.ProfileParameters.SHOPIFY_LINK.value
                             ]
                         )
                     except KeyError:
