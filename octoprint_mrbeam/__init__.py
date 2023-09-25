@@ -514,7 +514,7 @@ class MrBeamPlugin(
         )
 
     def on_settings_load(self):
-        self._send_maintenance_information(trigger="settings_load")
+        self._send_maintenance_information(trigger=MrBeamEvents.SETTINGS_LOAD)
         return dict(
             svgDPI=self._settings.get(["svgDPI"]),
             dxfScale=self._settings.get(["dxfScale"]),
@@ -605,7 +605,7 @@ class MrBeamPlugin(
         )
 
     def on_airfilter_changed(self, *args, **kwargs):
-        self._send_maintenance_information(trigger="airfilter_changed")
+        self._send_maintenance_information(trigger=MrBeamEvents.AIRFILTER_CHANGED)
 
     def _send_maintenance_information(self, trigger=None):
         self._plugin_manager.send_plugin_message(
@@ -697,7 +697,9 @@ class MrBeamPlugin(
 
     def set_heavy_duty_prefilter(self, value):
         if value != self._settings.get(["heavyDutyPrefilter"]):
-            self._send_maintenance_information(trigger="heavyDutyPrefilter_changed")
+            self._send_maintenance_information(
+                trigger=MrBeamEvents.HEAVY_DUTY_PREFILTER_CHANGED
+            )
         self._settings.set_boolean(["heavyDutyPrefilter"], value)
 
     def is_heavy_duty_prefilter_enabled(self):

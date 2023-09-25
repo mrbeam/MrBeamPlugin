@@ -494,7 +494,7 @@ $(function () {
                 return;
             }
             if ("maintenance_information" in data) {
-                maintenanceInformation = data.maintenance_information;
+                const maintenanceInformation = data.maintenance_information;
                 console.log(
                     "Maintenance information received",
                     maintenanceInformation
