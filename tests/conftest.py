@@ -65,5 +65,6 @@ def mrbeam_plugin():
     mrbeam_plugin._event_bus.fire(Events.STARTUP)
     mrbeam_plugin.user_notification_system = MagicMock()
     mrbeam_plugin._printer = MagicMock()
+    mrbeam_plugin.airfilter = MagicMock()
 
     yield mrbeam_plugin
