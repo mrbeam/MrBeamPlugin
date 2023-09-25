@@ -302,16 +302,12 @@ $(function () {
                     OctoPrint.simpleApiCommand(
                         "mrbeam",
                         "reset_prefilter_usage",
-                        {}
-                    )
-                        .done(function () {
-                            self.prefilterUsage(0);
-                        })
-                        .fail(function () {
-                            console.error(
-                                "Unable to reset pre-filter usage counter."
-                            );
-                        });
+                        { serial: self.mrb_state.airfilter_serial() }
+                    ).fail(function () {
+                        console.error(
+                            "Unable to reset pre-filter usage counter."
+                        );
+                    });
                 });
         };
 
@@ -335,16 +331,12 @@ $(function () {
                     OctoPrint.simpleApiCommand(
                         "mrbeam",
                         "reset_carbon_filter_usage",
-                        {}
-                    )
-                        .done(function () {
-                            self.carbonFilterUsage(0);
-                        })
-                        .fail(function () {
-                            console.error(
-                                "Unable to reset carbon filter usage counter."
-                            );
-                        });
+                        { serial: self.mrb_state.airfilter_serial() }
+                    ).fail(function () {
+                        console.error(
+                            "Unable to reset carbon filter usage counter."
+                        );
+                    });
                 });
         };
 
@@ -364,15 +356,11 @@ $(function () {
                         "mrbeam",
                         "reset_laser_head_usage",
                         {}
-                    )
-                        .done(function () {
-                            self.laserHeadUsage(0);
-                        })
-                        .fail(function () {
-                            console.error(
-                                "Unable to reset laser head usage counter."
-                            );
-                        });
+                    ).fail(function () {
+                        console.error(
+                            "Unable to reset laser head usage counter."
+                        );
+                    });
                 });
         };
 
