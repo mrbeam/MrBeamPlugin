@@ -1,13 +1,11 @@
 #No fan or airfilter 1 system
 prefilter_stages: 1
 carbonfilter_stages: 1
-prefilter_heavy_duty_stages: 1
 prefilter:
   - lifespan: 40
     shopify_link: 'products/vorfilter-mrbeam?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'
-prefilter_heavy_duty:
-  - lifespan: 80
-    shopify_link: 'products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'
+    heavy_duty_lifespan: 80
+    heavy_duty_shopify_link: 'products/mr-beam-vorfilter-kartusche-5er-pack?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'
 carbonfilter:
   - lifespan: 280
     shopify_link: 'products/aktivkohlefilter-inklusive-zehn-vorfilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page'
