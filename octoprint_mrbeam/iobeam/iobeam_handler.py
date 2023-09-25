@@ -1111,8 +1111,9 @@ class IoBeamHandler(object):
             pressure_dataset,
             temperature_dataset,
         )
-        self._airfilter.serial = device_dataset.get("serial_num")
-        self._airfilter.model_id = device_dataset.get("type")
+        self._airfilter.set_airfilter(
+            serial=device_dataset.get("serial_num"), model_id=device_dataset.get("type")
+        )
         self._airfilter.set_pressure(
             pressure1=pressure_dataset.get("pressure1"),
             pressure2=pressure_dataset.get("pressure2"),

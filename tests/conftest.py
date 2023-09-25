@@ -67,5 +67,6 @@ def mrbeam_plugin():
     mrbeam_plugin._printer = MagicMock()
     mrbeam_plugin.hw_malfunction_handler = MagicMock()
     mrbeam_plugin.is_boot_grace_period = MagicMock(return_value=False)
+    mrbeam_plugin.airfilter = MagicMock()
 
     yield mrbeam_plugin

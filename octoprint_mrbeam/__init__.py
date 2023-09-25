@@ -234,6 +234,9 @@ class MrBeamPlugin(
         self._event_bus.subscribe(
             MrBeamEvents.LASER_HEAD_READ, self._on_laserhead_ready
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.AIRFILTER_CHANGED, self.on_airfilter_changed
+        )
 
         self.start_time_ntp_timer()
 
@@ -511,6 +514,7 @@ class MrBeamPlugin(
         )
 
     def on_settings_load(self):
+        self._send_maintenance_information(trigger=MrBeamEvents.SETTINGS_LOAD)
         return dict(
             svgDPI=self._settings.get(["svgDPI"]),
             dxfScale=self._settings.get(["dxfScale"]),
@@ -569,25 +573,6 @@ class MrBeamPlugin(
                 model_id=self.laserhead_handler.get_current_used_lh_model_id(),
                 model_supported=self.laserhead_handler.is_current_used_lh_model_supported(),
             ),
-            usage=dict(
-                totalUsage=self.usage_handler.get_total_usage(),
-                prefilterUsage=self.usage_handler.get_prefilter_usage(),
-                carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
-                laserHeadUsage=self.usage_handler.get_laser_head_usage(),
-                gantryUsage=self.usage_handler.get_gantry_usage(),
-                prefilterLifespans=self.airfilter.get_lifespans(AirFilter.PREFILTER),
-                carbonfilterLifespans=self.airfilter.get_lifespans(
-                    AirFilter.CARBONFILTER
-                ),
-                carbonfilterShopify=self.airfilter.get_shopify_links(
-                    AirFilter.CARBONFILTER
-                ),
-                prefilterShopify=self.airfilter.get_shopify_links(AirFilter.PREFILTER),
-                prefilterHeavyDutyShopify=self.airfilter.get_shopify_links(
-                    AirFilter.PREFILTER_HEAVY_DUTY
-                ),
-                laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
-            ),
             heavyDutyPrefilter=self.is_heavy_duty_prefilter_enabled(),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
@@ -598,6 +583,34 @@ class MrBeamPlugin(
                 fps=self._settings.get(["leds", "fps"]),
             ),
             isFirstRun=self.isFirstRun(),
+        )
+
+    def _get_usage_data_dict(self):
+        return dict(
+            totalUsage=self.usage_handler.get_total_usage(),
+            prefilterUsage=self.usage_handler.get_prefilter_usage(),
+            carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
+            laserHeadUsage=self.usage_handler.get_laser_head_usage(),
+            gantryUsage=self.usage_handler.get_gantry_usage(),
+            prefilterLifespans=self.airfilter.get_lifespans(AirFilter.PREFILTER),
+            carbonfilterLifespans=self.airfilter.get_lifespans(AirFilter.CARBONFILTER),
+            carbonfilterShopify=self.airfilter.get_shopify_links(
+                AirFilter.CARBONFILTER
+            ),
+            prefilterShopify=self.airfilter.get_shopify_links(AirFilter.PREFILTER),
+            prefilterHeavyDutyShopify=self.airfilter.get_shopify_links(
+                AirFilter.PREFILTER, heavy_duty=True
+            ),
+            laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
+        )
+
+    def on_airfilter_changed(self, *args, **kwargs):
+        self._send_maintenance_information(trigger=MrBeamEvents.AIRFILTER_CHANGED)
+
+    def _send_maintenance_information(self, trigger=None):
+        self._plugin_manager.send_plugin_message(
+            "mrbeam",
+            dict(maintenance_information=self._get_usage_data_dict(), trigger=trigger),
         )
 
     def on_settings_save(self, data):
@@ -683,6 +696,10 @@ class MrBeamPlugin(
             octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     def set_heavy_duty_prefilter(self, value):
+        if value != self._settings.get(["heavyDutyPrefilter"]):
+            self._send_maintenance_information(
+                trigger=MrBeamEvents.HEAVY_DUTY_PREFILTER_CHANGED
+            )
         self._settings.set_boolean(["heavyDutyPrefilter"], value)
 
     def is_heavy_duty_prefilter_enabled(self):
