@@ -157,9 +157,6 @@ class UsageHandler(object):
         self._plugin.iobeam.subscribe(
             IoBeamValueEvents.LASERHEAD_CHANGED, self._event_laserhead_changed
         )
-        self._event_bus.subscribe(
-            MrBeamEvents.AIRFILTER_CHANGED, self._event_airfilter_changed
-        )
         self._event_bus.subscribe(IoBeamEvents.FAN_CONNECTED, self._event_fan_connected)
 
     def _event_laser_head_read(self, event, payload):
@@ -219,21 +216,6 @@ class UsageHandler(object):
         self._logger.debug("Laserhead changed recalculate dust mapping")
         self._calculate_dust_mapping()
 
-    def _event_airfilter_changed(self, event, payload):
-        """
-        Event handler for airfilter changed event. Will be triggered if the airfilter
-        changed. It triggers the migration of the airfilter usage data from the old
-        format to the new format.
-
-        Args:
-            event: Event that triggered the handler
-            payload: Payload of the event
-
-        Returns:
-            None
-        """
-        # self._migrate_airfilterfilter_data_if_necessary()
-
     def _event_fan_connected(self, event, payload):
         self._logger.debug("Fan connected, trigger migration of airfilter usage data.")
         self._migrate_airfilterfilter_data_if_necessary()
@@ -246,7 +228,7 @@ class UsageHandler(object):
                 job_duration = self._calculate_ntp_fix_compensation(job_duration)
 
             dust_factor = self._calculate_dust_factor()
-            self._set_job_time(self.TOTAL_KEY, self.start_time_total + job_duration)
+            self._set_job_time([self.TOTAL_KEY], self.start_time_total + job_duration)
             self._set_job_time(
                 [self.LASER_HEAD_KEY, self._laser_head_serial],
                 self.start_time_laser_head + job_duration * dust_factor,
@@ -380,7 +362,7 @@ class UsageHandler(object):
         Returns:
             int: job time in seconds
         """
-        return usage_data.get(self.JOB_TIME_KEY, 0)
+        return usage_data.get(self.JOB_TIME_KEY, None)
 
     def _get_airfilter_serial(self):
         """
