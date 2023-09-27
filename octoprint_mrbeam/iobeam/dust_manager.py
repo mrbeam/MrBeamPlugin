@@ -184,7 +184,7 @@ class DustManager(object):
         else:
             err = True
 
-        self._connected = args["connected"]
+        self._set_connected(args["connected"])
 
         if self._connected is not None:
             self._unboost_timer_interval()
@@ -196,6 +196,23 @@ class DustManager(object):
         self._send_dust_to_analytics(self._dust)
 
         self._last_rpm_values.append(self._rpm)
+
+    def _set_connected(self, connected):
+        """
+        Sets the connected state and fires an event if the state changed.
+
+        Args:
+            connected: True if the fan is connected, False otherwise
+
+        Returns:
+            None
+        """
+        if self._connected != connected:
+            if connected:
+                self._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
+            else:
+                self._event_bus.fire(IoBeamEvents.FAN_DISCONNECTED)
+        self._connected = connected
 
     def _on_command_response(self, args):
         self._logger.debug("Fan command response: %s", args)

@@ -40,6 +40,8 @@ class IoBeamEvents(object):
     INTERLOCK_CLOSED = "iobeam.interlock.closed"
     LID_OPENED = "iobeam.lid.opened"
     LID_CLOSED = "iobeam.lid.closed"
+    FAN_CONNECTED = "iobeam.fan.connected"
+    FAN_DISCONNECTED = "iobeam.fan.disconnected"
 
 
 class IoBeamValueEvents(object):
@@ -48,7 +50,6 @@ class IoBeamValueEvents(object):
 
     LASER_TEMP = "iobeam.laser.temp"
     DUST_VALUE = "iobeam.dust.value"
-    RPM_VALUE = "iobeam.rpm.value"
     RPM_VALUE = "iobeam.rpm.value"
     STATE_VALUE = "iobeam.state.value"
     DYNAMIC_VALUE = "iobeam.dynamic.value"
