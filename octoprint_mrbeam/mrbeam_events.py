@@ -3,8 +3,6 @@ from octoprint.events import Events as OctoPrintEvents
 
 # NOTICE: This is used by the camera plugin
 class MrBeamEvents(object):
-
-    HEAVY_DUTY_PREFILTER_CHANGED = "HeavyDutyPrefilterChanged"
     SETTINGS_LOAD = "SettingsLoad"
     MRB_PLUGIN_INITIALIZED = "MrbPluginInitialized"
     BOOT_GRACE_PERIOD_END = "BootGracePeriodEnd"
@@ -91,6 +89,12 @@ class MrBeamEvents(object):
 
     # Airfilter
     AIRFILTER_CHANGED = "AirfilterChanged"
+    HEAVY_DUTY_PREFILTER_CHANGED = "HeavyDutyPrefilterChanged"
+
+    # Usage Data
+    USAGE_DATA_RESET_PREFILTER = "UsageDataResetPrefilter"
+    USAGE_DATA_RESET_CARBON_FILTER = "UsageDataResetCarbonFilter"
+    USAGE_DATA_RESET_LASER_HEAD = "UsageDataResetLaserHead"
 
     @classmethod
     def register_with_octoprint(cls):
