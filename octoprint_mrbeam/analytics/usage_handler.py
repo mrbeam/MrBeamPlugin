@@ -317,16 +317,44 @@ class UsageHandler(object):
         return airfilter_usage_data if airfilter_usage_data is not None else {}
 
     def _get_airfilter_prefilter_usage_data(self, serial=None):
+        """
+        Get the usage data for the prefilter of the airfilter with the given serial.
+
+        Args:
+            serial: Serial of the airfilter
+
+        Returns:
+            (dict): Usage data for the prefilter of the airfilter with the given serial
+        """
         if serial is None:
             serial = self._get_airfilter_serial()
         return self._get_airfilter_usage_data(serial).get(self.PREFILTER_KEY, {})
 
     def _get_airfilter_carbon_filter_usage_data(self, serial=None):
+        """
+        Get the usage data for the carbon filter of the airfilter with the given serial.
+
+        Args:
+            serial: Serial of the airfilter
+
+        Returns:
+            (dict): Usage data for the carbon filter of the airfilter with the given serial
+        """
         if serial is None:
             serial = self._get_airfilter_serial()
         return self._get_airfilter_usage_data(serial).get(self.CARBON_FILTER_KEY, {})
 
     def _set_job_time(self, component, job_time):
+        """
+        Set the job time for the given component.
+
+        Args:
+            component: Component to set the job time for
+            job_time: job time in seconds
+
+        Returns:
+            None
+        """
         element = self._usage_data
         if not isinstance(component, list):
             component = [component]
@@ -344,9 +372,10 @@ class UsageHandler(object):
 
     def _get_job_time(self, usage_data):
         """
+        Get the job time from the given usage data.
 
         Args:
-            usage_data:
+            usage_data: Usage data to get the job time from
 
         Returns:
             int: job time in seconds
@@ -813,7 +842,7 @@ class UsageHandler(object):
 
     def _migrate_airfilterfilter_data_if_necessary(self):
         """
-        Migrate the job time from the old format to the new one for AirFilter2
+        Trigger the migration of the old airfilter data to the new structure if necessary.
 
         Returns:
             None
@@ -830,6 +859,12 @@ class UsageHandler(object):
             migration_timer.start()
 
     def _migrate_old_airfilter_structure_to_new(self):
+        """
+        Migrate the job time from the old format to the new one for AirFilter2
+
+        Returns:
+            None
+        """
         # get data from old structure
         if self._airfilter.model_id not in AirFilter.AIRFILTER3_MODELS:
             serial = self._get_airfilter_serial()

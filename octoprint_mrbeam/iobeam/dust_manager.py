@@ -198,6 +198,15 @@ class DustManager(object):
         self._last_rpm_values.append(self._rpm)
 
     def _set_connected(self, connected):
+        """
+        Sets the connected state and fires an event if the state changed.
+
+        Args:
+            connected: True if the fan is connected, False otherwise
+
+        Returns:
+            None
+        """
         if self._connected != connected:
             if connected:
                 self._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
