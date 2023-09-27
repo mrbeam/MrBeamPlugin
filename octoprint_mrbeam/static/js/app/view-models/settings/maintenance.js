@@ -25,8 +25,6 @@ $(function () {
         );
         self.LASER_HEAD = gettext("laser head");
         self.GANTRY = gettext("mechanics");
-        self.PREFILTER_LIFESPAN = 40;
-        self.CARBON_FILTER_LIFESPAN = 280;
         self.GANTRY_LIFESPAN = 100;
         self.WARN_IF_CRITICAL_PERCENT = 70;
         self.WARN_IF_USED_PERCENT = 100;
@@ -37,8 +35,6 @@ $(function () {
         self.carbonFilterUsage = ko.observable(0);
         self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
-        self.prefilterLifespans = ko.observable(0);
-        self.carbonfilterLifespans = ko.observable(0);
         self.prefilterShopify = ko.observable(0);
         self.carbonfilterShopify = ko.observable(0);
         self.prefilterHeavyDutyShopify = ko.observable(0);
@@ -62,12 +58,6 @@ $(function () {
         self.totalUsageHours = ko.computed(function () {
             return Math.floor(self.totalUsage() / 36) / 100;
         });
-        self.prefilterUsageHours = ko.computed(function () {
-            return Math.floor(self.prefilterUsage() / 3600);
-        });
-        self.carbonFilterUsageHours = ko.computed(function () {
-            return Math.floor(self.carbonFilterUsage() / 3600);
-        });
         self.laserHeadUsageHours = ko.computed(function () {
             return Math.floor(self.laserHeadUsage() / 3600);
         });
@@ -79,27 +69,14 @@ $(function () {
             return Math.min(roundDownToNearest10(val), 100);
         };
 
-        self.prefilterLifespan = function (stage) {
-            return self.prefilterLifespans() != null
-                ? self.prefilterLifespans()[stage]
-                : null;
-        };
-
-        self.carbonfilterLifespan = function (stage) {
-            return self.carbonfilterLifespans() != null
-                ? self.carbonfilterLifespans()[stage]
-                : null;
-        };
-
         self.prefilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-                (self.prefilterUsageHours() / self.prefilterLifespan(0)) * 100
+                self.prefilterUsage()
             );
         });
         self.carbonFilterPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(
-                (self.carbonFilterUsageHours() / self.carbonfilterLifespan(0)) *
-                    100
+                self.prefilterUsage()
             );
         });
         self.laserHeadPercent = ko.computed(function () {
@@ -500,12 +477,6 @@ $(function () {
                     maintenanceInformation.laserHeadLifespan
                 );
 
-                self.prefilterLifespans(
-                    maintenanceInformation.prefilterLifespans
-                );
-                self.carbonfilterLifespans(
-                    maintenanceInformation.carbonfilterLifespans
-                );
                 self.carbonfilterShopify(
                     maintenanceInformation.carbonfilterShopify
                 );

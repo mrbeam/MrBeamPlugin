@@ -5,6 +5,7 @@ import unicodedata
 
 import yaml
 from octoprint.util import dict_merge
+from scipy.interpolate import interp1d
 
 from octoprint_mrbeam import AirFilter
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents, IoBeamEvents
@@ -30,6 +31,8 @@ class UsageHandler(object):
     DEFAULT_PREFILTER_LIFESPAN = 40
     HEAVY_DUTY_PREFILTER_LIFESPAN = 80
     MIGRATION_WAIT = 3  # in seconds
+    MAX_PRESSURE = 3000
+    MAX_FAN_TEST_RPM = 10000
 
     JOB_TIME_KEY = "job_time"
     AIRFILTER_KEY = "airfilter"
@@ -41,7 +44,34 @@ class UsageHandler(object):
     GANTRY_KEY = "gantry"
     COMPRESSOR_KEY = "compressor"
     SUCCESSFUL_JOBS_KEY = "succ_jobs"
+    PRESSURE_KEY = "pressure"
+    FAN_TEST_RPM_KEY = "fan_test_rpm"
     UNKNOWN_SERIAL_KEY = "no_serial"
+
+    AF3_PRESSURE_GRAPH_CARBON_FILTER = [
+        (0, 0),
+        (600, 20),
+        (1200, 40),
+        (1800, 60),
+        (2400, 80),
+        (MAX_PRESSURE, 100),
+    ]  # TODO need to be replaced with actual values
+    AF3_PRESSURE_GRAPH_PREFILTER = [
+        (0, 0),
+        (600, 20),
+        (1200, 40),
+        (1800, 60),
+        (2400, 80),
+        (MAX_PRESSURE, 100),
+    ]  # TODO need to be replaced with actual values
+    AF3_RPM_GRAPH = [
+        (8000, 0),
+        (8400, 20),
+        (8800, 40),
+        (9200, 60),
+        (9600, 80),
+        (MAX_FAN_TEST_RPM, 100),
+    ]  # TODO need to be replaced with actual values
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.usage")
@@ -125,8 +155,8 @@ class UsageHandler(object):
                 self.get_duration_humanreadable(
                     self._usage_data[self.TOTAL_KEY][self.JOB_TIME_KEY]
                 ),
-                self.get_duration_humanreadable(self.get_prefilter_usage()),
-                self.get_duration_humanreadable(self.get_carbon_filter_usage()),
+                self.get_duration_humanreadable(self._get_prefilter_usage_time()),
+                self.get_duration_humanreadable(self._get_carbon_filter_usage_time()),
                 self.get_duration_humanreadable(
                     self._usage_data[self.LASER_HEAD_KEY][self._laser_head_serial][
                         self.JOB_TIME_KEY
@@ -169,8 +199,8 @@ class UsageHandler(object):
     def _event_start(self, event, payload):
         self._load_usage_data()
         self.start_time_total = self._usage_data[self.TOTAL_KEY][self.JOB_TIME_KEY]
-        self.start_time_prefilter = self.get_prefilter_usage()
-        self.start_time_carbon_filter = self.get_carbon_filter_usage()
+        self.start_time_prefilter = self._get_prefilter_usage_time()
+        self.start_time_carbon_filter = self._get_carbon_filter_usage_time()
         self.start_time_laser_head = self._usage_data[self.LASER_HEAD_KEY][
             self._laser_head_serial
         ][self.JOB_TIME_KEY]
@@ -466,8 +496,8 @@ class UsageHandler(object):
         try:
             usage_data = dict(
                 total=self._usage_data[self.TOTAL_KEY][self.JOB_TIME_KEY],
-                prefilter=self.get_prefilter_usage(),
-                carbon_filter=self.get_carbon_filter_usage,
+                prefilter=self._get_prefilter_usage_time(),
+                carbon_filter=self._get_carbon_filter_usage_time,
                 laser_head=dict(
                     usage=self._usage_data[self.LASER_HEAD_KEY][
                         self._laser_head_serial
@@ -487,21 +517,21 @@ class UsageHandler(object):
                 "Could not write analytics for usage, missing key: {e}".format(e=e)
             )
 
-    def get_prefilter_usage(self):
+    def _get_prefilter_usage_time(self):
         """
-        Get the usage of the prefilter in seconds.
+        Get the usage time of the prefilter in seconds.
 
         Returns:
-            int: usage of the prefilter in seconds
+            int: usage time of the prefilter in seconds
         """
         return self._get_job_time(self._get_airfilter_prefilter_usage_data())
 
-    def get_carbon_filter_usage(self):
+    def _get_carbon_filter_usage_time(self):
         """
-        Get the usage of the carbon filter in seconds.
+        Get the usage time of the carbon filter in seconds.
 
         Returns:
-            int: usage of the carbon filter in seconds
+            int: usage time of the carbon filter in seconds
         """
         return self._get_job_time(self._get_airfilter_carbon_filter_usage_data())
 
@@ -638,7 +668,7 @@ class UsageHandler(object):
             ][self.JOB_TIME_KEY]
             self._logger.info(
                 "Initializing prefilter usage time: {usage}".format(
-                    usage=self.get_prefilter_usage()
+                    usage=self._get_prefilter_usage_time()
                 )
             )
 
@@ -880,3 +910,221 @@ class UsageHandler(object):
                 prefilter, carbon_filter, serial
             )
         )
+
+    def get_carbon_filter_usage(self):
+        """
+        Calculate the usage of the carbon filter in percent.
+
+        Returns:
+            The usage of the carbon filter in percent.
+        """
+        if self._airfilter.model_id in AirFilter.AIRFILTER3_MODELS:
+            return self._calculate_af3_filter_usage(filter_stage=AirFilter.CARBONFILTER)
+        else:
+            return self._calculate_af2_filter_usage(filter_stage=AirFilter.PREFILTER)
+
+    def get_prefilter_usage(self):
+        """
+        Calculate the usage of the prefilter in percent.
+
+        Returns:
+            The usage of the prefilter in percent.
+        """
+        if self._airfilter.model_id in AirFilter.AIRFILTER3_MODELS:
+            return self._calculate_af3_filter_usage(filter_stage=AirFilter.PREFILTER)
+        else:
+            return self._calculate_af2_filter_usage(filter_stage=AirFilter.PREFILTER)
+
+    def _calculate_af2_filter_usage(self, filter_stage):
+        """
+        Calculate the usage of the given filter stage in percent.
+
+        Args:
+            filter_stage: The filter stage to calculate the usage for.
+
+        Returns:
+            The usage of the given filter stage in percent.
+        """
+        # get the correct data for the filter stage
+        if filter_stage == AirFilter.PREFILTER:
+            stage_usage_time = self._get_prefilter_usage_time()
+        elif filter_stage == AirFilter.CARBONFILTER:
+            stage_usage_time = self._get_carbon_filter_usage_time()
+        else:
+            return None
+
+        usage_time = stage_usage_time if stage_usage_time is not None else 0
+
+        # calculate the percentage
+        time_percentage = self._get_percentage_from_time(
+            usage_time, self._airfilter.get_lifespans(filter_stage)[0]
+        )
+
+        # calculate the total percentage
+        total_percentage = (
+            time_percentage  # currently we only take the time into account
+        )
+
+        return total_percentage
+
+    def _calculate_af3_filter_usage(self, filter_stage):
+        """
+        Calculate the usage of the given filter stage in percent.
+
+        Args:
+            filter_stage: The filter stage to calculate the usage for.
+
+        Returns:
+            The usage of the given filter stage in percent.
+        """
+        # get the correct data for the filter stage
+        if filter_stage == AirFilter.PREFILTER:
+            pressure_graph = self.AF3_PRESSURE_GRAPH_CARBON_FILTER
+            usage_data = self._get_airfilter_prefilter_usage_data()
+            stage_usage_time = self._get_prefilter_usage_time()
+        elif filter_stage == AirFilter.CARBONFILTER:
+            pressure_graph = self.AF3_PRESSURE_GRAPH_PREFILTER
+            usage_data = self._get_airfilter_carbon_filter_usage_data()
+            stage_usage_time = self._get_carbon_filter_usage_time()
+        else:
+            return None
+
+        # get the global values
+        pressure_loss = usage_data.get(self.PRESSURE_KEY, self.MAX_PRESSURE)
+        usage_time = stage_usage_time if stage_usage_time is not None else 0
+        rpm_filter_test = self._get_airfilter_carbon_filter_usage_data().get(
+            self.FAN_TEST_RPM_KEY, self.MAX_FAN_TEST_RPM
+        )  # this is saved in carbon filter stage
+
+        # calculate the percentages
+        pressure_percentage = self._get_precentage_from_interpolation(
+            pressure_graph, pressure_loss
+        )
+        time_percentage = self._get_percentage_from_time(
+            usage_time, self._airfilter.get_lifespans(filter_stage)[0]
+        )
+        rpm_percentage = self._get_precentage_from_interpolation(
+            self.AF3_RPM_GRAPH, rpm_filter_test
+        )
+
+        # calculate the total percentage
+        total_percentage = max(pressure_percentage, time_percentage)
+
+        self._logger.debug("pressure_percentage: {}".format(pressure_percentage))
+        self._logger.debug("time_percentage: {}".format(time_percentage))
+        self._logger.debug("rpm_percentage: {}".format(rpm_percentage))
+        self._logger.debug("total percentag: {}".format(total_percentage))
+
+        return max(min(total_percentage, 100), 0)  # limit percentage between 0 and 100
+
+    @staticmethod
+    def _get_precentage_from_interpolation(reference_points, value):
+        """
+        Calculate the percentage from the given points and value.
+
+        Args:
+            reference_points: list of tuples with x and y values for the interpolation
+            value: the value to calculate the percentage for
+
+        Returns:
+            The percentage for the given value.
+        """
+        # Separate x and y values from the known points
+        x_values, y_values = zip(*reference_points)
+
+        # Create a piecewise linear interpolation function
+        interp_function = interp1d(
+            x_values, y_values, kind="linear", fill_value="extrapolate"
+        )
+
+        percentage = float(interp_function(value))
+
+        return percentage
+
+    @staticmethod
+    def _get_percentage_from_time(usage_time, lifespan):
+        """
+        Calculate the percentage of the lifespan that has been used.
+
+        Args:
+            usage_time: usage time in seconds
+            lifespan: lifespan in hours
+
+        Returns:
+            float: percentage of lifespan that has been used
+        """
+        return (usage_time / 3600) / lifespan * 100
+
+    def set_pressure(self, pressure, filter_stage):
+        """
+        Set the pressure of the airfilter.
+
+        Args:
+            pressure: The pressure of the airfilter.
+            filter_stage: The filter stage to set the pressure for.
+        """
+        if (
+            self._airfilter.model_id in AirFilter.AIRFILTER3_MODELS
+            and pressure is not None
+            # TODO and if job is running
+        ):
+            if filter_stage == AirFilter.CARBONFILTER:
+                current_pressure_value = self._get_airfilter_carbon_filter_usage_data()[
+                    self.PRESSURE_KEY
+                ]
+                stage_key = self.CARBON_FILTER_KEY
+            elif filter_stage == AirFilter.PREFILTER:
+                current_pressure_value = self._get_airfilter_prefilter_usage_data()[
+                    self.PRESSURE_KEY
+                ]
+                stage_key = self.PREFILTER_KEY
+            else:
+                self._logger.error("Unknown filter stage: {}".format(filter_stage))
+                return
+            percent_difference = (
+                abs(current_pressure_value - pressure) / current_pressure_value * 100
+            )
+            if pressure > current_pressure_value:
+                self._logger.info(
+                    "Pressure value is higher than the current pressure value. Updating the pressure value."
+                )
+                self._update_pressure_value(pressure, stage_key)
+            elif pressure < current_pressure_value and percent_difference > 20:
+                self._logger.info(
+                    "Pressure drop of 20% detected reset time and pressure value."
+                )
+                self._update_pressure_value(pressure, stage_key)
+                if filter_stage == AirFilter.CARBONFILTER:
+                    self.reset_carbon_filter_usage(self._get_airfilter_serial())
+                elif filter_stage == AirFilter.PREFILTER:
+                    self.reset_prefilter_usage(self._get_airfilter_serial())
+
+    def set_fan_test_rpm(self, rpm):
+        """
+        Set the fan test rpm of the airfilter.
+
+        Args:
+            rpm: The rpm during the fan test.
+
+        Returns:
+            The percentage of the lifespan that has been used.
+        """
+        if self._airfilter.model_id in AirFilter.AIRFILTER3_MODELS and rpm is not None:
+            self._usage_data[self.AIRFILTER_KEY][self._get_airfilter_serial()][
+                AirFilter.CARBONFILTER
+            ][self.FAN_TEST_RPM_KEY] = rpm
+
+    def _update_pressure_value(self, pressure, filter_stage):
+        """
+        Update the pressure value of the given filter stage.
+
+        Args:
+            pressure: The pressure value to update.
+            filter_stage:  The filter stage to update the pressure value for.
+
+        Returns:
+            The percentage of the lifespan that has been used.
+        """
+        self._usage_data[self.AIRFILTER_KEY][self._get_airfilter_serial()][
+            filter_stage
+        ][self.PRESSURE_KEY] = pressure

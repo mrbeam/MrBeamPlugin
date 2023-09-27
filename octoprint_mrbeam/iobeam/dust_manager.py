@@ -46,6 +46,7 @@ class DustManager(object):
 
     FAN_TEST_RPM_PERCENTAGE = 50
     FAN_TEST_DURATION = 35  # seconds
+    PRESSURE_VALUES_LIST_SIZE = 5
     FAN_NOT_SPINNING_TIMEOUT = 10  # time in seconds before reporting the error
     FAN_DATA_MISSING_TIMEOUT = 10  # time in seconds before reporting the error
 
@@ -83,7 +84,7 @@ class DustManager(object):
         self._fan_not_spinning_reported = None
 
         self._last_rpm_values = deque(maxlen=5)
-        self._last_pressure_values = deque(maxlen=5)
+        self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
         self._job_dust_values = []
 
         self.extraction_limit = 0.3
@@ -302,9 +303,14 @@ class DustManager(object):
                     rpm_val=list(self._last_rpm_values),
                     fan_state=self._state,
                     usage_count=self._usage_handler.get_total_usage(),
-                    prefilter_count=self._usage_handler.get_prefilter_usage(),
-                    carbon_filter_count=self._usage_handler.get_carbon_filter_usage(),
+                    prefilter_count=self._usage_handler._get_prefilter_usage_time(),
+                    carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
                     pressure_val=list(self._last_pressure_values),
+                )
+                # set rpm of test fan to the average of the messured values
+                self._usage_handler.set_fan_test_rpm(
+                    sum(list(self._last_pressure_values))
+                    / self.PRESSURE_VALUES_LIST_SIZE
                 )
                 self._analytics_handler.add_fan_rpm_test(data)
 

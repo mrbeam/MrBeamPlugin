@@ -70,6 +70,7 @@ class AirFilter(object):
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.airfilter")
         self._plugin = plugin
+        self._event_bus = plugin._event_bus
         self._serial = None
         self._model_id = None
         self._pressure1 = None
@@ -81,8 +82,19 @@ class AirFilter(object):
         self._temperature3 = None
         self._temperature4 = None
         self._profile = None
+        self._usage_handler = None
 
         self._load_current_profile()
+
+        self._subscribe_to_events()
+
+    def _subscribe_to_events(self):
+        self._event_bus.subscribe(
+            MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
+        )
+
+    def _on_mrbeam_plugin_initialized(self):
+        self._usage_handler = self._plugin.usage_handler
 
     @property
     def model(self):
@@ -205,6 +217,34 @@ class AirFilter(object):
             self._pressure3 = pressure3
         if pressure4 is not None:
             self._pressure4 = pressure4
+
+        if pressure2 is not None and pressure3 is not None and pressure4 is not None:
+            prefilter_pressure = self._pressure2 - self._pressure3
+            carbon_filter_pressure = self._pressure3 - self._pressure4
+            self._usage_handler.set_pressure(carbon_filter_pressure, self.CARBONFILTER)
+            self._usage_handler.set_pressure(prefilter_pressure, self.PREFILTER)
+
+    @property
+    def current_pressure_drop_mainfilter(self):
+        """Returns the pressure drop of the main filter.
+
+        Returns:
+            int: Pressure drop of the main filter
+        """
+        if self._pressure3 is not None and self._pressure4 is not None:
+            return self._pressure3 - self._pressure4
+        return None
+
+    @property
+    def current_pressure_drop_prefilter(self):
+        """Returns the pressure drop of the prefilter.
+
+        Returns:
+                int: Pressure drop of the prefilter
+        """
+        if self._pressure2 is not None and self._pressure3 is not None:
+            return self._pressure2 - self._pressure3
+        return None
 
     def set_temperatures(
         self,
@@ -461,4 +501,10 @@ class AirFilter(object):
         return None
 
     def heavy_duty_prefilter_enabled(self):
+        """
+        Returns True if the heavy duty prefilter is enabled in the current profile
+
+        Returns:
+            bool: True if the heavy duty prefilter is enabled in the current profile
+        """
         return self._plugin.is_heavy_duty_prefilter_enabled()
