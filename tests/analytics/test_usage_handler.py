@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from _pytest.python_api import approx
 from mock.mock import MagicMock, patch
@@ -218,6 +220,7 @@ def test_migrate_af2_jobtime(airfilter_serial, usage_handler):
     with patch.object(usage_handler, "MIGRATION_WAIT", 0):
         usage_handler._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
         wait_till_event_received(usage_handler._event_bus, IoBeamEvents.FAN_CONNECTED)
+        time.sleep(0.1)  # wait for thread to be finished
 
     assert (
         usage_handler._usage_data["airfilter"][airfilter_serial]["prefilter"][
@@ -253,6 +256,7 @@ def test_migrate_af2_jobtime_if_single_or_af1(airfilter_serial, usage_handler):
     with patch.object(usage_handler, "MIGRATION_WAIT", 0):
         usage_handler._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
         wait_till_event_received(usage_handler._event_bus, IoBeamEvents.FAN_CONNECTED)
+        time.sleep(0.1)  # wait for thread to be finished
 
     assert (
         usage_handler._usage_data["airfilter"][usage_handler.UNKNOWN_SERIAL_KEY][
