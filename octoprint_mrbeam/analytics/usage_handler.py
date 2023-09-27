@@ -1,11 +1,13 @@
 import os
+import threading
 import time
 import unicodedata
 
 import yaml
+from octoprint.util import dict_merge
 
 from octoprint_mrbeam import AirFilter
-from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents, IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -27,6 +29,7 @@ class UsageHandler(object):
     MIN_DUST_VALUE = 0.2
     DEFAULT_PREFILTER_LIFESPAN = 40
     HEAVY_DUTY_PREFILTER_LIFESPAN = 80
+    MIGRATION_WAIT = 3  # in seconds
 
     JOB_TIME_KEY = "job_time"
     AIRFILTER_KEY = "airfilter"
@@ -48,6 +51,7 @@ class UsageHandler(object):
         self._settings = plugin._settings
         self._plugin_version = plugin.get_plugin_version()
         self._device_serial = plugin.getSerialNum()
+        self._file_lock = threading.Lock()
 
         self.start_time_total = -1
         self.start_time_laser_head = -1
@@ -72,7 +76,7 @@ class UsageHandler(object):
             analyticsfolder, self._settings.get(["analytics", "usage_backup_filename"])
         )
 
-        self._usage_data = None
+        self._usage_data = {}
         self._load_usage_data()
 
         self._event_bus.subscribe(
@@ -97,7 +101,6 @@ class UsageHandler(object):
             self._laser_head_serial = self.UNKNOWN_SERIAL_KEY
         self._calculate_dust_mapping()
         self._init_missing_usage_data()
-        self._migrate_af2_jobtime()
         self._log_usage()
 
         self._subscribe()
@@ -154,6 +157,10 @@ class UsageHandler(object):
         self._plugin.iobeam.subscribe(
             IoBeamValueEvents.LASERHEAD_CHANGED, self._event_laserhead_changed
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.AIRFILTER_CHANGED, self._event_airfilter_changed
+        )
+        self._event_bus.subscribe(IoBeamEvents.FAN_CONNECTED, self._event_fan_connected)
 
     def _event_laser_head_read(self, event, payload):
         # Update laser head info if necessary --> Only update if there is a serial number different than the previous
@@ -211,6 +218,25 @@ class UsageHandler(object):
         """
         self._logger.debug("Laserhead changed recalculate dust mapping")
         self._calculate_dust_mapping()
+
+    def _event_airfilter_changed(self, event, payload):
+        """
+        Event handler for airfilter changed event. Will be triggered if the airfilter
+        changed. It triggers the migration of the airfilter usage data from the old
+        format to the new format.
+
+        Args:
+            event: Event that triggered the handler
+            payload: Payload of the event
+
+        Returns:
+            None
+        """
+        # self._migrate_airfilterfilter_data_if_necessary()
+
+    def _event_fan_connected(self, event, payload):
+        self._logger.debug("Fan connected, trigger migration of airfilter usage data.")
+        self._migrate_airfilterfilter_data_if_necessary()
 
     def _set_time(self, job_duration):
         if job_duration is not None and job_duration > 0.0:
@@ -276,16 +302,23 @@ class UsageHandler(object):
         return job_duration
 
     def _get_airfilter_usage_data(self, serial):
-        return self._usage_data.get(self.AIRFILTER_KEY, {}).get(serial, {})
+        """
+        Returns the usage data for the airfilter with the given serial.
+
+        Args:
+            serial: Serial of the airfilter
+
+        Returns:
+            (dict): Usage data for the airfilter with the given serial
+        """
+        airfilter_usage_data = self._usage_data.get(self.AIRFILTER_KEY, {}).get(
+            serial, {}
+        )
+        return airfilter_usage_data if airfilter_usage_data is not None else {}
 
     def _get_airfilter_prefilter_usage_data(self, serial=None):
         if serial is None:
             serial = self._get_airfilter_serial()
-        self._logger.debug(
-            "prefilter usage: {}".format(
-                self._get_airfilter_usage_data(serial).get(self.PREFILTER_KEY, {})
-            )
-        )
         return self._get_airfilter_usage_data(serial).get(self.PREFILTER_KEY, {})
 
     def _get_airfilter_carbon_filter_usage_data(self, serial=None):
@@ -302,8 +335,6 @@ class UsageHandler(object):
                 element[key] = {}
                 self._logger.info("Created new usage data key: {}".format(key))
             element = element[key]
-        # if component == self.PREFILTER_KEY:
-        #     self._usage_data[self.AIRFILTER_KEY][self.PREFILTER_KEY][self.JOB_TIME_KEY] = job_time
         element[self.JOB_TIME_KEY] = job_time
         self._logger.debug(
             "Set job time for component {} to {} - {}".format(
@@ -502,9 +533,9 @@ class UsageHandler(object):
         recovery_try = False
         if os.path.isfile(self._storage_file):
             try:
-                data = None
-                with open(self._storage_file, "r") as stream:
-                    data = yaml.safe_load(stream)
+                with self._file_lock:
+                    with open(self._storage_file, "r") as stream:
+                        data = yaml.safe_load(stream)
                 if self._validate_data(data):
                     self._usage_data = data
                     success = True
@@ -520,8 +551,9 @@ class UsageHandler(object):
             )
             recovery_try = True
             try:
-                with open(self._backup_file, "r") as stream:
-                    data = yaml.safe_load(stream)
+                with self._file_lock:
+                    with open(self._backup_file, "r") as stream:
+                        data = yaml.safe_load(stream)
                 if self._validate_data(data):
                     data["restored"] = data["restored"] + 1 if "restored" in data else 1
                     self._usage_data = data
@@ -554,8 +586,9 @@ class UsageHandler(object):
             boolean: successfull
         """
         success = False
-        with open(self._backup_file, "r") as stream:
-            data = yaml.load(stream)
+        with self._file_lock:
+            with open(self._backup_file, "r") as stream:
+                data = yaml.load(stream)
         if self._validate_data(data):
             # checks if the version is saved in unicode and converts it into a string see SW-1269
             if isinstance(data["version"], unicode):
@@ -575,8 +608,9 @@ class UsageHandler(object):
         self._usage_data["serial"] = self._device_serial
         file = self._storage_file if file is None else file
         try:
-            with open(file, "w") as outfile:
-                yaml.safe_dump(self._usage_data, outfile, default_flow_style=False)
+            with self._file_lock:
+                with open(file, "w") as outfile:
+                    yaml.safe_dump(self._usage_data, outfile, default_flow_style=False)
         except:
             self._logger.exception("Can't write file %s due to an exception: ", file)
 
@@ -777,35 +811,52 @@ class UsageHandler(object):
 
         return dust_factor
 
-    def _migrate_af2_jobtime(self):
+    def _migrate_airfilterfilter_data_if_necessary(self):
+        """
+        Migrate the job time from the old format to the new one for AirFilter2
+
+        Returns:
+            None
+        """
         if (
             self._usage_data.get(self.CARBON_FILTER_KEY) is not None
             and self._usage_data.get(self.PREFILTER_KEY) is not None
-            and self._airfilter.model_id not in AirFilter.AIRFILTER3_MODELS
         ):
-            prefilter_time = self._get_job_time(
-                self._usage_data.get(self.PREFILTER_KEY)
+            migration_timer = threading.Timer(
+                self.MIGRATION_WAIT, self._migrate_old_airfilter_structure_to_new
             )
-            carbon_filter_time = self._get_job_time(
-                self._usage_data.get(self.CARBON_FILTER_KEY)
+            migration_timer.daemon = True
+            migration_timer.name = "usage_do_migration_timer"
+            migration_timer.start()
+
+    def _migrate_old_airfilter_structure_to_new(self):
+        # get data from old structure
+        if self._airfilter.model_id not in AirFilter.AIRFILTER3_MODELS:
+            serial = self._get_airfilter_serial()
+        else:
+            serial = self.UNKNOWN_SERIAL_KEY
+        prefilter = self._usage_data.get(self.PREFILTER_KEY)
+        carbon_filter = self._usage_data.get(self.CARBON_FILTER_KEY)
+
+        # copy to new structure
+        self._usage_data = dict_merge(
+            self._usage_data,
+            {
+                self.AIRFILTER_KEY: {
+                    serial: {
+                        self.PREFILTER_KEY: prefilter,
+                        self.CARBON_FILTER_KEY: carbon_filter,
+                    }
+                }
+            },
+        )
+
+        # remove from old structure if serial is known
+        self._usage_data.pop(self.CARBON_FILTER_KEY, None)
+        self._usage_data.pop(self.PREFILTER_KEY, None)
+
+        self._logger.info(
+            "Migrated AF2 filter stage job time (pre:{} carbon:{}) to serial: {}".format(
+                prefilter, carbon_filter, serial
             )
-            self._set_job_time(
-                [self.AIRFILTER_KEY, self._get_airfilter_serial(), self.PREFILTER_KEY],
-                prefilter_time,
-            )
-            self._set_job_time(
-                [
-                    self.AIRFILTER_KEY,
-                    self._get_airfilter_serial(),
-                    self.CARBON_FILTER_KEY,
-                ],
-                carbon_filter_time,
-            )
-            self._usage_data.pop(self.CARBON_FILTER_KEY, None)
-            self._usage_data.pop(self.PREFILTER_KEY, None)
-            self._logger.info(
-                "Migrated AF2 filter stage job time (pre:{} carbon:{}) to serial: {}".format(
-                    prefilter_time, carbon_filter_time, self._get_airfilter_serial()
-                )
-            )
-            self._write_usage_data()
+        )
