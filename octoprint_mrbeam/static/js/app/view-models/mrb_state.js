@@ -9,6 +9,7 @@ $(function () {
 
         self.isCooling = ko.observable(undefined);
         self.airfilter_model = ko.observable(undefined);
+        self.airfilter_serial = ko.observable(undefined);
 
         self.onEventReadyToLaserStart = function (payload) {
             /**
@@ -86,6 +87,9 @@ $(function () {
                 }
                 if ("airfilter_model" in mrb_state) {
                     self.airfilter_model(mrb_state["airfilter_model"]);
+                }
+                if ("airfilter_serial" in mrb_state) {
+                    self.airfilter_serial(mrb_state["airfilter_serial"]);
                 }
             }
         };

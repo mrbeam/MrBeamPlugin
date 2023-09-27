@@ -2112,11 +2112,31 @@ class MrBeamPlugin(
         elif command == "review_data":
             return self.review_handler.save_review_data(data)
         elif command == "reset_prefilter_usage":
-            return self.usage_handler.reset_prefilter_usage()
+            if "serial" not in data:
+                return make_response("Missing serial", 400)
+            serial = data.get("serial", None)
+            self.usage_handler.reset_prefilter_usage(serial)
+            self._send_maintenance_information(
+                trigger=MrBeamEvents.USAGE_DATA_RESET_PREFILTER
+            )
+            return NO_CONTENT
         elif command == "reset_carbon_filter_usage":
-            return self.usage_handler.reset_carbon_filter_usage()
+            if "serial" not in data:
+                return make_response("Missing serial", 400)
+            serial = data.get("serial", None)
+            self.usage_handler.reset_carbon_filter_usage(serial)
+            self._send_maintenance_information(
+                trigger=MrBeamEvents.USAGE_DATA_RESET_CARBON_FILTER
+            )
+            return NO_CONTENT
         elif command == "reset_laser_head_usage":
-            return self.usage_handler.reset_laser_head_usage()
+            self.usage_handler.reset_laser_head_usage(
+                self.laserhead_handler.get_current_used_lh_data()["serial"]
+            )
+            self._send_maintenance_information(
+                trigger=MrBeamEvents.USAGE_DATA_RESET_LASER_HEAD
+            )
+            return NO_CONTENT
         elif command == "reset_gantry_usage":
             return self.usage_handler.reset_gantry_usage()
         elif command == "material_settings":

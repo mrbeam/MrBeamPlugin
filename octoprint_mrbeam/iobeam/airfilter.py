@@ -303,9 +303,6 @@ class AirFilter(object):
         Returns:
             dict: current air filter system profile, None: otherwise
         """
-        self._logger.debug(
-            "get profile for air filter system ID:{}".format(self.model_id)
-        )
         return self._profile
 
     def get_lifespan(self, filter_stage, stage_id=0):
