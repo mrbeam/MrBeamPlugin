@@ -5,7 +5,6 @@ ko.components.register('laser-cutter-mode-switch', {
         // TODO: change to using LASER_CUTTER_MODE_NAME
         self.selectedMode = ko.observable('default');
 
-        // Behaviors
         self.changeLaserCutterMode = function () {
             console.log("Changing laser cutter mode to", self.selectedMode());
 

@@ -3103,9 +3103,6 @@ $(function () {
                 "change",
                 throttle((event) => self._qt_currentQuickTextUpdate(event), 200)
             );
-
-            // TODO: change to using LASER_CUTTER_MODE_NAME
-            $("#laser_cutter_mode_select").val("default");
         };
 
         self.onAllBound = function (allViewModels) {
@@ -4613,46 +4610,6 @@ $(function () {
 
         self._sendAnalytics = function (event, payload) {
             self.analytics.send_frontend_event(event, payload);
-        };
-
-        self.changeLaserCutterMode = function (selectObject) {
-            console.log("Changing laser cutter mode to", selectObject.value);
-
-            showConfirmationDialog({
-                title: gettext("Change the laser cutter mode"),
-                message: gettext(
-                    "Keep in mind that the device will restart and the webpage will refresh after switching the laser cutter mode."
-                ),
-                question: gettext(
-                    `Are you sure you want to switch the laser cutter mode into ${selectObject.value}?`
-                ),
-                proceed: gettext("Confirm"),
-                proceedClass: "primary",
-                cancel: gettext("Cancel"),
-                onproceed: function () {
-                    OctoPrint.simpleApiCommand(
-                        "mrbeam",
-                        "laser_cutter_mode_change",
-                        { mode: selectObject.value }
-                    )
-                        .done(function (response) {
-                            console.log("Laser cutter mode changed ", response);
-                        })
-                        .fail(function () {
-                            console.log("Laser cutter mode change failed!");
-                            new PNotify({
-                                title: gettext(
-                                    "Changing the laser cutter mode failed"
-                                ),
-                                text: gettext(
-                                    `Changing the laser cutter mode to ${selectObject.value} failed. Please contact customer support.`
-                                ),
-                                type: "error",
-                                hide: false,
-                            });
-                        });
-                },
-            });
         };
     }
 
