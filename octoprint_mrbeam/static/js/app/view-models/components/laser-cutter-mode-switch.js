@@ -1,9 +1,9 @@
-ko.components.register('laser-cutter-mode-switch', {
-    viewModel: function() {
+ko.components.register("laser-cutter-mode-switch", {
+    viewModel: function () {
         let self = this;
 
         // TODO: change to using LASER_CUTTER_MODE_NAME
-        self.selectedMode = ko.observable('default');
+        self.selectedMode = ko.observable("default");
 
         self.changeLaserCutterMode = function () {
             console.log("Changing laser cutter mode to", self.selectedMode());
@@ -47,8 +47,8 @@ ko.components.register('laser-cutter-mode-switch', {
     },
     template: `
         <select id="laser_cutter_mode_select" data-test="laser-cutter-mode-select" data-bind="value: selectedMode, event:{ change: changeLaserCutterMode}">
-            <option value="default">${ _('Default')}</option>
-            <option value="rotary">${ _('Rotary')}</option>
+            <option value="default">${_("Default")}</option>
+            <option value="rotary">${_("Rotary")}</option>
         </select>
     `,
 });
