@@ -2674,7 +2674,7 @@ class MrBeamPlugin(
             self.fire_event(
                 MrBeamEvents.MRB_PLUGIN_VERSION,
                 payload=dict(
-                    version=self._plugin_version, is_first_run=self.isFirstRun()
+                    version=self._plugin_version, is_first_run=self.isFirstRun(), laser_cutter_mode_id=self.get_laser_cutter_mode_id()
                 ),
             )
 
@@ -2958,6 +2958,13 @@ class MrBeamPlugin(
         :rtype: String
         """
         return self._device_info.get_model()
+
+    def get_laser_cutter_mode_id(self):
+        """Gives you the laser cutter mode id like (for rotary or default modes, for example)
+
+        :return: mode id
+        """
+        return 1  # TODO: SW-3719 get real value
 
     def get_production_date(self):
         """Gives you the device's production date as string The value is solely
