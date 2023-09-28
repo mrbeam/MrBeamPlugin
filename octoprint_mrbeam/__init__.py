@@ -771,6 +771,7 @@ class MrBeamPlugin(
                 "js/app/view-models/mrbeam-constants.js",
                 "js/app/view-models/mrb_state.js",
                 "js/app/helpers/mutation-observer.js",
+                "js/app/view-models/components/laser-cutter-mode-switch.js",
             ],
             css=[
                 "css/fontawesome_v6/css/fontawesome.min.css",
