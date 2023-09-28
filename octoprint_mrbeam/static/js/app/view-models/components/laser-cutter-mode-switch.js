@@ -46,9 +46,10 @@ ko.components.register('laser-cutter-mode-switch', {
             });
         };
     },
-    template:
-        '<select id="laser_cutter_mode_select" data-test="laser-cutter-mode-select" data-bind="value: selectedMode, event:{ change: changeLaserCutterMode}">\
-            <option value="default">{{ _("Default") }}</option>\
-            <option value="rotary">{{ _("Rotary") }}</option>\
-        </select>'
+    template: `
+        <select id="laser_cutter_mode_select" data-test="laser-cutter-mode-select" data-bind="value: selectedMode, event:{ change: changeLaserCutterMode}">
+            <option value="default">${ _('Default')}</option>
+            <option value="rotary">${ _('Rotary')}</option>
+        </select>
+    `,
 });
