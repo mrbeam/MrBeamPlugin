@@ -29,6 +29,7 @@ def test_material_settings_parser():
     material_s = parse_csv(
         device_model=MODEL_MRBEAM_2_DC_S, laserhead_model=LASER_MODEL_S
     )
+    # TODO: SW-3719 test values for rotary mode
     assert material_dc.get("materials").get("Kraftplex").get("colors").get(
         "795f39"
     ).get("cut") != material_s.get("materials").get("Kraftplex").get("colors").get(

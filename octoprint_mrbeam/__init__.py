@@ -2097,6 +2097,7 @@ class MrBeamPlugin(
                             laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
                                 "model"
                             ],
+                            # TODO: SW-3719 add the laser cutter mode
                         )
                     ),
                     200,
