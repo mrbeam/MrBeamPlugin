@@ -483,10 +483,6 @@ $(function () {
             }
             if ("maintenance_information" in data) {
                 const maintenanceInformation = data.maintenance_information;
-                console.log(
-                    "Maintenance information received",
-                    maintenanceInformation
-                );
                 if (self.needsGantryMaintenance()) {
                     self.gantryUsage(maintenanceInformation.gantryUsage);
                 } else {

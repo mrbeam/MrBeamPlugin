@@ -170,7 +170,7 @@ class UsageHandler(object):
         self._load_usage_data()
         self.start_time_total = self._usage_data[self.TOTAL_KEY][self.JOB_TIME_KEY]
         self.start_time_prefilter = self.get_prefilter_usage()
-        self.start_time_carbon_filter = self.get_carbon_filter_usage
+        self.start_time_carbon_filter = self.get_carbon_filter_usage()
         self.start_time_laser_head = self._usage_data[self.LASER_HEAD_KEY][
             self._laser_head_serial
         ][self.JOB_TIME_KEY]
@@ -347,9 +347,7 @@ class UsageHandler(object):
             element = element[key]
         element[self.JOB_TIME_KEY] = job_time
         self._logger.debug(
-            "Set job time for component {} to {} - {}".format(
-                component, job_time, self._usage_data
-            )
+            "Set job time for component {} to {}".format(component, job_time)
         )
 
     def _get_job_time(self, usage_data):
@@ -360,9 +358,12 @@ class UsageHandler(object):
             usage_data: Usage data to get the job time from
 
         Returns:
-            int: job time in seconds
+            int: job time in seconds, -1 if it could not be found
         """
-        return usage_data.get(self.JOB_TIME_KEY, None)
+        if self.JOB_TIME_KEY not in usage_data:
+            self._logger.info("No job time found in usage data, returning -1")
+            return -1
+        return usage_data.get(self.JOB_TIME_KEY, -1)
 
     def _get_airfilter_serial(self):
         """
@@ -871,6 +872,8 @@ class UsageHandler(object):
         # remove from old structure if serial is known
         self._usage_data.pop(self.CARBON_FILTER_KEY, None)
         self._usage_data.pop(self.PREFILTER_KEY, None)
+
+        self._write_usage_data()
 
         self._logger.info(
             "Migrated AF2 filter stage job time (pre:{} carbon:{}) to serial: {}".format(
