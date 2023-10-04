@@ -61,6 +61,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             err_bottom_open: {
                 title: gettext("Bottom plate not detected"),
@@ -79,6 +80,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             err_hardware_malfunction_i2c: {
                 title: gettext("Hardware malfunction"),
@@ -97,6 +99,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             err_unknown_malfunction: {
                 title: gettext("Unknown malfunction"),
@@ -110,6 +113,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             err_compressor_malfunction: {
                 title: gettext("Compressor malfunction"),
@@ -128,6 +132,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             err_one_button_malfunction: {
                 title: gettext("One Button malfunction"),
@@ -143,6 +148,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             err_interlock_malfunction: {
                 title: gettext("Interlock malfunction"),
@@ -161,6 +167,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             warn_cam_conn_err: {
                 title: gettext("Camera busy"),
@@ -211,6 +218,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             err_job_cancelled_due_to_internal_error: {
                 title: gettext("Laser job canceled"),
@@ -242,6 +250,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             err_fan_not_spinning: {
                 title: gettext("Hardware malfunction"),
@@ -257,6 +266,7 @@ $(function () {
                 ),
                 type: "error",
                 hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
             },
             msg_cam_image_analytics_sent: {
                 title: gettext("Thank you"),

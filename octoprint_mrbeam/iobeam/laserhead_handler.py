@@ -92,7 +92,7 @@ class LaserheadHandler(object):
         try:
             return laser_head_model_str_list.pop(0)
         except IndexError:
-            self._logger.error("Unknown laserhead model,  name: {} ID: {}".format(
+            self._logger.error("Unknown laserhead model, name: {} ID: {}".format(
                 self._current_used_lh_model, self._current_used_lh_model_id))
             return str(None)
 
