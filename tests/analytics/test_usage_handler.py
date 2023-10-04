@@ -95,6 +95,45 @@ def test_load_load_with_file(usage_handler):
     )  # there is curretnly no get_compressor_usage() method
 
 
+def test_load_with_empty_file(mrbeam_plugin):
+    usage_file = """
+        """
+
+    def settings_get(key, default=None, **kwargs):
+        if key == ["analytics", "usage_filename"]:
+            return "test.yaml"
+        elif key == ["analytics", "folder"]:
+            return "analytics"
+        elif key == ["analytics", "usage_backup_filename"]:
+            return "backup.yaml"
+
+    with patch("__builtin__.open", mock_open(read_data=usage_file)), patch(
+        "octoprint_mrbeam.analytics.usage_handler.UsageHandler._write_usage_data",
+        return_value=True,
+    ), patch("os.path.isfile", lambda x: True):
+        mrbeam_plugin.laserhead_handler.current_laserhead_max_dust_factor = 3.0
+        mrbeam_plugin.laserhead_handler.get_current_used_lh_data = MagicMock(
+            return_value={"serial": LASERHEAD_SERIAL}
+        )
+        mrbeam_plugin.airfilter = MagicMock(serial="dummy_serial")
+        mrbeam_plugin._settings.get = MagicMock(
+            side_effect=settings_get
+        )  # return_value="test.yaml")
+        usage_handler = UsageHandler(mrbeam_plugin)
+        usage_handler._on_mrbeam_plugin_initialized(None, None)
+
+    # Assert
+    assert usage_handler.get_gantry_usage() == 0
+    assert usage_handler.get_laser_head_usage() == 0
+    assert usage_handler.get_prefilter_usage() == -1
+    assert usage_handler.get_carbon_filter_usage() == -1
+    assert usage_handler.get_total_usage() == 0
+    assert usage_handler.get_total_jobs() == 0
+    assert (
+        usage_handler._usage_data["compressor"]["job_time"] == 0
+    )  # there is curretnly no get_compressor_usage() method
+
+
 @pytest.mark.parametrize(
     "heavy_duty_filter, expected_lifespan",
     [
