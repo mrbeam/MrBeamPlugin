@@ -51,7 +51,6 @@ class CustomMaterialModel:
 
     def to_dict(self):
         material = vars(self)
-        # material.pop("material_key")
         return material
 
     def generate_material_key(self, material_key):
