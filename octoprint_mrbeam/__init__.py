@@ -2098,7 +2098,7 @@ class MrBeamPlugin(
                         parse_csv(
                             device_model=self.get_model_id(),
                             laserhead_model=self.get_laser_head_model(),
-                            # TODO: SW-3719 add the laser cutter mode
+                            laser_cutter_mode=self.get_laser_cutter_mode(),
                         )
                     ),
                     200,
