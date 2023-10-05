@@ -70,6 +70,7 @@ def mrbeam_plugin():
     mrbeam_plugin.hw_malfunction_handler = MagicMock()
     mrbeam_plugin.is_boot_grace_period = MagicMock(return_value=False)
     mrbeam_plugin.airfilter = MagicMock()
+    mrbeam_plugin.usage_handler = MagicMock()
 
     yield mrbeam_plugin
 
@@ -86,5 +87,7 @@ def wait_till_event_received(event_bus, event, timeout=0.1):
 @pytest.fixture
 def air_filter(mrbeam_plugin):
     air_filter = AirFilter(mrbeam_plugin)
+    air_filter._event_bus = EventManager()
     air_filter._plugin.send_mrb_state = MagicMock()
+    air_filter._event_bus.fire = MagicMock()
     return air_filter

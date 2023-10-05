@@ -20,7 +20,7 @@ def usage_handler(mrbeam_plugin, air_filter):
     usage_file = """
     carbon_filter:
       complete: true
-      job_time: 50.0
+      job_time: 201600.0
     compressor:
       complete: true
       job_time: 40.0
@@ -45,7 +45,7 @@ def usage_handler(mrbeam_plugin, air_filter):
           pressure: 2000
     prefilter:
       complete: true
-      job_time: 1500.0
+      job_time: 14400.0
     restored: 0
     serial: 000000000694FD5D-2X
     succ_jobs:
@@ -88,14 +88,14 @@ def usage_handler(mrbeam_plugin, air_filter):
 
 def test_load_load_with_file(usage_handler):
     # Assert
-    assert usage_handler.get_gantry_usage() == 30.0
-    assert usage_handler.get_laser_head_usage() == 20.0
-    assert usage_handler._get_prefilter_usage_time() == 150000.0
-    assert usage_handler._get_carbon_filter_usage_time() == 100000.0
-    assert usage_handler.get_total_usage() == 0.0
+    assert usage_handler.get_gantry_usage() == 30
+    assert usage_handler.get_laser_head_usage() == 20
+    assert usage_handler._get_prefilter_usage_time() == 150000
+    assert usage_handler._get_carbon_filter_usage_time() == 100000
+    assert usage_handler.get_total_usage() == 0
     assert usage_handler.get_total_jobs() == 0
     assert (
-        usage_handler._usage_data["compressor"]["job_time"] == 40.0
+        usage_handler._usage_data["compressor"]["job_time"] == 40
     )  # there is curretnly no get_compressor_usage() method
 
 
@@ -136,26 +136,6 @@ def test_load_with_empty_file(mrbeam_plugin, air_filter):
     assert (
         usage_handler._usage_data["compressor"]["job_time"] == 0
     )  # there is curretnly no get_compressor_usage() method
-
-
-@pytest.mark.parametrize(
-    "heavy_duty_filter, expected_lifespan",
-    [
-        (True, UsageHandler.HEAVY_DUTY_PREFILTER_LIFESPAN),
-        (False, UsageHandler.DEFAULT_PREFILTER_LIFESPAN),
-    ],
-)
-def test_get_prefilter_lifespan_when_havy_duty_prefilter_then_80_hours(
-    heavy_duty_filter, expected_lifespan, usage_handler
-):
-    # Arrange
-    usage_handler._settings.get = MagicMock(return_value=heavy_duty_filter)
-
-    # Act
-    lifespan = usage_handler.get_prefilter_lifespan()
-
-    # Assert
-    assert lifespan == expected_lifespan
 
 
 @pytest.mark.parametrize(
@@ -264,18 +244,8 @@ def test_migrate_af2_jobtime(airfilter_serial, usage_handler):
         wait_till_event_received(usage_handler._event_bus, IoBeamEvents.FAN_CONNECTED)
         time.sleep(0.1)  # wait for thread to be finished
 
-    assert (
-        usage_handler._usage_data["airfilter"][airfilter_serial]["prefilter"][
-            "job_time"
-        ]
-        == 1500
-    )
-    assert (
-        usage_handler._usage_data["airfilter"][airfilter_serial]["carbon_filter"][
-            "job_time"
-        ]
-        == 50
-    )
+    assert usage_handler.get_prefilter_usage() == 10
+    assert usage_handler.get_carbon_filter_usage() == 20
 
     assert "prefilter" not in usage_handler._usage_data
     assert "carbon_filter" not in usage_handler._usage_data
@@ -305,13 +275,13 @@ def test_migrate_af2_jobtime_if_single_or_af1(
         usage_handler._usage_data["airfilter"][usage_handler.UNKNOWN_SERIAL_KEY][
             "prefilter"
         ]["job_time"]
-        == 1500
+        == 14400
     )
     assert (
         usage_handler._usage_data["airfilter"][usage_handler.UNKNOWN_SERIAL_KEY][
             "carbon_filter"
         ]["job_time"]
-        == 50
+        == 201600
     )
 
     assert "prefilter" not in usage_handler._usage_data
@@ -320,20 +290,28 @@ def test_migrate_af2_jobtime_if_single_or_af1(
 
 def test_carbon_filter_usage_af3(usage_handler, mrbeam_plugin):
     # Arrange
-    airfilter = AirFilter(mrbeam_plugin)
-    airfilter.set_airfilter(8, AIRFILTER_SERIAL)
-    print("serial", airfilter.serial)
-    usage_handler._airfilter = airfilter
+    mrbeam_plugin.airfilter.set_airfilter(8, AIRFILTER_SERIAL)
+
     # Act
     usage = usage_handler.get_carbon_filter_usage()
 
     # Assert
-    assert usage == 10
+    assert usage == 40
+
+
+def test_prefilter_usage_af3(usage_handler, mrbeam_plugin):
+    # Arrange
+    mrbeam_plugin.airfilter.set_airfilter(8, AIRFILTER_SERIAL)
+
+    # Act
+    usage = usage_handler.get_prefilter_usage()
+
+    # Assert
+    assert usage == 66
 
 
 # TODO TEST time higher as pressure
 # TODO TEST pressure higher as time
-# TODO tEST AF2 percentage
 
 # test set pressure
 @pytest.mark.parametrize(
@@ -344,13 +322,11 @@ def test_carbon_filter_usage_af3(usage_handler, mrbeam_plugin):
         (0, 0),  # 20% lower will be set
     ],
 )
-def test_set_pressure_value_when_value_is_higher(
+def test_set_pressure_when_filter_stage_is_carbonfilter(
     pressure, expected, usage_handler, mrbeam_plugin
 ):
     # Arrange
-    airfilter = AirFilter(mrbeam_plugin)
-    airfilter.set_airfilter(8, AIRFILTER_SERIAL)
-    usage_handler._airfilter = airfilter
+    mrbeam_plugin.airfilter.set_airfilter(8, AIRFILTER_SERIAL)
 
     # Act
     with patch(
@@ -369,5 +345,77 @@ def test_set_pressure_value_when_value_is_higher(
     )
 
 
-# TODO test set rpm test
+@pytest.mark.parametrize(
+    "pressure, expected",
+    [
+        (2000, 2000),  # lower values will not be set
+        (3000, 3000),  # higher values will be set
+        (0, 0),  # 20% lower will be set
+    ],
+)
+def test_set_pressure_when_filter_stage_is_prefilter(
+    pressure, expected, usage_handler, mrbeam_plugin
+):
+    # Arrange
+    mrbeam_plugin.airfilter.set_airfilter(8, AIRFILTER_SERIAL)
+
+    # Act
+    with patch(
+        "octoprint_mrbeam.analytics.usage_handler.UsageHandler._write_usage_data",
+        return_value=True,
+    ):
+        usage_handler.set_pressure(pressure, AirFilter.PREFILTER)
+
+    # Assert
+    assert (
+        usage_handler._usage_data[UsageHandler.AIRFILTER_KEY][AIRFILTER_SERIAL][
+            UsageHandler.PREFILTER_KEY
+        ][UsageHandler.PRESSURE_KEY]
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    "filter_stage",
+    [
+        None,
+        "invalid",
+    ],
+)
+def test_set_pressure_when_filter_stage_is_not_valid(
+    filter_stage, usage_handler, mrbeam_plugin
+):
+    # Arrange
+    mrbeam_plugin.airfilter.set_airfilter(8, AIRFILTER_SERIAL)
+
+    # Act
+    with patch(
+        "octoprint_mrbeam.analytics.usage_handler.UsageHandler._write_usage_data",
+        return_value=True,
+    ), pytest.raises(ValueError) as exc_info:
+        usage_handler.set_pressure(200, filter_stage)
+
+    assert "Unknown filter stage:" in str(exc_info.value)
+
+
+def test_set_fan_test_rpm(usage_handler, mrbeam_plugin):
+    # Arrange
+    mrbeam_plugin.airfilter.set_airfilter(8, AIRFILTER_SERIAL)
+
+    # Act
+    with patch(
+        "octoprint_mrbeam.analytics.usage_handler.UsageHandler._write_usage_data",
+        return_value=True,
+    ):
+        usage_handler.set_fan_test_rpm(1000)
+
+    # Assert
+    assert (
+        usage_handler._usage_data[UsageHandler.AIRFILTER_KEY][AIRFILTER_SERIAL][
+            UsageHandler.CARBON_FILTER_KEY
+        ][UsageHandler.FAN_TEST_RPM_KEY]
+        == 1000
+    )
+
+
 # TODO test reset if 20% lower

@@ -281,7 +281,7 @@ class DustManager(object):
             self._logger.info("Starting test fan RPM as it didn't run for a while.")
             self._start_test_fan_rpm()
 
-    def _start_test_fan_rpm(self, time=FAN_TEST_DURATION):
+    def _start_test_fan_rpm(self, time=None):
         """
         Starts the test of the fan RPM for a given time.
 
@@ -291,6 +291,8 @@ class DustManager(object):
         Returns:
             None
         """
+        if time is None:
+            time = self.FAN_TEST_DURATION
         self._logger.debug(
             "FAN_TEST_RPM: Start - setting fan to %s for %ssec",
             self.FAN_TEST_RPM_PERCENTAGE,

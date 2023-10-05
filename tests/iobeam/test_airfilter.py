@@ -507,3 +507,75 @@ def test_heavy_duty_prefilter_enabled_when_enabled_then_true(enabled, air_filter
 
     # Assert
     assert heavy_duty_prefilter_enabled is enabled
+
+
+@pytest.mark.parametrize(
+    "model_id, expected_pressure_drop",
+    [
+        (1, None),
+        (8, 100),
+    ],
+)
+def test_pressure_drop_prefilter(model_id, expected_pressure_drop, air_filter):
+    # Arrange
+    air_filter.set_airfilter(model_id, "serial")
+    air_filter.set_pressure(pressure1=900, pressure2=800, pressure3=700, pressure4=600)
+
+    # Act
+    pressure_drop = air_filter.pressure_drop_prefilter
+
+    # Assert
+    assert pressure_drop == expected_pressure_drop
+
+
+@pytest.mark.parametrize(
+    "model_id, expected_pressure_drop",
+    [
+        (1, None),
+        (8, 100),
+    ],
+)
+def test_pressure_drop_main_filter(model_id, expected_pressure_drop, air_filter):
+    # Arrange
+    air_filter.set_airfilter(model_id, "serial")
+    air_filter.set_pressure(pressure1=900, pressure2=800, pressure3=700, pressure4=600)
+
+    # Act
+    pressure_drop = air_filter.pressure_drop_mainfilter
+
+    # Assert
+    assert pressure_drop == expected_pressure_drop
+
+
+def test_get_last_pressure_values(air_filter):
+    # Arrange
+    air_filter.set_pressure(pressure1=900, pressure2=800, pressure3=700, pressure4=600)
+    air_filter.set_pressure(pressure1=950, pressure2=850, pressure3=750, pressure4=650)
+    air_filter.set_pressure(pressure1=960, pressure2=860, pressure3=760, pressure4=660)
+    air_filter.set_pressure(pressure1=970, pressure2=870, pressure3=770, pressure4=670)
+    air_filter.set_pressure(pressure1=980, pressure2=880, pressure3=780, pressure4=680)
+    air_filter.set_pressure(pressure1=990, pressure2=890, pressure3=790, pressure4=690)
+
+    # Act
+    pressure_values = air_filter.last_pressure_values
+
+    # Assert
+    assert pressure_values == [
+        [950, 850, 750, 650],
+        [960, 860, 760, 660],
+        [970, 870, 770, 670],
+        [980, 880, 780, 680],
+        [990, 890, 790, 690],
+    ]
+
+
+def test_set_pressure_af2(air_filter):
+    # Arrange
+    air_filter.set_airfilter(1, "serial")
+
+    # Act
+    air_filter.set_pressure(pressure=900)
+    air_filter.set_pressure(pressure=800)
+
+    # Assert
+    assert air_filter.last_pressure_values == [900, 800]

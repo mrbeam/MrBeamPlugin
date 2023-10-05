@@ -43,6 +43,33 @@ class AirFilter(object):
     CARBONFILTER = "carbonfilter"
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
     PRESSURE_VALUES_LIST_SIZE = 5
+    MAX_PRESSURE_DIFFERENCE = 3000  # TODO SW-2320
+    MAX_FAN_TEST_RPM = 10000  # TODO SW-2320
+
+    AF3_PRESSURE_GRAPH_CARBON_FILTER = [
+        (0, 0),
+        (600, 20),
+        (1200, 40),
+        (1800, 60),
+        (2400, 80),
+        (MAX_PRESSURE_DIFFERENCE, 100),
+    ]  # TODO need to be replaced with actual values SW-2320
+    AF3_PRESSURE_GRAPH_PREFILTER = [
+        (0, 0),
+        (600, 20),
+        (1200, 40),
+        (1800, 60),
+        (2400, 80),
+        (MAX_PRESSURE_DIFFERENCE, 100),
+    ]  # TODO need to be replaced with actual values SW-2320
+    AF3_RPM_GRAPH = [
+        (8000, 0),
+        (8400, 20),
+        (8800, 40),
+        (9200, 60),
+        (9600, 80),
+        (MAX_FAN_TEST_RPM, 100),
+    ]  # TODO need to be replaced with actual values SW-2320
 
     class ProfileParameters(Enum):
         SHOPIFY_LINK = "shopify_link"
@@ -85,28 +112,8 @@ class AirFilter(object):
         self._temperature4 = None
         self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
         self._profile = None
-        self._usage_handler = None
 
         self._load_current_profile()
-
-        self._subscribe_to_events()
-
-    def _subscribe_to_events(self):
-        self._event_bus.subscribe(
-            MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
-        )
-
-    def _on_mrbeam_plugin_initialized(self, event, payload):
-        """Called when the plugin is initialized.
-
-        Args:
-            event: event name
-            payload: event payload
-
-        Returns:
-            None
-        """
-        self._usage_handler = self._plugin.usage_handler
 
     @property
     def model(self):
@@ -200,7 +207,7 @@ class AirFilter(object):
 
     def _airfilter_changed(self):
         self._plugin.send_mrb_state()
-        self._plugin._event_bus.fire(MrBeamEvents.AIRFILTER_CHANGED)
+        self._event_bus.fire(MrBeamEvents.AIRFILTER_CHANGED)
 
     def set_pressure(
         self,
@@ -230,11 +237,16 @@ class AirFilter(object):
         if pressure4 is not None:
             self._pressure4 = pressure4
 
-        if pressure2 is not None and pressure3 is not None and pressure4 is not None:
+        if (
+            pressure1 is not None
+            and pressure2 is not None
+            and pressure3 is not None
+            and pressure4 is not None
+        ):
             self._last_pressure_values.append(
                 [self._pressure1, self._pressure2, self._pressure3, self._pressure4]
             )
-        elif pressure1 is not None:
+        elif self._pressure1 is not None:
             self._last_pressure_values.append(self._pressure1)
 
     def _get_avg_pressure_differences(self):
@@ -255,7 +267,7 @@ class AirFilter(object):
 
     @property
     def last_pressure_values(self):
-        return self._last_pressure_values
+        return list(self._last_pressure_values)
 
     @property
     def pressure_drop_mainfilter(self):
