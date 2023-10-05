@@ -16,7 +16,7 @@ AIRFILTER_SERIAL = "dummy_serial"
 
 
 @pytest.fixture
-def usage_handler(mrbeam_plugin):
+def usage_handler(mrbeam_plugin, air_filter):
     usage_file = """
     carbon_filter:
       complete: true
@@ -76,7 +76,8 @@ def usage_handler(mrbeam_plugin):
         mrbeam_plugin.laserhead_handler.get_current_used_lh_data = MagicMock(
             return_value={"serial": LASERHEAD_SERIAL}
         )
-        mrbeam_plugin.airfilter = MagicMock(serial="dummy_serial")
+        air_filter.set_airfilter(4, "dummy_serial")
+        mrbeam_plugin.airfilter = air_filter
         mrbeam_plugin._settings.get = MagicMock(
             side_effect=settings_get
         )  # return_value="test.yaml")
@@ -98,7 +99,7 @@ def test_load_load_with_file(usage_handler):
     )  # there is curretnly no get_compressor_usage() method
 
 
-def test_load_with_empty_file(mrbeam_plugin):
+def test_load_with_empty_file(mrbeam_plugin, air_filter):
     usage_file = """
         """
 
@@ -118,7 +119,7 @@ def test_load_with_empty_file(mrbeam_plugin):
         mrbeam_plugin.laserhead_handler.get_current_used_lh_data = MagicMock(
             return_value={"serial": LASERHEAD_SERIAL}
         )
-        mrbeam_plugin.airfilter = MagicMock(serial="dummy_serial")
+        mrbeam_plugin.airfilter = air_filter
         mrbeam_plugin._settings.get = MagicMock(
             side_effect=settings_get
         )  # return_value="test.yaml")
@@ -128,8 +129,8 @@ def test_load_with_empty_file(mrbeam_plugin):
     # Assert
     assert usage_handler.get_gantry_usage() == 0
     assert usage_handler.get_laser_head_usage() == 0
-    assert usage_handler.get_prefilter_usage() == -1
-    assert usage_handler.get_carbon_filter_usage() == -1
+    assert usage_handler.get_prefilter_usage() == 0
+    assert usage_handler.get_carbon_filter_usage() == 0
     assert usage_handler.get_total_usage() == 0
     assert usage_handler.get_total_jobs() == 0
     assert (
@@ -218,7 +219,7 @@ def test_event_write(airfilter_serial, usage_handler):
     payload = {"time": 10}
     usage_handler._dust_manager.get_mean_job_dust = MagicMock(return_value=3)
     usage_handler.start_time_total = 1
-    usage_handler._airfilter.serial = airfilter_serial
+    usage_handler._airfilter.set_airfilter(1, airfilter_serial)
 
     # Act
     with patch.object(
@@ -252,8 +253,7 @@ def test_event_write(airfilter_serial, usage_handler):
 def test_migrate_af2_jobtime(airfilter_serial, usage_handler):
 
     # Arrange
-    usage_handler._airfilter.serial = airfilter_serial
-    usage_handler._airfilter.model_id = 1
+    usage_handler._airfilter.set_airfilter(1, airfilter_serial)
 
     # Act
     # usage_handler._migrate_af2_job_time()
@@ -287,11 +287,12 @@ def test_migrate_af2_jobtime(airfilter_serial, usage_handler):
         None,
     ],
 )
-def test_migrate_af2_jobtime_if_single_or_af1(airfilter_serial, usage_handler):
+def test_migrate_af2_jobtime_if_single_or_af1(
+    airfilter_serial, usage_handler, mrbeam_plugin
+):
 
     # Arrange
-    usage_handler._airfilter.serial = airfilter_serial
-    usage_handler._airfilter.model_id = 1
+    usage_handler._airfilter = AirFilter(mrbeam_plugin)  # set airfilter to None
 
     # Act
     # usage_handler._migrate_af2_job_time()

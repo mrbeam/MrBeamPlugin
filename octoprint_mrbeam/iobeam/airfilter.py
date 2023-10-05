@@ -1,6 +1,7 @@
 # singleton
 import os
 from enum import Enum
+from collections import deque
 
 import yaml
 from flask_babel import gettext
@@ -41,6 +42,7 @@ class AirFilter(object):
     PREFILTER = "prefilter"
     CARBONFILTER = "carbonfilter"
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
+    PRESSURE_VALUES_LIST_SIZE = 5
 
     class ProfileParameters(Enum):
         SHOPIFY_LINK = "shopify_link"
@@ -81,6 +83,7 @@ class AirFilter(object):
         self._temperature2 = None
         self._temperature3 = None
         self._temperature4 = None
+        self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
         self._profile = None
         self._usage_handler = None
 
@@ -93,7 +96,16 @@ class AirFilter(object):
             MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized
         )
 
-    def _on_mrbeam_plugin_initialized(self):
+    def _on_mrbeam_plugin_initialized(self, event, payload):
+        """Called when the plugin is initialized.
+
+        Args:
+            event: event name
+            payload: event payload
+
+        Returns:
+            None
+        """
         self._usage_handler = self._plugin.usage_handler
 
     @property
@@ -202,10 +214,10 @@ class AirFilter(object):
 
         Args:
             pressure: Pressure of the air filter 2
-            pressure1 (int): Pressure of the air filter 3 Inlet
-            pressure2 (int): Pressure of the air filter 3 1. Prefilter to 2. Prefilter
-            pressure3 (int): Pressure of the air filter 3 2. Prefilter to Mainfilter
-            pressure4 (int): Pressure of the air filter 3 Mainfilter to Fan
+            pressure1 (int): Pressure of the air filter 3 environment pressure
+            pressure2 (int): Pressure of the air filter 3 between inlet and Prefilter
+            pressure3 (int): Pressure of the air filter 3 between Prefilter and Mainfilter
+            pressure4 (int): Pressure of the air filter 3 between Mainfilter and Fan
         """
         if pressure is not None:
             self._pressure1 = pressure
@@ -219,31 +231,60 @@ class AirFilter(object):
             self._pressure4 = pressure4
 
         if pressure2 is not None and pressure3 is not None and pressure4 is not None:
-            prefilter_pressure = self._pressure2 - self._pressure3
-            carbon_filter_pressure = self._pressure3 - self._pressure4
-            self._usage_handler.set_pressure(carbon_filter_pressure, self.CARBONFILTER)
-            self._usage_handler.set_pressure(prefilter_pressure, self.PREFILTER)
+            self._last_pressure_values.append(
+                [self._pressure1, self._pressure2, self._pressure3, self._pressure4]
+            )
+        elif pressure1 is not None:
+            self._last_pressure_values.append(self._pressure1)
+
+    def _get_avg_pressure_differences(self):
+        """Returns the average pressure differences of the last pressure readings.
+
+        Returns:
+            (int, int, int): Average pressure difference of the last pressure readings for prefilter mainfilter and fan
+        """
+        prefilter_pressure = [sublist[1] for sublist in self._last_pressure_values]
+        mainfilter_pressure = [sublist[2] for sublist in self._last_pressure_values]
+        fan_pressure = [sublist[3] for sublist in self._last_pressure_values]
+
+        # calculate the average
+        prefilter_pressure_avg = sum(prefilter_pressure) / len(prefilter_pressure)
+        mainfilter_pressure_avg = sum(mainfilter_pressure) / len(mainfilter_pressure)
+        fan_pressure_avg = sum(fan_pressure) / len(fan_pressure)
+        return prefilter_pressure_avg, mainfilter_pressure_avg, fan_pressure_avg
 
     @property
-    def current_pressure_drop_mainfilter(self):
+    def pressure_drop_mainfilter(self):
         """Returns the pressure drop of the main filter.
 
         Returns:
             int: Pressure drop of the main filter
         """
-        if self._pressure3 is not None and self._pressure4 is not None:
-            return self._pressure3 - self._pressure4
+        if self.model_id in self.AIRFILTER3_MODELS:
+            (
+                _,
+                mainfilter_pressure_avg,
+                fan_pressure_avg,
+            ) = self._get_avg_pressure_differences()
+
+            return mainfilter_pressure_avg - fan_pressure_avg
         return None
 
     @property
-    def current_pressure_drop_prefilter(self):
+    def pressure_drop_prefilter(self):
         """Returns the pressure drop of the prefilter.
 
         Returns:
                 int: Pressure drop of the prefilter
         """
-        if self._pressure2 is not None and self._pressure3 is not None:
-            return self._pressure2 - self._pressure3
+        if self.model_id in self.AIRFILTER3_MODELS:
+            (
+                prefilter_pressure_avg,
+                mainfilter_pressure_avg,
+                _,
+            ) = self._get_avg_pressure_differences()
+
+            return prefilter_pressure_avg - mainfilter_pressure_avg
         return None
 
     def set_temperatures(
@@ -283,6 +324,7 @@ class AirFilter(object):
         self._temperature3 = None
         self._temperature4 = None
         self._profile = None
+        self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
 
     def _load_current_profile(self):
         """Loads the current profile of the air filter and safes it in self._profile.

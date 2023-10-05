@@ -70,14 +70,22 @@ $(function () {
         };
 
         self.prefilterPercent = ko.computed(function () {
-            return self.optimizeParameterPercentageValues(
-                self.prefilterUsage()
-            );
+            if (self.airfilter3Used()) {
+                return self.prefilterUsage();
+            } else {
+                return self.optimizeParameterPercentageValues(
+                    self.prefilterUsage()
+                );
+            }
         });
         self.carbonFilterPercent = ko.computed(function () {
-            return self.optimizeParameterPercentageValues(
-                self.prefilterUsage()
-            );
+            if (self.airfilter3Used()) {
+                return self.carbonFilterUsage();
+            } else {
+                return self.optimizeParameterPercentageValues(
+                    self.carbonFilterUsage()
+                );
+            }
         });
         self.laserHeadPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(

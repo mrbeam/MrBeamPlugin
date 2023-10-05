@@ -237,6 +237,9 @@ class MrBeamPlugin(
         self._event_bus.subscribe(
             MrBeamEvents.AIRFILTER_CHANGED, self.on_airfilter_changed
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.USAGE_DATA_CHANGED, self.on_usage_data_changed
+        )
 
         self.start_time_ntp_timer()
 
@@ -602,10 +605,43 @@ class MrBeamPlugin(
             laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
         )
 
-    def on_airfilter_changed(self, *args, **kwargs):
+    def on_airfilter_changed(self, event, payload):
+        """
+        On airfilter changed event, send maintenance information to frontend.
+
+        Args:
+            event: event name
+            payload: event payload
+
+        Returns:
+            None
+        """
         self._send_maintenance_information(trigger=MrBeamEvents.AIRFILTER_CHANGED)
 
+    def on_usage_data_changed(self, event, payload):
+        """
+        On usage data changed event, send maintenance information to frontend.
+
+        Args:
+            event: event name
+            payload: event payload
+
+        Returns:
+            None
+        """
+        if self.airfilter is not None:
+            self._send_maintenance_information(trigger=MrBeamEvents.USAGE_DATA_CHANGED)
+
     def _send_maintenance_information(self, trigger=None):
+        """
+        Send maintenance information to frontend.
+
+        Args:
+            trigger: trigger of the send
+
+        Returns:
+            None
+        """
         self._plugin_manager.send_plugin_message(
             "mrbeam",
             dict(maintenance_information=self._get_usage_data_dict(), trigger=trigger),
@@ -1034,7 +1070,7 @@ class MrBeamPlugin(
                 name=gettext("About This Mr Beam"),
                 template="settings/about_settings.jinja2",
                 suffix="_about",
-                custom_bindings=False,
+                custom_bindings=True,
             ),
             dict(
                 type="settings",

@@ -24,14 +24,6 @@ DEFAULT_PROFILE = {
 }
 
 
-@pytest.fixture
-def air_filter(mrbeam_plugin):
-    air_filter = AirFilter(mrbeam_plugin)
-    air_filter._plugin.send_mrb_state = MagicMock()
-    air_filter._plugin._event_bus.fire = MagicMock()
-    return air_filter
-
-
 def test_singelton(mrbeam_plugin):
     # Arrange
     air_filter = airfilter(mrbeam_plugin)
