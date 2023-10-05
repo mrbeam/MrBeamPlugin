@@ -254,6 +254,10 @@ class AirFilter(object):
         return prefilter_pressure_avg, mainfilter_pressure_avg, fan_pressure_avg
 
     @property
+    def last_pressure_values(self):
+        return self._last_pressure_values
+
+    @property
     def pressure_drop_mainfilter(self):
         """Returns the pressure drop of the main filter.
 

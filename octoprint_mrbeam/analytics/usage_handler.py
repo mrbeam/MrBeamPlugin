@@ -1101,6 +1101,7 @@ class UsageHandler(object):
             self._airfilter.model_id in AirFilter.AIRFILTER3_MODELS
             and pressure is not None
         ):
+            # get the correct data for the filter stage
             if filter_stage == AirFilter.CARBONFILTER:
                 last_saved_pressure_value = (
                     self._get_airfilter_carbon_filter_usage_data().get(
@@ -1108,14 +1109,17 @@ class UsageHandler(object):
                     )
                 )
                 stage_key = self.CARBON_FILTER_KEY
+                reset_call = self.reset_carbon_filter_usage
             elif filter_stage == AirFilter.PREFILTER:
                 last_saved_pressure_value = (
                     self._get_airfilter_prefilter_usage_data().get(self.PRESSURE_KEY, 0)
                 )
                 stage_key = self.PREFILTER_KEY
+                reset_call = self.reset_prefilter_usage
             else:
                 self._logger.error("Unknown filter stage: {}".format(filter_stage))
                 return
+
             # prevent 0 values and make sure it is float so the calculation works
             last_saved_pressure_value = float(max(last_saved_pressure_value, 0.1))
             percent_difference = (
@@ -1128,6 +1132,7 @@ class UsageHandler(object):
                     percent_difference, last_saved_pressure_value, pressure
                 )
             )
+
             if pressure > last_saved_pressure_value:
                 self._logger.info(
                     "Pressure value is higher than the last saved pressure value. Updating the pressure value."
@@ -1138,10 +1143,7 @@ class UsageHandler(object):
                     "Pressure drop of 20% detected reset time and pressure value."
                 )
                 self._update_pressure_value(pressure, stage_key)
-                if filter_stage == AirFilter.CARBONFILTER:
-                    self.reset_carbon_filter_usage(self._get_airfilter_serial())
-                elif filter_stage == AirFilter.PREFILTER:
-                    self.reset_prefilter_usage(self._get_airfilter_serial())
+                reset_call(self._get_airfilter_serial())  # reset the usage time
 
     def set_fan_test_rpm(self, rpm):
         """

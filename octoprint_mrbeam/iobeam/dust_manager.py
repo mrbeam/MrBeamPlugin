@@ -334,20 +334,12 @@ class DustManager(object):
 
             # Write to analytics if the values are valid
             if self._validate_values():
-                data = dict(
-                    rpm_val=list(self._last_rpm_values),
-                    fan_state=self._state,
-                    usage_count=self._usage_handler.get_total_usage(),
-                    prefilter_count=self._usage_handler._get_prefilter_usage_time(),
-                    carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
-                    # pressure_val=list(self._last_pressure_values),
-                )
-                # set rpm of test fan to the average of the messured values
+                # set rpm of test fan to the average of the measured values
                 self._usage_handler.set_fan_test_rpm(
                     sum(self._last_rpm_values) / len(self._last_rpm_values)
                 )
                 self._logger.debug(
-                    "mainfilter %s prefilter %s",
+                    "pressure drop - mainfilter %s prefilter %s",
                     self._airfilter.pressure_drop_mainfilter,
                     self._airfilter.pressure_drop_prefilter,
                 )
@@ -356,6 +348,17 @@ class DustManager(object):
                 )
                 self._usage_handler.set_pressure(
                     self._airfilter.pressure_drop_prefilter, AirFilter.PREFILTER
+                )
+
+                data = dict(
+                    rpm_val=list(self._last_rpm_values),
+                    fan_state=self._state,
+                    usage_count=self._usage_handler.get_total_usage(),
+                    prefilter_count=self._usage_handler._get_prefilter_usage_time(),
+                    carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
+                    pressure_val=self._airfilter.last_pressure_values,
+                    pressure_drop_mainfilter=self._airfilter.pressure_drop_mainfilter,
+                    pressure_drop_prefilter=self._airfilter.pressure_drop_prefilter,
                 )
                 self._analytics_handler.add_fan_rpm_test(data)
 
