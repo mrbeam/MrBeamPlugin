@@ -76,14 +76,14 @@ $(function () {
         };
 
         self.prefilterPercent = ko.computed(function () {
-            tenthSteps = !self.airfilter3Used();
+            const tenthSteps = !self.airfilter3Used();
             return self.optimizeParameterPercentageValues(
                 self.prefilterUsage(),
                 tenthSteps
             );
         });
         self.carbonFilterPercent = ko.computed(function () {
-            tenthSteps = !self.airfilter3Used();
+            const tenthSteps = !self.airfilter3Used();
             return self.optimizeParameterPercentageValues(
                 self.carbonFilterUsage(),
                 tenthSteps
