@@ -535,7 +535,7 @@ $(function () {
                         MRBEAM_LASER_HEAD_MODEL +
                         ", backend=" +
                         laserHeadModel +
-                        ", backendLaserCutterMode: frontend=" +
+                        ", laserCutterMode: frontend=" +
                         LASER_CUTTER_MODE +
                         ", backend=" +
                         backendLaserCutterMode +
@@ -549,7 +549,7 @@ $(function () {
                         MRBEAM_PLUGIN_VERSION +
                         ", isFirstRun: " +
                         CONFIG_FIRST_RUN +
-                        ", backendLaserCutterMode: frontend=" +
+                        ", laserCutterMode: " +
                         LASER_CUTTER_MODE +
                         ", laserheadModel: " +
                         MRBEAM_LASER_HEAD_MODEL +
