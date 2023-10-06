@@ -362,9 +362,13 @@ class UsageHandler(object):
             int: job time in seconds, -1 if it could not be found
         """
         if self.JOB_TIME_KEY not in usage_data:
-            self._logger.info("No job time found in usage data, returning -1")
-            return -1
-        return usage_data.get(self.JOB_TIME_KEY, -1)
+            self._logger.error(
+                "No job time found in %s, returning 0 - %s",
+                usage_data,
+                self._usage_data,
+            )
+            return 0
+        return usage_data.get(self.JOB_TIME_KEY, 0)
 
     def _get_airfilter_serial(self):
         """

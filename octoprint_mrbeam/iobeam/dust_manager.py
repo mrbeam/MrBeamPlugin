@@ -108,7 +108,6 @@ class DustManager(object):
         self._one_button_handler = self._plugin.onebutton_handler
         self._airfilter = self._plugin.airfilter
 
-        self._start_validation_timer()
         self._just_initialized = True
         self._logger.debug("initialized!")
 
@@ -236,6 +235,7 @@ class DustManager(object):
             self._boost_timer_interval()
         elif event == OctoPrintEvents.PRINT_STARTED:
             # We start the test of the fan at 80%
+            self._start_validation_timer()
             self._start_test_fan_rpm()
         elif event in (MrBeamEvents.BUTTON_PRESS_REJECT, OctoPrintEvents.PRINT_RESUMED):
             # just in case reset iobeam to start fan. In case fan got unplugged fanPCB might get restarted.
@@ -605,8 +605,7 @@ class DustManager(object):
             self._pause_laser(trigger="Air filter not connected.", log_message=msg)
 
         # TODO: check for error case in connected val (currently, connected == True/False/None)
-        if not self._check_and_report_error():
-            result = False
+        self._check_and_report_error()
         return result
 
     def _check_if_one_value_is_none(self):

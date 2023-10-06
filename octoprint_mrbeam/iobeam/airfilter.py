@@ -263,13 +263,13 @@ class AirFilter(object):
         fan_pressure = [sublist[3] for sublist in self._last_pressure_values]
 
         # calculate the average
-        prefilter_pressure_avg = min(
+        prefilter_pressure_avg = max(
             0, sum(prefilter_pressure) / len(prefilter_pressure)
         )  # limited to min 0
-        mainfilter_pressure_avg = min(
+        mainfilter_pressure_avg = max(
             0, sum(mainfilter_pressure) / len(mainfilter_pressure)
         )  # limited to min 0
-        fan_pressure_avg = min(
+        fan_pressure_avg = max(
             0, sum(fan_pressure) / len(fan_pressure)
         )  # limited to min 0
         return prefilter_pressure_avg, mainfilter_pressure_avg, fan_pressure_avg

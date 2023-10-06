@@ -77,7 +77,7 @@ def test_handle_fan_data_when_data_is_missing_then_malfunction(
 
 
 @patch("octoprint_mrbeam.iobeam.dust_manager.monotonic_time")
-def test_handle_fan_data_when_rpm_is_zero_and_job_ios_running_then_malfunction(
+def test_handle_fan_data_when_rpm_is_zero_and_job_is_running_then_malfunction(
     mock_monotonic_time, dust_manager
 ):
     # Arrange
