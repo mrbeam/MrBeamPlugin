@@ -558,7 +558,7 @@ class LaserheadHandler(object):
         laser head profile files and return them.
 
         Returns:
-            dict: current laser head properties, None: otherwise
+            dict: current laser head properties
         """
         # 1. get the ID of the current laser head
         laserhead_id = self.get_current_used_lh_model_id()
@@ -570,7 +570,7 @@ class LaserheadHandler(object):
             self._logger.exception(
                 "properties file for current laser head ID: {} doesn't exist or path is invalid. Path: {}".format(
                     laserhead_id, lh_properties_file_path))
-            return None
+            return {}
 
         self._logger.debug(
             "properties file for current laser head ID: {} exists. Path:{}".format(
@@ -585,7 +585,7 @@ class LaserheadHandler(object):
             self._logger.exception(
                 "Exception: {} while Opening or loading the properties file for current laser head. Path: {}".format(
                     e, lh_properties_file_path))
-            return None
+            return {}
 
     def _get_laserhead_properties(self):
         """returns the current saved laser head properties or load new if the
@@ -601,7 +601,7 @@ class LaserheadHandler(object):
             self._logger.debug("new laserhead_id -> load current laserhead porperties")
             # 2. Load the corresponding yaml file and return it's content
             self._laserhead_properties = self._load_current_laserhead_properties()
-            if self._laserhead_properties is not None:
+            if self._laserhead_properties:
                 self._laserhead_properties.update({'laserhead_id': laserhead_id})
             self._logger.debug("_laserhead_properties - {}".format(self._laserhead_properties))
         else:
