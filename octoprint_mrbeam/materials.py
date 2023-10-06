@@ -7,7 +7,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 # singleton
 _instance = None
 
-# TODO: SW-3719 keep these constants in a unique place
+# TODO: SW-3719 import these from mode services
 DEFAULT_MODE = "default"
 ROTARY_MODE = "rotary"
 
