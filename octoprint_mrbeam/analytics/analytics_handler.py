@@ -1430,7 +1430,7 @@ class AnalyticsHandler(object):
                 AnalyticsKeys.Header.LH_MODEL_ID: self._laserhead_handler.get_current_used_lh_model_id()
                 if self._laserhead_handler is not None
                 else self.UNKNOWN_VALUE,
-                AnalyticsKeys.Header.LH_SERIAL: self._plugin.get_laser_head_serial()
+                AnalyticsKeys.Header.LH_SERIAL: self._plugin.get_current_laser_head_serial()
                 if self._laserhead_handler is not None
                 else self.UNKNOWN_VALUE,
                 AnalyticsKeys.Header.FEATURE_ID: header_extension.get(

@@ -81,7 +81,7 @@ class Materials(object):
                 material_key=material_key,
                 material=material,
                 laser_cutter_mode=self.plugin.get_laser_cutter_mode(),
-                laser_model=self.plugin.get_laser_head_model(),
+                laser_model=self.plugin.get_current_laser_head_model(),
                 plugin_v=self.plugin.get_plugin_version(),
                 device_model=self.plugin.get_model_id()
             )

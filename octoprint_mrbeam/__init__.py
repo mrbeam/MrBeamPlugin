@@ -363,8 +363,8 @@ class MrBeamPlugin(
         msg += ", grbl_version_lastknown:{}".format(
             self._settings.get(["grbl_version_lastknown"])
         )
-        msg += ", laserhead-serial-lastknown:{}".format(self.get_laser_head_serial())
-        msg += ", laserhead-model-lastknown:{}".format(self.get_laser_head_serial())
+        msg += ", laserhead-serial-lastknown:{}".format(self.get_current_laser_head_serial())
+        msg += ", laserhead-model-lastknown:{}".format(self.get_current_laser_head_serial())
         self._logger.info(msg, terminal=True)
 
         msg = (
@@ -391,8 +391,8 @@ class MrBeamPlugin(
             beamOS_image=self._octopi_info,
             grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
             laserhead_lastknown=dict(
-                serial=self.get_laser_head_serial(),
-                model=self.get_laser_head_model(),
+                serial=self.get_current_laser_head_serial(),
+                model=self.get_current_laser_head_model(),
             ),
             _state=dict(
                 calibration_tool_mode=self.calibration_tool_mode,
@@ -558,8 +558,8 @@ class MrBeamPlugin(
             laserheadChanged=self.laserhead_changed(),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
             laserhead=dict(
-                serial=self.get_laser_head_serial(),
-                model=self.get_laser_head_model(),
+                serial=self.get_current_laser_head_serial(),
+                model=self.get_current_laser_head_model(),
                 model_id=self.laserhead_handler.get_current_used_lh_model_id(),
                 model_supported=self.laserhead_handler.is_current_used_lh_model_supported(),
             ),
@@ -897,8 +897,8 @@ class MrBeamPlugin(
                 beamosVersionDisplayVersion=display_version_string,
                 beamosVersionImage=self._octopi_info,
                 grbl_version=self._grbl_version,
-                laserhead_serial=self.get_laser_head_serial(),
-                laserhead_model=self.get_laser_head_model(),
+                laserhead_serial=self.get_current_laser_head_serial(),
+                laserhead_model=self.get_current_laser_head_model(),
                 laserhead_min_speed=self.laserhead_handler.current_laserhead_min_speed,
                 env=self.get_env(),
                 mac_addrs=self._get_mac_addresses(),
@@ -1297,10 +1297,10 @@ class MrBeamPlugin(
         # TODO: SW-3719 return actual laser cutter mode
         return "default"
 
-    def get_laser_head_model(self):
+    def get_current_laser_head_model(self):
         return self.laserhead_handler.get_current_used_lh_data()["model"]
 
-    def get_laser_head_serial(self):
+    def get_current_laser_head_serial(self):
         return self.laserhead_handler.get_current_used_lh_data()["serial"]
 
     # simpleApiCommand: messages;
@@ -2097,7 +2097,7 @@ class MrBeamPlugin(
                     jsonify(
                         parse_csv(
                             device_model=self.get_model_id(),
-                            laserhead_model=self.get_laser_head_model(),
+                            laserhead_model=self.get_current_laser_head_model(),
                             laser_cutter_mode=self.get_laser_cutter_mode(),
                         )
                     ),
@@ -2864,7 +2864,7 @@ class MrBeamPlugin(
                     dusting_mode=self.dust_manager.is_final_extraction_mode,
                     state=self._printer.get_state_string(),
                     is_homed=self._printer.is_homed(),
-                    laser_model=self.get_laser_head_model(),
+                    laser_model=self.get_current_laser_head_model(),
                 )
             except:
                 self._logger.exception("Exception while collecting mrb_state data.")
