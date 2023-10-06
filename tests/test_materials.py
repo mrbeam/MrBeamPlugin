@@ -39,6 +39,13 @@ def test_get_custom_materials_for_laser_cutter_mode_default(materials_instance, 
     assert "my rotary material" not in custom_materials
 
 
+def test_get_empty_custom_materials(materials_instance, mocker):
+    mocker.patch("octoprint_mrbeam.MrBeamPlugin.get_laser_cutter_mode", return_value="default")
+    materials_instance.custom_materials = {}
+    custom_materials = materials_instance.get_custom_materials_for_laser_cutter_mode()
+    assert custom_materials == {}
+
+
 def test_get_custom_materials_for_laser_cutter_mode_rotary(materials_instance, mocker):
     mocker.patch("octoprint_mrbeam.MrBeamPlugin.get_laser_cutter_mode", return_value="rotary")
     materials_instance.custom_materials = SAMPLE_MATERIALS
