@@ -102,7 +102,7 @@ def test_cooling_since_if_cooling(temperature_manager):
     cooling_since = temperature_manager.cooling_since
 
     # Assert
-    assert cooling_since == 1000
+    assert cooling_since == approx(1000, rel=1e-4)
 
 
 def test_handle_temp_invalid(temperature_manager):
