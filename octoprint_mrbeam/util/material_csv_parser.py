@@ -20,9 +20,11 @@ DEFAULT_MODE = "default"
 ROTARY_MODE = "rotary"
 
 MATERIALS_CSV_DIR = "files/material_settings/"
+DEFAULT_MATERIALS_CSV_DIR = MATERIALS_CSV_DIR + "materials.csv"
+ROTARY_MATERIALS_CSV_DIR = MATERIALS_CSV_DIR + "materials_rotary.csv"
 MATERIALS_CSVS = {
-    DEFAULT_MODE: MATERIALS_CSV_DIR + "materials.csv",
-    ROTARY_MODE: MATERIALS_CSV_DIR + "materials_rotary.csv",
+    DEFAULT_MODE: DEFAULT_MATERIALS_CSV_DIR,
+    ROTARY_MODE: ROTARY_MATERIALS_CSV_DIR,
 }
 
 
