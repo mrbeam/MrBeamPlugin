@@ -16,6 +16,7 @@ LASER_MODEL_X = "x"
 
 VALID_MODELS = [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY, MRB_DREAMCUT_X]
 
+# TODO: import these from mode services
 DEFAULT_MODE = "default"
 ROTARY_MODE = "rotary"
 
