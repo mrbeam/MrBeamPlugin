@@ -44,7 +44,7 @@ def test_add_high_temp_warning_state_transition(mrbeam_plugin):
     )
 
 
-def test_on_event_high_temperature_dismissed(analytics_handler):
+def test_on_event_high_temperature_dismissed(analytics_handler, mrbeam_plugin):
     # Arrange
     analytics_handler._add_device_event = MagicMock()
 
@@ -59,7 +59,7 @@ def test_on_event_high_temperature_dismissed(analytics_handler):
     )
 
 
-def test_on_event_high_temperature_warning(analytics_handler):
+def test_on_event_high_temperature_warning(analytics_handler, mrbeam_plugin):
     # Arrange
     analytics_handler._add_device_event = MagicMock()
 
@@ -74,7 +74,7 @@ def test_on_event_high_temperature_warning(analytics_handler):
     )
 
 
-def test_on_event_laser_cooling_to_slow(analytics_handler):
+def test_on_event_laser_cooling_to_slow(analytics_handler, mrbeam_plugin):
     # Arrange
     analytics_handler._add_device_event = MagicMock()
 
@@ -89,7 +89,7 @@ def test_on_event_laser_cooling_to_slow(analytics_handler):
     )
 
 
-def test_on_event_laser_cooling_re_trigger_fan(analytics_handler):
+def test_on_event_laser_cooling_re_trigger_fan(analytics_handler, mrbeam_plugin):
     # Arrange
     analytics_handler._add_device_event = MagicMock()
 
@@ -121,7 +121,7 @@ def test_on_event_laser_high_temperature(analytics_handler, mrbeam_plugin):
     )
 
 
-def test_on_event_high_temperature_shown_critical(analytics_handler):
+def test_on_event_high_temperature_shown_critical(analytics_handler, mrbeam_plugin):
     # Arrange
     analytics_handler._add_device_event = MagicMock()
 
@@ -136,7 +136,7 @@ def test_on_event_high_temperature_shown_critical(analytics_handler):
     )
 
 
-def test_on_event_high_temperature_shown_warning(analytics_handler):
+def test_on_event_high_temperature_shown_warning(analytics_handler, mrbeam_plugin):
     # Arrange
     analytics_handler._add_device_event = MagicMock()
 

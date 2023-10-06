@@ -119,11 +119,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                         lastOverlap = j;
                     }
                 }
-
-                // Update cluster if it includes QuickText elements
-                updateClusterIfItContainsQuickText(cluster);
             }
-
             clusters = clusters.filter((c) => c !== null);
             if (lastOverlap === -1) {
                 // create new cluster
@@ -274,7 +270,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             return Promise.resolve(elem);
         }
 
-        let prom = generatePNGFromURL(url).then((result) => {
+        let prom = url2png(url).then((result) => {
             elem.attr("href", result.dataUrl);
             return elem;
         });
@@ -344,44 +340,41 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 h,
                 fontDeclarations
             );
-            // includesQuickText is always true here as this method is only used on QuickText elements
-            generatePNGFromURL(svgDataUrl, pxPerMM, bboxMM, true, true).then(
-                (result) => {
-                    const size = getDataUriSize(result.dataUrl);
+            url2png(svgDataUrl, pxPerMM, bboxMM, true).then((result) => {
+                const size = getDataUriSize(result.dataUrl);
 
-                    if (MRBEAM_DEBUG_RENDERING) {
-                        console.info(
-                            "MRBEAM_DEBUG_RENDERING",
-                            result.dataUrl,
-                            result.bbox
-                        );
-                        const img = elem.paper.image(
-                            result.dataUrl,
-                            result.bbox.x,
-                            result.bbox.y,
-                            result.bbox.w,
-                            result.bbox.h
-                        );
-                        img.attr("opacity", 0.6);
-                        img.click(function () {
-                            img.remove();
-                        });
-                        const r = elem.paper.rect(result.bbox).attr({
-                            fill: "none",
-                            stroke: "#aa00aa",
-                            strokeWidth: 2,
-                        });
-                        setTimeout(() => r.remove(), 5000);
-                    }
-
-                    resolve({
-                        dataUrl: result.dataUrl,
-                        size: size,
-                        bbox: bboxMM,
-                        analysis: result.analysis,
+                if (MRBEAM_DEBUG_RENDERING) {
+                    console.info(
+                        "MRBEAM_DEBUG_RENDERING",
+                        result.dataUrl,
+                        result.bbox
+                    );
+                    const img = elem.paper.image(
+                        result.dataUrl,
+                        result.bbox.x,
+                        result.bbox.y,
+                        result.bbox.w,
+                        result.bbox.h
+                    );
+                    img.attr("opacity", 0.6);
+                    img.click(function () {
+                        img.remove();
                     });
+                    const r = elem.paper.rect(result.bbox).attr({
+                        fill: "none",
+                        stroke: "#aa00aa",
+                        strokeWidth: 2,
+                    });
+                    setTimeout(() => r.remove(), 5000);
                 }
-            );
+
+                resolve({
+                    dataUrl: result.dataUrl,
+                    size: size,
+                    bbox: bboxMM,
+                    analysis: result.analysis,
+                });
+            });
         });
         return prom;
     };
@@ -552,7 +545,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     //        return promise;
     //    };
 
-    // TODO use generatePNGFromURL, simplify, check if necessary
+    // TODO use url2png, simplify, check if necessary
     Element.prototype.renderJobTimeEstimationPNG = function (
         wPT,
         hPT,
@@ -729,17 +722,5 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             }
         }
         return [];
-    }
-
-    function updateClusterIfItContainsQuickText(cluster) {
-        cluster.elements.forEach((element) => {
-            let classListArray = Array.from(element.node.classList);
-            if (
-                classListArray.includes("straightText") ||
-                classListArray.includes("curvedText")
-            ) {
-                cluster.includesQuickText = true;
-            }
-        });
     }
 });
