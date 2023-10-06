@@ -888,9 +888,14 @@ class UsageHandler(object):
         if self._airfilter is None:
             return -1
         if self._airfilter.model_id in AirFilter.AIRFILTER3_MODELS:
-            return self._calculate_af3_filter_usage(filter_stage=AirFilter.CARBONFILTER)
+            percent = self._calculate_af3_filter_usage(
+                filter_stage=AirFilter.CARBONFILTER
+            )
         else:
-            return self._calculate_af2_filter_usage(filter_stage=AirFilter.CARBONFILTER)
+            percent = self._calculate_af2_filter_usage(
+                filter_stage=AirFilter.CARBONFILTER
+            )
+        return round(percent)
 
     def get_prefilter_usage(self):
         """
@@ -902,9 +907,10 @@ class UsageHandler(object):
         if self._airfilter is None:
             return -1
         if self._airfilter.model_id in AirFilter.AIRFILTER3_MODELS:
-            return self._calculate_af3_filter_usage(filter_stage=AirFilter.PREFILTER)
+            percent = self._calculate_af3_filter_usage(filter_stage=AirFilter.PREFILTER)
         else:
-            return self._calculate_af2_filter_usage(filter_stage=AirFilter.PREFILTER)
+            percent = self._calculate_af2_filter_usage(filter_stage=AirFilter.PREFILTER)
+        return round(percent)
 
     def _calculate_af2_filter_usage(self, filter_stage):
         """
@@ -946,7 +952,7 @@ class UsageHandler(object):
         Returns:
             The usage of the given filter stage in percent.
         """
-        usage_data = None
+        usage_data = {}
         stage_usage_time = None
         pressure_graph = None
 
@@ -1035,6 +1041,23 @@ class UsageHandler(object):
         """
         # Separate x and y values from the known points
         x_values, y_values = zip(*reference_points)
+
+        # limit input value
+        if value > max(x_values):
+            mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager").error(
+                "value %s is higher than max value %s, limiting to max value",
+                value,
+                max(x_values),
+            )
+            value = max(x_values)
+
+        elif value < min(x_values):
+            mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager").error(
+                "value %s is lower than min value %s, limiting to min value",
+                value,
+                min(x_values),
+            )
+            value = min(x_values)
 
         percentage = float(
             UsageHandler.linear_piecewise_interpolate(value, x_values, y_values)

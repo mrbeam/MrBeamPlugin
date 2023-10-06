@@ -44,7 +44,7 @@ class AirFilter(object):
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
     PRESSURE_VALUES_LIST_SIZE = 5
     MAX_PRESSURE_DIFFERENCE = 3000  # TODO SW-2320
-    MAX_FAN_TEST_RPM = 10000  # TODO SW-2320
+    MAX_FAN_TEST_RPM = 11000  # TODO SW-2320
 
     AF3_PRESSURE_GRAPH_CARBON_FILTER = [
         (0, 0),
@@ -246,7 +246,7 @@ class AirFilter(object):
             self._last_pressure_values.append(
                 [self._pressure1, self._pressure2, self._pressure3, self._pressure4]
             )
-        elif self._pressure1 is not None:
+        elif self._pressure1 is not None and self.model_id in self.AIRFILTER2_MODELS:
             self._last_pressure_values.append(self._pressure1)
 
     def _get_avg_pressure_differences(self):
@@ -255,14 +255,23 @@ class AirFilter(object):
         Returns:
             (int, int, int): Average pressure difference of the last pressure readings for prefilter mainfilter and fan
         """
+        self._logger.debug(
+            "Calculating average pressure differences. %s", self._last_pressure_values
+        )
         prefilter_pressure = [sublist[1] for sublist in self._last_pressure_values]
         mainfilter_pressure = [sublist[2] for sublist in self._last_pressure_values]
         fan_pressure = [sublist[3] for sublist in self._last_pressure_values]
 
         # calculate the average
-        prefilter_pressure_avg = sum(prefilter_pressure) / len(prefilter_pressure)
-        mainfilter_pressure_avg = sum(mainfilter_pressure) / len(mainfilter_pressure)
-        fan_pressure_avg = sum(fan_pressure) / len(fan_pressure)
+        prefilter_pressure_avg = min(
+            0, sum(prefilter_pressure) / len(prefilter_pressure)
+        )  # limited to min 0
+        mainfilter_pressure_avg = min(
+            0, sum(mainfilter_pressure) / len(mainfilter_pressure)
+        )  # limited to min 0
+        fan_pressure_avg = min(
+            0, sum(fan_pressure) / len(fan_pressure)
+        )  # limited to min 0
         return prefilter_pressure_avg, mainfilter_pressure_avg, fan_pressure_avg
 
     @property

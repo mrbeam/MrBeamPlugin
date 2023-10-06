@@ -310,9 +310,6 @@ def test_prefilter_usage_af3(usage_handler, mrbeam_plugin):
     assert usage == 66
 
 
-# TODO TEST time higher as pressure
-# TODO TEST pressure higher as time
-
 # test set pressure
 @pytest.mark.parametrize(
     "pressure, expected",
@@ -418,4 +415,42 @@ def test_set_fan_test_rpm(usage_handler, mrbeam_plugin):
     )
 
 
+# TODO TEST time higher as pressure
 # TODO test reset if 20% lower
+
+
+@pytest.mark.parametrize(
+    "graph, value, expected",
+    [
+        (AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER, 359, 11),
+        (AirFilter.AF3_PRESSURE_GRAPH_PREFILTER, 200, 6),
+        (AirFilter.AF3_RPM_GRAPH, 9800, 82),
+    ],
+)
+def test_get_precentage_from_interpolation(graph, value, expected, usage_handler):
+    # Arrange
+
+    # Act
+    result = usage_handler.get_precentage_from_interpolation(graph, value)
+
+    # Assert
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "graph, value, expected",
+    [
+        (AirFilter.AF3_RPM_GRAPH, 1009800, 100),  # higher than max should return 100
+        (AirFilter.AF3_RPM_GRAPH, -9800, 0),  # lower than min should return 0
+    ],
+)
+def test_get_precentage_from_interpolation_when_invalid_input(
+    graph, value, expected, usage_handler
+):
+    # Arrange
+
+    # Act
+    result = usage_handler.get_precentage_from_interpolation(graph, value)
+
+    # Assert
+    assert result == expected

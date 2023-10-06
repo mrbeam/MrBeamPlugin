@@ -65,27 +65,29 @@ $(function () {
             return Math.floor(self.gantryUsage() / 3600);
         });
 
-        self.optimizeParameterPercentageValues = function (val) {
-            return Math.min(roundDownToNearest10(val), 100);
+        self.optimizeParameterPercentageValues = function (
+            val,
+            tenthSteps = true
+        ) {
+            if (tenthSteps) {
+                val = roundDownToNearest10(val);
+            }
+            return Math.max(0, Math.min(val, 100));
         };
 
         self.prefilterPercent = ko.computed(function () {
-            if (self.airfilter3Used()) {
-                return self.prefilterUsage();
-            } else {
-                return self.optimizeParameterPercentageValues(
-                    self.prefilterUsage()
-                );
-            }
+            tenthSteps = !self.airfilter3Used();
+            return self.optimizeParameterPercentageValues(
+                self.prefilterUsage(),
+                tenthSteps
+            );
         });
         self.carbonFilterPercent = ko.computed(function () {
-            if (self.airfilter3Used()) {
-                return self.carbonFilterUsage();
-            } else {
-                return self.optimizeParameterPercentageValues(
-                    self.carbonFilterUsage()
-                );
-            }
+            tenthSteps = !self.airfilter3Used();
+            return self.optimizeParameterPercentageValues(
+                self.carbonFilterUsage(),
+                tenthSteps
+            );
         });
         self.laserHeadPercent = ko.computed(function () {
             return self.optimizeParameterPercentageValues(

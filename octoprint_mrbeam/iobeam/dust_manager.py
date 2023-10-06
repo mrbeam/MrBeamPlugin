@@ -49,6 +49,7 @@ class DustManager(object):
     FAN_TEST_DURATION = 35  # seconds
     FAN_TEST_DURATION_EXTEND = 10  # seconds
     FAN_TEST_RPM_MIN_DIFF = 500  # rpm
+    FAN_TEST_MIN_RPM = 1000  # rpm
     FAN_NOT_SPINNING_TIMEOUT = 10  # time in seconds before reporting the error
     FAN_DATA_MISSING_TIMEOUT = 10  # time in seconds before reporting the error
     REPEAT_TEST_FAN_RPM_INTERVAL = (
@@ -337,32 +338,38 @@ class DustManager(object):
             # Write to analytics if the values are valid
             if self._validate_values():
                 # set rpm of test fan to the average of the measured values
-                self._usage_handler.set_fan_test_rpm(
-                    sum(self._last_rpm_values) / len(self._last_rpm_values)
-                )
-                self._logger.debug(
-                    "pressure drop - mainfilter %s prefilter %s",
-                    self._airfilter.pressure_drop_mainfilter,
-                    self._airfilter.pressure_drop_prefilter,
-                )
-                self._usage_handler.set_pressure(
-                    self._airfilter.pressure_drop_mainfilter, AirFilter.CARBONFILTER
-                )
-                self._usage_handler.set_pressure(
-                    self._airfilter.pressure_drop_prefilter, AirFilter.PREFILTER
-                )
+                avg_rpm = sum(self._last_rpm_values) / len(self._last_rpm_values)
+                if avg_rpm > self.FAN_TEST_MIN_RPM:
+                    self._usage_handler.set_fan_test_rpm(avg_rpm)
+                    self._logger.debug(
+                        "pressure drop - mainfilter %s prefilter %s",
+                        self._airfilter.pressure_drop_mainfilter,
+                        self._airfilter.pressure_drop_prefilter,
+                    )
+                    self._usage_handler.set_pressure(
+                        self._airfilter.pressure_drop_mainfilter, AirFilter.CARBONFILTER
+                    )
+                    self._usage_handler.set_pressure(
+                        self._airfilter.pressure_drop_prefilter, AirFilter.PREFILTER
+                    )
 
-                data = dict(
-                    rpm_val=list(self._last_rpm_values),
-                    fan_state=self._state,
-                    usage_count=self._usage_handler.get_total_usage(),
-                    prefilter_count=self._usage_handler._get_prefilter_usage_time(),
-                    carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
-                    pressure_val=self._airfilter.last_pressure_values,
-                    pressure_drop_mainfilter=self._airfilter.pressure_drop_mainfilter,
-                    pressure_drop_prefilter=self._airfilter.pressure_drop_prefilter,
-                )
-                self._analytics_handler.add_fan_rpm_test(data)
+                    data = dict(
+                        rpm_val=list(self._last_rpm_values),
+                        fan_state=self._state,
+                        usage_count=self._usage_handler.get_total_usage(),
+                        prefilter_count=self._usage_handler._get_prefilter_usage_time(),
+                        carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
+                        pressure_val=self._airfilter.last_pressure_values,
+                        pressure_drop_mainfilter=self._airfilter.pressure_drop_mainfilter,
+                        pressure_drop_prefilter=self._airfilter.pressure_drop_prefilter,
+                    )
+                    self._analytics_handler.add_fan_rpm_test(data)
+                else:
+                    self._logger.error(
+                        "Fan not spinning at required RPM: %s (%s). Not writing to analytics.",
+                        avg_rpm,
+                        self.FAN_TEST_MIN_RPM,
+                    )
 
             # Set fan to auto again
             self._logger.debug("FAN_TEST_RPM: End - setting fan to auto")
@@ -598,7 +605,8 @@ class DustManager(object):
             self._pause_laser(trigger="Air filter not connected.", log_message=msg)
 
         # TODO: check for error case in connected val (currently, connected == True/False/None)
-        self._check_and_report_error()
+        if not self._check_and_report_error():
+            result = False
         return result
 
     def _check_if_one_value_is_none(self):
@@ -631,9 +639,6 @@ class DustManager(object):
     def _check_if_fan_is_spinning_during_a_running_job(self):
         """
         Checks if the fan is not spinning during a running job and sets the _fan_not_spinning_ts flag.
-
-        Returns:
-            None
         """
         if self._rpm <= 0 and self._one_button_handler.is_printing():
             if self._fan_not_spinning_ts is None:
@@ -648,6 +653,7 @@ class DustManager(object):
             self._fan_not_spinning_ts = None
 
     def _check_and_report_error(self):
+        result = True
         if not self._plugin.is_boot_grace_period():
             if (
                 self._fan_not_spinning_ts is not None
@@ -670,6 +676,7 @@ class DustManager(object):
                     analytics="fan-not-spinning",
                     log_message="Fan is not spinning.",
                 )
+                result = False
 
             if (
                 self._fan_data_missing_ts is not None
@@ -687,6 +694,7 @@ class DustManager(object):
                     },
                 )
                 self._fan_data_missing_reported = True
+                result = False
 
             if (
                 monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE
@@ -702,6 +710,8 @@ class DustManager(object):
                     },
                 )
                 self._fan_data_too_old_reported = True
+                result = False
+        return result
 
     def _validation_timer_callback(self):
         try:
