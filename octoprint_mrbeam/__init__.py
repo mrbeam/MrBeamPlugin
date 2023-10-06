@@ -2677,7 +2677,9 @@ class MrBeamPlugin(
             self.fire_event(
                 MrBeamEvents.MRB_PLUGIN_VERSION,
                 payload=dict(
-                    version=self._plugin_version, is_first_run=self.isFirstRun()
+                    version=self._plugin_version,
+                    is_first_run=self.isFirstRun(),
+                    laser_cutter_mode=self.get_laser_cutter_mode()
                 ),
             )
 
