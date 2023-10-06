@@ -2016,13 +2016,14 @@ $(function () {
 
         self._sanitize = function (name) {
             let no_special_chars = name
-                .replace(/[^a-zA-Z0-9\-_.() ]/g, "")
-                .replace(/ /g, "_"); // remove spaces,non-Ascii chars
-            const pattern = /[a-zA-Z0-9_\-()]$/g; //check if last character is a valid one
+                .replace(/[^a-zA-Z0-9\-_() ]/g, "") // remove everything which is not alphanumeric plus _-()
+                .replace(/ /g, "_"); // replace spaces
+            const pattern = /^[a-zA-Z0-9_\-()]+$/g; // check if only ascii characters from start to end
             const is_valid = pattern.test(no_special_chars);
             if (!is_valid || no_special_chars.length <= 1) {
+                // otherwise replace with generic name.
                 const time_stamp = Date.now();
-                no_special_chars = "mb" + no_special_chars + time_stamp;
+                no_special_chars = "mb_" + time_stamp;
             }
             return no_special_chars;
         };
