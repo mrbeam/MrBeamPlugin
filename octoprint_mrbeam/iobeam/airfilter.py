@@ -237,12 +237,7 @@ class AirFilter(object):
         if pressure4 is not None:
             self._pressure4 = pressure4
 
-        if (
-            pressure1 is not None
-            and pressure2 is not None
-            and pressure3 is not None
-            and pressure4 is not None
-        ):
+        if all([pressure1, pressure2, pressure3, pressure4]):
             self._last_pressure_values.append(
                 [self._pressure1, self._pressure2, self._pressure3, self._pressure4]
             )

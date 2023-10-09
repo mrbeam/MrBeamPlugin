@@ -652,6 +652,12 @@ class DustManager(object):
             self._fan_not_spinning_ts = None
 
     def _check_and_report_error(self):
+        """
+        Checks if there is an error and reports it to the user.
+
+        Returns:
+            bool: True if there is an error, False otherwise.
+        """
         result = True
         if not self._plugin.is_boot_grace_period():
             if (

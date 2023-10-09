@@ -472,7 +472,7 @@ class UsageHandler(object):
             usage_data = dict(
                 total=self._usage_data[self.TOTAL_KEY][self.JOB_TIME_KEY],
                 prefilter=self._get_prefilter_usage_time(),
-                carbon_filter=self._get_carbon_filter_usage_time,
+                carbon_filter=self._get_carbon_filter_usage_time(),
                 laser_head=dict(
                     usage=self._usage_data[self.LASER_HEAD_KEY][
                         self._laser_head_serial
@@ -928,15 +928,15 @@ class UsageHandler(object):
         """
         # get the correct data for the filter stage
         if filter_stage == AirFilter.PREFILTER:
-            stage_usage_time = self._get_prefilter_usage_time()
+            stage_usage_time = self._get_prefilter_usage_time() or 0
         elif filter_stage == AirFilter.CARBONFILTER:
-            stage_usage_time = self._get_carbon_filter_usage_time()
-
-        usage_time = stage_usage_time if stage_usage_time is not None else 0
+            stage_usage_time = self._get_carbon_filter_usage_time() or 0
+        else:
+            stage_usage_time = 0
 
         # calculate the percentage
         time_percentage = self._get_percentage_from_time(
-            usage_time, self._airfilter.get_lifespans(filter_stage)[0]
+            stage_usage_time, self._airfilter.get_lifespans(filter_stage)[0]
         )
 
         # calculate the total percentage
@@ -964,17 +964,18 @@ class UsageHandler(object):
         if filter_stage == AirFilter.PREFILTER:
             pressure_graph = AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER
             usage_data = self._get_airfilter_prefilter_usage_data()
-            stage_usage_time = self._get_prefilter_usage_time()
+            stage_usage_time = self._get_prefilter_usage_time() or 0
         elif filter_stage == AirFilter.CARBONFILTER:
             pressure_graph = AirFilter.AF3_PRESSURE_GRAPH_PREFILTER
             usage_data = self._get_airfilter_carbon_filter_usage_data()
-            stage_usage_time = self._get_carbon_filter_usage_time()
+            stage_usage_time = self._get_carbon_filter_usage_time() or 0
+        else:
+            stage_usage_time = 0
 
         # get the global values
         pressure_loss = usage_data.get(
             self.PRESSURE_KEY, AirFilter.MAX_PRESSURE_DIFFERENCE
         )
-        usage_time = stage_usage_time if stage_usage_time is not None else 0
         rpm_filter_test = self._get_airfilter_carbon_filter_usage_data().get(
             self.FAN_TEST_RPM_KEY, AirFilter.MAX_FAN_TEST_RPM
         )  # this is saved in carbon filter stage
@@ -984,7 +985,7 @@ class UsageHandler(object):
             pressure_graph, pressure_loss
         )
         time_percentage = self._get_percentage_from_time(
-            usage_time, self._airfilter.get_lifespans(filter_stage)[0]
+            stage_usage_time, self._airfilter.get_lifespans(filter_stage)[0]
         )
         rpm_percentage = self.get_precentage_from_interpolation(
             AirFilter.AF3_RPM_GRAPH, rpm_filter_test
@@ -1081,7 +1082,7 @@ class UsageHandler(object):
         Returns:
             float: percentage of lifespan that has been used
         """
-        return (usage_time / 3600) / lifespan * 100
+        return (usage_time / 3600.0) / lifespan * 100
 
     def set_pressure(self, pressure, filter_stage):
         """
@@ -1168,6 +1169,13 @@ class UsageHandler(object):
             self._write_usage_data()
 
     def _assign_value_and_create_structure(self, nested_keys, value):
+        """
+        Assign the given value to the given nested keys and create the structure if it does not exist.
+
+        Args:
+            nested_keys: The nested keys to assign the value to.
+            value: The value to assign.
+        """
         current_dict = self._usage_data
         for key in nested_keys[:-1]:
             current_dict = current_dict.setdefault(key, {})
