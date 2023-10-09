@@ -45,6 +45,12 @@ class AirFilter(object):
     PRESSURE_VALUES_LIST_SIZE = 5
     MAX_PRESSURE_DIFFERENCE = 3000  # TODO SW-2320
     MAX_FAN_TEST_RPM = 11000  # TODO SW-2320
+    AF3_MAX_PREFILTER_PRESSURE_CHANGE = (
+        100  # The maximum pressure change in Pa for the prefilter of the AF3
+    )
+    AF3_MAX_CARBON_FILTER_PRESSURE_CHANGE = (
+        50  # The maximum pressure change in Pa for the carbon filter of the AF3
+    )
 
     AF3_PRESSURE_GRAPH_CARBON_FILTER = [
         (0, 0),

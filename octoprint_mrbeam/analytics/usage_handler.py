@@ -1108,23 +1108,44 @@ class UsageHandler(object):
                 )
                 stage_key = self.CARBON_FILTER_KEY
                 reset_call = self.reset_carbon_filter_usage
+                value_change = min(
+                    abs(last_saved_pressure_value - pressure),
+                    AirFilter.AF3_MAX_CARBON_FILTER_PRESSURE_CHANGE,
+                )  # limit the value change to AirFilter.MAX_CARBON_FILTER_PRESSURE_CHANGE
+                pressure_percentage_new = self.get_precentage_from_interpolation(
+                    AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER, pressure
+                )
+                pressure_percentage_last_saved = self.get_precentage_from_interpolation(
+                    AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER,
+                    last_saved_pressure_value,
+                )
             elif filter_stage == AirFilter.PREFILTER:
                 last_saved_pressure_value = (
                     self._get_airfilter_prefilter_usage_data().get(self.PRESSURE_KEY, 0)
                 )
                 stage_key = self.PREFILTER_KEY
                 reset_call = self.reset_prefilter_usage
+                value_change = min(
+                    abs(last_saved_pressure_value - pressure),
+                    AirFilter.AF3_MAX_PREFILTER_PRESSURE_CHANGE,
+                )  # limit the value change to AirFilter.MAX_PREFILTER_PRESSURE_CHANGE
+                pressure_percentage_new = self.get_precentage_from_interpolation(
+                    AirFilter.AF3_PRESSURE_GRAPH_PREFILTER, pressure
+                )
+                pressure_percentage_last_saved = self.get_precentage_from_interpolation(
+                    AirFilter.AF3_PRESSURE_GRAPH_PREFILTER, last_saved_pressure_value
+                )
             else:
                 self._logger.error("Unknown filter stage: {}".format(filter_stage))
                 raise ValueError("Unknown filter stage: {}".format(filter_stage))
 
             # prevent 0 values and make sure it is float so the calculation works
             last_saved_pressure_value = float(max(last_saved_pressure_value, 0.1))
-            percent_difference = (
-                abs(last_saved_pressure_value - pressure)
-                / last_saved_pressure_value
-                * 100
+
+            percent_difference = abs(
+                pressure_percentage_new - pressure_percentage_last_saved
             )
+
             self._logger.debug(
                 "percent_difference: {} current_value: {} pressure {}".format(
                     percent_difference, last_saved_pressure_value, pressure
@@ -1136,8 +1157,9 @@ class UsageHandler(object):
                     "Pressure value is higher than the last saved pressure value. Updating the pressure value."
                 )
                 new_pressure_value = (
-                    last_saved_pressure_value + 1
-                )  # don't override just increment the value to prevent jumps
+                    last_saved_pressure_value + value_change
+                )  # don't override just increment the value to prevent big jumps
+
                 self._update_pressure_value(new_pressure_value, stage_key)
             elif pressure < last_saved_pressure_value and percent_difference > 20:
                 self._logger.info(

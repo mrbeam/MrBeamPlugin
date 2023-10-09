@@ -315,7 +315,7 @@ def test_prefilter_usage_af3(usage_handler, mrbeam_plugin):
     "pressure, expected",
     [
         (1000, 1200),  # lower values will not be set
-        (2000, 1204),  # higher values will be incremented
+        (2000, 1400),  # higher values will be incremented
         (0, 0),  # 20% lower will be set
     ],
 )
@@ -349,7 +349,7 @@ def test_set_pressure_when_filter_stage_is_carbonfilter(
     "pressure, expected",
     [
         (2000, 2000),  # lower values will not be set
-        (3000, 2001),  # higher values will be set
+        (3000, 2100),  # higher values will be set
         (0, 0),  # 20% lower will be set
     ],
 )
