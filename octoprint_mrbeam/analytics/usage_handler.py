@@ -1134,7 +1134,10 @@ class UsageHandler(object):
                 self._logger.info(
                     "Pressure value is higher than the last saved pressure value. Updating the pressure value."
                 )
-                self._update_pressure_value(pressure, stage_key)
+                new_pressure_value = (
+                    last_saved_pressure_value + 1
+                )  # don't override just increment the value to prevent jumps
+                self._update_pressure_value(new_pressure_value, stage_key)
             elif pressure < last_saved_pressure_value and percent_difference > 20:
                 self._logger.info(
                     "Pressure drop of 20% detected reset time and pressure value."
