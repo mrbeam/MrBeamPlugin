@@ -1,6 +1,7 @@
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
-class LaserCutterModeModel:
+
+class LaserCutterModeModel(object):
     """ Data object containing information about the laser cutter mode """
 
     MODES = {
@@ -104,7 +105,7 @@ class LaserCutterModeModel:
           default.
         """
         if mode_name in self.MODES.values():
-            self._id = _get_mode_key(mode_name)
+            self._id = self._get_mode_key(mode_name)
             self._name = self.MODES[self._id]
         else:
             self._logger.error("Invalid laser cutter mode name.")
@@ -128,7 +129,7 @@ class LaserCutterModeModel:
         """
         try:
             return list(self.MODES.values()).index(mode_name)
-        except KeyError as e:
+        except ValueError as e:
             self._logger.error("Invalid laser cutter mode name: %s", e)
             self._logger.warn(self.FALLBACK_WARNING)
             return self.FALLBACK_MODE_ID
