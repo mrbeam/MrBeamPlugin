@@ -3,6 +3,7 @@ import threading
 from octoprint.events import Events as OctoPrintEvents
 from octoprint.util import monotonic_time
 
+from octoprint_mrbeam import AirFilter
 from octoprint_mrbeam.iobeam.hw_malfunction_handler import HwMalfunctionHandler
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents, IoBeamEvents
@@ -44,13 +45,20 @@ class DustManager(object):
     DATA_TYPE_DYNAMIC = "dynamic"
     DATA_TYPE_CONENCTED = "connected"
 
-    FAN_TEST_RPM_PERCENTAGE = 50
+    FAN_TEST_RPM_PERCENTAGE = 80
     FAN_TEST_DURATION = 35  # seconds
+    FAN_TEST_DURATION_EXTEND = 10  # seconds
+    FAN_TEST_RPM_MIN_DIFF = 500  # rpm
+    FAN_TEST_MIN_RPM = 1000  # rpm
     FAN_NOT_SPINNING_TIMEOUT = 10  # time in seconds before reporting the error
     FAN_DATA_MISSING_TIMEOUT = 10  # time in seconds before reporting the error
+    REPEAT_TEST_FAN_RPM_INTERVAL = (
+        60  # time in seconds between fan rpm tests #TODO set to 30*60 again
+    )
 
     def __init__(self, plugin):
         self._plugin = plugin
+        self._airfilter = None
         self._plugin_manager = plugin._plugin_manager
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
         self.dev_mode = plugin._settings.get_boolean(["dev", "iobeam_disable_warnings"])
@@ -81,9 +89,9 @@ class DustManager(object):
         self._fan_data_missing_reported = None
         self._fan_data_too_old_reported = None
         self._fan_not_spinning_reported = None
+        self._last_test_fan_rpm_ts = None
 
         self._last_rpm_values = deque(maxlen=5)
-        self._last_pressure_values = deque(maxlen=5)
         self._job_dust_values = []
 
         self.extraction_limit = 0.3
@@ -98,8 +106,8 @@ class DustManager(object):
         self._iobeam = self._plugin.iobeam
         self._analytics_handler = self._plugin.analytics_handler
         self._one_button_handler = self._plugin.onebutton_handler
+        self._airfilter = self._plugin.airfilter
 
-        self._start_validation_timer()
         self._just_initialized = True
         self._logger.debug("initialized!")
 
@@ -133,9 +141,6 @@ class DustManager(object):
     def _subscribe(self):
         self._iobeam.subscribe(IoBeamValueEvents.DYNAMIC_VALUE, self._handle_fan_data)
         self._iobeam.subscribe(
-            IoBeamValueEvents.EXHAUST_DYNAMIC_VALUE, self._handle_exhaust_data
-        )
-        self._iobeam.subscribe(
             IoBeamValueEvents.FAN_ON_RESPONSE, self._on_command_response
         )
         self._iobeam.subscribe(
@@ -150,6 +155,7 @@ class DustManager(object):
         self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._onEvent)
         self._event_bus.subscribe(MrBeamEvents.BUTTON_PRESS_REJECT, self._onEvent)
         self._event_bus.subscribe(MrBeamEvents.EXHAUST_DEACTIVATE, self._onEvent)
+        self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._onEvent)
@@ -157,24 +163,6 @@ class DustManager(object):
         self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self._onEvent)
         self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
-
-    def _handle_exhaust_data(self, args):
-        """hanldes exhaust data comming from iobeam EXHAUST_DYNAMIC_VALUE
-        event.
-
-        Args:
-            args: data from the iobeam event
-
-        Returns:
-        """
-        pressure = args.get("pressure", None)
-        if pressure is not None:
-            self._logger.debug(
-                "last pressure values append {} - {}".format(
-                    pressure, self._last_pressure_values
-                )
-            )
-            self._last_pressure_values.append(pressure)
 
     def _handle_fan_data(self, args):
         err = False
@@ -246,7 +234,8 @@ class DustManager(object):
             self._start_dust_extraction(cancel_all_timers=True)
             self._boost_timer_interval()
         elif event == OctoPrintEvents.PRINT_STARTED:
-            # We start the test of the fan at 50%
+            # We start the test of the fan at 80%
+            self._start_validation_timer()
             self._start_test_fan_rpm()
         elif event in (MrBeamEvents.BUTTON_PRESS_REJECT, OctoPrintEvents.PRINT_RESUMED):
             # just in case reset iobeam to start fan. In case fan got unplugged fanPCB might get restarted.
@@ -254,6 +243,8 @@ class DustManager(object):
         elif event == MrBeamEvents.READY_TO_LASER_CANCELED:
             self._stop_dust_extraction()
             self._unboost_timer_interval()
+        elif event == MrBeamEvents.PRINT_PROGRESS:
+            self._start_test_fan_if_it_didnt_run_for_a_while()
         elif event in (
             OctoPrintEvents.PRINT_DONE,
             OctoPrintEvents.PRINT_FAILED,
@@ -277,36 +268,108 @@ class DustManager(object):
             )
             self._stop_dust_extraction()
 
-    def _start_test_fan_rpm(self):
+    def _start_test_fan_if_it_didnt_run_for_a_while(self):
+        """
+        Starts the test of the fan RPM if it didn't run for a while during a job.
+
+        Returns:
+            None
+        """
+        if (
+            monotonic_time() - self._last_test_fan_rpm_ts
+            > self.REPEAT_TEST_FAN_RPM_INTERVAL
+        ):
+            self._logger.info("Starting test fan RPM as it didn't run for a while.")
+            self._start_test_fan_rpm()
+
+    def _start_test_fan_rpm(self, time=None):
+        """
+        Starts the test of the fan RPM for a given time.
+
+        Args:
+            time (int): time in seconds for the test default is FAN_TEST_DURATION
+
+        Returns:
+            None
+        """
+        if time is None:
+            time = self.FAN_TEST_DURATION
         self._logger.debug(
             "FAN_TEST_RPM: Start - setting fan to %s for %ssec",
             self.FAN_TEST_RPM_PERCENTAGE,
-            self.FAN_TEST_DURATION,
+            time,
         )
         self._start_dust_extraction(
             self.FAN_TEST_RPM_PERCENTAGE, cancel_all_timers=True
         )
         self._boost_timer_interval()
 
-        t = threading.Timer(self.FAN_TEST_DURATION, self._finish_test_fan_rpm)
+        t = threading.Timer(time, self._finish_test_fan_rpm)
         t.setName("DustManager:_finish_test_fan_rpm")
         t.daemon = True
         t.start()
+        self._last_test_fan_rpm_ts = monotonic_time()
         self._fan_timers.append(t)
 
     def _finish_test_fan_rpm(self):
+        """
+        Finishes the test of the fan RPM.
+        It will exceed the length of the test if the RPM values are not stable enough.
+
+        Returns:
+            None
+        """
         try:
+            self._logger.debug(
+                "rpm values %s %s %s",
+                self._last_rpm_values,
+                max(self._last_rpm_values),
+                min(self._last_rpm_values),
+            )
+            # check if the test length needs to be exceeded
+            if (
+                max(self._last_rpm_values) - min(self._last_rpm_values)
+                > self.FAN_TEST_RPM_MIN_DIFF
+            ):
+                self._logger.info("extend test fan rpm")
+                self._start_test_fan_rpm(time=self.FAN_TEST_DURATION_EXTEND)
+                return None
+
             # Write to analytics if the values are valid
             if self._validate_values():
-                data = dict(
-                    rpm_val=list(self._last_rpm_values),
-                    fan_state=self._state,
-                    usage_count=self._usage_handler.get_total_usage(),
-                    prefilter_count=self._usage_handler.get_prefilter_usage(),
-                    carbon_filter_count=self._usage_handler.get_carbon_filter_usage(),
-                    pressure_val=list(self._last_pressure_values),
-                )
-                self._analytics_handler.add_fan_rpm_test(data)
+                # set rpm of test fan to the average of the measured values
+                avg_rpm = sum(self._last_rpm_values) / len(self._last_rpm_values)
+                if avg_rpm > self.FAN_TEST_MIN_RPM:
+                    self._usage_handler.set_fan_test_rpm(avg_rpm)
+                    self._logger.debug(
+                        "pressure drop - mainfilter %s prefilter %s",
+                        self._airfilter.pressure_drop_mainfilter,
+                        self._airfilter.pressure_drop_prefilter,
+                    )
+                    self._usage_handler.set_pressure(
+                        self._airfilter.pressure_drop_mainfilter, AirFilter.CARBONFILTER
+                    )
+                    self._usage_handler.set_pressure(
+                        self._airfilter.pressure_drop_prefilter, AirFilter.PREFILTER
+                    )
+
+                    data = dict(
+                        rpm_val=list(self._last_rpm_values),
+                        fan_state=self._state,
+                        usage_count=self._usage_handler.get_total_usage(),
+                        prefilter_count=self._usage_handler._get_prefilter_usage_time(),
+                        carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
+                        pressure_val=self._airfilter.last_pressure_values,
+                        pressure_drop_mainfilter=self._airfilter.pressure_drop_mainfilter,
+                        pressure_drop_prefilter=self._airfilter.pressure_drop_prefilter,
+                    )
+                    self._analytics_handler.add_fan_rpm_test(data)
+                else:
+                    self._logger.error(
+                        "Fan not spinning at required RPM: %s (%s). Not writing to analytics.",
+                        avg_rpm,
+                        self.FAN_TEST_MIN_RPM,
+                    )
 
             # Set fan to auto again
             self._logger.debug("FAN_TEST_RPM: End - setting fan to auto")
@@ -575,9 +638,6 @@ class DustManager(object):
     def _check_if_fan_is_spinning_during_a_running_job(self):
         """
         Checks if the fan is not spinning during a running job and sets the _fan_not_spinning_ts flag.
-
-        Returns:
-            None
         """
         if self._rpm <= 0 and self._one_button_handler.is_printing():
             if self._fan_not_spinning_ts is None:
@@ -592,6 +652,13 @@ class DustManager(object):
             self._fan_not_spinning_ts = None
 
     def _check_and_report_error(self):
+        """
+        Checks if there is an error and reports it to the user.
+
+        Returns:
+            bool: True if there is an error, False otherwise.
+        """
+        result = True
         if not self._plugin.is_boot_grace_period():
             if (
                 self._fan_not_spinning_ts is not None
@@ -614,6 +681,7 @@ class DustManager(object):
                     analytics="fan-not-spinning",
                     log_message="Fan is not spinning.",
                 )
+                result = False
 
             if (
                 self._fan_data_missing_ts is not None
@@ -631,6 +699,7 @@ class DustManager(object):
                     },
                 )
                 self._fan_data_missing_reported = True
+                result = False
 
             if (
                 monotonic_time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE
@@ -646,6 +715,8 @@ class DustManager(object):
                     },
                 )
                 self._fan_data_too_old_reported = True
+                result = False
+        return result
 
     def _validation_timer_callback(self):
         try:

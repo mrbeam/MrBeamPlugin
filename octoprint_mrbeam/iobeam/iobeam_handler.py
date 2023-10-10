@@ -1102,16 +1102,9 @@ class IoBeamHandler(object):
         :param dataset:
         :return: error count
         """
-        self._logger.debug("exhaust dataset: '%s'", dataset)
         device_dataset = dataset.get("device")
         pressure_dataset = dataset.get("pressure")
         temperature_dataset = dataset.get("temperature")
-        self._logger.debug(
-            "exhaust device datasets: '%s %s %s'",
-            device_dataset,
-            pressure_dataset,
-            temperature_dataset,
-        )
         self._airfilter.set_airfilter(
             serial=device_dataset.get("serial_num"), model_id=device_dataset.get("type")
         )
