@@ -98,7 +98,6 @@ class DustManager(object):
         self._analytics_handler = self._plugin.analytics_handler
         self._one_button_handler = self._plugin.onebutton_handler
 
-        self._start_validation_timer()
         self._just_initialized = True
         self._logger.debug("initialized!")
 
