@@ -1056,7 +1056,7 @@ class UsageHandler(object):
             value = max(x_values)
 
         elif value < min(x_values):
-            self._logger(
+            self._logger.error(
                 "value %s is lower than min value %s, limiting to min value",
                 value,
                 min(x_values),
