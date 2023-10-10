@@ -1,6 +1,7 @@
 # singleton
 import os
 from enum import Enum
+from collections import deque
 
 import yaml
 from flask_babel import gettext
@@ -41,6 +42,40 @@ class AirFilter(object):
     PREFILTER = "prefilter"
     CARBONFILTER = "carbonfilter"
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
+    PRESSURE_VALUES_LIST_SIZE = 5
+    MAX_PRESSURE_DIFFERENCE = 3000  # TODO SW-2320
+    MAX_FAN_TEST_RPM = 11000  # TODO SW-2320
+    AF3_MAX_PREFILTER_PRESSURE_CHANGE = (
+        100  # The maximum pressure change in Pa for the prefilter of the AF3
+    )
+    AF3_MAX_CARBON_FILTER_PRESSURE_CHANGE = (
+        50  # The maximum pressure change in Pa for the carbon filter of the AF3
+    )
+
+    AF3_PRESSURE_GRAPH_CARBON_FILTER = [
+        (0, 0),
+        (600, 20),
+        (1200, 40),
+        (1800, 60),
+        (2400, 80),
+        (MAX_PRESSURE_DIFFERENCE, 100),
+    ]  # TODO need to be replaced with actual values SW-2320
+    AF3_PRESSURE_GRAPH_PREFILTER = [
+        (0, 0),
+        (600, 20),
+        (1200, 40),
+        (1800, 60),
+        (2400, 80),
+        (MAX_PRESSURE_DIFFERENCE, 100),
+    ]  # TODO need to be replaced with actual values SW-2320
+    AF3_RPM_GRAPH = [
+        (8000, 0),
+        (8400, 20),
+        (8800, 40),
+        (9200, 60),
+        (9600, 80),
+        (MAX_FAN_TEST_RPM, 100),
+    ]  # TODO need to be replaced with actual values SW-2320
 
     class ProfileParameters(Enum):
         SHOPIFY_LINK = "shopify_link"
@@ -70,6 +105,7 @@ class AirFilter(object):
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.airfilter")
         self._plugin = plugin
+        self._event_bus = plugin._event_bus
         self._serial = None
         self._model_id = None
         self._pressure1 = None
@@ -80,6 +116,7 @@ class AirFilter(object):
         self._temperature2 = None
         self._temperature3 = None
         self._temperature4 = None
+        self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
         self._profile = None
 
         self._load_current_profile()
@@ -176,7 +213,7 @@ class AirFilter(object):
 
     def _airfilter_changed(self):
         self._plugin.send_mrb_state()
-        self._plugin._event_bus.fire(MrBeamEvents.AIRFILTER_CHANGED)
+        self._event_bus.fire(MrBeamEvents.AIRFILTER_CHANGED)
 
     def set_pressure(
         self,
@@ -190,10 +227,10 @@ class AirFilter(object):
 
         Args:
             pressure: Pressure of the air filter 2
-            pressure1 (int): Pressure of the air filter 3 Inlet
-            pressure2 (int): Pressure of the air filter 3 1. Prefilter to 2. Prefilter
-            pressure3 (int): Pressure of the air filter 3 2. Prefilter to Mainfilter
-            pressure4 (int): Pressure of the air filter 3 Mainfilter to Fan
+            pressure1 (int): Pressure of the air filter 3 environment pressure
+            pressure2 (int): Pressure of the air filter 3 between inlet and Prefilter
+            pressure3 (int): Pressure of the air filter 3 between Prefilter and Mainfilter
+            pressure4 (int): Pressure of the air filter 3 between Mainfilter and Fan
         """
         if pressure is not None:
             self._pressure1 = pressure
@@ -205,6 +242,76 @@ class AirFilter(object):
             self._pressure3 = pressure3
         if pressure4 is not None:
             self._pressure4 = pressure4
+
+        if all([pressure1, pressure2, pressure3, pressure4]):
+            self._last_pressure_values.append(
+                [self._pressure1, self._pressure2, self._pressure3, self._pressure4]
+            )
+        elif self._pressure1 is not None and self.model_id in self.AIRFILTER2_MODELS:
+            self._last_pressure_values.append(self._pressure1)
+
+    def _get_avg_pressure_differences(self):
+        """Returns the average pressure differences of the last pressure readings.
+
+        Returns:
+            (int, int, int): Average pressure difference of the last pressure readings for prefilter mainfilter and fan
+        """
+        self._logger.debug(
+            "Calculating average pressure differences. %s", self._last_pressure_values
+        )
+        prefilter_pressure = [sublist[1] for sublist in self._last_pressure_values]
+        mainfilter_pressure = [sublist[2] for sublist in self._last_pressure_values]
+        fan_pressure = [sublist[3] for sublist in self._last_pressure_values]
+
+        # calculate the average
+        prefilter_pressure_avg = max(
+            0, sum(prefilter_pressure) / len(prefilter_pressure)
+        )  # limited to min 0
+        mainfilter_pressure_avg = max(
+            0, sum(mainfilter_pressure) / len(mainfilter_pressure)
+        )  # limited to min 0
+        fan_pressure_avg = max(
+            0, sum(fan_pressure) / len(fan_pressure)
+        )  # limited to min 0
+        return prefilter_pressure_avg, mainfilter_pressure_avg, fan_pressure_avg
+
+    @property
+    def last_pressure_values(self):
+        return list(self._last_pressure_values)
+
+    @property
+    def pressure_drop_mainfilter(self):
+        """Returns the pressure drop of the main filter.
+
+        Returns:
+            int: Pressure drop of the main filter
+        """
+        if self.model_id in self.AIRFILTER3_MODELS:
+            (
+                _,
+                mainfilter_pressure_avg,
+                fan_pressure_avg,
+            ) = self._get_avg_pressure_differences()
+
+            return mainfilter_pressure_avg - fan_pressure_avg
+        return None
+
+    @property
+    def pressure_drop_prefilter(self):
+        """Returns the pressure drop of the prefilter.
+
+        Returns:
+                int: Pressure drop of the prefilter
+        """
+        if self.model_id in self.AIRFILTER3_MODELS:
+            (
+                prefilter_pressure_avg,
+                mainfilter_pressure_avg,
+                _,
+            ) = self._get_avg_pressure_differences()
+
+            return prefilter_pressure_avg - mainfilter_pressure_avg
+        return None
 
     def set_temperatures(
         self,
@@ -243,6 +350,7 @@ class AirFilter(object):
         self._temperature3 = None
         self._temperature4 = None
         self._profile = None
+        self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
 
     def _load_current_profile(self):
         """Loads the current profile of the air filter and safes it in self._profile.
@@ -461,4 +569,10 @@ class AirFilter(object):
         return None
 
     def heavy_duty_prefilter_enabled(self):
+        """
+        Returns True if the heavy duty prefilter is enabled in the current profile
+
+        Returns:
+            bool: True if the heavy duty prefilter is enabled in the current profile
+        """
         return self._plugin.is_heavy_duty_prefilter_enabled()

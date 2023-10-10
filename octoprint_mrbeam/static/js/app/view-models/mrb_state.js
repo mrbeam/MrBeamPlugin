@@ -97,6 +97,7 @@ $(function () {
 
     OCTOPRINT_VIEWMODELS.push({
         construct: MrbStateViewModel,
-        elements: [""],
+        dependencies: [],
+        elements: [],
     });
 });

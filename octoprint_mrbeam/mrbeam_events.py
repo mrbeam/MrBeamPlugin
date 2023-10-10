@@ -95,6 +95,7 @@ class MrBeamEvents(object):
     USAGE_DATA_RESET_PREFILTER = "UsageDataResetPrefilter"
     USAGE_DATA_RESET_CARBON_FILTER = "UsageDataResetCarbonFilter"
     USAGE_DATA_RESET_LASER_HEAD = "UsageDataResetLaserHead"
+    USAGE_DATA_CHANGED = "UsageDataChanged"
 
     @classmethod
     def register_with_octoprint(cls):
