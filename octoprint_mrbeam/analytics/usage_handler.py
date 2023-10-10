@@ -1032,8 +1032,7 @@ class UsageHandler(object):
                     / (x_sorted[i] - x_sorted[i - 1])
                 ) + y_sorted[i - 1]
 
-    @staticmethod
-    def get_precentage_from_interpolation(reference_points, value):
+    def get_precentage_from_interpolation(self, reference_points, value):
         """
         Calculate the percentage from the given points and value.
 
@@ -1049,7 +1048,7 @@ class UsageHandler(object):
 
         # limit input value
         if value > max(x_values):
-            mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager").error(
+            self._logger.error(
                 "value %s is higher than max value %s, limiting to max value",
                 value,
                 max(x_values),
@@ -1057,7 +1056,7 @@ class UsageHandler(object):
             value = max(x_values)
 
         elif value < min(x_values):
-            mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager").error(
+            self._logger(
                 "value %s is lower than min value %s, limiting to min value",
                 value,
                 min(x_values),
@@ -1179,29 +1178,10 @@ class UsageHandler(object):
             The percentage of the lifespan that has been used.
         """
         if self._airfilter.model_id in AirFilter.AIRFILTER3_MODELS and rpm is not None:
-            self._assign_value_and_create_structure(
-                [
-                    self.AIRFILTER_KEY,
-                    self._get_airfilter_serial(),
-                    self.CARBON_FILTER_KEY,
-                    self.FAN_TEST_RPM_KEY,
-                ],
-                rpm,
-            )
+            self._usage_data.setdefault(self.AIRFILTER_KEY, {}).setdefault(
+                self._get_airfilter_serial(), {}
+            ).setdefault(self.CARBON_FILTER_KEY, {})[self.FAN_TEST_RPM_KEY] = rpm
             self._write_usage_data()
-
-    def _assign_value_and_create_structure(self, nested_keys, value):
-        """
-        Assign the given value to the given nested keys and create the structure if it does not exist.
-
-        Args:
-            nested_keys: The nested keys to assign the value to.
-            value: The value to assign.
-        """
-        current_dict = self._usage_data
-        for key in nested_keys[:-1]:
-            current_dict = current_dict.setdefault(key, {})
-        current_dict[nested_keys[-1]] = value
 
     def _update_pressure_value(self, pressure, filter_stage):
         """
