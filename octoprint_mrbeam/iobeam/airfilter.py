@@ -6,6 +6,8 @@ from collections import deque
 import yaml
 from flask_babel import gettext
 
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
+
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
@@ -32,7 +34,8 @@ class AirFilter(object):
     Air Filter class to collect the data we receive over iobeam for the air filter system.
     """
 
-    AIRFILTER2_MODELS = [1, 2, 3, 4, 5, 6, 7]
+    AIRFILTER_OR_SINGLE_MODELS = [None, 0, 1]
+    AIRFILTER2_MODELS = [2, 3, 4, 5, 6, 7]
     AIRFILTER3_MODELS = [8]
     AIRFILTER_OR_SINGLE_MODEL_ID = "Air Filter System | Fan"
     AIRFILTER2_MODEL_ID = "Air Filter II System"
@@ -118,6 +121,7 @@ class AirFilter(object):
         self._temperature2 = None
         self._temperature3 = None
         self._temperature4 = None
+        self._connected = None
         self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
         self._profile = None
 
@@ -130,7 +134,7 @@ class AirFilter(object):
         Returns:
             str: Model name of the air filter
         """
-        if self._model_id == 0:
+        if self._model_id in self.AIRFILTER_OR_SINGLE_MODELS and self.connected:
             return self.AIRFILTER_OR_SINGLE_MODEL_ID
         elif self._model_id in self.AIRFILTER2_MODELS:
             return self.AIRFILTER2_MODEL_ID
@@ -315,6 +319,10 @@ class AirFilter(object):
             return prefilter_pressure_avg - mainfilter_pressure_avg
         return None
 
+    @property
+    def connected(self):
+        return self._connected
+
     def set_temperatures(
         self,
         temperature1=None,
@@ -339,6 +347,25 @@ class AirFilter(object):
         if temperature4 is not None:
             self._temperature4 = temperature4
 
+    def set_connected(self, connected):
+        """
+        Sets the connected state and fires an event if the state changed.
+
+        Args:
+            connected: True if the fan is connected, False otherwise
+
+        Returns:
+            None
+        """
+        if self._connected != connected:
+            self._connected = connected
+            if connected:
+                self._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
+                if self.serial is None and self.model_id is None:
+                    self.set_airfilter(1, self.UNKNOWN_SERIAL_KEY)
+            else:
+                self._event_bus.fire(IoBeamEvents.FAN_DISCONNECTED)
+
     def reset_data(self):
         """Resets all data of the air filter."""
         self._serial = None
@@ -352,6 +379,7 @@ class AirFilter(object):
         self._temperature3 = None
         self._temperature4 = None
         self._profile = None
+        self._connected = None
         self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
 
     def _load_current_profile(self):

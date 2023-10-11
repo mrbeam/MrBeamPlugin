@@ -1102,12 +1102,24 @@ class IoBeamHandler(object):
         :param dataset:
         :return: error count
         """
-        device_dataset = dataset.get("device")
-        pressure_dataset = dataset.get("pressure")
-        temperature_dataset = dataset.get("temperature")
-        self._airfilter.set_airfilter(
-            serial=device_dataset.get("serial_num"), model_id=device_dataset.get("type")
-        )
+        device_dataset = dataset.get("device", {})
+        pressure_dataset = dataset.get("pressure", {})
+        temperature_dataset = dataset.get("temperature", {})
+        if (
+            device_dataset.get("serial_num") is None
+            and device_dataset.get("type") is None
+            and "error" in pressure_dataset
+            and "error" in temperature_dataset
+        ):
+            self._logger.debug(
+                "Received empty exhaust dataset assume AF1 or single: '%s'", dataset
+            )
+            self._airfilter.set_airfilter(serial=self.UNKNOWN_SERIAL_KEY, model_id=1)
+        else:
+            self._airfilter.set_airfilter(
+                serial=device_dataset.get("serial_num"),
+                model_id=device_dataset.get("type"),
+            )
         self._airfilter.set_pressure(
             pressure1=pressure_dataset.get("pressure1"),
             pressure2=pressure_dataset.get("pressure2"),

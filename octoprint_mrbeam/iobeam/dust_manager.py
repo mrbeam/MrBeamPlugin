@@ -70,7 +70,6 @@ class DustManager(object):
         self._state = None
         self._dust = None
         self._rpm = None
-        self._connected = None
         self._data_ts = 0
 
         self._last_event = None
@@ -130,7 +129,7 @@ class DustManager(object):
         return mean_job_dust
 
     def is_fan_connected(self):
-        return self._connected
+        return self._airfilter.connected if self._airfilter else None
 
     def set_user_abort_final_extraction(self):
         self._user_abort_final_extraction = True
@@ -177,9 +176,9 @@ class DustManager(object):
         if self._dust is not None and self._printer.is_printing():
             self._job_dust_values.append(self._dust)
 
-        self._set_connected(args["connected"])
+        self._airfilter.set_connected(args["connected"])
 
-        if self._connected is not None:
+        if self._airfilter.connected is not None:
             self._unboost_timer_interval()
 
         if not err:
@@ -189,23 +188,6 @@ class DustManager(object):
         self._send_dust_to_analytics(self._dust)
 
         self._last_rpm_values.append(self._rpm)
-
-    def _set_connected(self, connected):
-        """
-        Sets the connected state and fires an event if the state changed.
-
-        Args:
-            connected: True if the fan is connected, False otherwise
-
-        Returns:
-            None
-        """
-        if self._connected != connected:
-            if connected:
-                self._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
-            else:
-                self._event_bus.fire(IoBeamEvents.FAN_DISCONNECTED)
-        self._connected = connected
 
     def _on_command_response(self, args):
         self._logger.debug("Fan command response: %s", args)
@@ -585,7 +567,7 @@ class DustManager(object):
                     state=self._state,
                     rpm=self._rpm,
                     dust=self._dust,
-                    connected=self._connected,
+                    connected=self._airfilter.connected,
                     age=(monotonic_time() - self._data_ts),
                 )
             )
@@ -593,13 +575,13 @@ class DustManager(object):
                 trigger=msg, analytics="invalid-old-fan-data", log_message=log_message
             )
 
-        elif self._connected == False:
+        elif self._airfilter.connected == False:
             result = False
             msg = "Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
                 state=self._state,
                 rpm=self._rpm,
                 dust=self._dust,
-                connected=self._connected,
+                connected=self._airfilter.connected,
                 age=(monotonic_time() - self._data_ts),
             )
             self._pause_laser(trigger="Air filter not connected.", log_message=msg)
