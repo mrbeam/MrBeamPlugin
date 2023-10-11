@@ -333,31 +333,8 @@ class AirFilter(object):
     def connected(self):
         return self._connected
 
-    def set_temperatures(
-        self,
-        temperature1=None,
-        temperature2=None,
-        temperature3=None,
-        temperature4=None,
-    ):
-        """Sets the temperatures of the air filter 3 system.
-
-        Args:
-            temperature1 (float): Temperature of the air filter 3 Inlet
-            temperature2 (float): Temperature of the air filter 3 1. Prefilter to 2. Prefilter
-            temperature3 (float): Temperature of the air filter 3 2. Prefilter to Mainfilter
-            temperature4 (float): Temperature of the air filter 3 Mainfilter to Fan
-        """
-        if temperature1 is not None:
-            self._temperature1 = temperature1
-        if temperature2 is not None:
-            self._temperature2 = temperature2
-        if temperature3 is not None:
-            self._temperature3 = temperature3
-        if temperature4 is not None:
-            self._temperature4 = temperature4
-
-    def set_connected(self, connected):
+    @connected.setter
+    def connected(self, connected):
         """
         Sets the connected state and fires an event if the state changed.
 
@@ -386,6 +363,30 @@ class AirFilter(object):
                     self._connected = connected  # need to set it here again as the set_airfilter resets it
             else:
                 self._event_bus.fire(IoBeamEvents.FAN_DISCONNECTED)
+
+    def set_temperatures(
+        self,
+        temperature1=None,
+        temperature2=None,
+        temperature3=None,
+        temperature4=None,
+    ):
+        """Sets the temperatures of the air filter 3 system.
+
+        Args:
+            temperature1 (float): Temperature of the air filter 3 Inlet
+            temperature2 (float): Temperature of the air filter 3 1. Prefilter to 2. Prefilter
+            temperature3 (float): Temperature of the air filter 3 2. Prefilter to Mainfilter
+            temperature4 (float): Temperature of the air filter 3 Mainfilter to Fan
+        """
+        if temperature1 is not None:
+            self._temperature1 = temperature1
+        if temperature2 is not None:
+            self._temperature2 = temperature2
+        if temperature3 is not None:
+            self._temperature3 = temperature3
+        if temperature4 is not None:
+            self._temperature4 = temperature4
 
     def reset_data(self):
         """Resets all data of the air filter."""

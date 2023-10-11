@@ -46,7 +46,7 @@ def test_set_airfilter(air_filter):
 
 def test_model_name_AF1_or_fan(air_filter):
     # Arrange
-    air_filter.set_connected(True)  # AF1 or fan need to be connected state to show name
+    air_filter.connected = True  # AF1 or fan need to be connected state to show name
     # Act
     model_name = air_filter.model
     # Assert
@@ -615,7 +615,7 @@ def test_set_connected(connected, air_filter):
     # Arrange
     air_filter.set_airfilter(8, "serial")
     # Act
-    air_filter.set_connected(connected)
+    air_filter.connected = connected
 
     # Assert
     assert air_filter.connected == connected
@@ -632,7 +632,7 @@ def test_set_connected__when__non_smart_af(connected, air_filter):
     # Arrange
     air_filter.set_airfilter(None, None)
     # Act
-    air_filter.set_connected(connected)
+    air_filter.connected = connected
 
     # Assert
     assert air_filter.connected == connected

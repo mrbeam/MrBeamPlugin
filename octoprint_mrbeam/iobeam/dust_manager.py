@@ -173,7 +173,7 @@ class DustManager(object):
         if self._dust is not None and self._printer.is_printing():
             self._job_dust_values.append(self._dust)
 
-        self._airfilter.set_connected(args["connected"])
+        self._airfilter.connected = args["connected"]
 
         if self._airfilter.connected is not None:
             self._unboost_timer_interval()
