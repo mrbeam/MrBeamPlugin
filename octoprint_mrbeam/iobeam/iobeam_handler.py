@@ -11,7 +11,10 @@ from octoprint_mrbeam import IS_X86
 
 from octoprint.events import Events as OctoPrintEvents
 
-from octoprint_mrbeam.iobeam.hw_malfunction_handler import HwMalfunction
+from octoprint_mrbeam.iobeam.hw_malfunction_handler import (
+    HwMalfunction,
+    HwMalfunctionHandler,
+)
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
@@ -159,6 +162,8 @@ class IoBeamHandler(object):
     DATASET_I2C_MONITORING = "i2c_monitoring"
     DATASET_REED_SWITCH = "reed_switch"
     DATASET_ANALYTICS = "analytics"
+
+    UNKNOWN_SERIAL_KEY = "no_serial"
 
     def __init__(self, plugin, printer):
         self._plugin = plugin
@@ -1102,12 +1107,24 @@ class IoBeamHandler(object):
         :param dataset:
         :return: error count
         """
-        device_dataset = dataset.get("device")
-        pressure_dataset = dataset.get("pressure")
-        temperature_dataset = dataset.get("temperature")
-        self._airfilter.set_airfilter(
-            serial=device_dataset.get("serial_num"), model_id=device_dataset.get("type")
-        )
+        device_dataset = dataset.get("device", {})
+        pressure_dataset = dataset.get("pressure", {})
+        temperature_dataset = dataset.get("temperature", {})
+        if (
+            device_dataset.get("serial_num") is None
+            and device_dataset.get("type") is None
+            and "error" in pressure_dataset
+            and "error" in temperature_dataset
+        ):
+            self._logger.debug(
+                "Received empty exhaust dataset assume AF1 or single: '%s'", dataset
+            )
+            self._airfilter.set_airfilter(serial=self.UNKNOWN_SERIAL_KEY, model_id=1)
+        else:
+            self._airfilter.set_airfilter(
+                serial=device_dataset.get("serial_num"),
+                model_id=device_dataset.get("type"),
+            )
         self._airfilter.set_pressure(
             pressure1=pressure_dataset.get("pressure1"),
             pressure2=pressure_dataset.get("pressure2"),
@@ -1190,7 +1207,7 @@ class IoBeamHandler(object):
                 dict(data=message),
             )
         notification = self._user_notification_system.get_notification(
-            notification_id="err_hardware_malfunction_non_i2c",
+            notification_id=HwMalfunctionHandler.HARDWARE_MALFUNCTION_NON_I2C,
             err_code=malfunction.error_code,
             replay=True,
         )

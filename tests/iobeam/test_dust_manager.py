@@ -16,11 +16,12 @@ class DustManagerMock(DustManager):
 
 
 @pytest.fixture
-def dust_manager(mrbeam_plugin, monkeypatch):
+def dust_manager(mrbeam_plugin, monkeypatch, air_filter):
     monkeypatch.setattr(DustManager, "FAN_TEST_DURATION", 0.01)
     dust_manager = DustManager(mrbeam_plugin)
     dust_manager._one_button_handler = MagicMock()
     dust_manager._analytics_handler = MagicMock()
+    dust_manager._airfilter = air_filter
     dust_manager._event_bus.fire(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
     wait_till_event_received(
         dust_manager._event_bus, MrBeamEvents.MRB_PLUGIN_INITIALIZED
@@ -151,3 +152,30 @@ def test_if_test_fan_rpm_was_triggered_when_it_didnt_run_for_a_while(
     time.sleep(0.1)  # wait till test fan rom finishes
 
     # Assert
+
+
+def test_when__exhaust_hose_is_blocked__then__show_malfunction(dust_manager):
+    # Arrange
+    dust_manager._airfilter.set_pressure(100, 100, 100, 100)
+    dust_manager._handle_fan_data(
+        {"rpm": 3000, "dust": 1, "state": 1, "connected": True}
+    )
+    dust_manager._handle_fan_data(
+        {"rpm": 3000, "dust": 1, "state": 1, "connected": True}
+    )
+
+    # Act
+    with patch.object(
+        dust_manager._plugin.hw_malfunction_handler, "report_hw_malfunction"
+    ) as mock_report_hw_malfunction:
+        dust_manager._event_bus.fire(OctoPrintEvents.PRINT_STARTED)
+        wait_till_event_received(dust_manager._event_bus, OctoPrintEvents.PRINT_STARTED)
+        time.sleep(0.1)  # wait till test fan rom finishes
+
+        # Assert
+        calls = [
+            call(
+                {"exhaust_hose_blocked": {"code": "E-00FF-1031", "stop_laser": False}}
+            ),
+        ]
+        mock_report_hw_malfunction.assert_has_calls(calls)

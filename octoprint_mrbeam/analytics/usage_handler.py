@@ -46,6 +46,12 @@ class UsageHandler(object):
 
     def __init__(self, plugin):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.usage")
+        self._logger_prefilter = mrb_logger(
+            "octoprint.plugins.mrbeam.analytics.usage.prefilter"
+        )
+        self._logger_mainfilter = mrb_logger(
+            "octoprint.plugins.mrbeam.analytics.usage.mainfilter"
+        )
         self._plugin = plugin
         self._airfilter = None
         self._event_bus = plugin._event_bus
@@ -284,7 +290,7 @@ class UsageHandler(object):
 
         return job_duration
 
-    def _get_airfilter_usage_data(self, serial):
+    def _get_airfilter_usage_data(self, serial=None):
         """
         Returns the usage data for the airfilter with the given serial.
 
@@ -294,6 +300,8 @@ class UsageHandler(object):
         Returns:
             (dict): Usage data for the airfilter with the given serial
         """
+        if serial is None:
+            serial = self._get_airfilter_serial()
         airfilter_usage_data = self._usage_data.get(self.AIRFILTER_KEY, {}).get(
             serial, {}
         )
@@ -309,8 +317,6 @@ class UsageHandler(object):
         Returns:
             (dict): Usage data for the prefilter of the airfilter with the given serial
         """
-        if serial is None:
-            serial = self._get_airfilter_serial()
         return self._get_airfilter_usage_data(serial).get(self.PREFILTER_KEY, {})
 
     def _get_airfilter_carbon_filter_usage_data(self, serial=None):
@@ -323,8 +329,6 @@ class UsageHandler(object):
         Returns:
             (dict): Usage data for the carbon filter of the airfilter with the given serial
         """
-        if serial is None:
-            serial = self._get_airfilter_serial()
         return self._get_airfilter_usage_data(serial).get(self.CARBON_FILTER_KEY, {})
 
     def _set_job_time(self, component, job_time):
@@ -957,20 +961,22 @@ class UsageHandler(object):
             The usage of the given filter stage in percent.
         """
         usage_data = {}
-        stage_usage_time = None
         pressure_graph = None
 
         # get the correct data for the filter stage
         if filter_stage == AirFilter.PREFILTER:
-            pressure_graph = AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER
+            pressure_graph = AirFilter.AF3_PRESSURE_GRAPH_PREFILTER
             usage_data = self._get_airfilter_prefilter_usage_data()
             stage_usage_time = self._get_prefilter_usage_time() or 0
+            logger = self._logger_prefilter
         elif filter_stage == AirFilter.CARBONFILTER:
-            pressure_graph = AirFilter.AF3_PRESSURE_GRAPH_PREFILTER
+            pressure_graph = AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER
             usage_data = self._get_airfilter_carbon_filter_usage_data()
             stage_usage_time = self._get_carbon_filter_usage_time() or 0
+            logger = self._logger_mainfilter
         else:
             stage_usage_time = 0
+            logger = self._logger
 
         # get the global values
         pressure_loss = usage_data.get(
@@ -993,7 +999,7 @@ class UsageHandler(object):
 
         # calculate the total percentage
         total_percentage = max(pressure_percentage, time_percentage)
-        self._logger.debug(
+        logger.debug(
             "pressure_percentage: {} time_percentage: {} rpm_percentage: {} total percentag: {}".format(
                 pressure_percentage, time_percentage, rpm_percentage, total_percentage
             )
@@ -1048,7 +1054,7 @@ class UsageHandler(object):
 
         # limit input value
         if value > max(x_values):
-            self._logger.error(
+            self._logger.debug(
                 "value %s is higher than max value %s, limiting to max value",
                 value,
                 max(x_values),
@@ -1056,7 +1062,7 @@ class UsageHandler(object):
             value = max(x_values)
 
         elif value < min(x_values):
-            self._logger.error(
+            self._logger.debug(
                 "value %s is lower than min value %s, limiting to min value",
                 value,
                 min(x_values),
@@ -1099,6 +1105,7 @@ class UsageHandler(object):
             and pressure is not None
         ):
             # get the correct data for the filter stage
+            self._logger.debug("------Set pressure for {}------".format(filter_stage))
             if filter_stage == AirFilter.CARBONFILTER:
                 last_saved_pressure_value = (
                     self._get_airfilter_carbon_filter_usage_data().get(
@@ -1118,6 +1125,7 @@ class UsageHandler(object):
                     AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER,
                     last_saved_pressure_value,
                 )
+                logger = self._logger_mainfilter
             elif filter_stage == AirFilter.PREFILTER:
                 last_saved_pressure_value = (
                     self._get_airfilter_prefilter_usage_data().get(self.PRESSURE_KEY, 0)
@@ -1134,9 +1142,22 @@ class UsageHandler(object):
                 pressure_percentage_last_saved = self.get_precentage_from_interpolation(
                     AirFilter.AF3_PRESSURE_GRAPH_PREFILTER, last_saved_pressure_value
                 )
+                logger = self._logger_prefilter
             else:
                 self._logger.error("Unknown filter stage: {}".format(filter_stage))
                 raise ValueError("Unknown filter stage: {}".format(filter_stage))
+            logger.debug(
+                "usage data {} press last:{} now{}".format(
+                    self._get_airfilter_usage_data(),
+                    last_saved_pressure_value,
+                    pressure,
+                )
+            )
+            logger.debug(
+                "pressure_percentage_new: {} pressure_percentage_last_saved: {}".format(
+                    pressure_percentage_new, pressure_percentage_last_saved
+                )
+            )
 
             # prevent 0 values and make sure it is float so the calculation works
             last_saved_pressure_value = float(max(last_saved_pressure_value, 0.1))
@@ -1145,23 +1166,30 @@ class UsageHandler(object):
                 pressure_percentage_new - pressure_percentage_last_saved
             )
 
-            self._logger.debug(
+            logger.debug(
                 "percent_difference: {} current_value: {} pressure {}".format(
                     percent_difference, last_saved_pressure_value, pressure
                 )
             )
 
             if pressure > last_saved_pressure_value:
-                self._logger.info(
-                    "Pressure value is higher than the last saved pressure value. Updating the pressure value."
-                )
                 new_pressure_value = (
                     last_saved_pressure_value + value_change
                 )  # don't override just increment the value to prevent big jumps
+                logger.info(
+                    "Pressure value is higher than the last saved pressure value. Updating the pressure value from {} to {}".format(
+                        last_saved_pressure_value,
+                        new_pressure_value,
+                    )
+                )
 
                 self._update_pressure_value(new_pressure_value, stage_key)
-            elif pressure < last_saved_pressure_value and percent_difference > 20:
-                self._logger.info(
+            elif (
+                pressure < last_saved_pressure_value
+                and percent_difference
+                > AirFilter.AF3_PRESSURE_DROP_PERCENTAGE_FOR_RESET
+            ):
+                logger.info(
                     "Pressure drop of 20% detected reset time and pressure value."
                 )
                 self._update_pressure_value(pressure, stage_key)

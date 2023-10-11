@@ -6,6 +6,8 @@ from collections import deque
 import yaml
 from flask_babel import gettext
 
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
+
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
@@ -32,50 +34,57 @@ class AirFilter(object):
     Air Filter class to collect the data we receive over iobeam for the air filter system.
     """
 
-    AIRFILTER2_MODELS = [1, 2, 3, 4, 5, 6, 7]
+    AIRFILTER_OR_SINGLE_MODELS = [None, 0, 1]
+    AIRFILTER2_MODELS = [2, 3, 4, 5, 6, 7]
     AIRFILTER3_MODELS = [8]
     AIRFILTER_OR_SINGLE_MODEL_ID = "Air Filter System | Fan"
     AIRFILTER2_MODEL_ID = "Air Filter II System"
     AIRFILTER3_MODEL_ID = "Air Filter 3 System"
+    UNKNOWN_SERIAL_KEY = "no_serial"
+
     PREFILTER_LIFESPAN_FALLBACK = 40
     CARBON_LIFESPAN_FALLBACK = 280
+
     PREFILTER = "prefilter"
     CARBONFILTER = "carbonfilter"
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
+
     PRESSURE_VALUES_LIST_SIZE = 5
-    MAX_PRESSURE_DIFFERENCE = 3000  # TODO SW-2320
-    MAX_FAN_TEST_RPM = 11000  # TODO SW-2320
+    MAX_PRESSURE_DIFFERENCE = 1880
+    MAX_FAN_TEST_RPM = 10750
     AF3_MAX_PREFILTER_PRESSURE_CHANGE = (
         100  # The maximum pressure change in Pa for the prefilter of the AF3
     )
     AF3_MAX_CARBON_FILTER_PRESSURE_CHANGE = (
         50  # The maximum pressure change in Pa for the carbon filter of the AF3
     )
+    AF3_PRESSURE_DROP_PERCENTAGE_FOR_RESET = (
+        40  # The percentage of the pressure drop before a reset is triggered
+    )
+    AF3_PRESSURE2_MIN = 9200
 
     AF3_PRESSURE_GRAPH_CARBON_FILTER = [
-        (0, 0),
-        (600, 20),
-        (1200, 40),
-        (1800, 60),
-        (2400, 80),
+        (450, 0),
+        (880, 20),
+        (950, 40),
+        (1150, 60),
+        (1500, 80),
         (MAX_PRESSURE_DIFFERENCE, 100),
-    ]  # TODO need to be replaced with actual values SW-2320
+    ]
     AF3_PRESSURE_GRAPH_PREFILTER = [
-        (0, 0),
-        (600, 20),
-        (1200, 40),
-        (1800, 60),
-        (2400, 80),
-        (MAX_PRESSURE_DIFFERENCE, 100),
-    ]  # TODO need to be replaced with actual values SW-2320
+        (100, 0),
+        (300, 20),
+        (620, 40),
+        (800, 60),
+        (980, 80),
+        (1200, 100),
+    ]
     AF3_RPM_GRAPH = [
-        (8000, 0),
-        (8400, 20),
-        (8800, 40),
-        (9200, 60),
-        (9600, 80),
+        (9860, 0),
+        (9900, 20),
+        (10200, 70),
         (MAX_FAN_TEST_RPM, 100),
-    ]  # TODO need to be replaced with actual values SW-2320
+    ]
 
     class ProfileParameters(Enum):
         SHOPIFY_LINK = "shopify_link"
@@ -116,6 +125,7 @@ class AirFilter(object):
         self._temperature2 = None
         self._temperature3 = None
         self._temperature4 = None
+        self._connected = None
         self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
         self._profile = None
 
@@ -128,7 +138,8 @@ class AirFilter(object):
         Returns:
             str: Model name of the air filter
         """
-        if self._model_id == 0:
+        self._logger.debug("model_id: {} con{}".format(self._model_id, self.connected))
+        if self._model_id in self.AIRFILTER_OR_SINGLE_MODELS and self.connected:
             return self.AIRFILTER_OR_SINGLE_MODEL_ID
         elif self._model_id in self.AIRFILTER2_MODELS:
             return self.AIRFILTER2_MODEL_ID
@@ -296,6 +307,11 @@ class AirFilter(object):
             return mainfilter_pressure_avg - fan_pressure_avg
         return None
 
+    def exhaust_hose_is_blocked(self):
+        if self.model_id in self.AIRFILTER3_MODELS:
+            return self._pressure2 < self.AF3_PRESSURE2_MIN
+        return None
+
     @property
     def pressure_drop_prefilter(self):
         """Returns the pressure drop of the prefilter.
@@ -312,6 +328,41 @@ class AirFilter(object):
 
             return prefilter_pressure_avg - mainfilter_pressure_avg
         return None
+
+    @property
+    def connected(self):
+        return self._connected
+
+    @connected.setter
+    def connected(self, connected):
+        """
+        Sets the connected state and fires an event if the state changed.
+
+        Args:
+            connected: True if the fan is connected, False otherwise
+
+        Returns:
+            None
+        """
+        if self._connected != connected:
+            self._connected = connected
+            if connected:
+                self._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
+                # If the fan gets marked as connected but we don't have a serial number or model id
+                # Then the af used is a non smart => AF1 or single
+                if self.serial is None and self.model_id is None:
+                    self.set_airfilter(
+                        self.AIRFILTER_OR_SINGLE_MODELS[-1], self.UNKNOWN_SERIAL_KEY
+                    )
+                    self._logger.debug(
+                        "Air filter is a non smart AF1 or single %s %s %s",
+                        connected,
+                        self._connected,
+                        self.connected,
+                    )
+                    self._connected = connected  # need to set it here again as the set_airfilter resets it
+            else:
+                self._event_bus.fire(IoBeamEvents.FAN_DISCONNECTED)
 
     def set_temperatures(
         self,
@@ -350,6 +401,7 @@ class AirFilter(object):
         self._temperature3 = None
         self._temperature4 = None
         self._profile = None
+        self._connected = None
         self._last_pressure_values = deque(maxlen=self.PRESSURE_VALUES_LIST_SIZE)
 
     def _load_current_profile(self):
