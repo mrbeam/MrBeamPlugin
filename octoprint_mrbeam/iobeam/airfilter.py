@@ -40,11 +40,15 @@ class AirFilter(object):
     AIRFILTER_OR_SINGLE_MODEL_ID = "Air Filter System | Fan"
     AIRFILTER2_MODEL_ID = "Air Filter II System"
     AIRFILTER3_MODEL_ID = "Air Filter 3 System"
+    UNKNOWN_SERIAL_KEY = "no_serial"
+
     PREFILTER_LIFESPAN_FALLBACK = 40
     CARBON_LIFESPAN_FALLBACK = 280
+
     PREFILTER = "prefilter"
     CARBONFILTER = "carbonfilter"
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
+
     PRESSURE_VALUES_LIST_SIZE = 5
     MAX_PRESSURE_DIFFERENCE = 1880
     MAX_FAN_TEST_RPM = 10750
@@ -134,6 +138,7 @@ class AirFilter(object):
         Returns:
             str: Model name of the air filter
         """
+        self._logger.debug("model_id: {} con{}".format(self._model_id, self.connected))
         if self._model_id in self.AIRFILTER_OR_SINGLE_MODELS and self.connected:
             return self.AIRFILTER_OR_SINGLE_MODEL_ID
         elif self._model_id in self.AIRFILTER2_MODELS:
@@ -366,8 +371,19 @@ class AirFilter(object):
             self._connected = connected
             if connected:
                 self._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
+                # If the fan gets marked as connected but we don't have a serial number or model id
+                # Then the af used is a non smart => AF1 or single
                 if self.serial is None and self.model_id is None:
-                    self.set_airfilter(1, self.UNKNOWN_SERIAL_KEY)
+                    self.set_airfilter(
+                        self.AIRFILTER_OR_SINGLE_MODELS[-1], self.UNKNOWN_SERIAL_KEY
+                    )
+                    self._logger.debug(
+                        "Air filter is a non smart AF1 or single %s %s %s",
+                        connected,
+                        self._connected,
+                        self.connected,
+                    )
+                    self._connected = connected  # need to set it here again as the set_airfilter resets it
             else:
                 self._event_bus.fire(IoBeamEvents.FAN_DISCONNECTED)
 

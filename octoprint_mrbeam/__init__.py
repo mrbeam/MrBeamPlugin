@@ -2936,7 +2936,7 @@ class MrBeamPlugin(
             try:
                 state_dict = dict(
                     laser_temp=self.temperature_manager.get_temperature(),
-                    fan_connected=self.dust_manager.is_fan_connected(),
+                    fan_connected=self.airfilter.connected,
                     fan_state=self.dust_manager.get_fan_state(),
                     fan_rpm=self.dust_manager.get_fan_rpm(),
                     fan_dust=self.dust_manager.get_dust(),

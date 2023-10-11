@@ -128,9 +128,6 @@ class DustManager(object):
             mean_job_dust = None
         return mean_job_dust
 
-    def is_fan_connected(self):
-        return self._airfilter.connected if self._airfilter else None
-
     def set_user_abort_final_extraction(self):
         self._user_abort_final_extraction = True
 

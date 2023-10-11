@@ -3,7 +3,6 @@ from mock.mock import MagicMock
 
 from octoprint_mrbeam.iobeam.airfilter import AirFilter, airfilter
 
-
 DEFAULT_PROFILE = {
     "carbonfilter": [
         {
@@ -47,7 +46,6 @@ def test_set_airfilter(air_filter):
 
 def test_model_name_AF1_or_fan(air_filter):
     # Arrange
-    air_filter.set_airfilter(0, "serial")
     air_filter.set_connected(True)  # AF1 or fan need to be connected state to show name
     # Act
     model_name = air_filter.model
@@ -580,3 +578,61 @@ def test_set_pressure_af2(air_filter):
 
     # Assert
     assert air_filter.last_pressure_values == [900, 800]
+
+
+@pytest.mark.parametrize(
+    "model_id, pressure, expected_blocked",
+    [
+        (1, 900, None),  # AF1 doesn't have this check
+        (2, 900, None),  # AF2 doesn't have this check
+        (8, 900, True),  # AF3 pressure below threshold
+        (8, 9300, False),  # AF3 pressure above threshold
+    ],
+    ids=("AF1", "AF2", "AF3_below", "AF3_above"),
+)
+def test_exhaust_hose_is_blocked_if_af3(
+    model_id, pressure, expected_blocked, air_filter
+):
+    # Arrange
+    air_filter.set_airfilter(model_id, "serial")
+    air_filter.set_pressure(pressure, pressure, pressure, pressure)
+
+    # Act
+    blocked = air_filter.exhaust_hose_is_blocked()
+
+    # Assert
+    assert blocked is expected_blocked
+
+
+@pytest.mark.parametrize(
+    "connected",
+    [
+        True,
+        False,
+    ],
+)
+def test_set_connected(connected, air_filter):
+    # Arrange
+    air_filter.set_airfilter(8, "serial")
+    # Act
+    air_filter.set_connected(connected)
+
+    # Assert
+    assert air_filter.connected == connected
+
+
+@pytest.mark.parametrize(
+    "connected",
+    [
+        True,
+        False,
+    ],
+)
+def test_set_connected__when__non_smart_af(connected, air_filter):
+    # Arrange
+    air_filter.set_airfilter(None, None)
+    # Act
+    air_filter.set_connected(connected)
+
+    # Assert
+    assert air_filter.connected == connected
