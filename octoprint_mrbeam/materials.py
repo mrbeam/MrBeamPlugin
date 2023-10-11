@@ -1,15 +1,12 @@
 import os
 import yaml
 
+from octoprint_mrbeam.enums.laser_cutter_mode import LaserCutterModeEnum
 from octoprint_mrbeam.model.custom_material_model import CustomMaterialModel
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
 _instance = None
-
-# TODO: SW-3719 import these from mode services
-DEFAULT_MODE = "default"
-ROTARY_MODE = "rotary"
 
 
 def materials(plugin):
@@ -71,7 +68,7 @@ class Materials(object):
         laser_cutter_mode = self.plugin.get_laser_cutter_mode()
         return {
             key: value for key, value in self.custom_materials.items() if
-            value.get('laser_cutter_mode', DEFAULT_MODE) == laser_cutter_mode
+            value.get('laser_cutter_mode', LaserCutterModeEnum.DEFAULT.value) == laser_cutter_mode
         }
 
     def add_custom_material(self, material_key, material):
