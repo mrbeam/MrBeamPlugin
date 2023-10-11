@@ -4,6 +4,7 @@ from octoprint_mrbeam.model.laser_cutter_mode import LaserCutterModeModel
 # singleton instance of the LaserCutterModeService class to be used across the application
 _instance = None
 
+
 def laser_cutter_mode_service(plugin):
     """
     Get or create a singleton instance of the LaserCutterModeService.
@@ -36,6 +37,7 @@ def laser_cutter_mode_service(plugin):
         _instance = LaserCutterModeService(plugin)
     return _instance
 
+
 class LaserCutterModeService:
     """ Service class for laser cutter mode. """
 
@@ -53,7 +55,6 @@ class LaserCutterModeService:
         self._logger = mrb_logger("octoprint.plugins.mrbeam.services.laser_cutter_mode")
         self._settings = plugin.get_settings()
         self._mode = LaserCutterModeModel(self._load_laser_cutter_mode_id())
-
 
     def _load_laser_cutter_mode_id(self):
         """
@@ -135,7 +136,7 @@ class LaserCutterModeService:
         - If the mode id is invalid, it will fall back to default.
         """
         self._logger.info("Change laser cutting mode by id: from mode_id=%s to mode_id=%s." % (self._mode.id, mode_id))
-        self._mode.id(mode_id)
+        self._mode.id = mode_id
         self._save_laser_cutter_mode_to_settings()
 
     def change_mode_by_name(self, mode_name):
@@ -151,8 +152,9 @@ class LaserCutterModeService:
         Notes:
         - If the mode name is invalid, it will fall back to default.
         """
-        self._logger.info("Change laser cutting mode by name: from mode_name=%s to mode_name=%s." % (self._mode.name, mode_name))
-        self._mode.name(mode_name)
+        self._logger.info("Change laser cutting mode by name: from mode_name=%s to mode_name=%s."
+                          % (self._mode.name, mode_name))
+        self._mode.name = mode_name
         self._save_laser_cutter_mode_to_settings()
 
     def _save_laser_cutter_mode_to_settings(self):
@@ -172,35 +174,12 @@ class LaserCutterModeService:
         self._settings.set(["laser_cutter_mode", "id"], self._mode.id, force=True)
         self._settings.set(["laser_cutter_mode", "name"], self._mode.name, force=True)
         self._settings.save()
-        self._check_saved_settings()
 
-    def _check_saved_settings(self):
-        """
-        Check if laser cutting mode is saved to settings.
-
-        Parameters:
-        - None
-
-        Returns:
-        - None
-
-        Notes:
-        - This function is called after saving the laser cutting mode to settings.
-        """
-        self._logger.debug("Check if laser cutting mode is saved to settings.")
-        # Check if mode is saved to settings
-        if self._settings.get(["laser_cutter_mode", "id"]) != self._mode.id and \
-                self._settings.get(["laser_cutter_mode", "name"]) != self._mode.name:
-            # If not, fall back to saved mode
-            self._logger.error("Laser setting mode is not saved to settings. Falling back to saved mode.")
-            self._mode.id(self._load_laser_cutter_mode_id())
-        else:
-            self._logger.info("Laser setting mode is saved to settings.")
-
-    ### The below is for future implementation
+    # The below is for future implementation
     # def _send_update_message_or_event(self):
-        # self._plugin._plugin_manager.send_plugin_message(self._plugin._identifier, dict(laserCutterMode=self._mode.id))
-        # self._plugin._event_bus.fire(
-        #     "laserCutterModeChanged", payload=dict(laserCutterMode=self._mode.id)
-        # )
-    ###
+    #     self._plugin._plugin_manager.send_plugin_message(
+    #           self._plugin._identifier, dict(laserCutterMode=self._mode.id)
+    #     )
+    #     self._plugin._event_bus.fire(
+    #         "laserCutterModeChanged", payload=dict(laserCutterMode=self._mode.id)
+    #     )
