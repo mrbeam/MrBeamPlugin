@@ -138,7 +138,6 @@ class AirFilter(object):
         Returns:
             str: Model name of the air filter
         """
-        self._logger.debug("model_id: {} con{}".format(self._model_id, self.connected))
         if self._model_id in self.AIRFILTER_OR_SINGLE_MODELS and self.connected:
             return self.AIRFILTER_OR_SINGLE_MODEL_ID
         elif self._model_id in self.AIRFILTER2_MODELS:
