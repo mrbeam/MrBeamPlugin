@@ -349,11 +349,13 @@ class DustManager(object):
                         rpm_val=list(self._last_rpm_values),
                         fan_state=self._state,
                         usage_count=self._usage_handler.get_total_usage(),
-                        prefilter_count=self._usage_handler._get_prefilter_usage_time(),
-                        carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
                         pressure_val=self._airfilter.last_pressure_values,
-                        pressure_drop_mainfilter=self._airfilter.pressure_drop_mainfilter,
-                        pressure_drop_prefilter=self._airfilter.pressure_drop_prefilter,
+                        prefilter_count=self._usage_handler._get_prefilter_usage_time(),
+                        prefilter_pressure_drop=self._airfilter.pressure_drop_prefilter,
+                        prefilter_percent=self._usage_handler.get_prefilter_usage(),
+                        carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
+                        carbon_filter_pressure_drop=self._airfilter.pressure_drop_mainfilter,
+                        carbon_filter_percent=self._usage_handler.get_carbon_filter_usage(),
                     )
                     self._analytics_handler.add_fan_rpm_test(data)
                 else:
