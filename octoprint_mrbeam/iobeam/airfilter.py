@@ -302,6 +302,11 @@ class AirFilter(object):
             return mainfilter_pressure_avg - fan_pressure_avg
         return None
 
+    def exhaust_hose_is_blocked(self):
+        if self.model_id in self.AIRFILTER3_MODELS:
+            return self._pressure2 < self.AF3_PRESSURE2_MIN
+        return None
+
     @property
     def pressure_drop_prefilter(self):
         """Returns the pressure drop of the prefilter.

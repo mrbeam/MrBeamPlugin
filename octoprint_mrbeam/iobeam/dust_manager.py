@@ -322,6 +322,19 @@ class DustManager(object):
                 # set rpm of test fan to the average of the measured values
                 avg_rpm = sum(self._last_rpm_values) / len(self._last_rpm_values)
                 if avg_rpm > self.FAN_TEST_MIN_RPM:
+                    if self._airfilter.exhaust_hose_is_blocked():
+                        self._logger.warning(
+                            "exhaust hose might be blocked", analytics=True
+                        )
+                        self._plugin.hw_malfunction_handler.report_hw_malfunction(
+                            {
+                                HwMalfunctionHandler.EXHAUST_HOSE_BLOCKED: {
+                                    "code": ErrorCodes.E_1031,
+                                    "stop_laser": False,  # don't cancel the laser job
+                                }
+                            },
+                        )
+                        return None
                     self._usage_handler.set_fan_test_rpm(avg_rpm)
                     self._logger.debug(
                         "pressure drop - mainfilter %s prefilter %s",

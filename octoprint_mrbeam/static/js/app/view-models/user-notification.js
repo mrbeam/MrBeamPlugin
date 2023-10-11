@@ -42,7 +42,7 @@ $(function () {
          * Add notification tempaltes here
          */
         self._notification_templates = {
-            err_leaserheadunit_missing: {
+            leaserheadunit_missing: {
                 title: gettext("Laserhead unit missing"),
                 text: _.sprintf(
                     gettext(
@@ -63,7 +63,7 @@ $(function () {
                 hide: false,
                 before_close: (pnotify) => self._dismissNotification(pnotify),
             },
-            err_bottom_open: {
+            bottom_open: {
                 title: gettext("Bottom plate not detected"),
                 text: _.sprintf(
                     gettext(
@@ -82,7 +82,7 @@ $(function () {
                 hide: false,
                 before_close: (pnotify) => self._dismissNotification(pnotify),
             },
-            err_hardware_malfunction_i2c: {
+            i2c_bus_malfunction: {
                 title: gettext("Hardware malfunction"),
                 text: _.sprintf(
                     gettext(
@@ -115,7 +115,7 @@ $(function () {
                 hide: false,
                 before_close: (pnotify) => self._dismissNotification(pnotify),
             },
-            err_compressor_malfunction: {
+            compressor_malfunction: {
                 title: gettext("Compressor malfunction"),
                 text: _.sprintf(
                     gettext(
@@ -134,7 +134,7 @@ $(function () {
                 hide: false,
                 before_close: (pnotify) => self._dismissNotification(pnotify),
             },
-            err_one_button_malfunction: {
+            onebtn_not_initialized: {
                 title: gettext("One Button malfunction"),
                 text: _.sprintf(
                     gettext(
@@ -150,7 +150,7 @@ $(function () {
                 hide: false,
                 before_close: (pnotify) => self._dismissNotification(pnotify),
             },
-            err_interlock_malfunction: {
+            hw_mnpltn: {
                 title: gettext("Interlock malfunction"),
                 text: _.sprintf(
                     gettext(
@@ -263,6 +263,25 @@ $(function () {
                             "Please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
                     self._getPlaceHolderParameters()
+                ),
+                type: "error",
+                hide: false,
+                before_close: (pnotify) => self._dismissNotification(pnotify),
+            },
+            exhaust_hose_blocked: {
+                title: gettext("Check Air Filter System hose"),
+                text: _.sprintf(
+                    gettext(
+                        "The hose of your Air Filter System might be blocked or is clogged.\n" +
+                            //TODO set error message
+                            "Please check the hose by following the %(opening_tag)sKnowledgebase article%(closing_tag)s.\n" +
+                            "\n" +
+                            "If this doesn’t solve the problem, please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
+                    ),
+                    self._getPlaceHolderParameters(
+                        gettext("https://support.mr-beam.org/en") +
+                            "/support/solutions/articles/43000702996" //TODO
+                    )
                 ),
                 type: "error",
                 hide: false,
