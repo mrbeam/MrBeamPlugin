@@ -273,14 +273,13 @@ $(function () {
                 text: _.sprintf(
                     gettext(
                         "The hose of your Air Filter System might be blocked or is clogged.\n" +
-                            //TODO set error message
                             "Please check the hose by following the %(opening_tag)sKnowledgebase article%(closing_tag)s.\n" +
                             "\n" +
                             "If this doesn’t solve the problem, please %(opening_tag_support)sopen a support ticket%(closing_tag_support)s."
                     ),
                     self._getPlaceHolderParameters(
                         gettext("https://support.mr-beam.org/en") +
-                            "/support/solutions/articles/43000702996" //TODO
+                            "/support/solutions/articles/43000713561#hose"
                     )
                 ),
                 type: "error",
