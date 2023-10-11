@@ -11,7 +11,10 @@ from octoprint_mrbeam import IS_X86
 
 from octoprint.events import Events as OctoPrintEvents
 
-from octoprint_mrbeam.iobeam.hw_malfunction_handler import HwMalfunction
+from octoprint_mrbeam.iobeam.hw_malfunction_handler import (
+    HwMalfunction,
+    HwMalfunctionHandler,
+)
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
@@ -1204,7 +1207,7 @@ class IoBeamHandler(object):
                 dict(data=message),
             )
         notification = self._user_notification_system.get_notification(
-            notification_id="err_hardware_malfunction_non_i2c",
+            notification_id=HwMalfunctionHandler.HARDWARE_MALFUNCTION_NON_I2C,
             err_code=malfunction.error_code,
             replay=True,
         )

@@ -236,7 +236,7 @@ $(function () {
                 hide: false,
                 before_close: (pnotify) => self._dismissNotification(pnotify),
             },
-            err_hardware_malfunction_non_i2c: {
+            hardware_malfunction_non_i2c: {
                 title: gettext("Hardware malfunction"),
                 text: _.sprintf(
                     gettext(

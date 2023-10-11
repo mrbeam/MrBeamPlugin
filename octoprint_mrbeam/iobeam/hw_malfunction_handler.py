@@ -61,6 +61,7 @@ class HwMalfunctionHandler(object):
     ONEBUTTON_NOT_INITIALIZED = "onebtn_not_initialized"
     I2C_BUS_MALFUNCTION = "i2c_bus_malfunction"
     I2C_DEVICE_MISSING = "i2c_missing_"
+    HARDWARE_MALFUNCTION_NON_I2C = "hardware_malfunction_non_i2c"
     KNOWN_MALFUNCTIONS = [
         MALFUNCTION_ID_BOTTOM_OPEN,
         MALFUNCTION_ID_LASERHEADUNIT_MISSING,
@@ -162,7 +163,7 @@ class HwMalfunctionHandler(object):
             if malfunction_id == self.PCF_ANOMALY:
                 notifications.append(
                     self._user_notification_system.get_notification(
-                        notification_id="err_hardware_malfunction_non_i2c",
+                        notification_id=self.HARDWARE_MALFUNCTION_NON_I2C,
                         err_code=malfunction.error_code,
                         replay=True,
                     )
