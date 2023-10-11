@@ -43,39 +43,41 @@ class AirFilter(object):
     CARBONFILTER = "carbonfilter"
     FILTERSTAGES = [PREFILTER, CARBONFILTER]
     PRESSURE_VALUES_LIST_SIZE = 5
-    MAX_PRESSURE_DIFFERENCE = 3000  # TODO SW-2320
-    MAX_FAN_TEST_RPM = 11000  # TODO SW-2320
+    MAX_PRESSURE_DIFFERENCE = 1880
+    MAX_FAN_TEST_RPM = 10750
     AF3_MAX_PREFILTER_PRESSURE_CHANGE = (
         100  # The maximum pressure change in Pa for the prefilter of the AF3
     )
     AF3_MAX_CARBON_FILTER_PRESSURE_CHANGE = (
         50  # The maximum pressure change in Pa for the carbon filter of the AF3
     )
+    AF3_PRESSURE_DROP_PERCENTAGE_FOR_RESET = (
+        40  # The percentage of the pressure drop before a reset is triggered
+    )
+    AF3_PRESSURE2_MIN = 9200
 
     AF3_PRESSURE_GRAPH_CARBON_FILTER = [
-        (0, 0),
-        (600, 20),
-        (1200, 40),
-        (1800, 60),
-        (2400, 80),
+        (450, 0),
+        (880, 20),
+        (950, 40),
+        (1150, 60),
+        (1500, 80),
         (MAX_PRESSURE_DIFFERENCE, 100),
-    ]  # TODO need to be replaced with actual values SW-2320
+    ]
     AF3_PRESSURE_GRAPH_PREFILTER = [
-        (0, 0),
-        (600, 20),
-        (1200, 40),
-        (1800, 60),
-        (2400, 80),
-        (MAX_PRESSURE_DIFFERENCE, 100),
-    ]  # TODO need to be replaced with actual values SW-2320
+        (100, 0),
+        (300, 20),
+        (620, 40),
+        (800, 60),
+        (980, 80),
+        (1200, 100),
+    ]
     AF3_RPM_GRAPH = [
-        (8000, 0),
-        (8400, 20),
-        (8800, 40),
-        (9200, 60),
-        (9600, 80),
+        (9860, 0),
+        (9900, 20),
+        (10200, 70),
         (MAX_FAN_TEST_RPM, 100),
-    ]  # TODO need to be replaced with actual values SW-2320
+    ]
 
     class ProfileParameters(Enum):
         SHOPIFY_LINK = "shopify_link"
