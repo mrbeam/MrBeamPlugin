@@ -37,7 +37,6 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
 from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
 from octoprint_mrbeam.fsm.high_temperature_fsm import HighTemperatureFSM
-from octoprint_mrbeam.iobeam.airfilter import airfilter, AirFilter
 
 IS_X86 = platform.machine() == "x86_64"
 from ._version import get_versions
@@ -48,6 +47,7 @@ if isinstance(__version__, unicode):
 
 del get_versions
 
+from octoprint_mrbeam.iobeam.airfilter import airfilter, AirFilter
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
@@ -2936,7 +2936,7 @@ class MrBeamPlugin(
             try:
                 state_dict = dict(
                     laser_temp=self.temperature_manager.get_temperature(),
-                    fan_connected=self.dust_manager.is_fan_connected(),
+                    fan_connected=self.airfilter.connected,
                     fan_state=self.dust_manager.get_fan_state(),
                     fan_rpm=self.dust_manager.get_fan_rpm(),
                     fan_dust=self.dust_manager.get_dust(),

@@ -2,8 +2,8 @@
 prefilter_stages: 1
 carbonfilter_stages: 1
 prefilter:
-  - lifespan: 80 # TODO replace with correct value SW-2320
+  - lifespan: 320
     shopify_link: 'maintenance/af3/pf1' # no utm parameters needed, as the redirect already use these
 carbonfilter:
-  - lifespan: 400 # TODO replace with correct value SW-2320
+  - lifespan: 1120
     shopify_link: 'maintenance/af3/mf' # no utm parameters needed, as the redirect already use these

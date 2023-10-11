@@ -42,7 +42,7 @@ def usage_handler(mrbeam_plugin, air_filter):
         prefilter:
           complete: true
           job_time: 150000.0
-          pressure: 2000
+          pressure: 700
     prefilter:
       complete: true
       job_time: 14400.0
@@ -296,7 +296,7 @@ def test_carbon_filter_usage_af3(usage_handler, mrbeam_plugin):
     usage = usage_handler.get_carbon_filter_usage()
 
     # Assert
-    assert usage == 40
+    assert usage == 62
 
 
 def test_prefilter_usage_af3(usage_handler, mrbeam_plugin):
@@ -307,7 +307,7 @@ def test_prefilter_usage_af3(usage_handler, mrbeam_plugin):
     usage = usage_handler.get_prefilter_usage()
 
     # Assert
-    assert usage == 66
+    assert usage == 48
 
 
 # test set pressure
@@ -315,7 +315,10 @@ def test_prefilter_usage_af3(usage_handler, mrbeam_plugin):
     "pressure, expected",
     [
         (1000, 1200),  # lower values will not be set
-        (2000, 1400),  # higher values will be incremented
+        (
+            2000,
+            1400,
+        ),  # higher values will be incremented by AF3_MAX_CARBON_FILTER_PRESSURE_CHANGE
         (0, 0),  # 20% lower will be set
     ],
 )
@@ -348,8 +351,11 @@ def test_set_pressure_when_filter_stage_is_carbonfilter(
 @pytest.mark.parametrize(
     "pressure, expected",
     [
-        (2000, 2000),  # lower values will not be set
-        (3000, 2100),  # higher values will be set
+        (600, 700),  # lower values will not be set
+        (
+            3000,
+            800,
+        ),  # higher values will incremented by AF3_MAX_PREFILTER_PRESSURE_CHANGE
         (0, 0),  # 20% lower will be set
     ],
 )
@@ -425,9 +431,9 @@ def test_set_fan_test_rpm(usage_handler, mrbeam_plugin):
 @pytest.mark.parametrize(
     "graph, value, expected",
     [
-        (AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER, 359, 11),
-        (AirFilter.AF3_PRESSURE_GRAPH_PREFILTER, 200, 6),
-        (AirFilter.AF3_RPM_GRAPH, 9800, 82),
+        (AirFilter.AF3_PRESSURE_GRAPH_CARBON_FILTER, 900, 25),
+        (AirFilter.AF3_PRESSURE_GRAPH_PREFILTER, 700, 48),
+        (AirFilter.AF3_RPM_GRAPH, 9870, 5),
     ],
 )
 def test_get_precentage_from_interpolation(graph, value, expected, usage_handler):

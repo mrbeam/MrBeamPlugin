@@ -85,10 +85,12 @@ class OneButtonHandler(object):
         self.intended_pause = False
 
         self.hardware_malfunction_notified = False
+        self._airfilter = None
 
     def _on_mrbeam_plugin_initialized(self, event, payload):
         self._temperature_manager = self._plugin.temperature_manager
         self._iobeam = self._plugin.iobeam
+        self._airfilter = self._plugin.airfilter
         self._dust_manager = self._plugin.dust_manager
         self._hw_malfunction = self._plugin.hw_malfunction_handler
 
@@ -224,14 +226,14 @@ class OneButtonHandler(object):
                 self._printer.is_operational()
                 and self.ready_to_laser_ts > 0
                 and self.is_interlock_closed()
-                and self.is_fan_connected()
+                and self._is_fan_connected()
             ):
                 self._logger.debug("onEvent() ONEBUTTON_RELEASED: start laser")
                 self._start_laser()
             elif (
                 self._printer.is_operational()
                 and self.ready_to_laser_ts > 0
-                and not (self.is_interlock_closed() and self.is_fan_connected())
+                and not (self.is_interlock_closed() and self._is_fan_connected())
             ):
                 # can't start laser
                 self._logger.debug(
@@ -249,7 +251,7 @@ class OneButtonHandler(object):
                         "onEvent() ONEBUTTON_RELEASED: interlock open: sending LASER_PAUSE_SAFETY_TIMEOUT_BLOCK to have the light flash up."
                     )
                     self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_BLOCK)
-                elif not self.is_fan_connected():
+                elif not self._is_fan_connected():
                     self._logger.debug(
                         "onEvent() ONEBUTTON_RELEASED: fan not connected: sending BUTTON_PRESS_REJECT."
                     )
@@ -663,9 +665,9 @@ class OneButtonHandler(object):
         else:
             raise Exception("iobeam handler not available from Plugin.")
 
-    def is_fan_connected(self):
-        if self._dust_manager:
-            return self._dust_manager.is_fan_connected()
+    def _is_fan_connected(self):
+        if self._airfilter:
+            return self._airfilter.connected
         else:
             raise Exception("dust_manager handler not available from Plugin.")
 

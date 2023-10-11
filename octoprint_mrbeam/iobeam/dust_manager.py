@@ -70,7 +70,6 @@ class DustManager(object):
         self._state = None
         self._dust = None
         self._rpm = None
-        self._connected = None
         self._data_ts = 0
 
         self._last_event = None
@@ -129,9 +128,6 @@ class DustManager(object):
             mean_job_dust = None
         return mean_job_dust
 
-    def is_fan_connected(self):
-        return self._connected
-
     def set_user_abort_final_extraction(self):
         self._user_abort_final_extraction = True
 
@@ -177,9 +173,9 @@ class DustManager(object):
         if self._dust is not None and self._printer.is_printing():
             self._job_dust_values.append(self._dust)
 
-        self._set_connected(args["connected"])
+        self._airfilter.connected = args["connected"]
 
-        if self._connected is not None:
+        if self._airfilter.connected is not None:
             self._unboost_timer_interval()
 
         if not err:
@@ -189,23 +185,6 @@ class DustManager(object):
         self._send_dust_to_analytics(self._dust)
 
         self._last_rpm_values.append(self._rpm)
-
-    def _set_connected(self, connected):
-        """
-        Sets the connected state and fires an event if the state changed.
-
-        Args:
-            connected: True if the fan is connected, False otherwise
-
-        Returns:
-            None
-        """
-        if self._connected != connected:
-            if connected:
-                self._event_bus.fire(IoBeamEvents.FAN_CONNECTED)
-            else:
-                self._event_bus.fire(IoBeamEvents.FAN_DISCONNECTED)
-        self._connected = connected
 
     def _on_command_response(self, args):
         self._logger.debug("Fan command response: %s", args)
@@ -340,6 +319,19 @@ class DustManager(object):
                 # set rpm of test fan to the average of the measured values
                 avg_rpm = sum(self._last_rpm_values) / len(self._last_rpm_values)
                 if avg_rpm > self.FAN_TEST_MIN_RPM:
+                    if self._airfilter.exhaust_hose_is_blocked():
+                        self._logger.warning(
+                            "exhaust hose might be blocked", analytics=True
+                        )
+                        self._plugin.hw_malfunction_handler.report_hw_malfunction(
+                            {
+                                HwMalfunctionHandler.EXHAUST_HOSE_BLOCKED: {
+                                    "code": ErrorCodes.E_1031,
+                                    "stop_laser": False,  # don't cancel the laser job
+                                }
+                            },
+                        )
+                        return None
                     self._usage_handler.set_fan_test_rpm(avg_rpm)
                     self._logger.debug(
                         "pressure drop - mainfilter %s prefilter %s",
@@ -357,11 +349,13 @@ class DustManager(object):
                         rpm_val=list(self._last_rpm_values),
                         fan_state=self._state,
                         usage_count=self._usage_handler.get_total_usage(),
-                        prefilter_count=self._usage_handler._get_prefilter_usage_time(),
-                        carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
                         pressure_val=self._airfilter.last_pressure_values,
-                        pressure_drop_mainfilter=self._airfilter.pressure_drop_mainfilter,
-                        pressure_drop_prefilter=self._airfilter.pressure_drop_prefilter,
+                        prefilter_count=self._usage_handler._get_prefilter_usage_time(),
+                        prefilter_pressure_drop=self._airfilter.pressure_drop_prefilter,
+                        prefilter_percent=self._usage_handler.get_prefilter_usage(),
+                        carbon_filter_count=self._usage_handler._get_carbon_filter_usage_time(),
+                        carbon_filter_pressure_drop=self._airfilter.pressure_drop_mainfilter,
+                        carbon_filter_percent=self._usage_handler.get_carbon_filter_usage(),
                     )
                     self._analytics_handler.add_fan_rpm_test(data)
                 else:
@@ -585,7 +579,7 @@ class DustManager(object):
                     state=self._state,
                     rpm=self._rpm,
                     dust=self._dust,
-                    connected=self._connected,
+                    connected=self._airfilter.connected,
                     age=(monotonic_time() - self._data_ts),
                 )
             )
@@ -593,13 +587,13 @@ class DustManager(object):
                 trigger=msg, analytics="invalid-old-fan-data", log_message=log_message
             )
 
-        elif self._connected == False:
+        elif self._airfilter.connected == False:
             result = False
             msg = "Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
                 state=self._state,
                 rpm=self._rpm,
                 dust=self._dust,
-                connected=self._connected,
+                connected=self._airfilter.connected,
                 age=(monotonic_time() - self._data_ts),
             )
             self._pause_laser(trigger="Air filter not connected.", log_message=msg)
