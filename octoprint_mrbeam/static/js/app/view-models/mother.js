@@ -443,11 +443,13 @@ $(function () {
         self.onEventMrbPluginVersion = function (payload) {
             if (
                 payload?.version ||
+                payload?.laser_cutter_mode ||
                 payload?.is_first_run ||
                 payload?.mrb_state?.laser_model
             ) {
                 self.force_reload_if_required(
                     payload["version"],
+                    payload["laser_cutter_mode"],
                     payload["is_first_run"],
                     payload["mrb_state"]["laser_model"]
                 );
@@ -485,11 +487,13 @@ $(function () {
          * This happens sometimes after a software update or if the user used a reset stick
          * @private
          * @param backend_version (optional) If no version is given the function reads it from self.settings
+         * @param backendLaserCutterMode (optional) If no laser_cutter_mode flag is given the function reads it from self.settings
          * @param isFirstRun (optional) If no firstRun flag is given the function reads it from self.settings
          * @param laserHeadModel (optional) If no laserHeadModel flag is given the function reads it from self.settings
          */
         self.force_reload_if_required = function (
             backend_version,
+            backendLaserCutterMode,
             isFirstRun,
             laserHeadModel
         ) {
@@ -499,6 +503,9 @@ $(function () {
                 backend_version = backend_version
                     ? backend_version
                     : mrb_settings._version();
+                backendLaserCutterMode = backendLaserCutterMode
+                    ? backendLaserCutterMode
+                    : "default"; // TODO: SW-3719 get real value from settings or leave it as default
                 isFirstRun = isFirstRun
                     ? isFirstRun
                     : mrb_settings.isFirstRun();
@@ -510,6 +517,7 @@ $(function () {
             }
             if (
                 backend_version !== MRBEAM_PLUGIN_VERSION ||
+                backendLaserCutterMode !== LASER_CUTTER_MODE ||
                 isFirstRun !== CONFIG_FIRST_RUN ||
                 (laserHeadModel !== undefined &&
                     laserHeadModel !== MRBEAM_LASER_HEAD_MODEL)
@@ -527,6 +535,10 @@ $(function () {
                         MRBEAM_LASER_HEAD_MODEL +
                         ", backend=" +
                         laserHeadModel +
+                        ", laserCutterMode: frontend=" +
+                        LASER_CUTTER_MODE +
+                        ", backend=" +
+                        backendLaserCutterMode +
                         ")"
                 );
                 console.log("Reloading frontend...");
@@ -537,6 +549,8 @@ $(function () {
                         MRBEAM_PLUGIN_VERSION +
                         ", isFirstRun: " +
                         CONFIG_FIRST_RUN +
+                        ", laserCutterMode: " +
+                        LASER_CUTTER_MODE +
                         ", laserheadModel: " +
                         MRBEAM_LASER_HEAD_MODEL +
                         ")"

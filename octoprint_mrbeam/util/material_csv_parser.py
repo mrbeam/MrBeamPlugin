@@ -16,6 +16,18 @@ LASER_MODEL_X = "x"
 
 VALID_MODELS = [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY, MRB_DREAMCUT_X]
 
+# TODO: import these from mode services
+DEFAULT_MODE = "default"
+ROTARY_MODE = "rotary"
+
+MATERIALS_CSV_DIR = "files/material_settings/"
+DEFAULT_MATERIALS_CSV_DIR = MATERIALS_CSV_DIR + "materials.csv"
+ROTARY_MATERIALS_CSV_DIR = MATERIALS_CSV_DIR + "materials_rotary.csv"
+MATERIALS_CSVS = {
+    DEFAULT_MODE: DEFAULT_MATERIALS_CSV_DIR,
+    ROTARY_MODE: ROTARY_MATERIALS_CSV_DIR,
+}
+
 
 def model_ids_to_csv_name(device_model_id, laser_model_id):
     convert = {
@@ -63,17 +75,21 @@ def dict_merge(dct, merge_dct):
             dct[k] = merge_dct[k]
 
 
-def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0"):
+def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0", laser_cutter_mode=DEFAULT_MODE):
     """Assumes following column order: mrbeamversion, material, colorcode,
     thickness_or_engrave, intensity, speed, passes, pierce_time, dithering.
 
     :param path: path to csv file
     :param device_model: the model of the device to use. Will return the material settings to use for that model.
     :param laserhead_model: the type of laserhead to use. Will return the material settings to use for that laserhead.
+    :param laser_cutter_mode: the laser cutter mode. Will return the material settings to use for that laser cutter mode.
     :return:
     """
+
+    csv_path = MATERIALS_CSVS[laser_cutter_mode]
+
     path = path or os.path.join(
-        __package_path__, "files/material_settings/materials.csv"
+        __package_path__, csv_path
     )
     dictionary = {}
     with open(path, "r") as f:

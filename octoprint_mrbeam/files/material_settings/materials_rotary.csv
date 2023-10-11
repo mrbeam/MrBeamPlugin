@@ -1,0 +1,17 @@
+Laserhead,Material,Color,Thickness,Intensity,Speed,Passes,Compressor,Piercing time,Dithering,Comments
+You can drag the cell to fill a range with the same name,Color codes take a long time to update -->,"Use ""fill color"" tool",Engrave or (mm),light-dark (%),light-dark 0 to 1500,,level 0 to 3,(ms),yes/no,"interpolated value or #madewithmrbeam? Let us know what makes you tick
+"
+Mr Beam II,Bamboo,#e7c982,Engrave,0-100,1500-450,1,0,0,no,values from default material settings
+Mr Beam II,Cork,#c19c73,Engrave,0-30,1500-1400,1,0,0,no,values from default material settings
+,,,,,,,,,,
+,DREAMCUT,,,,,,,,,
+MrB II Dreamcut,Bamboo,#e7c982,Engrave,0-50,1500-1500,1,3,0,no,values from default material settings
+MrB II Dreamcut,Cork,#c19c73,Engrave,0-30,1500-1500,1,3,0,no,values from default material settings
+,,,,,,,,,,
+,DREAMCUT S,,,,,,,,,
+MrB II Dreamcut S,Bamboo,#e7c982,Engrave,0-50,2000-2000,1,3,0,no,values from default material settings
+MrB II Dreamcut S,Cork,#c19c73,Engrave,0-15,1500-1500,1,3,0,no,values from default material settings
+,,,,,,,,,,
+,DREAMCUT X,,,,,,,,,
+MrB II Dreamcut x,Bamboo,#e7c982,Engrave,0-30,2000-2000,1,3,0,no,values from default material settings
+MrB II Dreamcut x,Cork,#c19c73,Engrave,0-14,2000-2000,1,3,0,no,values from default material settings

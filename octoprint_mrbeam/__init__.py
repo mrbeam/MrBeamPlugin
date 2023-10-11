@@ -336,9 +336,9 @@ class MrBeamPlugin(
     def _try_to_connect_laser(self):
         """Tries to connect the laser if both iobeam and laserhead are ready and the laser is not connected yet."""
         if (
-            self._iobeam_connected
-            and self._laserhead_ready
-            and self._printer.is_closed_or_error()
+                self._iobeam_connected
+                and self._laserhead_ready
+                and self._printer.is_closed_or_error()
         ):
             self._printer.connect()
 
@@ -374,17 +374,13 @@ class MrBeamPlugin(
         msg += ", grbl_version_lastknown:{}".format(
             self._settings.get(["grbl_version_lastknown"])
         )
-        msg += ", laserhead-serial-lastknown:{}".format(
-            self.laserhead_handler.get_current_used_lh_data()["serial"]
-        )
-        msg += ", laserhead-model-lastknown:{}".format(
-            self.laserhead_handler.get_current_used_lh_data()["model"]
-        )
+        msg += ", laserhead-serial-lastknown:{}".format(self.get_current_laser_head_serial())
+        msg += ", laserhead-model-lastknown:{}".format(self.get_current_laser_head_serial())
         self._logger.info(msg, terminal=True)
 
         msg = (
-            "MrBeam Lasercutter Profile: %s"
-            % self.laserCutterProfileManager.get_current_or_default()
+                "MrBeam Lasercutter Profile: %s"
+                % self.laserCutterProfileManager.get_current_or_default()
         )
         self._logger.info(msg, terminal=True)
         self._frontend_logger.info(msg)
@@ -406,8 +402,8 @@ class MrBeamPlugin(
             beamOS_image=self._octopi_info,
             grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
             laserhead_lastknown=dict(
-                serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
-                model=self.laserhead_handler.get_current_used_lh_data()["model"],
+                serial=self.get_current_laser_head_serial(),
+                model=self.get_current_laser_head_model(),
             ),
             _state=dict(
                 calibration_tool_mode=self.calibration_tool_mode,
@@ -577,8 +573,8 @@ class MrBeamPlugin(
             laserheadChanged=self.laserhead_changed(),
             gcodeAutoDeletion=self._settings.get(["gcodeAutoDeletion"]),
             laserhead=dict(
-                serial=self.laserhead_handler.get_current_used_lh_data()["serial"],
-                model=self.laserhead_handler.get_current_used_lh_data()["model"],
+                serial=self.get_current_laser_head_serial(),
+                model=self.get_current_laser_head_model(),
                 model_id=self.laserhead_handler.get_current_used_lh_model_id(),
                 model_supported=self.laserhead_handler.is_current_used_lh_model_supported(),
             ),
@@ -636,9 +632,9 @@ class MrBeamPlugin(
                     data["terminal_show_checksums"]
                 )
             if (
-                "gcode_nextgen" in data
-                and isinstance(data["gcode_nextgen"], collections.Iterable)
-                and "clip_working_area" in data["gcode_nextgen"]
+                    "gcode_nextgen" in data
+                    and isinstance(data["gcode_nextgen"], collections.Iterable)
+                    and "clip_working_area" in data["gcode_nextgen"]
             ):
                 self._settings.set_boolean(
                     ["gcode_nextgen", "clip_working_area"],
@@ -793,6 +789,7 @@ class MrBeamPlugin(
                 "js/app/view-models/mrbeam-constants.js",
                 "js/app/view-models/mrb_state.js",
                 "js/app/helpers/mutation-observer.js",
+                "js/app/view-models/components/laser-cutter-mode-switch.js",
             ],
             css=[
                 "css/fontawesome_v6/css/fontawesome.min.css",
@@ -860,14 +857,14 @@ class MrBeamPlugin(
         language = g.locale.language if g.locale else "en"
 
         if (
-            request.headers.get("User-Agent")
-            != self.analytics_handler._timer_handler.SELF_CHECK_USER_AGENT
+                request.headers.get("User-Agent")
+                != self.analytics_handler._timer_handler.SELF_CHECK_USER_AGENT
         ):
             self._track_ui_render_calls(request, language)
 
         enable_accesscontrol = self._user_manager.enabled
         accesscontrol_active = (
-            enable_accesscontrol and self._user_manager.hasBeenCustomized()
+                enable_accesscontrol and self._user_manager.hasBeenCustomized()
         )
 
         selectedProfile = self.laserCutterProfileManager.get_current_or_default()
@@ -923,12 +920,8 @@ class MrBeamPlugin(
                 beamosVersionDisplayVersion=display_version_string,
                 beamosVersionImage=self._octopi_info,
                 grbl_version=self._grbl_version,
-                laserhead_serial=self.laserhead_handler.get_current_used_lh_data()[
-                    "serial"
-                ],
-                laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
-                    "model"
-                ],
+                laserhead_serial=self.get_current_laser_head_serial(),
+                laserhead_model=self.get_current_laser_head_model(),
                 laserhead_min_speed=self.laserhead_handler.current_laserhead_min_speed,
                 env=self.get_env(),
                 mac_addrs=self._get_mac_addresses(),
@@ -1110,9 +1103,9 @@ class MrBeamPlugin(
     @octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
     def acl_wizard_api(self):
         if not (
-            self.isFirstRun()
-            and self._user_manager.enabled
-            and not self._user_manager.hasBeenCustomized()
+                self.isFirstRun()
+                and self._user_manager.enabled
+                and not self._user_manager.hasBeenCustomized()
         ):
             return make_response("Forbidden", 403)
 
@@ -1123,10 +1116,10 @@ class MrBeamPlugin(
             return make_response("Unable to interprete request", 400)
 
         if (
-            "user" in data.keys()
-            and "pass1" in data.keys()
-            and "pass2" in data.keys()
-            and data["pass1"] == data["pass2"]
+                "user" in data.keys()
+                and "pass1" in data.keys()
+                and "pass2" in data.keys()
+                and data["pass1"] == data["pass2"]
         ):
             # configure access control
             self._logger.debug("acl_wizard_api() creating admin user: %s", data["user"])
@@ -1192,11 +1185,11 @@ class MrBeamPlugin(
         # check if username is ok
         username = data.get("username", "")
         if (
-            current_user is None
-            or current_user.is_anonymous()
-            or not current_user.is_user()
-            or not current_user.is_active()
-            or current_user.get_name() != username
+                current_user is None
+                or current_user.is_anonymous()
+                or not current_user.is_user()
+                or not current_user.is_active()
+                or current_user.get_name() != username
         ):
             return make_response("Invalid user", 403)
 
@@ -1306,16 +1299,17 @@ class MrBeamPlugin(
 
         try:
             if data.get("reset", False) == True:
-                materials(self).reset_all_custom_materials()
+                materials(self).delete_all_custom_materials()
 
-            if "delete" in data:
-                materials(self).delete_custom_material(data["delete"])
+            if data.get("delete", []):
+                for material_key in data["delete"]:
+                    materials(self).delete_custom_material(material_key)
 
-            if "put" in data and isinstance(data["put"], dict):
-                for key, m in data["put"].iteritems():
-                    materials(self).put_custom_material(key, m)
+            if isinstance(data.get("put"), dict):
+                for material_key, material in data["put"].iteritems():
+                    materials(self).add_custom_material(material_key, material)
 
-            res["custom_materials"] = materials(self).get_custom_materials()
+            res["custom_materials"] = materials(self).get_custom_materials_for_laser_cutter_mode()
 
         except:
             self._logger.exception("Exception while handling custom_materials(): ")
@@ -1323,6 +1317,16 @@ class MrBeamPlugin(
 
         # self._logger.info("custom_material(): response: %s", data)
         return make_response(jsonify(res), 200)
+
+    def get_laser_cutter_mode(self):
+        # TODO: SW-3719 return actual laser cutter mode
+        return "default"
+
+    def get_current_laser_head_model(self):
+        return self.laserhead_handler.get_current_used_lh_data()["model"]
+
+    def get_current_laser_head_serial(self):
+        return self.laserhead_handler.get_current_used_lh_data()["serial"]
 
     # simpleApiCommand: messages;
     def messages(self, data):
@@ -1372,8 +1376,8 @@ class MrBeamPlugin(
     # simpleApiCommand: generate_backlash_compenation_pattern_gcode
     def generate_backlash_compenation_pattern_gcode(self, data):
         srcFile = (
-            __builtin__.__package_path__
-            + "/static/gcode/backlash_compensation_x@cardboard.gco"
+                __builtin__.__package_path__
+                + "/static/gcode/backlash_compensation_x@cardboard.gco"
         )
         with open(srcFile, "r") as fh:
             gcoString = fh.read()
@@ -1603,7 +1607,7 @@ class MrBeamPlugin(
         )
 
         if not "result" in json_data or not all(
-            k in json_data["result"].keys() for k in ["newCorners", "newMarkers"]
+                k in json_data["result"].keys() for k in ["newCorners", "newMarkers"]
         ):
             # TODO correct error message
             return make_response("No profile included in request", 400)
@@ -1632,10 +1636,10 @@ class MrBeamPlugin(
 
         # validate input
         if (
-            i < JobParams.Min.INTENSITY
-            or i > JobParams.Max.INTENSITY
-            or f < JobParams.Min.SPEED
-            or f > JobParams.Max.SPEED
+                i < JobParams.Min.INTENSITY
+                or i > JobParams.Max.INTENSITY
+                or f < JobParams.Min.SPEED
+                or f > JobParams.Max.SPEED
         ):
             return make_response("Invalid parameters", 400)
         cm = CalibrationMarker(
@@ -1653,7 +1657,7 @@ class MrBeamPlugin(
 
         seconds = 0
         while (
-            self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26
+                self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26
         ):  # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
             time.sleep(1.0)  # wait a second
             seconds += 1
@@ -1795,10 +1799,10 @@ class MrBeamPlugin(
                 "refs": {
                     "resource": location,
                     "download": url_for("index", _external=True)
-                    + "downloads/files/"
-                    + FileDestinations.LOCAL
-                    + "/"
-                    + file_name,
+                                + "downloads/files/"
+                                + FileDestinations.LOCAL
+                                + "/"
+                                + file_name,
                 },
             }
 
@@ -1850,9 +1854,9 @@ class MrBeamPlugin(
                 slicer = "svgtogcode"
                 slicer_instance = self._slicing_manager.get_slicer(slicer)
                 if slicer_instance.get_slicer_properties()["same_device"] and (
-                    self._printer.is_printing()
-                    or self._printer.is_paused()
-                    or self.lid_handler.lensCalibrationStarted
+                        self._printer.is_printing()
+                        or self._printer.is_paused()
+                        or self.lid_handler.lensCalibrationStarted
                 ):
                     # slicer runs on same device as OctoPrint, slicing while printing is hence disabled
                     _while = (
@@ -1879,7 +1883,7 @@ class MrBeamPlugin(
                 name, ext = os.path.splitext(gcode_name)
                 i = 1
                 while self.mrb_file_manager.file_exists(
-                    FileDestinations.LOCAL, gcode_name
+                        FileDestinations.LOCAL, gcode_name
                 ):
                     gcode_name = name + "." + str(i) + ext
                     i += 1
@@ -1887,9 +1891,9 @@ class MrBeamPlugin(
                 # prohibit overwriting the file that is currently being printed
                 currentOrigin, currentFilename = self._getCurrentFile()
                 if (
-                    currentFilename == gcode_name
-                    and currentOrigin == FileDestinations.LOCAL
-                    and (self._printer.is_printing() or self._printer.is_paused())
+                        currentFilename == gcode_name
+                        and currentOrigin == FileDestinations.LOCAL
+                        and (self._printer.is_printing() or self._printer.is_paused())
                 ):
                     msg = "Trying to slice into file that is currently being printed: {}".format(
                         gcode_name
@@ -1915,10 +1919,10 @@ class MrBeamPlugin(
 
                 # callback definition
                 def slicing_done(
-                    gcode_name,
-                    select_after_slicing,
-                    print_after_slicing,
-                    append_these_files,
+                        gcode_name,
+                        select_after_slicing,
+                        print_after_slicing,
+                        append_these_files,
                 ):
                     try:
                         # append additional gcodes
@@ -1984,10 +1988,10 @@ class MrBeamPlugin(
                     "refs": {
                         "resource": location,
                         "download": url_for("index", _external=True)
-                        + "downloads/files/"
-                        + FileDestinations.LOCAL
-                        + "/"
-                        + gcode_name,
+                                    + "downloads/files/"
+                                    + FileDestinations.LOCAL
+                                    + "/"
+                                    + gcode_name,
                     },
                 }
 
@@ -2059,7 +2063,7 @@ class MrBeamPlugin(
     def on_api_command(self, command, data):
         if command == "position":
             if isinstance(data["x"], (int, long, float)) and isinstance(
-                data["y"], (int, long, float)
+                    data["y"], (int, long, float)
             ):
                 self._printer.position(data["x"], data["y"])
             else:
@@ -2118,9 +2122,8 @@ class MrBeamPlugin(
                     jsonify(
                         parse_csv(
                             device_model=self.get_model_id(),
-                            laserhead_model=self.laserhead_handler.get_current_used_lh_data()[
-                                "model"
-                            ],
+                            laserhead_model=self.get_current_laser_head_model(),
+                            laser_cutter_mode=self.get_laser_cutter_mode(),
                         )
                     ),
                     200,
@@ -2170,7 +2173,7 @@ class MrBeamPlugin(
                 jsonify(
                     {
                         "alive": self.lid_handler.boardDetectorDaemon is not None
-                        and self.lid_handler.boardDetectorDaemon.is_alive(),
+                                 and self.lid_handler.boardDetectorDaemon.is_alive(),
                     }
                 ),
                 200,
@@ -2209,8 +2212,8 @@ class MrBeamPlugin(
         # Everytime the gcode auto deletion is enabled, it will be triggered
         if enable_deletion:
             if (
-                self._gcode_deletion_thread is None
-                or not self._gcode_deletion_thread.is_alive()
+                    self._gcode_deletion_thread is None
+                    or not self._gcode_deletion_thread.is_alive()
             ):
                 self._logger.info(
                     "set_gcode_deletion: Starting threaded bulk deletion of gcode files."
@@ -2539,15 +2542,15 @@ class MrBeamPlugin(
         )
 
     def do_slice(
-        self,
-        model_path,
-        printer_profile,
-        machinecode_path=None,
-        profile_path=None,
-        position=None,
-        on_progress=None,
-        on_progress_args=None,
-        on_progress_kwargs=None,
+            self,
+            model_path,
+            printer_profile,
+            machinecode_path=None,
+            profile_path=None,
+            position=None,
+            on_progress=None,
+            on_progress_args=None,
+            on_progress_kwargs=None,
     ):
         try:
             # TODO profile_path is not used because only the default (selected) profile is.
@@ -2698,7 +2701,9 @@ class MrBeamPlugin(
             self.fire_event(
                 MrBeamEvents.MRB_PLUGIN_VERSION,
                 payload=dict(
-                    version=self._plugin_version, is_first_run=self.isFirstRun()
+                    version=self._plugin_version,
+                    is_first_run=self.isFirstRun(),
+                    laser_cutter_mode=self.get_laser_cutter_mode()
                 ),
             )
 
@@ -2758,13 +2763,13 @@ class MrBeamPlugin(
             self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, payload)
 
     def on_slicing_progress(
-        self,
-        slicer,
-        source_location,
-        source_path,
-        destination_location,
-        destination_path,
-        progress,
+            self,
+            slicer,
+            source_location,
+            source_path,
+            destination_location,
+            destination_path,
+            progress,
     ):
         # TODO: this method should be moved into printer.py or comm_acc2 or so.
         flooredProgress = progress - (progress % 10)
@@ -2886,9 +2891,7 @@ class MrBeamPlugin(
                     dusting_mode=self.dust_manager.is_final_extraction_mode,
                     state=self._printer.get_state_string(),
                     is_homed=self._printer.is_homed(),
-                    laser_model=self.laserhead_handler.get_current_used_lh_data()[
-                        "model"
-                    ],
+                    laser_model=self.get_current_laser_head_model(),
                 )
             except:
                 self._logger.exception("Exception while collecting mrb_state data.")
@@ -2898,10 +2901,10 @@ class MrBeamPlugin(
     def _getCurrentFile(self):
         currentJob = self._printer.get_current_job()
         if (
-            currentJob is not None
-            and "file" in currentJob.keys()
-            and "name" in currentJob["file"]
-            and "origin" in currentJob["file"]
+                currentJob is not None
+                and "file" in currentJob.keys()
+                and "name" in currentJob["file"]
+                and "origin" in currentJob["file"]
         ):
             return currentJob["file"]["origin"], currentJob["file"]["name"]
         else:
@@ -2909,9 +2912,9 @@ class MrBeamPlugin(
 
     def _fixEmptyUserManager(self):
         if (
-            hasattr(self, "_user_manager")
-            and len(self._user_manager._users) <= 0
-            and (self._user_manager._customized or not self.isFirstRun())
+                hasattr(self, "_user_manager")
+                and len(self._user_manager._users) <= 0
+                and (self._user_manager._customized or not self.isFirstRun())
         ):
             self._logger.debug("_fixEmptyUserManager")
             self._user_manager._customized = False
@@ -3108,8 +3111,8 @@ class MrBeamPlugin(
             # ntpq_out, code = exec_cmd_output("ntpq -p", shell=True, log=False)
             # self._logger.debug("ntpq -p:\n%s", ntpq_out)
             cmd = (
-                "ntpq -pn | /usr/bin/awk 'BEGIN { ntp_offset=%s } $1 ~ /^\*/ { ntp_offset=$9 } END { print ntp_offset }'"
-                % max_offset
+                    "ntpq -pn | /usr/bin/awk 'BEGIN { ntp_offset=%s } $1 ~ /^\*/ { ntp_offset=$9 } END { print ntp_offset }'"
+                    % max_offset
             )
             output, code = exec_cmd_output(cmd, shell=True, log=False)
             try:
@@ -3138,7 +3141,7 @@ class MrBeamPlugin(
         )
         if self._time_ntp_check_last_ts > 0.0:
             local_time_shift = (
-                now - self._time_ntp_check_last_ts - interval_last
+                    now - self._time_ntp_check_last_ts - interval_last
             )  # if there was no shift, this should sum up to zero
         self._time_ntp_shift += local_time_shift
         self._time_ntp_synced = ntp_offset is not None
