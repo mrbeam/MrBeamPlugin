@@ -65,25 +65,6 @@ class LaserCutterModeService:
         mode_id = self._settings.get(["laser_cutter_mode", "id"])
         return mode_id
 
-    def get_mode(self):
-        """Get laser cutting mode.
-
-        The dictionary has the following format:
-            {
-                "id": <mode_id>,
-                "name": <mode_name>,
-            }
-
-        Returns:
-            mode (dict): A dictionary containing the id and name of the laser cutting mode.
-
-        """
-        self._logger.debug("Get laser cutting mode.")
-        return {
-            "id": self._mode.id,
-            "name": self._mode.name,
-        }
-
     def get_mode_id(self):
         """Get laser cutting mode id.
 
@@ -92,15 +73,6 @@ class LaserCutterModeService:
         """
         self._logger.debug("Get laser cutting mode id.")
         return self._mode.id
-
-    def get_mode_name(self):
-        """Get laser cutting mode name.
-
-        Returns:
-            mode_name (str): The name of the laser cutting mode.
-        """
-        self._logger.debug("Get laser cutting mode name.")
-        return self._mode.name
 
     def change_mode_by_id(self, mode_id):
         """Change laser cutting mode by id.
@@ -117,22 +89,6 @@ class LaserCutterModeService:
         self._mode.id = mode_id
         self._save_laser_cutter_mode_to_settings()
 
-    def change_mode_by_name(self, mode_name):
-        """Change laser cutting mode by name.
-
-        If the mode name is invalid, it will fall back to default.
-
-        Args:
-            mode_name (str): The name of the laser cutting mode.
-
-        Returns:
-
-        """
-        self._logger.info("Change laser cutting mode by name: from mode_name=%s to mode_name=%s."
-                          % (self._mode.name, mode_name))
-        self._mode.name = mode_name
-        self._save_laser_cutter_mode_to_settings()
-
     def _save_laser_cutter_mode_to_settings(self):
         """Save laser cutting mode to settings.
 
@@ -140,7 +96,6 @@ class LaserCutterModeService:
         """
         self._logger.debug("Save laser cutting mode to settings.")
         self._settings.set(["laser_cutter_mode", "id"], self._mode.id, force=True)
-        self._settings.set(["laser_cutter_mode", "name"], self._mode.name, force=True)
         self._settings.save()
 
     # The below is for future implementation

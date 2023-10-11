@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Create virtual environment and install requirements for python unit tests
-virtualenv -p python2.7 venv
+virtualenv -p python2.7 venv2  # For this to work: pip install virtualenv==20.21.1
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements-dev.txt

@@ -513,10 +513,7 @@ class MrBeamPlugin(
             leds=dict(brightness=255, fps=28),
             heavyDutyPrefilter=False,
             highTemperatureWarningDisabled=False,
-            laser_cutter_mode=dict(
-                id=LaserCutterModeModel.FALLBACK_MODE_ID,
-                name=LaserCutterModeModel.MODES[LaserCutterModeModel.FALLBACK_MODE_ID],
-            )
+            laser_cutter_mode=LaserCutterModeModel.FALLBACK_MODE_ID,
         )
 
     def on_settings_load(self):
@@ -597,10 +594,7 @@ class MrBeamPlugin(
                 fps=self._settings.get(["leds", "fps"]),
             ),
             isFirstRun=self.isFirstRun(),
-            laser_cutter_mode= dict (
-                id=self._settings.get(["laser_cutter_mode", "id"]),
-                name=self._settings.get(["laser_cutter_mode", "name"]),
-            )
+            laser_cutter_mode=self._settings.get(["laser_cutter_mode"]),
         )
 
     def on_settings_save(self, data):
@@ -678,8 +672,7 @@ class MrBeamPlugin(
                     ["heavyDutyPrefilter"], data["heavyDutyPrefilter"]
                 )
             if "laser_cutter_mode" in data:
-                self._settings.set(["laser_cutter_mode", "id"], data["laser_cutter_mode"]["id"])
-                self._settings.set(["laser_cutter_mode", "name"], data["laser_cutter_mode"]["name"])
+                self._settings.set(["laser_cutter_mode"], data["laser_cutter_mode"])
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
@@ -950,8 +943,7 @@ class MrBeamPlugin(
                     self._logger, DocumentService(self._logger)
                 ).get_burger_menu_model(self.get_model_id()),
                 isDevelop=self.is_dev_env(),
-                laser_cutter_mode_id=self._laser_cutter_mode_service.get_mode_id(),
-                laser_cutter_mode_name=self._laser_cutter_mode_service.get_mode_name(),
+                laser_cutter_mode=self.get_laser_cutter_mode(),
             )
         )
         r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
@@ -1319,8 +1311,7 @@ class MrBeamPlugin(
         return make_response(jsonify(res), 200)
 
     def get_laser_cutter_mode(self):
-        # TODO: SW-3719 return actual laser cutter mode
-        return "default"
+        return self._laser_cutter_mode_service.get_mode_id()
 
     def get_current_laser_head_model(self):
         return self.laserhead_handler.get_current_used_lh_data()["model"]
