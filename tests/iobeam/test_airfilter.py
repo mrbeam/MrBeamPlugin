@@ -48,6 +48,7 @@ def test_set_airfilter(air_filter):
 def test_model_name_AF1_or_fan(air_filter):
     # Arrange
     air_filter.set_airfilter(0, "serial")
+    air_filter.set_connected(True)  # AF1 or fan need to be connected state to show name
     # Act
     model_name = air_filter.model
     # Assert
@@ -56,7 +57,7 @@ def test_model_name_AF1_or_fan(air_filter):
 
 def test_model_name_AF2(air_filter):
     # Arrange
-    for i in range(1, 8):
+    for i in range(2, 8):
         air_filter.set_airfilter(i, "serial")
         # Act
         model_name = air_filter.model
@@ -245,14 +246,14 @@ def test_profile_for_airfilter_8(air_filter):
     assert profile == {
         "carbonfilter": [
             {
-                "lifespan": 400,
+                "lifespan": 1120,
                 "shopify_link": "maintenance/af3/mf",
             }
         ],
         "carbonfilter_stages": 1,
         "prefilter": [
             {
-                "lifespan": 80,
+                "lifespan": 320,
                 "shopify_link": "maintenance/af3/pf1",
             },
         ],
@@ -312,7 +313,7 @@ def test_get_lifespan_for_airfilter_1_carbonfilter(air_filter):
         (3, 40),
         (4, 40),
         (5, 40),
-        (8, 80),
+        (8, 320),
         (None, 40),
     ],
 )
@@ -335,7 +336,7 @@ def test_get_lifespan_for_prefilter(model_id, expected_lifespan, air_filter):
         (3, [80]),
         (4, [80]),
         (5, [40]),
-        (8, [80]),
+        (8, [320]),
         (None, [40]),
     ],
 )
@@ -415,7 +416,7 @@ def test_get_list_of_lifespans_for_prefilter(air_filter, mrbeam_plugin):
     lifespan = air_filter.get_lifespans("prefilter")
 
     # Assert
-    assert lifespan == [80]
+    assert lifespan == [320]
 
 
 def test_get_list_of_lifespans_for_carbonfilter(air_filter, mrbeam_plugin):
@@ -436,7 +437,7 @@ def test_get_list_of_lifespans_for_carbonfilter(air_filter, mrbeam_plugin):
     lifespan = air_filter.get_lifespans("carbonfilter")
 
     # Assert
-    assert lifespan == [400]
+    assert lifespan == [1120]
 
 
 def test_get_list_of_lifespans_profile_none(air_filter):
@@ -571,7 +572,7 @@ def test_get_last_pressure_values(air_filter):
 
 def test_set_pressure_af2(air_filter):
     # Arrange
-    air_filter.set_airfilter(1, "serial")
+    air_filter.set_airfilter(2, "serial")
 
     # Act
     air_filter.set_pressure(pressure=900)

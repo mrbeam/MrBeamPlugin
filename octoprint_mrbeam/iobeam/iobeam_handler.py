@@ -160,6 +160,8 @@ class IoBeamHandler(object):
     DATASET_REED_SWITCH = "reed_switch"
     DATASET_ANALYTICS = "analytics"
 
+    UNKNOWN_SERIAL_KEY = "no_serial"
+
     def __init__(self, plugin, printer):
         self._plugin = plugin
         self._printer = printer

@@ -37,7 +37,6 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.rest_handler.update_handler import UpdateRestHandlerMixin
 from octoprint_mrbeam.util.connectivity_checker import ConnectivityChecker
 from octoprint_mrbeam.fsm.high_temperature_fsm import HighTemperatureFSM
-from octoprint_mrbeam.iobeam.airfilter import airfilter, AirFilter
 
 IS_X86 = platform.machine() == "x86_64"
 from ._version import get_versions
@@ -48,6 +47,7 @@ if isinstance(__version__, unicode):
 
 del get_versions
 
+from octoprint_mrbeam.iobeam.airfilter import airfilter, AirFilter
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
