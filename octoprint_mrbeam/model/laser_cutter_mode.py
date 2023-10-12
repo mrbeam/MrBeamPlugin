@@ -22,7 +22,7 @@ class LaserCutterModeModel(object):
         if mode_id in self.MODES:
             self._id = mode_id
         else:
-            self._logger.error("Invalid laser cutter mode id during init.")
+            self._logger.error("Invalid laser cutter mode id during init: {}".format(mode_id))
             self._logger.warn(self.FALLBACK_WARNING)
             self._id = self.FALLBACK_MODE_ID
 
@@ -47,6 +47,6 @@ class LaserCutterModeModel(object):
         if mode_id in self.MODES:
             self._id = mode_id
         else:
-            self._logger.error("Invalid laser cutter mode id during init.")
+            self._logger.error("Invalid laser cutter mode id during set: {}".format(mode_id))
             self._logger.warn(self.FALLBACK_WARNING)
             self._id = self.FALLBACK_MODE_ID

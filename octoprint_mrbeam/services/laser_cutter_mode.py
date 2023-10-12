@@ -52,7 +52,7 @@ class LaserCutterModeService:
 
         """
         self._logger.debug("Load laser cutting mode from settings.")
-        mode_id = self._settings.get(["laser_cutter_mode", "id"])
+        mode_id = self._settings.get(["laser_cutter_mode"])
         return mode_id
 
     def get_mode_id(self):
@@ -85,7 +85,7 @@ class LaserCutterModeService:
         This function is called after changing the laser cutting mode.
         """
         self._logger.debug("Save laser cutting mode to settings.")
-        self._settings.set(["laser_cutter_mode", "id"], self._mode.id, force=True)
+        self._settings.set(["laser_cutter_mode"], self._mode.id, force=True)
         self._settings.save()
 
     # The below is for future implementation
