@@ -166,6 +166,8 @@ class MrBeamPlugin(
     TIME_NTP_SYNC_CHECK_INTERVAL_FAST = 10.0
     TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
 
+    RESTART_OCTOPRINT_CMD = "sudo systemctl restart octoprint.service"
+
     def __init__(self):
         self.mrbeam_plugin_initialized = False
         self._shutting_down = False
@@ -2049,6 +2051,7 @@ class MrBeamPlugin(
             high_temperature_warning_status=[],
             request_hardware_errors=[],
             dissmiss_notification=[],
+            laser_cutter_mode_change=[],
         )
 
     def on_api_command(self, command, data):
@@ -2185,6 +2188,8 @@ class MrBeamPlugin(
             return self.handle_hardware_error_request(data)
         elif command == "dissmiss_notification":
             return self.handle_dissmiss_notification_request(data)
+        elif command == "laser_cutter_mode_change":
+            return self.handle_laser_cutter_mode_change(data)
         return NO_CONTENT
 
     def analytics_init(self, data):
@@ -2352,6 +2357,21 @@ class MrBeamPlugin(
             NO_CONTENT
         """
         self.user_notification_system.dismiss_notification(data.get("id", None))
+        return NO_CONTENT
+
+    def handle_laser_cutter_mode_change(self, data):
+        """Handle a request to change the laser cutter mode
+
+        Args:
+            data: request data
+
+        Returns:
+            NO_CONTENT
+        """
+        new_mode = data.get("mode", None)
+        if new_mode:
+            self._laser_cutter_mode_service.change_mode_by_id(new_mode)
+            self.restart_octoprint()
         return NO_CONTENT
 
     def take_undistorted_picture(self, is_initial_calibration):
@@ -3194,6 +3214,11 @@ class MrBeamPlugin(
             self._logger.debug("_get_mac_addresses() found %s" % interfaces)
             self._mac_addrs = interfaces
         return self._mac_addrs
+
+    def restart_octoprint(self):
+        """Calls the command to restart octoprint"""
+        self._logger.info("Restarting OctoPrint...")
+        exec_cmd(self.RESTART_OCTOPRINT_CMD)
 
 
 # # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
