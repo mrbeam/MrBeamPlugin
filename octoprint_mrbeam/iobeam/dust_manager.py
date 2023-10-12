@@ -52,9 +52,7 @@ class DustManager(object):
     FAN_TEST_MIN_RPM = 1000  # rpm
     FAN_NOT_SPINNING_TIMEOUT = 10  # time in seconds before reporting the error
     FAN_DATA_MISSING_TIMEOUT = 10  # time in seconds before reporting the error
-    REPEAT_TEST_FAN_RPM_INTERVAL = (
-        60  # time in seconds between fan rpm tests #TODO set to 30*60 again
-    )
+    REPEAT_TEST_FAN_RPM_INTERVAL = 30 * 60  # time in seconds between fan rpm tests
 
     def __init__(self, plugin):
         self._plugin = plugin
