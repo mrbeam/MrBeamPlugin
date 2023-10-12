@@ -6,31 +6,21 @@ _instance = None
 
 
 def laser_cutter_mode_service(plugin):
-    """
-    Get or create a singleton instance of the LaserCutterModeService.
+    """Get or create a singleton instance of the LaserCutterModeService.
 
     This function is used to manage a singleton instance of the LaserCutterModeService
     class. It ensures that only one instance of the service is created and returned
     during the program's execution.
 
-    Parameters:
-    - plugin (object): An object representing the plugin that requires the
-      LaserCutterModeService. This is typically an instance of the plugin class.
+    Example Usage: laser_cutter_mode_service = laser_cutter_mode_service(plugin_instance)
+
+    Args:
+        plugin (object): An object representing the MrBeamPlugin
 
     Returns:
-    - _instance (LaserCutterModeService): The singleton instance of the
-      LaserCutterModeService class. If no instance exists, it creates one and returns it.
+        _instance (LaserCutterModeService): The singleton instance of the LaserCutterModeService
+        class. If no instance exists, it creates one and returns it.
 
-    Notes:
-    - The singleton pattern ensures that only one instance of LaserCutterModeService
-      is created and shared across the application, preventing unnecessary resource
-      duplication.
-    - It is crucial to provide the `plugin` parameter to initialize or
-      retrieve the singleton instance correctly.
-
-    Example Usage:
-    - To obtain the LaserCutterModeService instance:
-      laser_cutter_mode_service = laser_cutter_mode_service(plugin_instance)
     """
     global _instance
     if _instance is None:

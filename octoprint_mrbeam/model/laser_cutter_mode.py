@@ -19,9 +19,6 @@ class LaserCutterModeModel(object):
         """
         self._logger = mrb_logger("octoprint.plugins.mrbeam.model.laser_cutter_mode")
 
-        # Set mode id and name based on the given mode id
-        # If the mode id is not found in the defined MODES, it will fall back
-        # to default.
         if mode_id in self.MODES:
             self._id = mode_id
         else:
