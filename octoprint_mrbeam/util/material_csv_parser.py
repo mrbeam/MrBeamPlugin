@@ -73,7 +73,7 @@ def dict_merge(dct, merge_dct):
             dct[k] = merge_dct[k]
 
 
-def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0", laser_cutter_mode=DEFAULT_MODE):
+def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0", laser_cutter_mode=LaserCutterModeEnum.DEFAULT.value):
     """Assumes following column order: mrbeamversion, material, colorcode,
     thickness_or_engrave, intensity, speed, passes, pierce_time, dithering.
 
