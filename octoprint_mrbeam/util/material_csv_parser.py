@@ -1,3 +1,4 @@
+from octoprint_mrbeam.enums.laser_cutter_mode import LaserCutterModeEnum
 from . import device_info
 import sys, os, csv, json, collections
 
@@ -16,16 +17,13 @@ LASER_MODEL_X = "x"
 
 VALID_MODELS = [MRBEAM, MRB_DREAMCUT, MRB_DREAMCUT_S, MRB_READY, MRB_DREAMCUT_X]
 
-# TODO: import these from mode services
-DEFAULT_MODE = "default"
-ROTARY_MODE = "rotary"
 
 MATERIALS_CSV_DIR = "files/material_settings/"
 DEFAULT_MATERIALS_CSV_DIR = MATERIALS_CSV_DIR + "materials.csv"
 ROTARY_MATERIALS_CSV_DIR = MATERIALS_CSV_DIR + "materials_rotary.csv"
 MATERIALS_CSVS = {
-    DEFAULT_MODE: DEFAULT_MATERIALS_CSV_DIR,
-    ROTARY_MODE: ROTARY_MATERIALS_CSV_DIR,
+    LaserCutterModeEnum.DEFAULT.value: DEFAULT_MATERIALS_CSV_DIR,
+    LaserCutterModeEnum.ROTARY.value: ROTARY_MATERIALS_CSV_DIR,
 }
 
 
@@ -75,7 +73,7 @@ def dict_merge(dct, merge_dct):
             dct[k] = merge_dct[k]
 
 
-def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0", laser_cutter_mode=DEFAULT_MODE):
+def parse_csv(path=None, device_model=MRBEAM, laserhead_model="0", laser_cutter_mode=LaserCutterModeEnum.DEFAULT.value):
     """Assumes following column order: mrbeamversion, material, colorcode,
     thickness_or_engrave, intensity, speed, passes, pierce_time, dithering.
 

@@ -2,8 +2,7 @@ ko.components.register("laser-cutter-mode-switch", {
     viewModel: function () {
         let self = this;
 
-        // TODO: change to using LASER_CUTTER_MODE_NAME
-        self.selectedMode = ko.observable("default");
+        self.selectedMode = ko.observable(LASER_CUTTER_MODE);
 
         self.changeLaserCutterMode = function () {
             console.log("Changing laser cutter mode to", self.selectedMode());

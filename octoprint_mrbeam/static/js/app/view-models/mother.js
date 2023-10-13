@@ -505,7 +505,7 @@ $(function () {
                     : mrb_settings._version();
                 backendLaserCutterMode = backendLaserCutterMode
                     ? backendLaserCutterMode
-                    : "default"; // TODO: SW-3719 get real value from settings or leave it as default
+                    : mrb_settings.laser_cutter_mode();
                 isFirstRun = isFirstRun
                     ? isFirstRun
                     : mrb_settings.isFirstRun();
