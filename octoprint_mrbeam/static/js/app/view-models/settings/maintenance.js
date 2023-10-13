@@ -7,6 +7,7 @@ $(function () {
         self.analytics = params[1];
         self.userSettings = params[2];
         self.loginState = params[3];
+        self.mrb_state = params[4];
 
         self.PREFILTER = gettext("pre-filter");
         self.PREFILTER_WARNING_TITLE = gettext(
@@ -24,11 +25,9 @@ $(function () {
         );
         self.LASER_HEAD = gettext("laser head");
         self.GANTRY = gettext("mechanics");
+        self.GANTRY_LIFESPAN = 100;
         self.WARN_IF_CRITICAL_PERCENT = 70;
         self.WARN_IF_USED_PERCENT = 100;
-        self.PREFILTER_LIFESPAN = 40;
-        self.CARBON_FILTER_LIFESPAN = 280;
-        self.GANTRY_LIFESPAN = 100;
         self.laserHeadLifespan = ko.observable(0);
 
         self.totalUsage = ko.observable(0);
@@ -36,45 +35,28 @@ $(function () {
         self.carbonFilterUsage = ko.observable(0);
         self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
-        self.prefilterLifespan = ko.observable(0);
+        self.prefilterShopify = ko.observable(0);
+        self.carbonfilterShopify = ko.observable(0);
+        self.prefilterHeavyDutyShopify = ko.observable(0);
 
         self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
-        self.heavyDutyPrefilter = ko.observable(false);
+        self.heavyDutyPrefilterEnabled = ko.observable(false);
+        self.airfilter3Used = ko.observable(false);
 
         self.heavyDutyPrefilterValue = ko.computed({
             read: function () {
-                return self.heavyDutyPrefilter().toString();
+                return self.heavyDutyPrefilterEnabled().toString();
             },
             write: function (newValue) {
-                self.heavyDutyPrefilter(newValue === "true");
+                self.heavyDutyPrefilterEnabled(newValue === "true");
             },
             owner: self,
         });
 
-        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.prefilterLifespan(),
-        });
-        self.carbonFilterLifespanHours = _.sprintf(
-            gettext("/%(lifespan)s hrs"),
-            { lifespan: self.CARBON_FILTER_LIFESPAN }
-        );
-        self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.laserHeadLifespan(),
-        });
-        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {
-            lifespan: self.GANTRY_LIFESPAN,
-        });
-
         self.totalUsageHours = ko.computed(function () {
             return Math.floor(self.totalUsage() / 36) / 100;
-        });
-        self.prefilterUsageHours = ko.computed(function () {
-            return Math.floor(self.prefilterUsage() / 3600);
-        });
-        self.carbonFilterUsageHours = ko.computed(function () {
-            return Math.floor(self.carbonFilterUsage() / 3600);
         });
         self.laserHeadUsageHours = ko.computed(function () {
             return Math.floor(self.laserHeadUsage() / 3600);
@@ -83,18 +65,28 @@ $(function () {
             return Math.floor(self.gantryUsage() / 3600);
         });
 
-        self.optimizeParameterPercentageValues = function (val) {
-            return Math.min(roundDownToNearest10(val), 100);
+        self.optimizeParameterPercentageValues = function (
+            val,
+            tenthSteps = true
+        ) {
+            if (tenthSteps) {
+                val = roundDownToNearest10(val);
+            }
+            return Math.max(0, Math.min(val, 100));
         };
+
         self.prefilterPercent = ko.computed(function () {
+            const tenthSteps = !self.airfilter3Used();
             return self.optimizeParameterPercentageValues(
-                (self.prefilterUsageHours() / self.prefilterLifespan()) * 100
+                self.prefilterUsage(),
+                tenthSteps
             );
         });
         self.carbonFilterPercent = ko.computed(function () {
+            const tenthSteps = !self.airfilter3Used();
             return self.optimizeParameterPercentageValues(
-                (self.carbonFilterUsageHours() / self.CARBON_FILTER_LIFESPAN) *
-                    100
+                self.carbonFilterUsage(),
+                tenthSteps
             );
         });
         self.laserHeadPercent = ko.computed(function () {
@@ -154,24 +146,30 @@ $(function () {
             }
         });
 
-        self.heavyDutyPrefilter.subscribe(function (newValue) {
+        self.heavyDutyPrefilterEnabled.subscribe(function (newValue) {
             self.settings.settings.plugins.mrbeam.heavyDutyPrefilter(newValue);
             self.settings.saveData(undefined, function (newSettings) {
-                self.prefilterLifespan(
-                    newSettings.plugins.mrbeam.usage.prefilterLifespan
-                );
+                const new_lifespan = self.prefilterLifespan(0);
                 console.log(
                     "Prefilter lifespan changed to:",
                     newSettings.plugins.mrbeam.heavyDutyPrefilter,
-                    newSettings.plugins.mrbeam.usage.prefilterLifespan
+                    new_lifespan
                 );
             });
             self.settings.saveall(); //trigger saveinprogress class
         });
 
-        // The settings are already loaded here, Gina confirmed.
-        self.onBeforeBinding = function () {
-            self.loadUsageValues();
+        self.mrb_state.airfilter_model.subscribe(function (model_id) {
+            self._check_airfilter_model();
+        });
+
+        self._check_airfilter_model = function () {
+            const airfilter_model = self.mrb_state.airfilter_model();
+            if (airfilter_model === mrbeam.airfilter_model.AF3) {
+                self.airfilter3Used(true);
+            } else {
+                self.airfilter3Used(false);
+            }
         };
 
         self.onUserLoggedIn = function (user) {
@@ -226,6 +224,7 @@ $(function () {
 
             self._makePrefilterElementsClickable();
             self._addTooltipForPrefilterTitle();
+            self._check_airfilter_model();
         };
 
         self._addTooltipForPrefilterTitle = function (element) {
@@ -236,10 +235,10 @@ $(function () {
             elementsWithAttribute.forEach((element) => {
                 const image = element.getAttribute("data-tooltip-image");
                 $(element).tooltip({
-                    title: "<img src='" + image + "' width='300px'>",
+                    title: "<img src='" + image + "' height='220px'>",
                     placement: "right",
                     html: true,
-                    delay: { show: 300 },
+                    delay: { show: 400 },
                 });
             });
         };
@@ -262,7 +261,7 @@ $(function () {
                         // Prevent the click event from propagating further
                         event.stopPropagation();
                     } else {
-                        self.heavyDutyPrefilter(
+                        self.heavyDutyPrefilterEnabled(
                             radioInput.getAttribute("value")
                         );
                     }
@@ -290,16 +289,12 @@ $(function () {
                     OctoPrint.simpleApiCommand(
                         "mrbeam",
                         "reset_prefilter_usage",
-                        {}
-                    )
-                        .done(function () {
-                            self.prefilterUsage(0);
-                        })
-                        .fail(function () {
-                            console.error(
-                                "Unable to reset pre-filter usage counter."
-                            );
-                        });
+                        { serial: self.mrb_state.airfilter_serial() }
+                    ).fail(function () {
+                        console.error(
+                            "Unable to reset pre-filter usage counter."
+                        );
+                    });
                 });
         };
 
@@ -323,16 +318,12 @@ $(function () {
                     OctoPrint.simpleApiCommand(
                         "mrbeam",
                         "reset_carbon_filter_usage",
-                        {}
-                    )
-                        .done(function () {
-                            self.carbonFilterUsage(0);
-                        })
-                        .fail(function () {
-                            console.error(
-                                "Unable to reset carbon filter usage counter."
-                            );
-                        });
+                        { serial: self.mrb_state.airfilter_serial() }
+                    ).fail(function () {
+                        console.error(
+                            "Unable to reset carbon filter usage counter."
+                        );
+                    });
                 });
         };
 
@@ -352,15 +343,11 @@ $(function () {
                         "mrbeam",
                         "reset_laser_head_usage",
                         {}
-                    )
-                        .done(function () {
-                            self.laserHeadUsage(0);
-                        })
-                        .fail(function () {
-                            console.error(
-                                "Unable to reset laser head usage counter."
-                            );
-                        });
+                    ).fail(function () {
+                        console.error(
+                            "Unable to reset laser head usage counter."
+                        );
+                    });
                 });
         };
 
@@ -394,49 +381,38 @@ $(function () {
 
         self.onSettingsShown = function () {
             self.settings.requestData().done(function () {
-                self.loadUsageValues();
+                self.needsGantryMaintenance(
+                    window.mrbeam.model.is_mrbeam2() ||
+                        window.mrbeam.model.is_mrbeam2_dreamcut_ready1()
+                );
                 self.updateSettingsAbout();
+                self.heavyDutyPrefilterEnabled(
+                    self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
+                );
             });
         };
 
-        self.loadUsageValues = function () {
-            self.needsGantryMaintenance(
-                window.mrbeam.model.is_mrbeam2() ||
-                    window.mrbeam.model.is_mrbeam2_dreamcut_ready1()
-            );
-
-            if (self.needsGantryMaintenance()) {
-                self.gantryUsage(
-                    self.settings.settings.plugins.mrbeam.usage.gantryUsage()
-                );
+        self.shopifyLink = function (stagename, stageid) {
+            let link;
+            if (stagename === "prefilter") {
+                link =
+                    self.prefilterShopify() != null
+                        ? self.prefilterShopify()[stageid]
+                        : null;
+            } else if (stagename === "carbonfilter") {
+                link =
+                    self.carbonfilterShopify() != null
+                        ? self.carbonfilterShopify()[stageid]
+                        : null;
+            } else if (stagename === "prefilter_heavy_duty") {
+                link =
+                    self.prefilterHeavyDutyShopify() != null
+                        ? self.prefilterHeavyDutyShopify()[stageid]
+                        : null;
             } else {
-                self.gantryUsage(0);
+                link = null;
             }
-
-            self.totalUsage(
-                self.settings.settings.plugins.mrbeam.usage.totalUsage()
-            );
-            self.prefilterUsage(
-                self.settings.settings.plugins.mrbeam.usage.prefilterUsage()
-            );
-            self.carbonFilterUsage(
-                self.settings.settings.plugins.mrbeam.usage.carbonFilterUsage()
-            );
-            self.laserHeadUsage(
-                self.settings.settings.plugins.mrbeam.usage.laserHeadUsage()
-            );
-            self.laserHeadSerial(
-                self.settings.settings.plugins.mrbeam.laserhead.serial()
-            );
-            self.prefilterLifespan(
-                self.settings.settings.plugins.mrbeam.usage.prefilterLifespan()
-            );
-            self.heavyDutyPrefilter(
-                self.settings.settings.plugins.mrbeam.heavyDutyPrefilter()
-            );
-            self.laserHeadLifespan(
-                self.settings.settings.plugins.mrbeam.usage.laserHeadLifespan()
-            );
+            return link;
         };
 
         self.notifyMaintenanceRequired = function () {
@@ -488,6 +464,39 @@ $(function () {
             });
         };
 
+        self.onDataUpdaterPluginMessage = function (plugin, data) {
+            if (plugin !== "mrbeam") {
+                return;
+            }
+            if ("maintenance_information" in data) {
+                const maintenanceInformation = data.maintenance_information;
+                if (self.needsGantryMaintenance()) {
+                    self.gantryUsage(maintenanceInformation.gantryUsage);
+                } else {
+                    self.gantryUsage(0);
+                }
+
+                self.totalUsage(maintenanceInformation.totalUsage);
+                self.prefilterUsage(maintenanceInformation.prefilterUsage);
+                self.carbonFilterUsage(
+                    maintenanceInformation.carbonFilterUsage
+                );
+                self.laserHeadUsage(maintenanceInformation.laserHeadUsage);
+                self.laserHeadSerial(maintenanceInformation.laserHeadSerial);
+                self.laserHeadLifespan(
+                    maintenanceInformation.laserHeadLifespan
+                );
+
+                self.carbonfilterShopify(
+                    maintenanceInformation.carbonfilterShopify
+                );
+                self.prefilterShopify(maintenanceInformation.prefilterShopify);
+                self.prefilterHeavyDutyShopify(
+                    maintenanceInformation.prefilterHeavyDutyShopify
+                );
+            }
+        };
+
         self.saveUserSettings = function (earlyWarningShown) {
             // save to user settings
             if (self.loginState?.currentUser()) {
@@ -526,6 +535,7 @@ $(function () {
             "analyticsViewModel",
             "userSettingsViewModel",
             "loginStateViewModel",
+            "mrbStateViewModel",
         ],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...

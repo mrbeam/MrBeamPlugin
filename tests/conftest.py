@@ -8,7 +8,9 @@ from octoprint.events import EventManager, Events
 from octoprint.plugin import PluginManager
 
 from octoprint.settings import settings
-from octoprint_mrbeam import MrBeamPlugin
+from octoprint.util import monotonic_time
+
+from octoprint_mrbeam import MrBeamPlugin, AirFilter
 
 sett = settings(init=True)  # Initialize octoprint settings, necessary for MrBeamPlugin
 
@@ -60,11 +62,32 @@ def mrbeam_plugin():
     mrbeam_plugin._basefolder = os.path.join(
         os.path.dirname(__package_path__), "octoprint_mrbeam"
     )
+    mrbeam_plugin._plugin_manager = MagicMock()
     mrbeam_plugin.laserhead_handler = MagicMock()
     mrbeam_plugin._event_bus.fire(Events.STARTUP)
     mrbeam_plugin.user_notification_system = MagicMock()
     mrbeam_plugin._printer = MagicMock()
     mrbeam_plugin.hw_malfunction_handler = MagicMock()
     mrbeam_plugin.is_boot_grace_period = MagicMock(return_value=False)
+    mrbeam_plugin.airfilter = MagicMock()
+    mrbeam_plugin.usage_handler = MagicMock()
 
     yield mrbeam_plugin
+
+
+def wait_till_event_received(event_bus, event, timeout=0.1):
+    event_triggered = MagicMock()
+    event_bus.subscribe(event, event_triggered)
+    # Assert
+    starttime = monotonic_time()
+    while event_triggered.call_count == 0:
+        assert monotonic_time() - starttime < timeout  # approx(timeout, abs=0.1)
+
+
+@pytest.fixture
+def air_filter(mrbeam_plugin):
+    air_filter = AirFilter(mrbeam_plugin)
+    air_filter._event_bus = EventManager()
+    air_filter._plugin.send_mrb_state = MagicMock()
+    air_filter._event_bus.fire = MagicMock()
+    return air_filter

@@ -38,9 +38,7 @@ def analyticsHandler(plugin):
 class AnalyticsHandler(object):
     QUEUE_MAXSIZE = 1000
     UNKNOWN_VALUE = "unknown"
-    ANALYTICS_LOG_VERSION = (
-        29  # bumped for SW-1157 add laser head max temperature and summer month offset
-    )
+    ANALYTICS_LOG_VERSION = 30  # bumped for SW-2320 add pressure drop to analytics
 
     def __init__(self, plugin):
         self._plugin = plugin

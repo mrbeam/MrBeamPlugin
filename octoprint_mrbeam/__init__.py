@@ -47,6 +47,7 @@ if isinstance(__version__, unicode):
 
 del get_versions
 
+from octoprint_mrbeam.iobeam.airfilter import airfilter, AirFilter
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
@@ -233,6 +234,12 @@ class MrBeamPlugin(
         self._event_bus.subscribe(
             MrBeamEvents.LASER_HEAD_READ, self._on_laserhead_ready
         )
+        self._event_bus.subscribe(
+            MrBeamEvents.AIRFILTER_CHANGED, self.on_airfilter_changed
+        )
+        self._event_bus.subscribe(
+            MrBeamEvents.USAGE_DATA_CHANGED, self.on_usage_data_changed
+        )
 
         self.start_time_ntp_timer()
 
@@ -282,6 +289,7 @@ class MrBeamPlugin(
         self.wizard_config = WizardConfig(self)
         self.job_time_estimation = JobTimeEstimation(self)
         self.mrb_file_manager = mrbFileManager(self)
+        self.airfilter = airfilter(self)
 
         self._logger.info("MrBeamPlugin initialized!")
         self.mrbeam_plugin_initialized = True
@@ -509,6 +517,7 @@ class MrBeamPlugin(
         )
 
     def on_settings_load(self):
+        self._send_maintenance_information(trigger=MrBeamEvents.SETTINGS_LOAD)
         return dict(
             svgDPI=self._settings.get(["svgDPI"]),
             dxfScale=self._settings.get(["dxfScale"]),
@@ -567,16 +576,7 @@ class MrBeamPlugin(
                 model_id=self.laserhead_handler.get_current_used_lh_model_id(),
                 model_supported=self.laserhead_handler.is_current_used_lh_model_supported(),
             ),
-            usage=dict(
-                totalUsage=self.usage_handler.get_total_usage(),
-                prefilterUsage=self.usage_handler.get_prefilter_usage(),
-                carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
-                laserHeadUsage=self.usage_handler.get_laser_head_usage(),
-                gantryUsage=self.usage_handler.get_gantry_usage(),
-                prefilterLifespan=self.usage_handler.get_prefilter_lifespan(),
-                laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
-            ),
-            heavyDutyPrefilter=self._settings.get(["heavyDutyPrefilter"]),
+            heavyDutyPrefilter=self.is_heavy_duty_prefilter_enabled(),
             tour_auto_launch=self._settings.get(["tour_auto_launch"]),
             hw_features=dict(
                 has_compressor=self.compressor_handler.has_compressor(),
@@ -586,6 +586,65 @@ class MrBeamPlugin(
                 fps=self._settings.get(["leds", "fps"]),
             ),
             isFirstRun=self.isFirstRun(),
+        )
+
+    def _get_usage_data_dict(self):
+        return dict(
+            totalUsage=self.usage_handler.get_total_usage(),
+            prefilterUsage=self.usage_handler.get_prefilter_usage(),
+            carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
+            laserHeadUsage=self.usage_handler.get_laser_head_usage(),
+            gantryUsage=self.usage_handler.get_gantry_usage(),
+            carbonfilterShopify=self.airfilter.get_shopify_links(
+                AirFilter.CARBONFILTER
+            ),
+            prefilterShopify=self.airfilter.get_shopify_links(AirFilter.PREFILTER),
+            prefilterHeavyDutyShopify=self.airfilter.get_shopify_links(
+                AirFilter.PREFILTER, heavy_duty=True
+            ),
+            laserHeadLifespan=self.laserhead_handler.current_laserhead_lifespan,
+        )
+
+    def on_airfilter_changed(self, event, payload):
+        """
+        On airfilter changed event, send maintenance information to frontend.
+
+        Args:
+            event: event name
+            payload: event payload
+
+        Returns:
+            None
+        """
+        self._send_maintenance_information(trigger=MrBeamEvents.AIRFILTER_CHANGED)
+
+    def on_usage_data_changed(self, event, payload):
+        """
+        On usage data changed event, send maintenance information to frontend.
+
+        Args:
+            event: event name
+            payload: event payload
+
+        Returns:
+            None
+        """
+        if self.airfilter is not None:
+            self._send_maintenance_information(trigger=MrBeamEvents.USAGE_DATA_CHANGED)
+
+    def _send_maintenance_information(self, trigger=None):
+        """
+        Send maintenance information to frontend.
+
+        Args:
+            trigger: trigger of the send
+
+        Returns:
+            None
+        """
+        self._plugin_manager.send_plugin_message(
+            "mrbeam",
+            dict(maintenance_information=self._get_usage_data_dict(), trigger=trigger),
         )
 
     def on_settings_save(self, data):
@@ -659,9 +718,7 @@ class MrBeamPlugin(
             if "leds" in data and "fps" in data["leds"]:
                 self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
             if "heavyDutyPrefilter" in data:
-                self._settings.set_boolean(
-                    ["heavyDutyPrefilter"], data["heavyDutyPrefilter"]
-                )
+                self.set_heavy_duty_prefilter(data["heavyDutyPrefilter"])
         except Exception as e:
             self._logger.exception("Exception in on_settings_save() ")
             raise e
@@ -671,6 +728,16 @@ class MrBeamPlugin(
             # However this specific branching doesn't occur with other
             # saved settings simpultaneously.
             octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+
+    def set_heavy_duty_prefilter(self, value):
+        if value != self._settings.get(["heavyDutyPrefilter"]):
+            self._send_maintenance_information(
+                trigger=MrBeamEvents.HEAVY_DUTY_PREFILTER_CHANGED
+            )
+        self._settings.set_boolean(["heavyDutyPrefilter"], value)
+
+    def is_heavy_duty_prefilter_enabled(self):
+        return self._settings.get(["heavyDutyPrefilter"])
 
     def on_shutdown(self):
         self._shutting_down = True
@@ -733,6 +800,7 @@ class MrBeamPlugin(
                 "js/app/view-models/settings/camera.js",
                 "js/app/view-models/settings/backlash.js",
                 "js/app/view-models/settings/leds.js",
+                "js/app/view-models/settings/about.js",
                 "js/app/helpers/path-magic.js",
                 "js/lib/simplify.js",
                 "js/lib/clipper.js",
@@ -1002,7 +1070,7 @@ class MrBeamPlugin(
                 name=gettext("About This Mr Beam"),
                 template="settings/about_settings.jinja2",
                 suffix="_about",
-                custom_bindings=False,
+                custom_bindings=True,
             ),
             dict(
                 type="settings",
@@ -2078,11 +2146,31 @@ class MrBeamPlugin(
         elif command == "review_data":
             return self.review_handler.save_review_data(data)
         elif command == "reset_prefilter_usage":
-            return self.usage_handler.reset_prefilter_usage()
+            if "serial" not in data:
+                return make_response("Missing serial", 400)
+            serial = data.get("serial", None)
+            self.usage_handler.reset_prefilter_usage(serial)
+            self._send_maintenance_information(
+                trigger=MrBeamEvents.USAGE_DATA_RESET_PREFILTER
+            )
+            return NO_CONTENT
         elif command == "reset_carbon_filter_usage":
-            return self.usage_handler.reset_carbon_filter_usage()
+            if "serial" not in data:
+                return make_response("Missing serial", 400)
+            serial = data.get("serial", None)
+            self.usage_handler.reset_carbon_filter_usage(serial)
+            self._send_maintenance_information(
+                trigger=MrBeamEvents.USAGE_DATA_RESET_CARBON_FILTER
+            )
+            return NO_CONTENT
         elif command == "reset_laser_head_usage":
-            return self.usage_handler.reset_laser_head_usage()
+            self.usage_handler.reset_laser_head_usage(
+                self.laserhead_handler.get_current_used_lh_data()["serial"]
+            )
+            self._send_maintenance_information(
+                trigger=MrBeamEvents.USAGE_DATA_RESET_LASER_HEAD
+            )
+            return NO_CONTENT
         elif command == "reset_gantry_usage":
             return self.usage_handler.reset_gantry_usage()
         elif command == "material_settings":
@@ -2650,7 +2738,7 @@ class MrBeamPlugin(
     ##~~ Event Handler Plugin API
 
     def on_event(self, event, payload):
-        if event is not MrBeamEvents.ANALYTICS_DATA:
+        if event != MrBeamEvents.ANALYTICS_DATA:
             self._logger.info("on_event %s: %s", event, payload)
 
         if event == MrBeamEvents.BOOT_GRACE_PERIOD_END:
@@ -2846,9 +2934,9 @@ class MrBeamPlugin(
         """
         if self.mrbeam_plugin_initialized:
             try:
-                return dict(
+                state_dict = dict(
                     laser_temp=self.temperature_manager.get_temperature(),
-                    fan_connected=self.dust_manager.is_fan_connected(),
+                    fan_connected=self.airfilter.connected,
                     fan_state=self.dust_manager.get_fan_state(),
                     fan_rpm=self.dust_manager.get_fan_rpm(),
                     fan_dust=self.dust_manager.get_dust(),
@@ -2865,7 +2953,14 @@ class MrBeamPlugin(
                     laser_model=self.laserhead_handler.get_current_used_lh_data()[
                         "model"
                     ],
+                    airfilter_serial=self.airfilter.serial,
+                    airfilter_model=self.airfilter.model,
+                    airfilter_model_id=self.airfilter.model_id,
+                    airfilter_pressure=self.airfilter.pressure,
+                    airfilter_temperatures=self.airfilter.temperatures,
                 )
+                return collections.OrderedDict(sorted(state_dict.items()))
+
             except:
                 self._logger.exception("Exception while collecting mrb_state data.")
         else:
@@ -3176,6 +3271,11 @@ class MrBeamPlugin(
             self._logger.debug("_get_mac_addresses() found %s" % interfaces)
             self._mac_addrs = interfaces
         return self._mac_addrs
+
+    def send_mrb_state(self):
+        self._plugin_manager.send_plugin_message(
+            "mrbeam", dict(mrb_state=self.get_mrb_state())
+        )
 
 
 # # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS

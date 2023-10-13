@@ -11,7 +11,10 @@ from octoprint_mrbeam import IS_X86
 
 from octoprint.events import Events as OctoPrintEvents
 
-from octoprint_mrbeam.iobeam.hw_malfunction_handler import HwMalfunction
+from octoprint_mrbeam.iobeam.hw_malfunction_handler import (
+    HwMalfunction,
+    HwMalfunctionHandler,
+)
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
@@ -40,6 +43,8 @@ class IoBeamEvents(object):
     INTERLOCK_CLOSED = "iobeam.interlock.closed"
     LID_OPENED = "iobeam.lid.opened"
     LID_CLOSED = "iobeam.lid.closed"
+    FAN_CONNECTED = "iobeam.fan.connected"
+    FAN_DISCONNECTED = "iobeam.fan.disconnected"
 
 
 class IoBeamValueEvents(object):
@@ -48,7 +53,6 @@ class IoBeamValueEvents(object):
 
     LASER_TEMP = "iobeam.laser.temp"
     DUST_VALUE = "iobeam.dust.value"
-    RPM_VALUE = "iobeam.rpm.value"
     RPM_VALUE = "iobeam.rpm.value"
     STATE_VALUE = "iobeam.state.value"
     DYNAMIC_VALUE = "iobeam.dynamic.value"
@@ -159,6 +163,8 @@ class IoBeamHandler(object):
     DATASET_REED_SWITCH = "reed_switch"
     DATASET_ANALYTICS = "analytics"
 
+    UNKNOWN_SERIAL_KEY = "no_serial"
+
     def __init__(self, plugin, printer):
         self._plugin = plugin
         self._printer = printer
@@ -175,6 +181,7 @@ class IoBeamHandler(object):
         self._callbacks_lock = RWLock()
 
         self._laserhead_handler = None
+        self._airfilter = None
 
         self.iobeam_version = None
 
@@ -197,6 +204,7 @@ class IoBeamHandler(object):
 
     def _on_mrbeam_plugin_initialized(self, event, payload):
         self._laserhead_handler = self._plugin.laserhead_handler
+        self._airfilter = self._plugin.airfilter
         self._hw_malfunction_handler = self._plugin.hw_malfunction_handler
         self._user_notification_system = self._plugin.user_notification_system
 
@@ -1099,11 +1107,41 @@ class IoBeamHandler(object):
         :param dataset:
         :return: error count
         """
-        self._logger.debug("exhaust dataset: '%s'", dataset)
+        device_dataset = dataset.get("device", {})
+        pressure_dataset = dataset.get("pressure", {})
+        temperature_dataset = dataset.get("temperature", {})
+        if (
+            device_dataset.get("serial_num") is None
+            and device_dataset.get("type") is None
+            and "error" in pressure_dataset
+            and "error" in temperature_dataset
+        ):
+            self._logger.debug(
+                "Received empty exhaust dataset assume AF1 or single: '%s'", dataset
+            )
+            self._airfilter.set_airfilter(serial=self.UNKNOWN_SERIAL_KEY, model_id=1)
+        else:
+            self._airfilter.set_airfilter(
+                serial=device_dataset.get("serial_num"),
+                model_id=device_dataset.get("type"),
+            )
+        self._airfilter.set_pressure(
+            pressure1=pressure_dataset.get("pressure1"),
+            pressure2=pressure_dataset.get("pressure2"),
+            pressure3=pressure_dataset.get("pressure3"),
+            pressure4=pressure_dataset.get("pressure4"),
+        )
+        self._airfilter.set_temperatures(
+            temperature1=temperature_dataset.get("temp1"),
+            temperature2=temperature_dataset.get("temp2"),
+            temperature3=temperature_dataset.get("temp3"),
+            temperature4=temperature_dataset.get("temp4"),
+        )
         # get the pressure sensor reading this will come as dust with the current iobeam version
-        if "dust" in dataset:
+        if "pressure" in device_dataset:
+            self._airfilter.set_pressure(pressure=device_dataset.get("pressure"))
             vals = {
-                "pressure": dataset["dust"],
+                "pressure": device_dataset.get("pressure"),
             }
             self._call_callback(IoBeamValueEvents.EXHAUST_DYNAMIC_VALUE, dataset, vals)
         return 0
@@ -1169,7 +1207,7 @@ class IoBeamHandler(object):
                 dict(data=message),
             )
         notification = self._user_notification_system.get_notification(
-            notification_id="err_hardware_malfunction_non_i2c",
+            notification_id=HwMalfunctionHandler.HARDWARE_MALFUNCTION_NON_I2C,
             err_code=malfunction.error_code,
             replay=True,
         )
