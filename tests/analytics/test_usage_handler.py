@@ -4,6 +4,7 @@ import pytest
 from _pytest.python_api import approx
 from mock.mock import MagicMock, patch
 from mock import mock_open
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 from octoprint_mrbeam import IoBeamEvents, AirFilter
 from octoprint_mrbeam.analytics.usage_handler import (
@@ -407,6 +408,7 @@ def test_set_pressure_when_filter_stage_is_not_valid(
 def test_set_fan_test_rpm(usage_handler, mrbeam_plugin):
     # Arrange
     mrbeam_plugin.airfilter.set_airfilter(8, AIRFILTER_SERIAL)
+    wait_till_event_received(usage_handler._event_bus, MrBeamEvents.AIRFILTER_CHANGED)
 
     # Act
     with patch(
@@ -422,10 +424,6 @@ def test_set_fan_test_rpm(usage_handler, mrbeam_plugin):
         ][UsageHandler.FAN_TEST_RPM_KEY]
         == 1000
     )
-
-
-# TODO TEST time higher as pressure
-# TODO test reset if 20% lower
 
 
 @pytest.mark.parametrize(
@@ -463,3 +461,24 @@ def test_get_precentage_from_interpolation_when_invalid_input(
 
     # Assert
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        2,
+        8,
+    ],
+)
+def test_get_percentage_for_empty_usage_data(model, usage_handler, mrbeam_plugin):
+    # Arrange
+    usage_handler._usage_data = {}
+    mrbeam_plugin.airfilter.set_airfilter(model, AIRFILTER_SERIAL)
+
+    # Act
+    prefilter = usage_handler.get_prefilter_usage()
+    mainfilter = usage_handler.get_prefilter_usage()
+
+    # Assert
+    assert prefilter == 0
+    assert mainfilter == 0

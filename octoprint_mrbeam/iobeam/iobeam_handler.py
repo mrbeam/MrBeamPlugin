@@ -15,6 +15,7 @@ from octoprint_mrbeam.iobeam.hw_malfunction_handler import (
     HwMalfunction,
     HwMalfunctionHandler,
 )
+from octoprint_mrbeam.model.iobeam import exhaust
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
@@ -140,6 +141,7 @@ class IoBeamHandler(object):
     MESSAGE_ACTION_FAN_TYPE = "type"
     MESSAGE_ACTION_FAN_EXHAUST = "exhaust"
     MESSAGE_ACTION_FAN_LINK_QUALITY = "link_quality"
+    MESSAGE_ACTION_EXHAUST_RESET = "reset"
     MESSAGE_ACTION_COMPRESSOR_ON = "on"
 
     # Possible datasets
@@ -231,6 +233,12 @@ class IoBeamHandler(object):
 
     def shutdown_fan(self):
         self.send_fan_command(self.MESSAGE_ACTION_FAN_OFF)
+
+    def reset_exhaust(self):
+        """
+        Reset the exhaust fan.
+        """
+        self.send_fan_command(self.MESSAGE_ACTION_EXHAUST_RESET)
 
     def is_interlock_closed(self):
         return len(self._interlocks.keys()) == 0
@@ -1107,12 +1115,12 @@ class IoBeamHandler(object):
         :param dataset:
         :return: error count
         """
-        device_dataset = dataset.get("device", {})
+        device_dataset = exhaust.Device.from_dict(dataset.get("device", {}))
         pressure_dataset = dataset.get("pressure", {})
         temperature_dataset = dataset.get("temperature", {})
         if (
-            device_dataset.get("serial_num") is None
-            and device_dataset.get("type") is None
+            device_dataset.serial_num is None
+            and device_dataset.type is None
             and "error" in pressure_dataset
             and "error" in temperature_dataset
         ):
@@ -1122,9 +1130,10 @@ class IoBeamHandler(object):
             self._airfilter.set_airfilter(serial=self.UNKNOWN_SERIAL_KEY, model_id=1)
         else:
             self._airfilter.set_airfilter(
-                serial=device_dataset.get("serial_num"),
-                model_id=device_dataset.get("type"),
+                serial=device_dataset.serial_num,
+                model_id=device_dataset.type,
             )
+            self._airfilter.set_device(device_dataset)
         self._airfilter.set_pressure(
             pressure1=pressure_dataset.get("pressure1"),
             pressure2=pressure_dataset.get("pressure2"),
@@ -1138,10 +1147,10 @@ class IoBeamHandler(object):
             temperature4=temperature_dataset.get("temp4"),
         )
         # get the pressure sensor reading this will come as dust with the current iobeam version
-        if "pressure" in device_dataset:
-            self._airfilter.set_pressure(pressure=device_dataset.get("pressure"))
+        if device_dataset:
+            self._airfilter.set_pressure(pressure=device_dataset.pressure)
             vals = {
-                "pressure": device_dataset.get("pressure"),
+                "pressure": device_dataset.pressure,
             }
             self._call_callback(IoBeamValueEvents.EXHAUST_DYNAMIC_VALUE, dataset, vals)
         return 0

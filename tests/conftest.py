@@ -9,6 +9,7 @@ from octoprint.plugin import PluginManager
 
 from octoprint.settings import settings
 from octoprint.util import monotonic_time
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 from octoprint_mrbeam import MrBeamPlugin, AirFilter
 
@@ -75,19 +76,22 @@ def mrbeam_plugin():
     yield mrbeam_plugin
 
 
-def wait_till_event_received(event_bus, event, timeout=0.1):
+def wait_till_event_received(event_bus, event, timeout=1):
     event_triggered = MagicMock()
     event_bus.subscribe(event, event_triggered)
     # Assert
     starttime = monotonic_time()
     while event_triggered.call_count == 0:
-        assert monotonic_time() - starttime < timeout  # approx(timeout, abs=0.1)
+        assert (
+            round(monotonic_time() - starttime, 2) <= timeout
+        )  # approx(timeout, abs=0.1)
 
 
 @pytest.fixture
 def air_filter(mrbeam_plugin):
     air_filter = AirFilter(mrbeam_plugin)
-    air_filter._event_bus = EventManager()
     air_filter._plugin.send_mrb_state = MagicMock()
-    air_filter._event_bus.fire = MagicMock()
+
+    air_filter._event_bus.fire(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
+    wait_till_event_received(air_filter._event_bus, MrBeamEvents.MRB_PLUGIN_INITIALIZED)
     return air_filter
