@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-08-16 11:15+0200\n"
+"POT-Creation-Date: 2023-10-16 15:51+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,63 +17,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: octoprint_mrbeam/__init__.py:974
+#: octoprint_mrbeam/__init__.py:1042
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:731
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:742
 #: octoprint_mrbeam/templates/settings/file_settings.jinja2:2
 msgid "Files"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:981
+#: octoprint_mrbeam/__init__.py:1049
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:4
 msgid "Camera"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:988
+#: octoprint_mrbeam/__init__.py:1056
 #: octoprint_mrbeam/templates/settings/backlash_settings.jinja2:2
 msgid "Precision Calibration"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:995
+#: octoprint_mrbeam/__init__.py:1063
 #: octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:56
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:5
 msgid "Debug"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1002
+#: octoprint_mrbeam/__init__.py:1070
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
 msgid "About This Mr Beam"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1009
+#: octoprint_mrbeam/__init__.py:1077
 msgid "Better Together"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1016
+#: octoprint_mrbeam/__init__.py:1084
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
 msgid "Reminders"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1023
+#: octoprint_mrbeam/__init__.py:1091
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:2
 msgid "Maintenance"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1030
+#: octoprint_mrbeam/__init__.py:1098
 #: octoprint_mrbeam/templates/settings/leds_settings.jinja2:2
 msgid "Mr Beam Lights"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:1037
+#: octoprint_mrbeam/__init__.py:1105
 #: octoprint_mrbeam/templates/settings/custom_material_settings.jinja2:2
 msgid "Custom Material Settings"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:2456
+#: octoprint_mrbeam/__init__.py:2537
 msgid "A new picture is being taken, please wait a little..."
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:2461
+#: octoprint_mrbeam/__init__.py:2542
 msgid "Either the camera is busy or the lid is not open."
 msgstr ""
 
@@ -118,6 +118,10 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:1
 #: octoprint_mrbeam/wizard_config.py:182
 msgid "...and more!"
+msgstr ""
+
+#: octoprint_mrbeam/iobeam/airfilter.py:602
+msgid "https://www.mr-beam.org/en/"
 msgstr ""
 
 #: octoprint_mrbeam/printing/comm_acc2.py:428
@@ -275,42 +279,42 @@ msgstr ""
 msgid "Unable to start conversion because a parameter is missing."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2193
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2194
 msgid ""
 "To free up some disk space you may want to perform one or all of the "
 "following suggestions:"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2199
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2200
 msgid ""
 "Delete GCode files: Go to design library and click 'Only show GCode "
 "files' on the left. Here you can delete files from the according context "
 "menu."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2205
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2206
 msgid ""
 "Delete design files: Go to design library and click 'Only show design "
 "files' on the left. Here you can delete files from the according context "
 "menu."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2211
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2212
 msgid ""
 "Delete log files: Go to Settings -> logs and delete old log files per "
 "click on the trash bin icon."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2217
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2218
 #, python-format
 msgid "Find more details %(open)sonline%(close)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2224
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2225
 msgid "Get more free disk space"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/convert.js:2497
+#: octoprint_mrbeam/static/js/app/view-models/convert.js:2498
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:515
 msgid "Cut "
 msgstr ""
@@ -340,7 +344,7 @@ msgid "Do you still want to cancel?"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/mother.js:64
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:168
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:225
 msgid "No"
 msgstr ""
 
@@ -350,7 +354,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:42
 #: octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:71
 #: octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:110
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:169
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:226
 msgid "Yes"
 msgstr ""
 
@@ -425,42 +429,42 @@ msgstr ""
 msgid "Please confirm to proceed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:238
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:244
 #: octoprint_mrbeam/static/js/app/view-models/wizard/wizard-acl.js:178
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:23
 msgid "Invalid e-mail address"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:300
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:306
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:20
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:22
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:21
 msgid "E-mail address"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:499
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:513
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:524
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:505
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:519
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:530
 msgid "Session expired"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:500
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:506
 msgid "Trying to do a re-login..."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:514
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:520
 msgid "Re-login successful.<br/>Please repeat the last action."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:525
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:531
 msgid "Please login again."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:582
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:588
 msgid "Browser not supported."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:584
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:590
 #, python-format
 msgid ""
 "Mr Beam makes use of latest web technologies which might not be fully "
@@ -468,11 +472,11 @@ msgid ""
 "of%(br)s%(open)sGoogle Chrome%(close)s for Mr Beam."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:605
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:611
 msgid "Beta user: Please consider enabling Mr Beam Better Together!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:609
+#: octoprint_mrbeam/static/js/app/view-models/mrbeam.js:615
 #, python-format
 msgid ""
 "As you are currently in our Beta channel, you would help us tremendously "
@@ -481,11 +485,11 @@ msgid ""
 "Better Together settings%(close)s"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/review.js:236
+#: octoprint_mrbeam/static/js/app/view-models/review.js:245
 msgid "Error while saving review!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/review.js:238
+#: octoprint_mrbeam/static/js/app/view-models/review.js:247
 #, python-format
 msgid ""
 "Unable to save your review at the moment.%(br)sCheck connection to Mr "
@@ -795,12 +799,13 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/app/view-models/user-notification.js:19
 #: octoprint_mrbeam/static/js/app/view-models/user-notification.js:58
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:76
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:94
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:125
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:158
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:208
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:352
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:77
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:96
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:129
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:164
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:215
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:281
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:380
 #: octoprint_mrbeam/templates/calibration/user/view_corner_calibration.jinja2:16
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:25
 #: octoprint_mrbeam/templates/laserhead_changed.jinja2:41
@@ -828,11 +833,11 @@ msgid ""
 "support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:66
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:67
 msgid "Bottom plate not detected"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:68
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:69
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -844,13 +849,13 @@ msgid ""
 "support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:84
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:232
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:247
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:86
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:240
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:256
 msgid "Hardware malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:86
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:88
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -862,11 +867,11 @@ msgid ""
 "support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:102
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:105
 msgid "Unknown malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:104
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:107
 #, python-format
 msgid ""
 "The device is properly currently not able to start any laser job.\n"
@@ -875,11 +880,11 @@ msgid ""
 "ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:115
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:119
 msgid "Compressor malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:117
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:121
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -892,11 +897,11 @@ msgid ""
 "support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:133
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:138
 msgid "One Button malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:135
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:140
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -907,11 +912,11 @@ msgid ""
 "ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:148
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:154
 msgid "Interlock malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:150
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:156
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -923,44 +928,44 @@ msgid ""
 "support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:166
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:173
 msgid "Camera busy"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:167
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:174
 msgid "The camera was stopped recently, it will take a few seconds to restart."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:174
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:181
 msgid "No update information"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:175
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:182
 msgid ""
 "No information about available updates could be retrieved, please try "
 "again later. Errorcode: E-1000"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:182
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:190
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:189
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:197
 msgid "Error during fetching update information"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:183
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:190
 msgid "There was a error during fetching the update information Errorcode: E-1001"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:191
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:198
 msgid ""
 "There was a error during fetching the update information, please try "
 "again later."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:198
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:205
 msgid "Camera malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:200
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:207
 #, python-format
 msgid ""
 "You can still use the device by aligning manually without camera support."
@@ -972,11 +977,11 @@ msgid ""
 "support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:216
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:224
 msgid "Laser job canceled"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:218
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:226
 #, python-format
 msgid ""
 "The job was canceled due to an error - we apologize for any "
@@ -988,7 +993,7 @@ msgid ""
 "support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:234
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:242
 #, python-format
 msgid ""
 "The device is currently not able to start any laser job.\n"
@@ -999,7 +1004,7 @@ msgid ""
 "support ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:249
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:258
 #, python-format
 msgid ""
 "Your Air Filter or single Fan is not spinning properly.\n"
@@ -1010,41 +1015,56 @@ msgid ""
 "ticket%(closing_tag_support)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:262
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:272
+msgid "Check Air Filter System hose"
+msgstr ""
+
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:274
+#, python-format
+msgid ""
+"The hose of your Air Filter System might be blocked or is clogged.\n"
+"Please check the hose by following the %(opening_tag)sKnowledgebase "
+"article%(closing_tag)s.\n"
+"\n"
+"If this doesn’t solve the problem, please %(opening_tag_support)sopen a "
+"support ticket%(closing_tag_support)s."
+msgstr ""
+
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:290
 msgid "Thank you"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:263
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:291
 msgid ""
 "The last image from your camera was submitted to Mr Beam and is going to "
 "be uploaded silently in the background."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:269
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:297
 msgid "Lens Calibration Over"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:270
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:298
 msgid "A new lens calibration file has been created and is now being used."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:367
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:395
 #, python-format
 msgid ""
 "For more information check out this %(opening_tag)sKnowledge Base "
 "article%(closing_tag)s"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:384
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:412
 #, python-format
 msgid "Browse our %(opening_tag)sKnowledge Base%(closing_tag)s"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:404
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:432
 msgid "Error:"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:418
+#: octoprint_mrbeam/static/js/app/view-models/user-notification.js:446
 msgid "Error Code:"
 msgstr ""
 
@@ -1711,15 +1731,15 @@ msgid ""
 " that it is a Mr Beam Custom Material Settings backup file."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:11
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:12
 msgid "pre-filter"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:12
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:13
 msgid "Pre-Filter capacity reached 70%"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:15
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:16
 msgid ""
 "At this level, we highly recommend having a visual check on the pre-"
 "filter to make sure the estimation is representing the fill level of your"
@@ -1727,15 +1747,15 @@ msgid ""
 "your device."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:18
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:19
 msgid "main filter"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:19
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:20
 msgid "Main-Filter capacity reached 70%"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:22
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:23
 msgid ""
 "At this level, we highly recommend to have a visual check on the main-"
 "filter to make sure the estimation is representing the fill level of your"
@@ -1743,43 +1763,35 @@ msgid ""
 "your device."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:25
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:26
 msgid "laser head"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:26
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:27
 msgid "mechanics"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:56
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:60
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:63
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:66
-#, python-format
-msgid "/%(lifespan)s hrs"
-msgstr ""
-
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:147
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:139
 msgid "Did you change the pre-filter?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:149
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:141
 msgid "Did you change the main filter?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:151
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:143
 msgid "Did you clean the laser head?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:153
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:145
 msgid "Did you clean the mechanics?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:444
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:420
 msgid "Maintenance required"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:446
+#: octoprint_mrbeam/static/js/app/view-models/settings/maintenance.js:422
 #, python-format
 msgid ""
 "Regular maintenance on your Mr Beam is due.%(br)s Please check the "
@@ -3866,7 +3878,7 @@ msgstr ""
 msgid "Mr Beam Lasers will not publish the image nor sell it to third parties."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:86
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:99
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:226
 msgid "/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf"
 msgstr ""
@@ -4517,6 +4529,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:14
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:19
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:30
 msgid "Serial number"
 msgstr ""
 
@@ -4525,107 +4538,109 @@ msgid "Laser head"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:22
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:33
 msgid "Model"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:28
+msgid "Air Filter System"
+msgstr ""
+
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:38
 msgid "Network interfaces"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:44
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:54
 msgid "Mr Beam Plugin"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:46
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:56
 msgid "Image fingerprint"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:47
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:57
 msgid "Software channel"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:48
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:58
 msgid "Environment"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:49
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:59
 msgid "grbl"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:67
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:80
 msgid "Documentation, Support and Privacy"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:77
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:90
 msgid "get the latest versions"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:77
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:90
 msgid "online"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:82
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:95
 msgid "Online Support Portal"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:83
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:96
 msgid "Privacy Policies"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:84
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:27
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:46
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:76
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:104
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:161
 msgid "https://www.mr-beam.org/en"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:84
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
 msgid "Mr Beam Web Site"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:85
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:108
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:98
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:121
 msgid "find.mr-beam service"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:86
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:99
 msgid "Mr Beam Analytics"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:94
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:107
 msgid "Links"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:97
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:110
 msgid "Website"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:98
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:111
 msgid "Social media"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:107
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:120
 msgid "Official user group"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:107
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:120
 msgid "on Facebook"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:107
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:120
 msgid "German"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:109
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:122
 msgid "Online resources"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:109
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:122
 msgid "Mr Beam Downloads"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:110
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:123
 msgid "Source code"
 msgstr ""
 
@@ -5052,108 +5067,121 @@ msgstr ""
 msgid "Adjust the animation speed of Mr Beam Lights."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:11
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:12
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:68
 msgid "Air Filter: Pre-filter"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:13
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:14
+msgid ""
+"The pre filter filters all coarse particles from the exhaust air. Regular"
+" changing improves the air flow and preserves the main filter.*"
+msgstr ""
+
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:21
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:50
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:87
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:106
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:136
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:164
+msgid "Buy now"
+msgstr ""
+
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:31
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:60
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:119
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:146
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:179
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:206
+msgid "used"
+msgstr ""
+
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:41
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:128
+msgid "Air Filter: Main filter"
+msgstr ""
+
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:43
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:130
+msgid ""
+"The main filter is a combined hepa and activated carbon filter. It "
+"filters both tiny particles and odours from the exhaust air.*"
+msgstr ""
+
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:70
 msgid ""
 "Please choose which pre-filter you are using, so the maintenance counter "
 "can be adjusted accordingly."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:22
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:79
 msgid "Pre-filter mat (pink)"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:24
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:81
 msgid ""
 "The pink pre-filter mat is suitable for all those who use materials that "
 "cause little material abrasion (acrylic felt, slate, concrete, foam "
 "rubber, acrylic, etc.)."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:30
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:49
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:79
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:107
-msgid "Buy now"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:41
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:98
 msgid "Pre-filter (cartridge)"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:43
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:100
 msgid ""
 "The pre-filter cartridge is best suited for power users who process a lot"
 " of wood, cardboard, Kraftplex or also stamp rubber."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:62
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:89
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:122
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:149
-msgid "used"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:65
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:92
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:125
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:152
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:182
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:209
 msgid "Reset"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:71
-msgid "Air Filter: Main filter"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:73
-msgid ""
-"The main filter is a combined hepa and activated carbon filter. It "
-"filters both tiny particles and odours from the exhaust air.*"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:98
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:155
 msgid "Laser head cleaning"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:101
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:158
 msgid ""
 "Clean the laser head regularly to maintain its full performance. You can "
 "either do it yourself or you can send it to us and we clean it for you!"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:112
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:169
 msgid "How to clean a laser head"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:131
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:188
 msgid "Mechanics"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:133
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:190
 msgid "The gantry should always be clean. Oil it regularly with an acid-free oil."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:139
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:196
 msgid "Caring of the mechanical parts"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:156
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:213
 msgid ""
 "*Users without a Mr Beam Air Filter System can safely ignore and reset "
 "this counter."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:164
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:221
 #, python-format
 msgid ""
 "The hour counter for the following component will now be reset: "
 "%(component_to_reset)s."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:165
+#: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:222
 msgid "Please notice that there is no way to undo this operation"
 msgstr ""
 
