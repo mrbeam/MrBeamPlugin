@@ -6,7 +6,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 from octoprint_mrbeam.iobeam.airfilter import AirFilter, airfilter
 from octoprint_mrbeam.model.iobeam import exhaust
-from tests.conftest import wait_till_event_received
+from tests.conftest import subscribe
 
 DEFAULT_PROFILE = {
     "carbonfilter": [
@@ -29,9 +29,16 @@ DEFAULT_PROFILE = {
 
 
 def set_airfilter(airfilter, model_id, serial):
-    airfilter.set_airfilter(model_id, serial)
     if model_id is not None and serial is not None:
-        wait_till_event_received(airfilter._event_bus, MrBeamEvents.AIRFILTER_CHANGED)
+        subscribe(
+            airfilter._event_bus,
+            MrBeamEvents.AIRFILTER_CHANGED,
+            airfilter.set_airfilter,
+            model_id,
+            serial,
+        )
+    else:
+        airfilter.set_airfilter(model_id, serial)
 
 
 def test_singelton(mrbeam_plugin):
@@ -57,12 +64,15 @@ def test_set_airfilter(air_filter):
 
 def test_model_name_AF1_or_fan(air_filter):
     # Arrange
-    air_filter.connected = True  # AF1 or fan need to be connected state to show name
+    subscribe(
+        air_filter._event_bus,
+        MrBeamEvents.AIRFILTER_CHANGED,
+        lambda: setattr(air_filter, "connected", True),
+    )  # AF1 or fan need to be connected state to show name
     # Act
     model_name = air_filter.model
     # Assert
     assert model_name == "Air Filter System | Fan"
-    wait_till_event_received(air_filter._event_bus, MrBeamEvents.AIRFILTER_CHANGED)
 
 
 def test_model_name_AF2(air_filter):
@@ -617,17 +627,23 @@ def test_exhaust_hose_is_blocked_if_af3(
 
 
 @pytest.mark.parametrize(
-    "connected",
+    "connected,event",
     [
-        True,
-        False,
+        (True, IoBeamEvents.FAN_CONNECTED),
+        (False, IoBeamEvents.FAN_DISCONNECTED),
     ],
 )
-def test_set_connected__when__af3__and__external_power(connected, air_filter):
+def test_set_connected__when__af3__and__external_power(connected, event, air_filter):
     # Arrange
     set_airfilter(air_filter, 8, "serial")
+
     # Act
-    air_filter.connected = connected
+    subscribe(
+        air_filter._event_bus,
+        event,
+        lambda: setattr(air_filter, "connected", connected),
+    )
+
     air_filter.set_device(
         exhaust.Device.from_dict({"ext_power": True, "ext_voltage": 24.0})
     )
@@ -646,12 +662,17 @@ def test_set_connected__when__af3__and__external_power(connected, air_filter):
 def test_connected_when__af3__and__no_external_power(connected, event, air_filter):
     # Arrange
     set_airfilter(air_filter, 8, "serial")
+
     # Act
-    air_filter.connected = connected
+    subscribe(
+        air_filter._event_bus,
+        event,
+        lambda: setattr(air_filter, "connected", connected),
+    )
+
     air_filter.set_device(
         exhaust.Device.from_dict({"ext_power": False, "ext_voltage": 24.0})
     )
-    wait_till_event_received(air_filter._event_bus, event)
 
     # Assert
     assert air_filter.connected == False
@@ -667,9 +688,13 @@ def test_connected_when__af3__and__no_external_power(connected, event, air_filte
 def test_set_connected__when__non_smart_af(connected, event, air_filter):
     # Arrange
     set_airfilter(air_filter, None, None)
+
     # Act
-    air_filter.connected = connected
-    wait_till_event_received(air_filter._event_bus, event)
+    subscribe(
+        air_filter._event_bus,
+        event,
+        lambda: setattr(air_filter, "connected", connected),
+    )
 
     # Assert
     assert air_filter.connected == connected

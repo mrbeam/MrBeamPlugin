@@ -100,3 +100,36 @@ def air_filter(mrbeam_plugin):
     air_filter._event_bus.fire(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
     wait_till_event_received(air_filter._event_bus, MrBeamEvents.MRB_PLUGIN_INITIALIZED)
     return air_filter
+
+
+def subscribe(event_bus, event, func, *args, **kwargs):
+    debug = kwargs.get("debug", False)
+    timeout = kwargs.get("timeout", 5)
+    if debug:
+        print("subscribe called %s, (%s %s)", func, args, kwargs)
+
+    event_done = threading.Event()
+
+    def event_callback(event, payload):
+        if debug:
+            print("event_callback %s", event)
+        event_done.set()
+
+    event_bus.subscribe(event, event_callback)
+    starttime = monotonic_time()
+    if debug:
+        print("subscribed %s", event)
+
+    result = func(*args, **kwargs)
+    if debug:
+        print("function call")
+
+    while not event_done.is_set():
+        if debug:
+            print("waiting")
+        time.sleep(0.1)
+        assert round(monotonic_time() - starttime, 2) <= timeout
+
+    if debug:
+        print("done")
+    return result

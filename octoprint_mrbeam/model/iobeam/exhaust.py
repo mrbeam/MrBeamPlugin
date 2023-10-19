@@ -3,6 +3,7 @@ class ExhaustModelInitializationError(Exception):
 
 
 class Device:
+    # FOR PYTHON3
     # dataset_type: int
     # ext_power: bool
     # ext_voltage: float
@@ -36,6 +37,8 @@ class Device:
         self.type = type
 
     @staticmethod
+    # FOR PYTHON3
+    # def from_dict(dictonary: dict) -> None:
     def from_dict(dictonary):
         """
 
@@ -59,5 +62,5 @@ class Device:
             )
         except TypeError as e:
             raise ExhaustModelInitializationError(
-                "Can't init device from dict: {}".format(dictonary)
+                "Can't init device from dict: {} - e:{}".format(dictonary, e)
             )
