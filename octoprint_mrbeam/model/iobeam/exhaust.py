@@ -38,15 +38,16 @@ class Device:
 
     @staticmethod
     # FOR PYTHON3
-    # def from_dict(dictonary: dict) -> None:
+    # def from_dict(dictonary: dict) -> Device:
     def from_dict(dictonary):
         """
+        Creates a Device object from a dict.
 
         Args:
-            dictonary (dict):
+            dictonary (dict): dict with the device data
 
         Returns:
-
+            Device: Device object
         """
         try:
             return Device(

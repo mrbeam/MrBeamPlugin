@@ -290,12 +290,13 @@ class AirFilter(object):
 
     def set_device(self, device):
         """
+        Sets the device data of the air filter.
 
         Args:
             device (exhaust.Device):
 
         Returns:
-
+            None
         """
         if (
             self._external_power != device.ext_power
@@ -307,7 +308,8 @@ class AirFilter(object):
             )
             self._iobeam.reset_exhaust()
             return None
-        self._external_power = device.ext_power
+        else:
+            self._external_power = device.ext_power
 
     def _get_avg_pressure_differences(self):
         """Returns the average pressure differences of the last pressure readings.
