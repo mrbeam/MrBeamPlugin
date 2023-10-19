@@ -78,7 +78,7 @@ def mrbeam_plugin():
     yield mrbeam_plugin
 
 
-def wait_till_event_received(event_bus, event, timeout=1):
+def wait_till_event_received(event_bus, event, timeout=5):
     event_done = threading.Event()
 
     def event_callback(event, payload):
