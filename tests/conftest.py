@@ -97,8 +97,12 @@ def air_filter(mrbeam_plugin):
     air_filter = AirFilter(mrbeam_plugin)
     air_filter._plugin.send_mrb_state = MagicMock()
 
-    air_filter._event_bus.fire(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
-    wait_till_event_received(air_filter._event_bus, MrBeamEvents.MRB_PLUGIN_INITIALIZED)
+    subscribe(
+        air_filter._event_bus,
+        MrBeamEvents.MRB_PLUGIN_INITIALIZED,
+        air_filter._event_bus.fire,
+        MrBeamEvents.MRB_PLUGIN_INITIALIZED,
+    )
     return air_filter
 
 

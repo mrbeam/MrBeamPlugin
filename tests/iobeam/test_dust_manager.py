@@ -8,7 +8,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.dust_manager import DustManager
 from octoprint.events import Events as OctoPrintEvents
 
-from tests.conftest import wait_till_event_received
+from tests.conftest import subscribe
 
 
 class DustManagerMock(DustManager):
@@ -22,10 +22,13 @@ def dust_manager(mrbeam_plugin, monkeypatch, air_filter):
     dust_manager._one_button_handler = MagicMock()
     dust_manager._analytics_handler = MagicMock()
     dust_manager._airfilter = air_filter
-    dust_manager._event_bus.fire(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
-    wait_till_event_received(
-        dust_manager._event_bus, MrBeamEvents.MRB_PLUGIN_INITIALIZED
+    subscribe(
+        dust_manager._event_bus,
+        MrBeamEvents.MRB_PLUGIN_INITIALIZED,
+        dust_manager._event_bus.fire,
+        MrBeamEvents.MRB_PLUGIN_INITIALIZED,
     )
+
     dust_manager._iobeam.send_fan_command = MagicMock(return_value=(True, None))
     return dust_manager
 
@@ -106,8 +109,12 @@ def test_if_test_fan_rpm_was_triggered_when_job_was_started(dust_manager):
     dust_manager._handle_fan_data({"rpm": 40, "dust": 1, "state": 1, "connected": True})
 
     # Act
-    dust_manager._event_bus.fire(OctoPrintEvents.PRINT_STARTED)
-    wait_till_event_received(dust_manager._event_bus, OctoPrintEvents.PRINT_STARTED)
+    subscribe(
+        dust_manager._event_bus,
+        OctoPrintEvents.PRINT_STARTED,
+        dust_manager._event_bus.fire,
+        OctoPrintEvents.PRINT_STARTED,
+    )
     time.sleep(0.1)  # wait till test fan rom finishes
 
     # Assert
@@ -127,7 +134,12 @@ def test_if_test_fan_rpm_was_extended_when_rpm_diff_is_to_high(dust_manager):
 
     # Act
     dust_manager._event_bus.fire(OctoPrintEvents.PRINT_STARTED)
-    wait_till_event_received(dust_manager._event_bus, OctoPrintEvents.PRINT_STARTED)
+    subscribe(
+        dust_manager._event_bus,
+        OctoPrintEvents.PRINT_STARTED,
+        dust_manager._event_bus.fire,
+        OctoPrintEvents.PRINT_STARTED,
+    )
     time.sleep(0.1)  # wait till test fan rom finishes
 
     # Assert
@@ -143,12 +155,19 @@ def test_if_test_fan_rpm_was_triggered_when_it_didnt_run_for_a_while(
     dust_manager._handle_fan_data({"rpm": 40, "dust": 1, "state": 1, "connected": True})
 
     # Act
-    dust_manager._event_bus.fire(OctoPrintEvents.PRINT_STARTED)
-    wait_till_event_received(dust_manager._event_bus, OctoPrintEvents.PRINT_STARTED)
+    subscribe(
+        dust_manager._event_bus,
+        OctoPrintEvents.PRINT_STARTED,
+        dust_manager._event_bus.fire,
+        OctoPrintEvents.PRINT_STARTED,
+    )
     time.sleep(0.1)  # wait till test fan rom finishes
-    print("now")
-    dust_manager._event_bus.fire(MrBeamEvents.PRINT_PROGRESS)
-    wait_till_event_received(dust_manager._event_bus, MrBeamEvents.PRINT_PROGRESS)
+    subscribe(
+        dust_manager._event_bus,
+        MrBeamEvents.PRINT_PROGRESS,
+        dust_manager._event_bus.fire,
+        MrBeamEvents.PRINT_PROGRESS,
+    )
     time.sleep(0.1)  # wait till test fan rom finishes
 
     # Assert
@@ -168,8 +187,12 @@ def test_when__exhaust_hose_is_blocked__then__show_malfunction(dust_manager):
     with patch.object(
         dust_manager._plugin.hw_malfunction_handler, "report_hw_malfunction"
     ) as mock_report_hw_malfunction:
-        dust_manager._event_bus.fire(OctoPrintEvents.PRINT_STARTED)
-        wait_till_event_received(dust_manager._event_bus, OctoPrintEvents.PRINT_STARTED)
+        subscribe(
+            dust_manager._event_bus,
+            OctoPrintEvents.PRINT_STARTED,
+            dust_manager._event_bus.fire,
+            OctoPrintEvents.PRINT_STARTED,
+        )
         time.sleep(0.1)  # wait till test fan rom finishes
 
         # Assert
